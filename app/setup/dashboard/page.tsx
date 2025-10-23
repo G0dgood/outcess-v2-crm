@@ -1,17 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Input from '@/components/ui/Input';
-import Radio from '@/components/ui/Radio';
+import IndividualRadio from '@/components/ui/IndividualRadio';
 import CallDisposition from '@/components/CallDisposition';
 import KPIMetric from '@/components/KPIMetric';
 import { useSetup } from '@/contexts/SetupContext';
 
-export default function DashboardPage() {
+type DashboardVisibility = 'all' | 'admin' | 'admin-supervisor' | 'custom';
+
+interface VisibilityOption {
+	value: DashboardVisibility;
+	label: string;
+}
+
+export default function DashboardPage(): React.JSX.Element {
 	const { setupData, updateDashboardSettings } = useSetup();
 	const { dashboardSettings } = setupData;
 
-	const visibilityOptions = [
+	const visibilityOptions: VisibilityOption[] = [
 		{ value: 'all', label: 'All' },
 		{ value: 'admin', label: 'Admin' },
 		{ value: 'admin-supervisor', label: 'Admin & Supervisor' },
@@ -40,12 +47,12 @@ export default function DashboardPage() {
 						<label className="font-inter text-sm font-medium text-[#050711] mb-2 block">Who can see this dashboard</label>
 						<div className="space-y-2">
 							{visibilityOptions.map((option) => (
-								<Radio
+								<IndividualRadio
 									key={option.value}
 									name="visibility"
 									value={option.value}
 									checked={dashboardSettings.dashboardVisibility === option.value}
-									onChange={(value) => updateDashboardSettings({ dashboardVisibility: value as 'all' | 'admin' | 'admin-supervisor' | 'custom' })}
+									onChange={(value) => updateDashboardSettings({ dashboardVisibility: value as DashboardVisibility })}
 									label={option.label}
 								/>
 							))}

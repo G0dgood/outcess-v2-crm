@@ -16,12 +16,14 @@ interface AddUserModalProps {
 		phone: string;
 		role: string;
 	}) => void;
+	roleOptions: { value: string; label: string; }[];
 }
 
 export const AddUserModal: React.FC<AddUserModalProps> = ({
 	isOpen,
 	onClose,
 	onSave,
+	roleOptions,
 }) => {
 	const [formData, setFormData] = React.useState({
 		firstName: '',
@@ -30,13 +32,6 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 		phone: '',
 		role: '',
 	});
-
-	const roleOptions = [
-		{ value: 'administrator', label: 'Administrator' },
-		{ value: 'manager', label: 'Manager' },
-		{ value: 'user', label: 'User' },
-		{ value: 'viewer', label: 'Viewer' }
-	];
 
 	const handleInputChange = (field: string) => (value: string) => {
 		setFormData(prev => ({ ...prev, [field]: value }));

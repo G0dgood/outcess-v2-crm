@@ -7,6 +7,7 @@ import BackButton from '@/components/ui/BackButton';
 import Toggle from '@/components/ui/Toggle';
 import CreateRoleModal from '@/components/ui/CreateRoleModal';
 import Icon from '@/components/ui/Icon';
+import { useSetup } from '@/contexts/SetupContext';
 
 interface Role {
 	id: string;
@@ -22,75 +23,17 @@ interface Module {
 
 export default function RolePermissionManagementPage() {
 	const router = useRouter();
+	const { setupData, updateRoleManagementSettings } = useSetup();
+	const { roleManagementSettings } = setupData;
 	const [isCreateRoleModalOpen, setIsCreateRoleModalOpen] = useState(false);
-	const [roles, setRoles] = useState<Role[]>([
-		{
-			id: 'administrator',
-			name: 'Administrator',
-			description: 'Full access to the system',
-			permissions: {
-				dashboard: true,
-				customerBook: true,
-				userManagement: true,
-				setupBook: true,
-				customerSMS: true,
-				report: true,
-				systemSetting: true,
-				auditLog: true,
-			}
-		},
-		{
-			id: 'supervisor',
-			name: 'Supervisor',
-			description: 'Team management and reporting capabilities',
-			permissions: {
-				dashboard: false,
-				customerBook: false,
-				userManagement: false,
-				setupBook: false,
-				customerSMS: false,
-				report: false,
-				systemSetting: false,
-				auditLog: false,
-			}
-		},
-		{
-			id: 'agent',
-			name: 'Agent',
-			description: 'Customer support and interaction',
-			permissions: {
-				dashboard: false,
-				customerBook: false,
-				userManagement: false,
-				setupBook: false,
-				customerSMS: false,
-				report: false,
-				systemSetting: false,
-				auditLog: false,
-			}
-		}
-	]);
-
-	const modules: Module[] = [
-		{
-			id: 'dashboard',
-			name: 'Dashboard'
-		},
-		{ id: 'customerBook', name: 'Customer Book' },
-		{ id: 'userManagement', name: 'User Management' },
-		{ id: 'setupBook', name: 'Setup Book' },
-		{ id: 'customerSMS', name: 'Customer SMS' },
-		{ id: 'report', name: 'Report' },
-		{ id: 'systemSetting', name: 'System Setting' },
-		{ id: 'auditLog', name: 'Audit Log' },
-	];
 
 	const handlePermissionChange = (roleId: string, moduleId: string, enabled: boolean) => {
-		setRoles(prev => prev.map(role =>
+		const updatedRoles = roleManagementSettings.roles.map(role =>
 			role.id === roleId
 				? { ...role, permissions: { ...role.permissions, [moduleId]: enabled } }
 				: role
-		));
+		);
+		updateRoleManagementSettings({ roles: updatedRoles });
 	};
 
 	const handleCreateRole = (roleData: { name: string; description: string }) => {
@@ -100,7 +43,7 @@ export default function RolePermissionManagementPage() {
 		let counter = 1;
 
 		// Check if ID already exists and make it unique
-		while (roles.some(role => role.id === uniqueId)) {
+		while (roleManagementSettings.roles.some(role => role.id === uniqueId)) {
 			uniqueId = `${baseId}-${counter}`;
 			counter++;
 		}
@@ -125,7 +68,9 @@ export default function RolePermissionManagementPage() {
 				auditLog: false,
 			}
 		};
-		setRoles(prev => [...prev, newRole]);
+		updateRoleManagementSettings({
+			roles: [...roleManagementSettings.roles, newRole]
+		});
 	};
 
 	const handleDeleteRole = (roleId: string) => {
@@ -133,11 +78,13 @@ export default function RolePermissionManagementPage() {
 		if (roleId === 'administrator') {
 			return;
 		}
-		setRoles(prev => prev.filter(role => role.id !== roleId));
+		updateRoleManagementSettings({
+			roles: roleManagementSettings.roles.filter(role => role.id !== roleId)
+		});
 	};
 
 	const handleSaveChanges = () => {
-		console.log('Saving role permissions:', roles);
+		console.log('Saving role permissions:', roleManagementSettings.roles);
 		// TODO: Implement save functionality
 	};
 
@@ -176,7 +123,7 @@ export default function RolePermissionManagementPage() {
 
 			{/* Role Cards */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-				{roles.map((role) => (
+				{roleManagementSettings.roles.map((role) => (
 					<div key={role.id} className="bg-white border border-gray-200   p-6 relative group">
 						<div className="flex items-center justify-between mb-1">
 							<div className="flex items-center gap-3">
@@ -211,7 +158,7 @@ export default function RolePermissionManagementPage() {
 						<thead className="bg-gray-50">
 							<tr>
 								<th className="py-4 px-6 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Features/Modules</th>
-								{roles.map((role) => (
+								{roleManagementSettings.roles.map((role) => (
 									<th key={role.id} className="py-4 px-6 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
 										{role.name}
 									</th>
@@ -219,12 +166,12 @@ export default function RolePermissionManagementPage() {
 							</tr>
 						</thead>
 						<tbody className="bg-white divide-y divide-gray-200">
-							{modules.map((module) => (
+							{roleManagementSettings.modules.map((module) => (
 								<tr key={module.id}>
 									<td className="py-4 px-6 text-sm font-medium text-[#050711]">
 										{module.name}
 									</td>
-									{roles.map((role) => (
+									{roleManagementSettings.roles.map((role) => (
 										<td key={`${role.id}-${module.id}`} className="py-4 px-6 text-center">
 											<Toggle
 												checked={role.permissions[module.id]}

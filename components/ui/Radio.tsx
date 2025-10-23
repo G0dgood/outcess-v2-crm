@@ -1,50 +1,59 @@
-'use client';
-
 import React from 'react';
+
+interface RadioOption {
+	value: string;
+	label: string;
+	disabled?: boolean;
+}
 
 interface RadioProps {
 	name: string;
+	options: RadioOption[];
 	value: string;
-	checked: boolean;
 	onChange: (value: string) => void;
-	label: string;
-	className?: string;
 	disabled?: boolean;
+	className?: string;
 }
 
 const Radio: React.FC<RadioProps> = ({
 	name,
+	options,
 	value,
-	checked,
 	onChange,
-	label,
-	className = '',
 	disabled = false,
+	className = ''
 }) => {
+	const handleChange = (optionValue: string) => {
+		if (!disabled && !options.find(opt => opt.value === optionValue)?.disabled) {
+			onChange(optionValue);
+		}
+	};
+
 	return (
-		<label className={`flex items-center gap-2 cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}>
-			<input
-				type="radio"
-				name={name}
-				value={value}
-				checked={checked}
-				onChange={(e) => onChange(e.target.value)}
-				disabled={disabled}
-				className="sr-only"
-			/>
-			<div className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${checked
-					? 'border-[#050711] bg-[#050711]'
-					: 'border-gray-300 hover:border-gray-400'
-				} ${disabled ? 'border-gray-200' : ''}`}>
-				{checked && (
-					<div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
-				)}
-			</div>
-			<span className={`font-lato text-sm ${checked ? 'text-[#050711]' : 'text-gray-600'
-				} ${disabled ? 'text-gray-400' : ''}`}>
-				{label}
-			</span>
-		</label>
+		<div className={`radio-container ${className}`}>
+			{options.map((option) => {
+				const optionId = `${name}-${option.value}`;
+				const isOptionDisabled = disabled || option.disabled;
+
+				return (
+					<div key={option.value} className="radio">
+						<input
+							type="radio"
+							id={optionId}
+							name={name}
+							value={option.value}
+							checked={value === option.value}
+							onChange={() => handleChange(option.value)}
+							disabled={isOptionDisabled}
+							className="radio-input"
+						/>
+						<label htmlFor={optionId} className="radio-label">
+							{option.label}
+						</label>
+					</div>
+				);
+			})}
+		</div>
 	);
 };
 

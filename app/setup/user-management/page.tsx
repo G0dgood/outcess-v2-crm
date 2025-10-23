@@ -21,37 +21,9 @@ interface User {
 }
 
 export default function UserManagementPage() {
-	const { setupData, updateSetupData } = useSetup();
+	const { setupData, updateUserManagementSettings } = useSetup();
+	const { userManagementSettings, roleManagementSettings } = setupData;
 	const router = useRouter();
-	const [users, setUsers] = useState<User[]>([
-		{
-			id: '1',
-			name: 'John Doe',
-			email: 'john@company.com',
-			phone: '+1 (555) 123-4567',
-			role: 'Administrator',
-			status: 'active',
-			lastLogin: '2024-01-15'
-		},
-		{
-			id: '2',
-			name: 'Jane Smith',
-			email: 'jane@company.com',
-			phone: '+1 (555) 234-5678',
-			role: 'Manager',
-			status: 'active',
-			lastLogin: '2024-01-14'
-		},
-		{
-			id: '3',
-			name: 'Bob Johnson',
-			email: 'bob@company.com',
-			phone: '+1 (555) 345-6789',
-			role: 'User',
-			status: 'pending',
-			lastLogin: undefined
-		}
-	]);
 
 	const [isAddingUser, setIsAddingUser] = useState(false);
 	const [editingUser, setEditingUser] = useState<string | null>(null);
@@ -62,12 +34,10 @@ export default function UserManagementPage() {
 		role: string;
 	} | null>(null);
 
-	const roleOptions = [
-		{ value: 'administrator', label: 'Administrator' },
-		{ value: 'manager', label: 'Manager' },
-		{ value: 'user', label: 'User' },
-		{ value: 'viewer', label: 'Viewer' }
-	];
+	const roleOptions = roleManagementSettings.roles.map(role => ({
+		value: role.id,
+		label: role.name
+	}));
 
 	const statusOptions = [
 		{ value: 'active', label: 'Active' },
@@ -91,21 +61,27 @@ export default function UserManagementPage() {
 			status: 'pending',
 			lastLogin: undefined
 		};
-		setUsers(prev => [...prev, user]);
+		updateUserManagementSettings({
+			users: [...userManagementSettings.users, user]
+		});
 	};
 
 	const handleDeleteUser = (userId: string) => {
-		setUsers(prev => prev.filter(user => user.id !== userId));
+		updateUserManagementSettings({
+			users: userManagementSettings.users.filter(user => user.id !== userId)
+		});
 	};
 
 	const handleStatusChange = (userId: string, newStatus: string) => {
-		setUsers(prev => prev.map(user =>
-			user.id === userId ? { ...user, status: newStatus as User['status'] } : user
-		));
+		updateUserManagementSettings({
+			users: userManagementSettings.users.map(user =>
+				user.id === userId ? { ...user, status: newStatus as User['status'] } : user
+			)
+		});
 	};
 
 	const handleEditUser = (userId: string) => {
-		const user = users.find(u => u.id === userId);
+		const user = userManagementSettings.users.find(u => u.id === userId);
 		if (user) {
 			setEditingUserData({
 				name: user.name,
@@ -125,17 +101,19 @@ export default function UserManagementPage() {
 		role: string;
 	}) => {
 		if (editingUser) {
-			setUsers(prev => prev.map(user =>
-				user.id === editingUser
-					? {
-						...user,
-						name: `${userData.firstName} ${userData.lastName}`,
-						email: userData.email,
-						phone: userData.phone,
-						role: userData.role
-					}
-					: user
-			));
+			updateUserManagementSettings({
+				users: userManagementSettings.users.map(user =>
+					user.id === editingUser
+						? {
+							...user,
+							name: `${userData.firstName} ${userData.lastName}`,
+							email: userData.email,
+							phone: userData.phone,
+							role: userData.role
+						}
+						: user
+				)
+			});
 			setEditingUser(null);
 			setEditingUserData(null);
 		}
@@ -233,42 +211,59 @@ export default function UserManagementPage() {
 								</tr>
 							</thead>
 							<tbody className="bg-white divide-y divide-gray-200">
-								{users.map((user, index) => (
-									<tr key={user.id} className={index !== users.length - 1 ? 'border-b border-[#E5E7EB]' : ''}>
-										<td className="py-4 px-6 font-inter text-sm text-[#050711]">{user.name}</td>
-										<td className="py-4 px-6 font-inter text-sm text-gray-600">{user.email}</td>
-										<td className="py-4 px-6 font-inter text-sm text-gray-600">{user.phone}</td>
-										<td className="py-4 px-6 font-inter text-sm text-gray-600">{user.role}</td>
-										<td className="py-4 px-6">
-											<Dropdown
-												label=""
-												value={user.status}
-												onChange={(value) => handleStatusChange(user.id, value)}
-												options={statusOptions}
-												className="min-w-[120px]"
-											/>
-										</td>
-										<td className="py-4 px-6 font-inter text-sm text-gray-600">
-											{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
-										</td>
-										<td className="py-4 px-6 text-sm font-medium">
-											<div className='flex flex-row gap-3'>
-												<button
-													onClick={() => handleEditUser(user.id)}
-													className='cursor-pointer'
-												>
-													<Icon name="Edit_duotone_line" size={"lg"} />
-												</button>
-												<button
-													onClick={() => handleDeleteUser(user.id)}
-													className='cursor-pointer'
-												>
-													<Icon name="Trash_light" size={"lg"} />
-												</button>
+								{userManagementSettings.users.length === 0 ? (
+									<tr>
+										<td colSpan={7} className="py-12 px-6">
+											<div className="flex flex-col items-center justify-center text-center">
+												<img
+													src="/illustrations/Avatar-Neutral-Add-2--Streamline-Ux.png"
+													alt="No users added"
+													className="w-32 h-32 mb-4 opacity-60"
+												/>
+												<h3 className="font-inter text-base font-medium text-[#050711] mb-2">No Team Members Yet</h3>
+												<p className="font-lato text-sm text-gray-600 mb-4">Add your first team member to get started</p>
+
 											</div>
 										</td>
 									</tr>
-								))}
+								) : (
+									userManagementSettings.users.map((user, index) => (
+										<tr key={user.id} className={index !== userManagementSettings.users.length - 1 ? 'border-b border-[#E5E7EB]' : ''}>
+											<td className="py-4 px-6 font-inter text-sm text-[#050711]">{user.name}</td>
+											<td className="py-4 px-6 font-inter text-sm text-gray-600">{user.email}</td>
+											<td className="py-4 px-6 font-inter text-sm text-gray-600">{user.phone}</td>
+											<td className="py-4 px-6 font-inter text-sm text-gray-600">{user.role}</td>
+											<td className="py-4 px-6">
+												<Dropdown
+													label=""
+													value={user.status}
+													onChange={(value) => handleStatusChange(user.id, value)}
+													options={statusOptions}
+													className="min-w-[120px]"
+												/>
+											</td>
+											<td className="py-4 px-6 font-inter text-sm text-gray-600">
+												{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+											</td>
+											<td className="py-4 px-6 text-sm font-medium">
+												<div className='flex flex-row gap-3'>
+													<button
+														onClick={() => handleEditUser(user.id)}
+														className='cursor-pointer'
+													>
+														<Icon name="Edit_duotone_line" size={"lg"} />
+													</button>
+													<button
+														onClick={() => handleDeleteUser(user.id)}
+														className='cursor-pointer'
+													>
+														<Icon name="Trash_light" size={"lg"} />
+													</button>
+												</div>
+											</td>
+										</tr>
+									))
+								)}
 							</tbody>
 						</table>
 					</div>
@@ -280,6 +275,7 @@ export default function UserManagementPage() {
 				isOpen={isAddingUser}
 				onClose={() => setIsAddingUser(false)}
 				onSave={handleAddUser}
+				roleOptions={roleOptions}
 			/>
 
 			{/* Edit User Modal */}
@@ -289,8 +285,13 @@ export default function UserManagementPage() {
 					onClose={handleCancelEdit}
 					onSave={handleSaveEdit}
 					userData={editingUserData}
+					roleOptions={roleOptions}
 				/>
 			)}
 		</div>
 	);
 }
+
+{/* <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+	<path d="M8 1V15M1 8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+</svg> */}

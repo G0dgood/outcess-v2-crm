@@ -30,6 +30,76 @@ interface CallOutcome {
 	name: string;
 }
 
+interface Chart {
+	id: string;
+	title: string;
+	type: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
+	dataSource: 'dispositions' | 'callOutcomes' | 'custom';
+	timeRange: 'daily' | 'weekly' | 'monthly';
+	color?: string;
+	position: {
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+	};
+}
+
+interface CustomerField {
+	id: string;
+	name: string;
+	type: string;
+	required: boolean;
+	options?: string[]; // For dropdown, radio, checkbox fields
+}
+
+interface FieldType {
+	id: string;
+	name: string;
+	description: string;
+}
+
+interface User {
+	id: string;
+	name: string;
+	email: string;
+	phone: string;
+	role: string;
+	status: 'active' | 'inactive' | 'pending';
+	lastLogin?: string;
+}
+
+interface Role {
+	id: string;
+	name: string;
+	description: string;
+	permissions: Record<string, boolean>;
+}
+
+interface Module {
+	id: string;
+	name: string;
+}
+
+interface Permission {
+	id: string;
+	name: string;
+	description: string;
+}
+
+interface PermissionCategory {
+	id: string;
+	name: string;
+	icon: string;
+	permissions: Permission[];
+}
+
+interface RolePermissions {
+	[roleId: string]: {
+		[permissionId: string]: boolean;
+	};
+}
+
 interface SetupData {
 	companyName: string;
 	timeZone: string;
@@ -61,8 +131,23 @@ interface SetupData {
 		callOutcomes: CallOutcome[];
 		dispositionSettings: {
 			timeRangeView: 'daily' | 'weekly' | 'monthly';
-			chartType: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble' | '';
+			charts: Chart[];
 		};
+	};
+	customerBookSettings: {
+		configuredFields: CustomerField[];
+	};
+	userManagementSettings: {
+		users: User[];
+	};
+	roleManagementSettings: {
+		roles: Role[];
+		modules: Module[];
+	};
+	permissionAccessSettings: {
+		selectedRole: string;
+		rolePermissions: RolePermissions;
+		permissionCategories: PermissionCategory[];
 	};
 }
 
@@ -77,6 +162,15 @@ interface SetupContextType {
 	updateSetupData: (data: Partial<SetupData>) => void;
 	updateNavigationSettings: (data: Partial<SetupData['navigationSettings']>) => void;
 	updateDashboardSettings: (data: Partial<SetupData['dashboardSettings']>) => void;
+	addChart: (chart: Omit<Chart, 'id'>) => void;
+	removeChart: (chartId: string) => void;
+	updateChart: (chartId: string, updates: Partial<Chart>) => void;
+	updateChartPosition: (chartId: string, position: { x: number; y: number; width: number; height: number }) => void;
+	updateChartsOrder: (newCharts: Chart[]) => void;
+	updateCustomerBookSettings: (data: Partial<SetupData['customerBookSettings']>) => void;
+	updateUserManagementSettings: (data: Partial<SetupData['userManagementSettings']>) => void;
+	updateRoleManagementSettings: (data: Partial<SetupData['roleManagementSettings']>) => void;
+	updatePermissionAccessSettings: (data: Partial<SetupData['permissionAccessSettings']>) => void;
 	setupSteps: SetupStep[];
 }
 
@@ -130,8 +224,102 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			callOutcomes: [],
 			dispositionSettings: {
 				timeRangeView: 'daily',
-				chartType: '',
+				charts: [
+					{
+						id: 'default-pie-chart',
+						title: 'Call Disposition Overview',
+						type: 'pie',
+						dataSource: 'dispositions',
+						timeRange: 'daily',
+						color: '#050711',
+						position: {
+							x: 20,
+							y: 20,
+							width: 400,
+							height: 300
+						}
+					}
+				],
 			},
+		},
+		customerBookSettings: {
+			configuredFields: [
+				{ id: '1', name: 'Full Name', type: 'Text', required: true },
+				{ id: '2', name: 'Email', type: 'Email', required: true },
+				{ id: '3', name: 'Phone Number', type: 'Phone', required: true },
+			],
+		},
+		userManagementSettings: {
+			users: [],
+		},
+		roleManagementSettings: {
+			roles: [
+				{
+					id: 'administrator',
+					name: 'Administrator',
+					description: 'Full access to the system',
+					permissions: {
+						dashboard: true,
+						customerBook: true,
+						userManagement: true,
+						setupBook: true,
+						customerSMS: true,
+						report: true,
+						systemSetting: true,
+						auditLog: true,
+					}
+				}
+			],
+			modules: [
+				{ id: 'dashboard', name: 'Dashboard' },
+				{ id: 'customerBook', name: 'Customer Book' },
+				{ id: 'userManagement', name: 'User Management' },
+				{ id: 'setupBook', name: 'Setup Book' },
+				{ id: 'customerSMS', name: 'Customer SMS' },
+				{ id: 'report', name: 'Report' },
+				{ id: 'systemSetting', name: 'System Setting' },
+				{ id: 'auditLog', name: 'Audit Log' },
+			],
+		},
+		permissionAccessSettings: {
+			selectedRole: 'administrator', // Default to the first role from roleManagementSettings
+			rolePermissions: {
+				administrator: {},
+			},
+			permissionCategories: [
+				{
+					id: 'user-management',
+					name: 'User Management',
+					icon: 'User_alt_light',
+					permissions: [
+						{ id: 'create-users', name: 'Create Users', description: 'Ability to create new user accounts' },
+						{ id: 'edit-users', name: 'Edit Users', description: 'Ability to modify existing user accounts' },
+						{ id: 'delete-users', name: 'Delete Users', description: 'Ability to remove user accounts' },
+						{ id: 'view-users', name: 'View Users', description: 'Ability to view user information' },
+					],
+				},
+				{
+					id: 'customer-management',
+					name: 'Customer Management',
+					icon: 'Group_light',
+					permissions: [
+						{ id: 'create-customers', name: 'Create Customers', description: 'Ability to add new customers' },
+						{ id: 'edit-customers', name: 'Edit Customers', description: 'Ability to modify customer information' },
+						{ id: 'delete-customers', name: 'Delete Customers', description: 'Ability to remove customers' },
+						{ id: 'view-customers', name: 'View Customers', description: 'Ability to view customer data' },
+					],
+				},
+				{
+					id: 'dashboard-access',
+					name: 'Dashboard Access',
+					icon: 'darhboard',
+					permissions: [
+						{ id: 'view-dashboard', name: 'View Dashboard', description: 'Access to dashboard overview' },
+						{ id: 'export-data', name: 'Export Data', description: 'Ability to export dashboard data' },
+						{ id: 'customize-dashboard', name: 'Customize Dashboard', description: 'Ability to modify dashboard layout' },
+					],
+				},
+			],
 		},
 	});
 
@@ -156,6 +344,187 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			...prev,
 			dashboardSettings: {
 				...prev.dashboardSettings,
+				...data
+			}
+		}));
+	};
+
+	const addChart = (chart: Omit<Chart, 'id'>) => {
+		const newChart: Chart = {
+			...chart,
+			id: `chart-${Date.now()}`
+		};
+
+		// Calculate position to avoid overlap
+		const calculatePosition = (existingCharts: Chart[]) => {
+			const chartWidth = chart.position.width;
+			const chartHeight = chart.position.height;
+			const padding = 20;
+			const maxColumns = 2;
+
+			// Try to find an empty spot
+			for (let row = 0; row < 10; row++) {
+				for (let col = 0; col < maxColumns; col++) {
+					const x = col * (chartWidth + padding) + padding;
+					const y = row * (chartHeight + padding) + padding;
+
+					// Check if this position overlaps with existing charts
+					const overlaps = existingCharts.some(existingChart => {
+						const existing = existingChart.position;
+						return !(x >= existing.x + existing.width + padding ||
+							x + chartWidth + padding <= existing.x ||
+							y >= existing.y + existing.height + padding ||
+							y + chartHeight + padding <= existing.y);
+					});
+
+					if (!overlaps) {
+						return { x, y };
+					}
+				}
+			}
+
+			// Fallback: stack vertically
+			const maxY = Math.max(...existingCharts.map(c => c.position.y + c.position.height), 0);
+			return { x: padding, y: maxY + padding };
+		};
+
+		setSetupData(prev => {
+			const existingCharts = prev.dashboardSettings.dispositionSettings.charts;
+			const newPosition = calculatePosition(existingCharts);
+
+			const positionedChart: Chart = {
+				...newChart,
+				position: {
+					...newChart.position,
+					...newPosition
+				}
+			};
+
+			return {
+				...prev,
+				dashboardSettings: {
+					...prev.dashboardSettings,
+					dispositionSettings: {
+						...prev.dashboardSettings.dispositionSettings,
+						charts: [...existingCharts, positionedChart]
+					}
+				}
+			};
+		});
+	};
+
+	const removeChart = (chartId: string) => {
+		setSetupData(prev => ({
+			...prev,
+			dashboardSettings: {
+				...prev.dashboardSettings,
+				dispositionSettings: {
+					...prev.dashboardSettings.dispositionSettings,
+					charts: prev.dashboardSettings.dispositionSettings.charts.filter(chart => chart.id !== chartId)
+				}
+			}
+		}));
+	};
+
+	const updateChart = (chartId: string, updates: Partial<Chart>) => {
+		setSetupData(prev => ({
+			...prev,
+			dashboardSettings: {
+				...prev.dashboardSettings,
+				dispositionSettings: {
+					...prev.dashboardSettings.dispositionSettings,
+					charts: prev.dashboardSettings.dispositionSettings.charts.map(chart =>
+						chart.id === chartId ? { ...chart, ...updates } : chart
+					)
+				}
+			}
+		}));
+	};
+
+	const updateChartPosition = (chartId: string, position: { x: number; y: number; width: number; height: number }) => {
+		setSetupData(prev => ({
+			...prev,
+			dashboardSettings: {
+				...prev.dashboardSettings,
+				dispositionSettings: {
+					...prev.dashboardSettings.dispositionSettings,
+					charts: prev.dashboardSettings.dispositionSettings.charts.map(chart =>
+						chart.id === chartId ? { ...chart, position } : chart
+					)
+				}
+			}
+		}));
+	};
+
+	const updateChartsOrder = (newCharts: Chart[]) => {
+		setSetupData(prev => ({
+			...prev,
+			dashboardSettings: {
+				...prev.dashboardSettings,
+				dispositionSettings: {
+					...prev.dashboardSettings.dispositionSettings,
+					charts: newCharts
+				}
+			}
+		}));
+	};
+
+	const updateCustomerBookSettings = (data: Partial<SetupData['customerBookSettings']>) => {
+		setSetupData(prev => ({
+			...prev,
+			customerBookSettings: {
+				...prev.customerBookSettings,
+				...data
+			}
+		}));
+	};
+
+	const updateUserManagementSettings = (data: Partial<SetupData['userManagementSettings']>) => {
+		setSetupData(prev => ({
+			...prev,
+			userManagementSettings: {
+				...prev.userManagementSettings,
+				...data
+			}
+		}));
+	};
+
+	const updateRoleManagementSettings = (data: Partial<SetupData['roleManagementSettings']>) => {
+		setSetupData(prev => {
+			const updatedData = {
+				...prev,
+				roleManagementSettings: {
+					...prev.roleManagementSettings,
+					...data
+				}
+			};
+
+			// If roles were updated, sync rolePermissions
+			if (data.roles) {
+				const newRolePermissions: RolePermissions = {};
+				data.roles.forEach(role => {
+					newRolePermissions[role.id] = prev.permissionAccessSettings.rolePermissions[role.id] || {};
+				});
+
+				updatedData.permissionAccessSettings = {
+					...prev.permissionAccessSettings,
+					rolePermissions: newRolePermissions,
+					// If the currently selected role was removed, select the first available role
+					selectedRole: prev.permissionAccessSettings.selectedRole && data.roles.some(role => role.id === prev.permissionAccessSettings.selectedRole)
+						? prev.permissionAccessSettings.selectedRole
+						: data.roles[0]?.id || ''
+				};
+			}
+
+			return updatedData;
+		});
+	};
+
+	const updatePermissionAccessSettings = (data: Partial<SetupData['permissionAccessSettings']>) => {
+		setSetupData(prev => ({
+			...prev,
+			permissionAccessSettings: {
+				...prev.permissionAccessSettings,
 				...data
 			}
 		}));
@@ -249,6 +618,15 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		updateSetupData,
 		updateNavigationSettings,
 		updateDashboardSettings,
+		addChart,
+		removeChart,
+		updateChart,
+		updateChartPosition,
+		updateChartsOrder,
+		updateCustomerBookSettings,
+		updateUserManagementSettings,
+		updateRoleManagementSettings,
+		updatePermissionAccessSettings,
 		setupSteps,
 	};
 

@@ -22,6 +22,7 @@ interface EditUserModalProps {
 		phone: string;
 		role: string;
 	};
+	roleOptions: { value: string; label: string; }[];
 }
 
 export const EditUserModal: React.FC<EditUserModalProps> = ({
@@ -29,6 +30,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
 	onClose,
 	onSave,
 	userData,
+	roleOptions,
 }) => {
 	const [formData, setFormData] = React.useState({
 		firstName: '',
@@ -37,13 +39,6 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
 		phone: '',
 		role: '',
 	});
-
-	const roleOptions = [
-		{ value: 'administrator', label: 'Administrator' },
-		{ value: 'manager', label: 'Manager' },
-		{ value: 'user', label: 'User' },
-		{ value: 'viewer', label: 'Viewer' }
-	];
 
 	// Update form data when userData changes
 	React.useEffect(() => {

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import Input from '@/components/ui/Input';
-import Radio from '@/components/ui/Radio';
+import IndividualRadio from '@/components/ui/IndividualRadio';
 import Icon from '@/components/ui/Icon';
 import ColorPicker from '@/components/ui/ColorPicker';
 import { useSetup } from '@/contexts/SetupContext';
@@ -96,16 +96,19 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 			}}
 		>
 			<div
-				className="bg-white w-full max-w-lg mx-4"
+				className="bg-white w-full max-w-lg mx-4 max-h-[90vh] flex flex-col"
 				onClick={(e) => e.stopPropagation()}
 			>
-				<div className="flex justify-between items-center p-6 border-b border-gray-200">
+				{/* Fixed Header */}
+				<div className="flex justify-between items-center p-6 border-b border-gray-200 shrink-0">
 					<h2 className="font-inter text-lg font-semibold text-[#050711]">{title}</h2>
 					<button onClick={onClose} className="text-gray-400 hover:text-gray-600">
 						<Icon name="Close_round_light" size="lg" />
 					</button>
 				</div>
-				<div className="p-6 space-y-6">
+
+				{/* Scrollable Body */}
+				<div className="p-6 space-y-6 overflow-y-auto flex-1">
 					{/* Field Type */}
 					<Dropdown
 						label="Field Type"
@@ -164,14 +167,14 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 					<div>
 						<label className="font-inter text-sm font-medium text-[#050711] mb-3 block">Sort order preference</label>
 						<div className="space-y-2">
-							<Radio
+							<IndividualRadio
 								name="sortOrder"
 								value="entered"
 								checked={dispositionForm.sortOrder === 'entered'}
 								onChange={(value) => setDispositionForm(prev => ({ ...prev, sortOrder: value }))}
 								label="Entered Order"
 							/>
-							<Radio
+							<IndividualRadio
 								name="sortOrder"
 								value="alphabetical"
 								checked={dispositionForm.sortOrder === 'alphabetical'}
@@ -200,7 +203,9 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 						onChange={(color) => setDispositionForm(prev => ({ ...prev, color }))}
 					/>
 				</div>
-				<div className="flex justify-end gap-3 p-6">
+
+				{/* Fixed Footer */}
+				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 shrink-0">
 					<Button variant="outline" size="md" onClick={onClose}>Cancel</Button>
 					<Button variant="primary" size="md" onClick={onSave}>Save Disposition</Button>
 				</div>
@@ -268,9 +273,9 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 		],
 	};
 
-	// Render chart based on selected chart type
+	// Render chart based on dispositions data
 	const renderChart = () => {
-		if (!dispositionSettings.chartType || dispositions.length === 0) {
+		if (dispositions.length === 0) {
 			return (
 				<div className="h-64 flex flex-col items-center justify-center text-center">
 					<img
@@ -279,13 +284,10 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 						className="w-32 h-32 mb-4 opacity-60"
 					/>
 					<h3 className="font-inter text-base font-medium text-[#050711] mb-2">
-						{!dispositionSettings.chartType ? 'Select a Chart Type' : 'No Dispositions Configured'}
+						No Dispositions Configured
 					</h3>
 					<p className="font-lato text-sm text-gray-600">
-						{!dispositionSettings.chartType
-							? 'Choose a chart type from the settings above to view your data'
-							: 'Add disposition categories to see them visualized in your chart'
-						}
+						Add disposition categories to see them visualized in your chart
 					</p>
 				</div>
 			);
@@ -304,44 +306,8 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 			},
 		};
 
-		switch (dispositionSettings.chartType) {
-			case 'bar':
-				return <Bar data={chartData} options={commonOptions} />;
-			case 'line':
-				return <Line data={chartData} options={commonOptions} />;
-			case 'pie':
-				return <Pie data={chartData} options={commonOptions} />;
-			case 'doughnut':
-				return <Doughnut data={chartData} options={commonOptions} />;
-			case 'polarArea':
-				return <PolarArea data={chartData} options={commonOptions} />;
-			case 'radar':
-				return <Radar data={chartData} options={commonOptions} />;
-			case 'scatter':
-				// Scatter charts need different data format
-				const scatterData = {
-					datasets: dispositions.map((disposition, index) => ({
-						label: disposition.name,
-						data: [{ x: index, y: Math.floor(Math.random() * 100) + 10 }],
-						backgroundColor: disposition.color,
-						borderColor: disposition.color,
-					})),
-				};
-				return <Scatter data={scatterData} options={commonOptions} />;
-			case 'bubble':
-				// Bubble charts need different data format
-				const bubbleData = {
-					datasets: dispositions.map((disposition, index) => ({
-						label: disposition.name,
-						data: [{ x: index, y: Math.floor(Math.random() * 100) + 10, r: 15 }],
-						backgroundColor: disposition.color,
-						borderColor: disposition.color,
-					})),
-				};
-				return <Bubble data={bubbleData} options={commonOptions} />;
-			default:
-				return <Bar data={chartData} options={commonOptions} />;
-		}
+		// Default to pie chart for disposition visualization
+		return <Pie data={chartData} options={commonOptions} />;
 	};
 
 	const handleAddDisposition = () => {
@@ -478,20 +444,6 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 									}
 								})}
 								options={timeRangeOptions}
-							/>
-						</div>
-						<div>
-							<Dropdown
-								label="Chart Type"
-								value={dispositionSettings.chartType}
-								onChange={(value) => updateDashboardSettings({
-									dispositionSettings: {
-										...dispositionSettings,
-										chartType: value as 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble' | ''
-									}
-								})}
-								placeholder="Select chart type"
-								options={chartTypeOptions}
 							/>
 						</div>
 					</div>

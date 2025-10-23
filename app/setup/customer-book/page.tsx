@@ -26,12 +26,8 @@ interface FieldType {
 }
 
 export default function CustomerBookPage() {
-	const { setupData, updateSetupData } = useSetup();
-	const [configuredFields, setConfiguredFields] = useState<CustomerField[]>([
-		{ id: '1', name: 'Full Name', type: 'Text', required: true },
-		{ id: '2', name: 'Email', type: 'Email', required: true },
-		{ id: '3', name: 'Phone Number', type: 'Phone', required: true },
-	]);
+	const { setupData, updateCustomerBookSettings } = useSetup();
+	const { customerBookSettings } = setupData;
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [selectedFieldType, setSelectedFieldType] = useState<string>('text');
 
@@ -49,7 +45,9 @@ export default function CustomerBookPage() {
 	];
 
 	const handleDeleteField = (fieldId: string) => {
-		setConfiguredFields(prev => prev.filter(field => field.id !== fieldId));
+		updateCustomerBookSettings({
+			configuredFields: customerBookSettings.configuredFields.filter(field => field.id !== fieldId)
+		});
 	};
 
 	const handleAddField = (fieldType: FieldType) => {
@@ -64,7 +62,9 @@ export default function CustomerBookPage() {
 			type: fieldData.type,
 			required: fieldData.required,
 		};
-		setConfiguredFields(prev => [...prev, newField]);
+		updateCustomerBookSettings({
+			configuredFields: [...customerBookSettings.configuredFields, newField]
+		});
 	};
 
 	const renderFieldPreview = (fieldType: FieldType) => {
@@ -235,8 +235,8 @@ export default function CustomerBookPage() {
 							</tr>
 						</thead>
 						<tbody>
-							{configuredFields.map((field, index) => (
-								<tr key={field.id} className={index !== configuredFields.length - 1 ? 'border-b border-[#E5E7EB]' : ''}>
+							{customerBookSettings.configuredFields.map((field, index) => (
+								<tr key={field.id} className={index !== customerBookSettings.configuredFields.length - 1 ? 'border-b border-[#E5E7EB]' : ''}>
 									<td className="py-4 px-6 font-inter text-sm text-[#050711]">{field.name}</td>
 									<td className="py-4 px-6 font-inter text-sm text-gray-600">{field.type}</td>
 									<td className="py-4 px-6">

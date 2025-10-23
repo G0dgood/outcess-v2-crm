@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
 import Toggle from '@/components/ui/Toggle';
 import Icon from '@/components/ui/Icon';
+import { useSetup } from '@/contexts/SetupContext';
 
 interface Permission {
 	id: string;
@@ -28,147 +29,32 @@ interface RolePermissions {
 
 export default function PermissionAccessLevelsPage() {
 	const router = useRouter();
-	const [selectedRole, setSelectedRole] = useState<'admin' | 'supervisor' | 'agent'>('admin');
-	const [rolePermissions, setRolePermissions] = useState<RolePermissions>({
-		admin: {},
-		supervisor: {},
-		agent: {},
-	});
+	const { setupData, updatePermissionAccessSettings } = useSetup();
+	const { permissionAccessSettings, roleManagementSettings } = setupData;
 
-	const permissionCategories: PermissionCategory[] = [
-		{
-			id: 'user-management',
-			name: 'User Management',
-			icon: 'User_alt_light',
-			permissions: [
-				{
-					id: 'create-users',
-					name: 'Create Users',
-					description: 'Ability to create new user accounts'
-				},
-				{
-					id: 'edit-users',
-					name: 'Edit Users',
-					description: 'Modify existing user profiles and settings'
-				},
-				{
-					id: 'delete-users',
-					name: 'Delete Users',
-					description: 'Remove user accounts from the system'
-				},
-				{
-					id: 'view-users',
-					name: 'View Users',
-					description: 'View user profiles and information'
-				},
-				{
-					id: 'reset-passwords',
-					name: 'Reset Passwords',
-					description: 'Reset user passwords and send recovery emails'
-				}
-			]
-		},
-		{
-			id: 'system-configuration',
-			name: 'System Configuration',
-			icon: 'Setting_line_light',
-			permissions: [
-				{
-					id: 'system-settings',
-					name: 'System Settings',
-					description: 'Modify system-wide configurations'
-				},
-				{
-					id: 'security-settings',
-					name: 'Security Settings',
-					description: 'Configure security parameters'
-				},
-				{
-					id: 'log-access',
-					name: 'Log Access',
-					description: 'View and export system logs'
-				}
-			]
-		},
-		{
-			id: 'dashboard',
-			name: 'Dashboard',
-			icon: 'darhboard',
-			permissions: [
-				{
-					id: 'create-widget',
-					name: 'Create Widget',
-					description: 'Ability to create new widget'
-				},
-				{
-					id: 'edit-widget',
-					name: 'Edit Widget',
-					description: 'Modify existing widget'
-				},
-				{
-					id: 'delete-widget',
-					name: 'Delete Widget',
-					description: 'Remove widget from the system'
-				},
-				{
-					id: 'view-widget',
-					name: 'View Widget',
-					description: 'View dashboard widgets'
-				},
-				{
-					id: 'configure-dashboard',
-					name: 'Configure Dashboard',
-					description: 'Ability to configure dashboard'
-				}
-			]
-		},
-		{
-			id: 'customer-book',
-			name: 'Customer Book',
-			icon: 'Group_light',
-			permissions: [
-				{
-					id: 'view-customer-list',
-					name: 'View Customer List',
-					description: 'Ability to view customer list'
-				},
-				{
-					id: 'add-new-customer',
-					name: 'Add New Customer',
-					description: 'Ability to add new customer'
-				},
-				{
-					id: 'edit-customer-details',
-					name: 'Edit Customer Details',
-					description: 'Modify existing customer details'
-				},
-				{
-					id: 'delete-customer',
-					name: 'Delete Customer',
-					description: 'Remove customer from the system'
-				}
-			]
-		}
-	];
-
-	const roles = [
-		{ id: 'admin', name: 'Admin' },
-		{ id: 'supervisor', name: 'Supervisor' },
-		{ id: 'agent', name: 'Agent' }
-	];
+	const handleRoleChange = (roleId: string) => {
+		updatePermissionAccessSettings({
+			selectedRole: roleId
+		});
+	};
 
 	const handlePermissionChange = (permissionId: string, enabled: boolean) => {
-		setRolePermissions(prev => ({
-			...prev,
-			[selectedRole]: {
-				...prev[selectedRole],
+		const currentRolePermissions = permissionAccessSettings.rolePermissions[permissionAccessSettings.selectedRole] || {};
+		const updatedRolePermissions = {
+			...permissionAccessSettings.rolePermissions,
+			[permissionAccessSettings.selectedRole]: {
+				...currentRolePermissions,
 				[permissionId]: enabled
 			}
-		}));
+		};
+
+		updatePermissionAccessSettings({
+			rolePermissions: updatedRolePermissions
+		});
 	};
 
 	const handleSaveChanges = () => {
-		console.log('Saving permission changes:', rolePermissions);
+		console.log('Saving permission changes:', permissionAccessSettings.rolePermissions);
 		// TODO: Implement save functionality
 		router.back();
 	};
@@ -192,12 +78,12 @@ export default function PermissionAccessLevelsPage() {
 				</div>
 
 				{/* Role Tabs */}
-				<div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
-					{roles.map((role) => (
+				<div className="flex gap-1 bg-gray-200 p-1   w-fit">
+					{roleManagementSettings.roles.map((role) => (
 						<button
 							key={role.id}
-							onClick={() => setSelectedRole(role.id as 'admin' | 'supervisor' | 'agent')}
-							className={`px-4 py-2 rounded-md   font-medium transition-colors font-lato text-base leading-[150%] text-[#3A4050] ${selectedRole === role.id
+							onClick={() => handleRoleChange(role.id)}
+							className={`px-4 py-2 cursor-pointer  font-medium transition-colors font-lato text-base leading-[150%] text-[#3A4050] ${permissionAccessSettings.selectedRole === role.id
 								? 'bg-[#050711] text-white'
 								: 'text-gray-600 hover:text-gray-900'
 								}`}
@@ -210,7 +96,7 @@ export default function PermissionAccessLevelsPage() {
 
 			{/* Permission Categories */}
 			<div className="space-y-6">
-				{permissionCategories.map((category) => (
+				{permissionAccessSettings.permissionCategories.map((category) => (
 					<div key={category.id} className="bg-white border border-gray-200 ">
 						<div className="p-6 border-b border-gray-200">
 							<div className="flex items-center gap-3">
@@ -220,7 +106,6 @@ export default function PermissionAccessLevelsPage() {
 								<h2 className="font-inter text-lg font-semibold text-[#050711]">{category.name}</h2>
 							</div>
 						</div>
-
 						<div className="p-6 space-y-4">
 							{category.permissions.map((permission) => (
 								<div key={permission.id} className="grid grid-cols-2 items-center justify-between">
@@ -230,7 +115,7 @@ export default function PermissionAccessLevelsPage() {
 									</div>
 									<div className="col-span-1">
 										<Toggle
-											checked={rolePermissions[selectedRole]?.[permission.id] || false}
+											checked={permissionAccessSettings.rolePermissions[permissionAccessSettings.selectedRole]?.[permission.id] || false}
 											onChange={(enabled) => handlePermissionChange(permission.id, enabled)}
 										/>
 									</div>
@@ -242,7 +127,7 @@ export default function PermissionAccessLevelsPage() {
 			</div>
 
 			{/* Action Buttons */}
-			<div className="flex justify-end gap-3 mt-8 pb-8">
+			<div className="flex justify-end gap-3 mt-8">
 				<Button
 					variant="outline"
 					size="md"
@@ -255,7 +140,7 @@ export default function PermissionAccessLevelsPage() {
 					size="md"
 					onClick={handleSaveChanges}
 				>
-					Save Change
+					Save Changes
 				</Button>
 			</div>
 		</div>

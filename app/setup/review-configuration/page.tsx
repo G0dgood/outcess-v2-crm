@@ -2,13 +2,25 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import Button from '@/components/ui/Button';
 import Icon from '@/components/ui/Icon';
 import { useSetup } from '@/contexts/SetupContext';
 
-export default function ReviewConfigurationPage() {
+interface ConfigurationDetail {
+	label: string;
+	value: string;
+}
+
+interface ConfigurationCard {
+	id: string;
+	title: string;
+	icon: string;
+	step: number;
+	details: ConfigurationDetail[];
+}
+
+export default function ReviewConfigurationPage(): React.JSX.Element {
 	const router = useRouter();
-	const { setupData } = useSetup();
+	const { setupData, setCurrentStep } = useSetup();
 
 	const handleSubmitForApproval = () => {
 		console.log('Submitting CRM configuration for approval:', setupData);
@@ -18,45 +30,20 @@ export default function ReviewConfigurationPage() {
 
 	const handleEditStep = (step: number) => {
 		// Navigate back to specific step for editing
-		router.push(`/setup?step=${step}`);
+		setCurrentStep(step);
 	};
 
-	const configurationCards = [
+	const configurationCards: ConfigurationCard[] = [
 		{
 			id: 'basic-setup',
 			title: 'Basic Setup',
 			icon: 'Setting_line_light',
 			step: 1,
 			details: [
-				{ label: 'Company Name', value: setupData.companyName || 'TechCorp Solutions' },
-				{ label: 'Industry', value: setupData.industry || 'Communication' },
-				{ label: 'Time Zone', value: setupData.timeZone || 'UTC-5 (Eastern Time)' },
-				{ label: 'Size', value: setupData.businessSize || '50-100' }
-			]
-		},
-		{
-			id: 'dashboard',
-			title: 'Dashboard',
-			icon: 'darhboard',
-			step: 3,
-			details: [
-				{ label: 'Widgets', value: '3 Configured' },
-				{ label: 'Disposition', value: '10 configured' },
-				{ label: 'Disposition Time Range View', value: 'Daily' },
-				{ label: 'Disposition Chart Type', value: 'Pie Chart' }
-			]
-		},
-		{
-			id: 'user-management',
-			title: 'User Management',
-			icon: 'User_alt_light',
-			step: 5,
-			details: [
-				{ label: 'User Roles', value: '3 Defined' },
-				{ label: 'Created Roles', value: '1 Created' },
-				{ label: 'Users Added', value: '6 Created' },
-				{ label: 'Permission Access Levels', value: '20 Granted' },
-				{ label: 'Module Permission Overview', value: '6 Granted' }
+				{ label: 'Company Name', value: setupData.companyName || 'Not configured' },
+				{ label: 'Industry', value: setupData.industry || 'Not configured' },
+				{ label: 'Time Zone', value: setupData.timeZone || 'Not configured' },
+				{ label: 'Size', value: setupData.businessSize || 'Not configured' }
 			]
 		},
 		{
@@ -65,9 +52,25 @@ export default function ReviewConfigurationPage() {
 			icon: 'darhboard',
 			step: 2,
 			details: [
-				{ label: 'Menu Layout', value: setupData.selectedLayout === 'layout' ? 'Layout Style' : 'Compact' },
-				{ label: 'Logo Size', value: '180x40px' },
-				{ label: 'Theme color', value: `Primary: ${setupData.primaryColor || '#003399'} Secondary: ${setupData.secondaryColor || '#FF6600'}` }
+				{ label: 'Menu Layout', value: setupData.navigationSettings.menuStyle || 'Not configured' },
+				{ label: 'Primary Color', value: setupData.primaryColor || 'Not configured' },
+				{ label: 'Secondary Color', value: setupData.secondaryColor || 'Not configured' },
+				{ label: 'Logo', value: setupData.navigationSettings.logo ? 'Uploaded' : 'Not uploaded' }
+			]
+		},
+		{
+			id: 'dashboard',
+			title: 'Dashboard',
+			icon: 'darhboard',
+			step: 3,
+			details: [
+				{ label: 'Dashboard Name', value: setupData.dashboardSettings.dashboardName || 'Not configured' },
+				{ label: 'Visibility', value: setupData.dashboardSettings.dashboardVisibility || 'Not configured' },
+				{ label: 'Widgets', value: `${setupData.dashboardSettings.widgets.length} configured` },
+				{ label: 'Dispositions', value: `${setupData.dashboardSettings.dispositions.length} configured` },
+				{ label: 'Call Outcomes', value: `${setupData.dashboardSettings.callOutcomes.length} configured` },
+				{ label: 'Charts', value: `${setupData.dashboardSettings.dispositionSettings.charts.length} configured` },
+				{ label: 'Time Range View', value: setupData.dashboardSettings.dispositionSettings.timeRangeView || 'Not configured' }
 			]
 		},
 		{
@@ -76,8 +79,21 @@ export default function ReviewConfigurationPage() {
 			icon: 'Group_light',
 			step: 4,
 			details: [
-				{ label: 'Custom Fields', value: '6 Added' },
-				{ label: 'Required Fields', value: '4 Set' }
+				{ label: 'Custom Fields', value: `${setupData.customerBookSettings.configuredFields.length} added` },
+				{ label: 'Required Fields', value: `${setupData.customerBookSettings.configuredFields.filter(field => field.required).length} set` }
+			]
+		},
+		{
+			id: 'user-management',
+			title: 'User Management',
+			icon: 'User_alt_light',
+			step: 5,
+			details: [
+				{ label: 'Roles Defined', value: `${setupData.roleManagementSettings.roles.length} roles` },
+				{ label: 'Users Added', value: `${setupData.userManagementSettings.users.length} users` },
+				{ label: 'Modules', value: `${setupData.roleManagementSettings.modules.length} modules` },
+				{ label: 'Permission Categories', value: `${setupData.permissionAccessSettings.permissionCategories.length} categories` },
+				{ label: 'Selected Role', value: setupData.permissionAccessSettings.selectedRole || 'Not selected' }
 			]
 		}
 	];
@@ -122,7 +138,6 @@ export default function ReviewConfigurationPage() {
 					</div>
 				))}
 			</div>
-
 		</div>
 	);
 }
