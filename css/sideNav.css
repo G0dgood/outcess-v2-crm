@@ -1,0 +1,16 @@
+#side-nav { 
+  position: relative;
+  grid-area: sidenav  ;  
+}
+ 
+
+ 
+
+/* Media query for small screens */
+@media screen and (max-width: 768px) {
+  
+  #side-nav {
+    display: none !important;
+  }
+
+	}

@@ -1,0 +1,18 @@
+#header {
+  grid-area: header;
+  background: var(--accent-white);  
+  padding: 1rem 72px; 
+  border-bottom: 1px solid rgba(28, 28, 28, 0.1) ; 
+   display: block ;
+}
+
+  
+
+/* Media query for small screens */
+@media screen and (max-width: 1080px) {
+   #header {
+  grid-area: header; 
+   padding:  0px 1rem !important; 
+}
+}
+  

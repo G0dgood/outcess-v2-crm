@@ -1,0 +1,195 @@
+'use client';
+
+import React, { useState, useRef } from 'react';
+import Icon from './Icon';
+
+interface LogoUploadProps {
+	label?: string;
+	onFileSelect?: (file: File | null) => void;
+	acceptedTypes?: string[];
+	maxSize?: number; // in MB
+	minDimensions?: { width: number; height: number };
+	className?: string;
+	disabled?: boolean;
+	error?: string;
+	value?: File | string | null; // File object, URL string, or null
+}
+
+export const LogoUpload: React.FC<LogoUploadProps> = ({
+	label = 'Logo',
+	onFileSelect,
+	acceptedTypes = ['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg'],
+	maxSize = 5, // 5MB default
+	minDimensions = { width: 174, height: 28 },
+	className = '',
+	disabled = false,
+	error,
+	value
+}) => {
+	const [isDragOver, setIsDragOver] = useState(false);
+	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	// Handle file validation
+	const validateFile = (file: File): string | null => {
+		// Check file type
+		if (!acceptedTypes.includes(file.type)) {
+			return `File type not supported. Please upload ${acceptedTypes.map(type => type.split('/')[1].toUpperCase()).join(', ')} files.`;
+		}
+
+		// Check file size
+		if (file.size > maxSize * 1024 * 1024) {
+			return `File size must be less than ${maxSize}MB.`;
+		}
+
+		return null;
+	};
+
+	// Handle file selection
+	const handleFileSelect = (file: File) => {
+		const validationError = validateFile(file);
+		if (validationError) {
+			// You could show a toast or set an error state here
+			console.error(validationError);
+			return;
+		}
+
+		// Create preview URL
+		const url = URL.createObjectURL(file);
+		setPreviewUrl(url);
+
+		// Call the callback
+		onFileSelect?.(file);
+	};
+
+	// Handle input change
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (file) {
+			handleFileSelect(file);
+		}
+	};
+
+	// Handle drag and drop
+	const handleDragOver = (e: React.DragEvent) => {
+		e.preventDefault();
+		if (!disabled) {
+			setIsDragOver(true);
+		}
+	};
+
+	const handleDragLeave = (e: React.DragEvent) => {
+		e.preventDefault();
+		setIsDragOver(false);
+	};
+
+	const handleDrop = (e: React.DragEvent) => {
+		e.preventDefault();
+		setIsDragOver(false);
+
+		if (disabled) return;
+
+		const files = Array.from(e.dataTransfer.files);
+		const file = files[0];
+		if (file) {
+			handleFileSelect(file);
+		}
+	};
+
+	// Handle click to open file dialog
+	const handleClick = () => {
+		if (!disabled) {
+			fileInputRef.current?.click();
+		}
+	};
+
+	// Handle remove file
+	const handleRemove = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		setPreviewUrl(null);
+		onFileSelect?.(null);
+		if (fileInputRef.current) {
+			fileInputRef.current.value = '';
+		}
+	};
+
+	// Get file type description
+	const getFileTypeDescription = () => {
+		const types = acceptedTypes.map(type => type.split('/')[1].toUpperCase());
+		return `${types.join(', ')} (min. ${minDimensions.width}w x ${minDimensions.height}h and less than ${maxSize}MB)`;
+	};
+
+	return (
+		<div className={`logo-upload-container ${className}`}>
+			{label && (
+				<label className="font-inter text-base font-medium text-[#050711] mb-4 block">
+					{label}
+				</label>
+			)}
+
+			<div
+				className={`border-2 border-dashed transition-colors cursor-pointer ${isDragOver
+						? 'border-blue-400 bg-blue-50'
+						: error
+							? 'border-red-300 bg-red-50'
+							: 'border-gray-300 hover:border-gray-400'
+					} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+				onClick={handleClick}
+				onDragOver={handleDragOver}
+				onDragLeave={handleDragLeave}
+				onDrop={handleDrop}
+			>
+				{previewUrl ? (
+					<div className="p-4 text-center">
+						<div className="relative inline-block">
+							<img
+								src={previewUrl}
+								alt="Logo preview"
+								className="max-h-16 max-w-48 object-contain"
+							/>
+							{!disabled && (
+								<button
+									type="button"
+									onClick={handleRemove}
+									className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+								>
+									×
+								</button>
+							)}
+						</div>
+						<p className="font-inter text-sm text-gray-600 mt-2">Click to change logo</p>
+					</div>
+				) : (
+					<div className="p-8 text-center">
+						<div className="flex flex-col items-center">
+							<div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+								<Icon name="upload-cloud" />
+							</div>
+							<p className="font-inter text-sm font-medium text-[#050711] mb-1">
+								Click to upload or drag and drop
+							</p>
+							<p className="font-lato text-xs text-gray-600">
+								{getFileTypeDescription()}
+							</p>
+						</div>
+					</div>
+				)}
+			</div>
+
+			<input
+				ref={fileInputRef}
+				type="file"
+				accept={acceptedTypes.join(',')}
+				onChange={handleInputChange}
+				className="hidden"
+				disabled={disabled}
+			/>
+
+			{error && (
+				<p className="font-lato text-sm text-red-600 mt-2">{error}</p>
+			)}
+		</div>
+	);
+};
+
+export default LogoUpload;

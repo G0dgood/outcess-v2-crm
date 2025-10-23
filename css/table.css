@@ -1,0 +1,75 @@
+.table-container{
+ overflow: auto !important;  
+}
+ 
+.table {
+  width: 100%; 
+  margin-bottom: 2rem;
+  background-color: var(--white);
+}
+ 
+.table > thead > tr > th,
+.table > tbody > tr > th,
+.table > tfoot > tr > th,
+.table > thead > tr > td,
+.table > tbody > tr > td,
+.table > tfoot > tr > td {
+  text-align: left;
+  padding: 1rem 1.5rem; /* py-4 px-6 equivalent */
+  vertical-align: top;
+  border-top: 0;
+  -webkit-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+/* Specific table styles for NewApplicants component */
+.new-applicants-table th,
+.new-applicants-table td {
+  padding: 1rem 1.5rem; /* py-4 px-6 equivalent */
+  text-align: left;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.new-applicants-table th {
+  font-weight: 600;
+  font-size: 0.875rem; /* text-sm */
+  color: var(--text-primary);
+}
+
+.new-applicants-table tbody tr:nth-child(even) {
+  background-color: var(--card-bg);
+}
+
+.new-applicants-table tbody tr:nth-child(odd) {
+  background-color: var(--hover-bg);
+}
+
+.new-applicants-table tbody tr:hover {
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+ 
+ 
+#table-loader { 
+  color: var(--gray-light); 
+  padding-top: 5rem  ;
+  padding-bottom: 5rem ;   
+}
+#table-loader p {
+  color: var(--gray-light);
+}
+
+
+@media (max-width: 768px) {
+  .pageEntries {
+    display: none;
+  }
+}
+
+#table-loader{
+  display: flex;
+  justify-content: center;
+  align-items: center; 
+  width: 100%  
+}
