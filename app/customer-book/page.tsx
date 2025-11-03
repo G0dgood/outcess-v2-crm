@@ -2,10 +2,14 @@
 
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
 import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
+import PageHeading from '@/components/ui/PageHeading';
+import Search from '@/components/ui/Search';
 import { useSetup } from '@/contexts/SetupContext';
+import AddCustomerModal from '@/components/ui/AddCustomerModal';
+import CustomerDetailsModal from '@/components/ui/CustomerDetailsModal';
+import { ArrowRightIcon } from '@radix-ui/react-icons';
 
 interface Customer {
 	id: string;
@@ -19,7 +23,9 @@ const CustomerBookPage: React.FC = () => {
 	const { setupData } = useSetup();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
-	const [customers] = useState<Customer[]>([
+	const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
+	const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+	const [customers, setCustomers] = useState<Customer[]>([
 		{
 			id: '1',
 			firstName: 'Jane',
@@ -44,8 +50,26 @@ const CustomerBookPage: React.FC = () => {
 	);
 
 	const handleAddCustomer = () => {
-		console.log('Add Customer clicked');
-		// Implement add customer functionality
+		setIsAddCustomerModalOpen(true);
+	};
+
+	const handleSaveCustomer = (customerData: {
+		firstName: string;
+		lastName: string;
+		email: string;
+		phone: string;
+	}) => {
+		const newCustomer: Customer = {
+			id: Date.now().toString(),
+			...customerData,
+		};
+		setCustomers(prevCustomers => [...prevCustomers, newCustomer]);
+		setIsAddCustomerModalOpen(false);
+	};
+
+	const handleAddFields = () => {
+		console.log('Add Fields clicked');
+		// Implement add fields logic here
 	};
 
 	const handleImport = () => {
@@ -53,58 +77,48 @@ const CustomerBookPage: React.FC = () => {
 		// Implement import functionality
 	};
 
-	const handleAddField = () => {
-		console.log('Add Field clicked');
-		// Implement add field functionality
+	const handleViewCustomer = (customerId: string) => {
+		const customer = customers.find(c => c.id === customerId);
+		if (customer) {
+			setSelectedCustomer(customer);
+		}
 	};
+
+
 
 	const totalPages = 10;
 
 	return (
 		<div>
-			<div className="flex items-center justify-between ">
-				<h1 className="font-lato font-medium text-[16px] leading-[150%] text-[#3A4050]">Customer Book</h1>
+			{/* Title */}
+			<PageHeading
+				text="Customer Book"
+			/>
+
+			{/* Search Bar */}
+			<div className="my-6 flex items-center justify-between">
+				<Search
+					placeholder="Search"
+					value={searchTerm}
+					onChange={(value) => setSearchTerm(value)}
+				/>
 				<div className="flex items-center gap-3">
 					<Button
-						variant="outline"
+						variant="muted-sage-green-outline"
 						size="md"
 						onClick={handleAddCustomer}
-						className="bg-orange-500 text-white border-orange-500 hover:bg-orange-600"
 					>
 						Add Customer
 					</Button>
 					<Button
-						variant="outline"
+						variant="primary"
 						size="md"
 						onClick={handleImport}
-						className="bg-blue-500 text-white border-blue-500 hover:bg-blue-600 flex items-center gap-2"
+						className="bg-(--primary) text-white border-(--primary) hover:bg-(--primary)/90 flex items-center gap-2"
 					>
-						<Icon name="External_link_light" size="sm" />
 						Import
+						<Icon name="share" size="sm" />
 					</Button>
-				</div>
-			</div>
-			{/* Description */}
-			<div className="mb-6">
-				<p className="font-lato font-normal text-[14px] leading-[150%] text-[#6D7280]">
-					Consolidate all your customer information in the Customer Book, a single, comprehensive database.
-				</p>
-			</div>
-
-			{/* Search Bar */}
-			<div className="mb-6">
-				<div className="relative max-w-md">
-					<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-						<Icon name="Search_light" size="sm" className="text-gray-400" />
-					</div>
-					<Input
-						label=""
-						type="text"
-						placeholder="Search"
-						value={searchTerm}
-						onChange={(value) => setSearchTerm(value)}
-						className="pl-10"
-					/>
 				</div>
 			</div>
 
@@ -114,48 +128,35 @@ const CustomerBookPage: React.FC = () => {
 					<table className="min-w-full divide-y divide-gray-200">
 						<thead className="bg-gray-50">
 							<tr>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th>
 									<div className="flex items-center gap-2">
 										First Name
 										<Icon name="Question_mark_light" size="sm" className="text-gray-400" />
 									</div>
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-									Last Name
-								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-									Email
-								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-									Phone
-								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-									<button
-										onClick={handleAddField}
-										className="text-blue-600 hover:text-blue-800 font-medium"
-									>
-										Add Field
-									</button>
-								</th>
+								<th>Last Name</th>
+								<th>Email</th>
+								<th>Phone</th>
+								<th>Actions</th>
 							</tr>
 						</thead>
 						<tbody className="bg-white divide-y divide-gray-200">
 							{filteredCustomers.map((customer) => (
 								<tr key={customer.id} className="hover:bg-gray-50">
-									<td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+									<td className="font-medium text-gray-900">
 										{customer.firstName}
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-										{customer.lastName}
-									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-										{customer.email}
-									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-										{customer.phone}
-									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-										{/* Empty cell for Add Field column */}
+									<td>{customer.lastName}</td>
+									<td>{customer.email}</td>
+									<td>{customer.phone}</td>
+									<td>
+										<button
+											onClick={() => handleViewCustomer(customer.id)}
+											className="p-2 text-gray-600 hover:text-(--muted-sage-green) hover:bg-(--interactive-secondary)/10  transition-colors cursor-pointer"
+											title="View Customer"
+										>
+											<ArrowRightIcon className="w-5 h-5" />
+										</button>
 									</td>
 								</tr>
 							))}
@@ -165,17 +166,30 @@ const CustomerBookPage: React.FC = () => {
 			</div>
 
 			{/* Pagination */}
-			<div className="mt-6">
-				<Pagination
-					currentPage={currentPage}
-					totalPages={totalPages}
-					onPageChange={setCurrentPage}
-					showEllipsis={true}
-					maxVisiblePages={5}
-					primaryColor={setupData.primaryColor}
-					secondaryColor={setupData.secondaryColor}
-				/>
-			</div>
+			<Pagination
+				currentPage={currentPage}
+				totalPages={totalPages}
+				onPageChange={setCurrentPage}
+				showEllipsis={true}
+				maxVisiblePages={5}
+				primaryColor={setupData.primaryColor}
+				secondaryColor={setupData.secondaryColor}
+			/>
+
+			{/* Add Customer Modal */}
+			<AddCustomerModal
+				isOpen={isAddCustomerModalOpen}
+				onClose={() => setIsAddCustomerModalOpen(false)}
+				onSave={handleSaveCustomer}
+				onAddFields={handleAddFields}
+			/>
+
+			{/* Customer Details Modal */}
+			<CustomerDetailsModal
+				isOpen={!!selectedCustomer}
+				onClose={() => setSelectedCustomer(null)}
+				customer={selectedCustomer}
+			/>
 		</div>
 	);
 };

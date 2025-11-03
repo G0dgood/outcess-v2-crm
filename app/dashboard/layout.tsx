@@ -1,12 +1,22 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
 import DashboardHeader from "@/components/ui/DashboardHeader";
 import DashboardSideNav from "@/components/ui/DashboardSideNav";
+import MobileSideNav from "@/components/ui/MobileSideNav";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const { setupData } = useSetup();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
 
 
 
@@ -33,9 +43,23 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           console.log('Logout clicked');
           // Add logout logic here
         }}
+        onMobileMenuToggle={toggleMobileMenu}
       />
 
-      <DashboardSideNav activeItem="dashboard" />
+      {/* Desktop SideNav */}
+      <DashboardSideNav
+        activeItem="dashboard"
+        isMobileOpen={false}
+        onMobileClose={() => { }}
+      />
+
+      {/* Mobile SideNav */}
+      <MobileSideNav
+        activeItem="dashboard"
+        isOpen={isMobileMenuOpen}
+        onClose={closeMobileMenu}
+      />
+
       <main>{children}</main>
 
     </div>

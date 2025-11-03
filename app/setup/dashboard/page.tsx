@@ -43,7 +43,7 @@ export default function DashboardPage(): React.JSX.Element {
 							onChange={(value) => updateDashboardSettings({ dashboardName: value })}
 						/>
 					</div>
-					<div>
+					{/* <div>
 						<label className="font-inter text-sm font-medium text-[#050711] mb-2 block">Who can see this dashboard</label>
 						<div className="space-y-2">
 							{visibilityOptions.map((option) => (
@@ -57,7 +57,7 @@ export default function DashboardPage(): React.JSX.Element {
 								/>
 							))}
 						</div>
-					</div>
+					</div> */}
 				</div>
 			</div>
 

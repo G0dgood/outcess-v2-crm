@@ -1,0 +1,163 @@
+'use client';
+
+import React, { useRef, useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useSetup } from '@/contexts/SetupContext';
+import {
+	DashboardIcon,
+	BackpackIcon,
+	ClockIcon,
+	GearIcon,
+} from '@radix-ui/react-icons';
+
+interface AdminSideNavProps {
+	activeItem?: string;
+	onItemClick?: (item: string) => void;
+	className?: string;
+	isMobileOpen?: boolean;
+	onMobileClose?: () => void;
+}
+
+interface NavItem {
+	id: string;
+	label: string;
+	icon: React.ReactNode;
+	path: string;
+}
+
+const AdminSideNav: React.FC<AdminSideNavProps> = ({
+	activeItem = 'dashboard',
+	onItemClick,
+	className = '',
+	isMobileOpen = false,
+	onMobileClose,
+}) => {
+	const router = useRouter();
+	const pathname = usePathname();
+	const { setupData } = useSetup();
+	const navRef = useRef<HTMLElement>(null);
+
+	const navItems: NavItem[] = [
+		{
+			id: 'dashboard',
+			label: 'Dashboard',
+			icon: <DashboardIcon className="w-5 h-5" />,
+			path: '/admin/dashboard',
+		},
+		{
+			id: 'businesses-management',
+			label: 'Businesses Management',
+			icon: <BackpackIcon className="w-5 h-5" />,
+			path: '/admin/businesses',
+		},
+		{
+			id: 'pending-request',
+			label: 'Pending Request',
+			icon: <ClockIcon className="w-5 h-5" />,
+			path: '/admin/pending-request',
+		},
+		{
+			id: 'settings',
+			label: 'Settings',
+			icon: <GearIcon className="w-5 h-5" />,
+			path: '/admin/settings',
+		},
+	];
+
+	const handleItemClick = (item: NavItem, e?: React.MouseEvent) => {
+		if (onItemClick) {
+			onItemClick(item.id);
+		} else {
+			router.push(item.path);
+		}
+		// Close mobile menu if open
+		if (isMobileOpen && onMobileClose) {
+			onMobileClose();
+		}
+	};
+
+	// Determine active item based on pathname
+	const getActiveItem = () => {
+		if (pathname?.startsWith('/admin/dashboard')) return 'dashboard';
+		if (pathname?.startsWith('/admin/businesses')) return 'businesses-management';
+		if (pathname?.startsWith('/admin/pending-request')) return 'pending-request';
+		if (pathname?.startsWith('/admin/settings')) return 'settings';
+		return activeItem;
+	};
+
+	const currentActiveItem = getActiveItem();
+
+	return (
+		<>
+			{/* Side Navigation - Desktop Only */}
+			<nav
+				ref={navRef}
+				id="side-nav"
+				className={`
+					bg-white w-64 border-r border-gray-200
+					hidden md:block relative h-auto
+					${className}
+				`}
+			>
+				<div className="p-4 mt-4">
+					{/* Navigation Items */}
+					<div className="space-y-2">
+						{navItems.map((item) => {
+							const isActive = currentActiveItem === item.id;
+							return (
+								<div key={item.id}>
+									<button
+										onClick={(e) => handleItemClick(item, e)}
+										className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 transition-all duration-200 ${isActive
+											? 'text-white'
+											: 'text-gray-700 hover:text-white'
+											}`}
+										style={{
+											backgroundColor: isActive ? setupData.primaryColor || '#050711' : 'transparent',
+											'--hover-bg': setupData.secondaryColor || '#6C8B7D'
+										} as React.CSSProperties}
+										onMouseEnter={(e) => {
+											if (!isActive) {
+												e.currentTarget.style.backgroundColor = setupData.secondaryColor || '#6C8B7D';
+												// Update icon and text colors to white on hover
+												const icon = e.currentTarget.querySelector('.shrink-0') as HTMLElement;
+												const text = e.currentTarget.querySelector('.font-medium') as HTMLElement;
+												if (icon) icon.style.color = 'white';
+												if (text) text.style.color = 'white';
+											}
+										}}
+										onMouseLeave={(e) => {
+											if (!isActive) {
+												e.currentTarget.style.backgroundColor = 'transparent';
+												// Reset icon and text colors
+												const icon = e.currentTarget.querySelector('.shrink-0') as HTMLElement;
+												const text = e.currentTarget.querySelector('.font-medium') as HTMLElement;
+												if (icon) icon.style.color = '';
+												if (text) text.style.color = '';
+											}
+										}}
+									>
+										<div className={`shrink-0 transition-colors duration-200 ${isActive ? 'text-white' : 'text-gray-600'
+											}`}>
+											{item.icon}
+										</div>
+										<span className={`font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] text-[#3A4050] transition-colors duration-200 flex-1 text-left ${isActive ? 'text-white' : 'text-gray-700'
+											}`}>
+											{item.label}
+										</span>
+									</button>
+								</div>
+							);
+						})}
+					</div>
+
+					{/* Separator */}
+					<div className="border-t border-gray-200 my-4"></div>
+				</div>
+			</nav>
+		</>
+	);
+};
+
+export default AdminSideNav;
+

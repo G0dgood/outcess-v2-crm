@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import AddChartModal from '@/components/ui/AddChartModal';
+import StickyNote, { StickyNoteData } from '@/components/ui/StickyNote';
+import StickyNoteModal from '@/components/ui/StickyNoteModal';
 import Icon from '@/components/ui/Icon';
 import { useSetup } from '@/contexts/SetupContext';
 import {
@@ -29,7 +31,9 @@ import { CSS } from '@dnd-kit/utilities';
 interface WidgetCardProps {
 	title: string;
 	value: string | number;
-	onMenuClick?: () => void;
+	widgetId: string;
+	onEdit?: (widgetId: string) => void;
+	onDelete?: (widgetId: string) => void;
 }
 
 interface SortableChartProps {
@@ -55,20 +59,69 @@ interface SortableChartProps {
 	onRemoveChart: (chartId: string) => void;
 }
 
-const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, onMenuClick }) => {
+const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, widgetId, onEdit, onDelete }) => {
+	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+	const dropdownRef = useRef<HTMLDivElement>(null);
+
+	// Close dropdown when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+				setIsDropdownOpen(false);
+			}
+		};
+
+		if (isDropdownOpen) {
+			document.addEventListener('mousedown', handleClickOutside);
+		}
+
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, [isDropdownOpen]);
+
+	const handleEdit = () => {
+		onEdit?.(widgetId);
+		setIsDropdownOpen(false);
+	};
+
+	const handleDelete = () => {
+		onDelete?.(widgetId);
+		setIsDropdownOpen(false);
+	};
+
 	return (
 		<div className="bg-white border border-gray-200 p-6 relative">
 			<div className="flex justify-between items-start mb-4">
 				<h3 className="font-lato font-normal text-[18px] leading-[150%] text-[#6D7280]">{title}</h3>
-				<button
-					onClick={onMenuClick}
-					className="text-gray-400 hover:text-gray-600 transition-colors"
-					title="Widget options"
-				>
-					<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-						<path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-					</svg>
-				</button>
+				<div className="relative" ref={dropdownRef}>
+					<button
+						onClick={(e) => {
+							e.stopPropagation();
+							setIsDropdownOpen(!isDropdownOpen);
+						}}
+						className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+						title="Widget options"
+					>
+						<Icon name="Ellipsis_vertical_light" size="sm" />
+					</button>
+					{isDropdownOpen && (
+						<div className="absolute right-0 top-6 z-50 bg-white border border-gray-200 shadow-lg min-w-[120px]">
+							<button
+								onClick={handleEdit}
+								className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors first:rounded-t-lg cursor-pointer"
+							>
+								Edit
+							</button>
+							<button
+								onClick={handleDelete}
+								className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors last:rounded-b-lg cursor-pointer"
+							>
+								Delete
+							</button>
+						</div>
+					)}
+				</div>
 			</div>
 			<div className="text-3xl font-bold text-gray-900">{value}</div>
 		</div>
@@ -689,6 +742,10 @@ const SortableChart: React.FC<SortableChartProps> = ({ chart, pieChartData, onRe
 const DashboardContent: React.FC = () => {
 	const { setupData, addChart, removeChart, updateChartsOrder } = useSetup();
 	const [isAddChartModalOpen, setIsAddChartModalOpen] = useState(false);
+	const [isStickyNoteModalOpen, setIsStickyNoteModalOpen] = useState(false);
+	const [stickyNotes, setStickyNotes] = useState<StickyNoteData[]>([]);
+	const [editingNote, setEditingNote] = useState<StickyNoteData | undefined>(undefined);
+	const [isLoaded, setIsLoaded] = useState(false);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -696,6 +753,72 @@ const DashboardContent: React.FC = () => {
 			coordinateGetter: sortableKeyboardCoordinates,
 		})
 	);
+
+	// Load sticky notes from localStorage on mount
+	useEffect(() => {
+		const loadStickyNotes = () => {
+			try {
+				const savedNotes = localStorage.getItem('stickyNotes');
+				if (savedNotes) {
+					const parsed = JSON.parse(savedNotes);
+					if (Array.isArray(parsed) && parsed.length > 0) {
+						const loadedNotes = parsed.map((note: any) => ({
+							id: note.id || Date.now().toString() + Math.random(),
+							title: note.title || '',
+							content: note.content || '',
+							color: note.color || '#FFFACD',
+							todos: Array.isArray(note.todos) ? note.todos : [],
+							position: note.position && typeof note.position === 'object' ? note.position : { x: 100 + (parsed.indexOf(note) * 20), y: 100 + (parsed.indexOf(note) * 20) },
+							rotation: note.rotation !== undefined ? note.rotation : Math.random() * 6 - 3,
+							isHidden: note.isHidden !== undefined ? note.isHidden : false,
+							createdAt: note.createdAt ? new Date(note.createdAt) : new Date(),
+							updatedAt: note.updatedAt ? new Date(note.updatedAt) : new Date(),
+							reminder: note.reminder ? new Date(note.reminder) : undefined,
+						}));
+						setStickyNotes(loadedNotes);
+						setIsLoaded(true);
+					} else {
+						setIsLoaded(true);
+					}
+				} else {
+					setIsLoaded(true);
+				}
+			} catch (error) {
+				console.error('Error loading sticky notes:', error);
+				setIsLoaded(true);
+			}
+		};
+
+		loadStickyNotes();
+	}, []);
+
+	// Save sticky notes to localStorage whenever they change (but not on initial load)
+	useEffect(() => {
+		if (!isLoaded) return; // Don't save until initial load is complete
+
+		const saveStickyNotes = () => {
+			try {
+				// Convert dates to ISO strings for storage
+				const notesToSave = stickyNotes.map(note => ({
+					id: note.id,
+					title: note.title || '',
+					content: note.content || '',
+					color: note.color || '#FFFACD',
+					reminder: note.reminder ? note.reminder.toISOString() : undefined,
+					todos: note.todos || [],
+					position: note.position || { x: 100, y: 100 },
+					rotation: note.rotation !== undefined ? note.rotation : 0,
+					createdAt: note.createdAt ? note.createdAt.toISOString() : new Date().toISOString(),
+					updatedAt: note.updatedAt ? note.updatedAt.toISOString() : new Date().toISOString(),
+				}));
+				localStorage.setItem('stickyNotes', JSON.stringify(notesToSave));
+			} catch (error) {
+				console.error('Error saving sticky notes:', error);
+			}
+		};
+
+		saveStickyNotes();
+	}, [stickyNotes, isLoaded]);
 
 	// Sample data - in a real app, this would come from your data source
 	const widgetData = [
@@ -710,9 +833,14 @@ const DashboardContent: React.FC = () => {
 		{ label: 'Promise to pay', value: 25, color: '#A8E6CF' },
 	];
 
-	const handleWidgetMenu = (widgetTitle: string) => {
-		console.log('Widget menu clicked for:', widgetTitle);
-		// Implement widget menu functionality
+	const handleEditWidget = (widgetId: string) => {
+		console.log('Edit widget:', widgetId);
+		// Implement edit widget functionality
+	};
+
+	const handleDeleteWidget = (widgetId: string) => {
+		console.log('Delete widget:', widgetId);
+		// Implement delete widget functionality
 	};
 
 	const handleAddWidget = () => {
@@ -738,6 +866,84 @@ const DashboardContent: React.FC = () => {
 
 	const handleRemoveChart = (chartId: string) => {
 		removeChart(chartId);
+	};
+
+	const handleCreateStickyNote = (noteData: Omit<StickyNoteData, 'id' | 'createdAt' | 'updatedAt'>) => {
+		const newNote: StickyNoteData = {
+			...noteData,
+			id: Date.now().toString(),
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			position: noteData.position || {
+				x: 100 + (stickyNotes.length * 30),
+				y: 100 + (stickyNotes.length * 30)
+			},
+			rotation: noteData.rotation || Math.random() * 6 - 3,
+		};
+		setStickyNotes([...stickyNotes, newNote]);
+		setIsStickyNoteModalOpen(false);
+		setEditingNote(undefined);
+	};
+
+	const handleCreateStickyNoteDirectly = () => {
+		const newNote: StickyNoteData = {
+			id: Date.now().toString(),
+			title: '',
+			content: '',
+			color: '#FFFACD',
+			todos: [],
+			position: {
+				x: 100 + (stickyNotes.length * 30),
+				y: 100 + (stickyNotes.length * 30)
+			},
+			rotation: Math.random() * 6 - 3,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		};
+		setStickyNotes([...stickyNotes, newNote]);
+	};
+
+	const handleUpdateStickyNote = (updatedNote: StickyNoteData) => {
+		const updatedNotes = stickyNotes.map(note => note.id === updatedNote.id ? { ...updatedNote, updatedAt: new Date() } : note);
+		setStickyNotes(updatedNotes);
+		// Save to localStorage immediately when position or content changes
+		try {
+			const notesToSave = updatedNotes.map(note => ({
+				...note,
+				createdAt: note.createdAt.toISOString(),
+				updatedAt: note.updatedAt.toISOString(),
+				reminder: note.reminder ? note.reminder.toISOString() : undefined,
+			}));
+			localStorage.setItem('stickyNotes', JSON.stringify(notesToSave));
+			// Dispatch event to notify GlobalStickyNotes to reload
+			window.dispatchEvent(new CustomEvent('stickyNotesUpdated'));
+		} catch (error) {
+			console.error('Error saving sticky notes:', error);
+		}
+	};
+
+	const handleDeleteStickyNote = (noteId: string) => {
+		const updatedNotes = stickyNotes.filter(note => note.id !== noteId);
+		setStickyNotes(updatedNotes);
+		// Save to localStorage immediately when note is deleted
+		try {
+			const notesToSave = updatedNotes.map(note => ({
+				...note,
+				createdAt: note.createdAt.toISOString(),
+				updatedAt: note.updatedAt.toISOString(),
+				reminder: note.reminder ? note.reminder.toISOString() : undefined,
+			}));
+			localStorage.setItem('stickyNotes', JSON.stringify(notesToSave));
+			// Dispatch event to notify GlobalStickyNotes to reload
+			window.dispatchEvent(new CustomEvent('stickyNotesUpdated'));
+		} catch (error) {
+			console.error('Error saving sticky notes:', error);
+		}
+	};
+
+	const handleOpenStickyNoteModal = () => {
+		setEditingNote(undefined);
+		setIsStickyNoteModalOpen(true);
 	};
 
 	const handleDragEnd = (event: DragEndEvent) => {
@@ -767,7 +973,7 @@ const DashboardContent: React.FC = () => {
 			{/* Dashboard Title and Action Buttons */}
 			<div className="flex justify-between items-center mb-8">
 				<h1 className="font-lato font-normal text-[20px] leading-[150%] text-[#3A4050]">
-					{setupData.dashboardSettings.dashboardName || 'Outcess Dashboard'}
+					{setupData.dashboardSettings.dashboardName || ' Dashboard'}
 				</h1>
 				<div className="flex gap-3">
 					<Button
@@ -776,6 +982,15 @@ const DashboardContent: React.FC = () => {
 						onClick={handleAddWidget}
 					>
 						Add Widget
+					</Button>
+					<Button
+						variant="outline"
+						size="md"
+						onClick={handleCreateStickyNoteDirectly}
+						className="flex items-center gap-2"
+					>
+						<Icon name="Edit_duotone_line" size="sm" />
+						Note
 					</Button>
 					<Button
 						variant="outline"
@@ -796,9 +1011,11 @@ const DashboardContent: React.FC = () => {
 				{widgetData.map((widget, index) => (
 					<WidgetCard
 						key={index}
+						widgetId={`widget-${index}`}
 						title={widget.title}
 						value={widget.value}
-						onMenuClick={() => handleWidgetMenu(widget.title)}
+						onEdit={handleEditWidget}
+						onDelete={handleDeleteWidget}
 					/>
 				))}
 			</div>
@@ -828,11 +1045,32 @@ const DashboardContent: React.FC = () => {
 				</div>
 			</DndContext>
 
+			{/* Sticky Notes - Always visible on the page */}
+			{stickyNotes.filter(note => !note.isHidden).map((note) => (
+				<StickyNote
+					key={note.id}
+					note={note}
+					onUpdate={handleUpdateStickyNote}
+					onDelete={handleDeleteStickyNote}
+				/>
+			))}
+
 			{/* Add Chart Modal */}
 			<AddChartModal
 				isOpen={isAddChartModalOpen}
 				onClose={() => setIsAddChartModalOpen(false)}
 				onSave={handleAddChart}
+			/>
+
+			{/* Sticky Note Modal */}
+			<StickyNoteModal
+				isOpen={isStickyNoteModalOpen}
+				onClose={() => {
+					setIsStickyNoteModalOpen(false);
+					setEditingNote(undefined);
+				}}
+				onSave={handleCreateStickyNote}
+				note={editingNote}
 			/>
 		</div>
 	);

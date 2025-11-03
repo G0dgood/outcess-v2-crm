@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
+import DateFilter from '@/components/ui/DateFilter';
+import { MixerHorizontalIcon } from '@radix-ui/react-icons';
 import { useSetup } from '@/contexts/SetupContext';
+import PageHeading from '@/components/ui/PageHeading';
 
 interface ReportData {
 	id: string;
@@ -19,8 +22,33 @@ const ReportPage: React.FC = () => {
 	const { setupData } = useSetup();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
-	const [reportData] = useState<ReportData[]>([]); // Empty for now
-	const [totalPages] = useState(10);
+	const [isFilterOpen, setIsFilterOpen] = useState(false);
+	const filterButtonRef = useRef<HTMLDivElement>(null);
+	const [reportData] = useState<ReportData[]>([
+		{ id: '1', agentName: 'Sarah Johnson', agentId: 'AGT-001', date: '2024-01-15' },
+		{ id: '2', agentName: 'Michael Chen', agentId: 'AGT-002', date: '2024-01-16' },
+		{ id: '3', agentName: 'Emily Davis', agentId: 'AGT-003', date: '2024-01-17' },
+		{ id: '4', agentName: 'James Wilson', agentId: 'AGT-004', date: '2024-01-18' },
+		{ id: '5', agentName: 'Lisa Martinez', agentId: 'AGT-005', date: '2024-01-19' },
+		{ id: '6', agentName: 'Robert Taylor', agentId: 'AGT-006', date: '2024-01-20' },
+	]);
+
+	// Close filter dropdown when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (filterButtonRef.current && !filterButtonRef.current.contains(event.target as Node)) {
+				setIsFilterOpen(false);
+			}
+		};
+
+		if (isFilterOpen) {
+			document.addEventListener('mousedown', handleClickOutside);
+		}
+
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, [isFilterOpen]);
 
 	const handleDownload = () => {
 		console.log('Download clicked');
@@ -29,42 +57,62 @@ const ReportPage: React.FC = () => {
 	};
 
 	const handleFilter = () => {
-		console.log('Filter clicked');
-		// Implement filter functionality
-		// This could open a filter modal or dropdown
+		setIsFilterOpen(!isFilterOpen);
 	};
 
-	const handleAddField = () => {
-		console.log('Add Field clicked');
-		// Implement add field functionality
-		// This could open a modal to add new columns
+	const handleFilterApply = (filter: {
+		type: 'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange';
+		from?: string;
+		to?: string;
+	}) => {
+		console.log('Filter applied:', filter);
+		// Implement filter logic here
+		setIsFilterOpen(false);
 	};
+
+	const filteredReports = reportData.filter(report => {
+		if (!searchTerm) return true;
+		const searchLower = searchTerm.toLowerCase();
+		return (
+			report.agentName.toLowerCase().includes(searchLower) ||
+			report.agentId.toLowerCase().includes(searchLower) ||
+			report.date.toLowerCase().includes(searchLower)
+		);
+	});
+
+	const totalPages = Math.ceil(filteredReports.length / 10);
+	const startIndex = (currentPage - 1) * 10;
+	const paginatedReports = filteredReports.slice(startIndex, startIndex + 10);
 
 	return (
 		<div>
 			{/* Title and Action Buttons */}
-			<div className="flex items-center justify-between mb-6">
-				<h1 className="font-lato font-medium text-[16px] leading-[150%] text-[#3A4050]">Report</h1>
-				<Button
-					variant="outline"
-					size="md"
-					onClick={handleDownload}
-					className="bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
-				>
-					Download
-				</Button>
-			</div>
 
-			{/* Description */}
-			<div className="mb-6">
-				<p className="font-lato font-normal text-[14px] leading-[150%] text-[#6D7280]">
-					Visualize and analyze your data
-				</p>
-			</div>
+			<PageHeading
+				text="Report"
+			/>
 
 			{/* Search and Filter Bar */}
-			<div className="mb-6 flex items-center gap-4">
-				<div className="flex-1 max-w-md">
+			<div className="my-6 flex items-center gap-4 justify-between">
+				<div className="flex-1 max-w-md flex items-center gap-4 relative">
+					<div ref={filterButtonRef} className="relative">
+						<button
+							type="button"
+							onClick={handleFilter}
+							className="inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 px-4 py-2 text-sm bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 cursor-pointer gap-2 whitespace-nowrap"
+						>
+							<MixerHorizontalIcon className="w-4 h-4" />
+							Filter Report
+						</button>
+						{isFilterOpen && (
+							<div className="absolute top-full left-0 mt-2 z-50">
+								<DateFilter
+									onApply={handleFilterApply}
+									onClose={() => setIsFilterOpen(false)}
+								/>
+							</div>
+						)}
+					</div>
 					<Search
 						placeholder="Search"
 						value={searchTerm}
@@ -74,15 +122,15 @@ const ReportPage: React.FC = () => {
 						showClearButton={true}
 					/>
 				</div>
+
+
 				<Button
-					variant="outline"
+					variant="primary"
 					size="md"
-					onClick={handleFilter}
-					className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+					onClick={handleDownload}
+					className="flex items-center gap-2"
 				>
-					<Icon name="Filter_light" size="sm" />
-					Filter
-					<Icon name="Expand_down_light" size="sm" />
+					Download
 				</Button>
 			</div>
 
@@ -92,67 +140,38 @@ const ReportPage: React.FC = () => {
 					<table className="min-w-full divide-y divide-gray-200">
 						<thead className="bg-gray-50">
 							<tr>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-									Agent Name
-								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-									Agent ID
-								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-									Date
-								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-									<button
-										onClick={handleAddField}
-										className="text-blue-600 hover:text-blue-800 font-medium"
-									>
-										Add Field
-									</button>
-								</th>
+								<th>Agent Name</th>
+								<th>Agent ID</th>
+								<th>Date</th>
 							</tr>
 						</thead>
 						<tbody className="bg-white divide-y divide-gray-200">
-							{reportData.length > 0 ? (
-								reportData.map((report) => (
-									<tr key={report.id} className="hover:bg-gray-50">
-										<td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-											{report.agentName}
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-											{report.agentId}
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-											{report.date}
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-											{/* Empty cell for Add Field column */}
-										</td>
-									</tr>
-								))
-							) : (
+							{filteredReports.length === 0 ? (
 								<tr>
-									<td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+									<td colSpan={3} className="px-6 py-12 text-center">
 										<div className="flex flex-col items-center justify-center">
 											<div className="mb-4">
 												<Icon name="Bar_chart_light" size="4xl" className="text-gray-300" />
 											</div>
 											<h3 className="text-lg font-medium text-gray-900 mb-2">
-												No Report Data Available
+												No Data Found
 											</h3>
-											<p className="text-gray-500 mb-4">
-												Generate reports to visualize and analyze your data.
+											<p className="text-gray-500">
+												{searchTerm ? 'No reports match your search.' : 'No report data available.'}
 											</p>
-											<Button
-												variant="outline"
-												size="md"
-												onClick={handleDownload}
-												className="bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
-											>
-												Generate Report
-											</Button>
 										</div>
 									</td>
 								</tr>
+							) : (
+								paginatedReports.map((report) => (
+									<tr key={report.id} className="hover:bg-gray-50">
+										<td className="font-medium text-gray-900">
+											{report.agentName}
+										</td>
+										<td>{report.agentId}</td>
+										<td>{report.date}</td>
+									</tr>
+								))
 							)}
 						</tbody>
 					</table>
@@ -160,7 +179,7 @@ const ReportPage: React.FC = () => {
 			</div>
 
 			{/* Pagination */}
-			<div className="mt-6">
+			{filteredReports.length > 0 && (
 				<Pagination
 					currentPage={currentPage}
 					totalPages={totalPages}
@@ -170,9 +189,10 @@ const ReportPage: React.FC = () => {
 					primaryColor={setupData.primaryColor}
 					secondaryColor={setupData.secondaryColor}
 				/>
-			</div>
+			)}
 		</div>
 	);
 };
 
 export default ReportPage;
+

@@ -89,20 +89,7 @@ export default function SignUpPage() {
 		<div className="login-container">
 			{/* Left Side - Image */}
 			<div className="login-image-section">
-				<div className="image-placeholder">
-					<div className="professional-woman">
-						<div className="woman-figure">
-							<div className="head"></div>
-							<div className="body"></div>
-							<div className="headset"></div>
-							<div className="coffee-cup"></div>
-						</div>
-						<div className="office-elements">
-							<div className="monitor"></div>
-							<div className="desk-items"></div>
-						</div>
-					</div>
-				</div>
+
 			</div>
 
 			{/* Right Side - Sign Up Form */}

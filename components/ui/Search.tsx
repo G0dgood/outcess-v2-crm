@@ -3,10 +3,10 @@ import Icon from './Icon';
 
 interface SearchProps {
 	placeholder?: string;
-	value: string;
-	onChange: (value: string) => void;
+	value?: string;
+	onChange?: (value: string) => void;
 	className?: string;
-	inputClassName?: string;
+	maxWidth?: string;
 	disabled?: boolean;
 	onSearch?: (value: string) => void;
 	onClear?: () => void;
@@ -15,14 +15,14 @@ interface SearchProps {
 
 const Search: React.FC<SearchProps> = ({
 	placeholder = 'Search',
-	value,
+	value = '',
 	onChange,
 	className = '',
-	inputClassName = '',
+	maxWidth = 'max-w-md',
 	disabled = false,
 	onSearch,
 	onClear,
-	showClearButton = true,
+	showClearButton = false,
 }) => {
 	const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === 'Enter' && onSearch) {
@@ -31,34 +31,26 @@ const Search: React.FC<SearchProps> = ({
 	};
 
 	const handleClear = () => {
-		onChange('');
+		onChange?.('');
 		onClear?.();
 	};
 
 	return (
-		<div className={`relative ${className}`}>
-			{/* Search Icon */}
-			<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-				<Icon name="Search_light" size="sm" className="text-gray-400" />
-			</div>
-
-			{/* Input Field */}
+		<div className={`box-border flex flex-row items-center px-[14px] py-[10px] gap-2 w-[320px] h-[40px] bg-white border border-[#E5E7EB] relative ${maxWidth} ${className}`}>
+			<Icon name="search-refraction" size="sm" />
 			<input
 				type="text"
 				placeholder={placeholder}
 				value={value}
-				onChange={(e) => onChange(e.target.value)}
+				onChange={(e) => onChange?.(e.target.value)}
 				onKeyPress={handleKeyPress}
 				disabled={disabled}
-				className={`w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${inputClassName} ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
-					}`}
+				className={`flex-1 text-sm font-normal leading-[150%] text-(--text-secondary) focus:outline-none ${showClearButton && value ? 'pr-10' : ''}`}
 			/>
-
-			{/* Clear Button */}
 			{showClearButton && value && (
 				<button
 					onClick={handleClear}
-					className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+					className="flex items-center text-gray-400 hover:text-gray-600 transition-colors"
 					type="button"
 				>
 					<Icon name="Close_round_light" size="sm" />
@@ -69,3 +61,4 @@ const Search: React.FC<SearchProps> = ({
 };
 
 export default Search;
+

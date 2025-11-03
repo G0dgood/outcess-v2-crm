@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 interface DateInputProps {
 	label: string;
@@ -14,7 +14,7 @@ interface DateInputProps {
 	inputClassName?: string;
 }
 
-export const DateInput: React.FC<DateInputProps> = ({
+export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(({
 	label,
 	value = '',
 	onChange,
@@ -24,7 +24,7 @@ export const DateInput: React.FC<DateInputProps> = ({
 	error,
 	className = '',
 	inputClassName = '',
-}) => {
+}, ref) => {
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		onChange?.(e.target.value);
 	};
@@ -36,6 +36,7 @@ export const DateInput: React.FC<DateInputProps> = ({
 				{required && <span className="required-asterisk">*</span>}
 			</label>
 			<input
+				ref={ref}
 				type="date"
 				value={value}
 				onChange={handleChange}
@@ -43,10 +44,16 @@ export const DateInput: React.FC<DateInputProps> = ({
 				disabled={disabled}
 				className={`input-field ${error ? 'error' : ''} ${inputClassName}`}
 				required={required}
+				style={{
+					appearance: 'none',
+					WebkitAppearance: 'none',
+				}}
 			/>
 			{error && <span className="input-error">{error}</span>}
 		</div>
 	);
-};
+});
+
+DateInput.displayName = 'DateInput';
 
 export default DateInput;

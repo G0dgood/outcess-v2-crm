@@ -11,6 +11,7 @@ interface InputProps {
 	error?: string;
 	className?: string;
 	inputClassName?: string;
+	onKeyPress?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -24,6 +25,7 @@ export const Input: React.FC<InputProps> = ({
 	error,
 	className = '',
 	inputClassName = '',
+	onKeyPress,
 }) => {
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		onChange?.(e.target.value);
@@ -41,6 +43,7 @@ export const Input: React.FC<InputProps> = ({
 				type={type}
 				value={value}
 				onChange={handleChange}
+				onKeyPress={onKeyPress}
 				placeholder={placeholder}
 				disabled={disabled}
 				className={`input-field ${error ? 'error' : ''} ${inputClassName}`}

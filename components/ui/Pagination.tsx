@@ -82,7 +82,7 @@ const Pagination: React.FC<PaginationProps> = ({
 	const visiblePages = getVisiblePages();
 
 	return (
-		<div className={`flex items-center justify-between ${className}`}>
+		<div className={`mt-6 flex items-center justify-between ${className}`}>
 			{/* Previous Button */}
 			<div className="flex items-center gap-2">
 				<button
@@ -90,7 +90,7 @@ const Pagination: React.FC<PaginationProps> = ({
 					disabled={currentPage === 1}
 					className="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
 				>
-					Previous
+					← Previous
 				</button>
 			</div>
 
@@ -131,7 +131,7 @@ const Pagination: React.FC<PaginationProps> = ({
 					disabled={currentPage === totalPages}
 					className="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
 				>
-					Next
+					Next →
 				</button>
 			</div>
 		</div>

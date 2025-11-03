@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Input from '@/components/ui/Input';
 import PasswordInput from '@/components/ui/PasswordInput';
 import Image from 'next/image';
+import ArtworkCarousel from '@/components/ui/ArtworkCarousel';
 
 export default function LoginPage() {
 	const [formData, setFormData] = useState({
@@ -59,26 +60,12 @@ export default function LoginPage() {
 
 	return (
 		<div className="login-container">
-			{/* Left Side - Image */}
-			<div className="login-image-section">
-				<div className="image-placeholder">
-					<div className="professional-woman">
-						<div className="woman-figure">
-							<div className="head"></div>
-							<div className="body"></div>
-							<div className="headset"></div>
-							<div className="coffee-cup"></div>
-						</div>
-						<div className="office-elements">
-							<div className="monitor"></div>
-							<div className="desk-items"></div>
-						</div>
-					</div>
-				</div>
+			{/* Left Side - Artwork Carousel */}
+			<div className="login-image-section w-full md:w-1/2">
+				<ArtworkCarousel autoPlayInterval={300000} />
 			</div>
-
 			{/* Right Side - Login Form */}
-			<div className="login-form-section">
+			<div className="login-form-section w-full md:w-1/2">
 				<div className="login-form-container">
 					<div className="login-header">
 						<div className="logo-container">
@@ -125,7 +112,7 @@ export default function LoginPage() {
 									checked={formData.rememberMe}
 									onChange={handleCheckboxChange}
 								/>
-								<span className="checkbox-label">Remember me</span>
+								<span>Remember me</span>
 							</label>
 							<a href="#" className="forgot-password">Forgot password?</a>
 						</div>

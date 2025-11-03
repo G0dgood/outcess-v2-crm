@@ -34,7 +34,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
 					disabled={disabled}
 					className="checkbox-input"
 				/>
-				<label htmlFor={checkboxId} className="checkbox-label">fff</label>
+				<label htmlFor={checkboxId} className="checkbox-label"></label>
 			</div>
 			{label && (
 				<label htmlFor={checkboxId} className="checkbox-text-label">

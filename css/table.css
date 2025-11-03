@@ -73,3 +73,24 @@
   align-items: center; 
   width: 100%  
 }
+
+/* Table header styles */
+.table th,
+table th {
+  padding: 0.75rem 1.5rem; /* py-3 px-6 */
+  text-align: left;
+  font-size: 0.75rem; /* text-xs */
+  font-weight: 500; /* font-medium */
+  color: var(--text-tertiary); /* text-gray-500 equivalent */
+  text-transform: uppercase;
+  letter-spacing: 0.05em; /* tracking-wider */
+}
+
+/* Table cell styles */
+.table td,
+table td {
+  padding: 1rem 1.5rem; /* py-4 px-6 */
+  white-space: nowrap; /* whitespace-nowrap */
+  font-size: 0.875rem; /* text-sm */
+  color: var(--text-tertiary); /* text-gray-500 equivalent */
+}

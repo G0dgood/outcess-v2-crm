@@ -1,11 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
+import Checkbox from '@/components/ui/Checkbox';
 import { useSetup } from '@/contexts/SetupContext';
+import PageHeading from '@/components/ui/PageHeading';
+import { Pencil1Icon, TrashIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import AddUserModal from '@/components/ui/AddUserModal';
+import DeleteUserModal from '@/components/ui/DeleteUserModal';
 
 interface User {
 	id: string;
@@ -18,10 +24,14 @@ interface User {
 }
 
 const UsersPage: React.FC = () => {
+	const router = useRouter();
 	const { setupData } = useSetup();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
-	const [users] = useState<User[]>([
+	const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+	const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+	const [deleteUser, setDeleteUser] = useState<{ id: string; name: string } | null>(null);
+	const [users, setUsers] = useState<User[]>([
 		{
 			id: 'Sup1109',
 			firstName: 'Jane',
@@ -67,49 +77,84 @@ const UsersPage: React.FC = () => {
 	);
 
 	const handleAddUser = () => {
-		console.log('Add User clicked');
-		// Implement add user logic
+		setIsAddUserModalOpen(true);
 	};
+
+	const handleSaveUser = (userData: {
+		firstName: string;
+		lastName: string;
+		email: string;
+		phone: string;
+		role: string;
+	}) => {
+		console.log('Saving user:', userData);
+		// Implement save user logic here
+		// For now, just close the modal
+		setIsAddUserModalOpen(false);
+	};
+
+	const handleAddFields = () => {
+		console.log('Add Fields clicked');
+		// Implement add fields logic here
+	};
+
+	const handleDeleteClick = (user: User) => {
+		setDeleteUser({
+			id: user.id,
+			name: `${user.firstName} ${user.lastName}`,
+		});
+	};
+
+	const handleConfirmDelete = () => {
+		if (deleteUser) {
+			setUsers(prevUsers => prevUsers.filter(user => user.id !== deleteUser.id));
+			setDeleteUser(null);
+		}
+	};
+
+	const roleOptions = [
+		{ value: 'Agent', label: 'Agent' },
+		{ value: 'Supervisor', label: 'Supervisor' },
+		{ value: 'Admin', label: 'Admin' },
+	];
 
 	const handleImportUser = () => {
 		console.log('Import User clicked');
 		// Implement import user logic
 	};
 
+	const handleSelectAll = (checked: boolean) => {
+		if (checked) {
+			setSelectedUsers(new Set(currentUsers.map(user => user.id)));
+		} else {
+			setSelectedUsers(new Set());
+		}
+	};
+
+	const handleSelectUser = (userId: string, checked: boolean) => {
+		const newSelected = new Set(selectedUsers);
+		if (checked) {
+			newSelected.add(userId);
+		} else {
+			newSelected.delete(userId);
+		}
+		setSelectedUsers(newSelected);
+	};
+
+	const isAllSelected = currentUsers.length > 0 && currentUsers.every(user => selectedUsers.has(user.id));
+
 	return (
 		<div>
 			{/* Title and Action Buttons */}
 			<div className="flex items-center justify-between mb-6">
-				<h1 className="font-lato font-medium text-[16px] leading-[150%] text-[#3A4050]">Users</h1>
-				<div className="flex items-center gap-3">
-					<Button
-						variant="outline"
-						size="md"
-						onClick={handleImportUser}
-						className="bg-orange-500 text-white border-orange-500 hover:bg-orange-600"
-					>
-						Import User
-					</Button>
-					<Button
-						variant="outline"
-						size="md"
-						onClick={handleAddUser}
-						className="bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
-					>
-						Add User
-					</Button>
-				</div>
-			</div>
+				<PageHeading
+					text="Users"
+				/>
 
-			{/* Description */}
-			<div className="mb-6">
-				<p className="font-lato font-normal text-[14px] leading-[150%] text-[#6D7280]">
-					Find and manage team members, from agents to admins.
-				</p>
-			</div>
 
-			{/* Search Bar */}
-			<div className="mb-6">
+				{/* Search Bar */}
+			</div>
+			<div className="mb-6 flex items-center justify-between">
 				<Search
 					placeholder="Search"
 					value={searchTerm}
@@ -119,6 +164,24 @@ const UsersPage: React.FC = () => {
 					onClear={() => console.log('Search cleared')}
 					showClearButton={true}
 				/>
+				<Button
+					variant="primary"
+					size="md"
+					onClick={handleAddUser}
+					className="flex items-center gap-2"
+				>
+					Add User
+				</Button>
+			</div>
+
+			{/* Login Status Info Banner */}
+			<div className="mb-4 p-3 bg-gray-100 rounded-lg flex items-center gap-3">
+				<div className="shrink-0 w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center bg-white">
+					<ExclamationTriangleIcon className="w-4 h-4 text-gray-700" />
+				</div>
+				<p className="text-sm text-gray-700">
+					This is for tracking agents who are logged in or logged out
+				</p>
 			</div>
 
 			{/* Users Table */}
@@ -127,70 +190,85 @@ const UsersPage: React.FC = () => {
 					<table className="min-w-full divide-y divide-gray-200">
 						<thead className="bg-gray-50">
 							<tr>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-									<input type="checkbox" className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out" />
+								<th>
+									<Checkbox
+										checked={isAllSelected}
+										onChange={handleSelectAll}
+									/>
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th>
 									ID
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th>
 									First Name
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th>
 									Last Name
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th>
 									Email
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th>
 									Phone
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th>
 									Role
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-									<div className="flex items-center gap-1">
-										Login Status
-										<Icon name="Question_mark_light" size="sm" className="text-gray-400" />
-									</div>
+								<th>
+									Login Status
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-									Add
+								<th>
+									Actions
 								</th>
 							</tr>
 						</thead>
 						<tbody className="bg-white divide-y divide-gray-200">
 							{currentUsers.map((user) => (
 								<tr key={user.id} className="hover:bg-gray-50">
-									<td className="px-6 py-4 whitespace-nowrap">
-										<input type="checkbox" className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out" />
+									<td>
+										<Checkbox
+											checked={selectedUsers.has(user.id)}
+											onChange={(checked) => handleSelectUser(user.id, checked)}
+										/>
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+									<td>
 										{user.id}
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-										<div className="flex items-center gap-1">
-											{user.firstName}
-											<Icon name="Ellipsis_vertical_light" size="sm" className="text-gray-400" />
-										</div>
+									<td>
+										{user.firstName}
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+									<td>
 										{user.lastName}
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+									<td>
 										{user.email}
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+									<td>
 										{user.phone}
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+									<td>
 										{user.role}
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+									<td>
 										{user.loginStatus}
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-										{/* Empty cell for Add column */}
+									<td>
+										<div className="flex items-center gap-2">
+											<button
+												onClick={() => router.push(`/users/${user.id}/edit`)}
+												className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+												title="Edit User"
+											>
+												<Pencil1Icon className="w-5 h-5" />
+											</button>
+											<button
+												onClick={() => handleDeleteClick(user)}
+												className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+												title="Delete User"
+											>
+												<TrashIcon className="w-5 h-5" />
+											</button>
+										</div>
 									</td>
 								</tr>
 							))}
@@ -211,6 +289,23 @@ const UsersPage: React.FC = () => {
 					secondaryColor={setupData.secondaryColor}
 				/>
 			</div>
+
+			{/* Add User Modal */}
+			<AddUserModal
+				isOpen={isAddUserModalOpen}
+				onClose={() => setIsAddUserModalOpen(false)}
+				onSave={handleSaveUser}
+				roleOptions={roleOptions}
+				onAddFields={handleAddFields}
+			/>
+
+			{/* Delete User Modal */}
+			<DeleteUserModal
+				isOpen={!!deleteUser}
+				onClose={() => setDeleteUser(null)}
+				onConfirm={handleConfirmDelete}
+				userName={deleteUser?.name}
+			/>
 		</div>
 	);
 };

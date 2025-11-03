@@ -86,7 +86,7 @@ export const Modal: React.FC<ModalProps> = ({
 				return 'translate-x-0';
 			case 'center':
 			default:
-				return 'translate-x-0 translate-y-0 scale-100';
+				return 'scale-100 opacity-100';
 		}
 	};
 
@@ -98,7 +98,7 @@ export const Modal: React.FC<ModalProps> = ({
 				return '-translate-x-full';
 			case 'center':
 			default:
-				return 'translate-x-0 translate-y-0 scale-95';
+				return 'scale-95 opacity-0';
 		}
 	};
 
@@ -114,7 +114,7 @@ export const Modal: React.FC<ModalProps> = ({
 
 			{/* Modal */}
 			<div
-				className={`fixed ${getPositionClasses()} ${getSizeClasses()} bg-white shadow-xl z-50 transform transition-all duration-300 ${isOpen ? getAnimationClasses() : getInitialAnimationClasses()
+				className={`fixed ${getPositionClasses()} ${getSizeClasses()} bg-white shadow-xl z-50 transition-all duration-300 ${isOpen ? getAnimationClasses() : getInitialAnimationClasses()
 					} ${className}`}
 			>
 				<div className="flex flex-col h-full">

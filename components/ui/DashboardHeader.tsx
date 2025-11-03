@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import Icon from './Icon';
 import Dropdown from './Dropdown';
 import UserDropdown from './UserDropdown';
+import { HamburgerMenuIcon } from '@radix-ui/react-icons';
 
 interface DashboardHeaderProps {
 	companyName?: string;
@@ -18,6 +20,7 @@ interface DashboardHeaderProps {
 	onEditProfileClick?: () => void;
 	onLogoutClick?: () => void;
 	companyOptions?: Array<{ value: string; label: string; }>;
+	onMobileMenuToggle?: () => void;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -37,11 +40,80 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		{ value: 'Company 2', label: 'Company 2' },
 		{ value: 'Company 3', label: 'Company 3' },
 	],
+	onMobileMenuToggle,
 }) => {
+	const router = useRouter();
+	const pathname = usePathname();
+	const [hasStickyNotes, setHasStickyNotes] = useState(false);
+
+	// Check if sticky notes exist in localStorage
+	useEffect(() => {
+		const checkStickyNotes = () => {
+			try {
+				const savedNotes = localStorage.getItem('stickyNotes');
+				if (savedNotes) {
+					const parsed = JSON.parse(savedNotes);
+					setHasStickyNotes(Array.isArray(parsed) && parsed.length > 0);
+				} else {
+					setHasStickyNotes(false);
+				}
+			} catch (error) {
+				setHasStickyNotes(false);
+			}
+		};
+
+		checkStickyNotes();
+
+		// Check periodically for changes (in case notes are added/removed in another tab)
+		const interval = setInterval(checkStickyNotes, 1000);
+
+		// Listen for storage events from other tabs
+		const handleStorageChange = () => {
+			checkStickyNotes();
+		};
+
+		// Check when window gains focus (user returns to page)
+		const handleFocus = () => {
+			checkStickyNotes();
+		};
+
+		window.addEventListener('storage', handleStorageChange);
+		window.addEventListener('focus', handleFocus);
+
+		return () => {
+			clearInterval(interval);
+			window.removeEventListener('storage', handleStorageChange);
+			window.removeEventListener('focus', handleFocus);
+		};
+	}, []);
+
+	const handleNoteIconClick = () => {
+		// Store that user wants to see notes on current page
+		localStorage.setItem('showStickyNotes', 'true');
+
+		if (pathname !== '/dashboard') {
+			// Navigate to dashboard, or trigger a custom event to show notes on current page
+			window.dispatchEvent(new CustomEvent('showStickyNotes'));
+			// router.push('/dashboard');
+		} else {
+			// Already on dashboard, just ensure notes are visible
+			window.dispatchEvent(new CustomEvent('showStickyNotes'));
+		}
+	};
+
 	return (
 		<header id="header" >
 			<div className="flex items-center justify-between py-2.5">
-				<div className="flex-1">
+				{/* Hamburger Menu - Mobile Only */}
+				<button
+					onClick={onMobileMenuToggle}
+					className="md:hidden p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+					title="Menu"
+				>
+					<HamburgerMenuIcon className="w-6 h-6" />
+				</button>
+
+				<div className="flex-1 md:flex-none">
 					{/* This space can be used for logo or main title */}
 				</div>
 
@@ -57,6 +129,20 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 						className="min-w-[140px]"
 						inputClassName="h-8"
 					/>
+
+					{/* Sticky Notes Icon - Only show if notes exist */}
+					{hasStickyNotes && (
+						<button
+							onClick={handleNoteIconClick}
+							className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer relative"
+							title="View Sticky Notes"
+						>
+							<Icon name="Edit_duotone_line" size="3xl" />
+							{/* Indicator dot */}
+							<span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
+						</button>
+					)}
+
 					{/* Notifications Bell */}
 					<button
 						onClick={onNotificationsClick}

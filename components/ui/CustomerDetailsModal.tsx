@@ -1,0 +1,317 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Button from './Button';
+import Search from './Search';
+import FillDispositionModal, { DispositionFormData } from './FillDispositionModal';
+import SMSModal from './SMSModal';
+import DispositionHistoryModal from './DispositionHistoryModal';
+import { Cross2Icon, ChevronDownIcon, ChatBubbleIcon, ClipboardIcon, PersonIcon, EnvelopeClosedIcon, HomeIcon, MobileIcon, IdCardIcon } from '@radix-ui/react-icons';
+
+interface DispositionHistoryItem {
+	id: string;
+	date: string;
+	time: string;
+	agent: string;
+	timeSpent: string;
+}
+
+interface CustomerDetailsModalProps {
+	isOpen: boolean;
+	onClose: () => void;
+	customer: {
+		id: string;
+		firstName: string;
+		lastName: string;
+		email: string;
+		phone: string;
+		middleName?: string;
+		address?: string;
+	} | null;
+}
+
+export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
+	isOpen,
+	onClose,
+	customer,
+}) => {
+	const [searchTerm, setSearchTerm] = useState('');
+	const [pageSize, setPageSize] = useState(3);
+	const [isFillDispositionModalOpen, setIsFillDispositionModalOpen] = useState(false);
+	const [isSMSModalOpen, setIsSMSModalOpen] = useState(false);
+	const [isDispositionHistoryModalOpen, setIsDispositionHistoryModalOpen] = useState(false);
+	const [selectedDispositionData, setSelectedDispositionData] = useState<Partial<DispositionFormData> | undefined>(undefined);
+	const [selectedDispositionHistoryItem, setSelectedDispositionHistoryItem] = useState<DispositionHistoryItem | null>(null);
+
+	const dispositionHistory: DispositionHistoryItem[] = [
+		{
+			id: '1',
+			date: 'April 7, 2025',
+			time: '9:14 AM',
+			agent: 'John Doe',
+			timeSpent: '2m 23s',
+		},
+		{
+			id: '2',
+			date: 'March 23, 2025',
+			time: '8:30 AM',
+			agent: 'Jane Doe',
+			timeSpent: '1m 56s',
+		},
+		{
+			id: '3',
+			date: 'March 23, 2025',
+			time: '8:30 AM',
+			agent: 'Jane Doe',
+			timeSpent: '1m 56s',
+		},
+	];
+
+	useEffect(() => {
+		if (isOpen) {
+			document.body.style.overflow = 'hidden';
+		} else {
+			document.body.style.overflow = 'unset';
+		}
+
+		const handleEscape = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
+				onClose();
+			}
+		};
+
+		if (isOpen) {
+			document.addEventListener('keydown', handleEscape);
+		}
+
+		return () => {
+			document.body.style.overflow = 'unset';
+			document.removeEventListener('keydown', handleEscape);
+		};
+	}, [isOpen, onClose]);
+
+	if (!isOpen || !customer) return null;
+
+	const handleViewDetails = (dispositionId: string) => {
+		const disposition = dispositionHistory.find(item => item.id === dispositionId);
+		if (disposition) {
+			// Create an enriched disposition item with sample data matching the design
+			const enrichedDisposition: DispositionHistoryItem = {
+				...disposition,
+				agentId: 'agent.107693', // Sample agent ID
+				callAnswered: 'Yes',
+				reasonForNonPayment: 'No money',
+				reasonForNotWatching: 'No light',
+				commitmentDate: '12/11/25',
+				amountToPay: '3,000',
+				dateTime: '12/11/25 02:34',
+				comment: 'The customer is willing to pay',
+			};
+			setSelectedDispositionHistoryItem(enrichedDisposition);
+			setIsDispositionHistoryModalOpen(true);
+		}
+	};
+
+	return (
+		<div className="fixed inset-0 bg-black/50 z-50 overflow-hidden">
+			<div className="bg-gray-50 w-full h-full flex flex-col">
+				{/* Header */}
+				<div className="bg-white border-b border-gray-200 px-8 py-5">
+					<div className="flex justify-between items-center">
+						<h2 className="text-2xl font-semibold text-gray-900">Customer Details</h2>
+						<button
+							onClick={onClose}
+							className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+							aria-label="Close"
+						>
+							<Cross2Icon className="w-5 h-5" />
+						</button>
+					</div>
+				</div>
+
+				{/* Action Buttons */}
+				<div className="bg-white border-b border-gray-200 px-8 py-5">
+					<div className="flex items-center justify-end gap-3">
+						<Button
+							variant="primary"
+							size="md"
+							className="bg-orange-500 text-white border-orange-500 hover:bg-orange-600 flex items-center gap-2"
+							onClick={() => setIsSMSModalOpen(true)}
+							icon={<ChatBubbleIcon className="w-4 h-4" />}
+							iconPosition="left"
+						>
+							SMS
+						</Button>
+						<Button
+							variant="primary"
+							size="md"
+							onClick={() => setIsFillDispositionModalOpen(true)}
+							className="flex items-center gap-2"
+							icon={<ClipboardIcon className="w-4 h-4" />}
+							iconPosition="left"
+						>
+							Fill Disposition
+						</Button>
+					</div>
+				</div>
+
+				{/* Content */}
+				<div className="flex-1 overflow-y-auto p-8">
+					{/* Personal Information Section */}
+					<div className="mb-8">
+						<div className="bg-white border border-gray-200 shadow-sm">
+							<div className="bg-gradient-to-r from-[#6C8B7D]/10 to-transparent p-6 border-b border-gray-200">
+								<h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+									<PersonIcon className="w-5 h-5 text-[#6C8B7D]" />
+									Personal Information
+								</h3>
+							</div>
+							<div className="p-6">
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+									<div className="flex items-start gap-4 pb-5 border-b border-gray-100">
+										<PersonIcon className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
+										<div className="flex-1">
+											<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+												First Name
+											</label>
+											<p className="text-base text-gray-900 font-semibold">{customer.firstName || '-'}</p>
+										</div>
+									</div>
+									<div className="flex items-start gap-4 pb-5 border-b border-gray-100">
+										<PersonIcon className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
+										<div className="flex-1">
+											<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+												Last Name
+											</label>
+											<p className="text-base text-gray-900 font-semibold">{customer.lastName || '-'}</p>
+										</div>
+									</div>
+									<div className="flex items-start gap-4 pb-5 border-b border-gray-100">
+										<IdCardIcon className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
+										<div className="flex-1">
+											<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+												Middle Name
+											</label>
+											<p className="text-base text-gray-900 font-semibold">{customer.middleName || '-'}</p>
+										</div>
+									</div>
+									<div className="flex items-start gap-4 pb-5 border-b border-gray-100">
+										<EnvelopeClosedIcon className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
+										<div className="flex-1">
+											<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+												Email
+											</label>
+											<p className="text-base text-gray-900 font-semibold">{customer.email || '-'}</p>
+										</div>
+									</div>
+									<div className="flex items-start gap-4 pb-5 border-b border-gray-100">
+										<MobileIcon className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
+										<div className="flex-1">
+											<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+												Phone
+											</label>
+											<p className="text-base text-gray-900 font-semibold">{customer.phone || '-'}</p>
+										</div>
+									</div>
+									<div className="flex items-start gap-4">
+										<HomeIcon className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
+										<div className="flex-1">
+											<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+												Address
+											</label>
+											<p className="text-base text-gray-900 font-semibold">{customer.address || '-'}</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* Disposition History */}
+					<div className="bg-white border border-gray-200">
+						<div className="p-6 border-b border-gray-200 flex items-center justify-between gap-4">
+							<h3 className="text-lg font-semibold text-gray-900">Disposition History</h3>
+							<Button
+								variant="outline"
+								size="md"
+								onClick={() => setIsDispositionHistoryModalOpen(true)}
+							>
+								View All
+							</Button>
+						</div>
+
+						<div className="overflow-x-auto">
+							<table className="min-w-full divide-y divide-gray-200">
+								<thead className="bg-gray-50">
+									<tr>
+										<th>Date</th>
+										<th>Time</th>
+										<th>Agent</th>
+										<th>Time Spent</th>
+										<th>Action</th>
+									</tr>
+								</thead>
+								<tbody className="bg-white divide-y divide-gray-200">
+									{dispositionHistory.slice(0, pageSize).map((item) => (
+										<tr key={item.id} className="hover:bg-gray-50 transition-colors">
+											<td className="font-medium text-gray-900">{item.date}</td>
+											<td>{item.time}</td>
+											<td>{item.agent}</td>
+											<td>{item.timeSpent}</td>
+											<td>
+												<button
+													onClick={() => handleViewDetails(item.id)}
+													className="text-(--muted-sage-green) hover:text-(--muted-sage-green)/80 hover:underline transition-colors font-medium"
+												>
+													View Details
+												</button>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* Fill Disposition Modal */}
+			<FillDispositionModal
+				isOpen={isFillDispositionModalOpen}
+				onClose={() => {
+					setIsFillDispositionModalOpen(false);
+					setSelectedDispositionData(undefined);
+				}}
+				onSave={(data) => {
+					console.log('Save disposition:', data);
+					// Implement save logic here
+				}}
+				initialData={selectedDispositionData}
+			/>
+
+			{/* SMS Modal */}
+			<SMSModal
+				isOpen={isSMSModalOpen}
+				onClose={() => setIsSMSModalOpen(false)}
+				onSend={(data) => {
+					console.log('Send SMS:', data);
+					// Implement send SMS logic here
+				}}
+				initialPhone={customer.phone}
+			/>
+
+			{/* Disposition History Modal */}
+			<DispositionHistoryModal
+				isOpen={isDispositionHistoryModalOpen}
+				onClose={() => {
+					setIsDispositionHistoryModalOpen(false);
+					setSelectedDispositionHistoryItem(null);
+				}}
+				dispositionItem={selectedDispositionHistoryItem}
+			/>
+		</div>
+	);
+};
+
+export default CustomerDetailsModal;
+

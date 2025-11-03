@@ -165,11 +165,11 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 							<div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
 								<Icon name="upload-cloud" />
 							</div>
-							<p className="font-inter text-sm font-medium text-[#050711] mb-1">
-								Click to upload or drag and drop
+							<p className="font-inter text-sm font-medium text-[#050711] mb-2">
+								Drag and Drop or Upload Organization Logo
 							</p>
 							<p className="font-lato text-xs text-gray-600">
-								{getFileTypeDescription()}
+								We recommend you to upload a jpg / jpeg / png file with a minimum dimension of {minDimensions.width}w x {minDimensions.height}h and less than {maxSize}MB
 							</p>
 						</div>
 					</div>

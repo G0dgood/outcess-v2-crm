@@ -1,12 +1,23 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SetupProvider, useSetup } from '@/contexts/SetupContext';
 import DashboardHeader from '@/components/ui/DashboardHeader';
 import DashboardSideNav from '@/components/ui/DashboardSideNav';
+import MobileSideNav from '@/components/ui/MobileSideNav';
+import GlobalStickyNotes from '@/components/ui/GlobalStickyNotes';
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
 	const { setupData } = useSetup();
+	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+	const toggleMobileMenu = () => {
+		setIsMobileMenuOpen(!isMobileMenuOpen);
+	};
+
+	const closeMobileMenu = () => {
+		setIsMobileMenuOpen(false);
+	};
 
 	return (
 		<div id="page-wrapper">
@@ -24,10 +35,24 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 					console.log('Logout clicked');
 					// Add logout logic here
 				}}
+				onMobileMenuToggle={toggleMobileMenu}
 			/>
 
-			<DashboardSideNav activeItem="users" />
+			{/* Desktop SideNav */}
+			<DashboardSideNav 
+				activeItem="users"
+				isMobileOpen={false}
+				onMobileClose={() => {}}
+			/>
+
+			{/* Mobile SideNav */}
+			<MobileSideNav
+				activeItem="users"
+				isOpen={isMobileMenuOpen}
+				onClose={closeMobileMenu}
+			/>
 			<main>{children}</main>
+			<GlobalStickyNotes />
 		</div>
 	);
 }

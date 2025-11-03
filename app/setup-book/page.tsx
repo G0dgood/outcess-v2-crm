@@ -4,7 +4,10 @@ import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import Icon from '@/components/ui/Icon';
+import Pagination from '@/components/ui/Pagination';
 import { useSetup } from '@/contexts/SetupContext';
+import PageHeading from '@/components/ui/PageHeading';
+import { UploadIcon } from '@radix-ui/react-icons';
 
 interface FieldDefinition {
 	id: string;
@@ -13,15 +16,28 @@ interface FieldDefinition {
 	required: boolean;
 }
 
+interface SetupBookRecord {
+	id: string;
+	[key: string]: string | number | boolean; // Dynamic fields based on field definitions
+}
+
 const SetupBookPage: React.FC = () => {
 	const { setupData } = useSetup();
 	const [searchTerm, setSearchTerm] = useState('');
+	const [currentPage, setCurrentPage] = useState(1);
 	const [fieldDefinitions, setFieldDefinitions] = useState<FieldDefinition[]>([
 		{ id: '1', name: 'Name', type: 'text', required: true },
 		{ id: '2', name: 'Phone', type: 'phone', required: true },
 		{ id: '3', name: 'Email', type: 'email', required: false },
 	]);
-	const [totalCustomers, setTotalCustomers] = useState(0);
+	const [records, setRecords] = useState<SetupBookRecord[]>([
+		{ id: '1', Name: 'John Doe', Phone: '08012345678', Email: 'john.doe@example.com' },
+		{ id: '2', Name: 'Jane Smith', Phone: '08087654321', Email: 'jane.smith@example.com' },
+		{ id: '3', Name: 'Bob Johnson', Phone: '08011223344', Email: 'bob.johnson@example.com' },
+		{ id: '4', Name: 'Alice Williams', Phone: '08055667788', Email: 'alice.williams@example.com' },
+		{ id: '5', Name: 'Charlie Brown', Phone: '08099887766', Email: 'charlie.brown@example.com' },
+		{ id: '6', Name: 'David Miller', Phone: '08044332211', Email: 'david.miller@example.com' },
+	]);
 
 	const handleUpload = () => {
 		console.log('Upload clicked');
@@ -51,31 +67,28 @@ const SetupBookPage: React.FC = () => {
 		setFieldDefinitions(fieldDefinitions.filter(field => field.id !== fieldId));
 	};
 
+	const filteredRecords = records.filter(record => {
+		if (!searchTerm) return true;
+		const searchLower = searchTerm.toLowerCase();
+		return fieldDefinitions.some(field => {
+			const value = record[field.name];
+			return value && String(value).toLowerCase().includes(searchLower);
+		});
+	});
+
+	const totalPages = Math.ceil(filteredRecords.length / 10);
+	const startIndex = (currentPage - 1) * 10;
+	const paginatedRecords = filteredRecords.slice(startIndex, startIndex + 10);
+
 	return (
 		<div>
-			{/* Title and Upload Button */}
-			<div className="flex items-center justify-between mb-6">
-				<h1 className="font-lato font-medium text-[16px] leading-[150%] text-[#3A4050]">Setup Book</h1>
-				<Button
-					variant="outline"
-					size="md"
-					onClick={handleUpload}
-					className="bg-blue-500 text-white border-blue-500 hover:bg-blue-600 flex items-center gap-2"
-				>
-					<Icon name="upload-cloud" size="sm" />
-					Upload
-				</Button>
-			</div>
-
-			{/* Description */}
-			<div className="mb-6">
-				<p className="font-lato font-normal text-[14px] leading-[150%] text-[#6D7280]">
-					Upload and manage your call lists here. Prepare your agent's calling base for efficient outreach.
-				</p>
-			</div>
+			{/* Title */}
+			<PageHeading
+				text="Setup Book"
+			/>
 
 			{/* Search Bar */}
-			<div className="mb-6">
+			<div className="my-6 flex items-center justify-between">
 				<Search
 					placeholder="Search"
 					value={searchTerm}
@@ -85,84 +98,78 @@ const SetupBookPage: React.FC = () => {
 					onClear={() => console.log('Search cleared')}
 					showClearButton={true}
 				/>
+				<Button
+					size="md"
+					onClick={handleUpload}
+					variant="primary"
+					className="flex items-center gap-2"
+				>
+					<UploadIcon className="w-4 h-4" />
+					Upload
+				</Button>
 			</div>
 
-			{/* Field Definitions Section */}
+			{/* Records Table */}
 			<div className="bg-white border border-gray-200 overflow-hidden">
-				{/* Field Headers */}
-				<div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
-					<div className="flex items-center justify-between">
-						<div className="flex items-center gap-6">
-							{fieldDefinitions.map((field) => (
-								<div key={field.id} className="flex items-center gap-2">
-									<span className="text-sm font-medium text-gray-700">{field.name}</span>
-									<div className="flex items-center gap-1">
-										<button
-											onClick={() => handleFieldEdit(field.id)}
-											className="text-gray-400 hover:text-gray-600 transition-colors"
-											title="Edit field"
-										>
-											<Icon name="Edit_duotone_line" size="sm" />
-										</button>
-										<button
-											onClick={() => handleFieldDelete(field.id)}
-											className="text-gray-400 hover:text-red-600 transition-colors"
-											title="Delete field"
-										>
-											<Icon name="Trash_light" size="sm" />
-										</button>
-									</div>
-								</div>
-							))}
-						</div>
-						<button
-							onClick={handleAddField}
-							className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-						>
-							Add Field
-						</button>
-					</div>
-				</div>
-
-				{/* Content Area */}
-				<div className="p-6 min-h-[400px]">
-					{totalCustomers === 0 ? (
-						<div className="flex flex-col items-center justify-center h-full text-center">
-							<div className="mb-4">
-								<Icon name="upload-cloud" size="4xl" className="text-gray-300" />
-							</div>
-							<h3 className="text-lg font-medium text-gray-900 mb-2">
-								No Data Uploaded Yet
-							</h3>
-							<p className="text-gray-500 mb-4">
-								Upload your call list to get started with your outreach campaigns.
-							</p>
-							<Button
-								variant="outline"
-								size="md"
-								onClick={handleUpload}
-								className="bg-blue-500 text-white border-blue-500 hover:bg-blue-600 flex items-center gap-2"
-							>
-								<Icon name="upload-cloud" size="sm" />
-								Upload Your First File
-							</Button>
-						</div>
-					) : (
-						<div className="text-center text-gray-500">
-							<p>Your uploaded data will appear here</p>
-						</div>
-					)}
+				<div className="overflow-x-auto">
+					<table className="min-w-full divide-y divide-gray-200">
+						<thead className="bg-gray-50">
+							<tr>
+								{fieldDefinitions.map((field) => (
+									<th key={field.id}>
+										{field.name}
+									</th>
+								))}
+							</tr>
+						</thead>
+						<tbody className="bg-white divide-y divide-gray-200">
+							{filteredRecords.length === 0 ? (
+								<tr>
+									<td colSpan={fieldDefinitions.length} className="px-6 py-12 text-center">
+										<div className="flex flex-col items-center justify-center">
+											<div className="mb-4">
+												<Icon name="upload-cloud" size="4xl" className="text-gray-300" />
+											</div>
+											<h3 className="text-lg font-medium text-gray-900 mb-2">
+												No Data Found
+											</h3>
+											<p className="text-gray-500">
+												{searchTerm ? 'No records match your search.' : 'Upload your call list to get started.'}
+											</p>
+										</div>
+									</td>
+								</tr>
+							) : (
+								paginatedRecords.map((record) => (
+									<tr key={record.id} className="hover:bg-gray-50">
+										{fieldDefinitions.map((field) => (
+											<td key={field.id}>
+												{record[field.name] || '-'}
+											</td>
+										))}
+									</tr>
+								))
+							)}
+						</tbody>
+					</table>
 				</div>
 			</div>
 
-			{/* Footer */}
-			<div className="mt-6 flex justify-end">
-				<div className="text-sm text-gray-500">
-					Total Customers: <span className="font-medium">{totalCustomers}</span>
-				</div>
-			</div>
+			{/* Pagination */}
+			{filteredRecords.length > 0 && (
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onPageChange={setCurrentPage}
+					showEllipsis={true}
+					maxVisiblePages={5}
+					primaryColor={setupData.primaryColor}
+					secondaryColor={setupData.secondaryColor}
+				/>
+			)}
 		</div>
 	);
 };
 
 export default SetupBookPage;
+

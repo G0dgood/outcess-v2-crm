@@ -4,7 +4,7 @@ import React from 'react';
 import Input from './Input';
 import Dropdown from './Dropdown';
 import Button from './Button';
-import Icon from './Icon';
+import { Cross2Icon } from '@radix-ui/react-icons';
 
 interface AddUserModalProps {
 	isOpen: boolean;
@@ -17,6 +17,7 @@ interface AddUserModalProps {
 		role: string;
 	}) => void;
 	roleOptions: { value: string; label: string; }[];
+	onAddFields?: () => void;
 }
 
 export const AddUserModal: React.FC<AddUserModalProps> = ({
@@ -24,6 +25,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 	onClose,
 	onSave,
 	roleOptions,
+	onAddFields,
 }) => {
 	const [formData, setFormData] = React.useState({
 		firstName: '',
@@ -65,21 +67,22 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 bg-[#0b0d1293]/50  bg-opacity-50 flex items-center justify-center z-50">
-			<div className="bg-white    w-full max-w-md mx-4">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+			<div className="bg-white  w-full max-w-md mx-4">
 				{/* Modal Header */}
-				<div className="flex justify-between items-center border-b border-[#E5E7EB] pb-4 p-6">
-					<h2 className="font-inter text-xl font-semibold text-[#050711]">Add User</h2>
+				<div className="flex justify-between items-center p-6 border-b border-gray-200">
+					<h2 className="text-xl font-semibold text-gray-900">Add User</h2>
 					<button
 						onClick={onClose}
-						className="text-gray-400 hover:text-gray-600 transition-colors"
+						className="text-gray-500 hover:text-gray-700 transition-colors"
+						aria-label="Close"
 					>
-						<Icon name="Close_round_light" size="lg" />
+						<Cross2Icon className="w-5 h-5" />
 					</button>
 				</div>
 
 				{/* Modal Form */}
-				<div className="space-y-4 p-6">
+				<div className="p-6 space-y-6">
 					<Input
 						label="First Name"
 						placeholder="Enter First Name"
@@ -125,22 +128,30 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 				</div>
 
 				{/* Modal Footer */}
-				<div className="flex justify-end gap-3  p-6">
-					<Button
-						variant="outline"
-						size="md"
-						onClick={handleCancel}
+				<div className="flex justify-between items-center p-6 border-t border-gray-200">
+					<button
+						onClick={onAddFields}
+						className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
 					>
-						Cancel
-					</Button>
-					<Button
-						variant="primary"
-						size="md"
-						onClick={handleSave}
-						disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.role}
-					>
-						Save
-					</Button>
+						Add Fields
+					</button>
+					<div className="flex gap-3">
+						<Button
+							variant="outline"
+							size="md"
+							onClick={handleCancel}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="primary"
+							size="md"
+							onClick={handleSave}
+							disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.role}
+						>
+							Save
+						</Button>
+					</div>
 				</div>
 			</div>
 		</div>
