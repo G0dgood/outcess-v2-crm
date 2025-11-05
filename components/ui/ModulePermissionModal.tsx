@@ -120,13 +120,13 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
-			<div className="bg-white shadow-lg w-full max-w-md mx-4 overflow-hidden flex flex-col">
+			<div className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 overflow-hidden flex flex-col max-h-[90vh]">
 				{/* Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200 shrink-0">
-					<h2 className="text-xl font-semibold text-gray-900">Module Permission</h2>
+				<div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
+					<h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Module Permission</h2>
 					<button
 						onClick={onClose}
-						className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+						className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -134,27 +134,27 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 				</div>
 
 				{/* Form Content */}
-				<div className="flex-1 p-6 space-y-4">
-					<p className="text-sm text-gray-600">
+				<div className="flex-1 p-6 space-y-4 overflow-y-auto">
+					<p className="text-sm text-gray-600 dark:text-gray-400">
 						Select the roles that should have access to the module.
 					</p>
 
 					<div ref={dropdownRef} className="relative">
-						<label className="block text-sm font-medium text-gray-700 mb-2">
+						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 							Roles
 						</label>
 						<div
 							onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-							className="w-full px-3 py-2 border border-gray-300   bg-white text-left flex items-center justify-between hover:border-gray-400 transition-colors min-h-[42px] cursor-pointer"
+							className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-left flex items-center justify-between hover:border-gray-400 dark:hover:border-gray-500 transition-colors min-h-[42px] cursor-pointer"
 						>
 							<div className="flex flex-wrap gap-2 flex-1">
 								{selectedRoleLabels.length === 0 ? (
-									<span className="text-sm text-gray-500">Select roles</span>
+									<span className="text-sm text-gray-500 dark:text-gray-400">Select roles</span>
 								) : (
 									selectedRoleLabels.map((role) => (
 										<span
 											key={role.id}
-											className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 border border-gray-300   text-sm text-gray-700"
+											className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-500 text-sm text-gray-700 dark:text-gray-300"
 										>
 											{role.label}
 											<button
@@ -163,7 +163,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 													e.stopPropagation();
 													handleRemoveRole(role.id);
 												}}
-												className="hover:text-red-600 transition-colors"
+												className="hover:text-red-600 dark:hover:text-red-400 transition-colors"
 												aria-label={`Remove ${role.label}`}
 											>
 												<Cross2Icon className="w-3 h-3" />
@@ -172,21 +172,22 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 									))
 								)}
 							</div>
-							<ChevronDownIcon className={`w-4 h-4 text-gray-500 transition-transform shrink-0 ml-2 ${isDropdownOpen ? 'transform rotate-180' : ''}`} />
+							<ChevronDownIcon className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform shrink-0 ml-2 ${isDropdownOpen ? 'transform rotate-180' : ''}`} />
 						</div>
 						{isDropdownOpen && (
-							<div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300   shadow-lg z-50 max-h-48 overflow-y-auto">
+							<div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-lg z-50 max-h-48 overflow-y-auto">
 								<div className="py-2">
 									{roleOptions.map((role) => (
 										<label
 											key={role.id}
-											className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer"
+											className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
 										>
 											<Checkbox
 												checked={selectedRoles.includes(role.id)}
 												onChange={() => handleRoleToggle(role.id)}
+												size="medium"
 											/>
-											<span className="text-sm text-gray-900">{role.label}</span>
+											<span className="text-sm text-gray-900 dark:text-gray-100">{role.label}</span>
 										</label>
 									))}
 								</div>
@@ -196,7 +197,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 shrink-0">
+				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 shrink-0">
 					<Button
 						variant="danger"
 						size="md"

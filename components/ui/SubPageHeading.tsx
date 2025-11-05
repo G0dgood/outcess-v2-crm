@@ -1,0 +1,20 @@
+import React from 'react';
+
+interface SubPageHeadingProps {
+	text: string;
+	className?: string;
+}
+
+export const SubPageHeading: React.FC<SubPageHeadingProps> = ({
+	text,
+	className = '',
+}) => {
+	return (
+		<p className={`font-lato font-normal text-[14px] leading-[150%] text-[#6D7280] dark:text-gray-400 ${className}`}>
+			{text}
+		</p>
+	);
+};
+
+export default SubPageHeading;
+

@@ -22,8 +22,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 			<AdminHeader
 				userName="Admin User"
 				userEmail="admin@example.com"
-				isOnline={true}
-				onNotificationsClick={() => console.log('Notifications clicked')}
+				isOnline={true} 
 				onEditProfileClick={() => console.log('Edit profile clicked')}
 				onLogoutClick={() => {
 					console.log('Logout clicked');

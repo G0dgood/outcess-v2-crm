@@ -63,13 +63,13 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-			<div className="bg-white shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+			<div className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col">
 				{/* Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200 shrink-0">
-					<h2 className="text-xl font-semibold text-gray-900">Create Custom Role</h2>
+				<div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
+					<h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Create Custom Role</h2>
 					<button
 						onClick={onClose}
-						className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+						className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -95,9 +95,9 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 shrink-0">
+				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 shrink-0">
 					<Button
-						variant="outline"
+						variant="danger"
 						size="md"
 						onClick={handleCancel}
 					>

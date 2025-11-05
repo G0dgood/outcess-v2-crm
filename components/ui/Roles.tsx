@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import Button from './Button';
 import CreateCustomRoleModal from './CreateCustomRoleModal';
+import SubPageHeading from './SubPageHeading';
+import PageHeading from './PageHeading';
 
 interface Role {
 	id: string;
@@ -43,10 +45,12 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 			{/* Header Section */}
 			<div className="mb-6 flex items-start justify-between">
 				<div>
-					<h1 className="text-2xl font-semibold text-gray-900 mb-2">Roles</h1>
-					<p className="text-gray-600">
-						Following are the roles available. You can also create custom roles.
-					</p>
+					<PageHeading
+						text="Roles"
+					/>
+					<SubPageHeading
+						text="Following are the roles available. You can also create custom roles."
+					/>
 				</div>
 				<Button
 					variant="primary"
@@ -62,10 +66,10 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 				{roles.map((role) => (
 					<div
 						key={role.id}
-						className="bg-white border border-gray-200  p-6 hover:shadow-md transition-shadow"
+						className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow"
 					>
-						<h3 className="text-lg font-semibold text-gray-900 mb-2">{role.name}</h3>
-						<p className="text-sm text-gray-600">Users: {role.userCount}</p>
+						<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{role.name}</h3>
+						<p className="text-sm text-gray-600 dark:text-gray-400">Users: {role.userCount}</p>
 					</div>
 				))}
 			</div>

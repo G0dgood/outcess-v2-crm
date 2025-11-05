@@ -6,7 +6,9 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
 import PageHeading from '@/components/ui/PageHeading';
+import BackButton from '@/components/ui/BackButton';
 import { ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { useSetup } from '@/contexts/SetupContext';
 
 interface User {
 	id: string;
@@ -22,6 +24,9 @@ const EditUserPage: React.FC = () => {
 	const router = useRouter();
 	const params = useParams();
 	const userId = params.id as string;
+	const { setupData } = useSetup();
+	const primaryColor = setupData.primaryColor || '#050711';
+	const secondaryColor = setupData.secondaryColor || '#6C8B7D';
 
 	const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
 	const [showAlert, setShowAlert] = useState(true);
@@ -134,40 +139,47 @@ const EditUserPage: React.FC = () => {
 
 	return (
 		<div className="w-full">
+			{/* Back Button */}
+			<div className="mb-4">
+				<BackButton onClick={handleCancel} />
+			</div>
+
 			{/* User Header */}
-			<div className="bg-white border border-gray-200 p-6 mb-6">
+			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 mb-6">
 				<div className="flex items-center gap-4 mb-4">
-					<div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-						<span className="text-xl font-semibold text-gray-600">
+					<div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+						<span className="text-xl font-semibold text-gray-600 dark:text-gray-300">
 							{formData.firstName[0]}{formData.lastName[0]}
 						</span>
 					</div>
 					<div>
-						<h2 className="text-2xl font-semibold text-gray-900">
+						<h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
 							{formData.firstName} {formData.lastName}
 						</h2>
-						<p className="text-sm text-gray-500">{formData.email}</p>
-						<p className="text-sm text-gray-500">{formData.phone}</p>
+						<p className="text-sm text-gray-500 dark:text-gray-400">{formData.email}</p>
+						<p className="text-sm text-gray-500 dark:text-gray-400">{formData.phone}</p>
 					</div>
 				</div>
 
 				{/* Tabs */}
-				<div className="flex gap-6 border-b border-gray-200">
+				<div className="flex gap-6 border-b border-gray-200 dark:border-gray-700">
 					<button
 						onClick={() => setActiveTab('profile')}
 						className={`pb-2 px-1 font-medium transition-colors ${activeTab === 'profile'
-							? 'border-b-2 border-blue-600 text-blue-600'
-							: 'text-gray-500 hover:text-gray-700'
+							? 'border-b-2'
+							: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
 							}`}
+						style={activeTab === 'profile' ? { borderColor: primaryColor, color: primaryColor } : {}}
 					>
 						Profile
 					</button>
 					<button
 						onClick={() => setActiveTab('security')}
 						className={`pb-2 px-1 font-medium transition-colors ${activeTab === 'security'
-							? 'border-b-2 border-blue-600 text-blue-600'
-							: 'text-gray-500 hover:text-gray-700'
+							? 'border-b-2'
+							: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
 							}`}
+						style={activeTab === 'security' ? { borderColor: primaryColor, color: primaryColor } : {}}
 					>
 						Security
 					</button>
@@ -176,7 +188,7 @@ const EditUserPage: React.FC = () => {
 
 			{/* Profile Form */}
 			{activeTab === 'profile' && (
-				<div className="bg-white border border-gray-200 rounded-lg p-6">
+				<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6">
 					<PageHeading text="Edit User" className="mb-6" />
 
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -201,7 +213,7 @@ const EditUserPage: React.FC = () => {
 							placeholder="Enter Email"
 							type="email"
 							disabled
-							className="bg-gray-50"
+							className="bg-gray-50 dark:bg-gray-700"
 						/>
 
 						<Input
@@ -221,11 +233,11 @@ const EditUserPage: React.FC = () => {
 						/>
 
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-2">
+							<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 								Status
 							</label>
 							<div className="flex items-center gap-3">
-								<span className="text-sm text-gray-700">
+								<span className="text-sm text-gray-700 dark:text-gray-300">
 									{formData.status ? 'Active' : 'Inactive'}
 								</span>
 								<label className="relative inline-flex items-center cursor-pointer">
@@ -235,16 +247,22 @@ const EditUserPage: React.FC = () => {
 										onChange={(e) => handleInputChange('status')(e.target.checked)}
 										className="sr-only peer"
 									/>
-									<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+									<div
+										className="w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-gray-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4"
+										style={{
+											backgroundColor: formData.status ? primaryColor : '#D1D5DB',
+											boxShadow: formData.status ? `0 0 0 4px ${primaryColor}40` : 'none',
+										}}
+									/>
 								</label>
 							</div>
 						</div>
 					</div>
 
 					{/* Action Buttons */}
-					<div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
+					<div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
 						<Button
-							variant="outline"
+							variant="danger"
 							size="md"
 							onClick={handleCancel}
 						>
@@ -254,6 +272,7 @@ const EditUserPage: React.FC = () => {
 							variant="primary"
 							size="md"
 							onClick={handleSave}
+							style={{ backgroundColor: primaryColor }}
 						>
 							Save
 						</Button>
@@ -263,19 +282,19 @@ const EditUserPage: React.FC = () => {
 
 			{/* Security Form */}
 			{activeTab === 'security' && (
-				<div className="bg-white border border-gray-200 rounded-lg p-6">
+				<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6">
 					{/* Alert Message */}
 					{showAlert && (
-						<div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-3">
+						<div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 flex items-start gap-3 rounded">
 							<div className="shrink-0 mt-0.5">
-								<ExclamationTriangleIcon className="w-5 h-5 text-orange-600" />
+								<ExclamationTriangleIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
 							</div>
-							<div className="flex-1 text-sm text-orange-800">
+							<div className="flex-1 text-sm text-orange-800 dark:text-orange-400">
 								You're about to change the password of {formData.firstName} {formData.lastName}. The user will be logged out immediately.
 							</div>
 							<button
 								onClick={() => setShowAlert(false)}
-								className="shrink-0 text-orange-600 hover:text-orange-800 transition-colors"
+								className="shrink-0 text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 transition-colors"
 								aria-label="Close alert"
 							>
 								<Cross2Icon className="w-4 h-4" />
@@ -303,16 +322,16 @@ const EditUserPage: React.FC = () => {
 					</div>
 
 					{/* Action Buttons */}
-					<div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
+					<div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
 						<Button
-							variant="outline"
+							variant="danger"
 							size="md"
 							onClick={handleCancel}
 						>
 							Cancel
 						</Button>
 						<Button
-							variant="danger"
+							variant="primary"
 							size="md"
 							onClick={handleChangePassword}
 							disabled={!passwordData.newPassword || !passwordData.confirmPassword}

@@ -81,13 +81,13 @@ export const SMSModal: React.FC<SMSModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-			<div className="bg-white shadow-lg w-full max-w-md mx-4">
+			<div className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-md mx-4">
 				{/* Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200">
-					<h2 className="text-xl font-semibold text-gray-900">SMS</h2>
+				<div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+					<h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">SMS</h2>
 					<button
 						onClick={onClose}
-						className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+						className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -116,7 +116,7 @@ export const SMSModal: React.FC<SMSModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="flex justify-end items-center p-6 border-t border-gray-200">
+				<div className="flex justify-end items-center p-6 border-t border-gray-200 dark:border-gray-700">
 					<Button
 						variant="primary"
 						size="md"

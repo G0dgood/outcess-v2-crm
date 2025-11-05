@@ -38,13 +38,13 @@ export const Button: React.FC<ButtonProps> = ({
 	};
 
 	const variantClasses = {
-		primary: 'bg-[#050711] text-white hover:bg-[#04060e] focus:ring-[#050711] active:bg-[#03050c] cursor-pointer',
-		secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 active:bg-gray-300 cursor-pointer',
-		outline: 'border border-[#050711] text-[#050711] bg-transparent hover:bg-[#050711] hover:text-white focus:ring-[#050711] active:bg-[#04060e] cursor-pointer',
-		ghost: 'text-[#050711] bg-transparent hover:bg-[#050711]/10 focus:ring-[#050711] active:bg-[#050711]/20 cursor-pointer',
-		danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 active:bg-red-800 cursor-pointer',
-		'muted-sage-green': 'bg-(--interactive-secondary) text-white border-(--muted-sage-green) hover:bg-(--muted-sage-green)/90 focus:ring-(--muted-sage-green) active:bg-(--muted-sage-green)/80 cursor-pointer',
-		'muted-sage-green-outline': 'border border-(--muted-sage-green) text-(--muted-sage-green) bg-transparent hover:bg-(--interactive-secondary) hover:text-white focus:ring-(--muted-sage-green) active:bg-(--muted-sage-green)/90 cursor-pointer',
+		primary: 'bg-[#050711] dark:bg-gray-700 text-white dark:text-gray-100 hover:bg-[#04060e] dark:hover:bg-gray-600 focus:ring-[#050711] dark:focus:ring-gray-500 active:bg-[#03050c] dark:active:bg-gray-800 cursor-pointer',
+		secondary: 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500 dark:focus:ring-gray-400 active:bg-gray-300 dark:active:bg-gray-800 cursor-pointer',
+		outline: 'border border-[#050711] dark:border-gray-400 text-[#050711] dark:text-gray-100 bg-transparent hover:bg-[#050711] dark:hover:bg-gray-700 hover:text-white dark:hover:text-gray-100 focus:ring-[#050711] dark:focus:ring-gray-400 active:bg-[#04060e] dark:active:bg-gray-800 cursor-pointer',
+		ghost: 'text-[#050711] dark:text-gray-300 bg-transparent hover:bg-[#050711]/10 dark:hover:bg-gray-700/50 focus:ring-[#050711] dark:focus:ring-gray-400 active:bg-[#050711]/20 dark:active:bg-gray-700/70 cursor-pointer',
+		danger: 'bg-red-600 dark:bg-red-700 text-white dark:text-gray-100 hover:bg-red-700 dark:hover:bg-red-600 focus:ring-red-500 dark:focus:ring-red-400 active:bg-red-800 dark:active:bg-red-800 cursor-pointer',
+		'muted-sage-green': 'bg-(--interactive-secondary) dark:bg-gray-700 text-white dark:text-gray-100 border-(--muted-sage-green) dark:border-gray-600 hover:bg-(--muted-sage-green)/90 dark:hover:bg-gray-600 focus:ring-(--muted-sage-green) dark:focus:ring-gray-500 active:bg-(--muted-sage-green)/80 dark:active:bg-gray-800 cursor-pointer',
+		'muted-sage-green-outline': 'border border-(--muted-sage-green) dark:border-gray-400 text-(--muted-sage-green) dark:text-gray-300 bg-transparent hover:bg-(--interactive-secondary) dark:hover:bg-gray-700 hover:text-white dark:hover:text-gray-100 focus:ring-(--muted-sage-green) dark:focus:ring-gray-400 active:bg-(--muted-sage-green)/90 dark:active:bg-gray-800 cursor-pointer',
 	};
 
 	const widthClasses = fullWidth ? 'w-full' : '';

@@ -94,8 +94,8 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 				ref={navRef}
 				id="side-nav"
 				className={`
-					bg-white w-64 border-r border-gray-200
-					hidden md:block relative h-auto
+					w-64 border-r border-gray-200 dark:border-gray-700
+					hidden md:block relative h-auto transition-colors duration-300
 					${className}
 				`}
 			>
@@ -110,7 +110,7 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 										onClick={(e) => handleItemClick(item, e)}
 										className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 transition-all duration-200 ${isActive
 											? 'text-white'
-											: 'text-gray-700 hover:text-white'
+											: 'text-gray-700 dark:text-gray-300 hover:text-white dark:hover:text-white'
 											}`}
 										style={{
 											backgroundColor: isActive ? setupData.primaryColor || '#050711' : 'transparent',
@@ -137,11 +137,11 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 											}
 										}}
 									>
-										<div className={`shrink-0 transition-colors duration-200 ${isActive ? 'text-white' : 'text-gray-600'
+										<div className={`shrink-0 transition-colors duration-200 ${isActive ? 'text-white' : 'text-gray-600 dark:text-gray-400'
 											}`}>
 											{item.icon}
 										</div>
-										<span className={`font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] text-[#3A4050] transition-colors duration-200 flex-1 text-left ${isActive ? 'text-white' : 'text-gray-700'
+										<span className={`font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive ? 'text-white' : 'text-gray-700 dark:text-gray-300'
 											}`}>
 											{item.label}
 										</span>
@@ -152,7 +152,7 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 					</div>
 
 					{/* Separator */}
-					<div className="border-t border-gray-200 my-4"></div>
+					<div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>
 				</div>
 			</nav>
 		</>

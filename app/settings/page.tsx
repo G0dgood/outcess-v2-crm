@@ -28,11 +28,6 @@ const SettingsPage: React.FC = () => {
 		switch (activeTab) {
 			case 'roles':
 				return <Roles />;
-			case 'settings':
-				return (
-					<div className="bg-white border border-gray-200 p-6">
-					</div>
-				);
 			case 'fields':
 				return <Fields />;
 			case 'status':
@@ -42,11 +37,7 @@ const SettingsPage: React.FC = () => {
 			case 'company-details':
 				return <CompanyDetails />;
 			default:
-				return (
-					<div className="bg-white border border-gray-200 p-6">
-						<p className="text-gray-600">Please select a settings option from the sidebar.</p>
-					</div>
-				);
+				return <Fields />;
 		}
 	};
 

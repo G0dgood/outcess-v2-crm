@@ -179,7 +179,7 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 				{/* Footer */}
 				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 shrink-0">
 					<Button
-						variant="outline"
+						variant="danger"
 						size="md"
 						onClick={handleCancel}
 					>

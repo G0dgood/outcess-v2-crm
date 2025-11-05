@@ -11,7 +11,7 @@ export const PageHeading: React.FC<PageHeadingProps> = ({
 }) => {
 	return (
 		<h1
-			className={`font-lato not-italic font-medium text-[20px] bold leading-[150%] text-(--text-secondary) ${className}`}
+			className={`font-lato not-italic font-semibold text-[24px] leading-[150%] text-[#050711] dark:text-gray-100 ${className}`}
 		>
 			{text}
 		</h1>

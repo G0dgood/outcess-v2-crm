@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 interface CheckboxProps {
 	id?: string;
@@ -7,6 +7,7 @@ interface CheckboxProps {
 	label?: string;
 	disabled?: boolean;
 	className?: string;
+	size?: 'default' | 'small' | 'medium';
 }
 
 const Checkbox: React.FC<CheckboxProps> = ({
@@ -15,16 +16,19 @@ const Checkbox: React.FC<CheckboxProps> = ({
 	onChange,
 	label,
 	disabled = false,
-	className = ''
+	className = '',
+	size = 'default'
 }) => {
-	const checkboxId = id || `checkbox-${Math.random().toString(36).substr(2, 9)}`;
+	const generatedId = useId();
+	const checkboxId = id || generatedId;
+	const sizeClass = size === 'small' ? 'checkbox-small' : size === 'medium' ? 'checkbox-medium' : '';
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		onChange(e.target.checked);
 	};
 
 	return (
-		<div className={`checkbox-container ${className}`}>
+		<div className={`checkbox-container ${sizeClass} ${className}`}>
 			<div className="checkbox-round">
 				<input
 					type="checkbox"

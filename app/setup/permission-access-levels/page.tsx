@@ -69,23 +69,22 @@ export default function PermissionAccessLevelsPage() {
 				<div className="flex items-center gap-2 mb-4">
 					<BackButton
 						onClick={() => router.back()}
-						size="md"
 					/>
 					<div>
-						<h1 className="font-lato not-italic font-semibold text-[24px] leading-[150%] text-[#3A4050]">Permission Access Levels</h1>
-						<p className="font-lato not-italic font-normal text-[16px] leading-[150%] text-[#6D7280]">Manage user roles permissions</p>
+						<h1 className="font-lato not-italic font-semibold text-[24px] leading-[150%] text-[#3A4050] dark:text-gray-100">Permission Access Levels</h1>
+						<p className="font-lato not-italic font-normal text-[16px] leading-[150%] text-[#6D7280] dark:text-gray-400">Manage user roles permissions</p>
 					</div>
 				</div>
 
 				{/* Role Tabs */}
-				<div className="flex gap-1 bg-gray-200 p-1   w-fit">
+				<div className="flex gap-1 bg-gray-200 dark:bg-gray-700 p-1   w-fit">
 					{roleManagementSettings.roles.map((role) => (
 						<button
 							key={role.id}
 							onClick={() => handleRoleChange(role.id)}
-							className={`px-4 py-2 cursor-pointer  font-medium transition-colors font-lato text-base leading-[150%] text-[#3A4050] ${permissionAccessSettings.selectedRole === role.id
-								? 'bg-[#050711] text-white'
-								: 'text-gray-600 hover:text-gray-900'
+							className={`px-4 py-2 cursor-pointer  font-medium transition-colors font-lato text-base leading-[150%] text-[#3A4050] dark:text-gray-300 ${permissionAccessSettings.selectedRole === role.id
+								? 'bg-[#050711] dark:bg-gray-100 text-white dark:text-gray-900'
+								: 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
 								}`}
 						>
 							{role.name}
@@ -97,21 +96,21 @@ export default function PermissionAccessLevelsPage() {
 			{/* Permission Categories */}
 			<div className="space-y-6">
 				{permissionAccessSettings.permissionCategories.map((category) => (
-					<div key={category.id} className="bg-white border border-gray-200 ">
-						<div className="p-6 border-b border-gray-200">
+					<div key={category.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 ">
+						<div className="p-6 border-b border-gray-200 dark:border-gray-700">
 							<div className="flex items-center gap-3">
-								<div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+								<div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
 									<Icon name={category.icon} size="md" />
 								</div>
-								<h2 className="font-inter text-lg font-semibold text-[#050711]">{category.name}</h2>
+								<h2 className="font-inter text-lg font-semibold text-[#050711] dark:text-gray-100">{category.name}</h2>
 							</div>
 						</div>
 						<div className="p-6 space-y-4">
 							{category.permissions.map((permission) => (
 								<div key={permission.id} className="grid grid-cols-2 items-center justify-between">
 									<div className="flex-1">
-										<h3 className="font-inter text-sm font-medium text-[#050711] mb-1">{permission.name}</h3>
-										<p className="font-lato text-xs text-gray-600 col-span-2">{permission.description}</p>
+										<h3 className="font-inter text-sm font-medium text-[#050711] dark:text-gray-100 mb-1">{permission.name}</h3>
+										<p className="font-lato text-xs text-gray-600 dark:text-gray-400 col-span-2">{permission.description}</p>
 									</div>
 									<div className="col-span-1">
 										<Toggle

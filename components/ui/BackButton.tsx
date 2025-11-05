@@ -1,64 +1,62 @@
 'use client';
 
 import React from 'react';
-import { colors } from '@/lib/colors';
+import { useRouter } from 'next/navigation';
+import { ArrowLeftIcon } from '@radix-ui/react-icons';
+import { useSetup } from '@/contexts/SetupContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface BackButtonProps {
 	onClick?: () => void;
+	label?: string;
 	className?: string;
-	size?: 'sm' | 'md' | 'lg';
-	disabled?: boolean;
+	useCustomColor?: boolean;
 }
 
-export const BackButton: React.FC<BackButtonProps> = ({
+const BackButton: React.FC<BackButtonProps> = ({
 	onClick,
+	label = 'Back',
 	className = '',
-	size = 'md',
-	disabled = false,
+	useCustomColor = true,
 }) => {
-	const sizeClasses = {
-		sm: 'w-8 h-8',
-		md: 'w-10 h-10',
-		lg: 'w-12 h-12',
-	};
+	const router = useRouter();
+	const { setupData } = useSetup();
+	const { isDarkMode } = useTheme();
+	const primaryColor = setupData?.primaryColor || '#050711';
 
-	const iconSizes = {
-		sm: 16,
-		md: 20,
-		lg: 24,
+	const handleClick = () => {
+		if (onClick) {
+			onClick();
+		} else {
+			router.back();
+		}
 	};
 
 	return (
 		<button
-			onClick={onClick}
-			disabled={disabled}
-			className={`
-				${sizeClasses[size]}
-				flex items-center justify-center
-				bg-white border border-[#E5E7EB]
-				hover:bg-[#F9FAFB] hover:border-[#6C8B7D]
-				focus:outline-none focus:ring-2 focus:ring-[#6C8B7D] focus:ring-offset-2
-				transition-all duration-200
-				${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-				${className}
-			`}
-			aria-label="Go back"
+			onClick={handleClick}
+			className={`curson-pointer inline-flex items-center gap-2 text-sm font-medium transition-all duration-200 ${useCustomColor
+				? 'dark:text-gray-100' // Override dark mode to ensure visibility
+				: 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
+				} ${className}`}
+			style={useCustomColor ? {
+				color: isDarkMode ? '#F3F4F6' : primaryColor, // Use light color in dark mode, custom color in light mode
+			} : {}}
+			onMouseEnter={(e) => {
+				if (useCustomColor) {
+					e.currentTarget.style.opacity = '0.8';
+				}
+			}}
+			onMouseLeave={(e) => {
+				if (useCustomColor) {
+					e.currentTarget.style.opacity = '1';
+					e.currentTarget.style.color = isDarkMode ? '#F3F4F6' : primaryColor;
+				}
+			}}
+			aria-label={label}
 		>
-			<svg
-				width={iconSizes[size]}
-				height={iconSizes[size]}
-				viewBox="0 0 24 24"
-				fill="none"
-				xmlns="http://www.w3.org/2000/svg"
-			>
-				<path
-					d="M19 12H5M12 19L5 12L12 5"
-					stroke="#050711"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-				/>
-			</svg>
+			<ArrowLeftIcon className="w-4 h-4" />
+			<span>{label}</span>
 		</button>
 	);
 };

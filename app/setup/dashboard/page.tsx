@@ -28,12 +28,12 @@ export default function DashboardPage(): React.JSX.Element {
 	return (
 		<div className="w-full h-full">
 			<div className="mb-8">
-				<h1 className="font-lato not-italic font-semibold text-[24px] leading-[150%] text-[#3A4050]">Dashboard</h1>
-				<p className="font-lato not-italic font-normal text-[16px] leading-[150%] text-[#6D7280]">Set up your dashboard widgets and reports</p>
+				<h1 className="font-lato not-italic font-semibold text-[24px] leading-[150%] text-[#3A4050] dark:text-gray-100">Dashboard</h1>
+				<p className="font-lato not-italic font-normal text-[16px] leading-[150%] text-[#6D7280] dark:text-gray-400">Set up your dashboard widgets and reports</p>
 			</div>
 
 			{/* Dashboard Configuration */}
-			<div className="bg-white border border-gray-200 p-6 mb-6">
+			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 mb-6">
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 					<div>
 						<Input
@@ -63,12 +63,12 @@ export default function DashboardPage(): React.JSX.Element {
 
 			{/* Navigation Tabs */}
 			<div className="mb-6">
-				<div className="flex border-b border-gray-200">
+				<div className="flex border-b border-gray-200 dark:border-gray-700">
 					<button
 						onClick={() => updateDashboardSettings({ activeTab: 'kpi' })}
 						className={`px-4 py-2 font-inter text-sm font-medium transition-colors ${dashboardSettings.activeTab === 'kpi'
-							? 'text-[#050711] border-b-2 border-[#050711]'
-							: 'text-gray-600 hover:text-gray-900'
+							? 'text-[#050711] dark:text-gray-100 border-b-2 border-[#050711] dark:border-gray-100'
+							: 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
 							}`}
 					>
 						KPI Metric
@@ -76,8 +76,8 @@ export default function DashboardPage(): React.JSX.Element {
 					<button
 						onClick={() => updateDashboardSettings({ activeTab: 'disposition' })}
 						className={`px-4 py-2 font-inter text-sm font-medium transition-colors ${dashboardSettings.activeTab === 'disposition'
-							? 'text-[#050711] border-b-2 border-[#050711]'
-							: 'text-gray-600 hover:text-gray-900'
+							? 'text-[#050711] dark:text-gray-100 border-b-2 border-[#050711] dark:border-gray-100'
+							: 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
 							}`}
 					>
 						Call Disposition

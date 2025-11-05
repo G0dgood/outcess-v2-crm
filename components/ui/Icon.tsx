@@ -53,10 +53,16 @@ const Icon: React.FC<IconProps> = ({
 	// Generate alt text if not provided
 	const altText = alt || `${name} icon`;
 
-	// Apply color filter if specified
-	const style = color ? {
-		filter: `brightness(0) saturate(100%) ${getColorFilter(color)}`
-	} : undefined;
+	// Apply color filter if specified, otherwise use default dark mode filter
+	const getIconStyle = () => {
+		if (color) {
+			return {
+				filter: `brightness(0) saturate(100%) ${getColorFilter(color)}`
+			};
+		}
+		// Default: no filter, will use CSS classes for dark mode
+		return undefined;
+	};
 
 	return (
 		<Image
@@ -64,8 +70,8 @@ const Icon: React.FC<IconProps> = ({
 			alt={altText}
 			width={sizeValue}
 			height={sizeValue}
-			className={`inline-block ${className}`}
-			style={style}
+			className={`inline-block ${color ? '' : 'dark:invert dark:opacity-80'} ${className}`}
+			style={getIconStyle()}
 		/>
 	);
 };
@@ -91,6 +97,7 @@ const getColorFilter = (color: string): string => {
 		success: 'invert(64%) sepia(88%) saturate(1552%) hue-rotate(87deg) brightness(119%) contrast(119%)',
 		warning: 'invert(77%) sepia(29%) saturate(1352%) hue-rotate(3deg) brightness(101%) contrast(103%)',
 		error: 'invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%)',
+		red: 'invert(20%) sepia(95%) saturate(7490%) hue-rotate(349deg) brightness(100%) contrast(97%)',
 	};
 
 	// If it's a predefined color, use the filter

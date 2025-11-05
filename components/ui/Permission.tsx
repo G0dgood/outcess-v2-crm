@@ -6,6 +6,8 @@ import ModulePermissionModal from './ModulePermissionModal';
 import Checkbox from './Checkbox';
 import Toggle from './Toggle';
 import { DotsHorizontalIcon } from '@radix-ui/react-icons';
+import PageHeading from './PageHeading';
+import SubPageHeading from './SubPageHeading';
 
 interface PermissionItem {
 	id: string;
@@ -39,6 +41,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 			moduleName: 'Dashboard',
 			sharedTo: 'Admin, Agent',
 			selectedRoles: ['admin', 'agent'],
+			dateCreated: 'Jan 15, 2024',
 			access: true,
 			permissions: {
 				view: true,
@@ -52,6 +55,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 			moduleName: 'Customer Book',
 			sharedTo: 'All roles',
 			selectedRoles: ['admin', 'agent', 'supervisor'],
+			dateCreated: 'Jan 10, 2024',
 			access: true,
 			permissions: {
 				view: true,
@@ -65,6 +69,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 			moduleName: 'Users',
 			sharedTo: 'All roles',
 			selectedRoles: ['admin', 'agent', 'supervisor'],
+			dateCreated: 'Dec 28, 2023',
 			access: true,
 			permissions: {
 				view: true,
@@ -78,6 +83,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 			moduleName: 'Setup Book',
 			sharedTo: 'All roles',
 			selectedRoles: ['admin', 'agent', 'supervisor'],
+			dateCreated: 'Dec 15, 2023',
 			access: true,
 			permissions: {
 				view: true,
@@ -91,6 +97,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 			moduleName: 'Report',
 			sharedTo: 'All roles',
 			selectedRoles: ['admin', 'agent', 'supervisor'],
+			dateCreated: 'Dec 5, 2023',
 			access: true,
 			permissions: {
 				view: true,
@@ -104,6 +111,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 			moduleName: 'System Configuration',
 			sharedTo: 'All roles',
 			selectedRoles: ['admin', 'agent', 'supervisor'],
+			dateCreated: 'Nov 20, 2023',
 			access: true,
 			permissions: {
 				view: true,
@@ -207,44 +215,46 @@ const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 		<div className={`w-full h-full ${className}`}>
 			{/* Header Section */}
 			<div className="mb-6">
-				<h1 className="text-2xl font-semibold text-gray-900 mb-2">Permission</h1>
-				<p className="text-gray-600">
-					Keep your team organized and efficient by ensuring every user has access to the right assets.
-				</p>
+				<PageHeading
+					text="Permission"
+				/>
+				<SubPageHeading
+					text="Keep your team organized and efficient by ensuring every user has access to the right assets."
+				/>
 			</div>
 
 			{/* Permission Table */}
-			<div className="bg-white border border-gray-200 overflow-hidden">
+			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200">
-						<thead className="bg-gray-50">
+					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+						<thead className="bg-gray-50 dark:bg-gray-700">
 							<tr>
-								<th>Module Name</th>
-								<th>Shared To</th>
-								<th>Date Created</th>
-								<th>Access</th>
-								<th>Permission</th>
-								<th>Action</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Module Name</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Shared To</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Date Created</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Access</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Permission</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Action</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white divide-y divide-gray-200">
+						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
 							{permissions.length === 0 ? (
 								<tr>
-									<td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+									<td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
 										No permissions configured yet.
 									</td>
 								</tr>
 							) : (
 								permissions.map((permission) => (
-									<tr key={permission.id} className="hover:bg-gray-50 transition-colors">
+									<tr key={permission.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="font-medium text-gray-900">{permission.moduleName}</span>
+											<span className="font-medium text-gray-900 dark:text-gray-100">{permission.moduleName}</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm text-gray-600">{permission.sharedTo}</span>
+											<span className="text-sm text-gray-600 dark:text-gray-400">{permission.sharedTo}</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm text-gray-600">{permission.dateCreated || ''}</span>
+											<span className="text-sm text-gray-600 dark:text-gray-400">{permission.dateCreated || ''}</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<Toggle
@@ -254,34 +264,30 @@ const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 										</td>
 										<td className="px-6 py-4">
 											<div className="flex items-center gap-4">
-												<label className="flex items-center gap-2 cursor-pointer">
-													<Checkbox
-														checked={permission.permissions.view}
-														onChange={(checked) => handlePermissionChange(permission.id, 'view', checked)}
-													/>
-													<span className="text-sm text-gray-700">View</span>
-												</label>
-												<label className="flex items-center gap-2 cursor-pointer">
-													<Checkbox
-														checked={permission.permissions.edit}
-														onChange={(checked) => handlePermissionChange(permission.id, 'edit', checked)}
-													/>
-													<span className="text-sm text-gray-700">Edit</span>
-												</label>
-												<label className="flex items-center gap-2 cursor-pointer">
-													<Checkbox
-														checked={permission.permissions.delete}
-														onChange={(checked) => handlePermissionChange(permission.id, 'delete', checked)}
-													/>
-													<span className="text-sm text-gray-700">Delete</span>
-												</label>
-												<label className="flex items-center gap-2 cursor-pointer">
-													<Checkbox
-														checked={permission.permissions.create}
-														onChange={(checked) => handlePermissionChange(permission.id, 'create', checked)}
-													/>
-													<span className="text-sm text-gray-700">Create</span>
-												</label>
+												<Checkbox
+													checked={permission.permissions.view}
+													onChange={(checked) => handlePermissionChange(permission.id, 'view', checked)}
+													label="View"
+													size="medium"
+												/>
+												<Checkbox
+													checked={permission.permissions.edit}
+													onChange={(checked) => handlePermissionChange(permission.id, 'edit', checked)}
+													label="Edit"
+													size="medium"
+												/>
+												<Checkbox
+													checked={permission.permissions.delete}
+													onChange={(checked) => handlePermissionChange(permission.id, 'delete', checked)}
+													label="Delete"
+													size="medium"
+												/>
+												<Checkbox
+													checked={permission.permissions.create}
+													onChange={(checked) => handlePermissionChange(permission.id, 'create', checked)}
+													label="Create"
+													size="medium"
+												/>
 											</div>
 										</td>
 										<td className="px-2 py-2 whitespace-nowrap">
@@ -296,7 +302,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 												{/* Action Button */}
 												<button
 													onClick={() => handleMenuToggle(permission.id)}
-													className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+													className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 													aria-label="Actions"
 													aria-expanded={openMenuId === permission.id}
 												>
@@ -305,17 +311,17 @@ const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 
 												{/* Dropdown Menu */}
 												{openMenuId === permission.id && (
-													<div className="absolute right-0 w-48 bg-white border border-gray-200 shadow-lg z-50">
+													<div className="absolute right-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
 														<div className="flex flex-col">
 															<button
 																onClick={() => handleRename(permission)}
-																className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100 cursor-pointer"
+																className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 cursor-pointer"
 															>
 																Rename
 															</button>
 															<button
 																onClick={() => handleModulePermission(permission)}
-																className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+																className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
 															>
 																Module Permission
 															</button>

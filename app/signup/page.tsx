@@ -3,11 +3,18 @@
 import React, { useState } from 'react';
 import Input from '@/components/ui/Input';
 import PasswordInput from '@/components/ui/PasswordInput';
+import Checkbox from '@/components/ui/Checkbox';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useSetup } from '@/contexts/SetupContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import ArtworkCarousel from '@/components/ui/ArtworkCarousel';
 
 export default function SignUpPage() {
 	const router = useRouter();
+	const { setupData } = useSetup();
+	const { isDarkMode } = useTheme();
+	const primaryColor = setupData.primaryColor || '#050711';
 	const [formData, setFormData] = useState({
 		firstName: '',
 		lastName: '',
@@ -25,13 +32,6 @@ export default function SignUpPage() {
 		// Clear error when user starts typing
 		if (errors[field]) {
 			setErrors(prev => ({ ...prev, [field]: '' }));
-		}
-	};
-
-	const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setFormData(prev => ({ ...prev, agreeToTerms: e.target.checked }));
-		if (errors.agreeToTerms) {
-			setErrors(prev => ({ ...prev, agreeToTerms: '' }));
 		}
 	};
 
@@ -88,12 +88,12 @@ export default function SignUpPage() {
 	return (
 		<div className="login-container">
 			{/* Left Side - Image */}
-			<div className="login-image-section">
-
+			<div className="login-image-section w-full md:w-1/2">
+				<ArtworkCarousel autoPlayInterval={300000} />
 			</div>
 
 			{/* Right Side - Sign Up Form */}
-			<div className="login-form-section">
+			<div className="login-form-section w-full md:w-1/2">
 				<div className="login-form-container">
 					<div className="login-header">
 						<div className="logo-container">
@@ -106,8 +106,8 @@ export default function SignUpPage() {
 							// className="logo"
 							/>
 						</div>
-						<h1 className="welcome-title">Create Account</h1>
-						<p className="font-lato not-italic font-normal text-base leading-[150%] text-[#6D7280]">Join Peoplely CRM to get started.</p>
+						<h1 className="welcome-title" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>Create Account</h1>
+						<p className="font-lato not-italic font-normal text-base leading-[150%] text-[#6D7280] dark:text-gray-400">Join Peoplely CRM to get started.</p>
 					</div>
 
 					<form onSubmit={handleSubmit} className="login-form">
@@ -163,19 +163,17 @@ export default function SignUpPage() {
 						/>
 
 						<div className="terms-container">
-							<label className="terms-checkbox">
-								<input
-									type="checkbox"
+							<div className="terms-checkbox">
+								<Checkbox
 									checked={formData.agreeToTerms}
-									onChange={handleCheckboxChange}
+									onChange={(checked) => setFormData(prev => ({ ...prev, agreeToTerms: checked }))}
+									size="small"
 								/>
-								<span className="checkbox-label">
-									I agree to the{' '}
-									<a href="#" className="terms-link">Terms of Service</a>
-									{' '}and{' '}
-									<a href="#" className="terms-link">Privacy Policy</a>
+								<span>
+									I agree to the
+									Terms of Service and Privacy Policy
 								</span>
-							</label>
+							</div>
 							{errors.agreeToTerms && (
 								<span className="terms-error">{errors.agreeToTerms}</span>
 							)}
@@ -185,6 +183,19 @@ export default function SignUpPage() {
 							type="submit"
 							className={`login-button ${isLoading ? 'loading' : ''}`}
 							disabled={isLoading}
+							style={{ backgroundColor: primaryColor }}
+							onMouseEnter={(e) => {
+								if (!isLoading) {
+									e.currentTarget.style.backgroundColor = primaryColor;
+									e.currentTarget.style.opacity = '0.9';
+								}
+							}}
+							onMouseLeave={(e) => {
+								if (!isLoading) {
+									e.currentTarget.style.backgroundColor = primaryColor;
+									e.currentTarget.style.opacity = '1';
+								}
+							}}
 						>
 							{isLoading ? 'Creating Account...' : 'Create Account'}
 						</button>
@@ -192,7 +203,11 @@ export default function SignUpPage() {
 						<div className="signup-footer">
 							<p className="signup-text">
 								Already have an account?{' '}
-								<a href="/login" className="signup-link">Sign in</a>
+								<a href="/login" className="signup-link" style={{ color: primaryColor }} onMouseEnter={(e) => {
+									e.currentTarget.style.opacity = '0.8';
+								}} onMouseLeave={(e) => {
+									e.currentTarget.style.opacity = '1';
+								}}>Sign in</a>
 							</p>
 						</div>
 					</form>

@@ -123,36 +123,36 @@ const CustomerBookPage: React.FC = () => {
 			</div>
 
 			{/* Customer Table */}
-			<div className="bg-white  border border-gray-200 overflow-hidden">
+			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200">
-						<thead className="bg-gray-50">
+					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+						<thead className="bg-gray-50 dark:bg-gray-700">
 							<tr>
-								<th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">
 									<div className="flex items-center gap-2">
 										First Name
-										<Icon name="Question_mark_light" size="sm" className="text-gray-400" />
+										<Icon name="Question_mark_light" size="sm" className="text-gray-400 dark:text-gray-500" />
 									</div>
 								</th>
-								<th>Last Name</th>
-								<th>Email</th>
-								<th>Phone</th>
-								<th>Actions</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Last Name</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Email</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Phone</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Actions</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white divide-y divide-gray-200">
+						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
 							{filteredCustomers.map((customer) => (
-								<tr key={customer.id} className="hover:bg-gray-50">
-									<td className="font-medium text-gray-900">
+								<tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+									<td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-100">
 										{customer.firstName}
 									</td>
-									<td>{customer.lastName}</td>
-									<td>{customer.email}</td>
-									<td>{customer.phone}</td>
-									<td>
+									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{customer.lastName}</td>
+									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{customer.email}</td>
+									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{customer.phone}</td>
+									<td className="px-6 py-4 whitespace-nowrap">
 										<button
 											onClick={() => handleViewCustomer(customer.id)}
-											className="p-2 text-gray-600 hover:text-(--muted-sage-green) hover:bg-(--interactive-secondary)/10  transition-colors cursor-pointer"
+											className="p-2 text-gray-600 dark:text-gray-400 hover:text-(--muted-sage-green) dark:hover:text-gray-200 hover:bg-(--interactive-secondary)/10 dark:hover:bg-gray-700 transition-colors cursor-pointer"
 											title="View Customer"
 										>
 											<ArrowRightIcon className="w-5 h-5" />

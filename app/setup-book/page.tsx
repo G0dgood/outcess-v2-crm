@@ -8,6 +8,7 @@ import Pagination from '@/components/ui/Pagination';
 import { useSetup } from '@/contexts/SetupContext';
 import PageHeading from '@/components/ui/PageHeading';
 import { UploadIcon } from '@radix-ui/react-icons';
+import UploadBase from '@/components/ui/UploadBaseEmployee';
 
 interface FieldDefinition {
 	id: string;
@@ -25,6 +26,7 @@ const SetupBookPage: React.FC = () => {
 	const { setupData } = useSetup();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
+	const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 	const [fieldDefinitions, setFieldDefinitions] = useState<FieldDefinition[]>([
 		{ id: '1', name: 'Name', type: 'text', required: true },
 		{ id: '2', name: 'Phone', type: 'phone', required: true },
@@ -40,9 +42,14 @@ const SetupBookPage: React.FC = () => {
 	]);
 
 	const handleUpload = () => {
-		console.log('Upload clicked');
-		// Implement file upload logic
-		// This could open a file picker or drag-and-drop area
+		setIsUploadModalOpen(true);
+	};
+
+	const handleUploadComplete = (data: any[]) => {
+		console.log('Upload completed with data:', data);
+		// Process the uploaded data and update records
+		// You can add logic here to add the new records to the state
+		setIsUploadModalOpen(false);
 	};
 
 	const handleAddField = () => {
@@ -110,30 +117,30 @@ const SetupBookPage: React.FC = () => {
 			</div>
 
 			{/* Records Table */}
-			<div className="bg-white border border-gray-200 overflow-hidden">
+			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200">
-						<thead className="bg-gray-50">
+					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+						<thead className="bg-gray-50 dark:bg-gray-700">
 							<tr>
 								{fieldDefinitions.map((field) => (
-									<th key={field.id}>
+									<th key={field.id} className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">
 										{field.name}
 									</th>
 								))}
 							</tr>
 						</thead>
-						<tbody className="bg-white divide-y divide-gray-200">
+						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
 							{filteredRecords.length === 0 ? (
 								<tr>
 									<td colSpan={fieldDefinitions.length} className="px-6 py-12 text-center">
 										<div className="flex flex-col items-center justify-center">
 											<div className="mb-4">
-												<Icon name="upload-cloud" size="4xl" className="text-gray-300" />
+												<Icon name="upload-cloud" size="4xl" className="text-gray-300 dark:text-gray-600" />
 											</div>
-											<h3 className="text-lg font-medium text-gray-900 mb-2">
+											<h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
 												No Data Found
 											</h3>
-											<p className="text-gray-500">
+											<p className="text-gray-500 dark:text-gray-400">
 												{searchTerm ? 'No records match your search.' : 'Upload your call list to get started.'}
 											</p>
 										</div>
@@ -141,9 +148,9 @@ const SetupBookPage: React.FC = () => {
 								</tr>
 							) : (
 								paginatedRecords.map((record) => (
-									<tr key={record.id} className="hover:bg-gray-50">
+									<tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
 										{fieldDefinitions.map((field) => (
-											<td key={field.id}>
+											<td key={field.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
 												{record[field.name] || '-'}
 											</td>
 										))}
@@ -167,6 +174,14 @@ const SetupBookPage: React.FC = () => {
 					secondaryColor={setupData.secondaryColor}
 				/>
 			)}
+
+			{/* Upload Modal */}
+			<UploadBase
+				isOpen={isUploadModalOpen}
+				onClose={() => setIsUploadModalOpen(false)}
+				showButton={false}
+				onUploadComplete={handleUploadComplete}
+			/>
 		</div>
 	);
 };

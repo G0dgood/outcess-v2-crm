@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import SubPageHeading from './SubPageHeading';
+import PageHeading from './PageHeading';
 
 interface FieldType {
 	id: string;
@@ -70,10 +72,12 @@ const Fields: React.FC<FieldsProps> = ({ className = '' }) => {
 		<div className={`w-full h-full ${className}`}>
 			{/* Header Section */}
 			<div className="mb-6">
-				<h1 className="text-2xl font-semibold text-gray-900 mb-2">Field Types</h1>
-				<p className="text-gray-600">
-					Add field types to capture more details about customer interactions. You can arrange these fields in call forms for agents and customers to enhance data collection and improve service quality.
-				</p>
+				<PageHeading
+					text="Field Types"
+				/>
+				<SubPageHeading
+					text="Add field types to capture more details about customer interactions. You can arrange these fields in call forms for agents and customers to enhance data collection and improve service quality."
+				/>
 			</div>
 
 			{/* Field Types Grid */}
@@ -81,10 +85,10 @@ const Fields: React.FC<FieldsProps> = ({ className = '' }) => {
 				{fieldTypes.map((fieldType) => (
 					<div
 						key={fieldType.id}
-						className="bg-white border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
+						className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow cursor-pointer"
 					>
-						<h3 className="text-lg font-semibold text-gray-900 mb-2">{fieldType.name}</h3>
-						<p className="text-sm text-gray-600">{fieldType.description}</p>
+						<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{fieldType.name}</h3>
+						<p className="text-sm text-gray-600 dark:text-gray-400">{fieldType.description}</p>
 					</div>
 				))}
 			</div>

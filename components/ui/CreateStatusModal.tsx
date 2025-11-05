@@ -5,7 +5,9 @@ import Button from './Button';
 import Input from './Input';
 import Textarea from './Textarea';
 import Checkbox from './Checkbox';
-import { Cross2Icon, ChevronDownIcon } from '@radix-ui/react-icons';
+import Dropdown from './Dropdown';
+import IndividualRadio from './IndividualRadio';
+import { Cross2Icon } from '@radix-ui/react-icons';
 
 interface StatusFormData {
 	name: string;
@@ -131,16 +133,16 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-			<div className="bg-white shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
+			<div className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col">
 				{/* Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200 shrink-0">
-					<h2 className="text-xl font-semibold text-gray-900">
+				<div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
+					<h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
 						{isEditMode ? 'Edit Status' : 'Create Status'}
 					</h2>
 					<button
 						onClick={onClose}
-						className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+						className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -167,61 +169,74 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 
 					{/* Role Selection */}
 					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-3">Role</label>
+						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Role</label>
 						<div className="space-y-3">
-							<label className="flex items-center gap-3 cursor-pointer">
-								<input
-									type="radio"
-									name="roleSelection"
-									value="all"
-									checked={formData.roleSelection === 'all'}
-									onChange={() => setFormData(prev => ({ ...prev, roleSelection: 'all' }))}
-									className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-								/>
-								<span className="text-sm font-medium text-gray-900">All Roles</span>
-							</label>
+							<IndividualRadio
+								name="roleSelection"
+								value="all"
+								checked={formData.roleSelection === 'all'}
+								onChange={(value) => setFormData(prev => ({ ...prev, roleSelection: value as 'all' | 'selected' }))}
+								label="All Roles"
+							/>
 							<div>
-								<label className="flex items-center gap-3 cursor-pointer">
-									<input
-										type="radio"
-										name="roleSelection"
-										value="selected"
-										checked={formData.roleSelection === 'selected'}
-										onChange={() => setFormData(prev => ({ ...prev, roleSelection: 'selected' }))}
-										className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-									/>
-									<span className="text-sm font-medium text-gray-900">Only Selected Roles</span>
-								</label>
+								<IndividualRadio
+									name="roleSelection"
+									value="selected"
+									checked={formData.roleSelection === 'selected'}
+									onChange={(value) => setFormData(prev => ({ ...prev, roleSelection: value as 'all' | 'selected' }))}
+									label="Only Selected Roles"
+								/>
 								{formData.roleSelection === 'selected' && (
-									<div ref={dropdownRef} className="ml-7 mt-2 relative">
-										<button
-											type="button"
-											onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-											className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-left flex items-center justify-between hover:border-gray-400 transition-colors"
-										>
-											<span className="text-sm text-gray-600">
-												{getRoleSelectionDisplay()}
-											</span>
-											<ChevronDownIcon className={`w-4 h-4 text-gray-500 transition-transform ${isRoleDropdownOpen ? 'transform rotate-180' : ''}`} />
-										</button>
-										{isRoleDropdownOpen && (
-											<div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
-												<div className="py-2">
-													{roleOptions.map((role) => (
-														<label
-															key={role.id}
-															className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer"
-														>
-															<Checkbox
-																checked={formData.selectedRoles.includes(role.id)}
-																onChange={() => handleRoleToggle(role.id)}
-															/>
-															<span className="text-sm text-gray-900">{role.label}</span>
-														</label>
-													))}
-												</div>
+									<div className="ml-7 mt-2" ref={dropdownRef}>
+										<div className="dropdown-container">
+											<div className="dropdown-wrapper relative">
+												<button
+													type="button"
+													onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+													className="dropdown-trigger w-full"
+												>
+													<span className={`dropdown-text ${formData.selectedRoles.length === 0 ? 'placeholder' : ''}`}>
+														{getRoleSelectionDisplay()}
+													</span>
+													<svg
+														className={`dropdown-chevron ${isRoleDropdownOpen ? 'open' : ''}`}
+														width="12"
+														height="12"
+														viewBox="0 0 12 12"
+														fill="none"
+													>
+														<path
+															d="M3 4.5L6 7.5L9 4.5"
+															stroke="currentColor"
+															strokeWidth="1.5"
+															strokeLinecap="round"
+															strokeLinejoin="round"
+														/>
+													</svg>
+												</button>
+												{isRoleDropdownOpen && (
+													<div className="dropdown-menu">
+														<div className="dropdown-options">
+															{roleOptions.map((role) => (
+																<label
+																	key={role.id}
+																	className="dropdown-option flex items-center gap-3 cursor-pointer"
+																	onClick={(e) => e.stopPropagation()}
+																>
+																	<Checkbox
+																		checked={formData.selectedRoles.includes(role.id)}
+																		onChange={() => handleRoleToggle(role.id)}
+																		size="small"
+																		label={role.label}
+																	/>
+
+																</label>
+															))}
+														</div>
+													</div>
+												)}
 											</div>
-										)}
+										</div>
 									</div>
 								)}
 							</div>
@@ -230,14 +245,14 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 shrink-0">
-					<button
-						type="button"
+				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 shrink-0">
+					<Button
+						variant="danger"
+						size="md"
 						onClick={onClose}
-						className="px-4 py-2 text-sm font-medium text-orange-600 hover:text-orange-700 transition-colors"
 					>
 						Cancel
-					</button>
+					</Button>
 					<Button
 						variant="primary"
 						size="md"

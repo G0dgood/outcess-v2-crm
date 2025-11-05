@@ -146,7 +146,7 @@ const UsersPage: React.FC = () => {
 	return (
 		<div>
 			{/* Title and Action Buttons */}
-			<div className="flex items-center justify-between mb-6">
+			<div className="mb-6 flex items-start justify-between">
 				<PageHeading
 					text="Users"
 				/>
@@ -175,95 +175,67 @@ const UsersPage: React.FC = () => {
 			</div>
 
 			{/* Login Status Info Banner */}
-			<div className="mb-4 p-3 bg-gray-100 rounded-lg flex items-center gap-3">
-				<div className="shrink-0 w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center bg-white">
-					<ExclamationTriangleIcon className="w-4 h-4 text-gray-700" />
+			<div className="mb-4 p-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center gap-3">
+				<div className="shrink-0 w-6 h-6 flex items-center justify-center">
+					<ExclamationTriangleIcon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
 				</div>
-				<p className="text-sm text-gray-700">
+				<p className="text-sm text-gray-700 dark:text-gray-300">
 					This is for tracking agents who are logged in or logged out
 				</p>
 			</div>
 
 			{/* Users Table */}
-			<div className="bg-white border border-gray-200 overflow-hidden">
+			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200">
-						<thead className="bg-gray-50">
+					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+						<thead className="bg-gray-50 dark:bg-gray-700">
 							<tr>
 								<th>
 									<Checkbox
 										checked={isAllSelected}
 										onChange={handleSelectAll}
+										size="medium"
 									/>
 								</th>
-								<th>
-									ID
-								</th>
-								<th>
-									First Name
-								</th>
-								<th>
-									Last Name
-								</th>
-								<th>
-									Email
-								</th>
-								<th>
-									Phone
-								</th>
-								<th>
-									Role
-								</th>
-								<th>
-									Login Status
-								</th>
-								<th>
-									Actions
-								</th>
+								<th className="text-gray-900 dark:text-gray-100">ID</th>
+								<th className="text-gray-900 dark:text-gray-100">First Name</th>
+								<th className="text-gray-900 dark:text-gray-100">Last Name</th>
+								<th className="text-gray-900 dark:text-gray-100">Email</th>
+								<th className="text-gray-900 dark:text-gray-100">Phone</th>
+								<th className="text-gray-900 dark:text-gray-100">Role</th>
+								<th className="text-gray-900 dark:text-gray-100">Login Status</th>
+								<th className="text-gray-900 dark:text-gray-100">Actions</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white divide-y divide-gray-200">
+						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
 							{currentUsers.map((user) => (
-								<tr key={user.id} className="hover:bg-gray-50">
+								<tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
 									<td>
 										<Checkbox
 											checked={selectedUsers.has(user.id)}
 											onChange={(checked) => handleSelectUser(user.id, checked)}
+											size="medium"
 										/>
 									</td>
-									<td>
-										{user.id}
-									</td>
-									<td>
-										{user.firstName}
-									</td>
-									<td>
-										{user.lastName}
-									</td>
-									<td>
-										{user.email}
-									</td>
-									<td>
-										{user.phone}
-									</td>
-									<td>
-										{user.role}
-									</td>
-									<td>
-										{user.loginStatus}
-									</td>
+									<td className="text-gray-900 dark:text-gray-100">{user.id}</td>
+									<td className="text-gray-900 dark:text-gray-100">{user.firstName}</td>
+									<td className="text-gray-900 dark:text-gray-100">{user.lastName}</td>
+									<td className="text-gray-900 dark:text-gray-100">{user.email}</td>
+									<td className="text-gray-900 dark:text-gray-100">{user.phone}</td>
+									<td className="text-gray-900 dark:text-gray-100">{user.role}</td>
+									<td className="text-gray-900 dark:text-gray-100">{user.loginStatus}</td>
 									<td>
 										<div className="flex items-center gap-2">
 											<button
 												onClick={() => router.push(`/users/${user.id}/edit`)}
-												className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+												className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
 												title="Edit User"
 											>
 												<Pencil1Icon className="w-5 h-5" />
 											</button>
 											<button
 												onClick={() => handleDeleteClick(user)}
-												className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+												className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
 												title="Delete User"
 											>
 												<TrashIcon className="w-5 h-5" />
@@ -278,17 +250,15 @@ const UsersPage: React.FC = () => {
 			</div>
 
 			{/* Pagination */}
-			<div className="mt-6">
-				<Pagination
-					currentPage={currentPage}
-					totalPages={totalPages}
-					onPageChange={setCurrentPage}
-					showEllipsis={true}
-					maxVisiblePages={5}
-					primaryColor={setupData.primaryColor}
-					secondaryColor={setupData.secondaryColor}
-				/>
-			</div>
+			<Pagination
+				currentPage={currentPage}
+				totalPages={totalPages}
+				onPageChange={setCurrentPage}
+				showEllipsis={true}
+				maxVisiblePages={5}
+				primaryColor={setupData.primaryColor}
+				secondaryColor={setupData.secondaryColor}
+			/>
 
 			{/* Add User Modal */}
 			<AddUserModal

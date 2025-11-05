@@ -58,14 +58,14 @@ export default function SetupPage() {
 	return (
 		<div className="w-full h-[70vh]">
 			<div className="mb-8">
-				<h1 className="font-lato not-italic font-semibold text-[24px] leading-[150%] text-[#3A4050]">Basic Setup</h1>
-				<p className="font-lato not-italic font-normal text-[16px] leading-[150%] text-[#6D7280]">Configure your organization details and preferences</p>
+				<h1 className="font-lato not-italic font-semibold text-[24px] leading-[150%] text-[#3A4050] dark:text-gray-100">Basic Setup</h1>
+				<p className="font-lato not-italic font-normal text-[16px] leading-[150%] text-[#6D7280] dark:text-gray-400">Configure your organization details and preferences</p>
 			</div>
 
-			<div className="bg-(--accent-white) border border-gray-200  w-full h-full">
-				<div className="box-border w-full h-[97px] border-b border-[#E5E7EB] mb-6 p-6">
-					<h2 className="font-inter text-xl font-semibold text-[#050711] mb-1">Company Information</h2>
-					<p className="font-lato text-sm text-gray-600">Configure your company details</p>
+			<div className="bg-(--accent-white) dark:bg-gray-800 border border-gray-200 dark:border-gray-700 w-full h-full">
+				<div className="box-border w-full h-[97px] border-b border-[#E5E7EB] dark:border-gray-700 mb-6 p-6">
+					<h2 className="font-inter text-xl font-semibold text-[#050711] dark:text-gray-100 mb-1">Company Information</h2>
+					<p className="font-lato text-sm text-gray-600 dark:text-gray-400">Configure your company details</p>
 				</div>
 
 				<form className="space-y-6 p-6">

@@ -6,6 +6,9 @@ import Icon from './Icon';
 import Dropdown from './Dropdown';
 import UserDropdown from './UserDropdown';
 import { HamburgerMenuIcon } from '@radix-ui/react-icons';
+import NotificationDropdown from './NotificationDropdown';
+import { sampleNotifications } from '@/data/notifications';
+import ThemeDropdown from './ThemeDropdown';
 
 interface DashboardHeaderProps {
 	companyName?: string;
@@ -45,6 +48,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const router = useRouter();
 	const pathname = usePathname();
 	const [hasStickyNotes, setHasStickyNotes] = useState(false);
+	const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+
+
+	const handleNotificationClick = () => {
+		setIsNotificationPanelOpen(!isNotificationPanelOpen);
+		// Close profile dropdown if open
+		// setShowDropdown(false);
+	};
 
 	// Check if sticky notes exist in localStorage
 	useEffect(() => {
@@ -107,7 +118,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				{/* Hamburger Menu - Mobile Only */}
 				<button
 					onClick={onMobileMenuToggle}
-					className="md:hidden p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+					className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
 					title="Menu"
 				>
 					<HamburgerMenuIcon className="w-6 h-6" />
@@ -121,6 +132,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 				{/* Right side - Icons */}
 				<div className="flex items-center justify-center gap-4">
+					{/* Dark Mode Toggle Dropdown */}
+					<ThemeDropdown />
+
 					<Dropdown
 						label=""
 						value={companyName}
@@ -134,7 +148,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					{hasStickyNotes && (
 						<button
 							onClick={handleNoteIconClick}
-							className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer relative"
+							className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer relative"
 							title="View Sticky Notes"
 						>
 							<Icon name="Edit_duotone_line" size="3xl" />
@@ -144,22 +158,26 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					)}
 
 					{/* Notifications Bell */}
-					<button
-						onClick={onNotificationsClick}
-						className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-						title="Notifications"
-					>
-						<Icon name="Bell_light" size="3xl" />
-					</button>
+					<div className="relative">
+						<button
+							onClick={handleNotificationClick}
+							className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+							title="Notifications"
+						>
+							<Icon name="Bell_light" size="3xl" />
+						</button>
 
-					{/* Settings Gear */}
-					<button
-						onClick={onSettingsClick}
-						className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-						title="Settings"
-					>
-						<Icon name="Setting_line_light" size="3xl" />
-					</button>
+
+
+
+
+
+						<NotificationDropdown
+							isOpen={isNotificationPanelOpen}
+							onClose={() => setIsNotificationPanelOpen(false)}
+							notifications={sampleNotifications}
+						/>
+					</div>
 
 					{/* User Dropdown */}
 					<UserDropdown

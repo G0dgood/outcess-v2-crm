@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Button from './Button';
 import DateInput from './DateInput';
 import { CalendarIcon } from '@radix-ui/react-icons';
-import { useRef } from 'react';
+import { useSetup } from '@/contexts/SetupContext';
 
 interface DateFilterProps {
 	onApply?: (filter: {
@@ -19,6 +19,8 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 	onApply,
 	onClose,
 }) => {
+	const { setupData } = useSetup();
+	const primaryColor = setupData?.primaryColor || '#050711';
 	const [selectedFilter, setSelectedFilter] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange'>('all');
 	const [fromDate, setFromDate] = useState('');
 	const [toDate, setToDate] = useState('');
@@ -43,7 +45,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 	};
 
 	return (
-		<div className="bg-white border border-gray-200 shadow-lg p-6 w-full md:w-[283px] whitespace-nowrap">
+		<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-xl p-6 w-full md:w-[283px] whitespace-nowrap">
 			<div className="space-y-4">
 				{/* Radio Options */}
 				<div className="space-y-3">
@@ -54,9 +56,12 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							value="today"
 							checked={selectedFilter === 'today'}
 							onChange={() => setSelectedFilter('today')}
-							className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+							className="w-4 h-4 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+							style={{
+								accentColor: primaryColor,
+							}}
 						/>
-						<span className="text-sm font-medium text-gray-900">Today</span>
+						<span className="text-sm font-medium text-gray-900 dark:text-gray-100">Today</span>
 					</label>
 					<label className="flex items-center gap-3 cursor-pointer">
 						<input
@@ -65,9 +70,12 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							value="yesterday"
 							checked={selectedFilter === 'yesterday'}
 							onChange={() => setSelectedFilter('yesterday')}
-							className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+							className="w-4 h-4 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+							style={{
+								accentColor: primaryColor,
+							}}
 						/>
-						<span className="text-sm font-medium text-gray-900">Yesterday</span>
+						<span className="text-sm font-medium text-gray-900 dark:text-gray-100">Yesterday</span>
 					</label>
 					<label className="flex items-center gap-3 cursor-pointer">
 						<input
@@ -76,9 +84,12 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							value="last7days"
 							checked={selectedFilter === 'last7days'}
 							onChange={() => setSelectedFilter('last7days')}
-							className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+							className="w-4 h-4 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+							style={{
+								accentColor: primaryColor,
+							}}
 						/>
-						<span className="text-sm font-medium text-gray-900">Last 7 days</span>
+						<span className="text-sm font-medium text-gray-900 dark:text-gray-100">Last 7 days</span>
 					</label>
 					<label className="flex items-center gap-3 cursor-pointer">
 						<input
@@ -87,9 +98,12 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							value="last30days"
 							checked={selectedFilter === 'last30days'}
 							onChange={() => setSelectedFilter('last30days')}
-							className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+							className="w-4 h-4 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+							style={{
+								accentColor: primaryColor,
+							}}
 						/>
-						<span className="text-sm font-medium text-gray-900">Last 30 days</span>
+						<span className="text-sm font-medium text-gray-900 dark:text-gray-100">Last 30 days</span>
 					</label>
 					<label className="flex items-center gap-3 cursor-pointer">
 						<input
@@ -98,9 +112,12 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							value="all"
 							checked={selectedFilter === 'all'}
 							onChange={() => setSelectedFilter('all')}
-							className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+							className="w-4 h-4 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+							style={{
+								accentColor: primaryColor,
+							}}
 						/>
-						<span className="text-sm font-medium text-gray-900">All time record</span>
+						<span className="text-sm font-medium text-gray-900 dark:text-gray-100">All time record</span>
 					</label>
 					<label className="flex items-center gap-3 cursor-pointer">
 						<input
@@ -109,9 +126,12 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							value="dateRange"
 							checked={selectedFilter === 'dateRange'}
 							onChange={() => setSelectedFilter('dateRange')}
-							className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+							className="w-4 h-4 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+							style={{
+								accentColor: primaryColor,
+							}}
 						/>
-						<span className="text-sm font-medium text-gray-900">Date Range</span>
+						<span className="text-sm font-medium text-gray-900 dark:text-gray-100">Date Range</span>
 					</label>
 				</div>
 
@@ -130,10 +150,10 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							<button
 								type="button"
 								onClick={handleFromIconClick}
-								className="absolute right-3 bottom-3 cursor-pointer hover:text-gray-600 transition-colors"
+								className="absolute right-3 bottom-3 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
 								aria-label="Open date picker"
 							>
-								<CalendarIcon className="w-4 h-4 text-gray-400" />
+								<CalendarIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
 							</button>
 						</div>
 						<div className="relative">
@@ -148,10 +168,10 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							<button
 								type="button"
 								onClick={handleToIconClick}
-								className="absolute right-3 bottom-3 cursor-pointer hover:text-gray-600 transition-colors"
+								className="absolute right-3 bottom-3 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
 								aria-label="Open date picker"
 							>
-								<CalendarIcon className="w-4 h-4 text-gray-400" />
+								<CalendarIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
 							</button>
 						</div>
 					</div>

@@ -71,7 +71,7 @@ const PendingRequestPage: React.FC = () => {
 		<div>
 			{/* Header Section */}
 			<div className="mb-6">
-				<h1 className="text-2xl font-semibold text-gray-900 mb-2">Pending Request</h1>
+				<h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Pending Request</h1>
 			</div>
 
 			{/* Search Section */}
@@ -86,56 +86,56 @@ const PendingRequestPage: React.FC = () => {
 			</div>
 
 			{/* Businesses Table */}
-			<div className="bg-white border border-gray-200 overflow-hidden">
+			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200">
-						<thead className="bg-gray-50">
+					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+						<thead className="bg-gray-50 dark:bg-gray-700">
 							<tr>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
 									Company Name
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
 									Registration Date
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
 									Industry
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
 									Status
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
 									Action
 								</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white divide-y divide-gray-200">
+						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
 							{paginatedBusinesses.length === 0 ? (
 								<tr>
-									<td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+									<td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
 										No pending businesses found.
 									</td>
 								</tr>
 							) : (
 								paginatedBusinesses.map((business) => (
-									<tr key={business.id} className="hover:bg-gray-50 transition-colors">
+									<tr key={business.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm font-medium text-gray-900">{business.companyName}</span>
+											<span className="text-sm font-medium text-gray-900 dark:text-gray-100">{business.companyName}</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm text-gray-600">{business.registrationDate}</span>
+											<span className="text-sm text-gray-600 dark:text-gray-400">{business.registrationDate}</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm text-gray-600">{business.industry}</span>
+											<span className="text-sm text-gray-600 dark:text-gray-400">{business.industry}</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+											<span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400">
 												{business.status}
 											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<button
 												onClick={() => handleViewDetail(business.id)}
-												className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors cursor-pointer"
+												className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors cursor-pointer"
 											>
 												View Detail
 											</button>

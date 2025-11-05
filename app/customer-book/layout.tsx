@@ -27,7 +27,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 				userEmail="johndoe@example.com"
 				isOnline={true}
 				onCompanyChange={(company) => console.log('Company changed:', company)}
-				onNotificationsClick={() => console.log('Notifications clicked')}
 				onSettingsClick={() => console.log('Settings clicked')}
 				onStatusClick={() => console.log('Status clicked')}
 				onEditProfileClick={() => console.log('Edit profile clicked')}
@@ -39,10 +38,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 			/>
 
 			{/* Desktop SideNav */}
-			<DashboardSideNav 
+			<DashboardSideNav
 				activeItem="customer-book"
 				isMobileOpen={false}
-				onMobileClose={() => {}}
+				onMobileClose={() => { }}
 			/>
 
 			{/* Mobile SideNav */}

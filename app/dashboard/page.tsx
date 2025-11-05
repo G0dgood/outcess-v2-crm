@@ -91,31 +91,31 @@ const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, widgetId, onEdit,
 	};
 
 	return (
-		<div className="bg-white border border-gray-200 p-6 relative">
+		<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 relative">
 			<div className="flex justify-between items-start mb-4">
-				<h3 className="font-lato font-normal text-[18px] leading-[150%] text-[#6D7280]">{title}</h3>
+				<h3 className="font-lato font-normal text-[18px] leading-[150%] text-[#6D7280] dark:text-gray-300">{title}</h3>
 				<div className="relative" ref={dropdownRef}>
 					<button
 						onClick={(e) => {
 							e.stopPropagation();
 							setIsDropdownOpen(!isDropdownOpen);
 						}}
-						className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+						className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
 						title="Widget options"
 					>
 						<Icon name="Ellipsis_vertical_light" size="sm" />
 					</button>
 					{isDropdownOpen && (
-						<div className="absolute right-0 top-6 z-50 bg-white border border-gray-200 shadow-lg min-w-[120px]">
+						<div className="absolute right-0 top-6 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg min-w-[120px]">
 							<button
 								onClick={handleEdit}
-								className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors first:rounded-t-lg cursor-pointer"
+								className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors first:rounded-t-lg cursor-pointer"
 							>
 								Edit
 							</button>
 							<button
 								onClick={handleDelete}
-								className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors last:rounded-b-lg cursor-pointer"
+								className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors last:rounded-b-lg cursor-pointer"
 							>
 								Delete
 							</button>
@@ -123,7 +123,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, widgetId, onEdit,
 					)}
 				</div>
 			</div>
-			<div className="text-3xl font-bold text-gray-900">{value}</div>
+			<div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{value}</div>
 		</div>
 	);
 };
@@ -660,11 +660,11 @@ const SortableChart: React.FC<SortableChartProps> = ({ chart, pieChartData, onRe
 		<div
 			ref={setNodeRef}
 			style={style}
-			className="bg-white border border-gray-200 select-none"
+			className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 select-none"
 		>
 			{/* Chart Header */}
 			<div
-				className="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 cursor-move"
+				className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 cursor-move"
 				{...attributes}
 				{...listeners}
 			>
@@ -696,7 +696,7 @@ const SortableChart: React.FC<SortableChartProps> = ({ chart, pieChartData, onRe
 							onRemoveChart(chart.id);
 						}}
 						onPointerDown={(e) => e.stopPropagation()}
-						className="text-gray-400 transition-colors cursor-pointer"
+						className="text-gray-400 dark:text-gray-500 transition-colors cursor-pointer"
 						title="Remove chart"
 					>
 						<Icon name="Trash_light" size="lg" className='mt-3' />
@@ -726,7 +726,7 @@ const SortableChart: React.FC<SortableChartProps> = ({ chart, pieChartData, onRe
 										className="w-4 h-4 rounded-full"
 										style={{ backgroundColor: item.color }}
 									></div>
-									<span className="font-inter text-sm text-gray-700 whitespace-nowrap">
+									<span className="font-inter text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
 										{item.label}
 									</span>
 								</div>
@@ -1026,7 +1026,7 @@ const DashboardContent: React.FC = () => {
 				collisionDetection={closestCenter}
 				onDragEnd={handleDragEnd}
 			>
-				<div className="bg-white border border-gray-200 p-4">
+				<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4">
 					<SortableContext
 						items={setupData.dashboardSettings.dispositionSettings.charts.map(chart => chart.id)}
 						strategy={verticalListSortingStrategy}

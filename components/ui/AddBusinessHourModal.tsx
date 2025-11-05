@@ -5,6 +5,7 @@ import Button from './Button';
 import Dropdown from './Dropdown';
 import Input from './Input';
 import Checkbox from './Checkbox';
+import IndividualRadio from './IndividualRadio';
 import { Cross2Icon } from '@radix-ui/react-icons';
 
 interface BusinessHourData {
@@ -175,7 +176,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
 			<div className="bg-white shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
 				{/* Header */}
 				<div className="flex justify-between items-center p-6 border-b border-gray-200 shrink-0">
@@ -195,39 +196,27 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 					<div>
 						<label className="block text-sm font-medium text-gray-700 mb-3">Business Hours</label>
 						<div className="space-y-3">
-							<label className="flex items-center gap-3 cursor-pointer">
-								<input
-									type="radio"
-									name="businessHourType"
-									value="24hours-7days"
-									checked={businessHourType === '24hours-7days'}
-									onChange={() => setBusinessHourType('24hours-7days')}
-									className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-								/>
-								<span className="text-sm font-medium text-gray-900">24 Hours X 7 days</span>
-							</label>
-							<label className="flex items-center gap-3 cursor-pointer">
-								<input
-									type="radio"
-									name="businessHourType"
-									value="24hours-5days"
-									checked={businessHourType === '24hours-5days'}
-									onChange={() => setBusinessHourType('24hours-5days')}
-									className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-								/>
-								<span className="text-sm font-medium text-gray-900">24 Hours X 5 days</span>
-							</label>
-							<label className="flex items-center gap-3 cursor-pointer">
-								<input
-									type="radio"
-									name="businessHourType"
-									value="custom"
-									checked={businessHourType === 'custom'}
-									onChange={() => setBusinessHourType('custom')}
-									className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-								/>
-								<span className="text-sm font-medium text-gray-900">Custom Hour</span>
-							</label>
+							<IndividualRadio
+								name="businessHourType"
+								value="24hours-7days"
+								checked={businessHourType === '24hours-7days'}
+								onChange={(value) => setBusinessHourType(value as '24hours-7days' | '24hours-5days' | 'custom')}
+								label="24 Hours X 7 days"
+							/>
+							<IndividualRadio
+								name="businessHourType"
+								value="24hours-5days"
+								checked={businessHourType === '24hours-5days'}
+								onChange={(value) => setBusinessHourType(value as '24hours-7days' | '24hours-5days' | 'custom')}
+								label="24 Hours X 5 days"
+							/>
+							<IndividualRadio
+								name="businessHourType"
+								value="custom"
+								checked={businessHourType === 'custom'}
+								onChange={(value) => setBusinessHourType(value as '24hours-7days' | '24hours-5days' | 'custom')}
+								label="Custom Hour"
+							/>
 						</div>
 					</div>
 
@@ -236,17 +225,13 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 						<div>
 							<label className="block text-sm font-medium text-gray-700 mb-3">Business Timing</label>
 							<div className="space-y-4">
-								<label className="flex items-center gap-3 cursor-pointer">
-									<input
-										type="radio"
-										name="businessTiming"
-										value="same"
-										checked={businessTiming === 'same'}
-										onChange={() => setBusinessTiming('same')}
-										className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-									/>
-									<span className="text-sm font-medium text-gray-900">Same hour everyday</span>
-								</label>
+								<IndividualRadio
+									name="businessTiming"
+									value="same"
+									checked={businessTiming === 'same'}
+									onChange={(value) => setBusinessTiming(value as 'same' | 'different')}
+									label="Same hour everyday"
+								/>
 								{businessTiming === 'same' && (
 									<div className="ml-7 flex items-center gap-3">
 										<input
@@ -265,17 +250,13 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 									</div>
 								)}
 
-								<label className="flex items-center gap-3 cursor-pointer">
-									<input
-										type="radio"
-										name="businessTiming"
-										value="different"
-										checked={businessTiming === 'different'}
-										onChange={() => setBusinessTiming('different')}
-										className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-									/>
-									<span className="text-sm font-medium text-gray-900">Different hours everyday</span>
-								</label>
+								<IndividualRadio
+									name="businessTiming"
+									value="different"
+									checked={businessTiming === 'different'}
+									onChange={(value) => setBusinessTiming(value as 'same' | 'different')}
+									label="Different hours everyday"
+								/>
 								{businessTiming === 'different' && (
 									<div className="ml-7 space-y-3">
 										{daysOfWeek.map((day) => (
@@ -292,8 +273,9 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 															},
 														}));
 													}}
+													size="medium"
+													label={day.label}
 												/>
-												<span className="text-sm text-gray-900 min-w-[100px]">{day.label}</span>
 												<input
 													type="time"
 													value={differentHours[day.key].startTime}
@@ -323,13 +305,14 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 							<label className="block text-sm font-medium text-gray-700 mb-3">Business Days</label>
 							<div className="space-y-2">
 								{daysOfWeek.map((day) => (
-									<label key={day.key} className="flex items-center gap-3 cursor-pointer">
+									<div key={day.key} className="flex items-center gap-3 cursor-pointer">
 										<Checkbox
 											checked={businessDays.includes(day.key)}
 											onChange={(checked) => handleDayToggle(day.key)}
+											size="medium"
+											label={day.label}
 										/>
-										<span className="text-sm text-gray-900">{day.label}</span>
-									</label>
+									</div>
 								))}
 							</div>
 						</div>
@@ -339,7 +322,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 				{/* Footer */}
 				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 shrink-0">
 					<Button
-						variant="outline"
+						variant="danger"
 						size="md"
 						onClick={handleCancel}
 					>

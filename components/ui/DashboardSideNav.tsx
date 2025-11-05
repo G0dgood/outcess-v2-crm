@@ -155,8 +155,8 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 				ref={navRef}
 				id="side-nav"
 				className={`
-					bg-white w-64 border-r border-gray-200
-					hidden md:block relative h-auto
+					bg-white dark:bg-gray-900 w-64 border-r border-gray-200 dark:border-gray-700
+					hidden md:block relative h-auto transition-colors duration-300
 					${className}
 				`}
 			>
@@ -173,7 +173,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 										onClick={(e) => handleItemClick(item, e)}
 										className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 transition-all duration-200 ${isActive || (isSettings && isSettingsExpanded)
 											? 'text-white'
-											: 'text-gray-700 hover:text-white'
+											: 'text-gray-700 dark:text-gray-300 hover:text-white'
 											}`}
 										style={{
 											backgroundColor: (isActive || (isSettings && isSettingsExpanded)) ? setupData.primaryColor || '#050711' : 'transparent',
@@ -200,16 +200,16 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 											}
 										}}
 									>
-										<div className={`shrink-0 transition-colors duration-200 ${isActive || (isSettings && isSettingsExpanded) ? 'text-white' : 'text-gray-600'
+										<div className={`shrink-0 transition-colors duration-200 ${isActive || (isSettings && isSettingsExpanded) ? 'text-white' : 'text-gray-600 dark:text-gray-400'
 											}`}>
 											{getIconComponent(item.icon)}
 										</div>
-										<span className={`font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] text-[#3A4050]  transition-colors duration-200 flex-1 text-left ${isActive || (isSettings && isSettingsExpanded) ? 'text-white' : 'text-gray-700'
+										<span className={`font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive || (isSettings && isSettingsExpanded) ? 'text-white' : 'text-gray-700 dark:text-gray-300'
 											}`}>
 											{item.label}
 										</span>
 										{isSettings && (
-											<div className={`shrink-0 transition-colors duration-200 ${isSettingsExpanded ? 'text-white' : 'text-gray-600'
+											<div className={`shrink-0 transition-colors duration-200 ${isSettingsExpanded ? 'text-white' : 'text-gray-600 dark:text-gray-400'
 												}`}>
 												{isSettingsExpanded ? (
 													<ChevronDownIcon className="w-4 h-4" />
@@ -222,7 +222,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 
 									{/* Settings Sub-menu */}
 									{isSettings && isSettingsExpanded && (
-										<div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-300 pl-2">
+										<div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-300 dark:border-gray-600 pl-2">
 											{settingsSubItems.map((subItem) => {
 												// Get the tab value from the URL query parameter
 												const currentTab = searchParams?.get('tab');
@@ -235,7 +235,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 														onClick={() => handleSubItemClick(subItem)}
 														className={`cursor-pointer w-full flex items-center gap-3 px-4 py-2 transition-all duration-200 ${isSubActive
 															? 'text-white bg-opacity-80'
-															: 'text-gray-600 hover:text-white'
+															: 'text-gray-600 dark:text-gray-400 hover:text-white'
 															}`}
 														style={{
 															backgroundColor: isSubActive ? setupData.primaryColor || '#050711' : 'transparent',
@@ -259,11 +259,11 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 															}
 														}}
 													>
-														<div className={`sub-icon shrink-0 transition-colors duration-200 ${isSubActive ? 'text-white' : 'text-gray-500'
+														<div className={`sub-icon shrink-0 transition-colors duration-200 ${isSubActive ? 'text-white' : 'text-gray-500 dark:text-gray-400'
 															}`}>
 															{getIconComponent(subItem.icon)}
 														</div>
-														<span className={`sub-text font-inter font-medium text-[13px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 ${isSubActive ? 'text-white' : 'text-gray-600'
+														<span className={`sub-text font-inter font-medium text-[13px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 ${isSubActive ? 'text-white' : 'text-gray-600 dark:text-gray-300'
 															}`}>
 															{subItem.label}
 														</span>
@@ -278,7 +278,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 					</div>
 
 					{/* Separator */}
-					<div className="border-t border-gray-200 my-4"></div>
+					<div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>
 				</div>
 			</nav>
 		</>

@@ -247,7 +247,7 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 			<nav
 				ref={navRef}
 				className={`
-					fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-50
+					fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 z-50
 					transform transition-transform duration-300 ease-in-out
 					${isAnimating ? 'translate-x-0' : '-translate-x-full'}
 				`}
@@ -258,7 +258,7 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 				<div className="flex justify-end p-4 pb-2">
 					<button
 						onClick={onClose}
-						className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+						className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
 						aria-label="Close menu"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -327,7 +327,7 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 
 									{/* Settings Sub-menu */}
 									{isSettings && isSettingsExpanded && (
-										<div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-300 pl-2">
+										<div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-300 dark:border-gray-600 pl-2">
 											{settingsSubItems.map((subItem) => {
 												// Get the tab value from the URL query parameter
 												const currentTab = searchParams?.get('tab');
@@ -383,7 +383,7 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 					</div>
 
 					{/* Separator */}
-					<div className="border-t border-gray-200 my-4"></div>
+					<div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>
 				</div>
 			</nav>
 		</>

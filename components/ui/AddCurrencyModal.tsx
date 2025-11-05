@@ -161,7 +161,7 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 						<Input
 							label="Format Preview"
 							value={formatPreview}
-							onChange={() => {}} // Read-only
+							onChange={() => { }} // Read-only
 							disabled
 							placeholder="Select a currency to see preview"
 						/>
@@ -171,7 +171,7 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 				{/* Footer */}
 				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 shrink-0">
 					<Button
-						variant="outline"
+						variant="danger"
 						size="md"
 						onClick={handleCancel}
 					>

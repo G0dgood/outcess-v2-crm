@@ -76,13 +76,13 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-			<div className="bg-white shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+			<div className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
 				{/* Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200 shrink-0">
-					<h2 className="text-xl font-semibold text-gray-900">Disposition History</h2>
+				<div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
+					<h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Disposition History</h2>
 					<button
 						onClick={onClose}
-						className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+						className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -92,25 +92,25 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 				{/* Content */}
 				<div className="flex-1 overflow-y-auto p-6 space-y-6">
 					{/* Agent Information Section */}
-					<div className="bg-gray-50 border border-gray-200  p-6">
+					<div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-6">
 						<div className="space-y-3">
 							<div>
-								<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+								<label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
 									Agent Name
 								</label>
-								<p className="text-base text-gray-900 font-semibold">{dispositionItem.agent || '-'}</p>
+								<p className="text-base text-gray-900 dark:text-gray-100 font-semibold">{dispositionItem.agent || '-'}</p>
 							</div>
 							<div>
-								<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+								<label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
 									Agent ID
 								</label>
-								<p className="text-base text-gray-900 font-semibold">{dispositionItem.agentId || '-'}</p>
+								<p className="text-base text-gray-900 dark:text-gray-100 font-semibold">{dispositionItem.agentId || '-'}</p>
 							</div>
 							<div>
-								<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+								<label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
 									Date Contacted
 								</label>
-								<p className="text-base text-gray-900 font-semibold">{formatDateContacted()}</p>
+								<p className="text-base text-gray-900 dark:text-gray-100 font-semibold">{formatDateContacted()}</p>
 							</div>
 						</div>
 					</div>
@@ -118,54 +118,54 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 					{/* Call Details Section */}
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 						<div>
-							<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+							<label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
 								Call Answered
 							</label>
-							<p className="text-base text-gray-900 font-medium">{dispositionItem.callAnswered || '-'}</p>
+							<p className="text-base text-gray-900 dark:text-gray-100 font-medium">{dispositionItem.callAnswered || '-'}</p>
 						</div>
 						<div>
-							<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+							<label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
 								Reason For Non Payment
 							</label>
-							<p className="text-base text-gray-900 font-medium">{dispositionItem.reasonForNonPayment || '-'}</p>
+							<p className="text-base text-gray-900 dark:text-gray-100 font-medium">{dispositionItem.reasonForNonPayment || '-'}</p>
 						</div>
 						<div>
-							<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+							<label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
 								Reason for not watching
 							</label>
-							<p className="text-base text-gray-900 font-medium">{dispositionItem.reasonForNotWatching || '-'}</p>
+							<p className="text-base text-gray-900 dark:text-gray-100 font-medium">{dispositionItem.reasonForNotWatching || '-'}</p>
 						</div>
 						<div>
-							<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+							<label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
 								Commitment Date
 							</label>
-							<p className="text-base text-gray-900 font-medium">{dispositionItem.commitmentDate || '-'}</p>
+							<p className="text-base text-gray-900 dark:text-gray-100 font-medium">{dispositionItem.commitmentDate || '-'}</p>
 						</div>
 						<div>
-							<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+							<label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
 								Amount to Pay
 							</label>
-							<p className="text-base text-gray-900 font-medium">{dispositionItem.amountToPay || '-'}</p>
+							<p className="text-base text-gray-900 dark:text-gray-100 font-medium">{dispositionItem.amountToPay || '-'}</p>
 						</div>
 						<div>
-							<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+							<label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
 								Date and Time
 							</label>
-							<p className="text-base text-gray-900 font-medium">{dispositionItem.dateTime || `${dispositionItem.commitmentDate || ''} ${dispositionItem.time || ''}`.trim() || '-'}</p>
+							<p className="text-base text-gray-900 dark:text-gray-100 font-medium">{dispositionItem.dateTime || `${dispositionItem.commitmentDate || ''} ${dispositionItem.time || ''}`.trim() || '-'}</p>
 						</div>
 					</div>
 
 					{/* Comment Section */}
 					<div>
-						<label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+						<label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
 							Comment
 						</label>
-						<p className="text-base text-gray-900 font-medium">{dispositionItem.comment || '-'}</p>
+						<p className="text-base text-gray-900 dark:text-gray-100 font-medium">{dispositionItem.comment || '-'}</p>
 					</div>
 				</div>
 
 				{/* Footer */}
-				<div className="flex justify-end items-center p-6 border-t border-gray-200 shrink-0">
+				<div className="flex justify-end items-center p-6 border-t border-gray-200 dark:border-gray-700 shrink-0">
 					<Button
 						variant="primary"
 						size="md"

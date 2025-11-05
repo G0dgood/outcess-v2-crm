@@ -3,10 +3,18 @@
 import React, { useState } from 'react';
 import Input from '@/components/ui/Input';
 import PasswordInput from '@/components/ui/PasswordInput';
+import Checkbox from '@/components/ui/Checkbox';
 import Image from 'next/image';
 import ArtworkCarousel from '@/components/ui/ArtworkCarousel';
+import PricingModal from '@/components/ui/PricingModal';
+import { PersonIcon } from '@radix-ui/react-icons';
+import { useSetup } from '@/contexts/SetupContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function LoginPage() {
+	const { setupData } = useSetup();
+	const { isDarkMode } = useTheme();
+	const primaryColor = setupData.primaryColor || '#050711';
 	const [formData, setFormData] = useState({
 		email: '',
 		password: '',
@@ -15,6 +23,7 @@ export default function LoginPage() {
 
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isLoading, setIsLoading] = useState(false);
+	const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
 
 	const handleInputChange = (field: string) => (value: string) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
@@ -24,9 +33,6 @@ export default function LoginPage() {
 		}
 	};
 
-	const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setFormData(prev => ({ ...prev, rememberMe: e.target.checked }));
-	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -60,6 +66,27 @@ export default function LoginPage() {
 
 	return (
 		<div className="login-container">
+			{/* Top Right Header */}
+			<div className="login-top-header">
+				<div className="login-header-card">
+					<button className="upgrade-button" onClick={() => setIsPricingModalOpen(true)} style={{ color: primaryColor }}>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+						</svg>
+						<span>Upgrade</span>
+					</button>
+					<div className="header-separator"></div>
+					<div className="user-info">
+						<div className="user-email">chinedu.go@gmail.com</div>
+						<div className="user-plan">Free plan</div>
+					</div>
+					<div className="profile-icon">
+						<div className="profile-avatar">
+						</div>
+					</div>
+				</div>
+			</div>
+
 			{/* Left Side - Artwork Carousel */}
 			<div className="login-image-section w-full md:w-1/2">
 				<ArtworkCarousel autoPlayInterval={300000} />
@@ -78,8 +105,8 @@ export default function LoginPage() {
 							// className="logo"
 							/>
 						</div>
-						<h1 className="welcome-title">Welcome Back</h1>
-						<p className="welcome-subtitle font-lato font-normal text-base leading-[150%] text-[#6D7280]">Please Login to continue.</p>
+						<h1 className="welcome-title" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>Welcome Back</h1>
+						<p className="welcome-subtitle font-lato font-normal text-base leading-[150%] text-[#6D7280] dark:text-gray-400">Please Login to continue.</p>
 					</div>
 
 					<form onSubmit={handleSubmit} className="login-form">
@@ -106,27 +133,52 @@ export default function LoginPage() {
 						/>
 
 						<div className="login-options">
-							<label className="remember-me">
-								<input
-									type="checkbox"
-									checked={formData.rememberMe}
-									onChange={handleCheckboxChange}
-								/>
-								<span>Remember me</span>
-							</label>
-							<a href="#" className="forgot-password">Forgot password?</a>
+							<Checkbox
+								checked={formData.rememberMe}
+								onChange={(checked) => setFormData(prev => ({ ...prev, rememberMe: checked }))}
+								label="Remember me"
+								size="small"
+							/>
+							<a href="#" className="forgot-password" style={{ color: primaryColor }} onMouseEnter={(e) => {
+								e.currentTarget.style.opacity = '0.8';
+							}} onMouseLeave={(e) => {
+								e.currentTarget.style.opacity = '1';
+							}}>Forgot password?</a>
 						</div>
 
 						<button
 							type="submit"
 							className={`login-button ${isLoading ? 'loading' : ''}`}
 							disabled={isLoading}
+							style={{ backgroundColor: primaryColor }}
+							onMouseEnter={(e) => {
+								if (!isLoading) {
+									e.currentTarget.style.backgroundColor = primaryColor;
+									e.currentTarget.style.opacity = '0.9';
+								}
+							}}
+							onMouseLeave={(e) => {
+								if (!isLoading) {
+									e.currentTarget.style.backgroundColor = primaryColor;
+									e.currentTarget.style.opacity = '1';
+								}
+							}}
 						>
 							{isLoading ? 'Logging in...' : 'Login'}
 						</button>
 					</form>
 				</div>
 			</div>
+
+			{/* Pricing Modal */}
+			<PricingModal
+				isOpen={isPricingModalOpen}
+				onClose={() => setIsPricingModalOpen(false)}
+				onSelectPlan={(planId) => {
+					console.log('Selected plan:', planId);
+					// Handle plan selection
+				}}
+			/>
 		</div>
 	);
 }

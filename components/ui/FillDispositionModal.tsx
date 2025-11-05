@@ -145,13 +145,13 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-			<div className="bg-white shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+			<div className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
 				{/* Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200">
-					<h2 className="text-xl font-semibold text-gray-900">Disposition</h2>
+				<div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+					<h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Disposition</h2>
 					<button
 						onClick={onClose}
-						className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+						className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -218,15 +218,15 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 								<button
 									type="button"
 									onClick={handleCommitmentDateIconClick}
-									className="absolute right-3 bottom-3 cursor-pointer hover:text-gray-600 transition-colors"
+									className="absolute right-3 bottom-3 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
 									aria-label="Open date picker"
 								>
-									<CalendarIcon className="w-4 h-4 text-gray-400" />
+									<CalendarIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
 								</button>
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-2">
+								<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 									Date and Time
 								</label>
 								<div className="grid grid-cols-2 gap-3">
@@ -242,10 +242,10 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 										<button
 											type="button"
 											onClick={handleDateIconClick}
-											className="absolute right-3 bottom-3 cursor-pointer hover:text-gray-600 transition-colors"
+											className="absolute right-3 bottom-3 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
 											aria-label="Open date picker"
 										>
-											<CalendarIcon className="w-4 h-4 text-gray-400" />
+											<CalendarIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
 										</button>
 									</div>
 									<div className="input-container relative">
@@ -260,10 +260,10 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 										<button
 											type="button"
 											onClick={handleTimeIconClick}
-											className="absolute right-3 bottom-3 cursor-pointer hover:text-gray-600 transition-colors"
+											className="absolute right-3 bottom-3 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
 											aria-label="Open time picker"
 										>
-											<ClockIcon className="w-4 h-4 text-gray-400" />
+											<ClockIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
 										</button>
 									</div>
 								</div>
@@ -273,7 +273,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="flex justify-end items-center gap-3 p-6 border-t border-gray-200">
+				<div className="flex justify-end items-center gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
 					<Button
 						variant="outline"
 						size="md"

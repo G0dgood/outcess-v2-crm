@@ -5,6 +5,8 @@ import Button from './Button';
 import CreateStatusModal from './CreateStatusModal';
 import DeleteStatusModal from './DeleteStatusModal';
 import { TrashIcon, Pencil1Icon } from '@radix-ui/react-icons';
+import SubPageHeading from './SubPageHeading';
+import PageHeading from './PageHeading';
 
 interface StatusItem {
 	id: string;
@@ -126,13 +128,13 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 	};
 
 	const handleCreate = (data: StatusFormData) => {
-		const roleDisplay = data.roleSelection === 'all' 
-			? 'All users' 
+		const roleDisplay = data.roleSelection === 'all'
+			? 'All users'
 			: data.selectedRoles.map(roleId => roleLabels[roleId] || roleId).join(', ');
 
 		if (editingStatus) {
 			// Update existing status
-			setStatuses(prev => prev.map(status => 
+			setStatuses(prev => prev.map(status =>
 				status.id === editingStatus.id
 					? { ...status, ...data, role: roleDisplay }
 					: status
@@ -166,10 +168,12 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 			{/* Header Section */}
 			<div className="mb-6 flex items-start justify-between">
 				<div className="flex-1">
-					<h1 className="text-2xl font-semibold text-gray-900 mb-2">Status</h1>
-					<p className="text-gray-600">
-						Add fields to capture more details about customer interactions. You can arrange these fields in call forms for agents and customers to enhance data collection and improve service quality.
-					</p>
+					<PageHeading
+						text="Status"
+					/>
+					<SubPageHeading
+						text="Add fields to capture more details about customer interactions. You can arrange these fields in call forms for agents and customers to enhance data collection and improve service quality."
+					/>
 				</div>
 				<Button
 					variant="primary"
@@ -181,53 +185,53 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 			</div>
 
 			{/* Status Table */}
-			<div className="bg-white border border-gray-200 overflow-hidden">
+			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200">
-						<thead className="bg-gray-50">
+					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+						<thead className="bg-gray-50 dark:bg-gray-700">
 							<tr>
-								<th>Statuses</th>
-								<th>Description</th>
-								<th>Role</th>
-								<th>Action</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Statuses</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Description</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Role</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Action</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white divide-y divide-gray-200">
+						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
 							{statuses.length === 0 ? (
 								<tr>
-									<td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+									<td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
 										No statuses configured yet.
 									</td>
 								</tr>
 							) : (
 								statuses.map((status) => (
-									<tr key={status.id} className="hover:bg-gray-50 transition-colors">
+									<tr key={status.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
 										<td className="px-6 py-4 whitespace-nowrap">
 											<div className="flex items-center gap-3">
-												<div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
-													<div className="w-6 h-6 rounded-full bg-gray-400"></div>
+												<div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center shrink-0">
+													<div className="w-6 h-6 rounded-full bg-gray-400 dark:bg-gray-500"></div>
 												</div>
-												<span className="font-medium text-gray-900">{status.name}</span>
+												<span className="font-medium text-gray-900 dark:text-gray-100">{status.name}</span>
 											</div>
 										</td>
 										<td className="px-6 py-4">
-											<span className="text-sm text-gray-600">{status.description}</span>
+											<span className="text-sm text-gray-600 dark:text-gray-400">{status.description}</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm text-gray-600">{formatRoleDisplay(status)}</span>
+											<span className="text-sm text-gray-600 dark:text-gray-400">{formatRoleDisplay(status)}</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<div className="flex items-center gap-3">
 												<button
 													onClick={() => handleEdit(status.id)}
-													className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+													className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 													aria-label="Edit status"
 												>
 													<Pencil1Icon className="w-4 h-4" />
 												</button>
 												<button
 													onClick={() => handleDelete(status.id)}
-													className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 transition-colors"
+													className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 													aria-label="Delete status"
 												>
 													<TrashIcon className="w-4 h-4" />

@@ -99,7 +99,7 @@ const ReportPage: React.FC = () => {
 						<button
 							type="button"
 							onClick={handleFilter}
-							className="inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 px-4 py-2 text-sm bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 cursor-pointer gap-2 whitespace-nowrap"
+							className="inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-gray-500 dark:focus:ring-gray-400 cursor-pointer gap-2 whitespace-nowrap"
 						>
 							<MixerHorizontalIcon className="w-4 h-4" />
 							Filter Report
@@ -135,28 +135,28 @@ const ReportPage: React.FC = () => {
 			</div>
 
 			{/* Report Table */}
-			<div className="bg-white border border-gray-200 overflow-hidden">
+			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200">
-						<thead className="bg-gray-50">
+					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+						<thead className="bg-gray-50 dark:bg-gray-700">
 							<tr>
-								<th>Agent Name</th>
-								<th>Agent ID</th>
-								<th>Date</th>
+								<th className="text-gray-900 dark:text-gray-100">Agent Name</th>
+								<th className="text-gray-900 dark:text-gray-100">Agent ID</th>
+								<th className="text-gray-900 dark:text-gray-100">Date</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white divide-y divide-gray-200">
+						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
 							{filteredReports.length === 0 ? (
 								<tr>
 									<td colSpan={3} className="px-6 py-12 text-center">
 										<div className="flex flex-col items-center justify-center">
 											<div className="mb-4">
-												<Icon name="Bar_chart_light" size="4xl" className="text-gray-300" />
+												<Icon name="Bar_chart_light" size="4xl" className="text-gray-300 dark:text-gray-600" />
 											</div>
-											<h3 className="text-lg font-medium text-gray-900 mb-2">
+											<h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
 												No Data Found
 											</h3>
-											<p className="text-gray-500">
+											<p className="text-gray-500 dark:text-gray-400">
 												{searchTerm ? 'No reports match your search.' : 'No report data available.'}
 											</p>
 										</div>
@@ -164,12 +164,12 @@ const ReportPage: React.FC = () => {
 								</tr>
 							) : (
 								paginatedReports.map((report) => (
-									<tr key={report.id} className="hover:bg-gray-50">
-										<td className="font-medium text-gray-900">
+									<tr key={report.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+										<td className="font-medium text-gray-900 dark:text-gray-100">
 											{report.agentName}
 										</td>
-										<td>{report.agentId}</td>
-										<td>{report.date}</td>
+										<td className="text-gray-900 dark:text-gray-100">{report.agentId}</td>
+										<td className="text-gray-900 dark:text-gray-100">{report.date}</td>
 									</tr>
 								))
 							)}
