@@ -4,6 +4,7 @@
  */
 
 import { getIsNavigating } from './navigationState';
+import { shouldPlaySound, getComponentSoundType, loadSoundPreferences, type SoundPreferences } from './soundPreferences';
 
 export type SoundType = 
 	| 'notification'
@@ -38,6 +39,12 @@ export const playSound = (
 	volume: number = 0.3
 ): void => {
 	if (typeof window === 'undefined') return;
+	
+	// Check global sound preferences
+	const preferences = loadSoundPreferences();
+	if (!preferences.globalSoundEnabled) {
+		return;
+	}
 	
 	// Don't play sounds during navigation
 	if (getIsNavigating()) {
@@ -84,8 +91,19 @@ export const playSoundSequence = (sounds: SoundConfig[]): void => {
 
 /**
  * Play notification sound based on type
+ * @param type - The sound type to play
+ * @param component - Optional component name to check component-specific settings
  */
-export const playNotificationSound = (type: SoundType): void => {
+export const playNotificationSound = (type: SoundType, component?: keyof SoundPreferences['components']): void => {
+	// Check if sound should play for this component
+	if (component && !shouldPlaySound(component)) {
+		return;
+	}
+	
+	// If component is specified, use its configured sound type
+	if (component) {
+		type = getComponentSoundType(component);
+	}
 	switch (type) {
 		case 'notification':
 		case 'new_notification':

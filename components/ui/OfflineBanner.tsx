@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useSocket } from '@/contexts/SocketContext';
 import { setNavigating } from '@/utils/navigationState';
+import { playNotificationSound } from '@/utils/soundEffects';
 
 const OfflineBanner: React.FC = () => {
 	const { isOffline, getQueueSize, status, isOnline, isReconnected, networkSpeed } = useSocket();
@@ -35,36 +36,10 @@ const OfflineBanner: React.FC = () => {
 		// Don't play sounds if we're navigating between pages
 		if (isNavigating.current) return;
 
-		// Create audio context for sound generation
-		const playSound = (frequency: number, duration: number, type: 'sine' | 'square' = 'sine') => {
-			try {
-				const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-				const oscillator = audioContext.createOscillator();
-				const gainNode = audioContext.createGain();
-
-				oscillator.connect(gainNode);
-				gainNode.connect(audioContext.destination);
-
-				oscillator.frequency.value = frequency;
-				oscillator.type = type;
-
-				gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-				gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-
-				oscillator.start(audioContext.currentTime);
-				oscillator.stop(audioContext.currentTime + duration);
-			} catch (error) {
-				console.error('Error playing sound:', error);
-			}
-		};
-
 		// Play reconnection sound (successful chime)
 		if (isReconnected && !hasPlayedReconnectSound.current) {
 			hasPlayedReconnectSound.current = true;
-			// Play a pleasant ascending tone
-			playSound(523.25, 0.1, 'sine'); // C5
-			setTimeout(() => playSound(659.25, 0.1, 'sine'), 100); // E5
-			setTimeout(() => playSound(783.99, 0.2, 'sine'), 200); // G5
+			playNotificationSound('success', 'offlineBanner');
 		}
 
 		// Reset reconnect sound flag when not reconnected
@@ -75,9 +50,7 @@ const OfflineBanner: React.FC = () => {
 		// Play slow network sound (warning tone)
 		if (networkSpeed === 'slow' && isOnline && !hasPlayedSlowNetworkSound.current) {
 			hasPlayedSlowNetworkSound.current = true;
-			// Play a warning tone
-			playSound(440, 0.15, 'square'); // A4
-			setTimeout(() => playSound(440, 0.15, 'square'), 200);
+			playNotificationSound('warning', 'offlineBanner');
 		}
 
 		// Reset slow network sound flag when network is fast

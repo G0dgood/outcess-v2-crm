@@ -474,22 +474,78 @@ const DashboardContent: React.FC = () => {
 						borderColor: 'var(--light-gray)'
 					}}
 				>
-					<SortableContext
-						items={setupData.dashboardSettings.dispositionSettings.charts.map(chart => chart.id)}
-						strategy={verticalListSortingStrategy}
-					>
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-							{setupData.dashboardSettings.dispositionSettings.charts.map((chart) => (
-								<SortableChart
-									key={chart.id}
-									chart={chart}
-									generateChartData={generateChartDataWrapper}
-									onRemoveChart={handleRemoveChart}
-									onEditChart={handleEditChart}
+					{setupData.dashboardSettings.dispositionSettings.charts.length > 0 ? (
+						<SortableContext
+							items={setupData.dashboardSettings.dispositionSettings.charts.map(chart => chart.id)}
+							strategy={verticalListSortingStrategy}
+						>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+								{setupData.dashboardSettings.dispositionSettings.charts.map((chart) => (
+									<SortableChart
+										key={chart.id}
+										chart={chart}
+										generateChartData={generateChartDataWrapper}
+										onRemoveChart={handleRemoveChart}
+										onEditChart={handleEditChart}
+									/>
+								))}
+							</div>
+						</SortableContext>
+					) : (
+						<div className="p-12 flex flex-col items-center justify-center">
+							<svg
+								width="120"
+								height="120"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="1.5"
+								className="mb-6"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
+								<path
+									d="M3 3V21H21"
+									strokeLinecap="round"
+									strokeLinejoin="round"
 								/>
-							))}
+								<path
+									d="M7 16L12 11L16 15L21 10"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								/>
+								<path
+									d="M21 10V3H14"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								/>
+								<circle cx="7" cy="16" r="1.5" fill="currentColor" />
+								<circle cx="12" cy="11" r="1.5" fill="currentColor" />
+								<circle cx="16" cy="15" r="1.5" fill="currentColor" />
+								<circle cx="21" cy="10" r="1.5" fill="currentColor" />
+							</svg>
+							<h3
+								className="font-inter text-lg font-semibold mb-2"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								No Charts Configured
+							</h3>
+							<p
+								className="font-inter text-sm text-center mb-6 max-w-md"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
+								Add your first chart to visualize your disposition data and track important metrics.
+							</p>
+							<Button
+								variant="primary"
+								size="md"
+								onClick={() => setIsAddChartModalOpen(true)}
+								className="flex items-center gap-2"
+							>
+								<PlusIcon className="w-4 h-4" />
+								Add Chart
+							</Button>
 						</div>
-					</SortableContext>
+					)}
 				</div>
 			</DndContext>
 

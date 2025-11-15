@@ -11,7 +11,9 @@ import {
 	BarChartIcon,
 	IdCardIcon,
 	ChevronRightIcon,
-	ChevronDownIcon
+	ChevronDownIcon,
+	ChatBubbleIcon,
+	Link2Icon
 } from '@radix-ui/react-icons';
 import Group from '@/components/setupIcon/Group';
 
@@ -87,6 +89,18 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 			path: '/team-members',
 		},
 		{
+			id: 'sms',
+			label: 'SMS',
+			icon: 'sms',
+			path: '/sms',
+		},
+		{
+			id: 'integrations',
+			label: 'Integrations',
+			icon: 'integrations',
+			path: '/integrations',
+		},
+		{
 			id: 'setup-book',
 			label: 'Setup Book',
 			icon: 'settings-book',
@@ -152,6 +166,10 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 				return <IdCardIcon {...iconProps} />;
 			case 'group':
 				return <Group width={20} height={20} strokeColor="currentColor" fillColor="currentColor" />;
+			case 'sms':
+				return <ChatBubbleIcon {...iconProps} />;
+			case 'integrations':
+				return <Link2Icon {...iconProps} />;
 			default:
 				return null;
 		}

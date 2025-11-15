@@ -14,8 +14,10 @@ import {
 	EyeClosedIcon,
 	MoonIcon,
 	SunIcon,
-	GearIcon
+	GearIcon,
+	SpeakerLoudIcon
 } from "@radix-ui/react-icons";
+import SoundSettings from "@/components/ui/SoundSettings";
 import PageHeading from "@/components/ui/PageHeading";
 import SubPageHeading from "@/components/ui/SubPageHeading";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -35,7 +37,7 @@ export default function SettingsPage() {
 	const primaryColor = setupData.primaryColor || '#9333EA';
 	const secondaryColor = setupData.secondaryColor || '#6C8B7D';
 
-	const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'email' | 'preferences'>('profile');
+	const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'email' | 'preferences' | 'sound'>('profile');
 
 	// Loading states
 	const [isProfileLoading, setIsProfileLoading] = useState(false);
@@ -291,11 +293,12 @@ export default function SettingsPage() {
 							{ id: 'profile', label: 'Profile', icon: PersonIcon },
 							{ id: 'password', label: 'Password', icon: LockClosedIcon },
 							{ id: 'preferences', label: 'Preferences', icon: GearIcon },
+							{ id: 'sound', label: 'Sound', icon: SpeakerLoudIcon },
 							// { id: 'email', label: 'Email', icon: Mail }, 
 						].map(({ id, label, icon: IconComponent }) => (
 							<button
 								key={id}
-								onClick={() => setActiveSection(id as 'profile' | 'password' | 'email' | 'preferences')}
+								onClick={() => setActiveSection(id as 'profile' | 'password' | 'email' | 'preferences' | 'sound')}
 								className={`relative flex items-center space-x-2 py-3 px-4 font-medium text-sm transition-all duration-200 ${activeSection === id
 									? 'dark:text-gray-100'
 									: 'dark:text-gray-400 dark:hover:text-gray-300'
@@ -749,6 +752,33 @@ export default function SettingsPage() {
 								</button>
 							</div>
 						</div>
+					</div>
+				)}
+
+				{/* Sound Section */}
+				{activeSection === 'sound' && (
+					<div className="py-6">
+						<div className="mb-6">
+							<div className="flex items-center space-x-2 mb-2">
+								<SpeakerLoudIcon
+									className="w-6 h-6"
+									style={{ color: 'var(--text-secondary)' }}
+								/>
+								<h2
+									className="text-xl font-semibold"
+									style={{ color: 'var(--text-secondary)' }}
+								>
+									Sound Settings
+								</h2>
+							</div>
+							<p
+								className="text-sm dark:text-gray-400 ml-8"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
+								Control sound notifications for different components. You can enable or disable sounds globally or for specific components.
+							</p>
+						</div>
+						<SoundSettings />
 					</div>
 				)}
 

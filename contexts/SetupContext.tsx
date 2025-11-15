@@ -225,22 +225,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			callOutcomes: [],
 			dispositionSettings: {
 				timeRangeView: 'daily',
-				charts: [
-					{
-						id: 'default-pie-chart',
-						title: 'Call Disposition Overview',
-						type: 'pie',
-						dataSource: 'dispositions',
-						timeRange: 'daily',
-						color: '#050711',
-						position: {
-							x: 20,
-							y: 20,
-							width: 400,
-							height: 300
-						}
-					}
-				],
+				charts: [],
 			},
 		},
 		customerBookSettings: {

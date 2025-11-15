@@ -90,6 +90,7 @@ export const SortableChart: React.FC<SortableChartProps> = ({
 				className="flex justify-between items-center p-4 cursor-move"
 				{...attributes}
 				{...listeners}
+				suppressHydrationWarning
 				style={{
 					backgroundColor: 'var(--bg-primary)',
 					borderBottom: `1px solid var(--light-gray)`,

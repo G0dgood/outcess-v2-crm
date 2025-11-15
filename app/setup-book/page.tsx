@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
+import Checkbox from '@/components/ui/Checkbox';
 import { useSetup } from '@/contexts/SetupContext';
 import PageHeading from '@/components/ui/PageHeading';
-import { UploadIcon } from '@radix-ui/react-icons';
+import { UploadIcon, FileTextIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
+import Input from '@/components/ui/Input';
 import UploadBase from '@/components/ui/UploadBaseEmployee';
 
 interface FieldDefinition {
@@ -27,6 +29,12 @@ const SetupBookPage: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+	const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
+	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+	const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
+	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
+	const [editingRecord, setEditingRecord] = useState<SetupBookRecord | null>(null);
+	const [deleteRecord, setDeleteRecord] = useState<{ id: string; name: string } | null>(null);
 	const [fieldDefinitions, setFieldDefinitions] = useState<FieldDefinition[]>([
 		{ id: '1', name: 'Name', type: 'text', required: true },
 		{ id: '2', name: 'Phone', type: 'phone', required: true },
@@ -74,6 +82,49 @@ const SetupBookPage: React.FC = () => {
 		setFieldDefinitions(fieldDefinitions.filter(field => field.id !== fieldId));
 	};
 
+	const handleEditRecord = (record: SetupBookRecord) => {
+		setEditingRecord(record);
+	};
+
+	const handleSaveEdit = (updatedData: Record<string, string | number | boolean>) => {
+		if (editingRecord) {
+			setRecords(prevRecords =>
+				prevRecords.map(record =>
+					record.id === editingRecord.id
+						? { ...record, ...updatedData }
+						: record
+				)
+			);
+			setEditingRecord(null);
+		}
+	};
+
+	const handleDeleteClick = (record: SetupBookRecord) => {
+		// Get the first field value as the name for display
+		const firstField = fieldDefinitions[0];
+		const recordName = firstField ? String(record[firstField.name] || record.id) : record.id;
+		setDeleteRecord({
+			id: record.id,
+			name: recordName
+		});
+	};
+
+	const handleConfirmDelete = () => {
+		if (deleteRecord) {
+			setRecords(prevRecords => prevRecords.filter(record => record.id !== deleteRecord.id));
+			// Remove from selected if it was selected
+			setSelectedRecords(prev => {
+				const newSelected = new Set(prev);
+				newSelected.delete(deleteRecord.id);
+				if (newSelected.size === 0) {
+					setIsDrawerOpen(false);
+				}
+				return newSelected;
+			});
+			setDeleteRecord(null);
+		}
+	};
+
 	const filteredRecords = records.filter(record => {
 		if (!searchTerm) return true;
 		const searchLower = searchTerm.toLowerCase();
@@ -86,6 +137,51 @@ const SetupBookPage: React.FC = () => {
 	const totalPages = Math.ceil(filteredRecords.length / 10);
 	const startIndex = (currentPage - 1) * 10;
 	const paginatedRecords = filteredRecords.slice(startIndex, startIndex + 10);
+
+	const handleSelectAll = (checked: boolean) => {
+		if (checked) {
+			setSelectedRecords(new Set(paginatedRecords.map(record => record.id)));
+			setIsDrawerOpen(true);
+		} else {
+			setSelectedRecords(new Set());
+			setIsDrawerOpen(false);
+		}
+	};
+
+	const handleSelectRecord = (recordId: string, checked: boolean) => {
+		const newSelected = new Set(selectedRecords);
+		if (checked) {
+			newSelected.add(recordId);
+			setSelectedRecords(newSelected);
+			setIsDrawerOpen(true);
+		} else {
+			newSelected.delete(recordId);
+			setSelectedRecords(newSelected);
+			// Close drawer if no items are selected
+			if (newSelected.size === 0) {
+				setIsDrawerOpen(false);
+			}
+		}
+	};
+
+	const isAllSelected = paginatedRecords.length > 0 && paginatedRecords.every(record => selectedRecords.has(record.id));
+
+	// Handle drawer animations
+	useEffect(() => {
+		if (isDrawerOpen) {
+			setShouldRenderDrawer(true);
+			// Trigger animation after a tiny delay to ensure DOM is ready
+			setTimeout(() => setIsDrawerAnimating(true), 10);
+		} else {
+			// Start exit animation
+			setIsDrawerAnimating(false);
+			// Remove from DOM after animation completes (300ms)
+			const timer = setTimeout(() => {
+				setShouldRenderDrawer(false);
+			}, 300);
+			return () => clearTimeout(timer);
+		}
+	}, [isDrawerOpen]);
 
 	return (
 		<div>
@@ -137,6 +233,13 @@ const SetupBookPage: React.FC = () => {
 							}}
 						>
 							<tr>
+								<th>
+									<Checkbox
+										checked={isAllSelected}
+										onChange={handleSelectAll}
+										size="medium"
+									/>
+								</th>
 								{fieldDefinitions.map((field) => (
 									<th
 										key={field.id}
@@ -146,6 +249,12 @@ const SetupBookPage: React.FC = () => {
 										{field.name}
 									</th>
 								))}
+								<th
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Actions
+								</th>
 							</tr>
 						</thead>
 						<tbody
@@ -157,7 +266,7 @@ const SetupBookPage: React.FC = () => {
 						>
 							{filteredRecords.length === 0 ? (
 								<tr>
-									<td colSpan={fieldDefinitions.length} className="px-6 py-12 text-center">
+									<td colSpan={fieldDefinitions.length + 2} className="px-6 py-12 text-center">
 										<div className="flex flex-col items-center justify-center">
 											<div className="mb-4">
 												<Icon name="upload-cloud" size="4xl" className="text-gray-300 dark:text-gray-600" />
@@ -190,6 +299,13 @@ const SetupBookPage: React.FC = () => {
 											e.currentTarget.style.backgroundColor = 'var(--accent-white)';
 										}}
 									>
+										<td className="px-6 py-4 whitespace-nowrap">
+											<Checkbox
+												checked={selectedRecords.has(record.id)}
+												onChange={(checked) => handleSelectRecord(record.id, checked)}
+												size="medium"
+											/>
+										</td>
 										{fieldDefinitions.map((field) => (
 											<td
 												key={field.id}
@@ -199,6 +315,42 @@ const SetupBookPage: React.FC = () => {
 												{record[field.name] || '-'}
 											</td>
 										))}
+										<td>
+											<div className="flex items-center gap-2">
+												<button
+													onClick={() => handleEditRecord(record)}
+													className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+													style={{ color: 'var(--text-secondary)' }}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.color = '#2563EB';
+														e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.color = 'var(--text-secondary)';
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
+													title="Edit Record"
+												>
+													<Pencil1Icon className="w-5 h-5" />
+												</button>
+												<button
+													onClick={() => handleDeleteClick(record)}
+													className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
+													style={{ color: 'var(--text-secondary)' }}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.color = '#DC2626';
+														e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.color = 'var(--text-secondary)';
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
+													title="Delete Record"
+												>
+													<TrashIcon className="w-5 h-5" />
+												</button>
+											</div>
+										</td>
 									</tr>
 								))
 							)}
@@ -227,6 +379,316 @@ const SetupBookPage: React.FC = () => {
 				showButton={false}
 				onUploadComplete={handleUploadComplete}
 			/>
+
+			{/* Edit Record Modal */}
+			{editingRecord && (
+				<div
+					className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+					onClick={() => setEditingRecord(null)}
+				>
+					<div
+						className="dark:bg-gray-800 w-full max-w-2xl mx-4 shadow-lg"
+						style={{ backgroundColor: 'var(--accent-white)' }}
+						onClick={(e) => e.stopPropagation()}
+					>
+						{/* Modal Header */}
+						<div
+							className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6"
+							style={{ borderColor: 'var(--light-gray)' }}
+						>
+							<h2
+								className="font-inter text-xl font-semibold dark:text-gray-100"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								Edit Record
+							</h2>
+							<button
+								onClick={() => setEditingRecord(null)}
+								className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+								style={{ color: 'var(--text-tertiary)' }}
+								onMouseEnter={(e) => {
+									e.currentTarget.style.color = 'var(--text-secondary)';
+								}}
+								onMouseLeave={(e) => {
+									e.currentTarget.style.color = 'var(--text-tertiary)';
+								}}
+							>
+								<Icon name="Close_round_light" size="lg" />
+							</button>
+						</div>
+
+						{/* Modal Form */}
+						<div className="p-6 space-y-4">
+							{fieldDefinitions.map((field) => (
+								<Input
+									key={field.id}
+									label={field.name}
+									placeholder={`Enter ${field.name}`}
+									value={String(editingRecord[field.name] || '')}
+									onChange={(value) => {
+										setEditingRecord(prev => prev ? { ...prev, [field.name]: value } : null);
+									}}
+									type={field.type === 'phone' ? 'tel' : field.type === 'email' ? 'email' : field.type === 'number' ? 'number' : 'text'}
+									required={field.required}
+								/>
+							))}
+						</div>
+
+						{/* Modal Footer */}
+						<div
+							className="flex justify-end gap-3 p-6 border-t dark:border-gray-700"
+							style={{ borderColor: 'var(--light-gray)' }}
+						>
+							<Button
+								variant="outline"
+								size="md"
+								onClick={() => setEditingRecord(null)}
+							>
+								Cancel
+							</Button>
+							<Button
+								variant="primary"
+								size="md"
+								onClick={() => {
+									handleSaveEdit(editingRecord);
+								}}
+							>
+								Save Changes
+							</Button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Delete Record Modal */}
+			{deleteRecord && (
+				<div
+					className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+					onClick={() => setDeleteRecord(null)}
+				>
+					<div
+						className="dark:bg-gray-800 w-full max-w-md mx-4 shadow-lg"
+						style={{ backgroundColor: 'var(--accent-white)' }}
+						onClick={(e) => e.stopPropagation()}
+					>
+						{/* Modal Header */}
+						<div
+							className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6"
+							style={{ borderColor: 'var(--light-gray)' }}
+						>
+							<h2
+								className="font-inter text-xl font-semibold dark:text-gray-100"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								Delete Record
+							</h2>
+							<button
+								onClick={() => setDeleteRecord(null)}
+								className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+								style={{ color: 'var(--text-tertiary)' }}
+								onMouseEnter={(e) => {
+									e.currentTarget.style.color = 'var(--text-secondary)';
+								}}
+								onMouseLeave={(e) => {
+									e.currentTarget.style.color = 'var(--text-tertiary)';
+								}}
+							>
+								<Icon name="Close_round_light" size="lg" />
+							</button>
+						</div>
+
+						{/* Modal Content */}
+						<div className="p-6">
+							<p
+								className="text-sm dark:text-gray-300 mb-6"
+								style={{ color: 'var(--text-secondary)' }}
+							>
+								Are you sure you want to delete the record <strong>{deleteRecord.name}</strong>? This action cannot be undone.
+							</p>
+						</div>
+
+						{/* Modal Footer */}
+						<div
+							className="flex justify-end gap-3 p-6 border-t dark:border-gray-700"
+							style={{ borderColor: 'var(--light-gray)' }}
+						>
+							<Button
+								variant="outline"
+								size="md"
+								onClick={() => setDeleteRecord(null)}
+							>
+								Cancel
+							</Button>
+							<Button
+								variant="primary"
+								size="md"
+								onClick={handleConfirmDelete}
+								style={{
+									backgroundColor: '#DC2626',
+									color: 'white'
+								}}
+								onMouseEnter={(e) => {
+									e.currentTarget.style.backgroundColor = '#B91C1C';
+								}}
+								onMouseLeave={(e) => {
+									e.currentTarget.style.backgroundColor = '#DC2626';
+								}}
+							>
+								Delete
+							</Button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Selected Records Drawer */}
+			{shouldRenderDrawer && (
+				<div
+					className={`fixed top-0 right-0 h-full w-full max-w-md dark:bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${isDrawerAnimating ? 'translate-x-0' : 'translate-x-full'}`}
+					style={{ backgroundColor: 'var(--accent-white)' }}
+				>
+					{/* Drawer Header */}
+					<div
+						className="flex justify-between items-center border-b dark:border-gray-700 p-6"
+						style={{ borderColor: 'var(--light-gray)' }}
+					>
+						<div className="flex items-center gap-3">
+							<FileTextIcon
+								className="w-5 h-5 dark:text-gray-300"
+								style={{ color: 'var(--text-primary)' }}
+							/>
+							<h2
+								className="font-inter text-lg font-semibold dark:text-gray-100"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								Selected Records ({selectedRecords.size})
+							</h2>
+						</div>
+						<button
+							onClick={() => setIsDrawerOpen(false)}
+							className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+							style={{ color: 'var(--text-tertiary)' }}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.color = 'var(--text-secondary)';
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.color = 'var(--text-tertiary)';
+							}}
+						>
+							<Icon name="Close_round_light" size="lg" />
+						</button>
+					</div>
+
+					{/* Drawer Content */}
+					<div className="overflow-y-auto h-[calc(100vh-80px)] p-6">
+						{selectedRecords.size === 0 ? (
+							<div className="flex flex-col items-center justify-center h-full text-center">
+								<FileTextIcon
+									className="w-12 h-12 mb-4 dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								/>
+								<p
+									className="text-sm dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									No records selected
+								</p>
+							</div>
+						) : (
+							<div className="space-y-4">
+								{records
+									.filter(record => selectedRecords.has(record.id))
+									.map((record) => (
+										<div
+											key={record.id}
+											className="p-4 dark:bg-gray-700 border dark:border-gray-600 rounded-lg"
+											style={{
+												backgroundColor: 'var(--bg-primary)',
+												borderColor: 'var(--light-gray)'
+											}}
+										>
+											{/* Record Header */}
+											<div className="mb-3">
+												<div className="flex items-center gap-2 mb-2">
+													<span
+														className="text-xs font-medium dark:text-gray-300"
+														style={{ color: 'var(--text-secondary)' }}
+													>
+														ID: {record.id}
+													</span>
+												</div>
+											</div>
+
+											{/* Record Fields */}
+											<div className="space-y-2">
+												{fieldDefinitions.map((field) => (
+													<div key={field.id} className="flex items-start justify-between text-xs">
+														<span
+															className="font-medium dark:text-gray-400 mr-2"
+															style={{ color: 'var(--text-tertiary)' }}
+														>
+															{field.name}:
+														</span>
+														<span
+															className="text-right flex-1 dark:text-gray-100"
+															style={{ color: 'var(--text-primary)', wordBreak: 'break-word' }}
+														>
+															{record[field.name] ? String(record[field.name]) : '-'}
+														</span>
+													</div>
+												))}
+											</div>
+
+											{/* Actions */}
+											<div className="flex gap-2 mt-3">
+												<button
+													onClick={() => {
+														handleEditRecord(record);
+														setIsDrawerOpen(false);
+													}}
+													className="flex-1 text-xs py-2 px-3 rounded border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
+													style={{
+														borderColor: 'var(--light-gray)',
+														color: 'var(--text-secondary)',
+														backgroundColor: 'transparent'
+													}}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
+												>
+													Edit
+												</button>
+												<button
+													onClick={() => {
+														handleDeleteClick(record);
+														setIsDrawerOpen(false);
+													}}
+													className="flex-1 text-xs py-2 px-3 rounded border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
+													style={{
+														borderColor: 'var(--light-gray)',
+														color: '#DC2626',
+														backgroundColor: 'transparent'
+													}}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
+												>
+													Delete
+												</button>
+											</div>
+										</div>
+									))}
+							</div>
+						)}
+					</div>
+				</div>
+			)}
 		</div>
 	);
 };

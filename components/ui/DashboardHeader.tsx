@@ -7,6 +7,7 @@ import Dropdown from './Dropdown';
 import UserDropdown from './UserDropdown';
 import { HamburgerMenuIcon } from '@radix-ui/react-icons';
 import NotificationDropdown from './NotificationDropdown';
+import NotificationsModal from './NotificationsModal';
 import { sampleNotifications } from '@/data/notifications';
 import ThemeDropdown from './ThemeDropdown';
 import Image from 'next/image';
@@ -56,6 +57,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const pathname = usePathname();
 	const [hasStickyNotes, setHasStickyNotes] = useState(false);
 	const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+	const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
 	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket } = useSocket();
 	const { logout: authLogout, user: authUser } = useAuth();
 	const previousUnreadCount = useRef(0);
@@ -89,18 +91,18 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 		const unreadNotifications = sampleNotifications.filter(n => !n.isRead);
 		const unreadCount = unreadNotifications.length;
-		
+
 		// Play sound when new unread notifications arrive (count increases)
 		if (unreadCount > previousUnreadCount.current) {
 			// Play sound for each new notification
 			const newNotifications = unreadNotifications.slice(previousUnreadCount.current);
 			newNotifications.forEach((notification, index) => {
 				setTimeout(() => {
-					playNotificationSound('new_notification');
+					playNotificationSound('new_notification', 'notifications');
 				}, index * 150); // Stagger sounds if multiple notifications arrive
 			});
 		}
-		
+
 		previousUnreadCount.current = unreadCount;
 	}, [sampleNotifications, pathname]);
 
@@ -110,7 +112,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 			setIsNotificationPanelOpen(!isNotificationPanelOpen);
 			return;
 		}
-		
+
 		setIsNotificationPanelOpen(!isNotificationPanelOpen);
 		// Note: Sound is now handled by NotificationDropdown component to avoid duplicate sounds
 		// Close profile dropdown if open
@@ -258,7 +260,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					<Dropdown
 						label=""
 						value={companyName}
-						onChange={(value) => onCompanyChange?.(value)}
+						onChange={(value) => {
+							const stringValue = Array.isArray(value) ? value[0] : value;
+							onCompanyChange?.(stringValue);
+						}}
 						options={companyOptions}
 						className="min-w-[140px]"
 						inputClassName="h-8"
@@ -308,8 +313,20 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 							isOpen={isNotificationPanelOpen}
 							onClose={() => setIsNotificationPanelOpen(false)}
 							notifications={sampleNotifications}
+							onShowMore={() => {
+								setIsNotificationPanelOpen(false);
+								setIsNotificationsModalOpen(true);
+							}}
 						/>
 					</div>
+
+					{/* Notifications Modal - Render at header level so it persists */}
+					{isNotificationsModalOpen && (
+						<NotificationsModal
+							isOpen={isNotificationsModalOpen}
+							onClose={() => setIsNotificationsModalOpen(false)}
+						/>
+					)}
 
 					{/* User Dropdown */}
 					<UserDropdown

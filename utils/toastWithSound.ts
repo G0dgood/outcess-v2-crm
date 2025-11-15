@@ -5,12 +5,13 @@
 
 import { toast } from 'sonner';
 import { playNotificationSound } from './soundEffects';
+import type { SoundPreferences } from './soundPreferences';
 
 /**
  * Show success toast with sound
  */
 export const toastSuccess = (message: string, options?: Parameters<typeof toast.success>[1]) => {
-	playNotificationSound('success');
+	playNotificationSound('success', 'toasts');
 	return toast.success(message, options);
 };
 
@@ -18,7 +19,7 @@ export const toastSuccess = (message: string, options?: Parameters<typeof toast.
  * Show error toast with sound
  */
 export const toastError = (message: string, options?: Parameters<typeof toast.error>[1]) => {
-	playNotificationSound('error');
+	playNotificationSound('error', 'toasts');
 	return toast.error(message, options);
 };
 
@@ -26,7 +27,7 @@ export const toastError = (message: string, options?: Parameters<typeof toast.er
  * Show warning toast with sound
  */
 export const toastWarning = (message: string, options?: Parameters<typeof toast.warning>[1]) => {
-	playNotificationSound('warning');
+	playNotificationSound('warning', 'toasts');
 	return toast.warning(message, options);
 };
 
@@ -34,7 +35,7 @@ export const toastWarning = (message: string, options?: Parameters<typeof toast.
  * Show info toast with sound
  */
 export const toastInfo = (message: string, options?: Parameters<typeof toast.info>[1]) => {
-	playNotificationSound('info');
+	playNotificationSound('info', 'toasts');
 	return toast.info(message, options);
 };
 
@@ -60,11 +61,11 @@ export const toastPromise = <T,>(
 	return toast.promise(promise, messages, {
 		...options,
 		onSuccess: () => {
-			playNotificationSound('success');
+			playNotificationSound('success', 'toasts');
 			options?.onSuccess?.();
 		},
 		onError: (error) => {
-			playNotificationSound('error');
+			playNotificationSound('error', 'toasts');
 			options?.onError?.(error);
 		},
 	});
