@@ -1,3 +1,5 @@
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { SVGLoader } from './SVGLoader';
 const timeZoneOptions = [
 	{ value: 'UTC-12', label: 'UTC-12 (Baker Island)' },
 	{ value: 'UTC-11', label: 'UTC-11 (American Samoa)' },
@@ -50,6 +52,36 @@ const businessSizeOptions = [
 	{ value: '1000+', label: '1000+ employees' },
 ];
 
+const plusJakartaStyle = { fontFamily: 'var(--font-plus-jakarta)' };
 
+// NoRecordFound
+const NoRecordFound = ({ colSpan }: any) => {
+	return (
+		<tr>
+			<td colSpan={colSpan} className="h-[300px] p-0 m-auto border-b-0">
+				<div className="center-content flex flex-col justify-center items-center h-full">
+					<ExclamationTriangleIcon className="w-16 h-16" color={'var(--text-primary)'} />
+					<p
+						id="mt-3 !underline-none"
+						style={{ color: 'var(--text-primary)' }}>
+						No record found
+					</p>
+				</div>
+			</td>
+		</tr>
+	);
+};
 
-export { timeZoneOptions, industryOptions, businessSizeOptions };
+// SVGLoader Fetch
+const SVGLoaderFetch = ({ colSpan, text }: any) => (
+	<tr>
+		<td colSpan={colSpan} className="h-[300px] p-0 m-auto">
+			<div className="center-content flex flex-col justify-center items-center h-full">
+				<SVGLoader width={"40px"} height={"40px"} color={"var(--text-primary)"} />
+				<p className="mt-3">{text}</p>
+			</div>ź
+		</td>
+	</tr>
+);
+
+export { timeZoneOptions, industryOptions, businessSizeOptions, plusJakartaStyle, NoRecordFound, SVGLoaderFetch };

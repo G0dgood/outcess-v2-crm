@@ -17,7 +17,7 @@ interface DispositionCategory {
 	color: string;
 }
 
-interface Widget {
+export interface Widget {
 	id: string;
 	title: string;
 	value: number;
@@ -30,13 +30,14 @@ interface CallOutcome {
 	name: string;
 }
 
-interface Chart {
+export interface Chart {
 	id: string;
 	title: string;
 	type: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
-	dataSource: 'dispositions' | 'callOutcomes' | 'custom';
+	dataSource: string | string[]; // Support both single and multiple data sources
 	timeRange: 'daily' | 'weekly' | 'monthly';
-	color?: string;
+	color?: string; // Base color for backward compatibility
+	colors?: Record<string, string>; // Map of data source to color for multiple data sources
 	position: {
 		x: number;
 		y: number;

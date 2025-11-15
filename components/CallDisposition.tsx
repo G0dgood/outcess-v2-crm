@@ -7,6 +7,7 @@ import Input from '@/components/ui/Input';
 import IndividualRadio from '@/components/ui/IndividualRadio';
 import Icon from '@/components/ui/Icon';
 import ColorPicker from '@/components/ui/ColorPicker';
+import { PlusIcon } from '@radix-ui/react-icons';
 import { useSetup } from '@/contexts/SetupContext';
 import {
 	Chart as ChartJS,
@@ -96,13 +97,32 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 			}}
 		>
 			<div
-				className="bg-white dark:bg-gray-800 w-full max-w-lg mx-4 max-h-[90vh] flex flex-col"
+				className="dark:bg-gray-800 w-full max-w-lg mx-4 max-h-[90vh] flex flex-col"
+				style={{ backgroundColor: 'var(--accent-white)' }}
 				onClick={(e) => e.stopPropagation()}
 			>
 				{/* Fixed Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
-					<h2 className="font-inter text-lg font-semibold text-[#050711] dark:text-gray-100">{title}</h2>
-					<button onClick={onClose} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
+				<div
+					className="flex justify-between items-center p-6 border-b dark:border-gray-700 shrink-0"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<h2
+						className="font-inter text-lg font-semibold dark:text-gray-100"
+						style={{ color: 'var(--text-primary)' }}
+					>
+						{title}
+					</h2>
+					<button
+						onClick={onClose}
+						className="dark:text-gray-500 dark:hover:text-gray-300"
+						style={{ color: 'var(--text-tertiary)' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = 'var(--text-secondary)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = 'var(--text-tertiary)';
+						}}
+					>
 						<Icon name="Close_round_light" size="lg" />
 					</button>
 				</div>
@@ -114,7 +134,10 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 						label="Field Type"
 						placeholder="Select Field Type"
 						value={dispositionForm.fieldType}
-						onChange={(value) => setDispositionForm(prev => ({ ...prev, fieldType: value }))}
+						onChange={(value) => {
+							const stringValue = Array.isArray(value) ? value[0] : value;
+							setDispositionForm(prev => ({ ...prev, fieldType: stringValue }));
+						}}
 						options={fieldTypeOptions}
 					/>
 
@@ -129,7 +152,12 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 					{/* Dropdown Options */}
 					{dispositionForm.fieldType === 'dropdown' && (
 						<div>
-							<label className="font-inter text-sm font-medium text-[#050711] dark:text-gray-100 mb-2 block">Dropdown Options</label>
+							<label
+								className="font-inter text-sm font-medium dark:text-gray-100 mb-2 block"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								Dropdown Options
+							</label>
 							<div className="space-y-3">
 								{dispositionForm.dropdownOptions.map((option, index) => (
 									<div key={index} className="flex items-center gap-2">
@@ -145,7 +173,14 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 												const newOptions = dispositionForm.dropdownOptions.filter((_, i) => i !== index);
 												setDispositionForm(prev => ({ ...prev, dropdownOptions: newOptions }));
 											}}
-											className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-2"
+											className="dark:text-red-400 dark:hover:text-red-300 p-2"
+											style={{ color: '#DC2626' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.color = '#B91C1C';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.color = '#DC2626';
+											}}
 											type="button"
 										>
 											<Icon name="Trash_light" size="sm" />
@@ -154,9 +189,19 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 								))}
 								<button
 									onClick={onAddDropdownOption}
-									className="text-[#3B82F6] dark:text-blue-400 font-inter text-sm hover:underline flex items-center gap-1"
+									className="dark:text-blue-400 font-inter text-sm hover:underline flex items-center gap-1"
+									style={{ color: '#2563EB' }}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.textDecoration = 'underline';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.textDecoration = 'none';
+									}}
 								>
-									<Icon name="Add_round_light" size="sm" />
+									<PlusIcon
+										className="w-4 h-4"
+										style={{ color: '#2563EB' }}
+									/>
 									Add Option
 								</button>
 							</div>
@@ -165,7 +210,12 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 
 					{/* Sort Order Preference */}
 					<div>
-						<label className="font-inter text-sm font-medium text-[#050711] dark:text-gray-100 mb-3 block">Sort order preference</label>
+						<label
+							className="font-inter text-sm font-medium dark:text-gray-100 mb-3 block"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Sort order preference
+						</label>
 						<div className="space-y-2">
 							<IndividualRadio
 								name="sortOrder"
@@ -191,9 +241,19 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 							id="required"
 							checked={dispositionForm.isRequired}
 							onChange={(e) => setDispositionForm(prev => ({ ...prev, isRequired: e.target.checked }))}
-							className="w-4 h-4 text-[#050711] dark:text-gray-100 border-gray-300 dark:border-gray-600 rounded focus:ring-[#050711] dark:focus:ring-gray-400 dark:bg-gray-700"
+							className="w-4 h-4 dark:text-gray-100 dark:border-gray-600 rounded dark:focus:ring-gray-400 dark:bg-gray-700"
+							style={{
+								borderColor: 'var(--light-gray)',
+								accentColor: 'var(--text-primary)'
+							}}
 						/>
-						<label htmlFor="required" className="font-inter text-sm text-[#050711] dark:text-gray-100">Mark as Required</label>
+						<label
+							htmlFor="required"
+							className="font-inter text-sm dark:text-gray-100"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Mark as Required
+						</label>
 					</div>
 
 					{/* Colour Picker */}
@@ -205,7 +265,10 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 				</div>
 
 				{/* Fixed Footer */}
-				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 shrink-0">
+				<div
+					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<Button variant="outline" size="md" onClick={onClose}>Cancel</Button>
 					<Button variant="primary" size="md" onClick={onSave}>Save Disposition</Button>
 				</div>
@@ -283,10 +346,16 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 						alt="No chart data"
 						className="w-32 h-32 mb-4 opacity-60"
 					/>
-					<h3 className="font-inter text-base font-medium text-[#050711] dark:text-gray-100 mb-2">
+					<h3
+						className="font-inter text-base font-medium dark:text-gray-100 mb-2"
+						style={{ color: 'var(--text-primary)' }}
+					>
 						No Dispositions Configured
 					</h3>
-					<p className="font-lato text-sm text-gray-600 dark:text-gray-400">
+					<p
+						className="font-lato text-sm dark:text-gray-400"
+						style={{ color: 'var(--text-tertiary)' }}
+					>
 						Add disposition categories to see them visualized in your chart
 					</p>
 				</div>
@@ -388,10 +457,24 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 	return (
 		<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 			{/* Manage Disposition Categories */}
-			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-				<div className="p-6 border-b border-gray-200 dark:border-gray-700">
+			<div
+				className="dark:bg-gray-800 border dark:border-gray-700"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
+				<div
+					className="p-6 border-b dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<div className="flex items-center justify-between">
-						<h2 className="font-inter text-lg font-semibold text-[#050711] dark:text-gray-100">Manage Disposition Categories</h2>
+						<h2
+							className="font-inter text-lg font-semibold dark:text-gray-100"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Manage Disposition Categories
+						</h2>
 						<Button
 							variant="primary"
 							size="sm"
@@ -410,18 +493,37 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 									className="w-3 h-3 rounded-sm"
 									style={{ backgroundColor: disposition.color }}
 								></div>
-								<span className="font-lato text-sm text-[#050711] dark:text-gray-100">{disposition.name}</span>
+								<span
+									className="font-lato text-sm dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{disposition.name}
+								</span>
 							</div>
 							<div className="flex items-center gap-2">
 								<button
 									onClick={() => handleEditDisposition(disposition.id)}
-									className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+									className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+									style={{ color: 'var(--text-tertiary)' }}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.color = 'var(--text-secondary)';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.color = 'var(--text-tertiary)';
+									}}
 								>
 									<Icon name="Edit_duotone_line" size="sm" />
 								</button>
 								<button
 									onClick={() => handleDeleteDisposition(disposition.id)}
-									className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+									className="dark:text-gray-500 dark:hover:text-red-400 transition-colors"
+									style={{ color: 'var(--text-tertiary)' }}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.color = '#DC2626';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.color = 'var(--text-tertiary)';
+									}}
 								>
 									<Icon name="Trash_light" size="sm" />
 								</button>
@@ -430,8 +532,16 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 					))}
 				</div>
 
-				<div className="p-6 border-t border-gray-200 dark:border-gray-700">
-					<h3 className="font-inter text-base font-medium text-[#050711] dark:text-gray-100 mb-4">Disposition display settings in Dashboard</h3>
+				<div
+					className="p-6 border-t dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<h3
+						className="font-inter text-base font-medium dark:text-gray-100 mb-4"
+						style={{ color: 'var(--text-primary)' }}
+					>
+						Disposition display settings in Dashboard
+					</h3>
 					<div className="space-y-4">
 						<div>
 							<Dropdown
@@ -451,10 +561,24 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 			</div>
 
 			{/* Chart Area */}
-			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-				<div className="p-6 border-b border-gray-200 dark:border-gray-700">
+			<div
+				className="dark:bg-gray-800 border dark:border-gray-700"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
+				<div
+					className="p-6 border-b dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<div className="flex items-center justify-between">
-						<h2 className="font-inter text-lg font-semibold text-[#050711] dark:text-gray-100">review</h2>
+						<h2
+							className="font-inter text-lg font-semibold dark:text-gray-100"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							review
+						</h2>
 						<Dropdown
 							label=""
 							value={dispositionSettings.timeRangeView}
@@ -486,13 +610,26 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 										className="w-3 h-3 rounded-sm"
 										style={{ backgroundColor: disposition.color }}
 									></div>
-									<span className="font-lato text-sm text-gray-600 dark:text-gray-400">{disposition.name}</span>
+									<span
+										className="font-lato text-sm dark:text-gray-400"
+										style={{ color: 'var(--text-tertiary)' }}
+									>
+										{disposition.name}
+									</span>
 								</div>
 							))
 						) : (
 							<div className="flex items-center gap-2">
-								<div className="w-3 h-3 bg-gray-300 dark:bg-gray-600"></div>
-								<span className="font-lato text-sm text-gray-500 dark:text-gray-400">No dispositions configured</span>
+								<div
+									className="w-3 h-3 dark:bg-gray-600"
+									style={{ backgroundColor: '#D1D5DB' }}
+								></div>
+								<span
+									className="font-lato text-sm dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									No dispositions configured
+								</span>
 							</div>
 						)}
 					</div>

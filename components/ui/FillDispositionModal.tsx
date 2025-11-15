@@ -7,12 +7,18 @@ import Dropdown from './Dropdown';
 import Textarea from './Textarea';
 import DateInput from './DateInput';
 import { Cross2Icon, CalendarIcon, ClockIcon } from '@radix-ui/react-icons';
+import { useSocket } from '@/contexts/SocketContext';
+import { saveOfflineDisposition, updateDispositionStatus, removeOfflineDisposition, saveSyncedDisposition } from '@/utils/offlineDispositions';
+import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface FillDispositionModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onSave?: (data: DispositionFormData) => void;
 	initialData?: Partial<DispositionFormData>;
+	customerId?: string;
+	customerName?: string;
 }
 
 export interface DispositionFormData {
@@ -31,7 +37,12 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	onClose,
 	onSave,
 	initialData,
+	customerId,
+	customerName,
 }) => {
+	const { isOnline, isConnected, isOffline, send } = useSocket();
+	const { user: authUser } = useAuth();
+	const [isSaving, setIsSaving] = useState(false);
 	const [formData, setFormData] = useState<DispositionFormData>({
 		callAnswered: initialData?.callAnswered || '',
 		reasonForNotWatching: initialData?.reasonForNotWatching || '',
@@ -102,15 +113,60 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	};
 
 	const handleDateIconClick = () => {
-		dateInputRef.current?.click();
+		if (dateInputRef.current) {
+			// Use showPicker() if available (modern browsers)
+			if ('showPicker' in dateInputRef.current && typeof (dateInputRef.current as any).showPicker === 'function') {
+				try {
+					(dateInputRef.current as any).showPicker();
+				} catch (error) {
+					// Fallback to focus and click if showPicker fails
+					dateInputRef.current.focus();
+					dateInputRef.current.click();
+				}
+			} else {
+				// Fallback for older browsers
+				dateInputRef.current.focus();
+				dateInputRef.current.click();
+			}
+		}
 	};
 
 	const handleTimeIconClick = () => {
-		timeInputRef.current?.click();
+		if (timeInputRef.current) {
+			// Use showPicker() if available (modern browsers)
+			if ('showPicker' in timeInputRef.current && typeof (timeInputRef.current as any).showPicker === 'function') {
+				try {
+					(timeInputRef.current as any).showPicker();
+				} catch (error) {
+					// Fallback to focus and click if showPicker fails
+					timeInputRef.current.focus();
+					timeInputRef.current.click();
+				}
+			} else {
+				// Fallback for older browsers
+				timeInputRef.current.focus();
+				timeInputRef.current.click();
+			}
+		}
 	};
 
 	const handleCommitmentDateIconClick = () => {
-		commitmentDateInputRef.current?.click();
+		if (commitmentDateInputRef.current) {
+			// Use showPicker() if available (modern browsers)
+			if ('showPicker' in commitmentDateInputRef.current && typeof (commitmentDateInputRef.current as any).showPicker === 'function') {
+				try {
+					(commitmentDateInputRef.current as any).showPicker();
+				} catch (error) {
+					// Fallback to focus and click if showPicker fails
+					commitmentDateInputRef.current.focus();
+					commitmentDateInputRef.current.click();
+				}
+			} else {
+				// Fallback for older browsers
+				commitmentDateInputRef.current.focus();
+				commitmentDateInputRef.current.click();
+			}
+		}
 	};
 
 	const handleView = () => {
@@ -118,9 +174,71 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 		// Implement view logic
 	};
 
-	const handleSaveAndPost = () => {
-		onSave?.(formData);
-		onClose();
+	const handleSaveAndPost = async () => {
+		setIsSaving(true);
+		try {
+			// If offline, save to localStorage
+			if (isOffline) {
+				saveOfflineDisposition(formData, customerId, customerName);
+				toastInfo('Disposition saved offline. It will sync when you\'re back online.');
+				onSave?.(formData);
+				onClose();
+				return;
+			}
+
+			// If online and connected, try to save via API/socket
+			if (isOnline && isConnected) {
+				try {
+					// Try to send via socket or API
+					if (send) {
+						send({
+							type: 'disposition',
+							payload: {
+								...formData,
+								customerId,
+								customerName,
+								timestamp: new Date().toISOString(),
+							},
+						});
+					}
+
+					// Save to synced dispositions for history
+					saveSyncedDisposition(
+						formData,
+						customerId,
+						customerName,
+						authUser?.name,
+						authUser?.id
+					);
+
+					// Call the onSave callback
+					onSave?.(formData);
+
+					toastSuccess('Disposition saved successfully');
+					onClose();
+				} catch (error) {
+					console.error('Error saving disposition online:', error);
+					// Fall through to offline save
+					saveOfflineDisposition(formData, customerId, customerName);
+					toastInfo('Disposition saved offline due to connection error. It will sync when connection is restored.');
+					onSave?.(formData);
+					onClose();
+				}
+			} else {
+				// Not offline but also not connected - save offline as fallback
+				saveOfflineDisposition(formData, customerId, customerName);
+				toastInfo('Disposition saved offline. It will sync when you\'re back online.');
+				onSave?.(formData);
+				onClose();
+			}
+		} catch (error) {
+			console.error('Error saving disposition:', error);
+			toastError('Failed to save disposition');
+			onSave?.(formData);
+			onClose();
+		} finally {
+			setIsSaving(false);
+		}
 	};
 
 	if (!isOpen) return null;
@@ -145,13 +263,60 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-			<div className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+			<div 
+				className="dark:bg-gray-800 shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+				style={{ backgroundColor: 'var(--accent-white)' }}
+			>
 				{/* Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
-					<h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Disposition</h2>
+				<div 
+					className="flex justify-between items-center p-6 border-b dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<div className="flex items-center gap-3">
+						<h2 
+							className="text-xl font-semibold dark:text-gray-100"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Disposition
+						</h2>
+						{isOffline && (
+							<span 
+								className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+								style={{
+									backgroundColor: 'rgba(220, 53, 69, 0.1)',
+									color: '#DC3545',
+									border: '1px solid rgba(220, 53, 69, 0.2)'
+								}}
+							>
+								<svg 
+									className="w-3 h-3" 
+									fill="none" 
+									stroke="currentColor" 
+									viewBox="0 0 24 24"
+								>
+									<path 
+										strokeLinecap="round" 
+										strokeLinejoin="round" 
+										strokeWidth={2} 
+										d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
+									/>
+								</svg>
+								Offline
+							</span>
+						)}
+					</div>
 					<button
 						onClick={onClose}
-						className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						style={{ color: 'var(--text-tertiary)' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = 'var(--text-secondary)';
+							e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = 'var(--text-tertiary)';
+							e.currentTarget.style.backgroundColor = 'transparent';
+						}}
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -218,15 +383,25 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 								<button
 									type="button"
 									onClick={handleCommitmentDateIconClick}
-									className="absolute right-3 bottom-3 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+									className="absolute right-3 top-[38px] cursor-pointer dark:hover:text-gray-300 transition-colors z-10"
+									style={{ color: 'var(--text-tertiary)' }}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.color = 'var(--text-secondary)';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.color = 'var(--text-tertiary)';
+									}}
 									aria-label="Open date picker"
 								>
-									<CalendarIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+									<CalendarIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
 								</button>
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+								<label 
+									className="block text-sm font-medium dark:text-gray-300 mb-2"
+									style={{ color: 'var(--text-secondary)' }}
+								>
 									Date and Time
 								</label>
 								<div className="grid grid-cols-2 gap-3">
@@ -242,10 +417,17 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 										<button
 											type="button"
 											onClick={handleDateIconClick}
-											className="absolute right-3 bottom-3 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+											className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10"
+											style={{ color: 'var(--text-tertiary)' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.color = 'var(--text-secondary)';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.color = 'var(--text-tertiary)';
+											}}
 											aria-label="Open date picker"
 										>
-											<CalendarIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+											<CalendarIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
 										</button>
 									</div>
 									<div className="input-container relative">
@@ -260,10 +442,17 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 										<button
 											type="button"
 											onClick={handleTimeIconClick}
-											className="absolute right-3 bottom-3 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+											className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10"
+											style={{ color: 'var(--text-tertiary)' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.color = 'var(--text-secondary)';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.color = 'var(--text-tertiary)';
+											}}
 											aria-label="Open time picker"
 										>
-											<ClockIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+											<ClockIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
 										</button>
 									</div>
 								</div>
@@ -273,21 +462,45 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="flex justify-end items-center gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
-					<Button
-						variant="outline"
-						size="md"
-						onClick={handleView}
-					>
-						View
-					</Button>
-					<Button
-						variant="primary"
-						size="md"
-						onClick={handleSaveAndPost}
-					>
-						Save & Post
-					</Button>
+				<div 
+					className="flex items-center gap-3 p-6 border-t dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					{isOffline && (
+						<span className="text-xs flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
+							<svg 
+								className="w-4 h-4" 
+								fill="none" 
+								stroke="currentColor" 
+								viewBox="0 0 24 24"
+							>
+								<path 
+									strokeLinecap="round" 
+									strokeLinejoin="round" 
+									strokeWidth={2} 
+									d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
+								/>
+							</svg>
+							Will sync when online
+						</span>
+					)}
+					<div className="flex items-center gap-3 ml-auto">
+						<Button
+							variant="outline"
+							size="md"
+							onClick={handleView}
+						>
+							View
+						</Button>
+						<Button
+							variant="primary"
+							size="md"
+							onClick={handleSaveAndPost}
+							disabled={isSaving}
+						>
+							{isSaving ? 'Saving...' : (isOffline ? 'Save Offline' : 'Save & Post')}
+						</Button>
+					</div>
 				</div>
 			</div>
 		</div>

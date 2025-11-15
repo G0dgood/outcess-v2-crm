@@ -68,13 +68,31 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-			<div className="bg-white dark:bg-gray-800 w-full max-w-md mx-4  overflow-hidden">
+			<div
+				className="dark:bg-gray-800 w-full max-w-md mx-4 overflow-hidden"
+				style={{ backgroundColor: 'var(--accent-white)' }}
+			>
 				{/* Modal Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
-					<h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Add User</h2>
+				<div
+					className="flex justify-between items-center p-6 border-b dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<h2
+						className="text-xl font-semibold dark:text-gray-100"
+						style={{ color: 'var(--text-primary)' }}
+					>
+						Add User
+					</h2>
 					<button
 						onClick={onClose}
-						className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+						style={{ color: 'var(--text-tertiary)' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = 'var(--text-secondary)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = 'var(--text-tertiary)';
+						}}
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -128,10 +146,20 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 				</div>
 
 				{/* Modal Footer */}
-				<div className="flex justify-between items-center p-6 border-t border-gray-200 dark:border-gray-700">
+				<div
+					className="flex justify-between items-center p-6 border-t dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<button
 						onClick={onAddFields}
-						className="text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium transition-colors"
+						className="dark:text-orange-400 dark:hover:text-orange-300 font-medium transition-colors"
+						style={{ color: '#F97316' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = '#EA580C';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = '#F97316';
+						}}
 					>
 						Add Fields
 					</button>

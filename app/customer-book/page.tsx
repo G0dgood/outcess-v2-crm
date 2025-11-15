@@ -10,6 +10,7 @@ import { useSetup } from '@/contexts/SetupContext';
 import AddCustomerModal from '@/components/ui/AddCustomerModal';
 import CustomerDetailsModal from '@/components/ui/CustomerDetailsModal';
 import { ArrowRightIcon } from '@radix-ui/react-icons';
+import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 
 interface Customer {
 	id: string;
@@ -123,36 +124,125 @@ const CustomerBookPage: React.FC = () => {
 			</div>
 
 			{/* Customer Table */}
-			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+			<div
+				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-						<thead className="bg-gray-50 dark:bg-gray-700">
+					<table
+						className="min-w-full divide-y dark:divide-gray-700"
+						style={{ borderColor: 'var(--light-gray)' }}
+					>
+						<thead
+							className="dark:bg-gray-700 border-b dark:border-gray-700"
+							style={{
+								backgroundColor: 'var(--bg-primary)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							<tr>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">
+								<th
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
 									<div className="flex items-center gap-2">
-										First Name
-										<Icon name="Question_mark_light" size="sm" className="text-gray-400 dark:text-gray-500" />
+										<span>First Name</span>
+										<span className="dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }}>
+											<Icon name="Question_mark_light" size="sm" />
+										</span>
 									</div>
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Last Name</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Email</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Phone</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Actions</th>
+								<th
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Last Name
+								</th>
+								<th
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Email
+								</th>
+								<th
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Phone
+								</th>
+								<th
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Actions
+								</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-							{filteredCustomers.map((customer) => (
-								<tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-									<td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-100">
+						<tbody
+							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+							style={{
+								backgroundColor: 'var(--accent-white)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
+							{false ? (
+								<SVGLoaderFetch colSpan={8} />
+							) : filteredCustomers?.length === 0 ? (
+								<NoRecordFound colSpan={8}>
+									No document records found!
+								</NoRecordFound>
+							) : filteredCustomers.map((customer) => (
+								<tr
+									key={customer.id}
+									className="dark:hover:bg-gray-700"
+									style={{ borderColor: 'var(--light-gray)' }}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+									}}
+								>
+									<td
+										className="px-6 py-4 whitespace-nowrap font-medium dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
 										{customer.firstName}
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{customer.lastName}</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{customer.email}</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{customer.phone}</td>
+									<td
+										className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{customer.lastName}
+									</td>
+									<td
+										className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{customer.email}
+									</td>
+									<td
+										className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{customer.phone}
+									</td>
 									<td className="px-6 py-4 whitespace-nowrap">
 										<button
 											onClick={() => handleViewCustomer(customer.id)}
-											className="p-2 text-gray-600 dark:text-gray-400 hover:text-(--muted-sage-green) dark:hover:text-gray-200 hover:bg-(--interactive-secondary)/10 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+											className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+											style={{ color: 'var(--text-secondary)' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.color = 'var(--muted-sage-green)';
+												e.currentTarget.style.backgroundColor = 'rgba(108, 139, 125, 0.1)';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.color = 'var(--text-secondary)';
+												e.currentTarget.style.backgroundColor = 'transparent';
+											}}
 											title="View Customer"
 										>
 											<ArrowRightIcon className="w-5 h-5" />

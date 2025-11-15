@@ -52,23 +52,53 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
 			{displayCards.map((card, index) => (
 				<div
 					key={index}
-					className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6"
+					className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+					style={{
+						backgroundColor: 'var(--accent-white)',
+						borderColor: 'var(--light-gray)'
+					}}
 				>
 					<div className="flex items-center justify-between">
 						<div>
-							<p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+							<p 
+								className="text-sm font-medium dark:text-gray-400 mb-1"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
 								{card.title}
 							</p>
-							<p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+							<p 
+								className="text-3xl font-bold dark:text-gray-100"
+								style={{ color: 'var(--text-primary)' }}
+							>
 								{card.value}
 							</p>
 						</div>
 						<div
 							className={`p-3 rounded-lg ${
-								card.iconBgColor || 'bg-blue-50 dark:bg-blue-900/30'
+								card.iconBgColor || 'dark:bg-blue-900/30'
 							} ${card.iconBgColor === 'bg-blue-50' ? 'dark:bg-blue-900/30' : ''} ${card.iconBgColor === 'bg-green-50' ? 'dark:bg-green-900/30' : ''} ${card.iconBgColor === 'bg-purple-50' ? 'dark:bg-purple-900/30' : ''}`}
+							style={card.iconBgColor === 'bg-blue-50' ? {
+								backgroundColor: 'rgba(59, 130, 246, 0.1)'
+							} : card.iconBgColor === 'bg-green-50' ? {
+								backgroundColor: 'rgba(34, 197, 94, 0.1)'
+							} : card.iconBgColor === 'bg-purple-50' ? {
+								backgroundColor: 'rgba(168, 85, 247, 0.1)'
+							} : {
+								backgroundColor: 'rgba(59, 130, 246, 0.1)'
+							}}
 						>
-							<div className={`${card.iconColor || 'text-blue-600'} ${card.iconColor === 'text-blue-600' ? 'dark:text-blue-400' : ''} ${card.iconColor === 'text-green-600' ? 'dark:text-green-400' : ''} ${card.iconColor === 'text-purple-600' ? 'dark:text-purple-400' : ''}`}>
+							<div 
+								className={`${card.iconColor || ''} ${card.iconColor === 'text-blue-600' ? 'dark:text-blue-400' : ''} ${card.iconColor === 'text-green-600' ? 'dark:text-green-400' : ''} ${card.iconColor === 'text-purple-600' ? 'dark:text-purple-400' : ''}`}
+								style={card.iconColor === 'text-blue-600' ? {
+									color: '#2563EB'
+								} : card.iconColor === 'text-green-600' ? {
+									color: '#16A34A'
+								} : card.iconColor === 'text-purple-600' ? {
+									color: '#9333EA'
+								} : {
+									color: '#2563EB'
+								}}
+							>
 								{card.icon}
 							</div>
 						</div>

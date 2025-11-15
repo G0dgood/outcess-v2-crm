@@ -205,8 +205,18 @@ export default function CustomerBookPage() {
 			<div className="mb-8">
 				<div className="flex justify-between items-start">
 					<div>
-						<h1 className="font-lato not-italic font-semibold text-[24px] leading-[150%] text-[#3A4050] dark:text-gray-100">Customer Book</h1>
-						<p className="font-lato not-italic font-normal text-[16px] leading-[150%] text-[#6D7280] dark:text-gray-400">Configure the fields that you'll use to store customer information. Add custom fields to match your business needs.</p>
+						<h1 
+							className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							Customer Book
+						</h1>
+						<p 
+							className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
+							style={{ color: 'var(--text-tertiary)' }}
+						>
+							Configure the fields that you'll use to store customer information. Add custom fields to match your business needs.
+						</p>
 					</div>
 					<Button
 						variant="primary"
@@ -223,29 +233,87 @@ export default function CustomerBookPage() {
 			</div>
 
 			{/* Configured Fields Table */}
-			<div className="bg-(--accent-white) dark:bg-gray-800 border border-gray-200 dark:border-gray-700 mb-8">
+			<div 
+				className="dark:bg-gray-800 border dark:border-gray-700 mb-8"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
 				<div className="overflow-x-auto">
 					<table className="w-full">
 						<thead>
-							<tr className="border-b border-[#E5E7EB] dark:border-gray-700">
-								<th className="text-left py-4 px-6 font-inter text-sm font-medium text-[#050711] dark:text-gray-100">Field Name</th>
-								<th className="text-left py-4 px-6 font-inter text-sm font-medium text-[#050711] dark:text-gray-100">Type</th>
-								<th className="text-left py-4 px-6 font-inter text-sm font-medium text-[#050711] dark:text-gray-100">Required</th>
-								<th className="text-left py-4 px-6 font-inter text-sm font-medium text-[#050711] dark:text-gray-100">Action</th>
+							<tr 
+								className="border-b dark:border-gray-700"
+								style={{ 
+									borderColor: 'var(--light-gray)',
+									borderBottom: '1px solid'
+								}}
+							>
+								<th 
+									className="text-left py-4 px-6 font-inter text-sm font-medium dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Field Name
+								</th>
+								<th 
+									className="text-left py-4 px-6 font-inter text-sm font-medium dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Type
+								</th>
+								<th 
+									className="text-left py-4 px-6 font-inter text-sm font-medium dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Required
+								</th>
+								<th 
+									className="text-left py-4 px-6 font-inter text-sm font-medium dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Action
+								</th>
 							</tr>
 						</thead>
 						<tbody>
 							{customerBookSettings.configuredFields.map((field, index) => (
-								<tr key={field.id} className={index !== customerBookSettings.configuredFields.length - 1 ? 'border-b border-[#E5E7EB] dark:border-gray-700' : ''}>
-									<td className="py-4 px-6 font-inter text-sm text-[#050711] dark:text-gray-100">{field.name}</td>
-									<td className="py-4 px-6 font-inter text-sm text-gray-600 dark:text-gray-400">{field.type}</td>
+								<tr 
+									key={field.id} 
+									className={index !== customerBookSettings.configuredFields.length - 1 ? 'dark:border-gray-700' : ''}
+									style={index !== customerBookSettings.configuredFields.length - 1 ? { borderBottom: '1px solid', borderBottomColor: 'var(--light-gray)' } : {}}
+								>
+									<td 
+										className="py-4 px-6 font-inter text-sm dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{field.name}
+									</td>
+									<td 
+										className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+										style={{ color: 'var(--text-tertiary)' }}
+									>
+										{field.type}
+									</td>
 									<td className="py-4 px-6">
 										{field.required ? (
-											<span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
+											<span 
+												className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium dark:bg-green-900/30 dark:text-green-400"
+												style={{
+													backgroundColor: 'rgba(34, 197, 94, 0.1)',
+													color: '#16A34A'
+												}}
+											>
 												Required
 											</span>
 										) : (
-											<span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
+											<span 
+												className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium dark:bg-gray-700 dark:text-gray-300"
+												style={{
+													backgroundColor: 'var(--bg-primary)',
+													color: 'var(--text-tertiary)'
+												}}
+											>
 												Optional
 											</span>
 										)}
@@ -270,17 +338,51 @@ export default function CustomerBookPage() {
 
 			{/* Available Field Types */}
 			<div>
-				<h3 className="font-inter text-base font-medium text-[#050711] dark:text-gray-100 mb-4">Available Field Types</h3>
+				<h3 
+					className="font-inter text-base font-medium dark:text-gray-100 mb-4"
+					style={{ color: 'var(--text-primary)' }}
+				>
+					Available Field Types
+				</h3>
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 					{availableFieldTypes.map((fieldType) => (
 						<div
 							key={fieldType.id}
-							className="bg-(--accent-white) dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+							className="dark:bg-gray-800 border dark:border-gray-700 p-4 cursor-pointer dark:hover:border-gray-600 dark:hover:bg-gray-700 transition-colors"
+							style={{
+								backgroundColor: 'var(--accent-white)',
+								borderColor: 'var(--light-gray)'
+							}}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.borderColor = '#94A3B8';
+								e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.borderColor = 'var(--light-gray)';
+								e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+							}}
 							onClick={() => handleAddField(fieldType)}
 						>
-							<h4 className="font-inter text-sm font-medium text-[#050711] dark:text-gray-100 mb-2">{fieldType.name}</h4>
-							<p className="font-lato text-xs text-gray-600 dark:text-gray-400 mb-3">{fieldType.description}</p>
-							<div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-2" onClick={(e) => e.stopPropagation()}>
+							<h4 
+								className="font-inter text-sm font-medium dark:text-gray-100 mb-2"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								{fieldType.name}
+							</h4>
+							<p 
+								className="font-lato text-xs dark:text-gray-400 mb-3"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
+								{fieldType.description}
+							</p>
+							<div 
+								className="dark:bg-gray-700 border dark:border-gray-600 p-2"
+								style={{
+									backgroundColor: 'var(--bg-primary)',
+									borderColor: 'var(--light-gray)'
+								}}
+								onClick={(e) => e.stopPropagation()}
+							>
 								{renderFieldPreview(fieldType)}
 							</div>
 						</div>

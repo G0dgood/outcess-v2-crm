@@ -22,12 +22,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 			<AdminHeader
 				userName="Admin User"
 				userEmail="admin@example.com"
-				isOnline={true} 
+				userIsOnline={true} 
 				onEditProfileClick={() => console.log('Edit profile clicked')}
-				onLogoutClick={() => {
-					console.log('Logout clicked');
-					// Add logout logic here
-				}}
 				onMobileMenuToggle={toggleMobileMenu}
 			/>
 

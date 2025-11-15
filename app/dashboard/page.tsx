@@ -1,13 +1,27 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import AddChartModal from '@/components/ui/AddChartModal';
+import EditChartModal from '@/components/ui/EditChartModal';
+import AddWidgetModal from '@/components/ui/AddWidgetModal';
+import EditWidgetModal from '@/components/ui/EditWidgetModal';
+import DeleteWidgetModal from '@/components/ui/DeleteWidgetModal';
 import StickyNote, { StickyNoteData } from '@/components/ui/StickyNote';
 import StickyNoteModal from '@/components/ui/StickyNoteModal';
 import Icon from '@/components/ui/Icon';
+import { PlusIcon, Pencil1Icon } from '@radix-ui/react-icons';
 import { useSetup } from '@/contexts/SetupContext';
+import type { Chart, Widget } from '@/contexts/SetupContext';
+import { getPendingDispositionsCount, getOfflineDispositions, getSyncedDispositions } from '@/utils/offlineDispositions';
+import { useSocket } from '@/contexts/SocketContext';
+import { syncPendingDispositions } from '@/utils/offlineDispositions';
+import { WidgetCard } from '@/components/dashboard/WidgetCard';
+import { SortableChart } from '@/components/dashboard/SortableChart';
+import { generateChartData } from '@/utils/chartDataGenerator';
+import { serializeStickyNote, type StoredStickyNote } from '@/utils/stickyNoteUtils';
+import type { ChartDataItem } from '@/components/dashboard/charts/types';
 import {
 	DndContext,
 	closestCenter,
@@ -23,725 +37,19 @@ import {
 	sortableKeyboardCoordinates,
 	verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import {
-	useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
-interface WidgetCardProps {
-	title: string;
-	value: string | number;
-	widgetId: string;
-	onEdit?: (widgetId: string) => void;
-	onDelete?: (widgetId: string) => void;
-}
-
-interface SortableChartProps {
-	chart: {
-		id: string;
-		title: string;
-		type: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
-		dataSource: 'dispositions' | 'callOutcomes' | 'custom';
-		timeRange: 'daily' | 'weekly' | 'monthly';
-		color?: string;
-		position: {
-			x: number;
-			y: number;
-			width: number;
-			height: number;
-		};
-	};
-	pieChartData: Array<{
-		label: string;
-		value: number;
-		color: string;
-	}>;
-	onRemoveChart: (chartId: string) => void;
-}
-
-const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, widgetId, onEdit, onDelete }) => {
-	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-	const dropdownRef = useRef<HTMLDivElement>(null);
-
-	// Close dropdown when clicking outside
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-				setIsDropdownOpen(false);
-			}
-		};
-
-		if (isDropdownOpen) {
-			document.addEventListener('mousedown', handleClickOutside);
-		}
-
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside);
-		};
-	}, [isDropdownOpen]);
-
-	const handleEdit = () => {
-		onEdit?.(widgetId);
-		setIsDropdownOpen(false);
-	};
-
-	const handleDelete = () => {
-		onDelete?.(widgetId);
-		setIsDropdownOpen(false);
-	};
-
-	return (
-		<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 relative">
-			<div className="flex justify-between items-start mb-4">
-				<h3 className="font-lato font-normal text-[18px] leading-[150%] text-[#6D7280] dark:text-gray-300">{title}</h3>
-				<div className="relative" ref={dropdownRef}>
-					<button
-						onClick={(e) => {
-							e.stopPropagation();
-							setIsDropdownOpen(!isDropdownOpen);
-						}}
-						className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
-						title="Widget options"
-					>
-						<Icon name="Ellipsis_vertical_light" size="sm" />
-					</button>
-					{isDropdownOpen && (
-						<div className="absolute right-0 top-6 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg min-w-[120px]">
-							<button
-								onClick={handleEdit}
-								className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors first:rounded-t-lg cursor-pointer"
-							>
-								Edit
-							</button>
-							<button
-								onClick={handleDelete}
-								className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors last:rounded-b-lg cursor-pointer"
-							>
-								Delete
-							</button>
-						</div>
-					)}
-				</div>
-			</div>
-			<div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{value}</div>
-		</div>
-	);
-};
-
-interface PieChartProps {
-	data: Array<{
-		label: string;
-		value: number;
-		color: string;
-	}>;
-}
-
-const PieChart: React.FC<PieChartProps> = ({ data }) => {
-	const total = data.reduce((sum, item) => sum + item.value, 0);
-	let cumulativePercentage = 0;
-
-	return (
-		<div className="w-full h-full flex items-center justify-center">
-			<svg className="w-64 h-64 transform -rotate-90" viewBox="0 0 100 100">
-				{data.map((item, index) => {
-					const percentage = (item.value / total) * 100;
-					const startAngle = cumulativePercentage * 3.6;
-					const endAngle = (cumulativePercentage + percentage) * 3.6;
-
-					const radius = 40;
-					const centerX = 50;
-					const centerY = 50;
-
-					const startAngleRad = (startAngle * Math.PI) / 180;
-					const endAngleRad = (endAngle * Math.PI) / 180;
-
-					const x1 = centerX + radius * Math.cos(startAngleRad);
-					const y1 = centerY + radius * Math.sin(startAngleRad);
-					const x2 = centerX + radius * Math.cos(endAngleRad);
-					const y2 = centerY + radius * Math.sin(endAngleRad);
-
-					const largeArcFlag = percentage > 50 ? 1 : 0;
-
-					const pathData = [
-						`M ${centerX} ${centerY}`,
-						`L ${x1} ${y1}`,
-						`A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-						'Z'
-					].join(' ');
-
-					cumulativePercentage += percentage;
-
-					return (
-						<path
-							key={index}
-							d={pathData}
-							fill={item.color}
-							stroke="white"
-							strokeWidth="1"
-						/>
-					);
-				})}
-			</svg>
-		</div>
-	);
-};
-
-const DoughnutChart: React.FC<PieChartProps> = ({ data }) => {
-	const total = data.reduce((sum, item) => sum + item.value, 0);
-	let cumulativePercentage = 0;
-
-	return (
-		<div className="w-full h-full flex items-center justify-center">
-			<svg className="w-64 h-64 transform -rotate-90" viewBox="0 0 100 100">
-				{data.map((item, index) => {
-					const percentage = (item.value / total) * 100;
-					const startAngle = cumulativePercentage * 3.6;
-					const endAngle = (cumulativePercentage + percentage) * 3.6;
-
-					const outerRadius = 40;
-					const innerRadius = 20;
-					const centerX = 50;
-					const centerY = 50;
-
-					const startAngleRad = (startAngle * Math.PI) / 180;
-					const endAngleRad = (endAngle * Math.PI) / 180;
-
-					const x1 = centerX + outerRadius * Math.cos(startAngleRad);
-					const y1 = centerY + outerRadius * Math.sin(startAngleRad);
-					const x2 = centerX + outerRadius * Math.cos(endAngleRad);
-					const y2 = centerY + outerRadius * Math.sin(endAngleRad);
-
-					const x3 = centerX + innerRadius * Math.cos(endAngleRad);
-					const y3 = centerY + innerRadius * Math.sin(endAngleRad);
-					const x4 = centerX + innerRadius * Math.cos(startAngleRad);
-					const y4 = centerY + innerRadius * Math.sin(startAngleRad);
-
-					const largeArcFlag = percentage > 50 ? 1 : 0;
-
-					const pathData = [
-						`M ${x1} ${y1}`,
-						`A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-						`L ${x3} ${y3}`,
-						`A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x4} ${y4}`,
-						'Z'
-					].join(' ');
-
-					cumulativePercentage += percentage;
-
-					return (
-						<path
-							key={index}
-							d={pathData}
-							fill={item.color}
-							stroke="white"
-							strokeWidth="1"
-						/>
-					);
-				})}
-			</svg>
-		</div>
-	);
-};
-
-const BarChart: React.FC<PieChartProps> = ({ data }) => {
-	const maxValue = Math.max(...data.map(item => item.value));
-	const barWidth = 60;
-	const barSpacing = 20;
-	const chartHeight = 200;
-	const chartWidth = data.length * (barWidth + barSpacing);
-
-	return (
-		<div className="w-full h-full flex items-center justify-center">
-			<svg className="w-full h-full" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
-				{data.map((item, index) => {
-					const barHeight = (item.value / maxValue) * chartHeight;
-					const x = index * (barWidth + barSpacing) + barSpacing;
-					const y = chartHeight - barHeight;
-
-					return (
-						<g key={index}>
-							<rect
-								x={x}
-								y={y}
-								width={barWidth}
-								height={barHeight}
-								fill={item.color}
-								rx="4"
-							/>
-							<text
-								x={x + barWidth / 2}
-								y={chartHeight + 15}
-								textAnchor="middle"
-								className="text-xs fill-gray-600"
-							>
-								{item.label}
-							</text>
-							<text
-								x={x + barWidth / 2}
-								y={y - 5}
-								textAnchor="middle"
-								className="text-xs fill-gray-800 font-medium"
-							>
-								{item.value}
-							</text>
-						</g>
-					);
-				})}
-			</svg>
-		</div>
-	);
-};
-
-const LineChart: React.FC<PieChartProps> = ({ data }) => {
-	const maxValue = Math.max(...data.map(item => item.value));
-	const chartHeight = 200;
-	const chartWidth = 300;
-	const pointSpacing = chartWidth / (data.length - 1);
-
-	const points = data.map((item, index) => {
-		const x = index * pointSpacing;
-		const y = chartHeight - (item.value / maxValue) * chartHeight;
-		return `${x},${y}`;
-	}).join(' ');
-
-	return (
-		<div className="w-full h-full flex items-center justify-center">
-			<svg className="w-full h-full" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
-				{/* Grid lines */}
-				{Array.from({ length: 5 }, (_, i) => (
-					<line
-						key={i}
-						x1="0"
-						y1={(chartHeight / 4) * i}
-						x2={chartWidth}
-						y2={(chartHeight / 4) * i}
-						stroke="#e5e7eb"
-						strokeWidth="1"
-					/>
-				))}
-
-				{/* Line */}
-				<polyline
-					points={points}
-					fill="none"
-					stroke="#3b82f6"
-					strokeWidth="3"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-				/>
-
-				{/* Points */}
-				{data.map((item, index) => {
-					const x = index * pointSpacing;
-					const y = chartHeight - (item.value / maxValue) * chartHeight;
-
-					return (
-						<g key={index}>
-							<circle
-								cx={x}
-								cy={y}
-								r="6"
-								fill="#3b82f6"
-								stroke="white"
-								strokeWidth="2"
-							/>
-							<text
-								x={x}
-								y={chartHeight + 15}
-								textAnchor="middle"
-								className="text-xs fill-gray-600"
-							>
-								{item.label}
-							</text>
-							<text
-								x={x}
-								y={y - 10}
-								textAnchor="middle"
-								className="text-xs fill-gray-800 font-medium"
-							>
-								{item.value}
-							</text>
-						</g>
-					);
-				})}
-			</svg>
-		</div>
-	);
-};
-
-const PolarAreaChart: React.FC<PieChartProps> = ({ data }) => {
-	const maxValue = Math.max(...data.map(item => item.value));
-	const centerX = 50;
-	const centerY = 50;
-	const maxRadius = 40;
-
-	return (
-		<div className="w-full h-full flex items-center justify-center">
-			<svg className="w-64 h-64" viewBox="0 0 100 100">
-				{data.map((item, index) => {
-					const angle = (index / data.length) * 2 * Math.PI;
-					const radius = (item.value / maxValue) * maxRadius;
-					const nextAngle = ((index + 1) / data.length) * 2 * Math.PI;
-
-					const x1 = centerX + radius * Math.cos(angle);
-					const y1 = centerY + radius * Math.sin(angle);
-					const x2 = centerX + radius * Math.cos(nextAngle);
-					const y2 = centerY + radius * Math.sin(nextAngle);
-
-					const pathData = [
-						`M ${centerX} ${centerY}`,
-						`L ${x1} ${y1}`,
-						`A ${radius} ${radius} 0 0 1 ${x2} ${y2}`,
-						'Z'
-					].join(' ');
-
-					return (
-						<path
-							key={index}
-							d={pathData}
-							fill={item.color}
-							stroke="white"
-							strokeWidth="1"
-							opacity="0.8"
-						/>
-					);
-				})}
-			</svg>
-		</div>
-	);
-};
-
-const RadarChart: React.FC<PieChartProps> = ({ data }) => {
-	const maxValue = Math.max(...data.map(item => item.value));
-	const centerX = 50;
-	const centerY = 50;
-	const maxRadius = 40;
-	const sides = data.length;
-
-	return (
-		<div className="w-full h-full flex items-center justify-center">
-			<svg className="w-64 h-64" viewBox="0 0 100 100">
-				{/* Grid circles */}
-				{[0.2, 0.4, 0.6, 0.8, 1].map((scale, i) => (
-					<circle
-						key={i}
-						cx={centerX}
-						cy={centerY}
-						r={maxRadius * scale}
-						fill="none"
-						stroke="#e5e7eb"
-						strokeWidth="1"
-					/>
-				))}
-
-				{/* Grid lines */}
-				{data.map((_, index) => {
-					const angle = (index / sides) * 2 * Math.PI;
-					const x = centerX + maxRadius * Math.cos(angle);
-					const y = centerY + maxRadius * Math.sin(angle);
-
-					return (
-						<line
-							key={index}
-							x1={centerX}
-							y1={centerY}
-							x2={x}
-							y2={y}
-							stroke="#e5e7eb"
-							strokeWidth="1"
-						/>
-					);
-				})}
-
-				{/* Data polygon */}
-				<polygon
-					points={data.map((item, index) => {
-						const angle = (index / sides) * 2 * Math.PI;
-						const radius = (item.value / maxValue) * maxRadius;
-						const x = centerX + radius * Math.cos(angle);
-						const y = centerY + radius * Math.sin(angle);
-						return `${x},${y}`;
-					}).join(' ')}
-					fill="#3b82f6"
-					fillOpacity="0.3"
-					stroke="#3b82f6"
-					strokeWidth="2"
-				/>
-
-				{/* Data points */}
-				{data.map((item, index) => {
-					const angle = (index / sides) * 2 * Math.PI;
-					const radius = (item.value / maxValue) * maxRadius;
-					const x = centerX + radius * Math.cos(angle);
-					const y = centerY + radius * Math.sin(angle);
-
-					return (
-						<g key={index}>
-							<circle
-								cx={x}
-								cy={y}
-								r="3"
-								fill="#3b82f6"
-								stroke="white"
-								strokeWidth="1"
-							/>
-							<text
-								x={x + (x > centerX ? 5 : -5)}
-								y={y + (y > centerY ? 5 : -5)}
-								textAnchor={x > centerX ? 'start' : 'end'}
-								className="text-xs fill-gray-600"
-							>
-								{item.label}
-							</text>
-						</g>
-					);
-				})}
-			</svg>
-		</div>
-	);
-};
-
-const ScatterChart: React.FC<PieChartProps> = ({ data }) => {
-	const maxValue = Math.max(...data.map(item => item.value));
-	const chartHeight = 200;
-	const chartWidth = 300;
-
-	return (
-		<div className="w-full h-full flex items-center justify-center">
-			<svg className="w-full h-full" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
-				{/* Grid lines */}
-				{Array.from({ length: 5 }, (_, i) => (
-					<line
-						key={`h-${i}`}
-						x1="0"
-						y1={(chartHeight / 4) * i}
-						x2={chartWidth}
-						y2={(chartHeight / 4) * i}
-						stroke="#e5e7eb"
-						strokeWidth="1"
-					/>
-				))}
-				{Array.from({ length: 5 }, (_, i) => (
-					<line
-						key={`v-${i}`}
-						x1={(chartWidth / 4) * i}
-						y1="0"
-						x2={(chartWidth / 4) * i}
-						y2={chartHeight}
-						stroke="#e5e7eb"
-						strokeWidth="1"
-					/>
-				))}
-
-				{/* Scatter points */}
-				{data.map((item, index) => {
-					const x = (index / (data.length - 1)) * chartWidth;
-					const y = chartHeight - (item.value / maxValue) * chartHeight;
-					const size = Math.max(8, (item.value / maxValue) * 20);
-
-					return (
-						<g key={index}>
-							<circle
-								cx={x}
-								cy={y}
-								r={size}
-								fill={item.color}
-								stroke="white"
-								strokeWidth="2"
-								opacity="0.8"
-							/>
-							<text
-								x={x}
-								y={chartHeight + 15}
-								textAnchor="middle"
-								className="text-xs fill-gray-600"
-							>
-								{item.label}
-							</text>
-						</g>
-					);
-				})}
-			</svg>
-		</div>
-	);
-};
-
-const BubbleChart: React.FC<PieChartProps> = ({ data }) => {
-	const maxValue = Math.max(...data.map(item => item.value));
-	const chartHeight = 200;
-	const chartWidth = 300;
-
-	return (
-		<div className="w-full h-full flex items-center justify-center">
-			<svg className="w-full h-full" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
-				{/* Grid lines */}
-				{Array.from({ length: 5 }, (_, i) => (
-					<line
-						key={`h-${i}`}
-						x1="0"
-						y1={(chartHeight / 4) * i}
-						x2={chartWidth}
-						y2={(chartHeight / 4) * i}
-						stroke="#e5e7eb"
-						strokeWidth="1"
-					/>
-				))}
-				{Array.from({ length: 5 }, (_, i) => (
-					<line
-						key={`v-${i}`}
-						x1={(chartWidth / 4) * i}
-						y1="0"
-						x2={(chartWidth / 4) * i}
-						y2={chartHeight}
-						stroke="#e5e7eb"
-						strokeWidth="1"
-					/>
-				))}
-
-				{/* Bubble points */}
-				{data.map((item, index) => {
-					const x = (index / (data.length - 1)) * chartWidth;
-					const y = chartHeight - (item.value / maxValue) * chartHeight;
-					const bubbleSize = Math.max(15, (item.value / maxValue) * 40);
-
-					return (
-						<g key={index}>
-							<circle
-								cx={x}
-								cy={y}
-								r={bubbleSize}
-								fill={item.color}
-								stroke="white"
-								strokeWidth="2"
-								opacity="0.6"
-							/>
-							<text
-								x={x}
-								y={y}
-								textAnchor="middle"
-								dominantBaseline="middle"
-								className="text-xs fill-white font-medium"
-							>
-								{item.value}
-							</text>
-							<text
-								x={x}
-								y={chartHeight + 15}
-								textAnchor="middle"
-								className="text-xs fill-gray-600"
-							>
-								{item.label}
-							</text>
-						</g>
-					);
-				})}
-			</svg>
-		</div>
-	);
-};
-
-const SortableChart: React.FC<SortableChartProps> = ({ chart, pieChartData, onRemoveChart }) => {
-	const {
-		attributes,
-		listeners,
-		setNodeRef,
-		transform,
-		transition,
-		isDragging,
-	} = useSortable({ id: chart.id });
-
-	const style = {
-		transform: CSS.Transform.toString(transform),
-		transition,
-		opacity: isDragging ? 0.5 : 1,
-	};
-
-	return (
-		<div
-			ref={setNodeRef}
-			style={style}
-			className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 select-none"
-		>
-			{/* Chart Header */}
-			<div
-				className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 cursor-move"
-				{...attributes}
-				{...listeners}
-			>
-
-				<h3 className="font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] text-[#3A4050]">
-					{chart.title}
-				</h3>
-				<div className="flex items-center gap-3 justify-center z-20">
-					<div onPointerDown={(e) => e.stopPropagation()}>
-						<Dropdown
-							label=""
-							value={chart.timeRange}
-							onChange={(value) => {
-								// Update chart time range
-								console.log('Update chart time range:', chart.id, value);
-							}}
-							options={[
-								{ value: 'daily', label: 'Daily' },
-								{ value: 'weekly', label: 'Weekly' },
-								{ value: 'monthly', label: 'Monthly' },
-							]}
-							className="min-w-[100px]"
-							inputClassName="h-8"
-						/>
-					</div>
-					<button
-						onClick={(e) => {
-							e.stopPropagation();
-							onRemoveChart(chart.id);
-						}}
-						onPointerDown={(e) => e.stopPropagation()}
-						className="text-gray-400 dark:text-gray-500 transition-colors cursor-pointer"
-						title="Remove chart"
-					>
-						<Icon name="Trash_light" size="lg" className='mt-3' />
-					</button>
-				</div>
-			</div>
-
-			{/* Chart Content */}
-			<div className="p-6 h-80">
-				<div className="flex items-center justify-center h-full">
-					{/* Chart based on type */}
-					{chart.type === 'pie' && <PieChart data={pieChartData} />}
-					{chart.type === 'doughnut' && <DoughnutChart data={pieChartData} />}
-					{chart.type === 'bar' && <BarChart data={pieChartData} />}
-					{chart.type === 'line' && <LineChart data={pieChartData} />}
-					{chart.type === 'polarArea' && <PolarAreaChart data={pieChartData} />}
-					{chart.type === 'radar' && <RadarChart data={pieChartData} />}
-					{chart.type === 'scatter' && <ScatterChart data={pieChartData} />}
-					{chart.type === 'bubble' && <BubbleChart data={pieChartData} />}
-
-					{/* Legend - only show for circular charts */}
-					{(chart.type === 'pie' || chart.type === 'doughnut' || chart.type === 'polarArea' || chart.type === 'radar') && (
-						<div className="space-y-4 ml-8">
-							{pieChartData.map((item, index) => (
-								<div key={index} className="flex items-center gap-3">
-									<div
-										className="w-4 h-4 rounded-full"
-										style={{ backgroundColor: item.color }}
-									></div>
-									<span className="font-inter text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-										{item.label}
-									</span>
-								</div>
-							))}
-						</div>
-					)}
-				</div>
-			</div>
-		</div>
-	);
-};
 
 const DashboardContent: React.FC = () => {
-	const { setupData, addChart, removeChart, updateChartsOrder } = useSetup();
+	const { setupData, addChart, removeChart, updateChart, updateChartsOrder, updateDashboardSettings } = useSetup();
+	const { isOnline, isConnected, isOffline, send } = useSocket();
 	const [isAddChartModalOpen, setIsAddChartModalOpen] = useState(false);
+	const [isEditChartModalOpen, setIsEditChartModalOpen] = useState(false);
+	const [editingChart, setEditingChart] = useState<Chart | null>(null);
+	const [isAddWidgetModalOpen, setIsAddWidgetModalOpen] = useState(false);
+	const [isEditWidgetModalOpen, setIsEditWidgetModalOpen] = useState(false);
+	const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
+	const [isDeleteWidgetModalOpen, setIsDeleteWidgetModalOpen] = useState(false);
+	const [deletingWidget, setDeletingWidget] = useState<Widget | null>(null);
 	const [isStickyNoteModalOpen, setIsStickyNoteModalOpen] = useState(false);
 	const [stickyNotes, setStickyNotes] = useState<StickyNoteData[]>([]);
 	const [editingNote, setEditingNote] = useState<StickyNoteData | undefined>(undefined);
@@ -754,6 +62,30 @@ const DashboardContent: React.FC = () => {
 		})
 	);
 
+	const primaryColor = setupData.primaryColor || 'var(--text-primary)';
+
+	const primaryButtonStyle: React.CSSProperties = {
+		backgroundColor: primaryColor,
+		borderColor: primaryColor,
+		color: '#FFFFFF',
+	};
+
+	const outlineButtonStyle: React.CSSProperties = {
+		borderColor: primaryColor,
+		color: primaryColor,
+		backgroundColor: 'var(--accent-white)',
+	};
+
+	const handlePrimaryHover = (event: React.MouseEvent<HTMLButtonElement>, isHover: boolean) => {
+		event.currentTarget.style.filter = isHover ? 'brightness(0.95)' : '';
+	};
+
+	const handleOutlineHover = (event: React.MouseEvent<HTMLButtonElement>, isHover: boolean) => {
+		event.currentTarget.style.backgroundColor = isHover ? 'var(--bg-primary)' : 'var(--accent-white)';
+		event.currentTarget.style.color = primaryColor;
+		event.currentTarget.style.borderColor = primaryColor;
+	};
+
 	// Load sticky notes from localStorage on mount
 	useEffect(() => {
 		const loadStickyNotes = () => {
@@ -762,15 +94,16 @@ const DashboardContent: React.FC = () => {
 				if (savedNotes) {
 					const parsed = JSON.parse(savedNotes);
 					if (Array.isArray(parsed) && parsed.length > 0) {
-						const loadedNotes = parsed.map((note: any) => ({
-							id: note.id || Date.now().toString() + Math.random(),
+						const storedNotes = parsed as StoredStickyNote[];
+						const loadedNotes = storedNotes.map((note, index): StickyNoteData => ({
+							id: note.id || `${Date.now()}-${index}`,
 							title: note.title || '',
 							content: note.content || '',
 							color: note.color || '#FFFACD',
 							todos: Array.isArray(note.todos) ? note.todos : [],
-							position: note.position && typeof note.position === 'object' ? note.position : { x: 100 + (parsed.indexOf(note) * 20), y: 100 + (parsed.indexOf(note) * 20) },
+							position: note.position ?? { x: 100 + (index * 20), y: 100 + (index * 20) },
 							rotation: note.rotation !== undefined ? note.rotation : Math.random() * 6 - 3,
-							isHidden: note.isHidden !== undefined ? note.isHidden : false,
+							isHidden: note.isHidden ?? false,
 							createdAt: note.createdAt ? new Date(note.createdAt) : new Date(),
 							updatedAt: note.updatedAt ? new Date(note.updatedAt) : new Date(),
 							reminder: note.reminder ? new Date(note.reminder) : undefined,
@@ -799,18 +132,7 @@ const DashboardContent: React.FC = () => {
 		const saveStickyNotes = () => {
 			try {
 				// Convert dates to ISO strings for storage
-				const notesToSave = stickyNotes.map(note => ({
-					id: note.id,
-					title: note.title || '',
-					content: note.content || '',
-					color: note.color || '#FFFACD',
-					reminder: note.reminder ? note.reminder.toISOString() : undefined,
-					todos: note.todos || [],
-					position: note.position || { x: 100, y: 100 },
-					rotation: note.rotation !== undefined ? note.rotation : 0,
-					createdAt: note.createdAt ? note.createdAt.toISOString() : new Date().toISOString(),
-					updatedAt: note.updatedAt ? note.updatedAt.toISOString() : new Date().toISOString(),
-				}));
+				const notesToSave: StoredStickyNote[] = stickyNotes.map(serializeStickyNote);
 				localStorage.setItem('stickyNotes', JSON.stringify(notesToSave));
 			} catch (error) {
 				console.error('Error saving sticky notes:', error);
@@ -820,48 +142,159 @@ const DashboardContent: React.FC = () => {
 		saveStickyNotes();
 	}, [stickyNotes, isLoaded]);
 
-	// Sample data - in a real app, this would come from your data source
-	const widgetData = [
-		{ title: 'Total Calls', value: 0 },
-		{ title: 'Total Calls', value: 0 },
-		{ title: 'Total Calls', value: 0 },
-	];
+	// Pending dispositions count
+	const [pendingDispositionsCount, setPendingDispositionsCount] = useState(0);
 
-	const pieChartData = [
-		{ label: 'Already Paid', value: 45, color: '#FF6B6B' },
-		{ label: 'Call Back', value: 30, color: '#4ECDC4' },
-		{ label: 'Promise to pay', value: 25, color: '#A8E6CF' },
-	];
+	// Update pending dispositions count
+	useEffect(() => {
+		const updateCount = () => {
+			setPendingDispositionsCount(getPendingDispositionsCount());
+		};
+
+		updateCount();
+		// Update count every 5 seconds to catch changes
+		const interval = setInterval(updateCount, 5000);
+		return () => clearInterval(interval);
+	}, []);
+
+	// Sync pending dispositions when coming back online
+	useEffect(() => {
+		if (isOnline && isConnected && send) {
+			syncPendingDispositions(send).then((result) => {
+				if (result.success > 0) {
+					console.log(`Synced ${result.success} dispositions`);
+					setPendingDispositionsCount(getPendingDispositionsCount());
+				}
+			});
+		}
+	}, [isOnline, isConnected, send]);
+
+	// Get widgets from context and update values dynamically based on disposition data
+	const widgets = useMemo(() => {
+		// Get all dispositions for calculations
+		const allOfflineDispositions = getOfflineDispositions();
+		const allSyncedDispositions = getSyncedDispositions();
+		const allDispositions = [...allOfflineDispositions, ...allSyncedDispositions];
+
+		// Calculate disposition field counts
+		const calculateDispositionFieldCount = (fieldKey: string): number => {
+			return allDispositions.filter(disp => {
+				const fieldValue = disp[fieldKey as keyof typeof disp];
+				return fieldValue && fieldValue.toString().trim() !== '' && fieldValue !== '-';
+			}).length;
+		};
+
+		return setupData.dashboardSettings.widgets.map(widget => {
+			// Update pending dispositions widget value
+			if (widget.title === 'Pending Dispositions') {
+				return { ...widget, value: pendingDispositionsCount };
+			}
+
+			// Update total dispositions widget value
+			if (widget.title === 'Total Dispositions') {
+				return { ...widget, value: allDispositions.length };
+			}
+
+			// Update disposition field-based widgets
+			if (widget.title === 'Call Answered') {
+				return { ...widget, value: calculateDispositionFieldCount('callAnswered') };
+			}
+			if (widget.title === 'Reason For Non Payment') {
+				return { ...widget, value: calculateDispositionFieldCount('reasonForNonPayment') };
+			}
+			if (widget.title === 'Commitment Date') {
+				return { ...widget, value: calculateDispositionFieldCount('commitmentDate') };
+			}
+			if (widget.title === 'Amount To Pay') {
+				return { ...widget, value: calculateDispositionFieldCount('amountToPay') };
+			}
+			if (widget.title === 'Reason For Not Watching') {
+				return { ...widget, value: calculateDispositionFieldCount('reasonForNotWatching') };
+			}
+
+			return widget;
+		});
+	}, [setupData.dashboardSettings.widgets, pendingDispositionsCount]);
+
+	// Wrapper function to generate chart data using the utility function
+	const generateChartDataWrapper = (dataSource: string | string[], chartColor?: string, colors?: Record<string, string>): ChartDataItem[] => {
+		return generateChartData(dataSource, chartColor, setupData, pendingDispositionsCount, colors);
+	};
 
 	const handleEditWidget = (widgetId: string) => {
-		console.log('Edit widget:', widgetId);
-		// Implement edit widget functionality
+		const widget = widgets.find((w: Widget) => w.id === widgetId);
+		if (widget) {
+			setEditingWidget(widget);
+			setIsEditWidgetModalOpen(true);
+		}
 	};
 
 	const handleDeleteWidget = (widgetId: string) => {
-		console.log('Delete widget:', widgetId);
-		// Implement delete widget functionality
+		const widget = widgets.find((w: Widget) => w.id === widgetId);
+		if (widget) {
+			setDeletingWidget(widget);
+			setIsDeleteWidgetModalOpen(true);
+		}
+	};
+
+	const handleConfirmDelete = () => {
+		if (deletingWidget) {
+			const updatedWidgets = widgets.filter((w: Widget) => w.id !== deletingWidget.id);
+			updateDashboardSettings({
+				widgets: updatedWidgets,
+			});
+			setIsDeleteWidgetModalOpen(false);
+			setDeletingWidget(null);
+		}
+	};
+
+	const handleSaveWidget = (widget: Widget) => {
+		const updatedWidgets = widgets.map((w: Widget) => w.id === widget.id ? widget : w);
+		updateDashboardSettings({
+			widgets: updatedWidgets,
+		});
+		setIsEditWidgetModalOpen(false);
+		setEditingWidget(null);
 	};
 
 	const handleAddWidget = () => {
-		console.log('Add widget clicked');
-		// Implement add widget functionality
+		setIsAddWidgetModalOpen(true);
 	};
 
-	const handleAddChart = (chartData: {
-		title: string;
-		type: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
-		dataSource: 'dispositions' | 'callOutcomes' | 'custom';
-		timeRange: 'daily' | 'weekly' | 'monthly';
-		color?: string;
-		position: {
-			x: number;
-			y: number;
-			width: number;
-			height: number;
+	const handleSaveNewWidget = (widgetData: Omit<Widget, 'id'>) => {
+		const newWidget: Widget = {
+			...widgetData,
+			id: `widget-${Date.now()}`,
 		};
-	}) => {
+		const updatedWidgets = [...widgets, newWidget];
+		updateDashboardSettings({
+			widgets: updatedWidgets,
+		});
+		setIsAddWidgetModalOpen(false);
+	};
+
+	const handleAddChart = (chartData: Omit<Chart, 'id'>) => {
 		addChart(chartData);
+	};
+
+	const handleEditChart = (chartId: string) => {
+		const chart = setupData.dashboardSettings.dispositionSettings.charts.find(c => c.id === chartId);
+		if (chart) {
+			setEditingChart(chart);
+			setIsEditChartModalOpen(true);
+		}
+	};
+
+	const handleSaveChart = (chart: Chart) => {
+		updateChart(chart.id, {
+			title: chart.title,
+			type: chart.type,
+			dataSource: chart.dataSource,
+			timeRange: chart.timeRange,
+			color: chart.color,
+		});
+		setIsEditChartModalOpen(false);
+		setEditingChart(null);
 	};
 
 	const handleRemoveChart = (chartId: string) => {
@@ -891,7 +324,7 @@ const DashboardContent: React.FC = () => {
 			title: '',
 			content: '',
 			color: '#FFFACD',
-			todos: [],
+			todos: [] as StickyNoteData['todos'],
 			position: {
 				x: 100 + (stickyNotes.length * 30),
 				y: 100 + (stickyNotes.length * 30)
@@ -908,12 +341,7 @@ const DashboardContent: React.FC = () => {
 		setStickyNotes(updatedNotes);
 		// Save to localStorage immediately when position or content changes
 		try {
-			const notesToSave = updatedNotes.map(note => ({
-				...note,
-				createdAt: note.createdAt.toISOString(),
-				updatedAt: note.updatedAt.toISOString(),
-				reminder: note.reminder ? note.reminder.toISOString() : undefined,
-			}));
+			const notesToSave: StoredStickyNote[] = updatedNotes.map(serializeStickyNote);
 			localStorage.setItem('stickyNotes', JSON.stringify(notesToSave));
 			// Dispatch event to notify GlobalStickyNotes to reload
 			window.dispatchEvent(new CustomEvent('stickyNotesUpdated'));
@@ -927,12 +355,7 @@ const DashboardContent: React.FC = () => {
 		setStickyNotes(updatedNotes);
 		// Save to localStorage immediately when note is deleted
 		try {
-			const notesToSave = updatedNotes.map(note => ({
-				...note,
-				createdAt: note.createdAt.toISOString(),
-				updatedAt: note.updatedAt.toISOString(),
-				reminder: note.reminder ? note.reminder.toISOString() : undefined,
-			}));
+			const notesToSave: StoredStickyNote[] = updatedNotes.map(serializeStickyNote);
 			localStorage.setItem('stickyNotes', JSON.stringify(notesToSave));
 			// Dispatch event to notify GlobalStickyNotes to reload
 			window.dispatchEvent(new CustomEvent('stickyNotesUpdated'));
@@ -972,7 +395,10 @@ const DashboardContent: React.FC = () => {
 		<div>
 			{/* Dashboard Title and Action Buttons */}
 			<div className="flex justify-between items-center mb-8">
-				<h1 className="font-lato font-normal text-[20px] leading-[150%] text-[#3A4050]">
+				<h1
+					className="font-lato font-normal text-[20px] leading-[150%]"
+					style={{ color: 'var(--text-secondary)' }}
+				>
 					{setupData.dashboardSettings.dashboardName || ' Dashboard'}
 				</h1>
 				<div className="flex gap-3">
@@ -980,6 +406,10 @@ const DashboardContent: React.FC = () => {
 						variant="primary"
 						size="md"
 						onClick={handleAddWidget}
+						style={primaryButtonStyle}
+						className="transition-all duration-200"
+						onMouseEnter={(event) => handlePrimaryHover(event, true)}
+						onMouseLeave={(event) => handlePrimaryHover(event, false)}
 					>
 						Add Widget
 					</Button>
@@ -987,31 +417,42 @@ const DashboardContent: React.FC = () => {
 						variant="outline"
 						size="md"
 						onClick={handleCreateStickyNoteDirectly}
-						className="flex items-center gap-2"
+						className="flex items-center gap-2 transition-colors duration-200"
+						style={outlineButtonStyle}
+						onMouseEnter={(event) => handleOutlineHover(event, true)}
+						onMouseLeave={(event) => handleOutlineHover(event, false)}
 					>
-						<Icon name="Edit_duotone_line" size="sm" />
+						<Pencil1Icon className="w-4 h-4" />
 						Note
 					</Button>
 					<Button
 						variant="outline"
 						size="md"
 						onClick={() => setIsAddChartModalOpen(true)}
-						className="flex items-center gap-2"
+						className="flex items-center gap-2 transition-colors duration-200 relative"
+						style={outlineButtonStyle}
+						onMouseEnter={(event) => handleOutlineHover(event, true)}
+						onMouseLeave={(event) => handleOutlineHover(event, false)}
 					>
-						<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M8 1V15M1 8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-						</svg>
+						<PlusIcon className="w-4 h-4" />
 						Add Chart
+						{isOffline && (
+							<span
+								className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
+								style={{ backgroundColor: '#DC350' }}
+								title="Offline mode"
+							/>
+						)}
 					</Button>
 				</div>
 			</div>
 
 			{/* Widget Cards */}
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-				{widgetData.map((widget, index) => (
+				{widgets.map((widget: Widget) => (
 					<WidgetCard
-						key={index}
-						widgetId={`widget-${index}`}
+						key={widget.id}
+						widgetId={widget.id}
 						title={widget.title}
 						value={widget.value}
 						onEdit={handleEditWidget}
@@ -1026,7 +467,13 @@ const DashboardContent: React.FC = () => {
 				collisionDetection={closestCenter}
 				onDragEnd={handleDragEnd}
 			>
-				<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4">
+				<div
+					className="dark:bg-gray-800 border dark:border-gray-700 p-4"
+					style={{
+						backgroundColor: 'var(--accent-white)',
+						borderColor: 'var(--light-gray)'
+					}}
+				>
 					<SortableContext
 						items={setupData.dashboardSettings.dispositionSettings.charts.map(chart => chart.id)}
 						strategy={verticalListSortingStrategy}
@@ -1036,8 +483,9 @@ const DashboardContent: React.FC = () => {
 								<SortableChart
 									key={chart.id}
 									chart={chart}
-									pieChartData={pieChartData}
+									generateChartData={generateChartDataWrapper}
 									onRemoveChart={handleRemoveChart}
+									onEditChart={handleEditChart}
 								/>
 							))}
 						</div>
@@ -1060,6 +508,46 @@ const DashboardContent: React.FC = () => {
 				isOpen={isAddChartModalOpen}
 				onClose={() => setIsAddChartModalOpen(false)}
 				onSave={handleAddChart}
+			/>
+
+			{/* Edit Chart Modal */}
+			<EditChartModal
+				isOpen={isEditChartModalOpen}
+				onClose={() => {
+					setIsEditChartModalOpen(false);
+					setEditingChart(null);
+				}}
+				onSave={handleSaveChart}
+				chart={editingChart}
+			/>
+
+			{/* Add Widget Modal */}
+			<AddWidgetModal
+				isOpen={isAddWidgetModalOpen}
+				onClose={() => setIsAddWidgetModalOpen(false)}
+				onSave={handleSaveNewWidget}
+			/>
+
+			{/* Edit Widget Modal */}
+			<EditWidgetModal
+				isOpen={isEditWidgetModalOpen}
+				onClose={() => {
+					setIsEditWidgetModalOpen(false);
+					setEditingWidget(null);
+				}}
+				onSave={handleSaveWidget}
+				widget={editingWidget}
+			/>
+
+			{/* Delete Widget Modal */}
+			<DeleteWidgetModal
+				isOpen={isDeleteWidgetModalOpen}
+				onClose={() => {
+					setIsDeleteWidgetModalOpen(false);
+					setDeletingWidget(null);
+				}}
+				onConfirm={handleConfirmDelete}
+				widgetTitle={deletingWidget?.title}
 			/>
 
 			{/* Sticky Note Modal */}

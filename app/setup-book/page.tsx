@@ -117,19 +117,44 @@ const SetupBookPage: React.FC = () => {
 			</div>
 
 			{/* Records Table */}
-			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+			<div
+				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-						<thead className="bg-gray-50 dark:bg-gray-700">
+					<table
+						className="min-w-full divide-y dark:divide-gray-700"
+						style={{ borderColor: 'var(--light-gray)' }}
+					>
+						<thead
+							className="dark:bg-gray-700 border-b dark:border-gray-700"
+							style={{
+								backgroundColor: 'var(--bg-primary)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							<tr>
 								{fieldDefinitions.map((field) => (
-									<th key={field.id} className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">
+									<th
+										key={field.id}
+										className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+										style={{ color: 'var(--text-primary)' }}
+									>
 										{field.name}
 									</th>
 								))}
 							</tr>
 						</thead>
-						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+						<tbody
+							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+							style={{
+								backgroundColor: 'var(--accent-white)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							{filteredRecords.length === 0 ? (
 								<tr>
 									<td colSpan={fieldDefinitions.length} className="px-6 py-12 text-center">
@@ -137,10 +162,16 @@ const SetupBookPage: React.FC = () => {
 											<div className="mb-4">
 												<Icon name="upload-cloud" size="4xl" className="text-gray-300 dark:text-gray-600" />
 											</div>
-											<h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+											<h3
+												className="text-lg font-medium dark:text-gray-100 mb-2"
+												style={{ color: 'var(--text-primary)' }}
+											>
 												No Data Found
 											</h3>
-											<p className="text-gray-500 dark:text-gray-400">
+											<p
+												className="dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
 												{searchTerm ? 'No records match your search.' : 'Upload your call list to get started.'}
 											</p>
 										</div>
@@ -148,9 +179,23 @@ const SetupBookPage: React.FC = () => {
 								</tr>
 							) : (
 								paginatedRecords.map((record) => (
-									<tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+									<tr
+										key={record.id}
+										className="dark:hover:bg-gray-700"
+										style={{ borderColor: 'var(--light-gray)' }}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+										}}
+									>
 										{fieldDefinitions.map((field) => (
-											<td key={field.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+											<td
+												key={field.id}
+												className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+												style={{ color: 'var(--text-primary)' }}
+											>
 												{record[field.name] || '-'}
 											</td>
 										))}

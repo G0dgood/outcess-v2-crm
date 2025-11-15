@@ -13,6 +13,7 @@ import {
 	ChevronRightIcon,
 	ChevronDownIcon
 } from '@radix-ui/react-icons';
+import Group from '@/components/setupIcon/Group';
 
 interface DashboardSideNavProps {
 	activeItem?: string;
@@ -80,6 +81,12 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 			path: '/users',
 		},
 		{
+			id: 'team-members',
+			label: 'Team Members',
+			icon: 'group',
+			path: '/team-members',
+		},
+		{
 			id: 'setup-book',
 			label: 'Setup Book',
 			icon: 'settings-book',
@@ -143,6 +150,8 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 				return <GearIcon {...iconProps} />;
 			case 'id-card':
 				return <IdCardIcon {...iconProps} />;
+			case 'group':
+				return <Group width={20} height={20} strokeColor="currentColor" fillColor="currentColor" />;
 			default:
 				return null;
 		}
@@ -155,10 +164,14 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 				ref={navRef}
 				id="side-nav"
 				className={`
-					bg-white dark:bg-gray-900 w-64 border-r border-gray-200 dark:border-gray-700
+					dark:bg-gray-900 w-64 border-r dark:border-gray-700
 					hidden md:block relative h-auto transition-colors duration-300
 					${className}
 				`}
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
 			>
 				<div className="p-4">
 					{/* Navigation Items */}
@@ -173,10 +186,11 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 										onClick={(e) => handleItemClick(item, e)}
 										className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 transition-all duration-200 ${isActive || (isSettings && isSettingsExpanded)
 											? 'text-white'
-											: 'text-gray-700 dark:text-gray-300 hover:text-white'
+											: 'dark:text-gray-300 hover:text-white'
 											}`}
 										style={{
 											backgroundColor: (isActive || (isSettings && isSettingsExpanded)) ? setupData.primaryColor || '#050711' : 'transparent',
+											color: (isActive || (isSettings && isSettingsExpanded)) ? 'white' : 'var(--text-secondary)',
 											'--hover-bg': setupData.secondaryColor || '#6C8B7D'
 										} as React.CSSProperties}
 										onMouseEnter={(e) => {
@@ -195,22 +209,28 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 												// Reset icon and text colors
 												const icon = e.currentTarget.querySelector('.shrink-0') as HTMLElement;
 												const text = e.currentTarget.querySelector('.font-medium') as HTMLElement;
-												if (icon) icon.style.color = '';
-												if (text) text.style.color = '';
+												if (icon) icon.style.color = 'var(--text-tertiary)';
+												if (text) text.style.color = 'var(--text-secondary)';
 											}
 										}}
 									>
-										<div className={`shrink-0 transition-colors duration-200 ${isActive || (isSettings && isSettingsExpanded) ? 'text-white' : 'text-gray-600 dark:text-gray-400'
-											}`}>
+										<div
+											className={`shrink-0 transition-colors duration-200 ${isActive || (isSettings && isSettingsExpanded) ? 'text-white' : 'dark:text-gray-400'}`}
+											style={!(isActive || (isSettings && isSettingsExpanded)) ? { color: 'var(--text-tertiary)' } : {}}
+										>
 											{getIconComponent(item.icon)}
 										</div>
-										<span className={`font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive || (isSettings && isSettingsExpanded) ? 'text-white' : 'text-gray-700 dark:text-gray-300'
-											}`}>
+										<span
+											className={`font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive || (isSettings && isSettingsExpanded) ? 'text-white' : 'dark:text-gray-300'}`}
+											style={!(isActive || (isSettings && isSettingsExpanded)) ? { color: 'var(--text-secondary)' } : {}}
+										>
 											{item.label}
 										</span>
 										{isSettings && (
-											<div className={`shrink-0 transition-colors duration-200 ${isSettingsExpanded ? 'text-white' : 'text-gray-600 dark:text-gray-400'
-												}`}>
+											<div
+												className={`shrink-0 transition-colors duration-200 ${isSettingsExpanded ? 'text-white' : 'dark:text-gray-400'}`}
+												style={!isSettingsExpanded ? { color: 'var(--text-tertiary)' } : {}}
+											>
 												{isSettingsExpanded ? (
 													<ChevronDownIcon className="w-4 h-4" />
 												) : (
@@ -222,7 +242,10 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 
 									{/* Settings Sub-menu */}
 									{isSettings && isSettingsExpanded && (
-										<div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-300 dark:border-gray-600 pl-2">
+										<div
+											className="ml-4 mt-1 space-y-1 border-l-2 dark:border-gray-600 pl-2"
+											style={{ borderColor: 'var(--light-gray)' }}
+										>
 											{settingsSubItems.map((subItem) => {
 												// Get the tab value from the URL query parameter
 												const currentTab = searchParams?.get('tab');
@@ -235,10 +258,11 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 														onClick={() => handleSubItemClick(subItem)}
 														className={`cursor-pointer w-full flex items-center gap-3 px-4 py-2 transition-all duration-200 ${isSubActive
 															? 'text-white bg-opacity-80'
-															: 'text-gray-600 dark:text-gray-400 hover:text-white'
+															: 'dark:text-gray-400 hover:text-white'
 															}`}
 														style={{
 															backgroundColor: isSubActive ? setupData.primaryColor || '#050711' : 'transparent',
+															color: isSubActive ? 'white' : 'var(--text-tertiary)',
 														} as React.CSSProperties}
 														onMouseEnter={(e) => {
 															if (!isSubActive) {
@@ -254,17 +278,21 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 																e.currentTarget.style.backgroundColor = 'transparent';
 																const icon = e.currentTarget.querySelector('.sub-icon') as HTMLElement;
 																const text = e.currentTarget.querySelector('.sub-text') as HTMLElement;
-																if (icon) icon.style.color = '';
-																if (text) text.style.color = '';
+																if (icon) icon.style.color = 'var(--text-tertiary)';
+																if (text) text.style.color = 'var(--text-tertiary)';
 															}
 														}}
 													>
-														<div className={`sub-icon shrink-0 transition-colors duration-200 ${isSubActive ? 'text-white' : 'text-gray-500 dark:text-gray-400'
-															}`}>
+														<div
+															className={`sub-icon shrink-0 transition-colors duration-200 ${isSubActive ? 'text-white' : 'dark:text-gray-400'}`}
+															style={!isSubActive ? { color: 'var(--text-tertiary)' } : {}}
+														>
 															{getIconComponent(subItem.icon)}
 														</div>
-														<span className={`sub-text font-inter font-medium text-[13px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 ${isSubActive ? 'text-white' : 'text-gray-600 dark:text-gray-300'
-															}`}>
+														<span
+															className={`sub-text font-inter font-medium text-[13px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 ${isSubActive ? 'text-white' : 'dark:text-gray-300'}`}
+															style={!isSubActive ? { color: 'var(--text-tertiary)' } : {}}
+														>
 															{subItem.label}
 														</span>
 													</button>
@@ -278,7 +306,10 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 					</div>
 
 					{/* Separator */}
-					<div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+					<div
+						className="border-t dark:border-gray-700 my-4"
+						style={{ borderColor: 'var(--light-gray)' }}
+					></div>
 				</div>
 			</nav>
 		</>

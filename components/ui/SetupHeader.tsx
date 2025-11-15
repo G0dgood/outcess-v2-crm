@@ -29,7 +29,14 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 	const userData: User = user || defaultUser;
 
 	return (
-		<header id="header" className={`!flex flex-row bg-(--accent-white) border-b border-gray-100 dark:border-gray-700 px-6 py-4 justify-between items-center ${className}`}>
+		<header 
+			id="header" 
+			className={`!flex flex-row dark:bg-gray-800 border-b dark:border-gray-700 px-6 py-4 justify-between items-center ${className}`}
+			style={{
+				backgroundColor: 'var(--accent-white)',
+				borderColor: 'var(--light-gray)'
+			}}
+		>
 			<div className="flex items-center">
 				{showLogo && (
 					<div className="flex items-center gap-3">
@@ -38,17 +45,33 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 							<div className="w-2 h-2 bg-[#6C8B7D] rounded-full"></div>
 							<div className="w-2 h-2 bg-orange-500 rounded-full"></div>
 						</div>
-						<span className="font-lato not-italic font-medium text-[14px] leading-[150%] text-[#3A4050] dark:text-gray-100">{title}</span>
+						<span 
+							className="font-lato not-italic font-medium text-[14px] leading-[150%] dark:text-gray-100"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							{title}
+						</span>
 					</div>
 				)}
 				{!showLogo && (
-					<span className="font-inter font-semibold text-lg text-[#050711] dark:text-gray-100">{title}</span>
+					<span 
+						className="font-inter font-semibold text-lg dark:text-gray-100"
+						style={{ color: 'var(--text-primary)' }}
+					>
+						{title}
+					</span>
 				)}
 			</div>
 
 			{userData && (
 				<div className="flex items-center gap-3">
-					<div className="w-10 h-10 bg-[#F2F4F7] dark:bg-gray-700 border-2 border-[#E5E7EB] dark:border-gray-600 rounded-full flex items-center justify-center">
+					<div 
+						className="w-10 h-10 dark:bg-gray-700 border-2 dark:border-gray-600 rounded-full flex items-center justify-center"
+						style={{
+							backgroundColor: 'var(--bg-primary)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
 						{userData.avatar ? (
 							<img
 								src={userData.avatar}
@@ -56,16 +79,27 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 								className="w-10 h-10 rounded-full object-cover"
 							/>
 						) : (
-							<span className="font-lato font-semibold text-base leading-[150%] text-center text-[#475467] dark:text-gray-300">
+							<span 
+								className="font-lato font-semibold text-base leading-[150%] text-center dark:text-gray-300"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
 								{userData.initials || userData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
 							</span>
 						)}
 					</div>
 					<div className="flex flex-col">
-						<span className="font-lato font-medium text-sm leading-[150%] text-[#3A4050] dark:text-gray-100">
+						<span 
+							className="font-lato font-medium text-sm leading-[150%] dark:text-gray-100"
+							style={{ color: 'var(--text-secondary)' }}
+						>
 							{userData.name}
 						</span>
-						<span className="font-lato font-normal text-xs leading-[150%] text-[#6D7280] dark:text-gray-400">{userData.role}</span>
+						<span 
+							className="font-lato font-normal text-xs leading-[150%] dark:text-gray-400"
+							style={{ color: 'var(--text-tertiary)' }}
+						>
+							{userData.role}
+						</span>
 					</div>
 				</div>
 			)}

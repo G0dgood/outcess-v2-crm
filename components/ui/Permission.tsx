@@ -224,37 +224,117 @@ const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 			</div>
 
 			{/* Permission Table */}
-			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+			<div 
+				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-						<thead className="bg-gray-50 dark:bg-gray-700">
+					<table 
+						className="min-w-full divide-y dark:divide-gray-700"
+						style={{ borderColor: 'var(--light-gray)' }}
+					>
+						<thead 
+							className="dark:bg-gray-700 border-b dark:border-gray-700"
+							style={{ 
+								backgroundColor: 'var(--bg-primary)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							<tr>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Module Name</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Shared To</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Date Created</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Access</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Permission</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Action</th>
+								<th 
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Module Name
+								</th>
+								<th 
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Shared To
+								</th>
+								<th 
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Date Created
+								</th>
+								<th 
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Access
+								</th>
+								<th 
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Permission
+								</th>
+								<th 
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Action
+								</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+						<tbody 
+							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+							style={{
+								backgroundColor: 'var(--accent-white)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							{permissions.length === 0 ? (
 								<tr>
-									<td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+									<td 
+										colSpan={6} 
+										className="px-6 py-12 text-center dark:text-gray-400"
+										style={{ color: 'var(--text-tertiary)' }}
+									>
 										No permissions configured yet.
 									</td>
 								</tr>
 							) : (
 								permissions.map((permission) => (
-									<tr key={permission.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+									<tr 
+										key={permission.id} 
+										className="dark:hover:bg-gray-700 transition-colors"
+										style={{ borderColor: 'var(--light-gray)' }}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+										}}
+									>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="font-medium text-gray-900 dark:text-gray-100">{permission.moduleName}</span>
+											<span 
+												className="font-medium dark:text-gray-100"
+												style={{ color: 'var(--text-primary)' }}
+											>
+												{permission.moduleName}
+											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm text-gray-600 dark:text-gray-400">{permission.sharedTo}</span>
+											<span 
+												className="text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{permission.sharedTo}
+											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm text-gray-600 dark:text-gray-400">{permission.dateCreated || ''}</span>
+											<span 
+												className="text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{permission.dateCreated || ''}
+											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<Toggle
@@ -302,7 +382,16 @@ const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 												{/* Action Button */}
 												<button
 													onClick={() => handleMenuToggle(permission.id)}
-													className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+													className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+													style={{ color: 'var(--text-tertiary)' }}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.color = 'var(--text-secondary)';
+														e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.color = 'var(--text-tertiary)';
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
 													aria-label="Actions"
 													aria-expanded={openMenuId === permission.id}
 												>
@@ -311,17 +400,44 @@ const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 
 												{/* Dropdown Menu */}
 												{openMenuId === permission.id && (
-													<div className="absolute right-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
+													<div 
+														className="absolute right-0 w-48 dark:bg-gray-800 border dark:border-gray-700 shadow-lg z-50"
+														style={{
+															backgroundColor: 'var(--accent-white)',
+															borderColor: 'var(--light-gray)'
+														}}
+													>
 														<div className="flex flex-col">
 															<button
 																onClick={() => handleRename(permission)}
-																className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 cursor-pointer"
+																className="w-full px-4 py-2 text-left text-sm dark:text-gray-300 dark:hover:bg-gray-700 transition-colors dark:border-gray-700 cursor-pointer"
+																style={{
+																	color: 'var(--text-secondary)',
+																	backgroundColor: 'transparent',
+																	borderColor: 'var(--light-gray)'
+																}}
+																onMouseEnter={(e) => {
+																	e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+																}}
+																onMouseLeave={(e) => {
+																	e.currentTarget.style.backgroundColor = 'transparent';
+																}}
 															>
 																Rename
 															</button>
 															<button
 																onClick={() => handleModulePermission(permission)}
-																className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+																className="w-full px-4 py-2 text-left text-sm dark:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+																style={{
+																	color: 'var(--text-secondary)',
+																	backgroundColor: 'transparent'
+																}}
+																onMouseEnter={(e) => {
+																	e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+																}}
+																onMouseLeave={(e) => {
+																	e.currentTarget.style.backgroundColor = 'transparent';
+																}}
 															>
 																Module Permission
 															</button>

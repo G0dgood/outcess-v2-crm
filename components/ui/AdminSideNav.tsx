@@ -94,10 +94,14 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 				ref={navRef}
 				id="side-nav"
 				className={`
-					w-64 border-r border-gray-200 dark:border-gray-700
+					w-64 border-r dark:border-gray-700
 					hidden md:block relative h-auto transition-colors duration-300
 					${className}
 				`}
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
 			>
 				<div className="p-4 mt-4">
 					{/* Navigation Items */}
@@ -110,10 +114,11 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 										onClick={(e) => handleItemClick(item, e)}
 										className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 transition-all duration-200 ${isActive
 											? 'text-white'
-											: 'text-gray-700 dark:text-gray-300 hover:text-white dark:hover:text-white'
+											: 'dark:text-gray-300 hover:text-white dark:hover:text-white'
 											}`}
 										style={{
 											backgroundColor: isActive ? setupData.primaryColor || '#050711' : 'transparent',
+											color: isActive ? 'white' : 'var(--text-secondary)',
 											'--hover-bg': setupData.secondaryColor || '#6C8B7D'
 										} as React.CSSProperties}
 										onMouseEnter={(e) => {
@@ -132,17 +137,21 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 												// Reset icon and text colors
 												const icon = e.currentTarget.querySelector('.shrink-0') as HTMLElement;
 												const text = e.currentTarget.querySelector('.font-medium') as HTMLElement;
-												if (icon) icon.style.color = '';
-												if (text) text.style.color = '';
+												if (icon) icon.style.color = 'var(--text-tertiary)';
+												if (text) text.style.color = 'var(--text-secondary)';
 											}
 										}}
 									>
-										<div className={`shrink-0 transition-colors duration-200 ${isActive ? 'text-white' : 'text-gray-600 dark:text-gray-400'
-											}`}>
+										<div
+											className={`shrink-0 transition-colors duration-200 ${isActive ? 'text-white' : 'dark:text-gray-400'}`}
+											style={!isActive ? { color: 'var(--text-tertiary)' } : {}}
+										>
 											{item.icon}
 										</div>
-										<span className={`font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive ? 'text-white' : 'text-gray-700 dark:text-gray-300'
-											}`}>
+										<span
+											className={`font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive ? 'text-white' : 'dark:text-gray-300'}`}
+											style={!isActive ? { color: 'var(--text-secondary)' } : {}}
+										>
 											{item.label}
 										</span>
 									</button>
@@ -152,7 +161,10 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 					</div>
 
 					{/* Separator */}
-					<div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+					<div
+						className="border-t dark:border-gray-700 my-4"
+						style={{ borderColor: 'var(--light-gray)' }}
+					></div>
 				</div>
 			</nav>
 		</>

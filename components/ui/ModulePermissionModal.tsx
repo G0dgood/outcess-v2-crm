@@ -120,13 +120,33 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
-			<div className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 overflow-hidden flex flex-col max-h-[90vh]">
+			<div 
+				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 overflow-hidden flex flex-col max-h-[90vh]"
+				style={{ backgroundColor: 'var(--accent-white)' }}
+			>
 				{/* Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
-					<h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Module Permission</h2>
+				<div 
+					className="flex justify-between items-center p-6 border-b dark:border-gray-700 shrink-0"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<h2 
+						className="text-xl font-semibold dark:text-gray-100"
+						style={{ color: 'var(--text-primary)' }}
+					>
+						Module Permission
+					</h2>
 					<button
 						onClick={onClose}
-						className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						style={{ color: 'var(--text-tertiary)' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = 'var(--text-secondary)';
+							e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = 'var(--text-tertiary)';
+							e.currentTarget.style.backgroundColor = 'transparent';
+						}}
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -135,26 +155,56 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 
 				{/* Form Content */}
 				<div className="flex-1 p-6 space-y-4 overflow-y-auto">
-					<p className="text-sm text-gray-600 dark:text-gray-400">
+					<p 
+						className="text-sm dark:text-gray-400"
+						style={{ color: 'var(--text-tertiary)' }}
+					>
 						Select the roles that should have access to the module.
 					</p>
 
 					<div ref={dropdownRef} className="relative">
-						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						<label 
+							className="block text-sm font-medium dark:text-gray-300 mb-2"
+							style={{ color: 'var(--text-secondary)' }}
+						>
 							Roles
 						</label>
 						<div
 							onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-							className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-left flex items-center justify-between hover:border-gray-400 dark:hover:border-gray-500 transition-colors min-h-[42px] cursor-pointer"
+							className="w-full px-3 py-2 dark:border-gray-600 dark:bg-gray-700 text-left flex items-center justify-between dark:hover:border-gray-500 transition-colors min-h-[42px] cursor-pointer"
+							style={{
+								borderColor: 'var(--light-gray)',
+								backgroundColor: 'var(--accent-white)',
+								borderWidth: '1px',
+								borderStyle: 'solid'
+							}}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.borderColor = '#94A3B8';
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.borderColor = 'var(--light-gray)';
+							}}
 						>
 							<div className="flex flex-wrap gap-2 flex-1">
 								{selectedRoleLabels.length === 0 ? (
-									<span className="text-sm text-gray-500 dark:text-gray-400">Select roles</span>
+									<span 
+										className="text-sm dark:text-gray-400"
+										style={{ color: 'var(--text-tertiary)' }}
+									>
+										Select roles
+									</span>
 								) : (
 									selectedRoleLabels.map((role) => (
 										<span
 											key={role.id}
-											className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-500 text-sm text-gray-700 dark:text-gray-300"
+											className="inline-flex items-center gap-1 px-2 py-1 dark:bg-gray-600 dark:border-gray-500 text-sm dark:text-gray-300"
+											style={{
+												backgroundColor: 'var(--bg-primary)',
+												borderColor: 'var(--light-gray)',
+												borderWidth: '1px',
+												borderStyle: 'solid',
+												color: 'var(--text-primary)'
+											}}
 										>
 											{role.label}
 											<button
@@ -163,7 +213,14 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 													e.stopPropagation();
 													handleRemoveRole(role.id);
 												}}
-												className="hover:text-red-600 dark:hover:text-red-400 transition-colors"
+												className="dark:hover:text-red-400 transition-colors"
+												style={{ color: 'var(--text-tertiary)' }}
+												onMouseEnter={(e) => {
+													e.currentTarget.style.color = '#DC2626';
+												}}
+												onMouseLeave={(e) => {
+													e.currentTarget.style.color = 'var(--text-tertiary)';
+												}}
 												aria-label={`Remove ${role.label}`}
 											>
 												<Cross2Icon className="w-3 h-3" />
@@ -172,22 +229,45 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 									))
 								)}
 							</div>
-							<ChevronDownIcon className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform shrink-0 ml-2 ${isDropdownOpen ? 'transform rotate-180' : ''}`} />
+							<ChevronDownIcon 
+								className={`w-4 h-4 dark:text-gray-400 transition-transform shrink-0 ml-2 ${isDropdownOpen ? 'transform rotate-180' : ''}`}
+								style={{ color: 'var(--text-tertiary)' }}
+							/>
 						</div>
 						{isDropdownOpen && (
-							<div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-lg z-50 max-h-48 overflow-y-auto">
+							<div 
+								className="absolute top-full left-0 right-0 mt-1 dark:bg-gray-800 dark:border-gray-600 shadow-lg z-50 max-h-48 overflow-y-auto"
+								style={{
+									backgroundColor: 'var(--accent-white)',
+									borderColor: 'var(--light-gray)',
+									borderWidth: '1px',
+									borderStyle: 'solid'
+								}}
+							>
 								<div className="py-2">
 									{roleOptions.map((role) => (
 										<label
 											key={role.id}
-											className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+											className="flex items-center gap-3 px-4 py-2 dark:hover:bg-gray-700 cursor-pointer"
+											style={{ backgroundColor: 'transparent' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.backgroundColor = 'transparent';
+											}}
 										>
 											<Checkbox
 												checked={selectedRoles.includes(role.id)}
 												onChange={() => handleRoleToggle(role.id)}
 												size="medium"
 											/>
-											<span className="text-sm text-gray-900 dark:text-gray-100">{role.label}</span>
+											<span 
+												className="text-sm dark:text-gray-100"
+												style={{ color: 'var(--text-primary)' }}
+											>
+												{role.label}
+											</span>
 										</label>
 									))}
 								</div>
@@ -197,7 +277,10 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 shrink-0">
+				<div 
+					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<Button
 						variant="danger"
 						size="md"

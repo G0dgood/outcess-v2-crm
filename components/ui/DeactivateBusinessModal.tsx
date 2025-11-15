@@ -97,28 +97,47 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 				onClose={handleBack}
 				title=""
 				size="md"
-				className="bg-[#FFF8E1] dark:bg-orange-900/30 border-2 border-orange-300 dark:border-orange-800"
+				className="!bg-[rgba(251,146,60,0.1)] dark:bg-orange-900/30 !border-2 border-[rgba(251,146,60,0.3)] dark:border-orange-800"
 				showCloseButton={false}
 			>
 				<div className="p-6">
 					{/* Warning Icon and Message */}
 					<div className="flex items-start gap-3 mb-6">
-						<ExclamationTriangleIcon className="w-6 h-6 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
+						<ExclamationTriangleIcon
+							className="w-6 h-6 dark:text-orange-400 shrink-0 mt-0.5"
+							style={{ color: '#F97316' }}
+						/>
 						<div>
-							<h2 className="text-lg font-bold text-orange-700 dark:text-orange-400 mb-1">
+							<h2
+								className="text-lg font-bold dark:text-orange-400 mb-1"
+								style={{ color: '#EA580C' }}
+							>
 								Confirm Business Deactivation
 							</h2>
-							<p className="text-sm text-orange-600 dark:text-orange-400">
+							<p
+								className="text-sm dark:text-orange-400"
+								style={{ color: '#EA580C' }}
+							>
 								You are about to deactivate: <span className="font-semibold">{businessName}</span>
 							</p>
 						</div>
 					</div>
 
 					{/* Footer */}
-					<div className="flex items-center justify-end gap-3 pt-4 border-t border-orange-200 dark:border-orange-800">
+					<div
+						className="flex items-center justify-end gap-3 pt-4 border-t dark:border-orange-800"
+						style={{ borderColor: 'rgba(251, 146, 60, 0.3)' }}
+					>
 						<button
 							onClick={handleBack}
-							className="px-4 py-2 text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors cursor-pointer"
+							className="px-4 py-2 text-sm font-medium dark:text-orange-400 dark:hover:text-orange-300 transition-colors cursor-pointer"
+							style={{ color: '#EA580C' }}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.color = '#C2410C';
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.color = '#EA580C';
+							}}
 						>
 							Cancel
 						</button>
@@ -144,7 +163,10 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 			size="xl"
 		>
 			<div className="p-6">
-				<p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+				<p
+					className="text-sm font-medium dark:text-gray-300 mb-4"
+					style={{ color: 'var(--text-secondary)' }}
+				>
 					Why are you deactivating this business?
 				</p>
 
@@ -158,7 +180,7 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 								onClick={() => setSelectedReason(reason.id)}
 								className={`w-full text-left p-4 border-2 transition-all ${isSelected
 									? ''
-									: 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+									: 'dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-700/50'
 									}`}
 								style={
 									isSelected
@@ -166,12 +188,27 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 											borderColor: primaryColor,
 											backgroundColor: isDarkMode ? hexToRgba(primaryColor, 0.3) : hexToRgba(primaryColor, 0.15),
 										}
-										: undefined
+										: {
+											borderColor: 'var(--light-gray)',
+											backgroundColor: 'var(--accent-white)'
+										}
 								}
+								onMouseEnter={(e) => {
+									if (!isSelected) {
+										e.currentTarget.style.borderColor = '#94A3B8';
+										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+									}
+								}}
+								onMouseLeave={(e) => {
+									if (!isSelected) {
+										e.currentTarget.style.borderColor = 'var(--light-gray)';
+										e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+									}
+								}}
 							>
 								<div className="flex items-start gap-3">
 									<div
-										className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? '' : 'border-gray-300 dark:border-gray-600'
+										className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? '' : 'dark:border-gray-600'
 											}`}
 										style={
 											isSelected
@@ -179,7 +216,9 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 													borderColor: primaryColor,
 													backgroundColor: primaryColor,
 												}
-												: undefined
+												: {
+													borderColor: 'var(--light-gray)'
+												}
 										}
 									>
 										{isSelected && (
@@ -187,10 +226,18 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 										)}
 									</div>
 									<div className="flex-1">
-										<h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+										<h3
+											className="text-sm font-semibold dark:text-gray-100 mb-1"
+											style={{ color: 'var(--text-primary)' }}
+										>
 											{reason.title}
 										</h3>
-										<p className="text-sm text-gray-600 dark:text-gray-400">{reason.description}</p>
+										<p
+											className="text-sm dark:text-gray-400"
+											style={{ color: 'var(--text-tertiary)' }}
+										>
+											{reason.description}
+										</p>
 									</div>
 								</div>
 							</button>
@@ -199,7 +246,10 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+				<div
+					className="flex items-center justify-end gap-3 pt-4 border-t dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<Button
 						variant="outline"
 						size="md"

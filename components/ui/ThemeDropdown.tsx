@@ -4,8 +4,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MoonIcon, SunIcon } from '@radix-ui/react-icons';
 import { useTheme } from '@/contexts/ThemeContext';
 
-const ThemeDropdown: React.FC = () => {
-	const { isDarkMode, toggleTheme, setTheme } = useTheme();
+const ThemeDropdown: React.FC<{ inputClassName?: string }> = ({ inputClassName }) => {
+	const { isDarkMode, setTheme } = useTheme();
 	const [isOpen, setIsOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -48,78 +48,72 @@ const ThemeDropdown: React.FC = () => {
 		setIsOpen(false);
 	};
 
+	const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			setIsOpen((prev) => !prev);
+		} else if (event.key === 'Escape') {
+			setIsOpen(false);
+		}
+	};
+
 	return (
-		<div className="relative" ref={dropdownRef}>
+		<div className="relative dropdown-container" ref={dropdownRef}>
 			<button
-				onClick={() => setIsOpen(!isOpen)}
-				className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer flex items-center gap-2"
-				title={isDarkMode ? 'Dark mode active' : 'Light mode active'}
 				type="button"
+				onClick={() => setIsOpen((prev) => !prev)}
+				onKeyDown={handleKeyDown}
+				className={`dropdown-trigger flex items-center gap-2 ${isOpen ? 'open' : ''} ${inputClassName}`}
 				aria-haspopup="true"
 				aria-expanded={isOpen}
 			>
-				{isDarkMode ? (
-					<MoonIcon className="w-5 h-5" />
-				) : (
-					<SunIcon className="w-5 h-5" />
-				)}
-				<span className="hidden md:inline text-sm font-medium">
-					{isDarkMode ? 'Dark' : 'Light'}
+				<span className="flex items-center gap-2 dropdown-text">
+					{isDarkMode ? <MoonIcon className="w-4 h-4" /> : <SunIcon className="w-4 h-4" />}
+					<span className="hidden md:inline text-sm font-medium">
+						{isDarkMode ? 'Dark Mode' : 'Light Mode'}
+					</span>
 				</span>
 				<svg
-					className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+					className={`dropdown-chevron ${isOpen ? 'open' : ''}`}
+					width="12"
+					height="12"
+					viewBox="0 0 12 12"
 					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
 				>
-					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+					<path
+						d="M3 4.5L6 7.5L9 4.5"
+						stroke="currentColor"
+						strokeWidth="1.5"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					/>
 				</svg>
 			</button>
 
 			{isOpen && (
-				<div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden">
-					<div className="py-1">
+				<div className="dropdown-menu dropdown-menu-right">
+					<div className="dropdown-options">
 						<button
+							type="button"
 							onClick={() => handleThemeSelect('light')}
-							className={`w-full px-4 py-2 text-left text-sm flex items-center gap-3 transition-colors ${
-								!isDarkMode
-									? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
-									: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-							}`}
-							type="button"
+							className={`cursor-pointer flex items-center gap-2 dropdown-option ${!isDarkMode ? 'selected' : ''}`}
 						>
-							<SunIcon className="w-4 h-4" />
-							<span>Light Mode</span>
-							{!isDarkMode && (
-								<svg className="w-4 h-4 ml-auto" fill="currentColor" viewBox="0 0 20 20">
-									<path
-										fillRule="evenodd"
-										d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-										clipRule="evenodd"
-									/>
-								</svg>
-							)}
+							<div className="flex items-center gap-2">
+
+								<SunIcon className="w-4 h-4" />
+								<span>Light Mode</span>
+							</div>
 						</button>
+
 						<button
-							onClick={() => handleThemeSelect('dark')}
-							className={`w-full px-4 py-2 text-left text-sm flex items-center gap-3 transition-colors ${
-								isDarkMode
-									? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
-									: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-							}`}
 							type="button"
+							onClick={() => handleThemeSelect('dark')}
+							className={`cursor-pointer dropdown-option ${isDarkMode ? 'selected' : ''}`}
 						>
-							<MoonIcon className="w-4 h-4" />
-							<span>Dark Mode</span>
-							{isDarkMode && (
-								<svg className="w-4 h-4 ml-auto" fill="currentColor" viewBox="0 0 20 20">
-									<path
-										fillRule="evenodd"
-										d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-										clipRule="evenodd"
-									/>
-								</svg>
-							)}
+							<div className="flex items-center gap-2">
+								<MoonIcon className="w-4 h-4" />
+								<span>Dark Mode</span>
+							</div>
 						</button>
 					</div>
 				</div>

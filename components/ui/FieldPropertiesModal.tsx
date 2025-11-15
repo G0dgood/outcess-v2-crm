@@ -86,10 +86,20 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 			case 'textarea':
 				return (
 					<div>
-						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+						<label 
+							className="block text-sm font-medium dark:text-gray-300 mb-1"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							{label}
+						</label>
 						<textarea
 							placeholder={placeholder}
-							className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-gray-300 dark:placeholder:text-gray-500"
+							className="w-full px-3 py-2 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-gray-300 dark:placeholder:text-gray-500"
+							style={{
+								borderColor: 'var(--light-gray)',
+								backgroundColor: 'var(--accent-white)',
+								color: 'var(--text-primary)'
+							}}
 							rows={3}
 							disabled
 						/>
@@ -98,8 +108,21 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 			case 'dropdown':
 				return (
 					<div>
-						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
-						<select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-gray-300" disabled>
+						<label 
+							className="block text-sm font-medium dark:text-gray-300 mb-1"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							{label}
+						</label>
+						<select 
+							className="w-full px-3 py-2 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-gray-300" 
+							style={{
+								borderColor: 'var(--light-gray)',
+								backgroundColor: 'var(--accent-white)',
+								color: 'var(--text-primary)'
+							}}
+							disabled
+						>
 							<option>{placeholder}</option>
 						</select>
 					</div>
@@ -107,15 +130,30 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 			case 'radio':
 				return (
 					<div>
-						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+						<label 
+							className="block text-sm font-medium dark:text-gray-300 mb-1"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							{label}
+						</label>
 						<div className="space-y-2">
 							<label className="flex items-center">
 								<input type="radio" name="preview" className="mr-2" disabled />
-								<span className="text-sm text-gray-500 dark:text-gray-400">Option 1</span>
+								<span 
+									className="text-sm dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Option 1
+								</span>
 							</label>
 							<label className="flex items-center">
 								<input type="radio" name="preview" className="mr-2" disabled />
-								<span className="text-sm text-gray-500 dark:text-gray-400">Option 2</span>
+								<span 
+									className="text-sm dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Option 2
+								</span>
 							</label>
 						</div>
 					</div>
@@ -123,15 +161,30 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 			case 'checkbox':
 				return (
 					<div>
-						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+						<label 
+							className="block text-sm font-medium dark:text-gray-300 mb-1"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							{label}
+						</label>
 						<div className="space-y-2">
 							<label className="flex items-center">
 								<input type="checkbox" className="mr-2" disabled />
-								<span className="text-sm text-gray-500 dark:text-gray-400">Option 1</span>
+								<span 
+									className="text-sm dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Option 1
+								</span>
 							</label>
 							<label className="flex items-center">
 								<input type="checkbox" className="mr-2" disabled />
-								<span className="text-sm text-gray-500 dark:text-gray-400">Option 2</span>
+								<span 
+									className="text-sm dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Option 2
+								</span>
 							</label>
 						</div>
 					</div>
@@ -139,11 +192,21 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 			default:
 				return (
 					<div>
-						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+						<label 
+							className="block text-sm font-medium dark:text-gray-300 mb-1"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							{label}
+						</label>
 						<input
 							type={selectedType === 'email' ? 'email' : selectedType === 'number' ? 'number' : 'text'}
 							placeholder={placeholder}
-							className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-gray-300 dark:placeholder:text-gray-500"
+							className="w-full px-3 py-2 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-gray-300 dark:placeholder:text-gray-500"
+							style={{
+								borderColor: 'var(--light-gray)',
+								backgroundColor: 'var(--accent-white)',
+								color: 'var(--text-primary)'
+							}}
 							disabled
 						/>
 					</div>
@@ -187,7 +250,12 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 
 					{/* Required Field */}
 					<div>
-						<label className="font-inter text-sm font-medium text-[#050711] dark:text-gray-100 mb-2 block">Required Field</label>
+						<label 
+							className="font-inter text-sm font-medium dark:text-gray-100 mb-2 block"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Required Field
+						</label>
 						<Toggle
 							checked={isRequired}
 							onChange={setIsRequired}
@@ -197,15 +265,29 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 
 					{/* Preview */}
 					<div>
-						<label className="font-inter text-sm font-medium text-[#050711] dark:text-gray-100 mb-2 block">Preview</label>
-						<div className="p-4 bg-gray-50 dark:bg-gray-700 border dark:border-gray-600">
+						<label 
+							className="font-inter text-sm font-medium dark:text-gray-100 mb-2 block"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Preview
+						</label>
+						<div 
+							className="p-4 dark:bg-gray-700 border dark:border-gray-600"
+							style={{
+								backgroundColor: 'var(--bg-primary)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							{renderPreview()}
 						</div>
 					</div>
 				</div>
 
 				{/* Footer */}
-				<div className="p-6 border-t border-gray-200 dark:border-gray-700">
+				<div 
+					className="p-6 border-t dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<Button
 						variant="primary"
 						size="md"

@@ -175,20 +175,47 @@ const UsersPage: React.FC = () => {
 			</div>
 
 			{/* Login Status Info Banner */}
-			<div className="mb-4 p-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center gap-3">
+			<div 
+				className="mb-4 p-3 dark:bg-gray-800 border dark:border-gray-700 flex items-center gap-3"
+				style={{
+					backgroundColor: 'var(--bg-primary)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
 				<div className="shrink-0 w-6 h-6 flex items-center justify-center">
-					<ExclamationTriangleIcon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+					<ExclamationTriangleIcon 
+						className="w-4 h-4 dark:text-gray-300" 
+						style={{ color: 'var(--text-secondary)' }}
+					/>
 				</div>
-				<p className="text-sm text-gray-700 dark:text-gray-300">
+				<p 
+					className="text-sm dark:text-gray-300"
+					style={{ color: 'var(--text-secondary)' }}
+				>
 					This is for tracking agents who are logged in or logged out
 				</p>
 			</div>
 
 			{/* Users Table */}
-			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+			<div 
+				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-						<thead className="bg-gray-50 dark:bg-gray-700">
+					<table 
+						className="min-w-full divide-y dark:divide-gray-700"
+						style={{ borderColor: 'var(--light-gray)' }}
+					>
+						<thead 
+							className="dark:bg-gray-700 border-b dark:border-gray-700"
+							style={{ 
+								backgroundColor: 'var(--bg-primary)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							<tr>
 								<th>
 									<Checkbox
@@ -197,19 +224,75 @@ const UsersPage: React.FC = () => {
 										size="medium"
 									/>
 								</th>
-								<th className="text-gray-900 dark:text-gray-100">ID</th>
-								<th className="text-gray-900 dark:text-gray-100">First Name</th>
-								<th className="text-gray-900 dark:text-gray-100">Last Name</th>
-								<th className="text-gray-900 dark:text-gray-100">Email</th>
-								<th className="text-gray-900 dark:text-gray-100">Phone</th>
-								<th className="text-gray-900 dark:text-gray-100">Role</th>
-								<th className="text-gray-900 dark:text-gray-100">Login Status</th>
-								<th className="text-gray-900 dark:text-gray-100">Actions</th>
+								<th 
+									className="dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									ID
+								</th>
+								<th 
+									className="dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									First Name
+								</th>
+								<th 
+									className="dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Last Name
+								</th>
+								<th 
+									className="dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Email
+								</th>
+								<th 
+									className="dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Phone
+								</th>
+								<th 
+									className="dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Role
+								</th>
+								<th 
+									className="dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Login Status
+								</th>
+								<th 
+									className="dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Actions
+								</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+						<tbody 
+							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+							style={{
+								backgroundColor: 'var(--accent-white)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							{currentUsers.map((user) => (
-								<tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+								<tr 
+									key={user.id} 
+									className="dark:hover:bg-gray-700"
+									style={{ borderColor: 'var(--light-gray)' }}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+									}}
+								>
 									<td>
 										<Checkbox
 											checked={selectedUsers.has(user.id)}
@@ -217,25 +300,78 @@ const UsersPage: React.FC = () => {
 											size="medium"
 										/>
 									</td>
-									<td className="text-gray-900 dark:text-gray-100">{user.id}</td>
-									<td className="text-gray-900 dark:text-gray-100">{user.firstName}</td>
-									<td className="text-gray-900 dark:text-gray-100">{user.lastName}</td>
-									<td className="text-gray-900 dark:text-gray-100">{user.email}</td>
-									<td className="text-gray-900 dark:text-gray-100">{user.phone}</td>
-									<td className="text-gray-900 dark:text-gray-100">{user.role}</td>
-									<td className="text-gray-900 dark:text-gray-100">{user.loginStatus}</td>
+									<td 
+										className="dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{user.id}
+									</td>
+									<td 
+										className="dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{user.firstName}
+									</td>
+									<td 
+										className="dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{user.lastName}
+									</td>
+									<td 
+										className="dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{user.email}
+									</td>
+									<td 
+										className="dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{user.phone}
+									</td>
+									<td 
+										className="dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{user.role}
+									</td>
+									<td 
+										className="dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{user.loginStatus}
+									</td>
 									<td>
 										<div className="flex items-center gap-2">
 											<button
 												onClick={() => router.push(`/users/${user.id}/edit`)}
-												className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+												className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+												style={{ color: 'var(--text-secondary)' }}
+												onMouseEnter={(e) => {
+													e.currentTarget.style.color = '#2563EB';
+													e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+												}}
+												onMouseLeave={(e) => {
+													e.currentTarget.style.color = 'var(--text-secondary)';
+													e.currentTarget.style.backgroundColor = 'transparent';
+												}}
 												title="Edit User"
 											>
 												<Pencil1Icon className="w-5 h-5" />
 											</button>
 											<button
 												onClick={() => handleDeleteClick(user)}
-												className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
+												className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
+												style={{ color: 'var(--text-secondary)' }}
+												onMouseEnter={(e) => {
+													e.currentTarget.style.color = '#DC2626';
+													e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+												}}
+												onMouseLeave={(e) => {
+													e.currentTarget.style.color = 'var(--text-secondary)';
+													e.currentTarget.style.backgroundColor = 'transparent';
+												}}
 												title="Delete User"
 											>
 												<TrashIcon className="w-5 h-5" />

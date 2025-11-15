@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Button from './Button';
 import Input from './Input';
 import Dropdown from './Dropdown';
 import Icon from './Icon';
+import { ColorPicker } from './ColorPicker';
+import { useSocket } from '@/contexts/SocketContext';
+import { useSetup } from '@/contexts/SetupContext';
 
 interface AddChartModalProps {
 	isOpen: boolean;
@@ -12,9 +15,10 @@ interface AddChartModalProps {
 	onSave: (chartData: {
 		title: string;
 		type: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
-		dataSource: 'dispositions' | 'callOutcomes' | 'custom';
+		dataSource: string | string[]; // Support both single and multiple data sources
 		timeRange: 'daily' | 'weekly' | 'monthly';
 		color?: string;
+		colors?: Record<string, string>; // Map of data source to color
 		position: {
 			x: number;
 			y: number;
@@ -35,10 +39,13 @@ const chartTypeOptions = [
 	{ value: 'bubble', label: 'Bubble Chart' },
 ];
 
-const dataSourceOptions = [
-	{ value: 'dispositions', label: 'Call Dispositions' },
-	{ value: 'callOutcomes', label: 'Call Outcomes' },
-	{ value: 'custom', label: 'Custom Data' },
+// Disposition field mappings (same as AddWidgetModal)
+const DISPOSITION_FIELDS = [
+	{ value: 'Call Answered', label: 'Call Answered', fieldKey: 'callAnswered' },
+	{ value: 'Reason For Non Payment', label: 'Reason For Non Payment', fieldKey: 'reasonForNonPayment' },
+	{ value: 'Commitment Date', label: 'Commitment Date', fieldKey: 'commitmentDate' },
+	{ value: 'Amount To Pay', label: 'Amount To Pay', fieldKey: 'amountToPay' },
+	{ value: 'Reason For Not Watching', label: 'Reason For Not Watching', fieldKey: 'reasonForNotWatching' },
 ];
 
 const timeRangeOptions = [
@@ -52,12 +59,15 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 	onClose,
 	onSave,
 }) => {
+	const { isOffline } = useSocket();
+	const { setupData } = useSetup();
 	const [formData, setFormData] = useState({
 		title: '',
 		type: 'pie' as const,
-		dataSource: 'dispositions' as const,
+		dataSource: [] as string[], // Changed to array to support multiple data sources
 		timeRange: 'daily' as const,
 		color: '#050711',
+		colors: {} as Record<string, string>, // Map of data source to color
 		position: {
 			x: 20,
 			y: 20,
@@ -66,19 +76,120 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		}
 	});
 
-	const handleInputChange = (field: string) => (value: string) => {
-		setFormData(prev => ({ ...prev, [field]: value }));
+	// Build data source options (same as AddWidgetModal)
+	const dataSourceOptions = useMemo(() => {
+		const options: Array<{ value: string; label: string }> = [];
+
+		// Add disposition fields first
+		options.push(...DISPOSITION_FIELDS.map(f => ({ value: f.value, label: f.label })));
+
+		// Add common/default options
+		const commonOptions = [
+			{ value: 'Total Calls', label: 'Total Calls' },
+			{ value: 'Pending Dispositions', label: 'Pending Dispositions' },
+			{ value: 'Total Dispositions', label: 'Total Dispositions' },
+			{ value: 'Completed Calls', label: 'Completed Calls' },
+			{ value: 'Active Agents', label: 'Active Agents' },
+			{ value: 'Average Call Duration', label: 'Average Call Duration' },
+		];
+
+		options.push(...commonOptions);
+
+		// Add call outcomes if available
+		if (setupData.dashboardSettings.callOutcomes && setupData.dashboardSettings.callOutcomes.length > 0) {
+			setupData.dashboardSettings.callOutcomes.forEach((outcome) => {
+				options.push({
+					value: outcome.name,
+					label: outcome.name,
+				});
+			});
+		}
+
+		// Add disposition categories if available
+		if (setupData.dashboardSettings.dispositions && setupData.dashboardSettings.dispositions.length > 0) {
+			setupData.dashboardSettings.dispositions.forEach((disposition) => {
+				options.push({
+					value: disposition.name,
+					label: disposition.name,
+				});
+			});
+		}
+
+		// Add custom data option at the end
+		options.push({ value: 'custom', label: 'Custom Data' });
+
+		return options;
+	}, [setupData.dashboardSettings.callOutcomes, setupData.dashboardSettings.dispositions]);
+
+	const handleInputChange = (field: string) => (value: string | string[]) => {
+		// For non-multiple fields, ensure we only use string values
+		if (field === 'dataSource') {
+			const dataSourceArray = Array.isArray(value) ? value : [value];
+			setFormData(prev => ({ ...prev, [field]: dataSourceArray }));
+		} else {
+			// For other fields (type, timeRange, color), use string value
+			const stringValue = Array.isArray(value) ? value[0] : value;
+			setFormData(prev => ({ ...prev, [field]: stringValue }));
+		}
+	};
+
+	const handleDataSourceChange = (values: string | string[]) => {
+		const dataSourceArray = Array.isArray(values) ? values : [values];
+		setFormData(prev => {
+			// Initialize colors for new data sources with default color
+			const newColors = { ...prev.colors };
+			dataSourceArray.forEach(source => {
+				if (!newColors[source]) {
+					newColors[source] = prev.color || '#050711';
+				}
+			});
+			// Remove colors for deselected data sources
+			Object.keys(newColors).forEach(source => {
+				if (!dataSourceArray.includes(source)) {
+					delete newColors[source];
+				}
+			});
+			return { ...prev, dataSource: dataSourceArray, colors: newColors };
+		});
+	};
+
+	const handleColorChange = (dataSource: string, color: string) => {
+		setFormData(prev => ({
+			...prev,
+			colors: {
+				...prev.colors,
+				[dataSource]: color
+			}
+		}));
 	};
 
 	const handleSave = () => {
-		if (formData.title.trim()) {
-			onSave(formData);
+		if (formData.title.trim() && formData.dataSource.length > 0) {
+			// Convert to single string if only one source selected (for backward compatibility)
+			const dataSource = formData.dataSource.length === 1 
+				? formData.dataSource[0] 
+				: formData.dataSource;
+			
+			// If multiple data sources, use colors map; otherwise use single color
+			const chartData: any = {
+				...formData,
+				dataSource
+			};
+			
+			if (formData.dataSource.length > 1) {
+				chartData.colors = formData.colors;
+			} else {
+				chartData.color = formData.colors[formData.dataSource[0]] || formData.color;
+			}
+			
+			onSave(chartData);
 			setFormData({
 				title: '',
 				type: 'pie',
-				dataSource: 'dispositions',
+				dataSource: [],
 				timeRange: 'daily',
 				color: '#050711',
+				colors: {},
 				position: {
 					x: 20,
 					y: 20,
@@ -94,9 +205,10 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		setFormData({
 			title: '',
 			type: 'pie',
-			dataSource: 'dispositions',
+			dataSource: [],
 			timeRange: 'daily',
 			color: '#050711',
+			colors: {},
 			position: {
 				x: 20,
 				y: 20,
@@ -110,14 +222,59 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 bg-[#0b0d1293]/50 bg-opacity-50 flex items-center justify-center z-50">
-			<div className="bg-white w-full max-w-md mx-4">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+			<div 
+				className="dark:bg-gray-800 w-full max-w-md mx-4 shadow-lg"
+				style={{ backgroundColor: 'var(--accent-white)' }}
+			>
 				{/* Modal Header */}
-				<div className="flex justify-between items-center border-b border-[#E5E7EB] pb-4 p-6">
-					<h2 className="font-inter text-xl font-semibold text-[#050711]">Add New Chart</h2>
+				<div 
+					className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<div className="flex items-center gap-3">
+						<h2 
+							className="font-inter text-xl font-semibold dark:text-gray-100"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Add New Chart
+						</h2>
+						{isOffline && (
+							<span 
+								className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+								style={{
+									backgroundColor: 'rgba(220, 53, 69, 0.1)',
+									color: '#DC3545',
+									border: '1px solid rgba(220, 53, 69, 0.2)'
+								}}
+							>
+								<svg 
+									className="w-3 h-3" 
+									fill="none" 
+									stroke="currentColor" 
+									viewBox="0 0 24 24"
+								>
+									<path 
+										strokeLinecap="round" 
+										strokeLinejoin="round" 
+										strokeWidth={2} 
+										d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
+									/>
+								</svg>
+								Offline
+							</span>
+						)}
+					</div>
 					<button
 						onClick={onClose}
-						className="text-gray-400 hover:text-gray-600 transition-colors"
+						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+						style={{ color: 'var(--text-tertiary)' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = 'var(--text-secondary)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = 'var(--text-tertiary)';
+						}}
 					>
 						<Icon name="Close_round_light" size="lg" />
 					</button>
@@ -143,13 +300,46 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 					/>
 
 					<Dropdown
-						label="Data Source"
-						placeholder="Select data source"
+						label="Data Sources"
+						placeholder="Select data sources"
 						options={dataSourceOptions}
 						value={formData.dataSource}
-						onChange={handleInputChange('dataSource')}
+						onChange={handleDataSourceChange}
 						required
+						multiple={true}
 					/>
+
+					{/* Color pickers for each selected data source */}
+					{formData.dataSource.length > 0 && (
+						<div className="space-y-3">
+							<label
+								className="block text-sm font-medium dark:text-gray-300"
+								style={{ color: 'var(--text-secondary)' }}
+							>
+								Data Source Colors
+							</label>
+							{formData.dataSource.map((source) => {
+								const sourceLabel = dataSourceOptions.find(opt => opt.value === source)?.label || source;
+								return (
+									<div key={source} className="flex items-center gap-3">
+										<span
+											className="text-sm flex-1 dark:text-gray-400"
+											style={{ color: 'var(--text-tertiary)' }}
+										>
+											{sourceLabel}
+										</span>
+										<div className="w-48">
+											<ColorPicker
+												label=""
+												value={formData.colors[source] || formData.color}
+												onChange={(color) => handleColorChange(source, color)}
+											/>
+										</div>
+									</div>
+								);
+							})}
+						</div>
+					)}
 
 					<Dropdown
 						label="Time Range"
@@ -159,40 +349,48 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 						onChange={handleInputChange('timeRange')}
 						required
 					/>
-
-					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-2">
-							Chart Color
-						</label>
-						<div className="flex items-center gap-3">
-							<input
-								type="color"
-								value={formData.color}
-								onChange={(e) => handleInputChange('color')(e.target.value)}
-								className="w-12 h-10 border border-gray-300   cursor-pointer"
-							/>
-							<span className="text-sm text-gray-600">{formData.color}</span>
-						</div>
-					</div>
 				</div>
 
 				{/* Modal Footer */}
-				<div className="flex justify-end gap-3 p-6">
-					<Button
-						variant="outline"
-						size="md"
-						onClick={handleCancel}
-					>
-						Cancel
-					</Button>
-					<Button
-						variant="primary"
-						size="md"
-						onClick={handleSave}
-						disabled={!formData.title.trim()}
-					>
-						Add Chart
-					</Button>
+				<div 
+					className="flex items-center gap-3 p-6 border-t dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					{isOffline && (
+						<span className="text-xs flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
+							<svg 
+								className="w-4 h-4" 
+								fill="none" 
+								stroke="currentColor" 
+								viewBox="0 0 24 24"
+							>
+								<path 
+									strokeLinecap="round" 
+									strokeLinejoin="round" 
+									strokeWidth={2} 
+									d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
+								/>
+							</svg>
+							Will sync when online
+						</span>
+					)}
+					<div className="flex items-center gap-3 ml-auto">
+						<Button
+							variant="outline"
+							size="md"
+							onClick={handleCancel}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="primary"
+							size="md"
+							onClick={handleSave}
+							disabled={!formData.title.trim() || formData.dataSource.length === 0}
+						>
+							{isOffline ? 'Save Offline' : 'Add Chart'}
+						</Button>
+					</div>
 				</div>
 			</div>
 		</div>

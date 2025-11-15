@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Icon from './Icon';
 import Dropdown from './Dropdown';
@@ -9,13 +9,20 @@ import { HamburgerMenuIcon } from '@radix-ui/react-icons';
 import NotificationDropdown from './NotificationDropdown';
 import { sampleNotifications } from '@/data/notifications';
 import ThemeDropdown from './ThemeDropdown';
+import Image from 'next/image';
+import { plusJakartaStyle } from '../Options';
+import { useSocket } from '@/contexts/SocketContext';
+import { playNotificationSound } from '@/utils/soundEffects';
+import { useAuth } from '@/contexts/AuthContext';
+import { toastSuccess } from '@/utils/toastWithSound';
+import { setNavigating } from '@/utils/navigationState';
 
 interface DashboardHeaderProps {
 	companyName?: string;
 	userName?: string;
 	userEmail?: string;
 	userAvatar?: string;
-	isOnline?: boolean;
+	userIsOnline?: boolean;
 	onCompanyChange?: (company: string) => void;
 	onNotificationsClick?: () => void;
 	onSettingsClick?: () => void;
@@ -31,7 +38,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	userName = 'John Doe',
 	userEmail = 'johndoe@example.com',
 	userAvatar,
-	isOnline = true,
+	userIsOnline = true,
 	onCompanyChange,
 	onNotificationsClick,
 	onSettingsClick,
@@ -49,12 +56,88 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const pathname = usePathname();
 	const [hasStickyNotes, setHasStickyNotes] = useState(false);
 	const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket } = useSocket();
+	const { logout: authLogout, user: authUser } = useAuth();
+	const previousUnreadCount = useRef(0);
+	const previousPathname = useRef(pathname);
+	const isNavigating = useRef(false);
 
+	// Track navigation to prevent sounds during page switches
+	useEffect(() => {
+		if (previousPathname.current !== pathname) {
+			isNavigating.current = true;
+			previousPathname.current = pathname;
+			// Set global navigation state
+			setNavigating(true);
+			// Reset navigation flag after a short delay
+			setTimeout(() => {
+				isNavigating.current = false;
+			}, 1000);
+		}
+	}, [pathname]);
+
+	// Detect new unread notifications and play sound (works even when panel is closed)
+	// But don't play sounds during navigation
+	useEffect(() => {
+		// Don't play sounds if we're navigating between pages
+		if (isNavigating.current) {
+			// Update the count but don't play sounds
+			const unreadNotifications = sampleNotifications.filter(n => !n.isRead);
+			previousUnreadCount.current = unreadNotifications.length;
+			return;
+		}
+
+		const unreadNotifications = sampleNotifications.filter(n => !n.isRead);
+		const unreadCount = unreadNotifications.length;
+		
+		// Play sound when new unread notifications arrive (count increases)
+		if (unreadCount > previousUnreadCount.current) {
+			// Play sound for each new notification
+			const newNotifications = unreadNotifications.slice(previousUnreadCount.current);
+			newNotifications.forEach((notification, index) => {
+				setTimeout(() => {
+					playNotificationSound('new_notification');
+				}, index * 150); // Stagger sounds if multiple notifications arrive
+			});
+		}
+		
+		previousUnreadCount.current = unreadCount;
+	}, [sampleNotifications, pathname]);
 
 	const handleNotificationClick = () => {
+		// Don't play sound if we're navigating - NotificationDropdown will handle it
+		if (isNavigating.current) {
+			setIsNotificationPanelOpen(!isNotificationPanelOpen);
+			return;
+		}
+		
 		setIsNotificationPanelOpen(!isNotificationPanelOpen);
+		// Note: Sound is now handled by NotificationDropdown component to avoid duplicate sounds
 		// Close profile dropdown if open
 		// setShowDropdown(false);
+	};
+
+	// Handle logout
+	const handleLogout = async () => {
+		try {
+			// Disconnect socket connection
+			disconnectSocket();
+
+			// Logout from auth context
+			await authLogout();
+
+			// Show success message
+			toastSuccess('Logged out successfully');
+
+			// Redirect to login page
+			setTimeout(() => {
+				router.push('/login');
+			}, 500);
+		} catch (error) {
+			console.error('Logout error:', error);
+			// Even if there's an error, redirect to login
+			router.push('/login');
+		}
 	};
 
 	// Check if sticky notes exist in localStorage
@@ -125,6 +208,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				</button>
 
 				<div className="flex-1 md:flex-none">
+					<div className="flex items-center gap-2">
+						<Icon name="peoplelyHalf" size="xl" />
+						<span className="font-semibold text-[25px] leading-[28px] flex items-center text-[#050711]"
+							style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>Peoplely</span>
+
+					</div>
+					{/* <Image src="/logo/peoplelyHalf.svg" alt="Peoplely logo" width={140} height={40} priority /> */}
 					{/* This space can be used for logo or main title */}
 				</div>
 
@@ -132,8 +222,38 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 				{/* Right side - Icons */}
 				<div className="flex items-center justify-center gap-4">
+					{/* Offline Indicator */}
+					{(isOffline || socketStatus === 'offline') && (
+						<div
+							className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+							style={{
+								backgroundColor: 'var(--status-error)',
+								color: 'var(--text-inverse)',
+							}}
+							title="Offline - Messages will be queued"
+						>
+							<svg
+								className="w-4 h-4"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+								xmlns="http://www.w3.org/2000/svg"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
+								/>
+							</svg>
+							<span className="text-xs font-medium hidden sm:inline">Offline</span>
+						</div>
+					)}
+
 					{/* Dark Mode Toggle Dropdown */}
-					<ThemeDropdown />
+					<ThemeDropdown
+						inputClassName="h-8 mt-2"
+					/>
 
 					<Dropdown
 						label=""
@@ -148,7 +268,19 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					{hasStickyNotes && (
 						<button
 							onClick={handleNoteIconClick}
-							className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer relative"
+							className="p-2 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer relative"
+							style={{
+								color: 'var(--text-tertiary)',
+								backgroundColor: 'transparent'
+							}}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.color = 'var(--text-primary)';
+								e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.color = 'var(--text-tertiary)';
+								e.currentTarget.style.backgroundColor = 'transparent';
+							}}
 							title="View Sticky Notes"
 						>
 							<Icon name="Edit_duotone_line" size="3xl" />
@@ -181,13 +313,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 					{/* User Dropdown */}
 					<UserDropdown
-						userName={userName}
-						userEmail={userEmail}
-						userAvatar={userAvatar}
-						isOnline={isOnline}
+						userName={authUser?.name || userName}
+						userEmail={authUser?.email || userEmail}
+						userAvatar={authUser?.avatar || userAvatar}
+						isOnline={userIsOnline && isOnline && !isOffline && socketStatus !== 'offline'}
 						onStatusClick={onStatusClick}
 						onEditProfileClick={onEditProfileClick}
-						onLogoutClick={onLogoutClick}
+						onLogoutClick={onLogoutClick || handleLogout}
 					/>
 				</div>
 			</div>

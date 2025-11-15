@@ -66,10 +66,31 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 				{roles.map((role) => (
 					<div
 						key={role.id}
-						className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow"
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)',
+							boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+						}}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
+						}}
 					>
-						<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{role.name}</h3>
-						<p className="text-sm text-gray-600 dark:text-gray-400">Users: {role.userCount}</p>
+						<h3
+							className="text-lg font-semibold dark:text-gray-100 mb-2"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							{role.name}
+						</h3>
+						<p
+							className="text-sm dark:text-gray-400"
+							style={{ color: 'var(--text-tertiary)' }}
+						>
+							Users: {role.userCount}
+						</p>
 					</div>
 				))}
 			</div>

@@ -71,21 +71,50 @@ export default function PermissionAccessLevelsPage() {
 						onClick={() => router.back()}
 					/>
 					<div>
-						<h1 className="font-lato not-italic font-semibold text-[24px] leading-[150%] text-[#3A4050] dark:text-gray-100">Permission Access Levels</h1>
-						<p className="font-lato not-italic font-normal text-[16px] leading-[150%] text-[#6D7280] dark:text-gray-400">Manage user roles permissions</p>
+						<h1 
+							className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							Permission Access Levels
+						</h1>
+						<p 
+							className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
+							style={{ color: 'var(--text-tertiary)' }}
+						>
+							Manage user roles permissions
+						</p>
 					</div>
 				</div>
 
 				{/* Role Tabs */}
-				<div className="flex gap-1 bg-gray-200 dark:bg-gray-700 p-1   w-fit">
+				<div 
+					className="flex gap-1 dark:bg-gray-700 p-1 w-fit"
+					style={{ backgroundColor: 'var(--bg-primary)' }}
+				>
 					{roleManagementSettings.roles.map((role) => (
 						<button
 							key={role.id}
 							onClick={() => handleRoleChange(role.id)}
-							className={`px-4 py-2 cursor-pointer  font-medium transition-colors font-lato text-base leading-[150%] text-[#3A4050] dark:text-gray-300 ${permissionAccessSettings.selectedRole === role.id
-								? 'bg-[#050711] dark:bg-gray-100 text-white dark:text-gray-900'
-								: 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+							className={`px-4 py-2 cursor-pointer font-medium transition-colors font-lato text-base leading-[150%] dark:text-gray-300 ${permissionAccessSettings.selectedRole === role.id
+								? 'dark:bg-gray-100 dark:text-gray-900'
+								: 'dark:text-gray-400 dark:hover:text-gray-200'
 								}`}
+							style={permissionAccessSettings.selectedRole === role.id ? {
+								backgroundColor: 'var(--text-primary)',
+								color: 'white'
+							} : {
+								color: 'var(--text-tertiary)'
+							}}
+							onMouseEnter={(e) => {
+								if (permissionAccessSettings.selectedRole !== role.id) {
+									e.currentTarget.style.color = 'var(--text-secondary)';
+								}
+							}}
+							onMouseLeave={(e) => {
+								if (permissionAccessSettings.selectedRole !== role.id) {
+									e.currentTarget.style.color = 'var(--text-tertiary)';
+								}
+							}}
 						>
 							{role.name}
 						</button>
@@ -96,21 +125,49 @@ export default function PermissionAccessLevelsPage() {
 			{/* Permission Categories */}
 			<div className="space-y-6">
 				{permissionAccessSettings.permissionCategories.map((category) => (
-					<div key={category.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 ">
-						<div className="p-6 border-b border-gray-200 dark:border-gray-700">
+					<div 
+						key={category.id} 
+						className="dark:bg-gray-800 border dark:border-gray-700"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
+						<div 
+							className="p-6 border-b dark:border-gray-700"
+							style={{ borderColor: 'var(--light-gray)' }}
+						>
 							<div className="flex items-center gap-3">
-								<div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+								<div 
+									className="w-8 h-8 dark:bg-gray-700 rounded-full flex items-center justify-center"
+									style={{ backgroundColor: 'var(--bg-primary)' }}
+								>
 									<Icon name={category.icon} size="md" />
 								</div>
-								<h2 className="font-inter text-lg font-semibold text-[#050711] dark:text-gray-100">{category.name}</h2>
+								<h2 
+									className="font-inter text-lg font-semibold dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{category.name}
+								</h2>
 							</div>
 						</div>
 						<div className="p-6 space-y-4">
 							{category.permissions.map((permission) => (
 								<div key={permission.id} className="grid grid-cols-2 items-center justify-between">
 									<div className="flex-1">
-										<h3 className="font-inter text-sm font-medium text-[#050711] dark:text-gray-100 mb-1">{permission.name}</h3>
-										<p className="font-lato text-xs text-gray-600 dark:text-gray-400 col-span-2">{permission.description}</p>
+										<h3 
+											className="font-inter text-sm font-medium dark:text-gray-100 mb-1"
+											style={{ color: 'var(--text-primary)' }}
+										>
+											{permission.name}
+										</h3>
+										<p 
+											className="font-lato text-xs dark:text-gray-400 col-span-2"
+											style={{ color: 'var(--text-tertiary)' }}
+										>
+											{permission.description}
+										</p>
 									</div>
 									<div className="col-span-1">
 										<Toggle

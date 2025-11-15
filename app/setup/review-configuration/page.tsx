@@ -101,25 +101,60 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 	return (
 		<div className="w-full h-full">
 			<div className="mb-8">
-				<h1 className="font-lato not-italic font-semibold text-[24px] leading-[150%] text-[#3A4050] dark:text-gray-100">Review Your CRM Configuration</h1>
-				<p className="font-lato not-italic font-normal text-[16px] leading-[150%] text-[#6D7280] dark:text-gray-400">Please review all your selections before submitting for approval</p>
+				<h1 
+					className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
+					style={{ color: 'var(--text-secondary)' }}
+				>
+					Review Your CRM Configuration
+				</h1>
+				<p 
+					className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
+					style={{ color: 'var(--text-tertiary)' }}
+				>
+					Please review all your selections before submitting for approval
+				</p>
 			</div>
 
 			{/* Configuration Cards */}
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 				{configurationCards.map((card) => (
-					<div key={card.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 ">
-						<div className="p-6 border-b border-gray-200 dark:border-gray-700">
+					<div 
+						key={card.id} 
+						className="dark:bg-gray-800 border dark:border-gray-700"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
+						<div 
+							className="p-6 border-b dark:border-gray-700"
+							style={{ borderColor: 'var(--light-gray)' }}
+						>
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-3">
-									<div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+									<div 
+										className="w-8 h-8 dark:bg-gray-700 rounded-full flex items-center justify-center"
+										style={{ backgroundColor: 'var(--bg-primary)' }}
+									>
 										<Icon name={card.icon} size="md" />
 									</div>
-									<h2 className="font-inter text-lg font-semibold text-[#050711] dark:text-gray-100">{card.title}</h2>
+									<h2 
+										className="font-inter text-lg font-semibold dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{card.title}
+									</h2>
 								</div>
 								<button
 									onClick={() => handleEditStep(card.step)}
-									className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+									className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+									style={{ color: 'var(--text-tertiary)' }}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.color = 'var(--text-secondary)';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.color = 'var(--text-tertiary)';
+									}}
 									title={`Edit ${card.title}`}
 								>
 									<Icon name="Edit_duotone_line" size="sm" />
@@ -130,8 +165,18 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 						<div className="p-6 space-y-3">
 							{card.details.map((detail, index) => (
 								<div key={index} className="flex justify-between items-start">
-									<span className="font-lato text-sm text-gray-600 dark:text-gray-400 flex-1">{detail.label}:</span>
-									<span className="font-lato text-sm font-medium text-[#050711] dark:text-gray-100 text-right ml-4">{detail.value}</span>
+									<span 
+										className="font-lato text-sm dark:text-gray-400 flex-1"
+										style={{ color: 'var(--text-tertiary)' }}
+									>
+										{detail.label}:
+									</span>
+									<span 
+										className="font-lato text-sm font-medium dark:text-gray-100 text-right ml-4"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{detail.value}
+									</span>
 								</div>
 							))}
 						</div>

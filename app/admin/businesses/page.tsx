@@ -83,7 +83,12 @@ const BusinessesManagementPage: React.FC = () => {
 		<div  >
 			{/* Header Section */}
 			<div className="mb-6">
-				<h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Businesses Management</h1>
+				<h1 
+					className="text-2xl font-semibold dark:text-gray-100 mb-2"
+					style={{ color: 'var(--text-primary)' }}
+				>
+					Businesses Management
+				</h1>
 			</div>
 
 			{/* Search and Filter Section */}
@@ -108,61 +113,140 @@ const BusinessesManagementPage: React.FC = () => {
 			</div>
 
 			{/* Businesses Table */}
-			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+			<div 
+				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-						<thead className="bg-gray-50 dark:bg-gray-700">
+					<table 
+						className="min-w-full divide-y dark:divide-gray-700"
+						style={{ borderColor: 'var(--light-gray)' }}
+					>
+						<thead 
+							className="dark:bg-gray-700 border-b dark:border-gray-700"
+							style={{
+								backgroundColor: 'var(--bg-primary)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							<tr>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+								<th 
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
 									Company Name
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+								<th 
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
 									Status
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+								<th 
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
 									Users
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+								<th 
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
 									Contact Person
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+								<th 
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
 									Action
 								</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+						<tbody 
+							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+							style={{
+								backgroundColor: 'var(--accent-white)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							{paginatedBusinesses.length === 0 ? (
 								<tr>
-									<td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+									<td 
+										colSpan={5} 
+										className="px-6 py-12 text-center dark:text-gray-400"
+										style={{ color: 'var(--text-tertiary)' }}
+									>
 										No businesses found.
 									</td>
 								</tr>
 							) : (
 								paginatedBusinesses.map((business) => (
-									<tr key={business.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+									<tr 
+										key={business.id} 
+										className="dark:hover:bg-gray-700 transition-colors"
+										style={{ borderColor: 'var(--light-gray)' }}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+										}}
+									>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm font-medium text-gray-900 dark:text-gray-100">{business.companyName}</span>
+											<span 
+												className="text-sm font-medium dark:text-gray-100"
+												style={{ color: 'var(--text-primary)' }}
+											>
+												{business.companyName}
+											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<span
 												className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${business.status === 'Active'
-													? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
-													: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
+													? 'dark:bg-green-900/30 dark:text-green-400'
+													: 'dark:bg-red-900/30 dark:text-red-400'
 													}`}
+												style={business.status === 'Active' ? {
+													backgroundColor: 'rgba(34, 197, 94, 0.1)',
+													color: '#16A34A'
+												} : {
+													backgroundColor: 'rgba(220, 38, 38, 0.1)',
+													color: '#DC2626'
+												}}
 											>
 												{business.status}
 											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm text-gray-600 dark:text-gray-400">{business.users}</span>
+											<span 
+												className="text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{business.users}
+											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm text-gray-600 dark:text-gray-400">{business.contactPerson}</span>
+											<span 
+												className="text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{business.contactPerson}
+											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<button
 												onClick={() => handleViewDetail(business.id)}
-												className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors cursor-pointer"
+												className="dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors cursor-pointer"
+												style={{ color: '#2563EB' }}
+												onMouseEnter={(e) => {
+													e.currentTarget.style.color = '#1D4ED8';
+												}}
+												onMouseLeave={(e) => {
+													e.currentTarget.style.color = '#2563EB';
+												}}
 											>
 												View Detail
 											</button>

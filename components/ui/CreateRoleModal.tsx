@@ -46,13 +46,31 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-[#0b0d1293]/50 dark:bg-black/50 bg-opacity-50 flex items-center justify-center z-50">
-			<div className="bg-white dark:bg-gray-800 w-full max-w-md mx-4">
+			<div 
+				className="dark:bg-gray-800 w-full max-w-md mx-4"
+				style={{ backgroundColor: 'var(--accent-white)' }}
+			>
 				{/* Modal Header */}
-				<div className="flex justify-between items-center border-b border-[#E5E7EB] dark:border-gray-700 pb-4 p-6">
-					<h2 className="font-inter text-xl font-semibold text-[#050711] dark:text-gray-100">Create New Role</h2>
+				<div 
+					className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<h2 
+						className="font-inter text-xl font-semibold dark:text-gray-100"
+						style={{ color: 'var(--text-primary)' }}
+					>
+						Create New Role
+					</h2>
 					<button
 						onClick={onClose}
-						className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+						className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+						style={{ color: 'var(--text-tertiary)' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = 'var(--text-secondary)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = 'var(--text-tertiary)';
+						}}
 					>
 						<Icon name="Close_round_light" size="lg" />
 					</button>
@@ -80,7 +98,10 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
 				</div>
 
 				{/* Modal Footer */}
-				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+				<div 
+					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<Button
 						variant="outline"
 						size="md"

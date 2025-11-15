@@ -180,7 +180,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 		setAlpha(newAlpha);
 	};
 
-	const currentColor = hslToHex(hsl.h, hsl.s, hsl.l);
+	const currentColor = value && value.startsWith('#') ? value : hslToHex(hsl.h, hsl.s, hsl.l);
 
 	return (
 		<div className={`relative ${className}`} ref={pickerRef}>
@@ -193,9 +193,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 			<div className="flex items-center gap-3">
 				<div
 					ref={triggerRef}
-					className="w-8 h-8 border border-gray-300 cursor-pointer"
+					className="w-8 h-8 border border-gray-300 cursor-pointer rounded shadow-sm"
 					style={{ backgroundColor: currentColor }}
 					onClick={() => setIsOpen(!isOpen)}
+					title={currentColor}
 				/>
 
 				<div className="flex-1">

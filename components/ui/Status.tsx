@@ -16,6 +16,7 @@ interface StatusItem {
 	roleSelection?: 'all' | 'selected';
 	selectedRoles?: string[];
 	icon?: string;
+	color: string;
 }
 
 interface StatusFormData {
@@ -23,6 +24,7 @@ interface StatusFormData {
 	description: string;
 	roleSelection: 'all' | 'selected';
 	selectedRoles: string[];
+	color: string;
 }
 
 interface StatusProps {
@@ -43,6 +45,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 			description: 'The user is logged In and ready to receive calls.',
 			role: 'All users',
 			roleSelection: 'all',
+			color: '#10B981',
 		},
 		{
 			id: '2',
@@ -50,6 +53,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 			description: 'The user is currently engaged in a call or activity and cannot receive new calls',
 			role: 'All users',
 			roleSelection: 'all',
+			color: '#EF4444',
 		},
 		{
 			id: '3',
@@ -58,6 +62,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 			role: 'Agents',
 			roleSelection: 'selected',
 			selectedRoles: ['agents'],
+			color: '#3B82F6',
 		},
 		{
 			id: '4',
@@ -66,6 +71,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 			role: 'Agents, Supervisors',
 			roleSelection: 'selected',
 			selectedRoles: ['agents', 'supervisors'],
+			color: '#F59E0B',
 		},
 		{
 			id: '5',
@@ -73,6 +79,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 			description: 'The user is temporarily unavailable but still logged In (restroom break).',
 			role: 'All users',
 			roleSelection: 'all',
+			color: '#A855F7',
 		},
 		{
 			id: '6',
@@ -80,6 +87,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 			description: 'The user is taking a scheduled break.',
 			role: 'All users',
 			roleSelection: 'all',
+			color: '#6366F1',
 		},
 		{
 			id: '7',
@@ -88,6 +96,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 			role: 'Supervisors',
 			roleSelection: 'selected',
 			selectedRoles: ['supervisors'],
+			color: '#14B8A6',
 		},
 	]);
 
@@ -148,6 +157,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 				role: roleDisplay,
 				roleSelection: data.roleSelection,
 				selectedRoles: data.selectedRoles,
+				color: data.color || '#6C8B7D',
 			};
 			setStatuses(prev => [...prev, newStatus]);
 		}
@@ -185,53 +195,147 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 			</div>
 
 			{/* Status Table */}
-			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+			<div
+				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-						<thead className="bg-gray-50 dark:bg-gray-700">
+					<table
+						className="min-w-full divide-y dark:divide-gray-700"
+						style={{ borderColor: 'var(--light-gray)' }}
+					>
+						<thead
+							className="dark:bg-gray-700 border-b dark:border-gray-700"
+							style={{
+								backgroundColor: 'var(--bg-primary)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							<tr>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Statuses</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Description</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Role</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wider">Action</th>
+								<th
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Statuses
+								</th>
+								<th
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Description
+								</th>
+								<th
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Role
+								</th>
+								<th
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Action
+								</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+						<tbody
+							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+							style={{
+								backgroundColor: 'var(--accent-white)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							{statuses.length === 0 ? (
 								<tr>
-									<td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+									<td
+										colSpan={4}
+										className="px-6 py-12 text-center dark:text-gray-400"
+										style={{ color: 'var(--text-tertiary)' }}
+									>
 										No statuses configured yet.
 									</td>
 								</tr>
 							) : (
 								statuses.map((status) => (
-									<tr key={status.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+									<tr
+										key={status.id}
+										className="dark:hover:bg-gray-700 transition-colors"
+										style={{ borderColor: 'var(--light-gray)' }}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+										}}
+									>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<div className="flex items-center gap-3">
-												<div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center shrink-0">
-													<div className="w-6 h-6 rounded-full bg-gray-400 dark:bg-gray-500"></div>
+												<div
+													className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+													style={{ backgroundColor: 'var(--bg-primary)' }}
+												>
+													<div
+														className="w-6 h-6 rounded-full"
+														style={{ backgroundColor: status.color || '#9CA3AF' }}
+													></div>
 												</div>
-												<span className="font-medium text-gray-900 dark:text-gray-100">{status.name}</span>
+												<span
+													className="font-medium dark:text-gray-100"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													{status.name}
+												</span>
 											</div>
 										</td>
 										<td className="px-6 py-4">
-											<span className="text-sm text-gray-600 dark:text-gray-400">{status.description}</span>
+											<span
+												className="text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{status.description}
+											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm text-gray-600 dark:text-gray-400">{formatRoleDisplay(status)}</span>
+											<span
+												className="text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{formatRoleDisplay(status)}
+											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<div className="flex items-center gap-3">
 												<button
 													onClick={() => handleEdit(status.id)}
-													className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+													className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+													style={{ color: 'var(--text-tertiary)' }}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.color = 'var(--text-secondary)';
+														e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.color = 'var(--text-tertiary)';
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
 													aria-label="Edit status"
 												>
 													<Pencil1Icon className="w-4 h-4" />
 												</button>
 												<button
 													onClick={() => handleDelete(status.id)}
-													className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+													className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-700 transition-colors"
+													style={{ color: 'var(--text-tertiary)' }}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.color = '#DC2626';
+														e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.color = 'var(--text-tertiary)';
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
 													aria-label="Delete status"
 												>
 													<TrashIcon className="w-4 h-4" />
@@ -259,6 +363,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 					description: editingStatus.description,
 					roleSelection: editingStatus.roleSelection || 'all',
 					selectedRoles: editingStatus.selectedRoles || [],
+					color: editingStatus.color,
 				} : null}
 			/>
 

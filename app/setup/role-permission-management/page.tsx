@@ -102,8 +102,18 @@ export default function RolePermissionManagementPage() {
 							onClick={() => router.back()}
 						/>
 						<div>
-							<h1 className="font-lato not-italic font-semibold text-[24px] leading-[150%] text-[#3A4050] dark:text-gray-100">Role & Permission Management</h1>
-							<p className="font-lato not-italic font-normal text-[16px] leading-[150%] text-[#6D7280] dark:text-gray-400">Manage user roles and their associated permissions</p>
+							<h1 
+								className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
+								style={{ color: 'var(--text-secondary)' }}
+							>
+								Role & Permission Management
+							</h1>
+							<p 
+								className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
+								Manage user roles and their associated permissions
+							</p>
 						</div>
 					</div>
 					<Button
@@ -123,51 +133,129 @@ export default function RolePermissionManagementPage() {
 			{/* Role Cards */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 				{roleManagementSettings.roles.map((role) => (
-					<div key={role.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700   p-6 relative group">
+					<div 
+						key={role.id} 
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative group"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
 						<div className="flex items-center justify-between mb-1">
 							<div className="flex items-center gap-3">
-								<div className="w-8 h-8    flex items-center justify-center">
+								<div className="w-8 h-8 flex items-center justify-center">
 									<Icon name="darhboard" size="md" />
 								</div>
 							</div>
 							{role.id !== 'administrator' && (
 								<button
 									onClick={() => handleDeleteRole(role.id)}
-									className="duration-200 p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full cursor-pointer w-8 h-8 flex items-center justify-center"
+									className="duration-200 p-1 dark:hover:bg-red-900/20 rounded-full cursor-pointer w-8 h-8 flex items-center justify-center"
+									style={{
+										backgroundColor: 'transparent'
+									}}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.backgroundColor = 'transparent';
+									}}
 									title="Delete role"
 								>
 									<Icon name="Trash_light" size="sm" />
 								</button>
 							)}
 						</div>
-						<h3 className="font-lato font-medium text-base leading-[150%] text-[#3A4050] dark:text-gray-100">{role.name}</h3>
-						<p className="font-lato font-normal text-[12px] leading-[150%] text-[#6D7280] dark:text-gray-400">{role.description}</p>
+						<h3 
+							className="font-lato font-medium text-base leading-[150%] dark:text-gray-100"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							{role.name}
+						</h3>
+						<p 
+							className="font-lato font-normal text-[12px] leading-[150%] dark:text-gray-400"
+							style={{ color: 'var(--text-tertiary)' }}
+						>
+							{role.description}
+						</p>
 					</div>
 				))}
 			</div>
 
 			{/* Module Permission Overview */}
-			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 ">
-				<div className="p-6 border-b border-gray-200 dark:border-gray-700">
-					<h2 className="font-inter text-xl font-semibold text-[#050711] dark:text-gray-100">Module Permission Overview</h2>
+			<div 
+				className="dark:bg-gray-800 border dark:border-gray-700"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
+				<div 
+					className="p-6 border-b dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<h2 
+						className="font-inter text-xl font-semibold dark:text-gray-100"
+						style={{ color: 'var(--text-primary)' }}
+					>
+						Module Permission Overview
+					</h2>
 				</div>
 
 				<div className="overflow-x-auto">
 					<table className="min-w-full">
-						<thead className="bg-gray-50 dark:bg-gray-700">
-							<tr>
-								<th className="py-4 px-6 text-left text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Features/Modules</th>
+						<thead 
+							className="dark:bg-gray-700"
+							style={{ backgroundColor: 'var(--bg-primary)' }}
+						>
+							<tr 
+								style={{
+									borderBottom: '1px solid',
+									borderBottomColor: 'var(--light-gray)'
+								}}
+							>
+								<th 
+									className="py-4 px-6 text-left text-sm font-medium dark:text-gray-400 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Features/Modules
+								</th>
 								{roleManagementSettings.roles.map((role) => (
-									<th key={role.id} className="py-4 px-6 text-left text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+									<th 
+										key={role.id} 
+										className="py-4 px-6 text-left text-sm font-medium dark:text-gray-400 uppercase tracking-wider"
+										style={{ color: 'var(--text-primary)' }}
+									>
 										{role.name}
 									</th>
 								))}
 							</tr>
 						</thead>
-						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-							{roleManagementSettings.modules.map((module) => (
-								<tr key={module.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-									<td className="py-4 px-6 text-sm font-medium text-[#050711] dark:text-gray-100">
+						<tbody 
+							className="dark:bg-gray-800"
+							style={{
+								backgroundColor: 'var(--accent-white)'
+							}}
+						>
+							{roleManagementSettings.modules.map((module, index) => (
+								<tr 
+									key={module.id} 
+									className="dark:hover:bg-gray-700"
+									style={{
+										borderBottom: index !== roleManagementSettings.modules.length - 1 ? '1px solid' : 'none',
+										borderBottomColor: index !== roleManagementSettings.modules.length - 1 ? 'var(--light-gray)' : 'transparent'
+									}}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+									}}
+								>
+									<td 
+										className="py-4 px-6 text-sm font-medium dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
 										{module.name}
 									</td>
 									{roleManagementSettings.roles.map((role) => (

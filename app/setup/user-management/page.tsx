@@ -127,21 +127,56 @@ export default function UserManagementPage() {
 	return (
 		<div className="w-full h-full">
 			<div className="mb-8">
-				<h1 className="font-lato not-italic font-semibold text-[24px] leading-[150%] text-[#3A4050] dark:text-gray-100">User Management</h1>
-				<p className="font-lato not-italic font-normal text-[16px] leading-[150%] text-[#6D7280] dark:text-gray-400">Manage user accounts, roles, and permissions for your CRM system</p>
+				<h1 
+					className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
+					style={{ color: 'var(--text-secondary)' }}
+				>
+					User Management
+				</h1>
+				<p 
+					className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
+					style={{ color: 'var(--text-tertiary)' }}
+				>
+					Manage user accounts, roles, and permissions for your CRM system
+				</p>
 			</div>
 
-			<div className="flex  md-flex-row gap-6 mb-8 bg-(--accent-white) dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6">
+			<div 
+				className="flex md-flex-row gap-6 mb-8 dark:bg-gray-800 border dark:border-gray-700 p-6"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
 				{/* Feature Cards */}
-				<div className="flex  md-flex-row gap-6 mb-8">
+				<div className="flex md-flex-row gap-6 mb-8">
 					{/* Define User Roles Card */}
-					<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6">
+					<div 
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
 						<div className="flex flex-col w-[300px]">
-							<div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+							<div 
+								className="w-12 h-12 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4"
+								style={{ backgroundColor: 'var(--bg-primary)' }}
+							>
 								<Icon name="Group_light" size="xl" />
 							</div>
-							<h3 className="font-inter text-lg font-semibold text-[#050711] dark:text-gray-100 mb-2">Define User Roles</h3>
-							<p className="font-lato text-sm text-gray-600 dark:text-gray-400 mb-4">Set up different roles and their associated permissions within your CRM system.</p>
+							<h3 
+								className="font-inter text-lg font-semibold dark:text-gray-100 mb-2"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								Define User Roles
+							</h3>
+							<p 
+								className="font-lato text-sm dark:text-gray-400 mb-4"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
+								Set up different roles and their associated permissions within your CRM system.
+							</p>
 							<Button
 								variant="primary"
 								size="md"
@@ -154,13 +189,32 @@ export default function UserManagementPage() {
 					</div>
 
 					{/* Access Controls Card */}
-					<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6">
+					<div 
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
 						<div className="flex flex-col w-[300px]">
-							<div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+							<div 
+								className="w-12 h-12 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4"
+								style={{ backgroundColor: 'var(--bg-primary)' }}
+							>
 								<Icon name="Chield_light" size="xl" />
 							</div>
-							<h3 className="font-inter text-lg font-semibold text-[#050711] dark:text-gray-100 mb-2">Access Controls</h3>
-							<p className="font-lato text-sm text-gray-600 dark:text-gray-400 mb-4">Define detailed permissions and access levels for each role.</p>
+							<h3 
+								className="font-inter text-lg font-semibold dark:text-gray-100 mb-2"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								Access Controls
+							</h3>
+							<p 
+								className="font-lato text-sm dark:text-gray-400 mb-4"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
+								Define detailed permissions and access levels for each role.
+							</p>
 							<Button
 								variant="primary"
 								size="md"
@@ -175,11 +229,25 @@ export default function UserManagementPage() {
 			</div>
 
 
-			<div className="bg-(--accent-white) dark:bg-gray-800 border border-gray-200 dark:border-gray-700 w-full h-full">
-				<div className="box-border w-full   border-b border-[#E5E7EB] dark:border-gray-700  p-6">
+			<div 
+				className="dark:bg-gray-800 border dark:border-gray-700 w-full h-full"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
+				<div 
+					className="box-border w-full border-b dark:border-gray-700 p-6"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<div className="flex justify-between items-center">
 						<div>
-							<h2 className="font-inter text-xl font-semibold text-[#050711] dark:text-gray-100 mb-2">Team Members</h2>
+							<h2 
+								className="font-inter text-xl font-semibold dark:text-gray-100 mb-2"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								Team Members
+							</h2>
 						</div>
 						<Button
 							variant="primary"
@@ -198,19 +266,75 @@ export default function UserManagementPage() {
 				<div className="p-6">
 					{/* Users Table */}
 					<div className="overflow-x-auto">
-						<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-							<thead className="bg-gray-50 dark:bg-gray-700">
-								<tr>
-									<th scope="col" className="py-3 px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-									<th scope="col" className="py-3 px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-									<th scope="col" className="py-3 px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Phone</th>
-									<th scope="col" className="py-3 px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
-									<th scope="col" className="py-3 px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-									<th scope="col" className="py-3 px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Login</th>
-									<th scope="col" className="py-3 px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+						<table className="min-w-full divide-y dark:divide-gray-700">
+							<thead 
+								className="dark:bg-gray-700"
+								style={{ backgroundColor: 'var(--bg-primary)' }}
+							>
+								<tr
+									style={{
+										borderBottom: '1px solid',
+										borderBottomColor: 'var(--light-gray)'
+									}}
+								>
+									<th 
+										scope="col" 
+										className="py-3 px-6 text-left text-xs font-medium dark:text-gray-400 uppercase tracking-wider"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										Name
+									</th>
+									<th 
+										scope="col" 
+										className="py-3 px-6 text-left text-xs font-medium dark:text-gray-400 uppercase tracking-wider"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										Email
+									</th>
+									<th 
+										scope="col" 
+										className="py-3 px-6 text-left text-xs font-medium dark:text-gray-400 uppercase tracking-wider"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										Phone
+									</th>
+									<th 
+										scope="col" 
+										className="py-3 px-6 text-left text-xs font-medium dark:text-gray-400 uppercase tracking-wider"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										Role
+									</th>
+									<th 
+										scope="col" 
+										className="py-3 px-6 text-left text-xs font-medium dark:text-gray-400 uppercase tracking-wider"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										Status
+									</th>
+									<th 
+										scope="col" 
+										className="py-3 px-6 text-left text-xs font-medium dark:text-gray-400 uppercase tracking-wider"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										Last Login
+									</th>
+									<th 
+										scope="col" 
+										className="py-3 px-6 text-left text-xs font-medium dark:text-gray-400 uppercase tracking-wider"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										Actions
+									</th>
 								</tr>
 							</thead>
-							<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+							<tbody 
+								className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+								style={{
+									backgroundColor: 'var(--accent-white)',
+									borderColor: 'var(--light-gray)'
+								}}
+							>
 								{userManagementSettings.users.length === 0 ? (
 									<tr>
 										<td colSpan={7} className="py-12 px-6">
@@ -220,19 +344,53 @@ export default function UserManagementPage() {
 													alt="No users added"
 													className="w-32 h-32 mb-4 opacity-60"
 												/>
-												<h3 className="font-inter text-base font-medium text-[#050711] dark:text-gray-100 mb-2">No Team Members Yet</h3>
-												<p className="font-lato text-sm text-gray-600 dark:text-gray-400 mb-4">Add your first team member to get started</p>
+												<h3 
+													className="font-inter text-base font-medium dark:text-gray-100 mb-2"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													No Team Members Yet
+												</h3>
+												<p 
+													className="font-lato text-sm dark:text-gray-400 mb-4"
+													style={{ color: 'var(--text-tertiary)' }}
+												>
+													Add your first team member to get started
+												</p>
 
 											</div>
 										</td>
 									</tr>
 								) : (
 									userManagementSettings.users.map((user, index) => (
-										<tr key={user.id} className={index !== userManagementSettings.users.length - 1 ? 'border-b border-[#E5E7EB] dark:border-gray-700' : ''}>
-											<td className="py-4 px-6 font-inter text-sm text-[#050711] dark:text-gray-100">{user.name}</td>
-											<td className="py-4 px-6 font-inter text-sm text-gray-600 dark:text-gray-400">{user.email}</td>
-											<td className="py-4 px-6 font-inter text-sm text-gray-600 dark:text-gray-400">{user.phone}</td>
-											<td className="py-4 px-6 font-inter text-sm text-gray-600 dark:text-gray-400">{user.role}</td>
+										<tr 
+											key={user.id} 
+											className={index !== userManagementSettings.users.length - 1 ? 'dark:border-gray-700' : ''}
+											style={index !== userManagementSettings.users.length - 1 ? { borderBottom: '1px solid', borderBottomColor: 'var(--light-gray)' } : {}}
+										>
+											<td 
+												className="py-4 px-6 font-inter text-sm dark:text-gray-100"
+												style={{ color: 'var(--text-primary)' }}
+											>
+												{user.name}
+											</td>
+											<td 
+												className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{user.email}
+											</td>
+											<td 
+												className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{user.phone}
+											</td>
+											<td 
+												className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{user.role}
+											</td>
 											<td className="py-4 px-6">
 												<Dropdown
 													label=""
@@ -242,7 +400,10 @@ export default function UserManagementPage() {
 													className="min-w-[120px]"
 												/>
 											</td>
-											<td className="py-4 px-6 font-inter text-sm text-gray-600 dark:text-gray-400">
+											<td 
+												className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
 												{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
 											</td>
 											<td className="py-4 px-6 text-sm font-medium">

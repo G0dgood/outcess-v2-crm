@@ -1,8 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { PersonIcon } from '@radix-ui/react-icons';
+import { usePathname } from 'next/navigation';
 import { useSetup } from '@/contexts/SetupContext';
+import { playNotificationSound } from '@/utils/soundEffects';
+import { setNavigating } from '@/utils/navigationState';
 
 interface NotificationUser {
 	name: string;
@@ -33,7 +36,84 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	className = ''
 }) => {
 	const { setupData } = useSetup();
+	const pathname = usePathname();
 	const primaryColor = setupData.primaryColor || '#050711';
+	const hasPlayedOpenSound = useRef(false);
+	const playedNotificationIds = useRef<Set<string>>(new Set());
+	const previousPathname = useRef(pathname);
+	const isNavigating = useRef(false);
+
+	// Track navigation to prevent sounds during page switches
+	useEffect(() => {
+		if (previousPathname.current !== pathname) {
+			isNavigating.current = true;
+			previousPathname.current = pathname;
+			// Set global navigation state
+			setNavigating(true);
+			// Reset navigation flag after a short delay
+			setTimeout(() => {
+				isNavigating.current = false;
+			}, 1000);
+		}
+	}, [pathname]);
+
+	// Map notification type to sound type
+	const getSoundTypeForNotification = (type: Notification['type']): 'follow' | 'like' | 'join_request' | 'group_activity' | 'comment' | 'welcome' | 'notification' => {
+		return type;
+	};
+
+	// Play sound when notification panel opens (but not during navigation)
+	useEffect(() => {
+		// Don't play sound if we're navigating between pages
+		if (isNavigating.current) {
+			if (!isOpen) {
+				hasPlayedOpenSound.current = false;
+			}
+			return;
+		}
+
+		if (isOpen && !hasPlayedOpenSound.current) {
+			hasPlayedOpenSound.current = true;
+			playNotificationSound('panel_open');
+		}
+
+		if (!isOpen) {
+			hasPlayedOpenSound.current = false;
+		}
+	}, [isOpen, pathname]);
+
+	// Play sounds for new unread notifications (but not during navigation)
+	useEffect(() => {
+		// Don't play sounds if we're navigating between pages
+		if (isNavigating.current || !isOpen) return;
+
+		notifications.forEach((notification) => {
+			// Only play sound for unread notifications that haven't been played yet
+			if (!notification.isRead && !playedNotificationIds.current.has(notification.id)) {
+				playedNotificationIds.current.add(notification.id);
+				// Small delay to avoid overlapping sounds
+				setTimeout(() => {
+					// Double-check we're still not navigating before playing
+					if (!isNavigating.current) {
+						const soundType = getSoundTypeForNotification(notification.type);
+						playNotificationSound(soundType);
+					}
+				}, 100 * playedNotificationIds.current.size);
+			}
+		});
+	}, [notifications, isOpen, pathname]);
+
+	// Clean up played notification IDs when panel closes
+	useEffect(() => {
+		if (!isOpen) {
+			// Keep track of read notifications to avoid replaying
+			notifications.forEach((notification) => {
+				if (notification.isRead) {
+					playedNotificationIds.current.add(notification.id);
+				}
+			});
+		}
+	}, [isOpen, notifications]);
 
 	if (!isOpen) return null;
 
@@ -41,15 +121,37 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
 
 	return (
-		<div className={`absolute top-full right-0 mt-2 w-90 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl z-50 overflow-hidden ${className}`}>
+		<div
+			className={`absolute top-full right-0 mt-2 w-90 dark:bg-gray-800 border dark:border-gray-700 shadow-xl z-50 overflow-hidden ${className}`}
+			style={{
+				backgroundColor: 'var(--accent-white)',
+				borderColor: 'var(--light-gray)'
+			}}
+		>
 			{/* Header */}
-			<div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-[0px_6px_27px_rgba(19,25,19,0.07)] dark:shadow-none">
-				<h3 className="text-lg text-[#050711] dark:text-gray-100 font-inter font-medium text-[16px] leading-[120%] flex items-center tracking-[-0.02em]">
+			<div
+				className="flex items-center justify-between p-4 dark:bg-gray-800 border-b dark:border-gray-700 shadow-[0px_6px_27px_rgba(19,25,19,0.07)] dark:shadow-none"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
+				<h3
+					className="text-lg dark:text-gray-100 font-inter font-medium text-[16px] leading-[120%] flex items-center tracking-[-0.02em]"
+					style={{ color: 'var(--text-primary)' }}
+				>
 					Notification ({notifications.length})
 				</h3>
 				<button
 					onClick={onClose}
-					className="text-[#050711] dark:text-gray-300 hover:text-[#050711] dark:hover:text-gray-100 transition-colors"
+					className="dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
+					style={{ color: 'var(--text-primary)' }}
+					onMouseEnter={(e) => {
+						e.currentTarget.style.color = 'var(--text-primary)';
+					}}
+					onMouseLeave={(e) => {
+						e.currentTarget.style.color = 'var(--text-primary)';
+					}}
 				>
 					<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -62,8 +164,18 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 				{notifications.map((notification) => (
 					<div
 						key={notification.id}
-						className={`p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${!notification.isRead ? 'bg-green-50 dark:bg-green-900/20' : 'bg-white dark:bg-gray-800'
+						className={`p-4 border-b dark:border-gray-700 dark:hover:bg-gray-700 transition-colors ${!notification.isRead ? 'dark:bg-green-900/20' : 'dark:bg-gray-800'
 							}`}
+						style={{
+							borderColor: 'var(--light-gray)',
+							backgroundColor: notification.isRead ? 'var(--accent-white)' : 'var(--pale-mint-green)'
+						}}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.backgroundColor = notification.isRead ? 'var(--accent-white)' : 'var(--pale-mint-green)';
+						}}
 					>
 						<div className="flex items-start space-x-3">
 							{/* User Avatar or Icon */}
@@ -78,9 +190,20 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 							<div className="flex-1 min-w-0">
 								<div className="flex items-start justify-between">
 									<div className="">
-										<p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-											<span className="font-inter not-italic font-medium text-sm leading-[145%] text-[#050711] dark:text-gray-100 font-features">{notification.user.name}</span> {notification.message}
-											<span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+										<p
+											className="text-sm dark:text-gray-300 leading-relaxed"
+											style={{ color: 'var(--text-tertiary)' }}
+										>
+											<span
+												className="font-inter not-italic font-medium text-sm leading-[145%] dark:text-gray-100 font-features"
+												style={{ color: 'var(--text-primary)' }}
+											>
+												{notification.user.name}
+											</span> {notification.message}
+											<span
+												className="text-xs dark:text-gray-400 mt-1"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
 												-{notification.timestamp}
 											</span>
 										</p>
@@ -88,7 +211,16 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 									</div>
 
 									{/* Action Menu */}
-									<button className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors ml-2">
+									<button
+										className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors ml-2"
+										style={{ color: 'var(--text-tertiary)' }}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.color = 'var(--text-secondary)';
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.color = 'var(--text-tertiary)';
+										}}
+									>
 										<svg className="cursor-pointer w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
 											<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
 										</svg>
@@ -103,8 +235,23 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			</div>
 
 			{/* Footer */}
-			<div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-center shadow-[0px_6px_27px_rgba(19,25,19,0.07)] dark:shadow-none">
-				<button className="text-sm text-[#050711] dark:text-gray-300 hover:text-[#050711] dark:hover:text-gray-100 font-medium transition-colors font-inter not-italic leading-[145%] font-features">
+			<div
+				className="p-4 dark:bg-gray-800 border-t dark:border-gray-700 text-center shadow-[0px_6px_27px_rgba(19,25,19,0.07)] dark:shadow-none"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
+				<button
+					className="text-sm dark:text-gray-300 dark:hover:text-gray-100 font-medium transition-colors font-inter not-italic leading-[145%] font-features"
+					style={{ color: 'var(--text-primary)' }}
+					onMouseEnter={(e) => {
+						e.currentTarget.style.color = 'var(--text-primary)';
+					}}
+					onMouseLeave={(e) => {
+						e.currentTarget.style.color = 'var(--text-primary)';
+					}}
+				>
 					Show more
 				</button>
 			</div>

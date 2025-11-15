@@ -61,13 +61,33 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-			<div className="bg-white shadow-lg w-full max-w-md mx-4">
+			<div
+				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4"
+				style={{ backgroundColor: 'var(--accent-white)' }}
+			>
 				{/* Modal Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200">
-					<h2 className="text-xl font-semibold text-gray-900">Add Customer</h2>
+				<div
+					className="flex justify-between items-center p-6 border-b dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<h2
+						className="text-xl font-semibold dark:text-gray-100"
+						style={{ color: 'var(--text-primary)' }}
+					>
+						Add Customer
+					</h2>
 					<button
 						onClick={onClose}
-						className="text-gray-500 hover:text-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						style={{ color: 'var(--text-tertiary)' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = 'var(--text-secondary)';
+							e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = 'var(--text-tertiary)';
+							e.currentTarget.style.backgroundColor = 'transparent';
+						}}
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -82,6 +102,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 						value={formData.firstName}
 						onChange={handleInputChange('firstName')}
 						required
+						inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
 					/>
 
 					<Input
@@ -90,6 +111,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 						value={formData.lastName}
 						onChange={handleInputChange('lastName')}
 						required
+						inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
 					/>
 
 					<Input
@@ -99,6 +121,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 						onChange={handleInputChange('email')}
 						type="email"
 						required
+						inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
 					/>
 
 					<Input
@@ -108,14 +131,25 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 						onChange={handleInputChange('phone')}
 						type="tel"
 						required
+						inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
 					/>
 				</div>
 
 				{/* Modal Footer */}
-				<div className="flex justify-between items-center p-6 border-t border-gray-200">
+				<div
+					className="flex justify-between items-center p-6 border-t dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<button
 						onClick={onAddFields}
-						className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
+						className="font-medium transition-colors"
+						style={{ color: '#EA580C' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = '#C2410C';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = '#EA580C';
+						}}
 					>
 						Add Fields
 					</button>

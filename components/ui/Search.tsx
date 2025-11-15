@@ -36,7 +36,13 @@ const Search: React.FC<SearchProps> = ({
 	};
 
 	return (
-		<div className={`box-border flex flex-row items-center px-[14px] py-[10px] gap-2 w-[320px] h-[40px] bg-white dark:bg-gray-800 border border-[#E5E7EB] dark:border-gray-700 relative ${maxWidth} ${className} transition-colors duration-200`}>
+		<div 
+			className={`box-border flex flex-row items-center px-[14px] py-[10px] gap-2 w-[320px] h-[40px] dark:bg-gray-800 border dark:border-gray-700 relative ${maxWidth} ${className} transition-colors duration-200`}
+			style={{
+				backgroundColor: 'var(--accent-white)',
+				borderColor: 'var(--light-gray)'
+			}}
+		>
 			<Icon name="search-refraction" size="sm" />
 			<input
 				type="text"
@@ -45,12 +51,25 @@ const Search: React.FC<SearchProps> = ({
 				onChange={(e) => onChange?.(e.target.value)}
 				onKeyPress={handleKeyPress}
 				disabled={disabled}
-				className={`flex-1 text-sm font-normal leading-[150%] text-(--text-secondary) dark:text-gray-300 bg-transparent placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none ${showClearButton && value ? 'pr-10' : ''}`}
+				className={`search-input flex-1 text-sm font-normal leading-[150%] dark:text-gray-300 bg-transparent dark:placeholder:text-gray-500 focus:outline-none ${showClearButton && value ? 'pr-10' : ''}`}
+				style={{
+					color: 'var(--text-secondary)',
+				}}
+				onFocus={(e) => {
+					e.target.style.color = 'var(--text-secondary)';
+				}}
 			/>
 			{showClearButton && value && (
 				<button
 					onClick={handleClear}
-					className="flex items-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+					className="flex items-center dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+					style={{ color: 'var(--text-tertiary)' }}
+					onMouseEnter={(e) => {
+						e.currentTarget.style.color = 'var(--text-secondary)';
+					}}
+					onMouseLeave={(e) => {
+						e.currentTarget.style.color = 'var(--text-tertiary)';
+					}}
 					type="button"
 				>
 					<Icon name="Close_round_light" size="sm" />

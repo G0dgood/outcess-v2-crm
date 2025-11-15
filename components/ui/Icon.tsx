@@ -9,6 +9,7 @@ interface IconProps {
 	className?: string;
 	alt?: string;
 	color?: string;
+	style?: React.CSSProperties;
 }
 
 const Icon: React.FC<IconProps> = ({
@@ -16,7 +17,8 @@ const Icon: React.FC<IconProps> = ({
 	size = 'md',
 	className = '',
 	alt,
-	color
+	color,
+	style
 }) => {
 	// Convert size names to pixel values
 	const getSizeValue = (size: number | string): number => {
@@ -55,14 +57,23 @@ const Icon: React.FC<IconProps> = ({
 
 	// Apply color filter if specified, otherwise use default dark mode filter
 	const getIconStyle = () => {
+		const baseStyle = style || {};
 		if (color) {
 			return {
+				...baseStyle,
 				filter: `brightness(0) saturate(100%) ${getColorFilter(color)}`
 			};
 		}
+		// If style has a filter, use it directly
+		if (style?.filter) {
+			return baseStyle;
+		}
 		// Default: no filter, will use CSS classes for dark mode
-		return undefined;
+		return baseStyle;
 	};
+
+	// Don't apply dark mode invert if we have a custom color or filter
+	const hasCustomColor = color || style?.filter;
 
 	return (
 		<Image
@@ -70,7 +81,7 @@ const Icon: React.FC<IconProps> = ({
 			alt={altText}
 			width={sizeValue}
 			height={sizeValue}
-			className={`inline-block ${color ? '' : 'dark:invert dark:opacity-80'} ${className}`}
+			className={`inline-block ${hasCustomColor ? '' : 'dark:invert dark:opacity-80'} ${className}`}
 			style={getIconStyle()}
 		/>
 	);

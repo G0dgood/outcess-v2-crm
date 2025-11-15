@@ -9,13 +9,14 @@ interface DropdownProps {
 	label: string;
 	placeholder?: string;
 	options: DropdownOption[];
-	value?: string;
-	onChange?: (value: string) => void;
+	value?: string | string[];
+	onChange?: (value: string | string[]) => void;
 	required?: boolean;
 	disabled?: boolean;
 	error?: string;
 	className?: string;
 	inputClassName?: string;
+	multiple?: boolean;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -29,11 +30,33 @@ export const Dropdown: React.FC<DropdownProps> = ({
 	error,
 	className = '',
 	inputClassName = '',
+	multiple = false,
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
-	const selectedOption = options.find(option => option.value === value);
+	const isMultiple = multiple;
+	const selectedValues: string[] = isMultiple 
+		? (Array.isArray(value) ? value : [])
+		: (typeof value === 'string' && value ? [value] : []);
+	
+	const selectedOption = !isMultiple && typeof value === 'string'
+		? options.find(option => option.value === value)
+		: null;
+
+	const getDisplayText = () => {
+		if (isMultiple) {
+			if (selectedValues.length === 0) {
+				return placeholder;
+			}
+			if (selectedValues.length === 1) {
+				const option = options.find(opt => opt.value === selectedValues[0]);
+				return option ? option.label : placeholder;
+			}
+			return `${selectedValues.length} selected`;
+		}
+		return selectedOption ? selectedOption.label : placeholder;
+	};
 
 	const handleToggle = () => {
 		if (!disabled) {
@@ -42,8 +65,24 @@ export const Dropdown: React.FC<DropdownProps> = ({
 	};
 
 	const handleSelect = (optionValue: string) => {
-		onChange?.(optionValue);
-		setIsOpen(false);
+		if (isMultiple) {
+			const currentValues: string[] = Array.isArray(value) ? value : [];
+			const newValues: string[] = currentValues.includes(optionValue)
+				? currentValues.filter(v => v !== optionValue)
+				: [...currentValues, optionValue];
+			onChange?.(newValues);
+			// Don't close dropdown for multiple select
+		} else {
+			onChange?.(optionValue as string);
+			setIsOpen(false);
+		}
+	};
+
+	const isSelected = (optionValue: string): boolean => {
+		if (isMultiple) {
+			return selectedValues.includes(optionValue);
+		}
+		return typeof value === 'string' && value === optionValue;
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -89,8 +128,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
 					aria-haspopup="listbox"
 					aria-expanded={isOpen}
 				>
-					<span className={`dropdown-text ${!selectedOption ? 'placeholder' : ''}`}>
-						{selectedOption ? selectedOption.label : placeholder}
+					<span className={`dropdown-text ${(isMultiple ? selectedValues.length === 0 : !selectedOption) ? 'placeholder' : ''}`}>
+						{getDisplayText()}
 					</span>
 					<svg
 						className={`dropdown-chevron ${isOpen ? 'open' : ''}`}
@@ -135,10 +174,25 @@ export const Dropdown: React.FC<DropdownProps> = ({
 									<button
 										key={option.value}
 										type="button"
-										className={`dropdown-option ${value === option.value ? 'selected' : ''}`}
+										className={`dropdown-option ${isSelected(option.value) ? 'selected' : ''} ${isMultiple ? 'dropdown-option-multiple' : ''}`}
 										onClick={() => handleSelect(option.value)}
+										style={isMultiple ? { display: 'flex', alignItems: 'center', gap: '8px' } : undefined}
 									>
-										{option.label}
+										{isMultiple && (
+											<span className="dropdown-checkbox" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+												{isSelected(option.value) ? (
+													<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+														<rect x="2" y="2" width="12" height="12" rx="2" fill="currentColor" stroke="currentColor" strokeWidth="1.5"/>
+														<path d="M5 8L7 10L11 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+													</svg>
+												) : (
+													<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+														<rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+													</svg>
+												)}
+											</span>
+										)}
+										<span style={{ flex: 1, textAlign: 'left' }}>{option.label}</span>
 									</button>
 								))
 							)}

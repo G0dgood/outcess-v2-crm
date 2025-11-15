@@ -244,7 +244,10 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 		// Replace **text** with <strong>text</strong>
 		const parts = details.split(/(\*\*[^*]+\*\*)/g);
 		return (
-			<span className="text-sm text-gray-900 dark:text-gray-100">
+			<span 
+				className="text-sm dark:text-gray-100"
+				style={{ color: 'var(--text-primary)' }}
+			>
 				{parts.map((part, index) => {
 					if (part.startsWith('**') && part.endsWith('**')) {
 						const text = part.slice(2, -2);
@@ -269,24 +272,52 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 		<div>
 			{/* Header Section */}
 			<div className="mb-6">
-				<h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Business Details</h1>
+				<h1 
+					className="text-2xl font-semibold dark:text-gray-100 mb-2"
+					style={{ color: 'var(--text-primary)' }}
+				>
+					Business Details
+				</h1>
 			</div>
 
 			{/* Tabs and Deactivate Button */}
-			<div className="flex items-center justify-between mb-6 border-b border-gray-200 dark:border-gray-700">
+			<div 
+				className="flex items-center justify-between mb-6 border-b dark:border-gray-700"
+				style={{ borderColor: 'var(--light-gray)' }}
+			>
 				<div className="flex items-center gap-6">
-					{tabs.map((tab) => (
-						<button
-							key={tab.id}
-							onClick={() => setActiveTab(tab.id)}
-							className={`pb-4 px-1 font-medium text-sm transition-colors ${activeTab === tab.id
-								? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-								: 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-								}`}
-						>
-							{tab.label}
-						</button>
-					))}
+					{tabs.map((tab) => {
+						const isActive = activeTab === tab.id;
+						const activeColor = setupData.primaryColor || '#2563EB';
+						return (
+							<button
+								key={tab.id}
+								onClick={() => setActiveTab(tab.id)}
+								className={`pb-4 px-1 font-medium text-sm transition-colors ${isActive
+									? 'dark:text-blue-400 border-b-2 dark:border-blue-400'
+									: 'dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+									}`}
+								style={isActive ? {
+									color: activeColor,
+									borderBottomColor: activeColor
+								} : {
+									color: 'var(--text-tertiary)'
+								}}
+								onMouseEnter={(e) => {
+									if (!isActive) {
+										e.currentTarget.style.color = 'var(--text-primary)';
+									}
+								}}
+								onMouseLeave={(e) => {
+									if (!isActive) {
+										e.currentTarget.style.color = 'var(--text-tertiary)';
+									}
+								}}
+							>
+								{tab.label}
+							</button>
+						);
+					})}
 				</div>
 				<Button
 					variant="danger"
@@ -301,78 +332,234 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 			{activeTab === 'overview' && (
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					{/* Basic Information Card */}
-					<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6">
-						<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Basic Information</h2>
+					<div 
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
+						<h2 
+							className="text-lg font-semibold dark:text-gray-100 mb-4"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Basic Information
+						</h2>
 						<div className="space-y-4">
 							<div>
-								<span className="text-sm font-medium text-gray-600 dark:text-gray-400">Business ID:</span>
-								<span className="ml-2 text-sm text-gray-900 dark:text-gray-100">{businessData.businessId}</span>
+								<span 
+									className="text-sm font-medium dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Business ID:
+								</span>
+								<span 
+									className="ml-2 text-sm dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{businessData.businessId}
+								</span>
 							</div>
 							<div>
-								<span className="text-sm font-medium text-gray-600 dark:text-gray-400">Status:</span>
+								<span 
+									className="text-sm font-medium dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Status:
+								</span>
 								<span className="ml-2">
-									<span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
+									<span 
+										className="inline-flex px-2 py-1 text-xs font-semibold rounded-full dark:bg-green-900/30 dark:text-green-400"
+										style={{
+											backgroundColor: 'rgba(34, 197, 94, 0.1)',
+											color: '#16A34A'
+										}}
+									>
 										{businessData.status}
 									</span>
 								</span>
 							</div>
 							<div>
-								<span className="text-sm font-medium text-gray-600 dark:text-gray-400">Industry:</span>
-								<span className="ml-2 text-sm text-gray-900 dark:text-gray-100">{businessData.industry}</span>
+								<span 
+									className="text-sm font-medium dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Industry:
+								</span>
+								<span 
+									className="ml-2 text-sm dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{businessData.industry}
+								</span>
 							</div>
 							<div>
-								<span className="text-sm font-medium text-gray-600 dark:text-gray-400">Registration Date:</span>
-								<span className="ml-2 text-sm text-gray-900 dark:text-gray-100">{businessData.registrationDate}</span>
+								<span 
+									className="text-sm font-medium dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Registration Date:
+								</span>
+								<span 
+									className="ml-2 text-sm dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{businessData.registrationDate}
+								</span>
 							</div>
 						</div>
 					</div>
 
 					{/* Contact Information Card */}
-					<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6">
-						<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Contact Information</h2>
+					<div 
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
+						<h2 
+							className="text-lg font-semibold dark:text-gray-100 mb-4"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Contact Information
+						</h2>
 						<div className="space-y-4">
 							<div>
-								<span className="text-sm font-medium text-gray-600 dark:text-gray-400">Primary Contact:</span>
-								<span className="ml-2 text-sm text-gray-900 dark:text-gray-100">{businessData.primaryContact}</span>
+								<span 
+									className="text-sm font-medium dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Primary Contact:
+								</span>
+								<span 
+									className="ml-2 text-sm dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{businessData.primaryContact}
+								</span>
 							</div>
 							<div>
-								<span className="text-sm font-medium text-gray-600 dark:text-gray-400">Email:</span>
-								<span className="ml-2 text-sm text-gray-900 dark:text-gray-100">{businessData.email}</span>
+								<span 
+									className="text-sm font-medium dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Email:
+								</span>
+								<span 
+									className="ml-2 text-sm dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{businessData.email}
+								</span>
 							</div>
 							<div>
-								<span className="text-sm font-medium text-gray-600 dark:text-gray-400">Phone:</span>
-								<span className="ml-2 text-sm text-gray-900 dark:text-gray-100">{businessData.phone}</span>
+								<span 
+									className="text-sm font-medium dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Phone:
+								</span>
+								<span 
+									className="ml-2 text-sm dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{businessData.phone}
+								</span>
 							</div>
 							<div>
-								<span className="text-sm font-medium text-gray-600 dark:text-gray-400">Address:</span>
-								<span className="ml-2 text-sm text-gray-900 dark:text-gray-100">{businessData.address}</span>
+								<span 
+									className="text-sm font-medium dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Address:
+								</span>
+								<span 
+									className="ml-2 text-sm dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{businessData.address}
+								</span>
 							</div>
 						</div>
 					</div>
 
 					{/* Subscription Details Card */}
-					<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6">
-						<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Subscription Details</h2>
+					<div 
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
+						<h2 
+							className="text-lg font-semibold dark:text-gray-100 mb-4"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Subscription Details
+						</h2>
 						<div className="space-y-4">
 							<div>
-								<span className="text-sm font-medium text-gray-600 dark:text-gray-400">User Count:</span>
-								<span className="ml-2 text-sm text-gray-900 dark:text-gray-100">{businessData.userCount} active users</span>
+								<span 
+									className="text-sm font-medium dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									User Count:
+								</span>
+								<span 
+									className="ml-2 text-sm dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{businessData.userCount} active users
+								</span>
 							</div>
 							<div>
-								<span className="text-sm font-medium text-gray-600 dark:text-gray-400">Last Billing:</span>
-								<span className="ml-2 text-sm text-gray-900 dark:text-gray-100">{businessData.lastBilling}</span>
+								<span 
+									className="text-sm font-medium dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Last Billing:
+								</span>
+								<span 
+									className="ml-2 text-sm dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{businessData.lastBilling}
+								</span>
 							</div>
 						</div>
 					</div>
 
 					{/* Active Module Card */}
-					<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6">
-						<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Active Module</h2>
+					<div 
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
+						<h2 
+							className="text-lg font-semibold dark:text-gray-100 mb-4"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Active Module
+						</h2>
 						<div className="flex flex-wrap gap-2">
 							{businessData.activeModules.map((module, index) => (
 								<button
 									key={index}
-									className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+									className="px-4 py-2 text-sm font-medium dark:text-gray-300 dark:bg-gray-700 border dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+									style={{
+										color: 'var(--text-secondary)',
+										backgroundColor: 'var(--bg-primary)',
+										borderColor: 'var(--light-gray)'
+									}}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.backgroundColor = '#E2E8F0';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+									}}
 								>
 									{module}
 								</button>
@@ -387,37 +574,97 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 				<div>
 					{/* Header */}
 					<div className="mb-6">
-						<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">User Management</h2>
+						<h2 
+							className="text-lg font-semibold dark:text-gray-100"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							User Management
+						</h2>
 					</div>
 
 					{/* Users Table */}
-					<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+					<div 
+						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden mb-6"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
 						<div className="overflow-x-auto">
-							<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-								<thead className="bg-gray-50 dark:bg-gray-700">
+							<table 
+								className="min-w-full divide-y dark:divide-gray-700"
+								style={{ borderColor: 'var(--light-gray)' }}
+							>
+								<thead 
+									className="dark:bg-gray-700 border-b dark:border-gray-700"
+									style={{ 
+										backgroundColor: 'var(--bg-primary)',
+										borderBottomColor: 'var(--light-gray)'
+									}}
+								>
 									<tr>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+										<th 
+											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+											style={{ color: 'var(--text-primary)' }}
+										>
 											Name
 										</th>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+										<th 
+											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+											style={{ color: 'var(--text-primary)' }}
+										>
 											Email
 										</th>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+										<th 
+											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+											style={{ color: 'var(--text-primary)' }}
+										>
 											Role
 										</th>
 									</tr>
 								</thead>
-								<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+								<tbody 
+									className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+									style={{
+										backgroundColor: 'var(--accent-white)',
+										borderColor: 'var(--light-gray)'
+									}}
+								>
 									{paginatedUsers.map((user) => (
-										<tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<tr 
+											key={user.id} 
+											className="dark:hover:bg-gray-700 transition-colors"
+											style={{ borderColor: 'var(--light-gray)' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+											}}
+										>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.name}</span>
+												<span 
+													className="text-sm font-medium dark:text-gray-100"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													{user.name}
+												</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span className="text-sm text-gray-600 dark:text-gray-400">{user.email}</span>
+												<span 
+													className="text-sm dark:text-gray-400"
+													style={{ color: 'var(--text-tertiary)' }}
+												>
+													{user.email}
+												</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span className="text-sm text-gray-600 dark:text-gray-400">{user.role}</span>
+												<span 
+													className="text-sm dark:text-gray-400"
+													style={{ color: 'var(--text-tertiary)' }}
+												>
+													{user.role}
+												</span>
 											</td>
 										</tr>
 									))}
@@ -458,37 +705,98 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 				<div>
 					{/* Header */}
 					<div className="mb-6">
-						<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Billing History</h2>
+						<h2 
+							className="text-lg font-semibold dark:text-gray-100"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Billing History
+						</h2>
 					</div>
 
 					{/* Billing Table */}
-					<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+					<div 
+						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden mb-6"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
 						<div className="overflow-x-auto">
-							<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-								<thead className="bg-gray-50 dark:bg-gray-700">
+							<table 
+								className="min-w-full divide-y dark:divide-gray-700"
+								style={{ borderColor: 'var(--light-gray)' }}
+							>
+								<thead 
+									className="dark:bg-gray-700 border-b dark:border-gray-700"
+									style={{ 
+										backgroundColor: 'var(--bg-primary)',
+										borderBottomColor: 'var(--light-gray)'
+									}}
+								>
 									<tr>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+										<th 
+											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+											style={{ color: 'var(--text-primary)' }}
+										>
 											Date
 										</th>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+										<th 
+											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+											style={{ color: 'var(--text-primary)' }}
+										>
 											Amount
 										</th>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+										<th 
+											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+											style={{ color: 'var(--text-primary)' }}
+										>
 											Status
 										</th>
 									</tr>
 								</thead>
-								<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+								<tbody 
+									className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+									style={{
+										backgroundColor: 'var(--accent-white)',
+										borderColor: 'var(--light-gray)'
+									}}
+								>
 									{paginatedBilling.map((billing) => (
-										<tr key={billing.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<tr 
+											key={billing.id} 
+											className="dark:hover:bg-gray-700 transition-colors"
+											style={{ borderColor: 'var(--light-gray)' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+											}}
+										>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span className="text-sm text-gray-900 dark:text-gray-100">{billing.date}</span>
+												<span 
+													className="text-sm dark:text-gray-100"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													{billing.date}
+												</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span className="text-sm font-medium text-gray-900 dark:text-gray-100">{billing.amount}</span>
+												<span 
+													className="text-sm font-medium dark:text-gray-100"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													{billing.amount}
+												</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
+												<span 
+													className="inline-flex px-2 py-1 text-xs font-semibold rounded-full dark:bg-green-900/30 dark:text-green-400"
+													style={{
+														backgroundColor: 'rgba(34, 197, 94, 0.1)',
+														color: '#16A34A'
+													}}
+												>
 													{billing.status}
 												</span>
 											</td>
@@ -531,18 +839,45 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 				<div>
 					{/* Header with Filters and Export */}
 					<div className="flex items-center justify-between mb-6">
-						<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Recent Activity</h2>
+						<h2 
+							className="text-lg font-semibold dark:text-gray-100"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Recent Activity
+						</h2>
 						<div className="flex items-center gap-3">
 							<button
 								type="button"
-								className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+								className="flex items-center gap-2 px-4 py-2 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+								style={{
+									borderColor: 'var(--light-gray)',
+									color: 'var(--text-secondary)',
+									backgroundColor: 'var(--accent-white)'
+								}}
+								onMouseEnter={(e) => {
+									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+								}}
+								onMouseLeave={(e) => {
+									e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+								}}
 							>
 								<CalendarIcon className="w-4 h-4" />
 								<span>Last 7 Days</span>
 							</button>
 							<button
 								type="button"
-								className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+								className="flex items-center gap-2 px-4 py-2 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+								style={{
+									borderColor: 'var(--light-gray)',
+									color: 'var(--text-secondary)',
+									backgroundColor: 'var(--accent-white)'
+								}}
+								onMouseEnter={(e) => {
+									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+								}}
+								onMouseLeave={(e) => {
+									e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+								}}
 							>
 								<MixerHorizontalIcon className="w-4 h-4" />
 								<span>User Role</span>
@@ -562,42 +897,110 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 					</div>
 
 					{/* Activity Log Table */}
-					<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+					<div 
+						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
 						<div className="overflow-x-auto">
-							<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-								<thead className="bg-gray-50 dark:bg-gray-700">
+							<table 
+								className="min-w-full divide-y dark:divide-gray-700"
+								style={{ borderColor: 'var(--light-gray)' }}
+							>
+								<thead 
+									className="dark:bg-gray-700 border-b dark:border-gray-700"
+									style={{ 
+										backgroundColor: 'var(--bg-primary)',
+										borderBottomColor: 'var(--light-gray)'
+									}}
+								>
 									<tr>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+										<th 
+											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+											style={{ color: 'var(--text-primary)' }}
+										>
 											Timestamp
 										</th>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+										<th 
+											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+											style={{ color: 'var(--text-primary)' }}
+										>
 											User
 										</th>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+										<th 
+											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+											style={{ color: 'var(--text-primary)' }}
+										>
 											Action
 										</th>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+										<th 
+											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+											style={{ color: 'var(--text-primary)' }}
+										>
 											Details
 										</th>
 									</tr>
 								</thead>
-								<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+								<tbody 
+									className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+									style={{
+										backgroundColor: 'var(--accent-white)',
+										borderColor: 'var(--light-gray)'
+									}}
+								>
 									{activityLog.map((activity) => (
-										<tr key={activity.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<tr 
+											key={activity.id} 
+											className="dark:hover:bg-gray-700 transition-colors"
+											style={{ borderColor: 'var(--light-gray)' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+											}}
+										>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span className="text-sm text-gray-900 dark:text-gray-100">{activity.timestamp}</span>
+												<span 
+													className="text-sm dark:text-gray-100"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													{activity.timestamp}
+												</span>
 											</td>
 											<td className="px-6 py-4">
 												<div className="flex flex-col">
-													<span className="text-sm font-medium text-gray-900 dark:text-gray-100">{activity.user}</span>
-													<span className="text-sm text-gray-500 dark:text-gray-400">{activity.role}</span>
+													<span 
+														className="text-sm font-medium dark:text-gray-100"
+														style={{ color: 'var(--text-primary)' }}
+													>
+														{activity.user}
+													</span>
+													<span 
+														className="text-sm dark:text-gray-400"
+														style={{ color: 'var(--text-tertiary)' }}
+													>
+														{activity.role}
+													</span>
 												</div>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span className="text-sm text-gray-900 dark:text-gray-100">{activity.action}</span>
+												<span 
+													className="text-sm dark:text-gray-100"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													{activity.action}
+												</span>
 											</td>
 											<td className="px-6 py-4">
-												{renderDetails(activity.details)}
+												<span 
+													className="text-sm dark:text-gray-100"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													{renderDetails(activity.details)}
+												</span>
 											</td>
 										</tr>
 									))}

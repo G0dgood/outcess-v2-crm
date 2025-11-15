@@ -99,7 +99,20 @@ const ReportPage: React.FC = () => {
 						<button
 							type="button"
 							onClick={handleFilter}
-							className="inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-gray-500 dark:focus:ring-gray-400 cursor-pointer gap-2 whitespace-nowrap"
+							className="inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 px-4 py-2 text-sm dark:bg-gray-800 border dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 dark:focus:ring-gray-400 cursor-pointer gap-2 whitespace-nowrap"
+							style={{
+								backgroundColor: 'var(--accent-white)',
+								borderColor: 'var(--light-gray)',
+								color: 'var(--text-secondary)'
+							}}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+								e.currentTarget.style.color = 'var(--text-secondary)';
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+								e.currentTarget.style.color = 'var(--text-secondary)';
+							}}
 						>
 							<MixerHorizontalIcon className="w-4 h-4" />
 							Filter Report
@@ -135,17 +148,53 @@ const ReportPage: React.FC = () => {
 			</div>
 
 			{/* Report Table */}
-			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+			<div
+				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
 				<div className="overflow-x-auto">
-					<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-						<thead className="bg-gray-50 dark:bg-gray-700">
+					<table
+						className="min-w-full divide-y dark:divide-gray-700"
+						style={{ borderColor: 'var(--light-gray)' }}
+					>
+						<thead
+							className="dark:bg-gray-700 border-b dark:border-gray-700"
+							style={{
+								backgroundColor: 'var(--bg-primary)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							<tr>
-								<th className="text-gray-900 dark:text-gray-100">Agent Name</th>
-								<th className="text-gray-900 dark:text-gray-100">Agent ID</th>
-								<th className="text-gray-900 dark:text-gray-100">Date</th>
+								<th
+									className="dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Agent Name
+								</th>
+								<th
+									className="dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Agent ID
+								</th>
+								<th
+									className="dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Date
+								</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+						<tbody
+							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+							style={{
+								backgroundColor: 'var(--accent-white)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							{filteredReports.length === 0 ? (
 								<tr>
 									<td colSpan={3} className="px-6 py-12 text-center">
@@ -153,10 +202,16 @@ const ReportPage: React.FC = () => {
 											<div className="mb-4">
 												<Icon name="Bar_chart_light" size="4xl" className="text-gray-300 dark:text-gray-600" />
 											</div>
-											<h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+											<h3
+												className="text-lg font-medium dark:text-gray-100 mb-2"
+												style={{ color: 'var(--text-primary)' }}
+											>
 												No Data Found
 											</h3>
-											<p className="text-gray-500 dark:text-gray-400">
+											<p
+												className="dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
 												{searchTerm ? 'No reports match your search.' : 'No report data available.'}
 											</p>
 										</div>
@@ -164,12 +219,35 @@ const ReportPage: React.FC = () => {
 								</tr>
 							) : (
 								paginatedReports.map((report) => (
-									<tr key={report.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-										<td className="font-medium text-gray-900 dark:text-gray-100">
+									<tr
+										key={report.id}
+										className="dark:hover:bg-gray-700"
+										style={{ borderColor: 'var(--light-gray)' }}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+										}}
+									>
+										<td
+											className="font-medium dark:text-gray-100"
+											style={{ color: 'var(--text-primary)' }}
+										>
 											{report.agentName}
 										</td>
-										<td className="text-gray-900 dark:text-gray-100">{report.agentId}</td>
-										<td className="text-gray-900 dark:text-gray-100">{report.date}</td>
+										<td
+											className="dark:text-gray-100"
+											style={{ color: 'var(--text-primary)' }}
+										>
+											{report.agentId}
+										</td>
+										<td
+											className="dark:text-gray-100"
+											style={{ color: 'var(--text-primary)' }}
+										>
+											{report.date}
+										</td>
 									</tr>
 								))
 							)}

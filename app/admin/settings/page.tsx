@@ -240,13 +240,26 @@ export default function SettingsPage() {
 			<div className="space-y-6">
 				{/* Header skeleton */}
 				<div className="flex justify-between items-center">
-					<h3 className="text-lg font-medium">Profile Details</h3>
+					<h3
+						className="text-lg font-medium"
+						style={{ color: 'var(--text-secondary)' }}
+					>
+						Profile Details
+					</h3>
 					<Skeleton className="h-10 w-24" />
 				</div>
 
 				{/* Current info skeleton */}
-				<div className="bg-gray-50 p-4 ">
-					<h4 className="text-sm font-medium text-gray-700 mb-3">Current Information</h4>
+				<div
+					className="p-4"
+					style={{ backgroundColor: 'var(--bg-primary)' }}
+				>
+					<h4
+						className="text-sm font-medium mb-3"
+						style={{ color: 'var(--text-secondary)' }}
+					>
+						Current Information
+					</h4>
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 						<div>
 							<Skeleton className="h-4 w-20 mb-2" />
@@ -302,9 +315,18 @@ export default function SettingsPage() {
 					text="Manage your account information, security, and payment methods."
 				/>
 			</div>
-			<div className="bg-(--accent-white) dark:bg-gray-800 border border-gray-200 dark:border-gray-700 w-full h-full p-6">
+			<div
+				className="dark:bg-gray-800 border dark:border-gray-700 w-full h-full p-6"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
+			>
 				{/* Navigation Tabs */}
-				<div className="border-b border-gray-200 dark:border-gray-700 mb-8">
+				<div
+					className="border-b dark:border-gray-700 mb-8"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<nav className="-mb-px flex space-x-1">
 						{[
 							{ id: 'profile', label: 'Profile', icon: PersonIcon },
@@ -315,12 +337,12 @@ export default function SettingsPage() {
 						].map(({ id, label, icon: IconComponent }) => {
 							const isActive = activeSection === id;
 							const activeColor = isDarkMode ? '#F3F4F6' : (primaryColor || '#050711');
-							const inactiveColor = isDarkMode ? '#9CA3AF' : undefined;
+							const inactiveColor = isDarkMode ? '#9CA3AF' : 'var(--text-tertiary)';
 							return (
 								<button
 									key={id}
 									onClick={() => setActiveSection(id as 'profile' | 'password' | 'email' | 'payment' | 'preferences')}
-									className={`relative flex items-center space-x-2 py-3 px-4 font-medium text-sm transition-all duration-200 ${isActive ? '' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+									className={`relative flex items-center space-x-2 py-3 px-4 font-medium text-sm transition-all duration-200 ${isActive ? '' : 'dark:text-gray-400 dark:hover:text-gray-300'
 										}`}
 									style={{
 										color: isActive ? activeColor : inactiveColor,
@@ -332,7 +354,7 @@ export default function SettingsPage() {
 									}}
 									onMouseLeave={(e) => {
 										if (!isActive) {
-											e.currentTarget.style.color = inactiveColor || '';
+											e.currentTarget.style.color = inactiveColor;
 										}
 									}}
 								>
@@ -358,16 +380,32 @@ export default function SettingsPage() {
 						<div className="py-6">
 							<div className="mb-6">
 								<div className="flex items-center space-x-2 mb-2">
-									<PersonIcon className="w-6 h-6 text-(--text-secondary) dark:text-gray-400" />
-									<h2 className="text-xl font-semibold text-(--text-secondary) dark:text-gray-100">Personal Information</h2>
+									<PersonIcon
+										className="w-6 h-6 dark:text-gray-400"
+										style={{ color: 'var(--text-secondary)' }}
+									/>
+									<h2
+										className="text-xl font-semibold dark:text-gray-100"
+										style={{ color: 'var(--text-secondary)' }}
+									>
+										Personal Information
+									</h2>
 								</div>
-								<p className="text-sm text-gray-600 dark:text-gray-400 ml-8">
+								<p
+									className="text-sm dark:text-gray-400 ml-8"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
 									Update your personal details and contact information.
 								</p>
 							</div>
 							<div className="space-y-6">
 								<div className="flex justify-between items-center">
-									<h3 className="text-lg font-medium text-(--text-secondary) dark:text-gray-100">Profile Details</h3>
+									<h3
+										className="text-lg font-medium dark:text-gray-100"
+										style={{ color: 'var(--text-secondary)' }}
+									>
+										Profile Details
+									</h3>
 									{!isEditingProfile ? (
 										<Button
 											onClick={() => setIsEditingProfile(true)}
@@ -397,31 +435,85 @@ export default function SettingsPage() {
 								</div>
 
 								{/* Current User Info Display */}
-								<div className="bg-gray-50 dark:bg-gray-700/50 p-4">
-									<h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Current Information</h4>
+								<div
+									className="dark:bg-gray-700/50 p-4"
+									style={{ backgroundColor: 'var(--bg-primary)' }}
+								>
+									<h4
+										className="text-sm font-medium dark:text-gray-300 mb-3"
+										style={{ color: 'var(--text-secondary)' }}
+									>
+										Current Information
+									</h4>
 									<div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
 										<div>
-											<span className="font-medium text-gray-600 dark:text-gray-400">Full Name:</span>
-											<p className="text-gray-900 dark:text-gray-100">{profileData.fullName || 'Not set'}</p>
+											<span
+												className="font-medium dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												Full Name:
+											</span>
+											<p
+												className="dark:text-gray-100"
+												style={{ color: 'var(--text-primary)' }}
+											>
+												{profileData.fullName || 'Not set'}
+											</p>
 										</div>
 										<div>
-											<span className="font-medium text-gray-600 dark:text-gray-400">Username:</span>
-											<p className="text-gray-900 dark:text-gray-100">{profileData.username || 'Not set'}</p>
+											<span
+												className="font-medium dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												Username:
+											</span>
+											<p
+												className="dark:text-gray-100"
+												style={{ color: 'var(--text-primary)' }}
+											>
+												{profileData.username || 'Not set'}
+											</p>
 										</div>
 										<div>
-											<span className="font-medium text-gray-600 dark:text-gray-400">Phone:</span>
-											<p className="text-gray-900 dark:text-gray-100">{profileData.phone || 'Not set'}</p>
+											<span
+												className="font-medium dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												Phone:
+											</span>
+											<p
+												className="dark:text-gray-100"
+												style={{ color: 'var(--text-primary)' }}
+											>
+												{profileData.phone || 'Not set'}
+											</p>
 										</div>
 										<div>
-											<span className="font-medium text-gray-600 dark:text-gray-400">Email:</span>
-											<p className="text-gray-900 dark:text-gray-100">{profileData.email || 'Not set'}</p>
+											<span
+												className="font-medium dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												Email:
+											</span>
+											<p
+												className="dark:text-gray-100"
+												style={{ color: 'var(--text-primary)' }}
+											>
+												{profileData.email || 'Not set'}
+											</p>
 										</div>
 									</div>
 								</div>
 
 								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 									<div className="space-y-2">
-										<label htmlFor="fullName" className="text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
+										<label
+											htmlFor="fullName"
+											className="text-sm font-medium dark:text-gray-300"
+											style={{ color: 'var(--text-secondary)' }}
+										>
+											Full Name
+										</label>
 										<Input
 											label=""
 											type="text"
@@ -433,7 +525,13 @@ export default function SettingsPage() {
 									</div>
 
 									<div className="space-y-2">
-										<label htmlFor="username" className="text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+										<label
+											htmlFor="username"
+											className="text-sm font-medium dark:text-gray-300"
+											style={{ color: 'var(--text-secondary)' }}
+										>
+											Username
+										</label>
 										<Input
 											label=""
 											type="text"
@@ -445,7 +543,13 @@ export default function SettingsPage() {
 									</div>
 
 									<div className="space-y-2">
-										<label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
+										<label
+											htmlFor="email"
+											className="text-sm font-medium dark:text-gray-300"
+											style={{ color: 'var(--text-secondary)' }}
+										>
+											Email Address
+										</label>
 										<Input
 											label=""
 											type="email"
@@ -453,13 +557,22 @@ export default function SettingsPage() {
 											disabled
 											className="disabled:bg-gray-50"
 										/>
-										<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+										<p
+											className="text-sm dark:text-gray-400 mt-1"
+											style={{ color: 'var(--text-tertiary)' }}
+										>
 											Email changes require verification. Use the Email tab to update.
 										</p>
 									</div>
 
 									<div className="space-y-2">
-										<label htmlFor="phone" className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number</label>
+										<label
+											htmlFor="phone"
+											className="text-sm font-medium dark:text-gray-300"
+											style={{ color: 'var(--text-secondary)' }}
+										>
+											Phone Number
+										</label>
 										<Input
 											label=""
 											type="tel"
@@ -480,17 +593,34 @@ export default function SettingsPage() {
 					<div className="py-6">
 						<div className="mb-6">
 							<div className="flex items-center space-x-2 mb-2">
-								<LockClosedIcon className="w-6 h-6 text-(--text-secondary) dark:text-gray-400" />
-								<h2 className="text-xl font-semibold text-(--text-secondary) dark:text-gray-100">Change Password</h2>
+								<LockClosedIcon
+									className="w-6 h-6 dark:text-gray-400"
+									style={{ color: 'var(--text-secondary)' }}
+								/>
+								<h2
+									className="text-xl font-semibold dark:text-gray-100"
+									style={{ color: 'var(--text-secondary)' }}
+								>
+									Change Password
+								</h2>
 							</div>
-							<p className="text-sm text-gray-600 dark:text-gray-400 ml-8">
+							<p
+								className="text-sm dark:text-gray-400 ml-8"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
 								Update your password to keep your account secure.
 							</p>
 						</div>
 						<div className="space-y-6">
 							<div className="max-w-md space-y-4">
 								<div className="space-y-2">
-									<label htmlFor="currentPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">Current Password</label>
+									<label
+										htmlFor="currentPassword"
+										className="text-sm font-medium dark:text-gray-300"
+										style={{ color: 'var(--text-secondary)' }}
+									>
+										Current Password
+									</label>
 									<div className="relative">
 										<Input
 											label=""
@@ -500,7 +630,14 @@ export default function SettingsPage() {
 										/>
 										<button
 											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+											style={{ color: 'var(--text-tertiary)' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.color = 'var(--text-secondary)';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.color = 'var(--text-tertiary)';
+											}}
 											onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
 										>
 											{showPasswords.current ? <EyeClosedIcon className="h-5 w-5" /> : <EyeOpenIcon className="h-5 w-5" />}
@@ -509,7 +646,13 @@ export default function SettingsPage() {
 								</div>
 
 								<div className="space-y-2">
-									<label htmlFor="newPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">New Password</label>
+									<label
+										htmlFor="newPassword"
+										className="text-sm font-medium dark:text-gray-300"
+										style={{ color: 'var(--text-secondary)' }}
+									>
+										New Password
+									</label>
 									<div className="relative">
 										<Input
 											label=""
@@ -519,7 +662,14 @@ export default function SettingsPage() {
 										/>
 										<button
 											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+											style={{ color: 'var(--text-tertiary)' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.color = 'var(--text-secondary)';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.color = 'var(--text-tertiary)';
+											}}
 											onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
 										>
 											{showPasswords.new ? <EyeClosedIcon className="h-5 w-5" /> : <EyeOpenIcon className="h-5 w-5" />}
@@ -528,7 +678,13 @@ export default function SettingsPage() {
 								</div>
 
 								<div className="space-y-2">
-									<label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">Confirm New Password</label>
+									<label
+										htmlFor="confirmPassword"
+										className="text-sm font-medium dark:text-gray-300"
+										style={{ color: 'var(--text-secondary)' }}
+									>
+										Confirm New Password
+									</label>
 									<div className="relative">
 										<Input
 											label=""
@@ -538,7 +694,14 @@ export default function SettingsPage() {
 										/>
 										<button
 											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+											style={{ color: 'var(--text-tertiary)' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.color = 'var(--text-secondary)';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.color = 'var(--text-tertiary)';
+											}}
 											onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
 										>
 											{showPasswords.confirm ? <EyeClosedIcon className="h-5 w-5" /> : <EyeOpenIcon className="h-5 w-5" />}
@@ -627,24 +790,55 @@ export default function SettingsPage() {
 					<div className="py-6">
 						<div className="mb-6">
 							<div className="flex items-center space-x-2 mb-2">
-								<IdCardIcon className="w-6 h-6 text-(--text-secondary) dark:text-gray-400" />
-								<h2 className="text-xl font-semibold text-(--text-secondary) dark:text-gray-100">Payment Methods</h2>
+								<IdCardIcon
+									className="w-6 h-6 dark:text-gray-400"
+									style={{ color: 'var(--text-secondary)' }}
+								/>
+								<h2
+									className="text-xl font-semibold dark:text-gray-100"
+									style={{ color: 'var(--text-secondary)' }}
+								>
+									Payment Methods
+								</h2>
 							</div>
-							<p className="text-sm text-gray-600 dark:text-gray-400 ml-8">
+							<p
+								className="text-sm dark:text-gray-400 ml-8"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
 								Manage your credit cards and payment methods.
 							</p>
 						</div>
 						<div className="space-y-6">
 							{/* Existing Credit Cards */}
 							<div className="space-y-4">
-								<h3 className="text-lg font-medium text-(--text-secondary) dark:text-gray-100">Saved Payment Methods</h3>
+								<h3
+									className="text-lg font-medium dark:text-gray-100"
+									style={{ color: 'var(--text-secondary)' }}
+								>
+									Saved Payment Methods
+								</h3>
 								{creditCards.map((card) => (
-									<div key={card.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700  dark:bg-gray-700/50">
+									<div
+										key={card.id}
+										className="flex items-center justify-between p-4 border dark:border-gray-700 dark:bg-gray-700/50"
+										style={{
+											backgroundColor: 'var(--accent-white)',
+											borderColor: 'var(--light-gray)'
+										}}
+									>
 										<div className="flex items-center space-x-4">
-											<IdCardIcon className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+											<IdCardIcon
+												className="h-8 w-8 dark:text-gray-500"
+												style={{ color: 'var(--text-tertiary)' }}
+											/>
 											<div>
 												<div className="flex items-center space-x-2">
-													<span className="font-medium text-(--text-secondary) dark:text-gray-100">{card.brand} •••• {card.last4}</span>
+													<span
+														className="font-medium dark:text-gray-100"
+														style={{ color: 'var(--text-secondary)' }}
+													>
+														{card.brand} •••• {card.last4}
+													</span>
 													{card.isDefault && (
 														<span
 															className="text-xs px-2 py-1 rounded-full text-white"
@@ -654,7 +848,10 @@ export default function SettingsPage() {
 														</span>
 													)}
 												</div>
-												<p className="text-sm text-gray-500 dark:text-gray-400">
+												<p
+													className="text-sm dark:text-gray-400"
+													style={{ color: 'var(--text-tertiary)' }}
+												>
 													Expires {card.expiryMonth.toString().padStart(2, '0')}/{card.expiryYear}
 												</p>
 											</div>
@@ -690,7 +887,12 @@ export default function SettingsPage() {
 							{/* Add New Credit Card */}
 							<div className="space-y-4">
 								<div className="flex justify-between items-center">
-									<h3 className="text-lg font-medium text-(--text-secondary) dark:text-gray-100">Add New Payment Method</h3>
+									<h3
+										className="text-lg font-medium dark:text-gray-100"
+										style={{ color: 'var(--text-secondary)' }}
+									>
+										Add New Payment Method
+									</h3>
 									<Button
 										variant="outline"
 										onClick={() => setIsAddingCard(!isAddingCard)}
@@ -704,9 +906,21 @@ export default function SettingsPage() {
 								</div>
 
 								{isAddingCard && (
-									<div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+									<div
+										className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border dark:border-gray-700 rounded-lg dark:bg-gray-700/50"
+										style={{
+											backgroundColor: 'var(--bg-primary)',
+											borderColor: 'var(--light-gray)'
+										}}
+									>
 										<div className="md:col-span-2 space-y-2">
-											<label htmlFor="cardNumber" className="text-sm font-medium text-gray-700 dark:text-gray-300">Card Number</label>
+											<label
+												htmlFor="cardNumber"
+												className="text-sm font-medium dark:text-gray-300"
+												style={{ color: 'var(--text-secondary)' }}
+											>
+												Card Number
+											</label>
 											<Input
 												label=""
 												type="text"
@@ -717,7 +931,13 @@ export default function SettingsPage() {
 										</div>
 
 										<div className="space-y-2">
-											<label htmlFor="cardholderName" className="text-sm font-medium text-gray-700 dark:text-gray-300">Cardholder Name</label>
+											<label
+												htmlFor="cardholderName"
+												className="text-sm font-medium dark:text-gray-300"
+												style={{ color: 'var(--text-secondary)' }}
+											>
+												Cardholder Name
+											</label>
 											<Input
 												label=""
 												type="text"
@@ -728,7 +948,13 @@ export default function SettingsPage() {
 										</div>
 
 										<div className="space-y-2">
-											<label htmlFor="zipCode" className="text-sm font-medium text-gray-700 dark:text-gray-300">ZIP Code</label>
+											<label
+												htmlFor="zipCode"
+												className="text-sm font-medium dark:text-gray-300"
+												style={{ color: 'var(--text-secondary)' }}
+											>
+												ZIP Code
+											</label>
 											<Input
 												label=""
 												type="text"
@@ -739,7 +965,13 @@ export default function SettingsPage() {
 										</div>
 
 										<div className="space-y-2">
-											<label htmlFor="expiryMonth" className="text-sm font-medium text-gray-700 dark:text-gray-300">Expiry Month</label>
+											<label
+												htmlFor="expiryMonth"
+												className="text-sm font-medium dark:text-gray-300"
+												style={{ color: 'var(--text-secondary)' }}
+											>
+												Expiry Month
+											</label>
 											<Input
 												label=""
 												type="text"
@@ -750,7 +982,13 @@ export default function SettingsPage() {
 										</div>
 
 										<div className="space-y-2">
-											<label htmlFor="expiryYear" className="text-sm font-medium text-gray-700 dark:text-gray-300">Expiry Year</label>
+											<label
+												htmlFor="expiryYear"
+												className="text-sm font-medium dark:text-gray-300"
+												style={{ color: 'var(--text-secondary)' }}
+											>
+												Expiry Year
+											</label>
 											<Input
 												label=""
 												type="text"
@@ -761,7 +999,13 @@ export default function SettingsPage() {
 										</div>
 
 										<div className="space-y-2">
-											<label htmlFor="cvv" className="text-sm font-medium text-gray-700 dark:text-gray-300">CVV</label>
+											<label
+												htmlFor="cvv"
+												className="text-sm font-medium dark:text-gray-300"
+												style={{ color: 'var(--text-secondary)' }}
+											>
+												CVV
+											</label>
 											<Input
 												label=""
 												type="text"
@@ -799,17 +1043,34 @@ export default function SettingsPage() {
 					<div className="py-6">
 						<div className="mb-6">
 							<div className="flex items-center space-x-2 mb-2">
-								<GearIcon className="w-6 h-6 text-(--text-secondary) dark:text-gray-400" />
-								<h2 className="text-xl font-semibold text-(--text-secondary) dark:text-gray-100">Appearance</h2>
+								<GearIcon
+									className="w-6 h-6 dark:text-gray-400"
+									style={{ color: 'var(--text-secondary)' }}
+								/>
+								<h2
+									className="text-xl font-semibold dark:text-gray-100"
+									style={{ color: 'var(--text-secondary)' }}
+								>
+									Appearance
+								</h2>
 							</div>
-							<p className="text-sm text-gray-600 dark:text-gray-400 ml-8">
+							<p
+								className="text-sm dark:text-gray-400 ml-8"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
 								Customize the appearance of your application.
 							</p>
 						</div>
 
 						<div className="space-y-6">
 							{/* Dark Mode Toggle */}
-							<div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700">
+							<div
+								className="flex items-center justify-between p-4 dark:bg-gray-700/50 border dark:border-gray-700"
+								style={{
+									backgroundColor: 'var(--bg-primary)',
+									borderColor: 'var(--light-gray)'
+								}}
+							>
 								<div className="flex items-center space-x-3">
 									<div className="p-2" style={{ backgroundColor: primaryColor + '20' }}>
 										{isDarkMode ? (
@@ -819,8 +1080,16 @@ export default function SettingsPage() {
 										)}
 									</div>
 									<div>
-										<h3 className="text-base font-medium text-gray-900 dark:text-gray-100">Dark Mode</h3>
-										<p className="text-sm text-gray-600 dark:text-gray-400">
+										<h3
+											className="text-base font-medium dark:text-gray-100"
+											style={{ color: 'var(--text-primary)' }}
+										>
+											Dark Mode
+										</h3>
+										<p
+											className="text-sm dark:text-gray-400"
+											style={{ color: 'var(--text-tertiary)' }}
+										>
 											{isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
 										</p>
 									</div>

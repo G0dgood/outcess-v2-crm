@@ -131,6 +131,9 @@ export const Modal: React.FC<ModalProps> = ({
 
 	if (!shouldRender) return null;
 
+	// Check if className contains a custom background override
+	const hasCustomBackground = className.includes('bg-[') || className.includes('!bg-');
+
 	return (
 		<>
 			{/* Backdrop */}
@@ -141,19 +144,37 @@ export const Modal: React.FC<ModalProps> = ({
 
 			{/* Modal */}
 			<div
-				className={`fixed ${getPositionClasses()} ${getSizeClasses()} bg-white dark:bg-gray-800 shadow-xl z-50 transition-all duration-300 ease-in-out ${getAnimationClasses()} ${className}`}
+				className={`fixed ${getPositionClasses()} ${getSizeClasses()} dark:bg-gray-800 shadow-xl z-50 transition-all duration-300 ease-in-out ${getAnimationClasses()} ${className}`}
+				style={hasCustomBackground ? undefined : {
+					backgroundColor: 'var(--accent-white)'
+				}}
 			>
 				<div className="flex flex-col h-full">
 					{/* Header */}
 					{(title || showCloseButton) && (
-						<div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+						<div 
+							className="flex items-center justify-between p-6 border-b dark:border-gray-700"
+							style={{ borderColor: 'var(--light-gray)' }}
+						>
 							{title && (
-								<h2 className="font-inter text-lg font-semibold text-[#050711] dark:text-gray-100">{title}</h2>
+								<h2 
+									className="font-inter text-lg font-semibold dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{title}
+								</h2>
 							)}
 							{showCloseButton && (
 								<button
 									onClick={onClose}
-									className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+									className="dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+									style={{ color: 'var(--text-tertiary)' }}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.color = 'var(--text-secondary)';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.color = 'var(--text-tertiary)';
+									}}
 								>
 									<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 										<path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

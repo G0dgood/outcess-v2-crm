@@ -14,6 +14,7 @@ import {
 	ChevronRightIcon,
 	ChevronDownIcon
 } from '@radix-ui/react-icons';
+import Group from '@/components/setupIcon/Group';
 
 interface MobileSideNavProps {
 	activeItem?: string;
@@ -79,6 +80,12 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 			label: 'Users',
 			icon: 'users',
 			path: '/users',
+		},
+		{
+			id: 'team-members',
+			label: 'Team Members',
+			icon: 'group',
+			path: '/team-members',
 		},
 		{
 			id: 'setup-book',
@@ -148,6 +155,8 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 				return <GearIcon {...iconProps} />;
 			case 'id-card':
 				return <IdCardIcon {...iconProps} />;
+			case 'group':
+				return <Group width={20} height={20} strokeColor="currentColor" fillColor="currentColor" />;
 			default:
 				return null;
 		}
@@ -247,12 +256,16 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 			<nav
 				ref={navRef}
 				className={`
-					fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 z-50
+					fixed top-0 left-0 h-full w-64 dark:bg-gray-900 border-r dark:border-gray-700 z-50
 					transform transition-transform duration-300 ease-in-out
 					${isAnimating ? 'translate-x-0' : '-translate-x-full'}
 				`}
 				role="navigation"
 				aria-label="Mobile navigation"
+				style={{
+					backgroundColor: 'var(--accent-white)',
+					borderColor: 'var(--light-gray)'
+				}}
 			>
 				{/* Close Button */}
 				<div className="flex justify-end p-4 pb-2">
@@ -276,14 +289,11 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 								<div key={item.id}>
 									<button
 										onClick={(e) => handleItemClick(item, e)}
-										className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 transition-all duration-200 ${isActive || (isSettings && isSettingsExpanded)
-											? 'text-white'
-											: 'text-gray-700 hover:text-white'
-											}`}
+										className="cursor-pointer w-full flex items-center gap-3 px-4 py-3 transition-all duration-200"
 										style={{
 											backgroundColor: (isActive || (isSettings && isSettingsExpanded)) ? setupData.primaryColor || '#050711' : 'transparent',
-											'--hover-bg': setupData.secondaryColor || '#6C8B7D'
-										} as React.CSSProperties}
+											color: (isActive || (isSettings && isSettingsExpanded)) ? 'white' : 'var(--text-secondary)'
+										}}
 										onMouseEnter={(e) => {
 											if (!isActive && !(isSettings && isSettingsExpanded)) {
 												e.currentTarget.style.backgroundColor = setupData.secondaryColor || '#6C8B7D';
@@ -305,17 +315,27 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 											}
 										}}
 									>
-										<div className={`shrink-0 transition-colors duration-200 ${isActive || (isSettings && isSettingsExpanded) ? 'text-white' : 'text-gray-600'
-											}`}>
+										<div
+											className="shrink-0 transition-colors duration-200"
+											style={isActive || (isSettings && isSettingsExpanded)
+												? { color: 'white' }
+												: { color: 'var(--text-tertiary)' }}
+										>
 											{getIconComponent(item.icon)}
 										</div>
-										<span className={`font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] text-[#3A4050]  transition-colors duration-200 flex-1 text-left ${isActive || (isSettings && isSettingsExpanded) ? 'text-white' : 'text-gray-700'
-											}`}>
+										<span
+											className="font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 flex-1 text-left"
+											style={isActive || (isSettings && isSettingsExpanded)
+												? { color: 'white' }
+												: { color: 'var(--text-secondary)' }}
+										>
 											{item.label}
 										</span>
 										{isSettings && (
-											<div className={`shrink-0 transition-colors duration-200 ${isSettingsExpanded ? 'text-white' : 'text-gray-600'
-												}`}>
+											<div
+												className="shrink-0 transition-colors duration-200"
+												style={isSettingsExpanded ? { color: 'white' } : { color: 'var(--text-tertiary)' }}
+											>
 												{isSettingsExpanded ? (
 													<ChevronDownIcon className="w-4 h-4" />
 												) : (
@@ -327,7 +347,10 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 
 									{/* Settings Sub-menu */}
 									{isSettings && isSettingsExpanded && (
-										<div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-300 dark:border-gray-600 pl-2">
+										<div
+											className="ml-4 mt-1 space-y-1 border-l-2 dark:border-gray-600 pl-2"
+											style={{ borderColor: 'var(--light-gray)' }}
+										>
 											{settingsSubItems.map((subItem) => {
 												// Get the tab value from the URL query parameter
 												const currentTab = searchParams?.get('tab');
@@ -338,13 +361,11 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 													<button
 														key={subItem.id}
 														onClick={() => handleSubItemClick(subItem)}
-														className={`cursor-pointer w-full flex items-center gap-3 px-4 py-2 transition-all duration-200 ${isSubActive
-															? 'text-white bg-opacity-80'
-															: 'text-gray-600 hover:text-white'
-															}`}
+														className="cursor-pointer w-full flex items-center gap-3 px-4 py-2 transition-all duration-200"
 														style={{
 															backgroundColor: isSubActive ? setupData.primaryColor || '#050711' : 'transparent',
-														} as React.CSSProperties}
+															color: isSubActive ? 'white' : 'var(--text-tertiary)'
+														}}
 														onMouseEnter={(e) => {
 															if (!isSubActive) {
 																e.currentTarget.style.backgroundColor = setupData.secondaryColor || '#6C8B7D';
@@ -359,17 +380,21 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 																e.currentTarget.style.backgroundColor = 'transparent';
 																const icon = e.currentTarget.querySelector('.sub-icon') as HTMLElement;
 																const text = e.currentTarget.querySelector('.sub-text') as HTMLElement;
-																if (icon) icon.style.color = '';
-																if (text) text.style.color = '';
+																if (icon) icon.style.color = 'var(--text-tertiary)';
+																if (text) text.style.color = 'var(--text-tertiary)';
 															}
 														}}
 													>
-														<div className={`sub-icon shrink-0 transition-colors duration-200 ${isSubActive ? 'text-white' : 'text-gray-500'
-															}`}>
+														<div
+															className="sub-icon shrink-0 transition-colors duration-200"
+															style={isSubActive ? { color: 'white' } : { color: 'var(--text-tertiary)' }}
+														>
 															{getIconComponent(subItem.icon)}
 														</div>
-														<span className={`sub-text font-inter font-medium text-[13px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 ${isSubActive ? 'text-white' : 'text-gray-600'
-															}`}>
+														<span
+															className="sub-text font-inter font-medium text-[13px] leading-[20px] tracking-[-0.5px] transition-colors duration-200"
+															style={isSubActive ? { color: 'white' } : { color: 'var(--text-tertiary)' }}
+														>
 															{subItem.label}
 														</span>
 													</button>

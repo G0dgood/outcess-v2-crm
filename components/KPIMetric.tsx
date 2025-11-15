@@ -76,12 +76,31 @@ const WidgetModal: React.FC<WidgetModalProps> = ({
 			}}
 		>
 			<div
-				className="bg-white dark:bg-gray-800 w-full max-w-md mx-4"
+				className="dark:bg-gray-800 w-full max-w-md mx-4"
+				style={{ backgroundColor: 'var(--accent-white)' }}
 				onClick={(e) => e.stopPropagation()}
 			>
-				<div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
-					<h2 className="font-inter text-lg font-semibold text-[#050711] dark:text-gray-100">{title}</h2>
-					<button onClick={onClose} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
+				<div 
+					className="flex justify-between items-center p-6 border-b dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<h2 
+						className="font-inter text-lg font-semibold dark:text-gray-100"
+						style={{ color: 'var(--text-primary)' }}
+					>
+						{title}
+					</h2>
+					<button 
+						onClick={onClose} 
+						className="dark:text-gray-500 dark:hover:text-gray-300"
+						style={{ color: 'var(--text-tertiary)' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = 'var(--text-secondary)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = 'var(--text-tertiary)';
+						}}
+					>
 						<Icon name="Close_round_light" size="lg" />
 					</button>
 				</div>
@@ -106,7 +125,10 @@ const WidgetModal: React.FC<WidgetModalProps> = ({
 						onChange={(color: string) => setWidgetForm(prev => ({ ...prev, color }))}
 					/>
 				</div>
-				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+				<div 
+					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<Button variant="outline" size="md" onClick={onClose}>Cancel</Button>
 					<Button variant="primary" size="md" onClick={onSave}>Save</Button>
 				</div>
@@ -136,12 +158,31 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 			}}
 		>
 			<div
-				className="bg-white dark:bg-gray-800 w-full max-w-md mx-4"
+				className="dark:bg-gray-800 w-full max-w-md mx-4"
+				style={{ backgroundColor: 'var(--accent-white)' }}
 				onClick={(e) => e.stopPropagation()}
 			>
-				<div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
-					<h2 className="font-inter text-lg font-semibold text-[#050711] dark:text-gray-100">Call Outcomes</h2>
-					<button onClick={onClose} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
+				<div 
+					className="flex justify-between items-center p-6 border-b dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<h2 
+						className="font-inter text-lg font-semibold dark:text-gray-100"
+						style={{ color: 'var(--text-primary)' }}
+					>
+						Call Outcomes
+					</h2>
+					<button 
+						onClick={onClose} 
+						className="dark:text-gray-500 dark:hover:text-gray-300"
+						style={{ color: 'var(--text-tertiary)' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = 'var(--text-secondary)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = 'var(--text-tertiary)';
+						}}
+					>
 						<Icon name="Close_round_light" size="lg" />
 					</button>
 				</div>
@@ -165,17 +206,39 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 								alt="No call outcomes"
 								className="w-32 h-32 mb-4 opacity-60"
 							/>
-							<h3 className="font-inter text-base font-medium text-[#050711] dark:text-gray-100 mb-2">No Call Outcomes Yet</h3>
-							<p className="font-lato text-sm text-gray-600 dark:text-gray-400 mb-4">Add your first call outcome above to get started</p>
+							<h3 
+								className="font-inter text-base font-medium dark:text-gray-100 mb-2"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								No Call Outcomes Yet
+							</h3>
+							<p 
+								className="font-lato text-sm dark:text-gray-400 mb-4"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
+								Add your first call outcome above to get started
+							</p>
 						</div>
 					) : (
 						<div className="space-y-2">
 							{callOutcomes.map((outcome) => (
 								<div key={outcome.id} className="flex items-center justify-between">
-									<span className="font-lato text-sm text-[#050711] dark:text-gray-100">{outcome.name}</span>
+									<span 
+										className="font-lato text-sm dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{outcome.name}
+									</span>
 									<button
 										onClick={() => onDeleteOutcome(outcome.id)}
-										className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400"
+										className="dark:text-gray-500 dark:hover:text-red-400"
+										style={{ color: 'var(--text-tertiary)' }}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.color = '#DC2626';
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.color = 'var(--text-tertiary)';
+										}}
 									>
 										<Icon name="Trash_light" size="sm" />
 									</button>
@@ -184,7 +247,10 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 						</div>
 					)}
 				</div>
-				<div className="flex justify-end p-6 border-t border-gray-200 dark:border-gray-700">
+				<div 
+					className="flex justify-end p-6 border-t dark:border-gray-700"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<Button variant="outline" size="md" onClick={onClose}>Done</Button>
 				</div>
 			</div>
@@ -287,12 +353,31 @@ export default function KPIMetric({
 			{/* Widgets Grid */}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 				{widgets.map((widget) => (
-					<div key={widget.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 relative">
+					<div 
+						key={widget.id} 
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
 						<div className="flex items-center justify-between mb-4">
-							<h3 className="font-inter text-sm font-medium text-[#050711] dark:text-gray-100">{widget.title}</h3>
+							<h3 
+								className="font-inter text-sm font-medium dark:text-gray-100"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								{widget.title}
+							</h3>
 							<button
 								onClick={() => handleEditWidget(widget)}
-								className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+								className="dark:text-gray-500 dark:hover:text-gray-300"
+								style={{ color: 'var(--text-tertiary)' }}
+								onMouseEnter={(e) => {
+									e.currentTarget.style.color = 'var(--text-secondary)';
+								}}
+								onMouseLeave={(e) => {
+									e.currentTarget.style.color = 'var(--text-tertiary)';
+								}}
 							>
 								<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
 									<path d="M8 4C8.55228 4 9 3.55228 9 3C9 2.44772 8.55228 2 8 2C7.44772 2 7 2.44772 7 3C7 3.55228 7.44772 4 8 4Z" fill="currentColor" />

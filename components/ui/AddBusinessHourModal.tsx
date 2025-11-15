@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import Dropdown from './Dropdown';
-import Input from './Input';
 import Checkbox from './Checkbox';
 import IndividualRadio from './IndividualRadio';
 import { Cross2Icon } from '@radix-ui/react-icons';
@@ -176,14 +175,34 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
-			<div className="bg-white shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+			<div
+				className="dark:bg-gray-800 shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+				style={{ backgroundColor: 'var(--accent-white)' }}
+			>
 				{/* Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200 shrink-0">
-					<h2 className="text-xl font-semibold text-gray-900">Add Business Hour</h2>
+				<div
+					className="flex justify-between items-center p-6 border-b dark:border-gray-700 shrink-0"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<h2
+						className="text-xl font-semibold dark:text-gray-100"
+						style={{ color: 'var(--text-primary)' }}
+					>
+						Add Business Hour
+					</h2>
 					<button
 						onClick={onClose}
-						className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						style={{ color: 'var(--text-tertiary)' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = 'var(--text-secondary)';
+							e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = 'var(--text-tertiary)';
+							e.currentTarget.style.backgroundColor = 'transparent';
+						}}
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -194,7 +213,12 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 				<div className="flex-1 overflow-y-auto p-6 space-y-6">
 					{/* Business Hours Section */}
 					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-3">Business Hours</label>
+						<label
+							className="block text-sm font-medium dark:text-gray-200 mb-3"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							Business Hours
+						</label>
 						<div className="space-y-3">
 							<IndividualRadio
 								name="businessHourType"
@@ -223,7 +247,12 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 					{/* Business Timing Section (only shown when Custom Hour is selected) */}
 					{businessHourType === 'custom' && (
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-3">Business Timing</label>
+							<label
+								className="block text-sm font-medium dark:text-gray-200 mb-3"
+								style={{ color: 'var(--text-secondary)' }}
+							>
+								Business Timing
+							</label>
 							<div className="space-y-4">
 								<IndividualRadio
 									name="businessTiming"
@@ -238,14 +267,29 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 											type="time"
 											value={sameStartTime}
 											onChange={(e) => setSameStartTime(e.target.value)}
-											className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+											className="px-3 py-2 border rounded-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+											style={{
+												borderColor: 'var(--light-gray)',
+												color: 'var(--text-primary)',
+												backgroundColor: 'var(--accent-white)'
+											}}
 										/>
-										<span className="text-sm text-gray-600">to</span>
+										<span
+											className="text-sm dark:text-gray-400"
+											style={{ color: 'var(--text-tertiary)' }}
+										>
+											to
+										</span>
 										<input
 											type="time"
 											value={sameEndTime}
 											onChange={(e) => setSameEndTime(e.target.value)}
-											className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+											className="px-3 py-2 border rounded-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+											style={{
+												borderColor: 'var(--light-gray)',
+												color: 'var(--text-primary)',
+												backgroundColor: 'var(--accent-white)'
+											}}
 										/>
 									</div>
 								)}
@@ -281,15 +325,30 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 													value={differentHours[day.key].startTime}
 													onChange={(e) => handleDifferentHourChange(day.key, 'startTime', e.target.value)}
 													disabled={!differentHours[day.key].enabled}
-													className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+													className="px-3 py-2 border rounded-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed"
+													style={{
+														borderColor: 'var(--light-gray)',
+														color: 'var(--text-primary)',
+														backgroundColor: 'var(--accent-white)'
+													}}
 												/>
-												<span className="text-sm text-gray-600">to</span>
+												<span
+													className="text-sm dark:text-gray-400"
+													style={{ color: 'var(--text-tertiary)' }}
+												>
+													to
+												</span>
 												<input
 													type="time"
 													value={differentHours[day.key].endTime}
 													onChange={(e) => handleDifferentHourChange(day.key, 'endTime', e.target.value)}
 													disabled={!differentHours[day.key].enabled}
-													className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+													className="px-3 py-2 border rounded-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed"
+													style={{
+														borderColor: 'var(--light-gray)',
+														color: 'var(--text-primary)',
+														backgroundColor: 'var(--accent-white)'
+													}}
 												/>
 											</div>
 										))}
@@ -302,7 +361,12 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 					{/* Business Days Section (only shown when Custom Hour is selected and Same hour everyday) */}
 					{businessHourType === 'custom' && businessTiming === 'same' && (
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-3">Business Days</label>
+							<label
+								className="block text-sm font-medium dark:text-gray-200 mb-3"
+								style={{ color: 'var(--text-secondary)' }}
+							>
+								Business Days
+							</label>
 							<div className="space-y-2">
 								{daysOfWeek.map((day) => (
 									<div key={day.key} className="flex items-center gap-3 cursor-pointer">
@@ -320,7 +384,10 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 shrink-0">
+				<div
+					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<Button
 						variant="danger"
 						size="md"

@@ -68,35 +68,71 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 		<div className="relative" ref={dropdownRef}>
 			<button
 				onClick={() => setIsOpen(!isOpen)}
-				className="p-1 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors cursor-pointer"
+				className="p-1 rounded-full transition-colors cursor-pointer"
 				title={userName}
+				style={{
+					color: 'var(--text-tertiary)',
+					backgroundColor: 'transparent'
+				}}
+				onMouseEnter={(e) => {
+					e.currentTarget.style.color = 'var(--text-primary)';
+					e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+				}}
+				onMouseLeave={(e) => {
+					e.currentTarget.style.color = 'var(--text-tertiary)';
+					e.currentTarget.style.backgroundColor = 'transparent';
+				}}
 			>
 				<div className="relative">
 					{userAvatar ? (
 						<img
 							src={userAvatar}
 							alt={userName}
-							className="w-8 h-8 rounded-full border-2 border-gray-200 dark:border-gray-600"
+							className="w-8 h-8 rounded-full border-2"
+							style={{ borderColor: 'var(--light-gray)' }}
 						/>
 					) : (
-						<div className="box-border w-[40px] h-[40px] bg-[#F2F4F7] dark:bg-gray-700 border border-[#E5E7EB] dark:border-gray-600 rounded-[200px] flex items-center justify-center">
-							<span className="text-gray-600 dark:text-gray-300 font-semibold text-sm">
+						<div
+							className="box-border w-[40px] h-[40px] rounded-full flex items-center justify-center"
+							style={{
+								backgroundColor: 'var(--bg-primary)',
+								border: '1px solid var(--light-gray)'
+							}}
+						>
+							<span
+								className="font-semibold text-sm"
+								style={{ color: 'var(--text-primary)' }}
+							>
 								{userName.charAt(0).toUpperCase()}
 							</span>
 						</div>
 					)}
 					{/* Online Status Indicator */}
 					{isOnline && (
-						<div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+						<div
+							className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 rounded-full"
+							style={{ borderColor: 'var(--accent-white)' }}
+						></div>
 					)}
 				</div>
 			</button>
 
 			{/* User Dropdown */}
 			{isOpen && !isStatusOpen && (
-				<div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50   overflow-hidden">
+				<div
+					className="absolute right-0 top-full mt-2 w-80 dark:bg-gray-800 border dark:border-gray-700 shadow-lg z-50 overflow-hidden"
+					style={{
+						backgroundColor: 'var(--accent-white)',
+						borderColor: 'var(--light-gray)'
+					}}
+				>
 					{/* User Info Section */}
-					<div className="p-4 border-b border-gray-200 dark:border-gray-700">
+					<div
+						className="p-4 border-b dark:border-gray-700"
+						style={{
+							borderColor: 'var(--light-gray)'
+						}}
+					>
 						<div className="flex items-center gap-3">
 							{userAvatar ? (
 								<img
@@ -106,20 +142,33 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 								/>
 							) : (
 								<div className="w-12 h-12 bg-[#F2F4F7] dark:bg-gray-700 border border-[#E5E7EB] dark:border-gray-600 rounded-full flex items-center justify-center">
-									<span className="text-gray-600 dark:text-gray-300 font-semibold text-lg">
+									<span
+										className="font-semibold text-lg dark:text-gray-300"
+										style={{ color: 'var(--text-primary)' }}
+									>
 										{userName.charAt(0).toUpperCase()}
 									</span>
 								</div>
 							)}
 							<div className="flex-1">
-								<h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base">{userName}</h3>
-								<p className="text-sm text-gray-500 dark:text-gray-400">{userEmail}</p>
+								<h3
+									className="font-semibold text-base dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{userName}
+								</h3>
+								<p
+									className="text-sm dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									{userEmail}
+								</p>
 							</div>
 						</div>
 					</div>
 
 					{/* Menu Items */}
-					<div className="py-2">
+					<div style={{ backgroundColor: 'var(--accent-white)' }} className="dark:bg-gray-800">
 						{/* Status */}
 						<div className="relative">
 							<button
@@ -127,13 +176,21 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 									e.stopPropagation();
 									setIsStatusOpen(!isStatusOpen);
 								}}
-								className="w-full px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between transition-colors"
+								className="w-full px-4 py-2 text-left flex items-center justify-between transition-colors"
+								style={{
+									color: 'var(--text-secondary)',
+									backgroundColor: 'transparent'
+								}}
+								onMouseEnter={(e) => {
+									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+								}}
+								onMouseLeave={(e) => {
+									e.currentTarget.style.backgroundColor = 'transparent';
+								}}
 							>
 								<span>Status</span>
 								<Icon name="Expand_right_light" size="lg" />
 							</button>
-
-
 						</div>
 
 						{/* Settings */}
@@ -142,15 +199,26 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 								router.push('/usersettings');
 								setIsOpen(false);
 							}}
-							className="w-full px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+							className="w-full px-4 py-2 text-left cursor-pointer transition-colors"
+							style={{
+								color: 'var(--text-secondary)',
+								backgroundColor: 'transparent'
+							}}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.backgroundColor = 'transparent';
+							}}
 						>
 							Settings
 						</button>
 
-
-
 						{/* Separator */}
-						<div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+						<div
+							className="border-t my-2 dark:border-gray-700"
+							style={{ borderColor: 'var(--light-gray)' }}
+						></div>
 
 						{/* Logout */}
 						<button
@@ -158,7 +226,17 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 								onLogoutClick?.();
 								setIsOpen(false);
 							}}
-							className="w-full px-4 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 cursor-pointer transition-colors"
+							className="w-full px-4 py-2 text-left flex items-center gap-2 cursor-pointer transition-colors"
+							style={{
+								color: 'var(--status-error)',
+								backgroundColor: 'transparent'
+							}}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.backgroundColor = 'transparent';
+							}}
 						>
 							<Icon name="Sign_out_squre_light" size="lg" color="red" className="dark:invert-0! dark:opacity-100!" />
 							Log out
@@ -169,26 +247,55 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 
 			{/* Status Submenu */}
 			{isStatusOpen && (
-				<div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50 overflow-hidden">
+				<div
+					className="absolute right-0 top-full mt-2 w-48 dark:bg-gray-800 border dark:border-gray-700 shadow-lg z-50 overflow-hidden"
+					style={{
+						backgroundColor: 'var(--accent-white)',
+						borderColor: 'var(--light-gray)'
+					}}
+				>
 					{/* Back Button Header */}
-					<div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+					<div
+						className="px-4 py-2 border-b dark:border-gray-700"
+						style={{ borderColor: 'var(--light-gray)' }}
+					>
 						<button
 							onClick={() => {
 								setIsStatusOpen(false);
 								setIsOpen(true);
 							}}
-							className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors cursor-pointer"
+							className="flex items-center gap-2 transition-colors cursor-pointer"
+							style={{
+								color: 'var(--text-secondary)',
+								backgroundColor: 'transparent'
+							}}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.color = 'var(--text-primary)';
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.color = 'var(--text-secondary)';
+							}}
 						>
 							<ArrowLeftIcon className="w-4 h-4" />
 							<span className="text-sm font-medium">Back</span>
 						</button>
 					</div>
-					<div className="">
+					<div style={{ backgroundColor: 'var(--accent-white)' }} className="dark:bg-gray-800">
 						{statusOptions.map((option) => (
 							<button
 								key={option.value}
 								onClick={() => handleStatusSelect(option.value)}
-								className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer font-lato font-medium text-[16px] leading-[150%] text-[#3A4050] dark:text-gray-300 transition-colors"
+								className="w-full px-4 py-2 text-left cursor-pointer font-lato font-medium text-[16px] leading-[150%] transition-colors"
+								style={{
+									color: 'var(--text-primary)',
+									backgroundColor: 'transparent'
+								}}
+								onMouseEnter={(e) => {
+									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+								}}
+								onMouseLeave={(e) => {
+									e.currentTarget.style.backgroundColor = 'transparent';
+								}}
 							>
 								{option.label}
 							</button>

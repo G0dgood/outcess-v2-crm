@@ -114,15 +114,33 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-			<div className="bg-white shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+			<div
+				className="dark:bg-gray-800 shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+				style={{ backgroundColor: 'var(--accent-white)' }}
+			>
 				{/* Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200 shrink-0">
-					<h2 className="text-xl font-semibold text-gray-900">
+				<div
+					className="flex justify-between items-center p-6 border-b dark:border-gray-700 shrink-0"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<h2
+						className="text-xl font-semibold dark:text-gray-100"
+						style={{ color: 'var(--text-primary)' }}
+					>
 						{initialData ? 'Edit Shift Hour' : 'New Shift Hour'}
 					</h2>
 					<button
 						onClick={onClose}
-						className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						style={{ color: 'var(--text-tertiary)' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = 'var(--text-secondary)';
+							e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = 'var(--text-tertiary)';
+							e.currentTarget.style.backgroundColor = 'transparent';
+						}}
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -155,6 +173,7 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 							value={formData.shiftStartTime}
 							onChange={(value) => handleInputChange('shiftStartTime')(value)}
 							type="time"
+						inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
 							required
 						/>
 						<Input
@@ -163,6 +182,7 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 							value={formData.shiftEndTime}
 							onChange={(value) => handleInputChange('shiftEndTime')(value)}
 							type="time"
+						inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
 							required
 						/>
 					</div>
@@ -177,7 +197,10 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 shrink-0">
+				<div
+					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<Button
 						variant="danger"
 						size="md"

@@ -5,8 +5,8 @@ import Button from './Button';
 import Input from './Input';
 import Textarea from './Textarea';
 import Checkbox from './Checkbox';
-import Dropdown from './Dropdown';
 import IndividualRadio from './IndividualRadio';
+import ColorPicker from './ColorPicker';
 import { Cross2Icon } from '@radix-ui/react-icons';
 
 interface StatusFormData {
@@ -14,6 +14,7 @@ interface StatusFormData {
 	description: string;
 	roleSelection: 'all' | 'selected';
 	selectedRoles: string[];
+	color: string;
 }
 
 interface CreateStatusModalProps {
@@ -40,6 +41,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 		description: '',
 		roleSelection: 'all',
 		selectedRoles: [],
+		color: '#6C8B7D',
 	});
 	const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
@@ -53,6 +55,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 				description: initialData.description || '',
 				roleSelection: initialData.roleSelection || 'all',
 				selectedRoles: initialData.selectedRoles || [],
+				color: initialData.color || '#6C8B7D',
 			});
 		} else if (isOpen && !initialData) {
 			setFormData({
@@ -60,6 +63,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 				description: '',
 				roleSelection: 'all',
 				selectedRoles: [],
+				color: '#6C8B7D',
 			});
 		}
 	}, [isOpen, initialData]);
@@ -134,15 +138,33 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
-			<div className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+			<div 
+				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+				style={{ backgroundColor: 'var(--accent-white)' }}
+			>
 				{/* Header */}
-				<div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
-					<h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+				<div 
+					className="flex justify-between items-center p-6 border-b dark:border-gray-700 shrink-0"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
+					<h2 
+						className="text-xl font-semibold dark:text-gray-100"
+						style={{ color: 'var(--text-primary)' }}
+					>
 						{isEditMode ? 'Edit Status' : 'Create Status'}
 					</h2>
 					<button
 						onClick={onClose}
-						className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						style={{ color: 'var(--text-tertiary)' }}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.color = 'var(--text-secondary)';
+							e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.color = 'var(--text-tertiary)';
+							e.currentTarget.style.backgroundColor = 'transparent';
+						}}
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
@@ -167,9 +189,20 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 						rows={4}
 					/>
 
+					<ColorPicker
+						label="Status Color"
+						value={formData.color}
+						onChange={(color) => setFormData(prev => ({ ...prev, color }))}
+					/>
+
 					{/* Role Selection */}
 					<div>
-						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Role</label>
+						<label 
+							className="block text-sm font-medium dark:text-gray-300 mb-3"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							Role
+						</label>
 						<div className="space-y-3">
 							<IndividualRadio
 								name="roleSelection"
@@ -245,7 +278,10 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 shrink-0">
+				<div 
+					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
+					style={{ borderColor: 'var(--light-gray)' }}
+				>
 					<Button
 						variant="danger"
 						size="md"
