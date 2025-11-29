@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Icon from './Icon';
 import Dropdown from './Dropdown';
@@ -41,7 +41,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	userIsOnline = true,
 	onCompanyChange,
 	onNotificationsClick,
-	onSettingsClick,
 	onStatusClick,
 	onEditProfileClick,
 	onLogoutClick,
@@ -103,16 +102,18 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		}
 
 		previousUnreadCount.current = unreadCount;
-	}, [sampleNotifications, pathname]);
+	}, [pathname]);
 
 	const handleNotificationClick = () => {
 		// Don't play sound if we're navigating - NotificationDropdown will handle it
 		if (isNavigating.current) {
 			setIsNotificationPanelOpen(!isNotificationPanelOpen);
+			onNotificationsClick?.();
 			return;
 		}
 
 		setIsNotificationPanelOpen(!isNotificationPanelOpen);
+		onNotificationsClick?.();
 		// Note: Sound is now handled by NotificationDropdown component to avoid duplicate sounds
 		// Close profile dropdown if open
 		// setShowDropdown(false);
@@ -152,7 +153,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				} else {
 					setHasStickyNotes(false);
 				}
-			} catch (error) {
+			} catch {
 				setHasStickyNotes(false);
 			}
 		};

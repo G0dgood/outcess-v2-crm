@@ -6,7 +6,7 @@ import Input from './Input';
 import Dropdown from './Dropdown';
 import { Cross2Icon } from '@radix-ui/react-icons';
 
-interface ShiftHour {
+export interface ShiftHour {
 	id?: string;
 	shiftName: string;
 	shiftDays: string;
@@ -162,7 +162,7 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 						placeholder="Select shift days"
 						options={dayOptions}
 						value={formData.shiftDays}
-						onChange={(value) => handleInputChange('shiftDays')(value)}
+						onChange={(value) => handleInputChange('shiftDays')(Array.isArray(value) ? value.join(',') : value)}
 						required
 					/>
 
@@ -172,8 +172,8 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 							placeholder="HH:MM"
 							value={formData.shiftStartTime}
 							onChange={(value) => handleInputChange('shiftStartTime')(value)}
-							type="time"
-						inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+							type="text"
+							inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
 							required
 						/>
 						<Input
@@ -181,8 +181,8 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 							placeholder="HH:MM"
 							value={formData.shiftEndTime}
 							onChange={(value) => handleInputChange('shiftEndTime')(value)}
-							type="time"
-						inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+							type="text"
+							inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
 							required
 						/>
 					</div>
@@ -223,4 +223,3 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 };
 
 export default AddShiftHourModal;
-

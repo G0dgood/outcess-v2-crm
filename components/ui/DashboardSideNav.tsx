@@ -36,8 +36,6 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 	activeItem = 'dashboard',
 	onItemClick,
 	className = '',
-	isMobileOpen = false,
-	onMobileClose,
 }) => {
 	const router = useRouter();
 	const pathname = usePathname();

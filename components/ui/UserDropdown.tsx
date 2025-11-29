@@ -20,8 +20,6 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 	userEmail,
 	userAvatar,
 	isOnline = true,
-	onStatusClick,
-	onEditProfileClick,
 	onLogoutClick,
 }) => {
 	const router = useRouter();

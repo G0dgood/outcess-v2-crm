@@ -7,7 +7,7 @@ import Checkbox from './Checkbox';
 import IndividualRadio from './IndividualRadio';
 import { Cross2Icon } from '@radix-ui/react-icons';
 
-interface BusinessHourData {
+export interface BusinessHourData {
 	businessHourType: '24hours-7days' | '24hours-5days' | 'custom';
 	businessTiming?: 'same' | 'different';
 	sameStartTime?: string;
@@ -409,4 +409,3 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 };
 
 export default AddBusinessHourModal;
-

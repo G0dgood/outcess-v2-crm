@@ -13,7 +13,7 @@ const SupportPage: React.FC = () => {
 	const supportCategories = [
 		{
 			title: 'Getting Started',
-            icon: FileTextIcon,
+			icon: FileTextIcon,
 			description: 'Learn the basics and set up your account',
 			articles: [
 				'How to create your first account',
@@ -35,7 +35,7 @@ const SupportPage: React.FC = () => {
 		},
 		{
 			title: 'Features & Usage',
-            icon: PlayIcon,
+			icon: PlayIcon,
 			description: 'Master all platform features',
 			articles: [
 				'Using the call routing system',
@@ -104,7 +104,7 @@ const SupportPage: React.FC = () => {
 		{
 			title: 'Help Center',
 			description: 'Browse our comprehensive documentation and guides.',
-            icon: FileTextIcon,
+			icon: FileTextIcon,
 			action: 'Browse Docs',
 			link: '/docs',
 			availability: 'Always Available'
@@ -369,7 +369,7 @@ const SupportPage: React.FC = () => {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-                            <FileTextIcon className="w-8 h-8 mb-4 text-[#6C8B7D]" />
+							<FileTextIcon className="w-8 h-8 mb-4 text-[#6C8B7D]" />
 							<h3
 								className="text-lg font-semibold mb-2 text-[#050711] group-hover:text-[#6C8B7D] transition-colors"
 								style={plusJakartaStyle}
@@ -392,7 +392,7 @@ const SupportPage: React.FC = () => {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-                            <PlayIcon className="w-8 h-8 mb-4 text-[#6C8B7D]" />
+							<PlayIcon className="w-8 h-8 mb-4 text-[#6C8B7D]" />
 							<h3
 								className="text-lg font-semibold mb-2 text-[#050711] group-hover:text-[#6C8B7D] transition-colors"
 								style={plusJakartaStyle}

@@ -7,6 +7,9 @@ import LogoUpload from './LogoUpload';
 import AddShiftHourModal from './AddShiftHourModal';
 import AddCurrencyModal from './AddCurrencyModal';
 import AddBusinessHourModal from './AddBusinessHourModal';
+import { ShiftHour } from './AddShiftHourModal';
+import { Currency } from './AddCurrencyModal';
+import { BusinessHourData } from './AddBusinessHourModal';
 import { Pencil1Icon } from '@radix-ui/react-icons';
 import PageHeading from './PageHeading';
 import SupPageHeading from './SubPageHeading';
@@ -22,9 +25,9 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 	const [isAddShiftHourModalOpen, setIsAddShiftHourModalOpen] = useState(false);
 	const [isAddCurrencyModalOpen, setIsAddCurrencyModalOpen] = useState(false);
 	const [isAddBusinessHourModalOpen, setIsAddBusinessHourModalOpen] = useState(false);
-	const [selectedShiftHour, setSelectedShiftHour] = useState<any>(null);
-	const [currencies, setCurrencies] = useState<any[]>([]);
-	const [businessHours, setBusinessHours] = useState<any[]>([]);
+    const [selectedShiftHour, setSelectedShiftHour] = useState<ShiftHour | null>(null);
+    const [currencies, setCurrencies] = useState<Currency[]>([]);
+    const [businessHours, setBusinessHours] = useState<BusinessHourData[]>([]);
 	const [formData, setFormData] = useState({
 		companyName: 'Uconnect',
 		phoneNumber: '',
@@ -668,12 +671,12 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 								>
 									Currencies
 								</h2>
-								<p 
-									className="dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								>
-									Configure your organization's currency settings on this page.
-								</p>
+                            <p 
+                                className="dark:text-gray-400"
+                                style={{ color: 'var(--text-tertiary)' }}
+                            >
+                                Configure your organization&apos;s currency settings on this page.
+                            </p>
 							</div>
 							<Button
 								variant="primary"
@@ -750,4 +753,3 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 };
 
 export default CompanyDetails;
-

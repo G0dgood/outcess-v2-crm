@@ -6,7 +6,7 @@ import Dropdown from './Dropdown';
 import Input from './Input';
 import { Cross2Icon } from '@radix-ui/react-icons';
 
-interface Currency {
+export interface Currency {
 	code: string;
 	name: string;
 	symbol: string;
@@ -173,7 +173,7 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 						placeholder="Select currency"
 						options={currencyOptions}
 						value={selectedCurrency}
-						onChange={handleCurrencyChange}
+						onChange={(value) => handleCurrencyChange(Array.isArray(value) ? value[0] : value)}
 						required
 					/>
 
@@ -216,4 +216,3 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 };
 
 export default AddCurrencyModal;
-
