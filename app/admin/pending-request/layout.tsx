@@ -22,7 +22,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 			<AdminHeader
 				userName="Admin User"
 				userEmail="admin@example.com"
-				userIsOnline={true} 
+				isOnline={true}
 				onEditProfileClick={() => console.log('Edit profile clicked')}
 				onMobileMenuToggle={toggleMobileMenu}
 			/>
@@ -51,4 +51,3 @@ export default function PendingRequestLayout({ children }: { children: React.Rea
 		</SetupProvider>
 	);
 }
-
