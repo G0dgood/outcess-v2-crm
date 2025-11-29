@@ -23,9 +23,8 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 	const { setupData } = useSetup();
 	const { isDarkMode } = useTheme();
 	const primaryColor = setupData.primaryColor || '#050711';
-	const [selectedReason, setSelectedReason] = useState<string>('');
-	const [showConfirmation, setShowConfirmation] = useState(false);
-	const [selectedReasonLabel, setSelectedReasonLabel] = useState<string>('');
+    const [selectedReason, setSelectedReason] = useState<string>('');
+    const [showConfirmation, setShowConfirmation] = useState(false);
 
 	// Helper function to convert hex to rgba
 	const hexToRgba = (hex: string, alpha: number): string => {
@@ -60,29 +59,25 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 
 	// Reset state when modal closes
 	useEffect(() => {
-		if (!isOpen) {
-			setSelectedReason('');
-			setShowConfirmation(false);
-			setSelectedReasonLabel('');
-		}
+        if (!isOpen) {
+            setSelectedReason('');
+            setShowConfirmation(false);
+        }
 	}, [isOpen]);
 
 	const handleContinue = () => {
-		if (selectedReason) {
-			const reason = deactivationReasons.find(r => r.id === selectedReason);
-			setSelectedReasonLabel(reason?.title || '');
-			setShowConfirmation(true);
-		}
+        if (selectedReason) {
+            setShowConfirmation(true);
+        }
 	};
 
 	const handleConfirm = () => {
-		if (selectedReason) {
-			onConfirm(selectedReason);
-			setSelectedReason('');
-			setShowConfirmation(false);
-			setSelectedReasonLabel('');
-			onClose();
-		}
+        if (selectedReason) {
+            onConfirm(selectedReason);
+            setSelectedReason('');
+            setShowConfirmation(false);
+            onClose();
+        }
 	};
 
 	const handleBack = () => {
@@ -272,4 +267,3 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 };
 
 export default DeactivateBusinessModal;
-

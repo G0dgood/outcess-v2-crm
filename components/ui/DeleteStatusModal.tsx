@@ -86,7 +86,7 @@ export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
 						Are you sure you want to delete the <span 
 							className="font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
-						>'{statusName}'</span> status? This action cannot be undone.
+                        >&apos;{statusName}&apos;</span> status? This action cannot be undone.
 					</p>
 				</div>
 
@@ -116,4 +116,3 @@ export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
 };
 
 export default DeleteStatusModal;
-

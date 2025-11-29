@@ -36,7 +36,7 @@ export const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
 						className="font-lato font-medium text-[16px] leading-[150%] dark:text-gray-100 mb-5"
 						style={{ color: 'var(--text-primary)' }}
 					>
-						Are you sure you want to delete this user from the CRM?
+                    Are you sure you want to delete {userName} from the CRM?
 					</h2>
 
 					{/* Warning Message */}
@@ -85,4 +85,3 @@ export const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
 };
 
 export default DeleteUserModal;
-

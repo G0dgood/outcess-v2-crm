@@ -8,11 +8,13 @@ interface UploadBaseProps {
   isOpen?: boolean;
   onClose?: () => void;
   showButton?: boolean;
-  onUploadComplete?: (data: any[]) => void;
+  onUploadComplete?: (data: CsvRow[]) => void;
 }
 
 // Simple CSV parser function
-const parseCSV = (text: string, header: boolean = true): any[] => {
+type CsvRow = Record<string, string>;
+
+const parseCSV = (text: string, header: boolean = true): CsvRow[] => {
   const lines = text.split('\n').filter(line => line.trim());
   if (lines.length === 0) return [];
 
@@ -48,7 +50,7 @@ const parseCSV = (text: string, header: boolean = true): any[] => {
 
   const headers = rows[0];
   const data = rows.slice(1).map(row => {
-    const obj: any = {};
+    const obj: Record<string, string> = {};
     headers.forEach((header, index) => {
       obj[header] = row[index] || '';
     });
@@ -68,26 +70,13 @@ const UploadBase: React.FC<UploadBaseProps> = ({
   const primaryColor = setupData.primaryColor || '#050711';
   const [progress, setProgress] = useState(0);
   const [show, setShow] = useState(false);
-  const [jsonData, setJSONData] = useState<any[]>([]);
+  const [jsonData, setJSONData] = useState<CsvRow[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<any>(null);
-  const [uploadSummary, setUploadSummary] = useState<{
-    successCount: number;
-    skippedCount: number;
-    failedCount: number;
-    skippedDetails: string;
-    failedDetails: string;
-  }>({
-    successCount: 0,
-    skippedCount: 0,
-    failedCount: 0,
-    skippedDetails: "None",
-    failedDetails: "None",
-  });
+  const [isSuccess] = useState(false);
+  const [isError] = useState(false);
+  const [isLoading] = useState(false);
+  type ApiError = { data?: { message?: string } };
+  const [error] = useState<ApiError | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -104,7 +93,6 @@ const UploadBase: React.FC<UploadBaseProps> = ({
     setProgress(0);
     setJSONData([]);
     setIsDragOver(false);
-    setIsModalOpen(false);
   };
 
   const handleShow = () => setShow(true);
@@ -209,45 +197,27 @@ const UploadBase: React.FC<UploadBaseProps> = ({
       const successCount = created.length;
       const skippedCount = updated.length;
       const failedCount = failed.length;
+      const skippedDetails = updated.join(", ");
+      const failedDetails = failed
+        .map((item: { email?: string; reason?: string }) => `${item.email || "Unknown email"}: ${item.reason || "Unknown reason"}`)
+        .join("; ");
 
-      // Build detailed message for skipped and failed records
-      const skippedDetails =
-        updated.length > 0
-          ? updated
-            .map((item: any) => item)
-            .filter((email: string) => email)
-            .join(", ")
-          : "None";
-      const failedDetails =
-        failed.length > 0
-          ? failed
-            .map(
-              (item: any) =>
-                `${item.email || "Unknown email"}: ${item.reason}`
-            )
-            .join("; ")
-          : "None";
-
-      // Set modal data and show modal
-      setUploadSummary({
-        successCount,
-        skippedCount,
-        failedCount,
-        skippedDetails,
-        failedDetails,
-      });
-      setIsModalOpen(true);
+      if (successCount || skippedCount || failedCount) {
+        toast.success("Upload summary", {
+          description: `Success: ${successCount}, Skipped: ${skippedCount}${skippedDetails ? ` (${skippedDetails})` : ""}, Failed: ${failedCount}${failedDetails ? ` (${failedDetails})` : ""}`,
+          duration: 5000,
+        });
+      }
 
       // Call onUploadComplete callback if provided
       if (onUploadComplete && jsonData.length > 0) {
         onUploadComplete(jsonData);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setProgress(0);
 
       toast.error("Upload Failed", {
-        description:
-          err?.data?.message || "An error occurred while uploading employees",
+        description: (typeof err === "object" && err && (err as { data?: { message?: string } }).data?.message) || "An error occurred while uploading employees",
         duration: 5000,
       });
     }
@@ -308,10 +278,8 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                     color: '#DC2626'
                   }}
                 >
-                  {/* @ts-ignore */}
                   <p>
                     <i className="fas fa-exclamation-circle mr-2" />{" "}
-                    {/* @ts-ignore */}
                     {error?.data?.message || "Upload failed"}
                   </p>
                   <button
