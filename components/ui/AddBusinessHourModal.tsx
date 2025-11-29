@@ -163,14 +163,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 		onClose();
 	};
 
-	const formatTime = (time: string): string => {
-		if (!time) return '';
-		const [hours, minutes] = time.split(':');
-		const hour = parseInt(hours);
-		const ampm = hour >= 12 ? 'PM' : 'AM';
-		const displayHour = hour % 12 || 12;
-		return `${displayHour}:${minutes.padStart(2, '0')} ${ampm}`;
-	};
+
 
 	if (!isOpen) return null;
 

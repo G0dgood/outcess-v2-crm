@@ -166,22 +166,22 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 	const handleSave = () => {
 		if (formData.title.trim() && formData.dataSource.length > 0) {
 			// Convert to single string if only one source selected (for backward compatibility)
-			const dataSource = formData.dataSource.length === 1 
-				? formData.dataSource[0] 
+			const dataSource = formData.dataSource.length === 1
+				? formData.dataSource[0]
 				: formData.dataSource;
-			
+
 			// If multiple data sources, use colors map; otherwise use single color
-			const chartData: any = {
+			const chartData = {
 				...formData,
 				dataSource
 			};
-			
+
 			if (formData.dataSource.length > 1) {
 				chartData.colors = formData.colors;
 			} else {
 				chartData.color = formData.colors[formData.dataSource[0]] || formData.color;
 			}
-			
+
 			onSave(chartData);
 			setFormData({
 				title: '',
@@ -223,24 +223,24 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-			<div 
+			<div
 				className="dark:bg-gray-800 w-full max-w-md mx-4 shadow-lg"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Modal Header */}
-				<div 
+				<div
 					className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<div className="flex items-center gap-3">
-						<h2 
+						<h2
 							className="font-inter text-xl font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Add New Chart
 						</h2>
 						{isOffline && (
-							<span 
+							<span
 								className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
 								style={{
 									backgroundColor: 'rgba(220, 53, 69, 0.1)',
@@ -248,16 +248,16 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 									border: '1px solid rgba(220, 53, 69, 0.2)'
 								}}
 							>
-								<svg 
-									className="w-3 h-3" 
-									fill="none" 
-									stroke="currentColor" 
+								<svg
+									className="w-3 h-3"
+									fill="none"
+									stroke="currentColor"
 									viewBox="0 0 24 24"
 								>
-									<path 
-										strokeLinecap="round" 
-										strokeLinejoin="round" 
-										strokeWidth={2} 
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
 										d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
 									/>
 								</svg>
@@ -352,22 +352,22 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 				</div>
 
 				{/* Modal Footer */}
-				<div 
+				<div
 					className="flex items-center gap-3 p-6 border-t dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					{isOffline && (
 						<span className="text-xs flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
-							<svg 
-								className="w-4 h-4" 
-								fill="none" 
-								stroke="currentColor" 
+							<svg
+								className="w-4 h-4"
+								fill="none"
+								stroke="currentColor"
 								viewBox="0 0 24 24"
 							>
-								<path 
-									strokeLinecap="round" 
-									strokeLinejoin="round" 
-									strokeWidth={2} 
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
 									d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
 								/>
 							</svg>

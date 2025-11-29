@@ -11,7 +11,7 @@ interface LoginTopHeaderProps {
   onUpgradeClick: () => void;
 }
 
-const LoginTopHeader: React.FC<LoginTopHeaderProps> = ({ email, plan, primaryColor, onUpgradeClick }) => {
+const LoginTopHeader: React.FC<LoginTopHeaderProps> = ({ primaryColor, onUpgradeClick }) => {
 
 
   return (

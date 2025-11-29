@@ -15,11 +15,9 @@ const Pagination: React.FC<PaginationProps> = ({
 	currentPage,
 	totalPages,
 	onPageChange,
-	showEllipsis = true,
 	maxVisiblePages = 5,
 	className = '',
 	primaryColor = '#050711',
-	secondaryColor = '#6C8B7D',
 }) => {
 	const handlePrevious = () => {
 		if (currentPage > 1) {

@@ -5,15 +5,11 @@ import { usePathname } from 'next/navigation';
 import PageHeading from './PageHeading';
 import SubPageHeading from './SubPageHeading';
 import Dropdown from './Dropdown';
-import Checkbox from './Checkbox';
 import Button from './Button';
 import {
 	loadSoundPreferences,
 	saveSoundPreferences,
-	setGlobalSoundEnabled,
-	setComponentSoundSettings,
 	type SoundPreferences,
-	type ComponentSoundSettings
 } from '@/utils/soundPreferences';
 import { playNotificationSound, type SoundType } from '@/utils/soundEffects';
 import { SpeakerLoudIcon, SpeakerOffIcon } from '@radix-ui/react-icons';

@@ -23,8 +23,7 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 	minDimensions = { width: 174, height: 28 },
 	className = '',
 	disabled = false,
-	error,
-	value
+	error
 }) => {
 	const [isDragOver, setIsDragOver] = useState(false);
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -113,11 +112,7 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 		}
 	};
 
-	// Get file type description
-	const getFileTypeDescription = () => {
-		const types = acceptedTypes.map(type => type.split('/')[1].toUpperCase());
-		return `${types.join(', ')} (min. ${minDimensions.width}w x ${minDimensions.height}h and less than ${maxSize}MB)`;
-	};
+
 
 	return (
 		<div className={`logo-upload-container ${className}`}>
@@ -129,10 +124,10 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 
 			<div
 				className={`border-2 border-dashed transition-colors cursor-pointer ${isDragOver
-						? 'border-blue-400 bg-blue-50'
-						: error
-							? 'border-red-300 bg-red-50'
-							: 'border-gray-300 hover:border-gray-400'
+					? 'border-blue-400 bg-blue-50'
+					: error
+						? 'border-red-300 bg-red-50'
+						: 'border-gray-300 hover:border-gray-400'
 					} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
 				onClick={handleClick}
 				onDragOver={handleDragOver}

@@ -88,28 +88,9 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 		onClose();
 	};
 
-	const getSelectedRolesDisplay = () => {
-		if (selectedRoles.length === 0) {
-			return 'Select roles';
-		}
-		return selectedRoles.map(roleId => {
-			const role = roleOptions.find(r => r.id === roleId);
-			return role ? role.label : roleId;
-		}).join(', ');
-	};
 
-	const getSharedToDisplay = () => {
-		if (selectedRoles.length === roleOptions.length) {
-			return 'All roles';
-		}
-		if (selectedRoles.length === 0) {
-			return 'No roles selected';
-		}
-		return selectedRoles.map(roleId => {
-			const role = roleOptions.find(r => r.id === roleId);
-			return role ? role.label : roleId;
-		}).join(', ');
-	};
+
+
 
 	if (!isOpen) return null;
 
@@ -120,16 +101,16 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
-			<div 
+			<div
 				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 overflow-hidden flex flex-col max-h-[90vh]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
-				<div 
+				<div
 					className="flex justify-between items-center p-6 border-b dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<h2 
+					<h2
 						className="text-xl font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
@@ -155,7 +136,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 
 				{/* Form Content */}
 				<div className="flex-1 p-6 space-y-4 overflow-y-auto">
-					<p 
+					<p
 						className="text-sm dark:text-gray-400"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
@@ -163,7 +144,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 					</p>
 
 					<div ref={dropdownRef} className="relative">
-						<label 
+						<label
 							className="block text-sm font-medium dark:text-gray-300 mb-2"
 							style={{ color: 'var(--text-secondary)' }}
 						>
@@ -187,7 +168,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 						>
 							<div className="flex flex-wrap gap-2 flex-1">
 								{selectedRoleLabels.length === 0 ? (
-									<span 
+									<span
 										className="text-sm dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
@@ -229,13 +210,13 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 									))
 								)}
 							</div>
-							<ChevronDownIcon 
+							<ChevronDownIcon
 								className={`w-4 h-4 dark:text-gray-400 transition-transform shrink-0 ml-2 ${isDropdownOpen ? 'transform rotate-180' : ''}`}
 								style={{ color: 'var(--text-tertiary)' }}
 							/>
 						</div>
 						{isDropdownOpen && (
-							<div 
+							<div
 								className="absolute top-full left-0 right-0 mt-1 dark:bg-gray-800 dark:border-gray-600 shadow-lg z-50 max-h-48 overflow-y-auto"
 								style={{
 									backgroundColor: 'var(--accent-white)',
@@ -262,7 +243,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 												onChange={() => handleRoleToggle(role.id)}
 												size="medium"
 											/>
-											<span 
+											<span
 												className="text-sm dark:text-gray-100"
 												style={{ color: 'var(--text-primary)' }}
 											>
@@ -277,7 +258,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div 
+				<div
 					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>

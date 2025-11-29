@@ -8,9 +8,9 @@ export type SocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error'
 // Message types
 export interface SocketMessage {
 	type: string;
-	payload?: any;
+	payload?: unknown;
 	timestamp?: number;
-	[id: string]: any;
+	[id: string]: unknown;
 }
 
 // Event handler type
@@ -46,7 +46,7 @@ interface SocketContextType {
 
 	// Message methods
 	send: (message: SocketMessage | string) => void;
-	sendJSON: (data: any) => void;
+	sendJSON: (data: unknown) => void;
 
 	// Event listeners
 	on: (event: string, handler: SocketEventHandler) => void;
@@ -222,7 +222,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 			return;
 		}
 
-		const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+		const connection =
+			(navigator as NavigatorWithConnection).connection ||
+			(navigator as NavigatorWithConnection).mozConnection ||
+			(navigator as NavigatorWithConnection).webkitConnection;
 		if (!connection) {
 			setNetworkSpeed('unknown');
 			return;
@@ -286,9 +289,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 		checkNetworkSpeed();
 
 		// Monitor connection changes
-		const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+		const connection =
+			(navigator as NavigatorWithConnection).connection ||
+			(navigator as NavigatorWithConnection).mozConnection ||
+			(navigator as NavigatorWithConnection).webkitConnection;
 		if (connection) {
-			connection.addEventListener('change', checkNetworkSpeed);
+			connection?.addEventListener?.('change', checkNetworkSpeed);
 		}
 
 		window.addEventListener('online', handleOnline);
@@ -296,7 +302,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 
 		return () => {
 			if (connection) {
-				connection.removeEventListener('change', checkNetworkSpeed);
+				connection?.removeEventListener?.('change', checkNetworkSpeed);
 			}
 			window.removeEventListener('online', handleOnline);
 			window.removeEventListener('offline', handleOffline);
@@ -459,7 +465,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 		}
 	}, [offlineModeEnabled, isOnline, status, maxQueueSize, saveQueueToStorage]);
 
-	const sendJSON = useCallback((data: any) => {
+	const sendJSON = useCallback((data: unknown) => {
 		send({
 			type: 'message',
 			payload: data,
@@ -590,4 +596,15 @@ export const useSocket = () => {
 };
 
 export default SocketContext;
+type NetworkConnection = {
+	effectiveType?: string;
+	addEventListener?: (type: 'change', listener: () => void) => void;
+	removeEventListener?: (type: 'change', listener: () => void) => void;
+};
+
+type NavigatorWithConnection = Navigator & {
+	connection?: NetworkConnection;
+	mozConnection?: NetworkConnection;
+	webkitConnection?: NetworkConnection;
+};
 

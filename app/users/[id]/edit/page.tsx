@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -26,7 +26,6 @@ const EditUserPage: React.FC = () => {
 	const userId = params.id as string;
 	const { setupData } = useSetup();
 	const primaryColor = setupData.primaryColor || '#050711';
-	const secondaryColor = setupData.secondaryColor || '#6C8B7D';
 
 	const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
 	const [showAlert, setShowAlert] = useState(true);
@@ -46,7 +45,7 @@ const EditUserPage: React.FC = () => {
 	const [loading, setLoading] = useState(true);
 
 	// Mock user data - in a real app, fetch from API using userId
-	const mockUsers: User[] = [
+	const mockUsers: User[] = useMemo(() => ([
 		{
 			id: 'Sup1109',
 			firstName: 'Jane',
@@ -74,7 +73,7 @@ const EditUserPage: React.FC = () => {
 			role: 'Agent',
 			loginStatus: 'Logged In',
 		},
-	];
+	]), []);
 
 	useEffect(() => {
 		// Find user by ID
@@ -90,7 +89,7 @@ const EditUserPage: React.FC = () => {
 			});
 		}
 		setLoading(false);
-	}, [userId]);
+	}, [userId, mockUsers]);
 
 	const roleOptions = [
 		{ value: 'Agent', label: 'Agent' },
@@ -288,7 +287,7 @@ const EditUserPage: React.FC = () => {
 						<Dropdown
 							label="Role"
 							value={formData.role}
-							onChange={handleInputChange('role')}
+							onChange={(value) => handleInputChange('role')(Array.isArray(value) ? value[0] : value)}
 							options={roleOptions}
 							placeholder="Select Role"
 						/>
@@ -375,7 +374,7 @@ const EditUserPage: React.FC = () => {
 								className="flex-1 text-sm dark:text-orange-400"
 								style={{ color: '#EA580C' }}
 							>
-								You're about to change the password of {formData.firstName} {formData.lastName}. The user will be logged out immediately.
+								You&apos;re about to change the password of {formData.firstName} {formData.lastName}. The user will be logged out immediately.
 							</div>
 							<button
 								onClick={() => setShowAlert(false)}
@@ -441,4 +440,3 @@ const EditUserPage: React.FC = () => {
 };
 
 export default EditUserPage;
-

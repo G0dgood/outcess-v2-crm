@@ -51,10 +51,12 @@ export const playSound = (
 		return;
 	}
 
-	try {
-		const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-		const oscillator = audioContext.createOscillator();
-		const gainNode = audioContext.createGain();
+    try {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (!AudioCtx) return;
+        const audioContext = new AudioCtx();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
 
 		oscillator.connect(gainNode);
 		gainNode.connect(audioContext.destination);
@@ -194,4 +196,3 @@ export const playNotificationSound = (type: SoundType, component?: keyof SoundPr
 			playSound(440, 0.15, 'sine', 0.25); // A4
 	}
 };
-

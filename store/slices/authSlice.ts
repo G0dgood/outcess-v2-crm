@@ -2,17 +2,17 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // User interface
 export interface User {
-	id: string;
-	email: string;
-	name: string;
-	avatar?: string;
-	role?: string;
-	companyId?: string;
-	companyName?: string;
-	phone?: string;
-	createdAt?: string;
-	updatedAt?: string;
-	[key: string]: any;
+    id: string;
+    email: string;
+    name: string;
+    avatar?: string;
+    role?: string;
+    companyId?: string;
+    companyName?: string;
+    phone?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    [key: string]: unknown;
 }
 
 // Authentication tokens
@@ -241,4 +241,3 @@ export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.
 export const selectIsLoading = (state: { auth: AuthState }) => state.auth.isLoading;
 export const selectAccessToken = (state: { auth: AuthState }) => state.auth.tokens?.accessToken || null;
 export const selectRefreshToken = (state: { auth: AuthState }) => state.auth.tokens?.refreshToken || null;
-

@@ -4,7 +4,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useSetup } from '@/contexts/SetupContext';
 import { PersonIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { sampleNotifications } from '@/data/notifications';
-import type { Notification } from './NotificationDropdown';
 import Pagination from './Pagination';
 import Search from './Search';
 
@@ -183,11 +182,10 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 						<div className="flex items-center gap-2">
 							<button
 								onClick={() => setFilter('all')}
-								className={`px-4 py-2 text-sm font-medium transition-colors ${
-									filter === 'all'
+								className={`px-4 py-2 text-sm font-medium transition-colors ${filter === 'all'
 										? 'dark:bg-gray-700 dark:text-gray-100'
 										: 'dark:text-gray-400 dark:hover:text-gray-200'
-								}`}
+									}`}
 								style={{
 									backgroundColor: filter === 'all' ? 'var(--bg-primary)' : 'transparent',
 									color: filter === 'all' ? 'var(--text-primary)' : 'var(--text-tertiary)',
@@ -209,11 +207,10 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 							</button>
 							<button
 								onClick={() => setFilter('unread')}
-								className={`px-4 py-2 text-sm font-medium transition-colors ${
-									filter === 'unread'
+								className={`px-4 py-2 text-sm font-medium transition-colors ${filter === 'unread'
 										? 'dark:bg-gray-700 dark:text-gray-100'
 										: 'dark:text-gray-400 dark:hover:text-gray-200'
-								}`}
+									}`}
 								style={{
 									backgroundColor: filter === 'unread' ? 'var(--bg-primary)' : 'transparent',
 									color: filter === 'unread' ? 'var(--text-primary)' : 'var(--text-tertiary)',
@@ -235,11 +232,10 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 							</button>
 							<button
 								onClick={() => setFilter('read')}
-								className={`px-4 py-2 text-sm font-medium transition-colors ${
-									filter === 'read'
+								className={`px-4 py-2 text-sm font-medium transition-colors ${filter === 'read'
 										? 'dark:bg-gray-700 dark:text-gray-100'
 										: 'dark:text-gray-400 dark:hover:text-gray-200'
-								}`}
+									}`}
 								style={{
 									backgroundColor: filter === 'read' ? 'var(--bg-primary)' : 'transparent',
 									color: filter === 'read' ? 'var(--text-primary)' : 'var(--text-tertiary)',
@@ -278,9 +274,8 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 								{paginatedNotifications.map((notification) => (
 									<div
 										key={notification.id}
-										className={`p-4 border-b dark:border-gray-700 dark:hover:bg-gray-700 transition-colors ${
-											!notification.isRead ? 'dark:bg-green-900/20' : 'dark:bg-gray-800'
-										}`}
+										className={`p-4 border-b dark:border-gray-700 dark:hover:bg-gray-700 transition-colors ${!notification.isRead ? 'dark:bg-green-900/20' : 'dark:bg-gray-800'
+											}`}
 										style={{
 											borderColor: 'var(--light-gray)',
 											backgroundColor: notification.isRead ? 'var(--accent-white)' : 'var(--pale-mint-green)'

@@ -47,7 +47,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 	onClose,
 	customer,
 }) => {
-	const [searchTerm, setSearchTerm] = useState('');
+
 	const [pageSize, setPageSize] = useState(3);
 	const [isFillDispositionModalOpen, setIsFillDispositionModalOpen] = useState(false);
 	const [isSMSModalOpen, setIsSMSModalOpen] = useState(false);

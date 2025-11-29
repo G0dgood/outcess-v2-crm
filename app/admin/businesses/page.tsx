@@ -83,7 +83,7 @@ const BusinessesManagementPage: React.FC = () => {
 		<div  >
 			{/* Header Section */}
 			<div className="mb-6">
-				<h1 
+				<h1
 					className="text-2xl font-semibold dark:text-gray-100 mb-2"
 					style={{ color: 'var(--text-primary)' }}
 				>
@@ -91,30 +91,30 @@ const BusinessesManagementPage: React.FC = () => {
 				</h1>
 			</div>
 
-		{/* Search and Filter Section */}
-		<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-			<Search
-				placeholder="Search businesses..."
-				value={searchTerm}
-				onChange={setSearchTerm}
-				className="w-full sm:w-auto"
-				maxWidth="w-full"
-				showClearButton={true}
-			/>
-			<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
-				<Dropdown
-					label=""
-					value={statusFilter}
-					onChange={(value) => setStatusFilter(value)}
-					options={statusOptions}
-					className="w-full sm:w-[180px]"
-					inputClassName="h-8 text-xs sm:h-10 sm:text-sm"
+			{/* Search and Filter Section */}
+			<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+				<Search
+					placeholder="Search businesses..."
+					value={searchTerm}
+					onChange={setSearchTerm}
+					className="w-full sm:w-auto"
+					maxWidth="w-full"
+					showClearButton={true}
 				/>
+				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
+					<Dropdown
+						label=""
+						value={statusFilter}
+						onChange={(value) => setStatusFilter(Array.isArray(value) ? value[0] : value)}
+						options={statusOptions}
+						className="w-full sm:w-[180px]"
+						inputClassName="h-8 text-xs sm:h-10 sm:text-sm"
+					/>
+				</div>
 			</div>
-		</div>
 
 			{/* Businesses Table */}
-			<div 
+			<div
 				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
 				style={{
 					backgroundColor: 'var(--accent-white)',
@@ -122,11 +122,11 @@ const BusinessesManagementPage: React.FC = () => {
 				}}
 			>
 				<div className="overflow-x-auto">
-					<table 
+					<table
 						className="min-w-full divide-y dark:divide-gray-700"
 						style={{ borderColor: 'var(--light-gray)' }}
 					>
-						<thead 
+						<thead
 							className="dark:bg-gray-700 border-b dark:border-gray-700"
 							style={{
 								backgroundColor: 'var(--bg-primary)',
@@ -134,31 +134,31 @@ const BusinessesManagementPage: React.FC = () => {
 							}}
 						>
 							<tr>
-								<th 
+								<th
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Company Name
 								</th>
-								<th 
+								<th
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Status
 								</th>
-								<th 
+								<th
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Users
 								</th>
-								<th 
+								<th
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Contact Person
 								</th>
-								<th 
+								<th
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -166,7 +166,7 @@ const BusinessesManagementPage: React.FC = () => {
 								</th>
 							</tr>
 						</thead>
-						<tbody 
+						<tbody
 							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
 							style={{
 								backgroundColor: 'var(--accent-white)',
@@ -175,8 +175,8 @@ const BusinessesManagementPage: React.FC = () => {
 						>
 							{paginatedBusinesses.length === 0 ? (
 								<tr>
-									<td 
-										colSpan={5} 
+									<td
+										colSpan={5}
 										className="px-6 py-12 text-center dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
@@ -185,8 +185,8 @@ const BusinessesManagementPage: React.FC = () => {
 								</tr>
 							) : (
 								paginatedBusinesses.map((business) => (
-									<tr 
-										key={business.id} 
+									<tr
+										key={business.id}
 										className="dark:hover:bg-gray-700 transition-colors"
 										style={{ borderColor: 'var(--light-gray)' }}
 										onMouseEnter={(e) => {
@@ -197,7 +197,7 @@ const BusinessesManagementPage: React.FC = () => {
 										}}
 									>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span 
+											<span
 												className="text-sm font-medium dark:text-gray-100"
 												style={{ color: 'var(--text-primary)' }}
 											>
@@ -222,7 +222,7 @@ const BusinessesManagementPage: React.FC = () => {
 											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span 
+											<span
 												className="text-sm dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
@@ -230,7 +230,7 @@ const BusinessesManagementPage: React.FC = () => {
 											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span 
+											<span
 												className="text-sm dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>

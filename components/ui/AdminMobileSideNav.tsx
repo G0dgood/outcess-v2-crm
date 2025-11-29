@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import AdminSideNav from './AdminSideNav';
 

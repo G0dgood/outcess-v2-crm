@@ -1,10 +1,4 @@
 "use client";
-
-import Dashboard from "@/components/setupIcon/Dashboard";
-import Group from "@/components/setupIcon/Group";
-import Mark from "@/components/setupIcon/Mark";
-import Menu from "@/components/setupIcon/Menu";
-import UserAlt from "@/components/setupIcon/UserAlt";
 import BottomNav from "@/components/ui/BottomNav";
 import SetupHeader from "@/components/ui/SetupHeader";
 import SetupSidebar from "@/components/ui/SetupSidebar";

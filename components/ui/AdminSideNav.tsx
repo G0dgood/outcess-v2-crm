@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSetup } from '@/contexts/SetupContext';
 import {
@@ -64,7 +64,7 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 		},
 	];
 
-	const handleItemClick = (item: NavItem, e?: React.MouseEvent) => {
+	const handleItemClick = (item: NavItem) => {
 		if (onItemClick) {
 			onItemClick(item.id);
 		} else {
@@ -111,7 +111,7 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 							return (
 								<div key={item.id}>
 									<button
-										onClick={(e) => handleItemClick(item, e)}
+										onClick={() => handleItemClick(item)}
 										className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 transition-all duration-200 ${isActive
 											? 'text-white'
 											: 'dark:text-gray-300 hover:text-white dark:hover:text-white'

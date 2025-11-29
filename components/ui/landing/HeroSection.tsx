@@ -10,7 +10,7 @@ interface HeroSectionProps {
 	agents: string[];
 }
 
-const HeroSection: React.FC<HeroSectionProps> = ({ agents }) => {
+const HeroSection: React.FC<HeroSectionProps> = () => {
 
 	return (
 		<section className="flex flex-col gap-12 md:flex-row md:items-center md:gap-16 px-6 md:px-45 pt-45 pb-18">

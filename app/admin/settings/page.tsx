@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,7 +40,7 @@ export default function SettingsPage() {
 	// Loading states
 	const [isProfileLoading, setIsProfileLoading] = useState(false);
 	const [isPasswordLoading, setIsPasswordLoading] = useState(false);
-	const [isLoadingUserData, setIsLoadingUserData] = useState(false);
+	const [isLoadingUserData] = useState(false);
 
 	// Profile section
 	const [isEditingProfile, setIsEditingProfile] = useState(false);

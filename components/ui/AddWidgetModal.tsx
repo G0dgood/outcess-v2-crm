@@ -156,7 +156,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 				<Dropdown
 					label="Widget Title"
 					value={formData.title}
-					onChange={handleInputChange('title')}
+					onChange={(value) => handleInputChange('title')(Array.isArray(value) ? value[0] : value)}
 					options={widgetTitleOptions}
 					placeholder="Select widget title"
 				/>

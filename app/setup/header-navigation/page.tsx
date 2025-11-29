@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { Menu } from '@/components/setupIcon/Menu';
 import { Dashboard } from '@/components/setupIcon/Dashboard';
-import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import ColorPicker from '@/components/ui/ColorPicker';
 import LogoUpload from '@/components/ui/LogoUpload';
@@ -20,7 +19,7 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 	const [primaryColor, setPrimaryColor] = useState<string>(setupData.primaryColor);
 	const [secondaryColor, setSecondaryColor] = useState<string>(setupData.secondaryColor);
 	const [logoFile, setLogoFile] = useState<File | null>(null);
-
+	console.log('logoFile', logoFile)
 	const handleMenuStyleChange = (style: MenuStyle): void => {
 		setSelectedLayout(style);
 		updateNavigationSettings({ menuStyle: style });
@@ -104,7 +103,7 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 						className="font-lato text-sm dark:text-gray-400 mb-6"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
-						Configure your CRM's main navigation structure
+						Configure your CRM&apos;s main navigation structure
 					</p>
 				</div>
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">

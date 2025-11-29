@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Input from '@/components/ui/Input';
-import IndividualRadio from '@/components/ui/IndividualRadio';
 import CallDisposition from '@/components/CallDisposition';
 import KPIMetric from '@/components/KPIMetric';
 import { useSetup } from '@/contexts/SetupContext';
@@ -18,23 +17,18 @@ export default function DashboardPage(): React.JSX.Element {
 	const { setupData, updateDashboardSettings } = useSetup();
 	const { dashboardSettings } = setupData;
 
-	const visibilityOptions: VisibilityOption[] = [
-		{ value: 'all', label: 'All' },
-		{ value: 'admin', label: 'Admin' },
-		{ value: 'admin-supervisor', label: 'Admin & Supervisor' },
-		{ value: 'custom', label: 'Custom' }
-	];
+
 
 	return (
 		<div className="w-full h-full">
 			<div className="mb-8">
-				<h1 
+				<h1
 					className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
 					style={{ color: 'var(--text-secondary)' }}
 				>
 					Dashboard
 				</h1>
-				<p 
+				<p
 					className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
@@ -43,7 +37,7 @@ export default function DashboardPage(): React.JSX.Element {
 			</div>
 
 			{/* Dashboard Configuration */}
-			<div 
+			<div
 				className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6"
 				style={{
 					backgroundColor: 'var(--accent-white)',
@@ -79,7 +73,7 @@ export default function DashboardPage(): React.JSX.Element {
 
 			{/* Navigation Tabs */}
 			<div className="mb-6">
-				<div 
+				<div
 					className="flex border-b dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>

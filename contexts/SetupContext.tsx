@@ -54,11 +54,7 @@ interface CustomerField {
 	options?: string[]; // For dropdown, radio, checkbox fields
 }
 
-interface FieldType {
-	id: string;
-	name: string;
-	description: string;
-}
+
 
 interface User {
 	id: string;

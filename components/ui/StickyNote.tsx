@@ -134,11 +134,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 		setIsEditing(false);
 	};
 
-	const handleCancel = () => {
-		setTitle(note.title);
-		setContent(note.content);
-		setIsEditing(false);
-	};
+
 
 	const toggleTodo = (todoId: string) => {
 		const updatedTodos = note.todos.map(todo =>

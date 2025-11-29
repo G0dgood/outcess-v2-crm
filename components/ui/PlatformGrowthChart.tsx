@@ -9,8 +9,8 @@ interface MonthlyData {
 }
 
 const PlatformGrowthChart: React.FC = () => {
-	const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-	
+
+
 	// Sample data based on the image description
 	const data: MonthlyData[] = [
 		{ month: 'Jan', businesses: 90, users: 58 },
@@ -56,8 +56,8 @@ const PlatformGrowthChart: React.FC = () => {
 
 	return (
 		<div className="w-full overflow-x-auto">
-			<svg 
-				width={chartWidth} 
+			<svg
+				width={chartWidth}
 				height={chartHeight}
 				className="w-full"
 				viewBox={`0 0 ${chartWidth} ${chartHeight}`}

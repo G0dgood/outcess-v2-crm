@@ -55,7 +55,7 @@ const businessSizeOptions = [
 const plusJakartaStyle = { fontFamily: 'var(--font-plus-jakarta)' };
 
 // NoRecordFound
-const NoRecordFound = ({ colSpan }: any) => {
+const NoRecordFound = ({ colSpan }: { colSpan: number }) => {
 	return (
 		<tr>
 			<td colSpan={colSpan} className="h-[300px] p-0 m-auto border-b-0">
@@ -73,7 +73,7 @@ const NoRecordFound = ({ colSpan }: any) => {
 };
 
 // SVGLoader Fetch
-const SVGLoaderFetch = ({ colSpan, text }: any) => (
+const SVGLoaderFetch = ({ colSpan, text }: { colSpan: number; text: string }) => (
 	<tr>
 		<td colSpan={colSpan} className="h-[300px] p-0 m-auto">
 			<div className="center-content flex flex-col justify-center items-center h-full">

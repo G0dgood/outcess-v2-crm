@@ -4,6 +4,7 @@
  */
 
 import { DispositionFormData } from '@/components/ui/FillDispositionModal';
+import type { SocketMessage } from '@/contexts/SocketContext';
 
 export interface OfflineDisposition extends DispositionFormData {
 	id: string;
@@ -117,7 +118,7 @@ export const clearSyncedDispositions = (): void => {
  * This should be called when connection is restored
  */
 export const syncPendingDispositions = async (
-	sendFn?: (message: any) => void
+    sendFn?: (message: SocketMessage) => void
 ): Promise<{ success: number; failed: number }> => {
 	const pending = getPendingDispositions();
 	let success = 0;
@@ -216,4 +217,3 @@ export const getSyncedDispositions = (customerId?: string): SyncedDisposition[] 
 	}
 	return [];
 };
-

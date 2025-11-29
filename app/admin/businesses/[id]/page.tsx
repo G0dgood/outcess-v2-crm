@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import DeactivateBusinessModal from '@/components/ui/DeactivateBusinessModal';
 import Pagination from '@/components/ui/Pagination';
@@ -16,7 +15,6 @@ interface BusinessDetailProps {
 }
 
 const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
-	const router = useRouter();
 	const { setupData } = useSetup();
 	const [activeTab, setActiveTab] = useState('overview');
 	const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
@@ -244,7 +242,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 		// Replace **text** with <strong>text</strong>
 		const parts = details.split(/(\*\*[^*]+\*\*)/g);
 		return (
-			<span 
+			<span
 				className="text-sm dark:text-gray-100"
 				style={{ color: 'var(--text-primary)' }}
 			>
@@ -272,7 +270,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 		<div>
 			{/* Header Section */}
 			<div className="mb-6">
-				<h1 
+				<h1
 					className="text-2xl font-semibold dark:text-gray-100 mb-2"
 					style={{ color: 'var(--text-primary)' }}
 				>
@@ -281,7 +279,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 			</div>
 
 			{/* Tabs and Deactivate Button */}
-			<div 
+			<div
 				className="flex items-center justify-between mb-6 border-b dark:border-gray-700"
 				style={{ borderColor: 'var(--light-gray)' }}
 			>
@@ -332,14 +330,14 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 			{activeTab === 'overview' && (
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					{/* Basic Information Card */}
-					<div 
+					<div
 						className="dark:bg-gray-800 border dark:border-gray-700 p-6"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
 						}}
 					>
-						<h2 
+						<h2
 							className="text-lg font-semibold dark:text-gray-100 mb-4"
 							style={{ color: 'var(--text-primary)' }}
 						>
@@ -347,13 +345,13 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 						</h2>
 						<div className="space-y-4">
 							<div>
-								<span 
+								<span
 									className="text-sm font-medium dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Business ID:
 								</span>
-								<span 
+								<span
 									className="ml-2 text-sm dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -361,14 +359,14 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 								</span>
 							</div>
 							<div>
-								<span 
+								<span
 									className="text-sm font-medium dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Status:
 								</span>
 								<span className="ml-2">
-									<span 
+									<span
 										className="inline-flex px-2 py-1 text-xs font-semibold rounded-full dark:bg-green-900/30 dark:text-green-400"
 										style={{
 											backgroundColor: 'rgba(34, 197, 94, 0.1)',
@@ -380,13 +378,13 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 								</span>
 							</div>
 							<div>
-								<span 
+								<span
 									className="text-sm font-medium dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Industry:
 								</span>
-								<span 
+								<span
 									className="ml-2 text-sm dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -394,13 +392,13 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 								</span>
 							</div>
 							<div>
-								<span 
+								<span
 									className="text-sm font-medium dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Registration Date:
 								</span>
-								<span 
+								<span
 									className="ml-2 text-sm dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -411,14 +409,14 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 					</div>
 
 					{/* Contact Information Card */}
-					<div 
+					<div
 						className="dark:bg-gray-800 border dark:border-gray-700 p-6"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
 						}}
 					>
-						<h2 
+						<h2
 							className="text-lg font-semibold dark:text-gray-100 mb-4"
 							style={{ color: 'var(--text-primary)' }}
 						>
@@ -426,13 +424,13 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 						</h2>
 						<div className="space-y-4">
 							<div>
-								<span 
+								<span
 									className="text-sm font-medium dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Primary Contact:
 								</span>
-								<span 
+								<span
 									className="ml-2 text-sm dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -440,13 +438,13 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 								</span>
 							</div>
 							<div>
-								<span 
+								<span
 									className="text-sm font-medium dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Email:
 								</span>
-								<span 
+								<span
 									className="ml-2 text-sm dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -454,13 +452,13 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 								</span>
 							</div>
 							<div>
-								<span 
+								<span
 									className="text-sm font-medium dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Phone:
 								</span>
-								<span 
+								<span
 									className="ml-2 text-sm dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -468,13 +466,13 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 								</span>
 							</div>
 							<div>
-								<span 
+								<span
 									className="text-sm font-medium dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Address:
 								</span>
-								<span 
+								<span
 									className="ml-2 text-sm dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -485,14 +483,14 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 					</div>
 
 					{/* Subscription Details Card */}
-					<div 
+					<div
 						className="dark:bg-gray-800 border dark:border-gray-700 p-6"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
 						}}
 					>
-						<h2 
+						<h2
 							className="text-lg font-semibold dark:text-gray-100 mb-4"
 							style={{ color: 'var(--text-primary)' }}
 						>
@@ -500,13 +498,13 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 						</h2>
 						<div className="space-y-4">
 							<div>
-								<span 
+								<span
 									className="text-sm font-medium dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									User Count:
 								</span>
-								<span 
+								<span
 									className="ml-2 text-sm dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -514,13 +512,13 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 								</span>
 							</div>
 							<div>
-								<span 
+								<span
 									className="text-sm font-medium dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Last Billing:
 								</span>
-								<span 
+								<span
 									className="ml-2 text-sm dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -531,14 +529,14 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 					</div>
 
 					{/* Active Module Card */}
-					<div 
+					<div
 						className="dark:bg-gray-800 border dark:border-gray-700 p-6"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
 						}}
 					>
-						<h2 
+						<h2
 							className="text-lg font-semibold dark:text-gray-100 mb-4"
 							style={{ color: 'var(--text-primary)' }}
 						>
@@ -574,7 +572,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 				<div>
 					{/* Header */}
 					<div className="mb-6">
-						<h2 
+						<h2
 							className="text-lg font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
@@ -583,7 +581,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 					</div>
 
 					{/* Users Table */}
-					<div 
+					<div
 						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden mb-6"
 						style={{
 							backgroundColor: 'var(--accent-white)',
@@ -591,31 +589,31 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 						}}
 					>
 						<div className="overflow-x-auto">
-							<table 
+							<table
 								className="min-w-full divide-y dark:divide-gray-700"
 								style={{ borderColor: 'var(--light-gray)' }}
 							>
-								<thead 
+								<thead
 									className="dark:bg-gray-700 border-b dark:border-gray-700"
-									style={{ 
+									style={{
 										backgroundColor: 'var(--bg-primary)',
 										borderBottomColor: 'var(--light-gray)'
 									}}
 								>
 									<tr>
-										<th 
+										<th
 											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											Name
 										</th>
-										<th 
+										<th
 											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											Email
 										</th>
-										<th 
+										<th
 											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 											style={{ color: 'var(--text-primary)' }}
 										>
@@ -623,7 +621,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 										</th>
 									</tr>
 								</thead>
-								<tbody 
+								<tbody
 									className="dark:bg-gray-800 divide-y dark:divide-gray-700"
 									style={{
 										backgroundColor: 'var(--accent-white)',
@@ -631,8 +629,8 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 									}}
 								>
 									{paginatedUsers.map((user) => (
-										<tr 
-											key={user.id} 
+										<tr
+											key={user.id}
 											className="dark:hover:bg-gray-700 transition-colors"
 											style={{ borderColor: 'var(--light-gray)' }}
 											onMouseEnter={(e) => {
@@ -643,7 +641,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 											}}
 										>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span 
+												<span
 													className="text-sm font-medium dark:text-gray-100"
 													style={{ color: 'var(--text-primary)' }}
 												>
@@ -651,7 +649,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 												</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span 
+												<span
 													className="text-sm dark:text-gray-400"
 													style={{ color: 'var(--text-tertiary)' }}
 												>
@@ -659,7 +657,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 												</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span 
+												<span
 													className="text-sm dark:text-gray-400"
 													style={{ color: 'var(--text-tertiary)' }}
 												>
@@ -705,7 +703,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 				<div>
 					{/* Header */}
 					<div className="mb-6">
-						<h2 
+						<h2
 							className="text-lg font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
@@ -714,7 +712,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 					</div>
 
 					{/* Billing Table */}
-					<div 
+					<div
 						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden mb-6"
 						style={{
 							backgroundColor: 'var(--accent-white)',
@@ -722,31 +720,31 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 						}}
 					>
 						<div className="overflow-x-auto">
-							<table 
+							<table
 								className="min-w-full divide-y dark:divide-gray-700"
 								style={{ borderColor: 'var(--light-gray)' }}
 							>
-								<thead 
+								<thead
 									className="dark:bg-gray-700 border-b dark:border-gray-700"
-									style={{ 
+									style={{
 										backgroundColor: 'var(--bg-primary)',
 										borderBottomColor: 'var(--light-gray)'
 									}}
 								>
 									<tr>
-										<th 
+										<th
 											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											Date
 										</th>
-										<th 
+										<th
 											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											Amount
 										</th>
-										<th 
+										<th
 											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 											style={{ color: 'var(--text-primary)' }}
 										>
@@ -754,7 +752,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 										</th>
 									</tr>
 								</thead>
-								<tbody 
+								<tbody
 									className="dark:bg-gray-800 divide-y dark:divide-gray-700"
 									style={{
 										backgroundColor: 'var(--accent-white)',
@@ -762,8 +760,8 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 									}}
 								>
 									{paginatedBilling.map((billing) => (
-										<tr 
-											key={billing.id} 
+										<tr
+											key={billing.id}
 											className="dark:hover:bg-gray-700 transition-colors"
 											style={{ borderColor: 'var(--light-gray)' }}
 											onMouseEnter={(e) => {
@@ -774,7 +772,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 											}}
 										>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span 
+												<span
 													className="text-sm dark:text-gray-100"
 													style={{ color: 'var(--text-primary)' }}
 												>
@@ -782,7 +780,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 												</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span 
+												<span
 													className="text-sm font-medium dark:text-gray-100"
 													style={{ color: 'var(--text-primary)' }}
 												>
@@ -790,7 +788,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 												</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span 
+												<span
 													className="inline-flex px-2 py-1 text-xs font-semibold rounded-full dark:bg-green-900/30 dark:text-green-400"
 													style={{
 														backgroundColor: 'rgba(34, 197, 94, 0.1)',
@@ -839,7 +837,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 				<div>
 					{/* Header with Filters and Export */}
 					<div className="flex items-center justify-between mb-6">
-						<h2 
+						<h2
 							className="text-lg font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
@@ -897,7 +895,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 					</div>
 
 					{/* Activity Log Table */}
-					<div 
+					<div
 						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
 						style={{
 							backgroundColor: 'var(--accent-white)',
@@ -905,37 +903,37 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 						}}
 					>
 						<div className="overflow-x-auto">
-							<table 
+							<table
 								className="min-w-full divide-y dark:divide-gray-700"
 								style={{ borderColor: 'var(--light-gray)' }}
 							>
-								<thead 
+								<thead
 									className="dark:bg-gray-700 border-b dark:border-gray-700"
-									style={{ 
+									style={{
 										backgroundColor: 'var(--bg-primary)',
 										borderBottomColor: 'var(--light-gray)'
 									}}
 								>
 									<tr>
-										<th 
+										<th
 											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											Timestamp
 										</th>
-										<th 
+										<th
 											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											User
 										</th>
-										<th 
+										<th
 											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											Action
 										</th>
-										<th 
+										<th
 											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 											style={{ color: 'var(--text-primary)' }}
 										>
@@ -943,7 +941,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 										</th>
 									</tr>
 								</thead>
-								<tbody 
+								<tbody
 									className="dark:bg-gray-800 divide-y dark:divide-gray-700"
 									style={{
 										backgroundColor: 'var(--accent-white)',
@@ -951,8 +949,8 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 									}}
 								>
 									{activityLog.map((activity) => (
-										<tr 
-											key={activity.id} 
+										<tr
+											key={activity.id}
 											className="dark:hover:bg-gray-700 transition-colors"
 											style={{ borderColor: 'var(--light-gray)' }}
 											onMouseEnter={(e) => {
@@ -963,7 +961,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 											}}
 										>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span 
+												<span
 													className="text-sm dark:text-gray-100"
 													style={{ color: 'var(--text-primary)' }}
 												>
@@ -972,13 +970,13 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 											</td>
 											<td className="px-6 py-4">
 												<div className="flex flex-col">
-													<span 
+													<span
 														className="text-sm font-medium dark:text-gray-100"
 														style={{ color: 'var(--text-primary)' }}
 													>
 														{activity.user}
 													</span>
-													<span 
+													<span
 														className="text-sm dark:text-gray-400"
 														style={{ color: 'var(--text-tertiary)' }}
 													>
@@ -987,7 +985,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 												</div>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap">
-												<span 
+												<span
 													className="text-sm dark:text-gray-100"
 													style={{ color: 'var(--text-primary)' }}
 												>
@@ -995,7 +993,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 												</span>
 											</td>
 											<td className="px-6 py-4">
-												<span 
+												<span
 													className="text-sm dark:text-gray-100"
 													style={{ color: 'var(--text-primary)' }}
 												>

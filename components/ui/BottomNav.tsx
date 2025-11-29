@@ -1,6 +1,5 @@
 import React from 'react';
 import Button from './Button';
-import { colors } from '@/lib/colors';
 
 interface BottomNavProps {
 	onSave?: () => void;

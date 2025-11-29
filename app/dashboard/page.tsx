@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Button from '@/components/ui/Button';
-import Dropdown from '@/components/ui/Dropdown';
 import AddChartModal from '@/components/ui/AddChartModal';
 import EditChartModal from '@/components/ui/EditChartModal';
 import AddWidgetModal from '@/components/ui/AddWidgetModal';
@@ -10,7 +9,6 @@ import EditWidgetModal from '@/components/ui/EditWidgetModal';
 import DeleteWidgetModal from '@/components/ui/DeleteWidgetModal';
 import StickyNote, { StickyNoteData } from '@/components/ui/StickyNote';
 import StickyNoteModal from '@/components/ui/StickyNoteModal';
-import Icon from '@/components/ui/Icon';
 import { PlusIcon, Pencil1Icon } from '@radix-ui/react-icons';
 import { useSetup } from '@/contexts/SetupContext';
 import type { Chart, Widget } from '@/contexts/SetupContext';
@@ -64,27 +62,15 @@ const DashboardContent: React.FC = () => {
 
 	const primaryColor = setupData.primaryColor || 'var(--text-primary)';
 
-	const primaryButtonStyle: React.CSSProperties = {
-		backgroundColor: primaryColor,
-		borderColor: primaryColor,
-		color: '#FFFFFF',
-	};
 
-	const outlineButtonStyle: React.CSSProperties = {
-		borderColor: primaryColor,
-		color: primaryColor,
-		backgroundColor: 'var(--accent-white)',
-	};
+
+
 
 	const handlePrimaryHover = (event: React.MouseEvent<HTMLButtonElement>, isHover: boolean) => {
 		event.currentTarget.style.filter = isHover ? 'brightness(0.95)' : '';
 	};
 
-	const handleOutlineHover = (event: React.MouseEvent<HTMLButtonElement>, isHover: boolean) => {
-		event.currentTarget.style.backgroundColor = isHover ? 'var(--bg-primary)' : 'var(--accent-white)';
-		event.currentTarget.style.color = primaryColor;
-		event.currentTarget.style.borderColor = primaryColor;
-	};
+
 
 	// Load sticky notes from localStorage on mount
 	useEffect(() => {

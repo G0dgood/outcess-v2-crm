@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import Button from './Button';
 import Dropdown from './Dropdown';
 import Icon from './Icon';
 

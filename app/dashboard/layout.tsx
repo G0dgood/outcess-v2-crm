@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
-import { toast } from "sonner";
 import DashboardHeader from "@/components/ui/DashboardHeader";
 import DashboardSideNav from "@/components/ui/DashboardSideNav";
 import MobileSideNav from "@/components/ui/MobileSideNav";

@@ -14,7 +14,7 @@ export interface User {
 	phone?: string;
 	createdAt?: string;
 	updatedAt?: string;
-	[key: string]: any;
+    [key: string]: unknown;
 }
 
 // Authentication tokens
@@ -64,7 +64,7 @@ export interface RegisterData {
 	name: string;
 	companyName?: string;
 	phone?: string;
-	[key: string]: any;
+    [key: string]: unknown;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -108,7 +108,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 		} finally {
 			setIsLoading(false);
 		}
-	}, [storageKey]);
+    }, [storageKey]);
 
 	// Save auth data to localStorage
 	const saveAuthData = useCallback((userData: User | null, tokenData: AuthTokens | null) => {
@@ -461,4 +461,3 @@ export const useAuth = () => {
 };
 
 export default AuthContext;
-
