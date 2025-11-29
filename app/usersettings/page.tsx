@@ -74,19 +74,7 @@ export default function SettingsPage() {
 	// const [isEmailVerifying, setIsEmailVerifying] = useState(false);
 
 	// Credit cards section
-	const [creditCards, setCreditCards] = useState<CreditCardInfo[]>([
-		{ id: '1', last4: '4242', brand: 'Visa', expiryMonth: 12, expiryYear: 2025, isDefault: true },
-		{ id: '2', last4: '5555', brand: 'Mastercard', expiryMonth: 8, expiryYear: 2026, isDefault: false },
-	]);
-	const [isAddingCard, setIsAddingCard] = useState(false);
-	const [newCardData, setNewCardData] = useState({
-		cardNumber: '',
-		expiryMonth: '',
-		expiryYear: '',
-		cvv: '',
-		cardholderName: '',
-		zipCode: '',
-	});
+
 
 	const handleProfileSave = async () => {
 		setIsProfileLoading(true);
