@@ -122,10 +122,7 @@ const UsersPage: React.FC = () => {
 		{ value: 'Admin', label: 'Admin' },
 	];
 
-	const handleImportUser = () => {
-		console.log('Import User clicked');
-		// Implement import user logic
-	};
+
 
 	const handleSelectAll = (checked: boolean) => {
 		if (checked) {

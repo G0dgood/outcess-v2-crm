@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Input from '@/components/ui/Input';
 import PasswordInput from '@/components/ui/PasswordInput';
 import Checkbox from '@/components/ui/Checkbox';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';

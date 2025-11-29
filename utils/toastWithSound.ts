@@ -4,8 +4,7 @@
  */
 
 import { toast } from 'sonner';
-import { playNotificationSound } from './soundEffects';
-import type { SoundPreferences } from './soundPreferences';
+import { playNotificationSound } from './soundEffects'; 
 
 /**
  * Show success toast with sound
@@ -59,7 +58,7 @@ export const toastPromise = <T,>(
     options?: Parameters<typeof toast.promise>[1]
 ) => {
     return toast.promise(promise, messages, {
-        ...options,
+        ...(options || {}),
         onSuccess: (data: T) => {
             playNotificationSound('success', 'toasts');
             options?.onSuccess?.(data);
@@ -67,7 +66,7 @@ export const toastPromise = <T,>(
         onError: (error: unknown) => {
             playNotificationSound('error', 'toasts');
             options?.onError?.(error);
-        },
+        }
     });
 };
 

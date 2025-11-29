@@ -23,7 +23,7 @@ import {
 	Tooltip,
 	Legend,
 } from 'chart.js';
-import { Bar, Line, Pie, Doughnut, PolarArea, Radar, Scatter, Bubble } from 'react-chartjs-2';
+import { Pie } from 'react-chartjs-2';
 
 ChartJS.register(
 	CategoryScale,
@@ -608,7 +608,7 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 					{/* Legend */}
 					<div className="space-y-2">
 						{dispositions.length > 0 ? (
-							dispositions.map((disposition, index) => (
+							dispositions.map((disposition) => (
 								<div key={disposition.id} className="flex items-center gap-2">
 									<div
 										className="w-3 h-3 rounded-sm"

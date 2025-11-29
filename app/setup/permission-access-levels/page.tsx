@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
@@ -14,18 +14,9 @@ interface Permission {
 	description: string;
 }
 
-interface PermissionCategory {
-	id: string;
-	name: string;
-	icon: string;
-	permissions: Permission[];
-}
 
-interface RolePermissions {
-	[roleId: string]: {
-		[permissionId: string]: boolean;
-	};
-}
+
+
 
 export default function PermissionAccessLevelsPage() {
 	const router = useRouter();

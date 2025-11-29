@@ -16,10 +16,7 @@ interface Role {
 	permissions: Record<string, boolean>;
 }
 
-interface Module {
-	id: string;
-	name: string;
-}
+
 
 export default function RolePermissionManagementPage() {
 	const router = useRouter();
@@ -88,10 +85,7 @@ export default function RolePermissionManagementPage() {
 		// TODO: Implement save functionality
 	};
 
-	const handleCancel = () => {
-		// TODO: Implement cancel functionality or navigation back
-		console.log('Canceling changes');
-	};
+
 
 	return (
 		<div className="w-full h-full">

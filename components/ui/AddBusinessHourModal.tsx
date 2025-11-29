@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Button from './Button';
-import Dropdown from './Dropdown';
 import Checkbox from './Checkbox';
 import IndividualRadio from './IndividualRadio';
 import { Cross2Icon } from '@radix-ui/react-icons';

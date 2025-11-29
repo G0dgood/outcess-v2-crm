@@ -1,7 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
+import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -9,7 +7,6 @@ import { useSetup } from "@/contexts/SetupContext";
 import {
 	PersonIcon,
 	LockClosedIcon,
-	IdCardIcon,
 	EyeOpenIcon,
 	EyeClosedIcon,
 	MoonIcon,
@@ -21,6 +18,7 @@ import SoundSettings from "@/components/ui/SoundSettings";
 import PageHeading from "@/components/ui/PageHeading";
 import SubPageHeading from "@/components/ui/SubPageHeading";
 import { useTheme } from "@/contexts/ThemeContext";
+import { toast } from "sonner";
 
 interface CreditCardInfo {
 	id: string;

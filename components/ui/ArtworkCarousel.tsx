@@ -156,7 +156,6 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 
 	// Handle image load error - fallback to LQIP thumbnail
 	const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, imageId: string) => {
-		const img = e.currentTarget;
 		if (!imageErrors.has(imageId)) {
 			setImageErrors((prev) => new Set(prev).add(imageId));
 		}

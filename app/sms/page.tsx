@@ -29,7 +29,7 @@ const SMSPage: React.FC = () => {
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 	const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
-	const [smsList, setSmsList] = useState<SMS[]>([
+	const [smsList] = useState<SMS[]>([
 		{
 			id: 'SMS001',
 			phoneNumber: '+234 802 345 6789',

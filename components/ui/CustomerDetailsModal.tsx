@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Button from './Button';
-import Search from './Search';
 import FillDispositionModal, { DispositionFormData } from './FillDispositionModal';
 import SMSModal from './SMSModal';
 import DispositionHistoryModal from './DispositionHistoryModal';
-import { Cross2Icon, ChevronDownIcon, ChatBubbleIcon, ClipboardIcon, PersonIcon, EnvelopeClosedIcon, HomeIcon, MobileIcon, IdCardIcon } from '@radix-ui/react-icons';
-import { getOfflineDispositions, OfflineDisposition, getSyncedDispositions, SyncedDisposition, saveSyncedDisposition } from '@/utils/offlineDispositions';
+import { Cross2Icon, ChatBubbleIcon, ClipboardIcon, PersonIcon, EnvelopeClosedIcon, HomeIcon, MobileIcon, IdCardIcon } from '@radix-ui/react-icons';
+import { getOfflineDispositions, OfflineDisposition, getSyncedDispositions, SyncedDisposition } from '@/utils/offlineDispositions';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface DispositionHistoryItem {
