@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import LandingHeader from '@/components/ui/LandingHeader';
 import LandingFooter from '@/components/ui/landing/LandingFooter';
 import { plusJakartaStyle } from '@/components/Options';
-import { MagnifyingGlassIcon, ChatBubbleIcon, EnvelopeClosedIcon, BookOpenIcon, VideoIcon, ArrowRightIcon } from '@radix-ui/react-icons';
+import { MagnifyingGlassIcon, ChatBubbleIcon, EnvelopeClosedIcon, FileTextIcon, PlayIcon, ArrowRightIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
 
 const SupportPage: React.FC = () => {
@@ -13,7 +13,7 @@ const SupportPage: React.FC = () => {
 	const supportCategories = [
 		{
 			title: 'Getting Started',
-			icon: BookOpenIcon,
+            icon: FileTextIcon,
 			description: 'Learn the basics and set up your account',
 			articles: [
 				'How to create your first account',
@@ -35,7 +35,7 @@ const SupportPage: React.FC = () => {
 		},
 		{
 			title: 'Features & Usage',
-			icon: VideoIcon,
+            icon: PlayIcon,
 			description: 'Master all platform features',
 			articles: [
 				'Using the call routing system',
@@ -104,7 +104,7 @@ const SupportPage: React.FC = () => {
 		{
 			title: 'Help Center',
 			description: 'Browse our comprehensive documentation and guides.',
-			icon: BookOpenIcon,
+            icon: FileTextIcon,
 			action: 'Browse Docs',
 			link: '/docs',
 			availability: 'Always Available'
@@ -369,7 +369,7 @@ const SupportPage: React.FC = () => {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							<BookOpenIcon className="w-8 h-8 mb-4 text-[#6C8B7D]" />
+                            <FileTextIcon className="w-8 h-8 mb-4 text-[#6C8B7D]" />
 							<h3
 								className="text-lg font-semibold mb-2 text-[#050711] group-hover:text-[#6C8B7D] transition-colors"
 								style={plusJakartaStyle}
@@ -392,7 +392,7 @@ const SupportPage: React.FC = () => {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							<VideoIcon className="w-8 h-8 mb-4 text-[#6C8B7D]" />
+                            <PlayIcon className="w-8 h-8 mb-4 text-[#6C8B7D]" />
 							<h3
 								className="text-lg font-semibold mb-2 text-[#050711] group-hover:text-[#6C8B7D] transition-colors"
 								style={plusJakartaStyle}
@@ -468,7 +468,6 @@ const SupportPage: React.FC = () => {
 };
 
 export default SupportPage;
-
 
 
 
