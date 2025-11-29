@@ -46,7 +46,6 @@ function PaymentPageContent() {
 	const orderPrice = orderBillingCycle === 'annual' ? Math.round(baseMonthlyPrice * 12 * 0.83) : baseMonthlyPrice;
 
 	const primaryColor = setupData.primaryColor || '#9333EA';
-	const secondaryColor = setupData.secondaryColor || '#6C8B7D';
 
 	const countries = [
 		{ value: 'US', label: 'United States' },
@@ -262,7 +261,7 @@ function PaymentPageContent() {
 									label="Country"
 									options={countries}
 									value={formData.country}
-									onChange={(value) => setFormData(prev => ({ ...prev, country: value }))}
+									onChange={(value) => setFormData(prev => ({ ...prev, country: Array.isArray(value) ? value[0] : value }))}
 								/>
 							</div>
 
@@ -378,7 +377,7 @@ function PaymentPageContent() {
 									className="flex items-center justify-between pt-3 border-t-2"
 									style={{ borderColor: primaryColor }}
 								>
-									<span className="text-sm font-medium text-gray-900">Today's total</span>
+									<span className="text-sm font-medium text-gray-900">Today&apos;s total</span>
 									<span
 										className="text-2xl font-bold"
 										style={{ color: primaryColor }}

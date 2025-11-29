@@ -8,7 +8,7 @@ import Textarea from './Textarea';
 import DateInput from './DateInput';
 import { Cross2Icon, CalendarIcon, ClockIcon } from '@radix-ui/react-icons';
 import { useSocket } from '@/contexts/SocketContext';
-import { saveOfflineDisposition, updateDispositionStatus, removeOfflineDisposition, saveSyncedDisposition } from '@/utils/offlineDispositions';
+import { saveOfflineDisposition, saveSyncedDisposition } from '@/utils/offlineDispositions';
 import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -115,10 +115,11 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	const handleDateIconClick = () => {
 		if (dateInputRef.current) {
 			// Use showPicker() if available (modern browsers)
-			if ('showPicker' in dateInputRef.current && typeof (dateInputRef.current as any).showPicker === 'function') {
+			const el = dateInputRef.current as HTMLInputElement & { showPicker?: () => void };
+			if (typeof el.showPicker === 'function') {
 				try {
-					(dateInputRef.current as any).showPicker();
-				} catch (error) {
+					el.showPicker();
+				} catch {
 					// Fallback to focus and click if showPicker fails
 					dateInputRef.current.focus();
 					dateInputRef.current.click();
@@ -134,10 +135,11 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	const handleTimeIconClick = () => {
 		if (timeInputRef.current) {
 			// Use showPicker() if available (modern browsers)
-			if ('showPicker' in timeInputRef.current && typeof (timeInputRef.current as any).showPicker === 'function') {
+			const el = timeInputRef.current as HTMLInputElement & { showPicker?: () => void };
+			if (typeof el.showPicker === 'function') {
 				try {
-					(timeInputRef.current as any).showPicker();
-				} catch (error) {
+					el.showPicker();
+				} catch {
 					// Fallback to focus and click if showPicker fails
 					timeInputRef.current.focus();
 					timeInputRef.current.click();
@@ -153,10 +155,11 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	const handleCommitmentDateIconClick = () => {
 		if (commitmentDateInputRef.current) {
 			// Use showPicker() if available (modern browsers)
-			if ('showPicker' in commitmentDateInputRef.current && typeof (commitmentDateInputRef.current as any).showPicker === 'function') {
+			const el = commitmentDateInputRef.current as HTMLInputElement & { showPicker?: () => void };
+			if (typeof el.showPicker === 'function') {
 				try {
-					(commitmentDateInputRef.current as any).showPicker();
-				} catch (error) {
+					el.showPicker();
+				} catch {
 					// Fallback to focus and click if showPicker fails
 					commitmentDateInputRef.current.focus();
 					commitmentDateInputRef.current.click();
@@ -263,24 +266,24 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-			<div 
+			<div
 				className="dark:bg-gray-800 shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden flex flex-col"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
-				<div 
+				<div
 					className="flex justify-between items-center p-6 border-b dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<div className="flex items-center gap-3">
-						<h2 
+						<h2
 							className="text-xl font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Disposition
 						</h2>
 						{isOffline && (
-							<span 
+							<span
 								className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
 								style={{
 									backgroundColor: 'rgba(220, 53, 69, 0.1)',
@@ -288,16 +291,16 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 									border: '1px solid rgba(220, 53, 69, 0.2)'
 								}}
 							>
-								<svg 
-									className="w-3 h-3" 
-									fill="none" 
-									stroke="currentColor" 
+								<svg
+									className="w-3 h-3"
+									fill="none"
+									stroke="currentColor"
 									viewBox="0 0 24 24"
 								>
-									<path 
-										strokeLinecap="round" 
-										strokeLinejoin="round" 
-										strokeWidth={2} 
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
 										d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
 									/>
 								</svg>
@@ -333,7 +336,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 								placeholder="Select"
 								options={callAnsweredOptions}
 								value={formData.callAnswered}
-								onChange={handleInputChange('callAnswered')}
+								onChange={(value) => handleInputChange('callAnswered')(Array.isArray(value) ? value.join(',') : value)}
 							/>
 
 							<Dropdown
@@ -341,7 +344,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 								placeholder="Select"
 								options={reasonForNotWatchingOptions}
 								value={formData.reasonForNotWatching}
-								onChange={handleInputChange('reasonForNotWatching')}
+								onChange={(value) => handleInputChange('reasonForNotWatching')(Array.isArray(value) ? value.join(',') : value)}
 							/>
 
 							<Input
@@ -368,7 +371,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 								placeholder="Select"
 								options={reasonForNonPaymentOptions}
 								value={formData.reasonForNonPayment}
-								onChange={handleInputChange('reasonForNonPayment')}
+								onChange={(value) => handleInputChange('reasonForNonPayment')(Array.isArray(value) ? value.join(',') : value)}
 							/>
 
 							<div className="relative">
@@ -398,7 +401,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 							</div>
 
 							<div>
-								<label 
+								<label
 									className="block text-sm font-medium dark:text-gray-300 mb-2"
 									style={{ color: 'var(--text-secondary)' }}
 								>
@@ -462,22 +465,22 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div 
+				<div
 					className="flex items-center gap-3 p-6 border-t dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					{isOffline && (
 						<span className="text-xs flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
-							<svg 
-								className="w-4 h-4" 
-								fill="none" 
-								stroke="currentColor" 
+							<svg
+								className="w-4 h-4"
+								fill="none"
+								stroke="currentColor"
 								viewBox="0 0 24 24"
 							>
-								<path 
-									strokeLinecap="round" 
-									strokeLinejoin="round" 
-									strokeWidth={2} 
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
 									d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
 								/>
 							</svg>
@@ -508,4 +511,3 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 };
 
 export default FillDispositionModal;
-

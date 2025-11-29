@@ -3,6 +3,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import StickyNote, { StickyNoteData } from './StickyNote';
 
+type StoredStickyNote = {
+    id?: string;
+    title?: string;
+    content?: string;
+    color?: string;
+    reminder?: string;
+    todos?: Array<{ id: string; text: string; completed: boolean }>;
+    position?: { x: number; y: number };
+    rotation?: number;
+    isHidden?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+};
+
 const GlobalStickyNotes: React.FC = () => {
 	const [stickyNotes, setStickyNotes] = useState<StickyNoteData[]>([]);
 	const [isVisible, setIsVisible] = useState(false);
@@ -14,29 +28,29 @@ const GlobalStickyNotes: React.FC = () => {
 	const loadStickyNotes = () => {
 		isLoadingRef.current = true;
 		try {
-			const savedNotes = localStorage.getItem('stickyNotes');
-			if (savedNotes) {
-				const parsed = JSON.parse(savedNotes);
-				if (Array.isArray(parsed) && parsed.length > 0) {
-					const loadedNotes = parsed.map((note: any) => ({
-						id: note.id || Date.now().toString() + Math.random(),
-						title: note.title || '',
-						content: note.content || '',
-						color: note.color || '#FFFACD',
-						todos: Array.isArray(note.todos) ? note.todos : [],
-						position: note.position && typeof note.position === 'object' ? note.position : { x: 100 + (parsed.indexOf(note) * 20), y: 100 + (parsed.indexOf(note) * 20) },
-						rotation: note.rotation !== undefined ? note.rotation : Math.random() * 6 - 3,
-						isHidden: note.isHidden !== undefined ? note.isHidden : false,
-						createdAt: note.createdAt ? new Date(note.createdAt) : new Date(),
-						updatedAt: note.updatedAt ? new Date(note.updatedAt) : new Date(),
-						reminder: note.reminder ? new Date(note.reminder) : undefined,
-					}));
-					setStickyNotes(loadedNotes);
-					setIsLoaded(true);
-					// Update last saved ref to prevent re-saving what we just loaded
-					lastSavedRef.current = JSON.stringify(parsed);
-					return loadedNotes;
-				} else {
+            const savedNotes = localStorage.getItem('stickyNotes');
+            if (savedNotes) {
+                const parsed = JSON.parse(savedNotes) as unknown as StoredStickyNote[];
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    const loadedNotes = parsed.map((note: StoredStickyNote) => ({
+                        id: note.id || Date.now().toString() + Math.random(),
+                        title: note.title || '',
+                        content: note.content || '',
+                        color: note.color || '#FFFACD',
+                        todos: Array.isArray(note.todos) ? note.todos : [],
+                        position: note.position && typeof note.position === 'object' ? note.position : { x: 100 + (parsed.indexOf(note) * 20), y: 100 + (parsed.indexOf(note) * 20) },
+                        rotation: note.rotation !== undefined ? note.rotation : Math.random() * 6 - 3,
+                        isHidden: note.isHidden !== undefined ? note.isHidden : false,
+                        createdAt: note.createdAt ? new Date(note.createdAt) : new Date(),
+                        updatedAt: note.updatedAt ? new Date(note.updatedAt) : new Date(),
+                        reminder: note.reminder ? new Date(note.reminder) : undefined,
+                    }));
+                    setStickyNotes(loadedNotes);
+                    setIsLoaded(true);
+                    // Update last saved ref to prevent re-saving what we just loaded
+                    lastSavedRef.current = JSON.stringify(parsed);
+                    return loadedNotes;
+                } else {
 					setStickyNotes([]);
 					setIsLoaded(true);
 					lastSavedRef.current = '[]';
@@ -71,17 +85,17 @@ const GlobalStickyNotes: React.FC = () => {
 			
 			// Also check localStorage directly to ensure we have latest data
 			try {
-				const savedNotes = localStorage.getItem('stickyNotes');
-				if (savedNotes) {
-					const parsed = JSON.parse(savedNotes);
-					if (Array.isArray(parsed) && parsed.length > 0) {
-						const hasVisibleNotes = parsed.some((note: any) => !note.isHidden);
-						if (hasVisibleNotes) {
-							setIsVisible(true);
-							return;
-						}
-					}
-				}
+                const savedNotes = localStorage.getItem('stickyNotes');
+                if (savedNotes) {
+                    const parsed = JSON.parse(savedNotes) as unknown as StoredStickyNote[];
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        const hasVisibleNotes = parsed.some((note: StoredStickyNote) => !note.isHidden);
+                        if (hasVisibleNotes) {
+                            setIsVisible(true);
+                            return;
+                        }
+                    }
+                }
 			} catch (error) {
 				console.error('Error checking notes for visibility:', error);
 			}

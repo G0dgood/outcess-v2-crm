@@ -3,11 +3,9 @@
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { useSetup } from '@/contexts/SetupContext';
 import PageHeading from '@/components/ui/PageHeading';
-import Icon from '@/components/ui/Icon';
 import { Modal } from '@/components/ui/Modal';
-import { Link2Icon, CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { Link2Icon, Cross2Icon } from '@radix-ui/react-icons';
 
 interface Integration {
 	id: string;
@@ -26,8 +24,7 @@ interface Integration {
 }
 
 const IntegrationsPage: React.FC = () => {
-	const { setupData } = useSetup();
-	const [integrations, setIntegrations] = useState<Integration[]>([
+    const [integrations, setIntegrations] = useState<Integration[]>([
 		{
 			id: 'slack',
 			name: 'Slack',
@@ -326,10 +323,10 @@ const IntegrationsPage: React.FC = () => {
 										<br />
 										2. Create a new app or select an existing one
 										<br />
-										3. Go to "OAuth & Permissions" and copy your Bot User OAuth Token
-									</p>
-								</div>
-							)}
+                                        3. Go to &quot;OAuth & Permissions&quot; and copy your Bot User OAuth Token
+                                        </p>
+                                </div>
+                        )}
 						</>
 					)}
 				</div>
@@ -368,4 +365,3 @@ const IntegrationsPage: React.FC = () => {
 };
 
 export default IntegrationsPage;
-

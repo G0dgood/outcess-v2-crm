@@ -4,11 +4,9 @@ import React, { useState } from 'react';
 import Input from '@/components/ui/Input';
 import PasswordInput from '@/components/ui/PasswordInput';
 import Checkbox from '@/components/ui/Checkbox';
-import Image from 'next/image';
 import ArtworkCarousel from '@/components/ui/ArtworkCarousel';
 import PricingModal from '@/components/ui/PricingModal';
 import LoginTopHeader from '@/components/ui/LoginTopHeader';
-import { PersonIcon } from '@radix-ui/react-icons';
 import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -157,7 +155,7 @@ export default function LoginPage() {
 
 						<div className="signup-footer">
 							<p className="signup-text">
-								Don't have an account?{' '}
+								Don&apos;t have an account?{' '}
 								<a href="/signup" className="signup-link" style={{ color: primaryColor }} onMouseEnter={(e) => {
 									e.currentTarget.style.opacity = '0.8';
 								}} onMouseLeave={(e) => {

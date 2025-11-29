@@ -11,11 +11,11 @@ import { useSetup } from '@/contexts/SetupContext';
 import PageHeading from '@/components/ui/PageHeading';
 
 interface ReportData {
-	id: string;
-	agentName: string;
-	agentId: string;
-	date: string;
-	[key: string]: any; // For dynamic fields
+    id: string;
+    agentName: string;
+    agentId: string;
+    date: string;
+    [key: string]: string | number | boolean;
 }
 
 const ReportPage: React.FC = () => {

@@ -215,7 +215,7 @@ export default function CustomerBookPage() {
 							className="font-lato not-italic font-normal text-[14px] sm:text-[16px] leading-[150%] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
-							Configure the fields that you'll use to store customer information. Add custom fields to match your business needs.
+							Configure the fields that you&apos;ll use to store customer information. Add custom fields to match your business needs.
 						</p>
 					</div>
 					<Button

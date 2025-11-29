@@ -177,7 +177,7 @@ const OfflineBanner: React.FC = () => {
 						</svg>
 						<div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
 							<span className="font-medium text-sm sm:text-base">
-								You're currently offline
+								You&apos;re currently offline
 							</span>
 							{queueSize > 0 && (
 								<span className="text-xs sm:text-sm opacity-90">
@@ -199,4 +199,3 @@ const OfflineBanner: React.FC = () => {
 };
 
 export default OfflineBanner;
-

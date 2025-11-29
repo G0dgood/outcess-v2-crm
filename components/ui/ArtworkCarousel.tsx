@@ -43,7 +43,7 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 			}
 			setError(null);
 
-			let newArtworks: any[] = [];
+			let newArtworks: Artwork[] = [];
 
 			// For initial load, fetch "The Red Armchair" by Picasso first
 			if (!append && pageToFetch === 1) {
@@ -78,14 +78,14 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 			}
 
 			const data = await response.json();
-			const regularArtworks = data.data
-				.filter((artwork: any) => {
+			const regularArtworks = (data.data as Artwork[])
+				.filter((artwork) => {
 					// Only require that the artwork has an image
 					// Skip if it's already in newArtworks (the Picasso one)
 					const alreadyAdded = newArtworks.some(a => a.id === artwork.id);
 					return artwork.image_id && !alreadyAdded;
 				})
-				.map((artwork: any) => ({
+				.map((artwork) => ({
 					id: artwork.id,
 					title: artwork.title,
 					image_id: artwork.image_id,
@@ -360,4 +360,3 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 };
 
 export default ArtworkCarousel;
-

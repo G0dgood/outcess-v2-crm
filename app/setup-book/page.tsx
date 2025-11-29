@@ -53,7 +53,7 @@ const SetupBookPage: React.FC = () => {
 		setIsUploadModalOpen(true);
 	};
 
-	const handleUploadComplete = (data: any[]) => {
+	const handleUploadComplete = (data: Record<string, string>[]) => {
 		console.log('Upload completed with data:', data);
 		// Process the uploaded data and update records
 		// You can add logic here to add the new records to the state
