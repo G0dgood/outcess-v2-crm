@@ -183,29 +183,32 @@ const UsersPage: React.FC = () => {
 
 				{/* Search Bar */}
 			</div>
-			<div className="mb-6 flex items-center justify-between">
+			<div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 				<Search
 					placeholder="Search"
 					value={searchTerm}
 					onChange={setSearchTerm}
-					className="max-w-md"
+					className="w-full sm:w-auto"
+					maxWidth="w-full"
 					onSearch={(value) => console.log('Search triggered:', value)}
 					onClear={() => console.log('Search cleared')}
 					showClearButton={true}
 				/>
-				<Button
-					variant="primary"
-					size="md"
-					onClick={handleAddUser}
-					className="flex items-center gap-2"
-				>
-					Add User
-				</Button>
+				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
+					<Button
+						variant="primary"
+						size="md"
+						onClick={handleAddUser}
+						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+					>
+						Add User
+					</Button>
+				</div>
 			</div>
 
 			{/* Login Status Info Banner */}
 			{showInfoBanner && (
-				<div 
+				<div
 					className="mb-4 p-3 dark:bg-gray-800 border dark:border-gray-700 flex items-center gap-3"
 					style={{
 						backgroundColor: 'var(--bg-primary)',
@@ -213,12 +216,12 @@ const UsersPage: React.FC = () => {
 					}}
 				>
 					<div className="shrink-0 w-6 h-6 flex items-center justify-center">
-						<ExclamationTriangleIcon 
-							className="w-4 h-4 dark:text-gray-300" 
+						<ExclamationTriangleIcon
+							className="w-4 h-4 dark:text-gray-300"
 							style={{ color: 'var(--text-secondary)' }}
 						/>
 					</div>
-					<p 
+					<p
 						className="text-sm dark:text-gray-300 flex-1"
 						style={{ color: 'var(--text-secondary)' }}
 					>
@@ -242,7 +245,7 @@ const UsersPage: React.FC = () => {
 			)}
 
 			{/* Users Table */}
-			<div 
+			<div
 				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
 				style={{
 					backgroundColor: 'var(--accent-white)',
@@ -250,13 +253,13 @@ const UsersPage: React.FC = () => {
 				}}
 			>
 				<div className="overflow-x-auto">
-					<table 
+					<table
 						className="min-w-full divide-y dark:divide-gray-700"
 						style={{ borderColor: 'var(--light-gray)' }}
 					>
-						<thead 
+						<thead
 							className="dark:bg-gray-700 border-b dark:border-gray-700"
-							style={{ 
+							style={{
 								backgroundColor: 'var(--bg-primary)',
 								borderColor: 'var(--light-gray)'
 							}}
@@ -269,49 +272,49 @@ const UsersPage: React.FC = () => {
 										size="medium"
 									/>
 								</th>
-								<th 
+								<th
 									className="dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									ID
 								</th>
-								<th 
+								<th
 									className="dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									First Name
 								</th>
-								<th 
+								<th
 									className="dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Last Name
 								</th>
-								<th 
+								<th
 									className="dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Email
 								</th>
-								<th 
+								<th
 									className="dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Phone
 								</th>
-								<th 
+								<th
 									className="dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Role
 								</th>
-								<th 
+								<th
 									className="dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Login Status
 								</th>
-								<th 
+								<th
 									className="dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -319,7 +322,7 @@ const UsersPage: React.FC = () => {
 								</th>
 							</tr>
 						</thead>
-						<tbody 
+						<tbody
 							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
 							style={{
 								backgroundColor: 'var(--accent-white)',
@@ -327,8 +330,8 @@ const UsersPage: React.FC = () => {
 							}}
 						>
 							{currentUsers.map((user) => (
-								<tr 
-									key={user.id} 
+								<tr
+									key={user.id}
 									className="dark:hover:bg-gray-700"
 									style={{ borderColor: 'var(--light-gray)' }}
 									onMouseEnter={(e) => {
@@ -345,43 +348,43 @@ const UsersPage: React.FC = () => {
 											size="medium"
 										/>
 									</td>
-									<td 
+									<td
 										className="dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{user.id}
 									</td>
-									<td 
+									<td
 										className="dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{user.firstName}
 									</td>
-									<td 
+									<td
 										className="dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{user.lastName}
 									</td>
-									<td 
+									<td
 										className="dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{user.email}
 									</td>
-									<td 
+									<td
 										className="dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{user.phone}
 									</td>
-									<td 
+									<td
 										className="dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{user.role}
 									</td>
-									<td 
+									<td
 										className="dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>

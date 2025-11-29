@@ -69,13 +69,13 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 	return (
 		<div className="w-full h-full">
 			<div className="mb-8">
-				<h1 
+				<h1
 					className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
 					style={{ color: 'var(--text-secondary)' }}
 				>
 					Header & Navigation
 				</h1>
-				<p 
+				<p
 					className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
@@ -83,24 +83,24 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 				</p>
 			</div>
 
-			<div 
+			<div
 				className="dark:bg-gray-800 border dark:border-gray-700 w-full h-full"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
 				}}
 			>
-				<div 
+				<div
 					className="box-border w-full h-[97px] border-b dark:border-gray-700 mb-6 p-6"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<h2 
+					<h2
 						className="font-inter text-xl font-semibold dark:text-gray-100 mb-2"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Navigation Settings
 					</h2>
-					<p 
+					<p
 						className="font-lato text-sm dark:text-gray-400 mb-6"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
@@ -115,7 +115,7 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 
 							{/* Menu Style */}
 							<div className="mb-6">
-								<h3 
+								<h3
 									className="font-inter text-base font-medium dark:text-gray-100 mb-4"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -148,13 +148,13 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 									>
 										<div className="flex flex-col">
 											<Menu width={24} height={24} strokeColor={selectedLayout === 'layout' ? '#6C8B7D' : colors.dark.primary} className="mb-3" />
-											<h4 
+											<h4
 												className="font-inter text-sm font-medium dark:text-gray-100 mb-1"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												Layout Style
 											</h4>
-											<p 
+											<p
 												className="font-lato text-xs dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
@@ -189,13 +189,13 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 									>
 										<div className="flex flex-col ">
 											<Dashboard width={24} height={24} strokeColor={selectedLayout === 'compact' ? '#6C8B7D' : colors.dark.primary} className="mb-3" />
-											<h4 
+											<h4
 												className="font-inter text-sm font-medium dark:text-gray-100 mb-1"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												Compact
 											</h4>
-											<p 
+											<p
 												className="font-lato text-xs dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
@@ -208,7 +208,7 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 
 							{/* Theme Colors */}
 							<div className="mb-6">
-								<h3 
+								<h3
 									className="font-inter text-base font-medium dark:text-gray-100 mb-4"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -244,26 +244,26 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 
 					{/* Right Column - Theme Preview */}
 					<div>
-						<div 
+						<div
 							className="dark:bg-gray-700 p-6"
 							style={{ backgroundColor: 'var(--bg-primary)' }}
 						>
 							<div className="flex items-center gap-2 mb-4">
 								<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<path 
-										d="M8 1L10.5 5.5L15.5 6L12 9.5L13 14.5L8 12L3 14.5L4 9.5L0.5 6L5.5 5.5L8 1Z" 
+									<path
+										d="M8 1L10.5 5.5L15.5 6L12 9.5L13 14.5L8 12L3 14.5L4 9.5L0.5 6L5.5 5.5L8 1Z"
 										className="dark:fill-gray-400"
 										style={{ fill: 'var(--text-tertiary)' }}
 									/>
 								</svg>
-								<h3 
+								<h3
 									className="font-inter text-base font-medium dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Theme Preview
 								</h3>
 							</div>
-							<p 
+							<p
 								className="font-lato text-sm dark:text-gray-400 mb-4"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
@@ -277,12 +277,13 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 										variant="primary"
 										size="sm"
 										style={{ backgroundColor: primaryColor }}
-										className="text-white"
+										className="text-white whitespace-nowrap"
 									>
 										Primary Button
 									</Button>
 									<Button
 										variant="outline"
+										className="whitespace-nowrap"
 										size="sm"
 										style={{
 											color: secondaryColor,

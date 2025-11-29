@@ -203,16 +203,16 @@ export default function CustomerBookPage() {
 	return (
 		<div className="w-full h-full">
 			<div className="mb-8">
-				<div className="flex justify-between items-start">
+				<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 					<div>
-						<h1 
-							className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
+						<h1
+							className="font-lato not-italic font-semibold text-[20px] sm:text-[24px] leading-[150%] dark:text-gray-100"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							Customer Book
 						</h1>
-						<p 
-							className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
+						<p
+							className="font-lato not-italic font-normal text-[14px] sm:text-[16px] leading-[150%] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							Configure the fields that you'll use to store customer information. Add custom fields to match your business needs.
@@ -222,7 +222,7 @@ export default function CustomerBookPage() {
 						variant="primary"
 						size="md"
 						onClick={() => setIsModalOpen(true)}
-						className="flex items-center gap-2"
+						className="flex items-center gap-2 w-full sm:w-auto justify-center"
 					>
 						<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
 							<path d="M8 1V15M1 8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -233,7 +233,7 @@ export default function CustomerBookPage() {
 			</div>
 
 			{/* Configured Fields Table */}
-			<div 
+			<div
 				className="dark:bg-gray-800 border dark:border-gray-700 mb-8"
 				style={{
 					backgroundColor: 'var(--accent-white)',
@@ -243,32 +243,32 @@ export default function CustomerBookPage() {
 				<div className="overflow-x-auto">
 					<table className="w-full">
 						<thead>
-							<tr 
+							<tr
 								className="border-b dark:border-gray-700"
-								style={{ 
+								style={{
 									borderColor: 'var(--light-gray)',
 									borderBottom: '1px solid'
 								}}
 							>
-								<th 
+								<th
 									className="text-left py-4 px-6 font-inter text-sm font-medium dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Field Name
 								</th>
-								<th 
+								<th
 									className="text-left py-4 px-6 font-inter text-sm font-medium dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Type
 								</th>
-								<th 
+								<th
 									className="text-left py-4 px-6 font-inter text-sm font-medium dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Required
 								</th>
-								<th 
+								<th
 									className="text-left py-4 px-6 font-inter text-sm font-medium dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -278,18 +278,18 @@ export default function CustomerBookPage() {
 						</thead>
 						<tbody>
 							{customerBookSettings.configuredFields.map((field, index) => (
-								<tr 
-									key={field.id} 
+								<tr
+									key={field.id}
 									className={index !== customerBookSettings.configuredFields.length - 1 ? 'dark:border-gray-700' : ''}
 									style={index !== customerBookSettings.configuredFields.length - 1 ? { borderBottom: '1px solid', borderBottomColor: 'var(--light-gray)' } : {}}
 								>
-									<td 
+									<td
 										className="py-4 px-6 font-inter text-sm dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{field.name}
 									</td>
-									<td 
+									<td
 										className="py-4 px-6 font-inter text-sm dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
@@ -297,7 +297,7 @@ export default function CustomerBookPage() {
 									</td>
 									<td className="py-4 px-6">
 										{field.required ? (
-											<span 
+											<span
 												className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium dark:bg-green-900/30 dark:text-green-400"
 												style={{
 													backgroundColor: 'rgba(34, 197, 94, 0.1)',
@@ -307,7 +307,7 @@ export default function CustomerBookPage() {
 												Required
 											</span>
 										) : (
-											<span 
+											<span
 												className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium dark:bg-gray-700 dark:text-gray-300"
 												style={{
 													backgroundColor: 'var(--bg-primary)',
@@ -338,7 +338,7 @@ export default function CustomerBookPage() {
 
 			{/* Available Field Types */}
 			<div>
-				<h3 
+				<h3
 					className="font-inter text-base font-medium dark:text-gray-100 mb-4"
 					style={{ color: 'var(--text-primary)' }}
 				>
@@ -363,19 +363,19 @@ export default function CustomerBookPage() {
 							}}
 							onClick={() => handleAddField(fieldType)}
 						>
-							<h4 
+							<h4
 								className="font-inter text-sm font-medium dark:text-gray-100 mb-2"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{fieldType.name}
 							</h4>
-							<p 
+							<p
 								className="font-lato text-xs dark:text-gray-400 mb-3"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								{fieldType.description}
 							</p>
-							<div 
+							<div
 								className="dark:bg-gray-700 border dark:border-gray-600 p-2"
 								style={{
 									backgroundColor: 'var(--bg-primary)',

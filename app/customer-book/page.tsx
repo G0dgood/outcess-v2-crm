@@ -96,18 +96,21 @@ const CustomerBookPage: React.FC = () => {
 				text="Customer Book"
 			/>
 
-			{/* Search Bar */}
-			<div className="my-6 flex items-center justify-between">
+			{/* Search & Actions */}
+			<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 				<Search
 					placeholder="Search"
 					value={searchTerm}
 					onChange={(value) => setSearchTerm(value)}
+					className="w-full sm:w-auto"
+					maxWidth="w-full"
 				/>
-				<div className="flex items-center gap-3">
+				<div className="flex   items-center justify-end sm:justify-start gap-2 sm:gap-3 whitespace-nowrap">
 					<Button
 						variant="muted-sage-green-outline"
 						size="md"
 						onClick={handleAddCustomer}
+						className="px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
 					>
 						Add Customer
 					</Button>
@@ -115,7 +118,7 @@ const CustomerBookPage: React.FC = () => {
 						variant="primary"
 						size="md"
 						onClick={handleImport}
-						className="bg-(--primary) text-white border-(--primary) hover:bg-(--primary)/90 flex items-center gap-2"
+						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
 					>
 						Import
 						<Icon name="share" size="sm" />

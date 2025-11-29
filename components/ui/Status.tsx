@@ -175,8 +175,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 
 	return (
 		<div className={`w-full h-full ${className}`}>
-			{/* Header Section */}
-			<div className="mb-6 flex items-start justify-between">
+			<div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 				<div className="flex-1">
 					<PageHeading
 						text="Status"
@@ -185,13 +184,16 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 						text="Add fields to capture more details about customer interactions. You can arrange these fields in call forms for agents and customers to enhance data collection and improve service quality."
 					/>
 				</div>
-				<Button
-					variant="primary"
-					size="md"
-					onClick={handleCreateStatus}
-				>
-					Create Status
-				</Button>
+				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
+					<Button
+						variant="primary"
+						size="md"
+						onClick={handleCreateStatus}
+						className="px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+					>
+						Create Status
+					</Button>
+				</div>
 			</div>
 
 			{/* Status Table */}
@@ -382,4 +384,3 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 };
 
 export default Status;
-

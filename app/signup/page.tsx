@@ -96,7 +96,7 @@ export default function SignUpPage() {
 			<div className="login-form-section w-full md:w-1/2">
 				<div className="login-form-container">
 					<div className="login-header">
-						<div className="logo-container">
+						{/* <div className="logo-container">
 							<Image
 								src="/peoplely-logo.svg"
 								alt="Peoplely Logo"
@@ -105,7 +105,7 @@ export default function SignUpPage() {
 								priority
 							// className="logo"
 							/>
-						</div>
+						</div> */}
 						<h1 className="welcome-title" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>Create Account</h1>
 						<p className="font-lato not-italic font-normal text-base leading-[150%] text-[#6D7280] dark:text-gray-400">Join Peoplely CRM to get started.</p>
 					</div>

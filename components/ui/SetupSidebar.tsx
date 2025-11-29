@@ -69,8 +69,8 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 		},
 	];
 	return (
-		<aside 
-			id="side-nav" 
+		<aside
+			id="side-nav"
 			className={`w-80 dark:bg-gray-900 border-r dark:border-gray-700 p-6 ${className}`}
 			style={{
 				backgroundColor: 'var(--accent-white)',
@@ -79,13 +79,13 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 		>
 			<div className="mb-6">
 				<div className="mb-1 flex flex-row justify-between items-center">
-					<h3 
+					<h3
 						className="font-inter text-base font-semibold dark:text-gray-100 mb-2"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Setup Progress
 					</h3>
-					<span 
+					<span
 						className="font-inter text-sm dark:text-gray-400"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
@@ -93,7 +93,7 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 					</span>
 				</div>
 
-				<div 
+				<div
 					className="w-full h-[8px] rounded-[8px] dark:bg-gray-700 relative"
 					style={{ backgroundColor: 'var(--bg-primary)' }}
 				>
@@ -135,26 +135,26 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 							}}
 						>
 							<div className="text-base w-5 h-5 text-center flex items-center justify-center">
-								<IconComponent 
-									className="w-5 h-5" 
+								<IconComponent
+									className="w-5 h-5"
 									style={step.active ? { color: secondaryColor } : isDarkMode ? { color: '#FFFFFF' } : { color: 'var(--text-tertiary)' }}
 								/>
 							</div>
 							<div className="flex-1">
-								<div 
+								<div
 									className="font-lato not-italic font-medium text-[14px] leading-[150%]"
 									style={step.active ? { color: secondaryColor } : isDarkMode ? { color: '#FFFFFF' } : { color: 'var(--text-secondary)' }}
 								>
 									{step.title}
 								</div>
-								<div 
+								<div
 									className="font-lato not-italic font-medium text-[14px] leading-[150%] w-[165px]"
 									style={step.active ? { color: isDarkMode ? '#9CA3AF' : 'var(--text-tertiary)' } : isDarkMode ? { color: '#FFFFFF' } : { color: 'var(--text-tertiary)' }}
 								>
 									{step.description}
 								</div>
 							</div>
-							<div 
+							<div
 								className="text-sm"
 								style={{ color: step.active ? (isDarkMode ? '#9CA3AF' : 'var(--text-tertiary)') : (isDarkMode ? '#FFFFFF' : 'var(--text-tertiary)') }}
 							>

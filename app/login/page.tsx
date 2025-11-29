@@ -7,6 +7,7 @@ import Checkbox from '@/components/ui/Checkbox';
 import Image from 'next/image';
 import ArtworkCarousel from '@/components/ui/ArtworkCarousel';
 import PricingModal from '@/components/ui/PricingModal';
+import LoginTopHeader from '@/components/ui/LoginTopHeader';
 import { PersonIcon } from '@radix-ui/react-icons';
 import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -66,45 +67,32 @@ export default function LoginPage() {
 
 	return (
 		<div className="login-container">
-			{/* Top Right Header */}
-			<div className="login-top-header">
-				<div className="login-header-card">
-					<button className="upgrade-button" onClick={() => setIsPricingModalOpen(true)} style={{ color: primaryColor }}>
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-						</svg>
-						<span>Upgrade</span>
-					</button>
-					<div className="header-separator"></div>
-					<div className="user-info">
-						<div className="user-email">chinedu.go@gmail.com</div>
-						<div className="user-plan">Free plan</div>
-					</div>
-					<div className="profile-icon">
-						<div className="profile-avatar">
-						</div>
-					</div>
-				</div>
-			</div>
+			<LoginTopHeader
+				email="chinedu.go@gmail.com"
+				plan="Free plan"
+				primaryColor={primaryColor}
+				onUpgradeClick={() => setIsPricingModalOpen(true)}
+			/>
 
 			{/* Left Side - Artwork Carousel */}
 			<div className="login-image-section w-full md:w-1/2">
 				<ArtworkCarousel autoPlayInterval={300000} />
 			</div>
 			{/* Right Side - Login Form */}
-			<div className="login-form-section w-full md:w-1/2">
+			<div className="login-form-section w-full md:w-1/4">
+
 				<div className="login-form-container">
 					<div className="login-header">
-						<div className="logo-container">
+						{/* <div className="logo-container">
 							<Image
 								src="/peoplely-logo.svg"
 								alt="Peoplely Logo"
 								width={120}
 								height={40}
 								priority
-							// className="logo"
+								className="logo"
 							/>
-						</div>
+						</div> */}
 						<h1 className="welcome-title" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>Welcome Back</h1>
 						<p className="welcome-subtitle font-lato font-normal text-base leading-[150%] text-[#6D7280] dark:text-gray-400">Please Login to continue.</p>
 					</div>
@@ -166,6 +154,17 @@ export default function LoginPage() {
 						>
 							{isLoading ? 'Logging in...' : 'Login'}
 						</button>
+
+						<div className="signup-footer">
+							<p className="signup-text">
+								Don't have an account?{' '}
+								<a href="/signup" className="signup-link" style={{ color: primaryColor }} onMouseEnter={(e) => {
+									e.currentTarget.style.opacity = '0.8';
+								}} onMouseLeave={(e) => {
+									e.currentTarget.style.opacity = '1';
+								}}>Create account</a>
+							</p>
+						</div>
 					</form>
 				</div>
 			</div>

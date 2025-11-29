@@ -91,26 +91,27 @@ const BusinessesManagementPage: React.FC = () => {
 				</h1>
 			</div>
 
-			{/* Search and Filter Section */}
-			<div className="flex items-center justify-between mb-6">
-				<Search
-					placeholder="Search businesses..."
-					value={searchTerm}
-					onChange={setSearchTerm}
-					className="flex-1 max-w-md"
-					showClearButton={true}
+		{/* Search and Filter Section */}
+		<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+			<Search
+				placeholder="Search businesses..."
+				value={searchTerm}
+				onChange={setSearchTerm}
+				className="w-full sm:w-auto"
+				maxWidth="w-full"
+				showClearButton={true}
+			/>
+			<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
+				<Dropdown
+					label=""
+					value={statusFilter}
+					onChange={(value) => setStatusFilter(value)}
+					options={statusOptions}
+					className="w-full sm:w-[180px]"
+					inputClassName="h-8 text-xs sm:h-10 sm:text-sm"
 				/>
-				<div  >
-					<Dropdown
-						label=""
-						value={statusFilter}
-						onChange={(value) => setStatusFilter(value)}
-						options={statusOptions}
-						className="w-[180px]"
-						inputClassName="h-10"
-					/>
-				</div>
 			</div>
+		</div>
 
 			{/* Businesses Table */}
 			<div 
@@ -287,4 +288,3 @@ const BusinessesManagementPage: React.FC = () => {
 };
 
 export default BusinessesManagementPage;
-

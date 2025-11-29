@@ -9,7 +9,7 @@ const LandingFooter: React.FC = () => {
 		<footer className="border-t border-light bg-surface">
 			<div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-12 md:flex-row md:justify-between">
 				<div className="space-y-4">
-					<Image src="/peoplely-logo.svg" alt="Peoplely logo" width={140} height={40} />
+					<Image src="/logo/peoplely.svg" alt="Peoplely logo" width={140} height={40} className="w-[110px] h-auto md:w-[140px]" />
 					<p className="text-sm text-tertiary">
 						Customizable CRM built to empower your support, sales, and success teams with intelligent tools.
 					</p>
@@ -102,4 +102,3 @@ const LandingFooter: React.FC = () => {
 };
 
 export default LandingFooter;
-

@@ -20,7 +20,7 @@ interface FeaturesSectionProps {
 
 const FeaturesSection: React.FC<FeaturesSectionProps> = ({ items }) => {
 	return (
-		<section id="features" className="p-[64px_80px] px-6 md:px-45">
+		<section id="features" className="px-6 py-16 md:px-45">
 			<div className="space-y-4 text-center flex flex-col items-center justify-center">
 				<HeroBadge iconSrc="" label="Features" />
 				<SectionTitle title="Everything You Need to Manage Your Call Center" />
@@ -46,4 +46,3 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ items }) => {
 };
 
 export default FeaturesSection;
-

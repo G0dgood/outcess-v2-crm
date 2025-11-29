@@ -9,8 +9,7 @@ import { HamburgerMenuIcon } from '@radix-ui/react-icons';
 import NotificationDropdown from './NotificationDropdown';
 import NotificationsModal from './NotificationsModal';
 import { sampleNotifications } from '@/data/notifications';
-import ThemeDropdown from './ThemeDropdown';
-import Image from 'next/image';
+import ThemeToggle from './ThemeToggle';
 import { plusJakartaStyle } from '../Options';
 import { useSocket } from '@/contexts/SocketContext';
 import { playNotificationSound } from '@/utils/soundEffects';
@@ -210,14 +209,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				</button>
 
 				<div className="flex-1 md:flex-none">
-					<div className="flex items-center gap-2">
+					<div className="hidden md:flex items-center gap-2">
 						<Icon name="peoplelyHalf" size="xl" />
 						<span className="font-semibold text-[25px] leading-[28px] flex items-center text-[#050711]"
 							style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>Peoplely</span>
-
 					</div>
-					{/* <Image src="/logo/peoplelyHalf.svg" alt="Peoplely logo" width={140} height={40} priority /> */}
-					{/* This space can be used for logo or main title */}
 				</div>
 
 
@@ -252,10 +248,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 						</div>
 					)}
 
-					{/* Dark Mode Toggle Dropdown */}
-					<ThemeDropdown
-						inputClassName="h-8 mt-2"
-					/>
+					{/* Dark/Light Mode Toggle */}
+					<ThemeToggle />
 
 					<Dropdown
 						label=""
@@ -298,7 +292,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					<div className="relative">
 						<button
 							onClick={handleNotificationClick}
-							className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+							className="p-1 w-7 h-7 flex justify-center items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
 							title="Notifications"
 						>
 							<Icon name="Bell_light" size="3xl" />

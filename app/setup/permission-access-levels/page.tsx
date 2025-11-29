@@ -71,13 +71,13 @@ export default function PermissionAccessLevelsPage() {
 						onClick={() => router.back()}
 					/>
 					<div>
-						<h1 
+						<h1
 							className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							Permission Access Levels
 						</h1>
-						<p 
+						<p
 							className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
@@ -87,7 +87,7 @@ export default function PermissionAccessLevelsPage() {
 				</div>
 
 				{/* Role Tabs */}
-				<div 
+				<div
 					className="flex gap-1 dark:bg-gray-700 p-1 w-fit"
 					style={{ backgroundColor: 'var(--bg-primary)' }}
 				>
@@ -125,26 +125,26 @@ export default function PermissionAccessLevelsPage() {
 			{/* Permission Categories */}
 			<div className="space-y-6">
 				{permissionAccessSettings.permissionCategories.map((category) => (
-					<div 
-						key={category.id} 
+					<div
+						key={category.id}
 						className="dark:bg-gray-800 border dark:border-gray-700"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
 						}}
 					>
-						<div 
+						<div
 							className="p-6 border-b dark:border-gray-700"
 							style={{ borderColor: 'var(--light-gray)' }}
 						>
 							<div className="flex items-center gap-3">
-								<div 
+								<div
 									className="w-8 h-8 dark:bg-gray-700 rounded-full flex items-center justify-center"
 									style={{ backgroundColor: 'var(--bg-primary)' }}
 								>
 									<Icon name={category.icon} size="md" />
 								</div>
-								<h2 
+								<h2
 									className="font-inter text-lg font-semibold dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -156,13 +156,13 @@ export default function PermissionAccessLevelsPage() {
 							{category.permissions.map((permission) => (
 								<div key={permission.id} className="grid grid-cols-2 items-center justify-between">
 									<div className="flex-1">
-										<h3 
+										<h3
 											className="font-inter text-sm font-medium dark:text-gray-100 mb-1"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											{permission.name}
 										</h3>
-										<p 
+										<p
 											className="font-lato text-xs dark:text-gray-400 col-span-2"
 											style={{ color: 'var(--text-tertiary)' }}
 										>

@@ -42,8 +42,7 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 
 	return (
 		<div className={`w-full h-full ${className}`}>
-			{/* Header Section */}
-			<div className="mb-6 flex items-start justify-between">
+			<div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 				<div>
 					<PageHeading
 						text="Roles"
@@ -52,13 +51,16 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 						text="Following are the roles available. You can also create custom roles."
 					/>
 				</div>
-				<Button
-					variant="primary"
-					size="md"
-					onClick={handleCreateCustomRole}
-				>
-					Create Custom Role
-				</Button>
+				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
+					<Button
+						variant="primary"
+						size="md"
+						onClick={handleCreateCustomRole}
+						className="px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+					>
+						Create Custom Role
+					</Button>
+				</div>
 			</div>
 
 			{/* Roles Grid */}
@@ -106,4 +108,3 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 };
 
 export default Roles;
-

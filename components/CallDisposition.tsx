@@ -9,6 +9,7 @@ import Icon from '@/components/ui/Icon';
 import ColorPicker from '@/components/ui/ColorPicker';
 import { PlusIcon } from '@radix-ui/react-icons';
 import { useSetup } from '@/contexts/SetupContext';
+import Image from 'next/image';
 import {
 	Chart as ChartJS,
 	CategoryScale,
@@ -341,10 +342,12 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 		if (dispositions.length === 0) {
 			return (
 				<div className="h-64 flex flex-col items-center justify-center text-center">
-					<img
+					<Image
 						src="/illustrations/Pie-Chart-1--Streamline-Ux.png"
 						alt="No chart data"
-						className="w-32 h-32 mb-4 opacity-60"
+						className="w-32 h-32 mb-4 opacity-60 "
+						width={100}
+						height={100}
 					/>
 					<h3
 						className="font-inter text-base font-medium dark:text-gray-100 mb-2"
@@ -468,7 +471,7 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 					className="p-6 border-b dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<div className="flex items-center justify-between">
+					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<h2
 							className="font-inter text-lg font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
@@ -479,6 +482,7 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 							variant="primary"
 							size="sm"
 							onClick={handleAddDisposition}
+							className="w-full sm:w-auto justify-center"
 						>
 							Add Disposition
 						</Button>

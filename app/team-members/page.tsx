@@ -163,7 +163,10 @@ const TeamMembersPage: React.FC = () => {
 							label: value === 'all' ? 'All Supervisors' : value,
 						}))}
 						value={supervisorFilter}
-						onChange={setSupervisorFilter}
+						onChange={(val) => {
+							if (Array.isArray(val)) return;
+							setSupervisorFilter(val);
+						}}
 						inputClassName="h-10 whitespace-nowrap"
 					/>
 					<Dropdown
@@ -173,7 +176,10 @@ const TeamMembersPage: React.FC = () => {
 							label: value === 'all' ? 'All Teams' : value,
 						}))}
 						value={teamFilter}
-						onChange={setTeamFilter}
+						onChange={(val) => {
+							if (Array.isArray(val)) return;
+							setTeamFilter(val);
+						}}
 						inputClassName="h-10 whitespace-nowrap"
 					/>
 				</div>
@@ -325,4 +331,3 @@ const TeamMembersPage: React.FC = () => {
 };
 
 export default TeamMembersPage;
-

@@ -96,20 +96,20 @@ export default function RolePermissionManagementPage() {
 	return (
 		<div className="w-full h-full">
 			<div className="mb-8">
-				<div className="flex justify-between items-center">
+				<div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
 					<div className="flex items-center gap-2">
 						<BackButton
 							onClick={() => router.back()}
 						/>
 						<div>
-							<h1 
-								className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
+							<h1
+								className="font-lato not-italic font-semibold text-[20px] sm:text-[24px] leading-[150%] dark:text-gray-100"
 								style={{ color: 'var(--text-secondary)' }}
 							>
 								Role & Permission Management
 							</h1>
-							<p 
-								className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
+							<p
+								className="font-lato not-italic font-normal text-[14px] sm:text-[16px] leading-[150%] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Manage user roles and their associated permissions
@@ -120,7 +120,7 @@ export default function RolePermissionManagementPage() {
 						variant="primary"
 						size="md"
 						onClick={() => setIsCreateRoleModalOpen(true)}
-						className="flex items-center gap-2"
+						className="flex items-center gap-2 w-full sm:w-auto justify-center"
 					>
 						<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
 							<path d="M8 1V15M1 8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -133,8 +133,8 @@ export default function RolePermissionManagementPage() {
 			{/* Role Cards */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 				{roleManagementSettings.roles.map((role) => (
-					<div 
-						key={role.id} 
+					<div
+						key={role.id}
 						className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative group"
 						style={{
 							backgroundColor: 'var(--accent-white)',
@@ -166,13 +166,13 @@ export default function RolePermissionManagementPage() {
 								</button>
 							)}
 						</div>
-						<h3 
+						<h3
 							className="font-lato font-medium text-base leading-[150%] dark:text-gray-100"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							{role.name}
 						</h3>
-						<p 
+						<p
 							className="font-lato font-normal text-[12px] leading-[150%] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
@@ -183,19 +183,19 @@ export default function RolePermissionManagementPage() {
 			</div>
 
 			{/* Module Permission Overview */}
-			<div 
+			<div
 				className="dark:bg-gray-800 border dark:border-gray-700"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
 				}}
 			>
-				<div 
+				<div
 					className="p-6 border-b dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<h2 
-						className="font-inter text-xl font-semibold dark:text-gray-100"
+					<h2
+						className="font-inter text-lg sm:text-xl font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Module Permission Overview
@@ -204,26 +204,26 @@ export default function RolePermissionManagementPage() {
 
 				<div className="overflow-x-auto">
 					<table className="min-w-full">
-						<thead 
+						<thead
 							className="dark:bg-gray-700"
 							style={{ backgroundColor: 'var(--bg-primary)' }}
 						>
-							<tr 
+							<tr
 								style={{
 									borderBottom: '1px solid',
 									borderBottomColor: 'var(--light-gray)'
 								}}
 							>
-								<th 
-									className="py-4 px-6 text-left text-sm font-medium dark:text-gray-400 uppercase tracking-wider"
+								<th
+									className="py-4 px-6 text-left text-xs sm:text-sm font-medium dark:text-gray-400 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Features/Modules
 								</th>
 								{roleManagementSettings.roles.map((role) => (
-									<th 
-										key={role.id} 
-										className="py-4 px-6 text-left text-sm font-medium dark:text-gray-400 uppercase tracking-wider"
+									<th
+										key={role.id}
+										className="py-4 px-6 text-left text-xs sm:text-sm font-medium dark:text-gray-400 uppercase tracking-wider"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{role.name}
@@ -231,15 +231,15 @@ export default function RolePermissionManagementPage() {
 								))}
 							</tr>
 						</thead>
-						<tbody 
+						<tbody
 							className="dark:bg-gray-800"
 							style={{
 								backgroundColor: 'var(--accent-white)'
 							}}
 						>
 							{roleManagementSettings.modules.map((module, index) => (
-								<tr 
-									key={module.id} 
+								<tr
+									key={module.id}
 									className="dark:hover:bg-gray-700"
 									style={{
 										borderBottom: index !== roleManagementSettings.modules.length - 1 ? '1px solid' : 'none',
@@ -252,8 +252,8 @@ export default function RolePermissionManagementPage() {
 										e.currentTarget.style.backgroundColor = 'var(--accent-white)';
 									}}
 								>
-									<td 
-										className="py-4 px-6 text-sm font-medium dark:text-gray-100"
+									<td
+										className="py-4 px-6 text-xs sm:text-sm font-medium dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{module.name}
@@ -274,11 +274,12 @@ export default function RolePermissionManagementPage() {
 			</div>
 
 			{/* Action Buttons */}
-			<div className="flex justify-end gap-3 mt-6">
+			<div className="flex flex-col sm:flex-row sm:justify-end gap-3 mt-6">
 				<Button
 					variant="outline"
 					size="md"
 					onClick={() => router.back()}
+					className="w-full sm:w-auto"
 				>
 					Cancel
 				</Button>
@@ -286,6 +287,7 @@ export default function RolePermissionManagementPage() {
 					variant="primary"
 					size="md"
 					onClick={handleSaveChanges}
+					className="w-full sm:w-auto"
 				>
 					Save Change
 				</Button>

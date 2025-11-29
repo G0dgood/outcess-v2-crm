@@ -22,17 +22,17 @@ interface PricingSectionProps {
 
 const PricingSection: React.FC<PricingSectionProps> = ({ tiers }) => {
 	return (
-		<section id="pricing" className="space-y-8 p-[64px_80px] px-6 md:px-45 bg-[#F9FAFB]">
+		<section id="pricing" className="space-y-8 px-6 py-16 md:px-45 bg-[#F9FAFB]">
 			<div className="space-y-3 text-center flex flex-col items-center justify-center">
 				<HeroBadge iconSrc="" label="Pricing" />
 				<SectionTitle title="Simple, Transparent Pricing" />
 				<SectionSubtitle subtitle="Choose the perfect plan for your team. All plans include a 14-day free trial with no credit card required." />
 			</div>
-			<div className=" gap-6  flex justify-center items-center">
+			<div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 justify-center items-stretch">
 				{tiers.map((tier) => (
 					<div
 						key={tier.title}
-						className={`box-border flex flex-col items-start p-[34px] gap-2 w-[362px] h-[579px] bg-white border-2 border-[#F3F4F6] rounded-[16px]flex  border-light bg-surface shadow-md ${tier.highlight ? 'shadow-soft' : ''
+						className={`box-border flex flex-col items-start p-[34px] gap-2 w-full bg-white border-2 border-[#F3F4F6] border-light bg-surface shadow-md ${tier.highlight ? 'shadow-soft' : ''
 							}`}
 					>
 						<div className="space-y-2">
@@ -40,7 +40,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ tiers }) => {
 								{tier.title}
 							</p>
 							<p className="not-italic font-normal text-[14px] leading-[24px] flex items-center text-[#4A5565]" style={plusJakartaStyle}>{tier.description}</p>
-							<h3 className="font-['Plus_Jakarta_Sans'] not-italic font-bold text-[48px] leading-[48px] flex items-center text-[#050711]">{tier.price}</h3>
+							<h3 className="font-['Plus_Jakarta_Sans'] not-italic font-bold text-[32px] leading-[36px] sm:text-[48px] sm:leading-[48px] flex items-center text-[#050711]">{tier.price}</h3>
 						</div>
 						<Link
 							href="/signup"
@@ -70,4 +70,3 @@ const PricingSection: React.FC<PricingSectionProps> = ({ tiers }) => {
 };
 
 export default PricingSection;
-

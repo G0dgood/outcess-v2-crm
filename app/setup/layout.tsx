@@ -8,12 +8,14 @@ import UserAlt from "@/components/setupIcon/UserAlt";
 import BottomNav from "@/components/ui/BottomNav";
 import SetupHeader from "@/components/ui/SetupHeader";
 import SetupSidebar from "@/components/ui/SetupSidebar";
-import React from "react";
+import React, { useRef } from "react";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const { currentStep, isLoading, setIsLoading, onStepComplete, onStepBack, setupData } = useSetup();
+  const saveTimeoutRef = useRef<number | null>(null);
+  const submitTimeoutRef = useRef<number | null>(null);
 
   const validateCurrentStep = () => {
     if (currentStep === 1) {
@@ -65,10 +67,21 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     toast.loading("Saving your progress...", {
       id: "save-progress",
+      action: {
+        label: "Cancel",
+        onClick: () => {
+          if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+            saveTimeoutRef.current = null;
+          }
+          setIsLoading(false);
+          toast.dismiss("save-progress");
+        }
+      }
     });
 
     // Simulate save operation
-    setTimeout(() => {
+    saveTimeoutRef.current = window.setTimeout(() => {
       console.log('Step completed:', currentStep);
       setIsLoading(false);
       toast.success("Step completed successfully!", {
@@ -84,10 +97,21 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     toast.loading("Submitting for approval...", {
       id: "submit-progress",
+      action: {
+        label: "Cancel",
+        onClick: () => {
+          if (submitTimeoutRef.current) {
+            clearTimeout(submitTimeoutRef.current);
+            submitTimeoutRef.current = null;
+          }
+          setIsLoading(false);
+          toast.dismiss("submit-progress");
+        }
+      }
     });
 
     // Simulate submission
-    setTimeout(() => {
+    submitTimeoutRef.current = window.setTimeout(() => {
       console.log('CRM configuration submitted for approval:', setupData);
       setIsLoading(false);
       toast.success("Configuration submitted successfully!", {
@@ -96,7 +120,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         duration: 3000,
       });
       // Navigate to dashboard after approval
-      setTimeout(() => {
+      window.setTimeout(() => {
         window.location.href = '/dashboard';
       }, 2000);
     }, 2000);

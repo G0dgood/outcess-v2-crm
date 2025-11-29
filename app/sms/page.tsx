@@ -162,26 +162,28 @@ const SMSPage: React.FC = () => {
 				<PageHeading text="SMS" />
 			</div>
 
-			{/* Search Bar */}
-			<div className="mb-6 flex items-center justify-between">
+			<div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 				<Search
 					placeholder="Search SMS by phone number, message, or contact name"
 					value={searchTerm}
 					onChange={setSearchTerm}
-					className="max-w-md"
+					className="w-full sm:w-auto"
+					maxWidth="w-full"
 					onSearch={(value) => console.log('Search triggered:', value)}
 					onClear={() => console.log('Search cleared')}
 					showClearButton={true}
 				/>
-				<Button
-					variant="primary"
-					size="md"
-					onClick={() => console.log('Send SMS clicked')}
-					className="flex items-center gap-2"
-				>
-					<ChatBubbleIcon className="w-4 h-4" />
-					Send SMS
-				</Button>
+				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
+					<Button
+						variant="primary"
+						size="md"
+						onClick={() => console.log('Send SMS clicked')}
+						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+					>
+						<ChatBubbleIcon className="w-4 h-4" />
+						Send SMS
+					</Button>
+				</div>
 			</div>
 
 			{/* SMS Table */}
@@ -372,165 +374,165 @@ const SMSPage: React.FC = () => {
 					className={`fixed top-0 right-0 h-full w-full max-w-md dark:bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${isDrawerAnimating ? 'translate-x-0' : 'translate-x-full'}`}
 					style={{ backgroundColor: 'var(--accent-white)' }}
 				>
-						{/* Drawer Header */}
-						<div
-							className="flex justify-between items-center border-b dark:border-gray-700 p-6"
-							style={{ borderColor: 'var(--light-gray)' }}
-						>
-							<div className="flex items-center gap-3">
-								<ChatBubbleIcon
-									className="w-5 h-5 dark:text-gray-300"
-									style={{ color: 'var(--text-primary)' }}
-								/>
-								<h2
-									className="font-inter text-lg font-semibold dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Selected SMS ({selectedSMS.size})
-								</h2>
-							</div>
-							<button
-								onClick={() => setIsDrawerOpen(false)}
-								className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-								style={{ color: 'var(--text-tertiary)' }}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.color = 'var(--text-secondary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.color = 'var(--text-tertiary)';
-								}}
+					{/* Drawer Header */}
+					<div
+						className="flex justify-between items-center border-b dark:border-gray-700 p-6"
+						style={{ borderColor: 'var(--light-gray)' }}
+					>
+						<div className="flex items-center gap-3">
+							<ChatBubbleIcon
+								className="w-5 h-5 dark:text-gray-300"
+								style={{ color: 'var(--text-primary)' }}
+							/>
+							<h2
+								className="font-inter text-lg font-semibold dark:text-gray-100"
+								style={{ color: 'var(--text-primary)' }}
 							>
-								<Icon name="Close_round_light" size="lg" />
-							</button>
+								Selected SMS ({selectedSMS.size})
+							</h2>
 						</div>
+						<button
+							onClick={() => setIsDrawerOpen(false)}
+							className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+							style={{ color: 'var(--text-tertiary)' }}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.color = 'var(--text-secondary)';
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.color = 'var(--text-tertiary)';
+							}}
+						>
+							<Icon name="Close_round_light" size="lg" />
+						</button>
+					</div>
 
-						{/* Drawer Content */}
-						<div className="overflow-y-auto h-[calc(100vh-80px)] p-6">
-							{selectedSMS.size === 0 ? (
-								<div className="flex flex-col items-center justify-center h-full text-center">
-									<ChatBubbleIcon
-										className="w-12 h-12 mb-4 dark:text-gray-400"
-										style={{ color: 'var(--text-tertiary)' }}
-									/>
-									<p
-										className="text-sm dark:text-gray-400"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										No SMS selected
-									</p>
-								</div>
-							) : (
-								<div className="space-y-4">
-									{smsList
-										.filter(sms => selectedSMS.has(sms.id))
-										.map((sms) => {
-											const statusColors = getStatusColor(sms.status);
-											const directionColors = getDirectionColor(sms.direction);
-											return (
+					{/* Drawer Content */}
+					<div className="overflow-y-auto h-[calc(100vh-80px)] p-6">
+						{selectedSMS.size === 0 ? (
+							<div className="flex flex-col items-center justify-center h-full text-center">
+								<ChatBubbleIcon
+									className="w-12 h-12 mb-4 dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								/>
+								<p
+									className="text-sm dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									No SMS selected
+								</p>
+							</div>
+						) : (
+							<div className="space-y-4">
+								{smsList
+									.filter(sms => selectedSMS.has(sms.id))
+									.map((sms) => {
+										const statusColors = getStatusColor(sms.status);
+										const directionColors = getDirectionColor(sms.direction);
+										return (
+											<div
+												key={sms.id}
+												className="p-4 dark:bg-gray-700 border dark:border-gray-600 rounded-lg"
+												style={{
+													backgroundColor: 'var(--bg-primary)',
+													borderColor: 'var(--light-gray)'
+												}}
+											>
+												{/* SMS Header */}
+												<div className="flex justify-between items-start mb-3">
+													<div className="flex-1">
+														<div className="flex items-center gap-2 mb-2">
+															<span
+																className="text-xs font-medium dark:text-gray-300"
+																style={{ color: 'var(--text-secondary)' }}
+															>
+																{sms.id}
+															</span>
+															<span
+																className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+																style={{
+																	backgroundColor: directionColors.bg,
+																	color: directionColors.text,
+																	border: `1px solid ${directionColors.border}`
+																}}
+															>
+																{sms.direction === 'inbound' ? 'Inbound' : 'Outbound'}
+															</span>
+															<span
+																className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+																style={{
+																	backgroundColor: statusColors.bg,
+																	color: statusColors.text,
+																	border: `1px solid ${statusColors.border}`
+																}}
+															>
+																{sms.status.charAt(0).toUpperCase() + sms.status.slice(1)}
+															</span>
+														</div>
+														{sms.contactName && (
+															<p
+																className="text-sm font-medium dark:text-gray-100 mb-1"
+																style={{ color: 'var(--text-primary)' }}
+															>
+																{sms.contactName}
+															</p>
+														)}
+														<p
+															className="text-xs dark:text-gray-400"
+															style={{ color: 'var(--text-tertiary)' }}
+														>
+															{sms.phoneNumber}
+														</p>
+													</div>
+												</div>
+
+												{/* Message Preview */}
 												<div
-													key={sms.id}
-													className="p-4 dark:bg-gray-700 border dark:border-gray-600 rounded-lg"
+													className="mt-3 p-3 dark:bg-gray-800 border dark:border-gray-600 rounded text-sm dark:text-gray-200 line-clamp-3"
 													style={{
-														backgroundColor: 'var(--bg-primary)',
-														borderColor: 'var(--light-gray)'
+														backgroundColor: 'var(--accent-white)',
+														borderColor: 'var(--light-gray)',
+														color: 'var(--text-primary)'
 													}}
 												>
-													{/* SMS Header */}
-													<div className="flex justify-between items-start mb-3">
-														<div className="flex-1">
-															<div className="flex items-center gap-2 mb-2">
-																<span
-																	className="text-xs font-medium dark:text-gray-300"
-																	style={{ color: 'var(--text-secondary)' }}
-																>
-																	{sms.id}
-																</span>
-																<span
-																	className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-																	style={{
-																		backgroundColor: directionColors.bg,
-																		color: directionColors.text,
-																		border: `1px solid ${directionColors.border}`
-																	}}
-																>
-																	{sms.direction === 'inbound' ? 'Inbound' : 'Outbound'}
-																</span>
-																<span
-																	className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-																	style={{
-																		backgroundColor: statusColors.bg,
-																		color: statusColors.text,
-																		border: `1px solid ${statusColors.border}`
-																	}}
-																>
-																	{sms.status.charAt(0).toUpperCase() + sms.status.slice(1)}
-																</span>
-															</div>
-															{sms.contactName && (
-																<p
-																	className="text-sm font-medium dark:text-gray-100 mb-1"
-																	style={{ color: 'var(--text-primary)' }}
-																>
-																	{sms.contactName}
-																</p>
-															)}
-															<p
-																className="text-xs dark:text-gray-400"
-																style={{ color: 'var(--text-tertiary)' }}
-															>
-																{sms.phoneNumber}
-															</p>
-														</div>
-													</div>
-
-													{/* Message Preview */}
-													<div
-														className="mt-3 p-3 dark:bg-gray-800 border dark:border-gray-600 rounded text-sm dark:text-gray-200 line-clamp-3"
-														style={{
-															backgroundColor: 'var(--accent-white)',
-															borderColor: 'var(--light-gray)',
-															color: 'var(--text-primary)'
-														}}
-													>
-														{sms.message}
-													</div>
-
-													{/* Timestamp */}
-													<p
-														className="text-xs mt-2 dark:text-gray-400"
-														style={{ color: 'var(--text-tertiary)' }}
-													>
-														{sms.timestamp}
-													</p>
-
-													{/* View Full Message Button */}
-													<button
-														onClick={() => {
-															setViewingSMS(sms);
-															setIsDrawerOpen(false);
-														}}
-														className="mt-3 w-full text-xs py-2 px-3 rounded border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
-														style={{
-															borderColor: 'var(--light-gray)',
-															color: 'var(--text-secondary)',
-															backgroundColor: 'transparent'
-														}}
-														onMouseEnter={(e) => {
-															e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-														}}
-														onMouseLeave={(e) => {
-															e.currentTarget.style.backgroundColor = 'transparent';
-														}}
-													>
-														View Full Message
-													</button>
+													{sms.message}
 												</div>
-											);
-										})}
-								</div>
-							)}
-						</div>
+
+												{/* Timestamp */}
+												<p
+													className="text-xs mt-2 dark:text-gray-400"
+													style={{ color: 'var(--text-tertiary)' }}
+												>
+													{sms.timestamp}
+												</p>
+
+												{/* View Full Message Button */}
+												<button
+													onClick={() => {
+														setViewingSMS(sms);
+														setIsDrawerOpen(false);
+													}}
+													className="mt-3 w-full text-xs py-2 px-3 rounded border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
+													style={{
+														borderColor: 'var(--light-gray)',
+														color: 'var(--text-secondary)',
+														backgroundColor: 'transparent'
+													}}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
+												>
+													View Full Message
+												</button>
+											</div>
+										);
+									})}
+							</div>
+						)}
 					</div>
+				</div>
 			)}
 
 			{/* SMS Message Modal */}
@@ -708,4 +710,3 @@ const SMSPage: React.FC = () => {
 };
 
 export default SMSPage;
-

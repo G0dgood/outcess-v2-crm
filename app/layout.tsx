@@ -71,7 +71,14 @@ export default function RootLayout({
                 <SocketProvider config={{ autoConnect: false }}>
                   <NavigationProvider>
                     {children}
-                    <Toaster position="top-right" richColors />
+                    <Toaster
+                      position="top-right"
+                      richColors
+                      closeButton
+                      toastOptions={{
+                        style: { borderRadius: 0 }
+                      }}
+                    />
                   </NavigationProvider>
                 </SocketProvider>
               </PrivilegeProvider>

@@ -401,41 +401,42 @@ const DashboardContent: React.FC = () => {
 				>
 					{setupData.dashboardSettings.dashboardName || ' Dashboard'}
 				</h1>
-				<div className="flex gap-3">
+				<div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
 					<Button
 						variant="primary"
 						size="md"
 						onClick={handleAddWidget}
-						style={primaryButtonStyle}
-						className="transition-all duration-200"
+						// style={primaryButtonStyle}
+						className="transition-all duration-200 px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm"
 						onMouseEnter={(event) => handlePrimaryHover(event, true)}
 						onMouseLeave={(event) => handlePrimaryHover(event, false)}
 					>
-						Add Widget
+						<PlusIcon className="w-4 h-4" />
+						<span className="ml-2 hidden sm:inline">Add Widget</span>
 					</Button>
 					<Button
-						variant="outline"
+						variant="primary"
 						size="md"
 						onClick={handleCreateStickyNoteDirectly}
-						className="flex items-center gap-2 transition-colors duration-200"
-						style={outlineButtonStyle}
-						onMouseEnter={(event) => handleOutlineHover(event, true)}
-						onMouseLeave={(event) => handleOutlineHover(event, false)}
+						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+						// style={outlineButtonStyle}
+						onMouseEnter={(event) => handlePrimaryHover(event, true)}
+						onMouseLeave={(event) => handlePrimaryHover(event, false)}
 					>
 						<Pencil1Icon className="w-4 h-4" />
-						Note
+						<span className="hidden sm:inline">Note</span>
 					</Button>
 					<Button
-						variant="outline"
+						variant="primary"
 						size="md"
 						onClick={() => setIsAddChartModalOpen(true)}
-						className="flex items-center gap-2 transition-colors duration-200 relative"
-						style={outlineButtonStyle}
-						onMouseEnter={(event) => handleOutlineHover(event, true)}
-						onMouseLeave={(event) => handleOutlineHover(event, false)}
+						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+						// style={outlineButtonStyle}
+						onMouseEnter={(event) => handlePrimaryHover(event, true)}
+						onMouseLeave={(event) => handlePrimaryHover(event, false)}
 					>
 						<PlusIcon className="w-4 h-4" />
-						Add Chart
+						<span className="hidden sm:inline">Add Chart</span>
 						{isOffline && (
 							<span
 								className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
@@ -444,6 +445,15 @@ const DashboardContent: React.FC = () => {
 							/>
 						)}
 					</Button>
+					{/* <Button
+						variant="primary"
+						size="md"
+						onClick={handleImport}
+						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+					>
+						Import
+						<Icon name="share" size="sm" />
+					</Button> */}
 				</div>
 			</div>
 
@@ -539,10 +549,10 @@ const DashboardContent: React.FC = () => {
 								variant="primary"
 								size="md"
 								onClick={() => setIsAddChartModalOpen(true)}
-								className="flex items-center gap-2"
+								className="flex items-center gap-2 px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm"
 							>
 								<PlusIcon className="w-4 h-4" />
-								Add Chart
+								<span className="hidden sm:inline">Add Chart</span>
 							</Button>
 						</div>
 					)}

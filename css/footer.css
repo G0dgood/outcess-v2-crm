@@ -1,0 +1,6 @@
+#footer {
+	   grid-area: footer;
+}
+#footer-setup {
+	   grid-area: footer-setup;
+}

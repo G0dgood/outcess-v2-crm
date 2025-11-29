@@ -14,18 +14,18 @@ const HeroSection: React.FC<HeroSectionProps> = ({ agents }) => {
 
 	return (
 		<section className="flex flex-col gap-12 md:flex-row md:items-center md:gap-16 px-6 md:px-45 pt-45 pb-18">
-			<div className="w-1/2">
+			<div className="w-full md:w-1/2">
 				<HeroBadge iconSrc="/logo/lighting.svg" label="Trusted by 100+ Call Centers" />
 
 				<h1
-					className="mt-4 text-primary font-bold text-[48px] leading-[1.1] sm:text-[56px] sm:leading-[1.05] lg:text-[72px] lg:leading-[1.05] text-[#050711]"
+					className="mt-4 text-primary font-bold text-[34px] leading-[1.15] sm:text-[48px] sm:leading-[1.1] lg:text-[72px] lg:leading-[1.05] text-[#050711]"
 					style={plusJakartaStyle}
 				>
 					<span className="inline md:block">Customizable</span>{' '}
 					<span className="inline md:block">CRM Built for Call</span>{' '}
 					<span className="inline md:block">Centers</span>
 				</h1>
-				<p className="  font-normal text-[20px] leading-[32px] flex items-center text-[#4A5565] mt-6 sm:pr-16" style={plusJakartaStyle}>
+				<p className="font-normal text-[16px] leading-[24px] sm:text-[20px] sm:leading-[32px] flex items-center text-[#4A5565] mt-6 sm:pr-16" style={plusJakartaStyle}>
 					Streamline operations, boost agent productivity, and deliver exceptional customer experiences in one seamless CRM platform
 					designed for busy call center teams.
 				</p>
@@ -54,12 +54,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ agents }) => {
 					</div>
 				</div>
 			</div>
-			<div className="w-1/2 flex justify-end">
-				<Image src="/logo/callCenter.svg" alt="Hero Section" width={616} height={500} className="w-full h-full object-cover" />
+			<div className="w-full md:w-1/2 flex justify-center md:justify-end">
+				<Image src="/logo/callCenter.svg" alt="Hero Section" width={616} height={500} className="w-full h-auto md:h-full object-cover" />
 			</div>
 		</section>
 	);
 };
 
 export default HeroSection;
-

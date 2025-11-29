@@ -17,6 +17,7 @@ import {
 	Link2Icon
 } from '@radix-ui/react-icons';
 import Group from '@/components/setupIcon/Group';
+import Icon from '@/components/ui/Icon';
 
 interface MobileSideNavProps {
 	activeItem?: string;
@@ -285,8 +286,11 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 					borderColor: 'var(--light-gray)'
 				}}
 			>
-				{/* Close Button */}
-				<div className="flex justify-end p-4 pb-2">
+				<div className="flex items-center justify-between p-4 pb-2">
+					<div className="flex items-center gap-2">
+						<Icon name="peoplelyHalf" size="xl" />
+						<span className="font-inter font-semibold text-[18px] leading-[22px]" style={{ color: 'var(--text-primary)' }}>Peoplely</span>
+					</div>
 					<button
 						onClick={onClose}
 						className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -297,6 +301,7 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 				</div>
 
 				<div className="p-4 pt-0">
+
 					{/* Navigation Items */}
 					<div className="space-y-2">
 						{navItems.map((item) => {
@@ -434,4 +439,3 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 };
 
 export default MobileSideNav;
-

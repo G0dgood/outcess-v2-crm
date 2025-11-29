@@ -80,18 +80,18 @@ const WidgetModal: React.FC<WidgetModalProps> = ({
 				style={{ backgroundColor: 'var(--accent-white)' }}
 				onClick={(e) => e.stopPropagation()}
 			>
-				<div 
+				<div
 					className="flex justify-between items-center p-6 border-b dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<h2 
+					<h2
 						className="font-inter text-lg font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						{title}
 					</h2>
-					<button 
-						onClick={onClose} 
+					<button
+						onClick={onClose}
 						className="dark:text-gray-500 dark:hover:text-gray-300"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
@@ -116,7 +116,7 @@ const WidgetModal: React.FC<WidgetModalProps> = ({
 						label="Call Outcomes"
 						placeholder="Select call outcome"
 						value={widgetForm.callOutcome}
-						onChange={(value) => setWidgetForm(prev => ({ ...prev, callOutcome: value }))}
+						onChange={(value) => setWidgetForm(prev => ({ ...prev, callOutcome: Array.isArray(value) ? value[0] : value }))}
 						options={callOutcomes.map(outcome => ({ value: outcome.id, label: outcome.name }))}
 					/>
 					<ColorPicker
@@ -125,7 +125,7 @@ const WidgetModal: React.FC<WidgetModalProps> = ({
 						onChange={(color: string) => setWidgetForm(prev => ({ ...prev, color }))}
 					/>
 				</div>
-				<div 
+				<div
 					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
@@ -162,18 +162,18 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 				style={{ backgroundColor: 'var(--accent-white)' }}
 				onClick={(e) => e.stopPropagation()}
 			>
-				<div 
+				<div
 					className="flex justify-between items-center p-6 border-b dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<h2 
+					<h2
 						className="font-inter text-lg font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Call Outcomes
 					</h2>
-					<button 
-						onClick={onClose} 
+					<button
+						onClick={onClose}
 						className="dark:text-gray-500 dark:hover:text-gray-300"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
@@ -206,13 +206,13 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 								alt="No call outcomes"
 								className="w-32 h-32 mb-4 opacity-60"
 							/>
-							<h3 
+							<h3
 								className="font-inter text-base font-medium dark:text-gray-100 mb-2"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								No Call Outcomes Yet
 							</h3>
-							<p 
+							<p
 								className="font-lato text-sm dark:text-gray-400 mb-4"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
@@ -223,7 +223,7 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 						<div className="space-y-2">
 							{callOutcomes.map((outcome) => (
 								<div key={outcome.id} className="flex items-center justify-between">
-									<span 
+									<span
 										className="font-lato text-sm dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
@@ -247,7 +247,7 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 						</div>
 					)}
 				</div>
-				<div 
+				<div
 					className="flex justify-end p-6 border-t dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
@@ -353,8 +353,8 @@ export default function KPIMetric({
 			{/* Widgets Grid */}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 				{widgets.map((widget) => (
-					<div 
-						key={widget.id} 
+					<div
+						key={widget.id}
 						className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative"
 						style={{
 							backgroundColor: 'var(--accent-white)',
@@ -362,7 +362,7 @@ export default function KPIMetric({
 						}}
 					>
 						<div className="flex items-center justify-between mb-4">
-							<h3 
+							<h3
 								className="font-inter text-sm font-medium dark:text-gray-100"
 								style={{ color: 'var(--text-primary)' }}
 							>

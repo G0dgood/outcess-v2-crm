@@ -143,3 +143,4 @@ export const getComponentSoundType = (component: keyof SoundPreferences['compone
 	return preferences.components[component]?.soundType ?? 'notification';
 };
 
+

@@ -5,11 +5,20 @@
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
+#sidenav-setup { 
+  position: relative;
+  grid-area: sidenav-setup  ;  
+  background-color: var(--accent-white);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
 .dark #side-nav {
   background-color: var(--accent-white);
 }
  
-
+.dark #sidenav-setup {
+  background-color: var(--accent-white);
+}
  
 
 /* Media query for small screens */
@@ -20,3 +29,7 @@
   }
 
 	}
+
+  #sidenav-setup {
+    display: none !important;
+  }

@@ -20,15 +20,15 @@ interface TestimonialsSectionProps {
 
 const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ items }) => {
 	return (
-		<section id="testimonials" className="space-y-8 p-[64px_80px] px-6 md:px-45 bg-[#F9FAFB]">
+		<section id="testimonials" className="space-y-8 px-6 py-16 md:px-45 bg-[#F9FAFB]">
 			<div className="space-y-3 text-center flex flex-col items-center justify-center">
 				<HeroBadge iconSrc="" label="Testimonials" />
 				<SectionTitle title="Trusted by Industry Leaders" />
 				<SectionSubtitle subtitle="See what our customers have to say about transforming their call center operations." />
 			</div>
-			<div className="grid gap-6 sm:grid-cols-3">
+			<div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
 				{items.map((testimonial) => (
-					<div key={testimonial.name} className="box-border flex flex-col justify-between items-start p-[33px] w-[405.33px] h-[250px] bg-white border border-[#F3F4F6] rounded-[16px]">
+					<div key={testimonial.name} className="box-border flex flex-col justify-between items-start p-[33px] w-full bg-white border border-[#F3F4F6] rounded-[16px]">
 						<div>
 							<div className="flex flex-wrap gap-2 items-center">
 								<Image src={testimonial.iconSrc} alt={testimonial.name} width={25} height={25} className="mb-4" />
@@ -51,4 +51,3 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ items }) => {
 };
 
 export default TestimonialsSection;
-

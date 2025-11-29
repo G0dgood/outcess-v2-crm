@@ -92,14 +92,24 @@ const ReportPage: React.FC = () => {
 				text="Report"
 			/>
 
-			{/* Search and Filter Bar */}
-			<div className="my-6 flex items-center gap-4 justify-between">
-				<div className="flex-1 max-w-md flex items-center gap-4 relative">
+			{/* Search and Actions */}
+			<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+				<Search
+					placeholder="Search"
+					value={searchTerm}
+					onChange={setSearchTerm}
+					className="w-full sm:w-auto"
+					maxWidth="w-full"
+					onSearch={(value) => console.log('Search triggered:', value)}
+					onClear={() => console.log('Search cleared')}
+					showClearButton={true}
+				/>
+				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
 					<div ref={filterButtonRef} className="relative">
 						<button
 							type="button"
 							onClick={handleFilter}
-							className="inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 px-4 py-2 text-sm dark:bg-gray-800 border dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 dark:focus:ring-gray-400 cursor-pointer gap-2 whitespace-nowrap"
+							className="inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm dark:bg-gray-800 border dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 dark:focus:ring-gray-400 cursor-pointer gap-2 whitespace-nowrap"
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)',
@@ -126,25 +136,15 @@ const ReportPage: React.FC = () => {
 							</div>
 						)}
 					</div>
-					<Search
-						placeholder="Search"
-						value={searchTerm}
-						onChange={setSearchTerm}
-						onSearch={(value) => console.log('Search triggered:', value)}
-						onClear={() => console.log('Search cleared')}
-						showClearButton={true}
-					/>
+					<Button
+						variant="primary"
+						size="md"
+						onClick={handleDownload}
+						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+					>
+						Download
+					</Button>
 				</div>
-
-
-				<Button
-					variant="primary"
-					size="md"
-					onClick={handleDownload}
-					className="flex items-center gap-2"
-				>
-					Download
-				</Button>
 			</div>
 
 			{/* Report Table */}
@@ -273,4 +273,3 @@ const ReportPage: React.FC = () => {
 };
 
 export default ReportPage;
-

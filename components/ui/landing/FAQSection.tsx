@@ -31,16 +31,14 @@ const FAQSection: React.FC<FAQSectionProps> = ({ items }) => {
 				<SectionSubtitle subtitle="Answers to common questions about our call center CRM software." />
 			</div>
 			<div
-				className={`space-y-4 flex flex-col items-center justify-center rounded-[32px] p-6 transition-colors duration-500 ${
-					activeIndex !== null ? 'bg-[#6C8B7D]' : 'bg-transparent'
-				}`}
+				className={`space-y-4 flex flex-col items-center justify-center rounded-[32px] p-6 transition-colors duration-500 `}
 			>
 				{items.map((faq, index) => {
 					const isActive = activeIndex === index;
 					return (
 						<div
 							key={faq.question}
-							className={`w-full max-w-[768px] rounded-2xl border transition-all duration-500 ${isActive ? 'bg-[rgba(108,139,125,0.1)] border-transparent ' : 'bg-surface border-transparent'
+							className={`w-full max-w-[768px] rounded-2xl border transition-all duration-500 ${isActive ? 'bg-[#6C8B7D] border-transparent ' : 'bg-surface border-transparent'
 								}`}
 						>
 							<button

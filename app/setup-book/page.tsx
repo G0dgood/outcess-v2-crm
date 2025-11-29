@@ -190,26 +190,28 @@ const SetupBookPage: React.FC = () => {
 				text="Setup Book"
 			/>
 
-			{/* Search Bar */}
-			<div className="my-6 flex items-center justify-between">
+			<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 				<Search
 					placeholder="Search"
 					value={searchTerm}
 					onChange={setSearchTerm}
-					className="max-w-md"
+					className="w-full sm:w-auto"
+					maxWidth="w-full"
 					onSearch={(value) => console.log('Search triggered:', value)}
 					onClear={() => console.log('Search cleared')}
 					showClearButton={true}
 				/>
-				<Button
-					size="md"
-					onClick={handleUpload}
-					variant="primary"
-					className="flex items-center gap-2"
-				>
-					<UploadIcon className="w-4 h-4" />
-					Upload
-				</Button>
+				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
+					<Button
+						size="md"
+						onClick={handleUpload}
+						variant="primary"
+						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+					>
+						<UploadIcon className="w-4 h-4" />
+						Upload
+					</Button>
+				</div>
 			</div>
 
 			{/* Records Table */}
@@ -694,4 +696,3 @@ const SetupBookPage: React.FC = () => {
 };
 
 export default SetupBookPage;
-

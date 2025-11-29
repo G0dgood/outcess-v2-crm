@@ -12,7 +12,7 @@ const CallToActionSection: React.FC = () => {
 	};
 
 	return (
-		<section className="bg-textPrimary px-10 py-16 text-center text-white shadow-soft h-[432px] flex flex-col justify-center items-center">
+		<section className="bg-textPrimary px-6 md:px-10 py-16 text-center text-white shadow-soft flex flex-col justify-center items-center">
 			<h2 className="text-3xl font-semibold sm:text-4xl">Ready to Transform Your Call Center?</h2>
 			<p className="mt-4 text-sm text-white/80 sm:text-base">
 				Join thousands of teams already using Peoplely CRM to deliver exceptional customer experiences.
@@ -22,7 +22,7 @@ const CallToActionSection: React.FC = () => {
 					placeholder="Start Free Trial"
 					value={value}
 					onChange={handleChange}
-					className="box-border w-96 max-w-96 h-12 bg-white/10 border border-white/20 px-2"
+					className="box-border w-full sm:w-96 h-12 bg-white/10 border border-white/20 px-2"
 				/>
 				<Link
 					href="/demo"
@@ -37,4 +37,3 @@ const CallToActionSection: React.FC = () => {
 };
 
 export default CallToActionSection;
-

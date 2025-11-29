@@ -58,7 +58,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       />
 
       <main>{children}</main>
-
     </div>
   );
 }

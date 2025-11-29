@@ -309,7 +309,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		},
 	});
 
-	console.log('setupData----->', JSON.stringify(setupData, null, 2));
+	// console.log('setupData----->', JSON.stringify(setupData, null, 2));
 
 	const updateSetupData = (data: Partial<SetupData>) => {
 		setSetupData(prev => ({ ...prev, ...data }));

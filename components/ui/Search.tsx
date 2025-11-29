@@ -37,7 +37,7 @@ const Search: React.FC<SearchProps> = ({
 
 	return (
 		<div 
-			className={`box-border flex flex-row items-center px-[14px] py-[10px] gap-2 w-[320px] h-[40px] dark:bg-gray-800 border dark:border-gray-700 relative ${maxWidth} ${className} transition-colors duration-200`}
+			className={`box-border flex flex-row items-center px-[14px] py-[10px] gap-2 w-full sm:w-[320px] md:w-[300px] lg:w-[400px] h-[40px] dark:bg-gray-800 border dark:border-gray-700 relative ${maxWidth} ${className} transition-colors duration-200`}
 			style={{
 				backgroundColor: 'var(--accent-white)',
 				borderColor: 'var(--light-gray)'
@@ -80,4 +80,3 @@ const Search: React.FC<SearchProps> = ({
 };
 
 export default Search;
-
