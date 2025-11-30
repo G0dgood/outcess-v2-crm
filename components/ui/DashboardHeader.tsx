@@ -200,10 +200,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	return (
 		<header id="header" >
 			<div className="flex items-center justify-between py-2.5">
-				{/* Hamburger Menu - Mobile Only */}
+				{/* Menu Toggle - Hidden on Mobile */}
 				<button
 					onClick={onMobileMenuToggle}
-					className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+					className="hidden md:inline-flex p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
 					title="Menu"
 				>
 					<HamburgerMenuIcon className="w-6 h-6" />
@@ -268,7 +268,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					{hasStickyNotes && (
 						<button
 							onClick={handleNoteIconClick}
-							className="p-2 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer relative"
+							className="hidden md:inline-flex p-2 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer relative"
 							style={{
 								color: 'var(--text-tertiary)',
 								backgroundColor: 'transparent'

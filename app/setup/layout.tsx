@@ -2,7 +2,7 @@
 import BottomNav from "@/components/ui/BottomNav";
 import SetupHeader from "@/components/ui/SetupHeader";
 import SetupSidebar from "@/components/ui/SetupSidebar";
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
 
@@ -10,6 +10,17 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const { currentStep, isLoading, setIsLoading, onStepComplete, onStepBack, setupData } = useSetup();
   const saveTimeoutRef = useRef<number | null>(null);
   const submitTimeoutRef = useRef<number | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const drawerRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobileView(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   const validateCurrentStep = () => {
     if (currentStep === 1) {
@@ -122,8 +133,16 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div id="page-wrapper">
-      <SetupHeader title="CRM Setup Configurator" />
-      {currentStep !== 6 ? <SetupSidebar currentStep={currentStep} /> : <div id="side-nav" />}
+      <SetupHeader title="CRM Setup Configurator" onMobileMenuToggle={() => setIsMobileMenuOpen(true)} />
+      {currentStep !== 6 ? <SetupSidebar currentStep={currentStep} className="hidden md:block" /> : <div id="side-nav" />}
+      {isMobileMenuOpen && isMobileView && (
+        <div className="fixed inset-0 z-50">
+          <div className="fixed inset-0 bg-black/10" onClick={() => setIsMobileMenuOpen(false)}></div>
+          <div ref={drawerRef} className="fixed top-0 left-0 h-full w-80 border-r dark:border-gray-700 dark:bg-gray-900 transform transition-transform duration-300 ease-in-out translate-x-0" style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}>
+            <SetupSidebar currentStep={currentStep} isMobile />
+          </div>
+        </div>
+      )}
       <BottomNav
         onSave={handleSave}
         onBack={handleBack}

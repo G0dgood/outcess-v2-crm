@@ -3,6 +3,7 @@ import React from 'react';
 import Icon from './Icon';
 import { plusJakartaStyle } from '../Options';
 import ThemeToggle from './ThemeToggle';
+import { HamburgerMenuIcon } from '@radix-ui/react-icons';
 
 interface User {
 	name: string;
@@ -16,6 +17,7 @@ interface SetupHeaderProps {
 	user?: User;
 	showLogo?: boolean;
 	className?: string;
+	onMobileMenuToggle?: () => void;
 }
 
 export const SetupHeader: React.FC<SetupHeaderProps> = ({
@@ -23,6 +25,7 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 	user,
 	showLogo = true,
 	className = '',
+	onMobileMenuToggle,
 }) => {
 	const defaultUser: User = {
 		name: "John Doe",
@@ -43,6 +46,13 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 			}}
 		>
 			<div className="flex items-center">
+				<button
+					onClick={onMobileMenuToggle}
+					className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer mr-2"
+					aria-label="Open setup menu"
+				>
+					<HamburgerMenuIcon className="w-6 h-6" />
+				</button>
 				{showLogo && (
 					<div className="flex items-center gap-3">
 						<div className="flex-1 md:flex-none">

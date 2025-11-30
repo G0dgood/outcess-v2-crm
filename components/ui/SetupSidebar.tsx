@@ -22,11 +22,13 @@ interface SetupStep {
 interface SetupSidebarProps {
 	currentStep?: number;
 	className?: string;
+	isMobile?: boolean;
 }
 
 export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 	currentStep,
 	className = '',
+	isMobile = false,
 }) => {
 	const { setupData } = useSetup();
 	const { isDarkMode } = useTheme();
@@ -71,8 +73,8 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 	];
 	return (
 		<aside
-			id="side-nav"
-			className={`w-80 dark:bg-gray-900 border-r dark:border-gray-700 p-6 ${className}`}
+			id={isMobile ? 'side-nav-mobile' : 'side-nav'}
+			className={`w-80 dark:bg-gray-900 ${isMobile ? ' h-full border-r dark:border-gray-700' : 'border-r dark:border-gray-700'} p-6 ${className}`}
 			style={{
 				backgroundColor: 'var(--accent-white)',
 				borderColor: 'var(--light-gray)'
