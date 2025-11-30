@@ -192,11 +192,9 @@ const CustomerBookPage: React.FC = () => {
 							}}
 						>
 							{false ? (
-								<SVGLoaderFetch colSpan={8} />
+								<SVGLoaderFetch colSpan={8} text="Loading customers..." />
 							) : filteredCustomers?.length === 0 ? (
-								<NoRecordFound colSpan={8}>
-									No document records found!
-								</NoRecordFound>
+								<NoRecordFound colSpan={8} />
 							) : filteredCustomers.map((customer) => (
 								<tr
 									key={customer.id}
