@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { SetupProvider, useSetup } from '@/contexts/SetupContext';
 import DashboardHeader from '@/components/ui/DashboardHeader';
 import DashboardSideNav from '@/components/ui/DashboardSideNav';
@@ -32,12 +32,16 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 				onEditProfileClick={() => console.log('Edit profile clicked')}
 				onMobileMenuToggle={toggleMobileMenu}
 			/>
-			<DashboardSideNav activeItem="settings" />
-			<MobileSideNav
-				isOpen={isMobileMenuOpen}
-				onClose={closeMobileMenu}
-				activeItem="settings"
-			/>
+			<Suspense fallback={null}>
+				<DashboardSideNav activeItem="settings" />
+			</Suspense>
+			<Suspense fallback={null}>
+				<MobileSideNav
+					isOpen={isMobileMenuOpen}
+					onClose={closeMobileMenu}
+					activeItem="settings"
+				/>
+			</Suspense>
 			<GlobalStickyNotes />
 			<main className="flex-1 overflow-y-auto p-6 md:p-8">
 				{children}
@@ -53,4 +57,3 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 		</SetupProvider>
 	);
 }
-
