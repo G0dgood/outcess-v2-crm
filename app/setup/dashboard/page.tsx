@@ -6,12 +6,9 @@ import CallDisposition from '@/components/CallDisposition';
 import KPIMetric from '@/components/KPIMetric';
 import { useSetup } from '@/contexts/SetupContext';
 
-type DashboardVisibility = 'all' | 'admin' | 'admin-supervisor' | 'custom';
 
-interface VisibilityOption {
-	value: DashboardVisibility;
-	label: string;
-}
+
+
 
 export default function DashboardPage(): React.JSX.Element {
 	const { setupData, updateDashboardSettings } = useSetup();

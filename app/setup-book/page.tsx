@@ -60,27 +60,11 @@ const SetupBookPage: React.FC = () => {
 		setIsUploadModalOpen(false);
 	};
 
-	const handleAddField = () => {
-		console.log('Add Field clicked');
-		// Implement add field logic
-		const newField: FieldDefinition = {
-			id: Date.now().toString(),
-			name: `Field ${fieldDefinitions.length + 1}`,
-			type: 'text',
-			required: false,
-		};
-		setFieldDefinitions([...fieldDefinitions, newField]);
-	};
 
-	const handleFieldEdit = (fieldId: string) => {
-		console.log('Edit field:', fieldId);
-		// Implement field editing logic
-	};
 
-	const handleFieldDelete = (fieldId: string) => {
-		console.log('Delete field:', fieldId);
-		setFieldDefinitions(fieldDefinitions.filter(field => field.id !== fieldId));
-	};
+
+
+
 
 	const handleEditRecord = (record: SetupBookRecord) => {
 		setEditingRecord(record);

@@ -20,14 +20,7 @@ import SubPageHeading from "@/components/ui/SubPageHeading";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 
-interface CreditCardInfo {
-	id: string;
-	last4: string;
-	brand: string;
-	expiryMonth: number;
-	expiryYear: number;
-	isDefault: boolean;
-}
+
 
 export default function SettingsPage() {
 	const { setupData } = useSetup();
@@ -35,6 +28,7 @@ export default function SettingsPage() {
 	const primaryColor = setupData.primaryColor || '#9333EA';
 	const secondaryColor = setupData.secondaryColor || '#6C8B7D';
 
+	console.log('secondaryColor', secondaryColor);
 	const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'email' | 'preferences' | 'sound'>('profile');
 
 	// Loading states

@@ -1,5 +1,6 @@
 "use client";
 import React from 'react';
+import Image from 'next/image';
 import Icon from './Icon';
 import { plusJakartaStyle } from '../Options';
 import ThemeToggle from './ThemeToggle';
@@ -83,13 +84,15 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 							borderColor: 'var(--light-gray)'
 						}}
 					>
-						{userData.avatar ? (
-							<img
-								src={userData.avatar}
-								alt={userData.name}
-								className="w-10 h-10 rounded-full object-cover"
-							/>
-						) : (
+                        {userData.avatar ? (
+                            <Image
+                                src={userData.avatar}
+                                alt={userData.name}
+                                width={40}
+                                height={40}
+                                className="rounded-full object-cover"
+                            />
+                        ) : (
 							<span
 								className="font-lato font-semibold text-base leading-[150%] text-center dark:text-gray-300"
 								style={{ color: 'var(--text-tertiary)' }}

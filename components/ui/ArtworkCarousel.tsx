@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 
 interface Artwork {
 	id: number;
@@ -258,18 +259,25 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 					onMouseLeave={handleMouseLeave}
 				>
 					{imageErrors.has(currentArtwork.image_id) && currentArtwork.thumbnail?.lqip ? (
-						<img
+						<Image
 							src={currentArtwork.thumbnail.lqip}
 							alt={currentArtwork.thumbnail?.alt_text || currentArtwork.title}
 							className="carousel-image carousel-image-clickable"
+							width={currentArtwork.thumbnail?.width || 800}
+							height={currentArtwork.thumbnail?.height || 600}
+							unoptimized
 						/>
 					) : (
-						<img
+						<Image
 							src={getImageUrl(currentArtwork.image_id)}
 							alt={currentArtwork.thumbnail?.alt_text || currentArtwork.title}
 							className="carousel-image carousel-image-clickable"
+							width={1200}
+							height={800}
+							sizes="(max-width: 768px) 100vw, 1200px"
 							onError={(e) => handleImageError(e, currentArtwork.image_id)}
 							crossOrigin="anonymous"
+							unoptimized
 						/>
 					)}
 					{/* Mouse tracker shadow */}

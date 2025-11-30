@@ -60,11 +60,6 @@ const DashboardContent: React.FC = () => {
 		})
 	);
 
-	const primaryColor = setupData.primaryColor || 'var(--text-primary)';
-
-
-
-
 
 	const handlePrimaryHover = (event: React.MouseEvent<HTMLButtonElement>, isHover: boolean) => {
 		event.currentTarget.style.filter = isHover ? 'brightness(0.95)' : '';

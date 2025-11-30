@@ -29,7 +29,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 	const [position, setPosition] = useState(note.position);
 	const [rotation, setRotation] = useState(note.rotation || Math.random() * 6 - 3); // Random rotation between -3 and 3 degrees
 	const [isEditing, setIsEditing] = useState(false);
-	const [title, setTitle] = useState(note.title);
+	const [title] = useState(note.title);
 	const [content, setContent] = useState(note.content);
 	const [isHidden, setIsHidden] = useState(note.isHidden || false);
 	const noteRef = useRef<HTMLDivElement>(null);
@@ -121,7 +121,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 			document.removeEventListener('mousemove', handleMouseMove);
 			document.removeEventListener('mouseup', handleMouseUp);
 		};
-	}, [isDragging, note, position, onUpdate]);
+	}, [isDragging, note, position, rotation, onUpdate]);
 
 	const handleSave = () => {
 		onUpdate({
@@ -188,7 +188,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 		if (!note.title && !note.content && note.todos.length === 0) {
 			setIsEditing(true);
 		}
-	}, [note.id]);
+	}, [note.id, note.title, note.content, note.todos.length]);
 
 	// Completely hide the note when closed
 	if (isHidden) {
@@ -446,4 +446,3 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 };
 
 export default StickyNote;
-

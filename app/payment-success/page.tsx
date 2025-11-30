@@ -4,12 +4,10 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckIcon } from '@radix-ui/react-icons';
 import Button from '@/components/ui/Button';
-import { useSetup } from '@/contexts/SetupContext';
 
 export default function PaymentSuccessPage() {
-	const router = useRouter();
-	const { setupData } = useSetup();
-	const primaryColor = setupData.primaryColor || '#9333EA';
+    const router = useRouter();
+    const primaryColor = '#9333EA';
 
 	return (
 		<div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -47,4 +45,3 @@ export default function PaymentSuccessPage() {
 		</div>
 	);
 }
-

@@ -31,7 +31,7 @@ const StickyNoteModal: React.FC<StickyNoteModalProps> = ({ isOpen, onClose, onSa
 	const [content, setContent] = useState(note?.content || '');
 	const [color, setColor] = useState(note?.color || '#FFEB3B');
 	const [reminder, setReminder] = useState<Date | undefined>(note?.reminder);
-	const [position, setPosition] = useState(note?.position || { x: 100, y: 100 });
+	const [position] = useState(note?.position || { x: 100, y: 100 });
 	const [rotation] = useState(note?.rotation || Math.random() * 6 - 3);
 
 	const handleSave = () => {
@@ -121,4 +121,3 @@ const StickyNoteModal: React.FC<StickyNoteModalProps> = ({ isOpen, onClose, onSa
 };
 
 export default StickyNoteModal;
-

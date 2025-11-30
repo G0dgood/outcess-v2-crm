@@ -8,11 +8,7 @@ import Toggle from '@/components/ui/Toggle';
 import Icon from '@/components/ui/Icon';
 import { useSetup } from '@/contexts/SetupContext';
 
-interface Permission {
-	id: string;
-	name: string;
-	description: string;
-}
+
 
 
 

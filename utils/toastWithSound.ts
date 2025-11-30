@@ -62,8 +62,7 @@ export const toastPromise = <T,>(
             playNotificationSound('error', 'toasts');
             throw error;
         });
-//@ts-ignore
-    return toast.promise<T>(wrapped, messages);
+    return toast.promise(wrapped, messages);
 };
 
 // Re-export other toast functions

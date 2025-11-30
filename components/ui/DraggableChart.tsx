@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import Dropdown from './Dropdown';
 import Icon from './Icon';
 
@@ -46,7 +46,7 @@ const DraggableChart: React.FC<DraggableChartProps> = ({
 		}
 	};
 
-	const handleMouseMove = (e: MouseEvent) => {
+	const handleMouseMove = useCallback((e: MouseEvent) => {
 		if (isDragging) {
 			const newX = e.clientX - dragStart.x;
 			const newY = e.clientY - dragStart.y;
@@ -73,12 +73,12 @@ const DraggableChart: React.FC<DraggableChartProps> = ({
 				height: newHeight,
 			});
 		}
-	};
+	}, [isDragging, dragStart.x, dragStart.y, chart.id, chart.position, isResizing, resizeStart.width, resizeStart.height, resizeStart.x, resizeStart.y, onUpdatePosition]);
 
-	const handleMouseUp = () => {
+	const handleMouseUp = useCallback(() => {
 		setIsDragging(false);
 		setIsResizing(false);
-	};
+	}, []);
 
 	const handleResizeMouseDown = (e: React.MouseEvent) => {
 		e.stopPropagation();
@@ -100,7 +100,7 @@ const DraggableChart: React.FC<DraggableChartProps> = ({
 				document.removeEventListener('mouseup', handleMouseUp);
 			};
 		}
-	}, [isDragging, isResizing, dragStart, resizeStart]);
+	}, [isDragging, isResizing, dragStart, resizeStart, handleMouseMove, handleMouseUp]);
 
 	return (
 		<div

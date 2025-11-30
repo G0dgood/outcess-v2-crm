@@ -22,11 +22,7 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 	const router = useRouter();
 	const { setupData, setCurrentStep } = useSetup();
 
-	const handleSubmitForApproval = () => {
-		console.log('Submitting CRM configuration for approval:', setupData);
-		// TODO: Implement submission logic
-		router.push('/dashboard'); // Navigate to main dashboard after approval
-	};
+
 
 	const handleEditStep = (step: number) => {
 		// Navigate back to specific step for editing
@@ -101,13 +97,13 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 	return (
 		<div className="w-full h-full">
 			<div className="mb-8">
-				<h1 
+				<h1
 					className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
 					style={{ color: 'var(--text-secondary)' }}
 				>
 					Review Your CRM Configuration
 				</h1>
-				<p 
+				<p
 					className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
@@ -118,27 +114,27 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 			{/* Configuration Cards */}
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 				{configurationCards.map((card) => (
-					<div 
-						key={card.id} 
+					<div
+						key={card.id}
 						className="dark:bg-gray-800 border dark:border-gray-700"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
 						}}
 					>
-						<div 
+						<div
 							className="p-6 border-b dark:border-gray-700"
 							style={{ borderColor: 'var(--light-gray)' }}
 						>
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-3">
-									<div 
+									<div
 										className="w-8 h-8 dark:bg-gray-700 rounded-full flex items-center justify-center"
 										style={{ backgroundColor: 'var(--bg-primary)' }}
 									>
 										<Icon name={card.icon} size="md" />
 									</div>
-									<h2 
+									<h2
 										className="font-inter text-lg font-semibold dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
@@ -165,13 +161,13 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 						<div className="p-6 space-y-3">
 							{card.details.map((detail, index) => (
 								<div key={index} className="flex justify-between items-start">
-									<span 
+									<span
 										className="font-lato text-sm dark:text-gray-400 flex-1"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										{detail.label}:
 									</span>
-									<span 
+									<span
 										className="font-lato text-sm font-medium dark:text-gray-100 text-right ml-4"
 										style={{ color: 'var(--text-primary)' }}
 									>
