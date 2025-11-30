@@ -35,9 +35,10 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 		role: '',
 	});
 
-	const handleInputChange = (field: string) => (value: string) => {
-		setFormData(prev => ({ ...prev, [field]: value }));
-	};
+    const handleInputChange = (field: string) => (value: string | string[]) => {
+        const stringValue = Array.isArray(value) ? value[0] : value;
+        setFormData(prev => ({ ...prev, [field]: stringValue }));
+    };
 
 	const handleSave = () => {
 		if (formData.firstName && formData.lastName && formData.email && formData.phone && formData.role) {
