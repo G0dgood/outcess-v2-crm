@@ -49,25 +49,21 @@ export const toastLoading = (message: string, options?: Parameters<typeof toast.
  * Show promise toast with sound based on result
  */
 export const toastPromise = <T,>(
-    promise: Promise<T>,
-    messages: {
-        loading: string;
-        success: string | ((data: T) => string);
-        error: string | ((error: unknown) => string);
-    },
-    options?: Parameters<typeof toast.promise>[1]
+    promise: Parameters<typeof toast.promise>[0],
+    messages: Parameters<typeof toast.promise>[1]
 ) => {
-    return toast.promise(promise, messages, {
-        ...(options || {}),
-        onSuccess: (data: T) => {
-            playNotificationSound('success');
-            options?.onSuccess?.(data);
-        },
-        onError: (error: unknown) => {
+    const runner = typeof promise === 'function' ? promise : () => promise;
+    const wrapped = () => runner()
+        .then((data) => {
+            playNotificationSound('success', 'toasts');
+            return data;
+        })
+        .catch((error) => {
             playNotificationSound('error', 'toasts');
-            options?.onError?.(error);
-        }
-    });
+            throw error;
+        });
+//@ts-ignore
+    return toast.promise<T>(wrapped, messages);
 };
 
 // Re-export other toast functions
