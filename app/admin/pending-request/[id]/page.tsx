@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Textarea from '@/components/ui/Textarea';
@@ -89,13 +88,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 			{/* Header Section */}
 			<div className="mb-6">
 				<div className="flex items-center gap-4 mb-4">
-					<h1
+					<h1 
 						className="text-2xl font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						{businessData.companyName}
 					</h1>
-					<span
+					<span 
 						className="inline-flex px-2 py-1 text-xs font-semibold rounded-full dark:bg-yellow-900/30 dark:text-yellow-400"
 						style={{
 							backgroundColor: 'rgba(251, 146, 60, 0.1)',
@@ -105,7 +104,7 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 						{businessData.status}
 					</span>
 				</div>
-				<p
+				<p 
 					className="text-sm dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
@@ -114,7 +113,7 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 			</div>
 
 			{/* Navigation Tabs */}
-			<div
+			<div 
 				className="border-b dark:border-gray-700 mb-6"
 				style={{ borderColor: 'var(--light-gray)' }}
 			>
@@ -127,10 +126,11 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 							<button
 								key={tab.id}
 								onClick={() => setActiveTab(tab.id)}
-								className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${isActive
+								className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+									isActive
 										? ''
 										: 'border-transparent dark:text-gray-400'
-									}`}
+								}`}
 								style={{
 									borderBottomColor: isActive ? activeColor : 'transparent',
 									color: isActive ? activeColor : inactiveColor,
@@ -159,14 +159,14 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 					{/* Main Content - Two Column Information Cards */}
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 						{/* Company Information Card */}
-						<div
+						<div 
 							className="dark:bg-gray-800 border dark:border-gray-700 p-6"
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							<h2
+							<h2 
 								className="text-lg font-semibold dark:text-gray-100 mb-4"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -174,13 +174,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 							</h2>
 							<div className="space-y-4">
 								<div>
-									<span
+									<span 
 										className="text-sm dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Company Name
 									</span>
-									<p
+									<p 
 										className="text-sm font-medium dark:text-gray-100 mt-1"
 										style={{ color: 'var(--text-primary)' }}
 									>
@@ -188,13 +188,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 									</p>
 								</div>
 								<div>
-									<span
+									<span 
 										className="text-sm dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Industry
 									</span>
-									<p
+									<p 
 										className="text-sm font-medium dark:text-gray-100 mt-1"
 										style={{ color: 'var(--text-primary)' }}
 									>
@@ -202,13 +202,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 									</p>
 								</div>
 								<div>
-									<span
+									<span 
 										className="text-sm dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Time Zone
 									</span>
-									<p
+									<p 
 										className="text-sm font-medium dark:text-gray-100 mt-1"
 										style={{ color: 'var(--text-primary)' }}
 									>
@@ -216,13 +216,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 									</p>
 								</div>
 								<div>
-									<span
+									<span 
 										className="text-sm dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Size
 									</span>
-									<p
+									<p 
 										className="text-sm font-medium dark:text-gray-100 mt-1"
 										style={{ color: 'var(--text-primary)' }}
 									>
@@ -233,14 +233,14 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 						</div>
 
 						{/* Contact Information Card */}
-						<div
+						<div 
 							className="dark:bg-gray-800 border dark:border-gray-700 p-6"
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							<h2
+							<h2 
 								className="text-lg font-semibold dark:text-gray-100 mb-4"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -248,13 +248,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 							</h2>
 							<div className="space-y-4">
 								<div>
-									<span
+									<span 
 										className="text-sm dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Contact Person
 									</span>
-									<p
+									<p 
 										className="text-sm font-medium dark:text-gray-100 mt-1"
 										style={{ color: 'var(--text-primary)' }}
 									>
@@ -262,13 +262,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 									</p>
 								</div>
 								<div>
-									<span
+									<span 
 										className="text-sm dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Email
 									</span>
-									<p
+									<p 
 										className="text-sm font-medium dark:text-gray-100 mt-1"
 										style={{ color: 'var(--text-primary)' }}
 									>
@@ -282,14 +282,14 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 			)}
 
 			{activeTab === 'header-navigation' && (
-				<div
+				<div 
 					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6"
 					style={{
 						backgroundColor: 'var(--accent-white)',
 						borderColor: 'var(--light-gray)'
 					}}
 				>
-					<h2
+					<h2 
 						className="text-lg font-semibold dark:text-gray-100 mb-6"
 						style={{ color: 'var(--text-primary)' }}
 					>
@@ -298,13 +298,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 					<div className="space-y-6">
 						{/* Menu Layout */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Menu Layout
 							</span>
-							<p
+							<p 
 								className="text-sm font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -314,13 +314,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 
 						{/* Layout Style */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Layout Style
 							</span>
-							<p
+							<p 
 								className="text-sm font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -330,7 +330,7 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 
 						{/* Theme Colors */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400 mb-2 block"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
@@ -341,12 +341,12 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 								<div className="flex items-center gap-2">
 									<div
 										className="w-8 h-8 rounded-full dark:border-gray-600"
-										style={{
+										style={{ 
 											backgroundColor: businessData.brandingSettings.primaryColor,
 											borderColor: 'var(--light-gray)'
 										}}
 									/>
-									<span
+									<span 
 										className="text-sm font-medium dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
@@ -358,12 +358,12 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 								<div className="flex items-center gap-2">
 									<div
 										className="w-8 h-8 rounded-full dark:border-gray-600"
-										style={{
+										style={{ 
 											backgroundColor: businessData.brandingSettings.secondaryColor,
 											borderColor: 'var(--light-gray)'
 										}}
 									/>
-									<span
+									<span 
 										className="text-sm font-medium dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
@@ -375,7 +375,7 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 
 						{/* Logo */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400 mb-2 block"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
@@ -384,20 +384,17 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 							{businessData.brandingSettings.logo ? (
 								<div className="flex items-center gap-3 mt-2">
 									{businessData.brandingSettings.logo.url ? (
-										<Image
+										<img
 											src={businessData.brandingSettings.logo.url}
 											alt={businessData.brandingSettings.logo.alt || 'Company Logo'}
 											className="h-10 object-contain"
-											width={160}
-											height={40}
-											priority
 										/>
 									) : (
 										<div className="flex items-center gap-2">
 											<div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-orange-500 to-white rounded-full flex items-center justify-center">
 												<span className="text-xs font-bold text-white">O</span>
 											</div>
-											<span
+											<span 
 												className="text-sm font-medium dark:text-gray-100"
 												style={{ color: 'var(--text-primary)' }}
 											>
@@ -407,7 +404,7 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 									)}
 								</div>
 							) : (
-								<p
+								<p 
 									className="text-sm dark:text-gray-400 mt-1"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
@@ -420,14 +417,14 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 			)}
 
 			{activeTab === 'dashboard' && (
-				<div
+				<div 
 					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6"
 					style={{
 						backgroundColor: 'var(--accent-white)',
 						borderColor: 'var(--light-gray)'
 					}}
 				>
-					<h2
+					<h2 
 						className="text-lg font-semibold dark:text-gray-100 mb-6"
 						style={{ color: 'var(--text-primary)' }}
 					>
@@ -436,13 +433,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 					<div className="space-y-6">
 						{/* Widgets */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Widgets
 							</span>
-							<p
+							<p 
 								className="text-sm font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -452,13 +449,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 
 						{/* Disposition */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Disposition
 							</span>
-							<p
+							<p 
 								className="text-sm font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -468,13 +465,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 
 						{/* Disposition Time Range View */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Disposition Time Range View
 							</span>
-							<p
+							<p 
 								className="text-sm font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -484,13 +481,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 
 						{/* Disposition Chart Type */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Disposition Chart Type
 							</span>
-							<p
+							<p 
 								className="text-sm font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -502,14 +499,14 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 			)}
 
 			{activeTab === 'customer-book' && (
-				<div
+				<div 
 					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6"
 					style={{
 						backgroundColor: 'var(--accent-white)',
 						borderColor: 'var(--light-gray)'
 					}}
 				>
-					<h2
+					<h2 
 						className="text-lg font-semibold dark:text-gray-100 mb-6"
 						style={{ color: 'var(--text-primary)' }}
 					>
@@ -518,13 +515,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 					<div className="space-y-6">
 						{/* Custom Fields */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Custom Fields
 							</span>
-							<p
+							<p 
 								className="text-sm font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -534,13 +531,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 
 						{/* Required Fields */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Required Fields
 							</span>
-							<p
+							<p 
 								className="text-sm font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -552,14 +549,14 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 			)}
 
 			{activeTab === 'user-management' && (
-				<div
+				<div 
 					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6"
 					style={{
 						backgroundColor: 'var(--accent-white)',
 						borderColor: 'var(--light-gray)'
 					}}
 				>
-					<h2
+					<h2 
 						className="text-lg font-semibold dark:text-gray-100 mb-6"
 						style={{ color: 'var(--text-primary)' }}
 					>
@@ -568,13 +565,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 					<div className="space-y-6">
 						{/* Created Roles */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Created Roles
 							</span>
-							<p
+							<p 
 								className="text-sm font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -584,13 +581,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 
 						{/* Users Added */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Users Added
 							</span>
-							<p
+							<p 
 								className="text-sm font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -600,13 +597,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 
 						{/* Permission Access Levels */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Permission Access Levels
 							</span>
-							<p
+							<p 
 								className="text-sm font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -616,13 +613,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 
 						{/* Module Permission Overview */}
 						<div>
-							<span
+							<span 
 								className="text-sm dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Module Permission Overview
 							</span>
-							<p
+							<p 
 								className="text-sm font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -634,7 +631,7 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 			)}
 
 			{/* Review Notes Section */}
-			<div
+			<div 
 				className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6"
 				style={{
 					backgroundColor: 'var(--accent-white)',
@@ -673,3 +670,4 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 };
 
 export default PendingRequestDetailPage;
+

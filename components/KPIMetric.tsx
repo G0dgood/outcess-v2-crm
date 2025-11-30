@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import Input from '@/components/ui/Input';
@@ -200,21 +199,18 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 					</div>
 
 					{/* Empty State */}
-                    {callOutcomes.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-8 text-center">
-                            <Image
-                                src="/illustrations/Call-Block--Streamline-Ux.png"
-                                alt="No call outcomes"
-                                className="w-32 h-32 mb-4 opacity-60"
-                                width={128}
-                                height={128}
-                                priority
-                            />
-                            <h3
-                                className="font-inter text-base font-medium dark:text-gray-100 mb-2"
-                                style={{ color: 'var(--text-primary)' }}
-                            >
-                                No Call Outcomes Yet
+					{callOutcomes.length === 0 ? (
+						<div className="flex flex-col items-center justify-center py-8 text-center">
+							<img
+								src="/illustrations/Call-Block--Streamline-Ux.png"
+								alt="No call outcomes"
+								className="w-32 h-32 mb-4 opacity-60"
+							/>
+							<h3
+								className="font-inter text-base font-medium dark:text-gray-100 mb-2"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								No Call Outcomes Yet
 							</h3>
 							<p
 								className="font-lato text-sm dark:text-gray-400 mb-4"
