@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import DashboardHeader from "@/components/ui/DashboardHeader";
 import DashboardSideNav from "@/components/ui/DashboardSideNav";
@@ -43,18 +43,22 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       />
 
       {/* Desktop SideNav */}
-      <DashboardSideNav
-        activeItem="dashboard"
-        isMobileOpen={false}
-        onMobileClose={() => { }}
-      />
+      <Suspense fallback={null}>
+        <DashboardSideNav
+          activeItem="dashboard"
+          isMobileOpen={false}
+          onMobileClose={() => { }}
+        />
+      </Suspense>
 
       {/* Mobile SideNav */}
-      <MobileSideNav
-        activeItem="dashboard"
-        isOpen={isMobileMenuOpen}
-        onClose={closeMobileMenu}
-      />
+      <Suspense fallback={null}>
+        <MobileSideNav
+          activeItem="dashboard"
+          isOpen={isMobileMenuOpen}
+          onClose={closeMobileMenu}
+        />
+      </Suspense>
 
       <main>{children}</main>
     </div>
