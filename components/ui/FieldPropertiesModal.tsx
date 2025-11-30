@@ -239,13 +239,13 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 
 					{/* Field Type */}
 					<div>
-						<Dropdown
-							label="Field Type"
-							value={selectedType}
-							onChange={setSelectedType}
-							options={fieldTypeOptions}
-							placeholder="Select field type"
-						/>
+					<Dropdown
+						label="Field Type"
+						value={selectedType}
+						onChange={(value) => setSelectedType(Array.isArray(value) ? value[0] : value)}
+						options={fieldTypeOptions}
+						placeholder="Select field type"
+					/>
 					</div>
 
 					{/* Required Field */}
