@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { SetupProvider, useSetup } from '@/contexts/SetupContext';
 import DashboardHeader from '@/components/ui/DashboardHeader';
 import DashboardSideNav from '@/components/ui/DashboardSideNav';
@@ -26,7 +26,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 				userName="John Doe"
 				userEmail="johndoe@example.com"
 				userIsOnline={true}
-				onCompanyChange={(company) => console.log('Company changed:', company)} 
+				onCompanyChange={(company) => console.log('Company changed:', company)}
 				onSettingsClick={() => console.log('Settings clicked')}
 				onStatusClick={() => console.log('Status clicked')}
 				onEditProfileClick={() => console.log('Edit profile clicked')}
@@ -34,18 +34,22 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 			/>
 
 			{/* Desktop SideNav */}
-			<DashboardSideNav
-				activeItem="setup-book"
-				isMobileOpen={false}
-				onMobileClose={() => { }}
-			/>
+			<Suspense fallback={null}>
+				<DashboardSideNav
+					activeItem="setup-book"
+					isMobileOpen={false}
+					onMobileClose={() => { }}
+				/>
+			</Suspense>
 
 			{/* Mobile SideNav */}
-			<MobileSideNav
-				activeItem="setup-book"
-				isOpen={isMobileMenuOpen}
-				onClose={closeMobileMenu}
-			/>
+			<Suspense fallback={null}>
+				<MobileSideNav
+					activeItem="setup-book"
+					isOpen={isMobileMenuOpen}
+					onClose={closeMobileMenu}
+				/>
+			</Suspense>
 			<main>{children}</main>
 			<GlobalStickyNotes />
 		</div>
@@ -61,4 +65,3 @@ function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default Layout;
-
