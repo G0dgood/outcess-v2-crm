@@ -60,7 +60,7 @@ export const toastPromise = <T,>(
     return toast.promise(promise, messages, {
         ...(options || {}),
         onSuccess: (data: T) => {
-            playNotificationSound('success', 'toasts');
+            playNotificationSound('success');
             options?.onSuccess?.(data);
         },
         onError: (error: unknown) => {
