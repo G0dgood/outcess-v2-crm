@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import Image from 'next/image';
 import { useSetup } from '@/contexts/SetupContext';
 import { PersonIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { sampleNotifications } from '@/data/notifications';
@@ -291,16 +290,14 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 										<div className="flex items-start space-x-3">
 											{/* User Avatar or Icon */}
 											<div className="shrink-0">
-                                                {notification.user.avatar ? (
-                                                    <Image
-                                                        src={notification.user.avatar}
-                                                        alt={notification.user.name}
-                                                        width={40}
-                                                        height={40}
-                                                        className="rounded-full border-2"
-                                                        style={{ borderColor: primaryColor }}
-                                                    />
-                                                ) : (
+												{notification.user.avatar ? (
+													<img
+														src={notification.user.avatar}
+														alt={notification.user.name}
+														className="w-10 h-10 rounded-full border-2"
+														style={{ borderColor: primaryColor }}
+													/>
+												) : (
 													<PersonIcon
 														className="w-5 h-5 dark:text-gray-300"
 														style={{ color: primaryColor }}
@@ -374,3 +371,4 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 };
 
 export default NotificationsModal;
+

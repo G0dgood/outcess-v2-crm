@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import Image from 'next/image';
 import Icon from './Icon';
 
 interface LogoUploadProps {
@@ -138,15 +137,11 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 				{previewUrl ? (
 					<div className="p-4 text-center">
 						<div className="relative inline-block">
-							{previewUrl && (
-								<Image
-									src={previewUrl}
-									alt="Logo preview"
-									width={192}
-									height={64}
-									className="object-contain"
-								/>
-							)}
+							<img
+								src={previewUrl}
+								alt="Logo preview"
+								className="max-h-16 max-w-48 object-contain"
+							/>
 							{!disabled && (
 								<button
 									type="button"

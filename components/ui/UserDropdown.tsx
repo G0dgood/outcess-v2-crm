@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Icon from './Icon';
 import { ArrowLeftIcon } from '@radix-ui/react-icons';
@@ -83,16 +82,14 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 				}}
 			>
 				<div className="relative">
-                    {userAvatar ? (
-                        <Image
-                            src={userAvatar}
-                            alt={userName}
-                            width={32}
-                            height={32}
-                            className="rounded-full border-2"
-                            style={{ borderColor: 'var(--light-gray)' }}
-                        />
-                    ) : (
+					{userAvatar ? (
+						<img
+							src={userAvatar}
+							alt={userName}
+							className="w-8 h-8 rounded-full border-2"
+							style={{ borderColor: 'var(--light-gray)' }}
+						/>
+					) : (
 						<div
 							className="box-border w-[40px] h-[40px] rounded-full flex items-center justify-center"
 							style={{
@@ -135,15 +132,13 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 						}}
 					>
 						<div className="flex items-center gap-3">
-                            {userAvatar ? (
-                                <Image
-                                    src={userAvatar}
-                                    alt={userName}
-                                    width={48}
-                                    height={48}
-                                    className="rounded-full border-2 border-gray-200 dark:border-gray-600"
-                                />
-                            ) : (
+							{userAvatar ? (
+								<img
+									src={userAvatar}
+									alt={userName}
+									className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-600"
+								/>
+							) : (
 								<div className="w-12 h-12 bg-[#F2F4F7] dark:bg-gray-700 border border-[#E5E7EB] dark:border-gray-600 rounded-full flex items-center justify-center">
 									<span
 										className="font-semibold text-lg dark:text-gray-300"
