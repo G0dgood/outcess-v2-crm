@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { SetupProvider, useSetup } from '@/contexts/SetupContext';
 import DashboardHeader from '@/components/ui/DashboardHeader';
 import DashboardSideNav from '@/components/ui/DashboardSideNav';
@@ -36,18 +36,22 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 			/>
 
 			{/* Desktop SideNav */}
-			<DashboardSideNav
-				activeItem="integrations"
-				isMobileOpen={false}
-				onMobileClose={() => { }}
-			/>
+			<Suspense fallback={null}>
+				<DashboardSideNav
+					activeItem="integrations"
+					isMobileOpen={false}
+					onMobileClose={() => { }}
+				/>
+			</Suspense>
 
 			{/* Mobile SideNav */}
-			<MobileSideNav
-				activeItem="integrations"
-				isOpen={isMobileMenuOpen}
-				onClose={closeMobileMenu}
-			/>
+			<Suspense fallback={null}>
+				<MobileSideNav
+					activeItem="integrations"
+					isOpen={isMobileMenuOpen}
+					onClose={closeMobileMenu}
+				/>
+			</Suspense>
 			<main>{children}</main>
 			<GlobalStickyNotes />
 		</div>
@@ -63,4 +67,3 @@ function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default Layout;
-
