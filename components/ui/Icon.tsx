@@ -48,9 +48,10 @@ const Icon: React.FC<IconProps> = ({
 	const sizeValue = getSizeValue(size);
 
 	// Build the icon path - check if it's a social icon
-	const socialIcons = ['facebook', 'insta', 'x', 'in'];
-	const directory = socialIcons.includes(name) ? 'socials' : 'icon';
-	const iconPath = `/${directory}/${name}.svg`;
+    const socialIcons = ['facebook', 'insta', 'x', 'in'];
+    // Use correct case-sensitive directory name for production environments
+    const directory = 'Icon';
+    const iconPath = `/${directory}/${name}.svg`;
 
 	// Generate alt text if not provided
 	const altText = alt || `${name} icon`;

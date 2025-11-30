@@ -5,7 +5,8 @@ import {
 	HamburgerMenuIcon,
 	DashboardIcon,
 	PersonIcon,
-	BackpackIcon
+	BackpackIcon,
+	ChevronRightIcon
 } from '@radix-ui/react-icons';
 import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -158,7 +159,10 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 								className="text-sm"
 								style={{ color: step.active ? (isDarkMode ? '#9CA3AF' : 'var(--text-tertiary)') : (isDarkMode ? '#FFFFFF' : 'var(--text-tertiary)') }}
 							>
-								<Icon name="Expand_down_light" />
+								<ChevronRightIcon
+									className="w-5 h-5"
+									style={step.active ? { color: secondaryColor } : isDarkMode ? { color: '#FFFFFF' } : { color: 'var(--text-tertiary)' }}
+								/>
 							</div>
 						</div>
 					);
