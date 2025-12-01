@@ -203,15 +203,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				{/* Menu Toggle - Mobile Only */}
 				<button
 					onClick={onMobileMenuToggle}
-					className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+					className="md:hidden p-2 text-black dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
 					title="Menu"
 				>
-					<HamburgerMenuIcon className="w-6 h-6" />
+					<HamburgerMenuIcon className="w-6 h-6 " />
 				</button>
 
 				<div className="flex-1 md:flex-none">
 					<div className="hidden md:flex items-center gap-2">
-						<Icon name="peoplelyHalf" size="xl" />
+						<Icon name="peoplelyHalf" size="xl" color="black" className="dark:hidden" />
+						<Icon name="peoplelyHalf" size="xl" className="hidden dark:inline-block" />
 						<span className="font-semibold text-[25px] leading-[28px] flex items-center text-[#050711]"
 							style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>Peoplely</span>
 					</div>

@@ -68,17 +68,17 @@ export const Modal: React.FC<ModalProps> = ({
 	const getSizeClasses = () => {
 		switch (size) {
 			case 'sm':
-				return 'w-full max-w-sm mx-4';
+				return 'w-full max-w-[calc(100vw-2rem)] sm:max-w-sm';
 			case 'md':
-				return 'w-full max-w-md mx-4';
+				return 'w-full max-w-[calc(100vw-2rem)] sm:max-w-md';
 			case 'lg':
-				return 'w-full max-w-lg mx-4';
+				return 'w-full max-w-[calc(100vw-2rem)] sm:max-w-lg';
 			case 'xl':
-				return 'w-full max-w-xl mx-4';
+				return 'w-full max-w-[calc(100vw-2rem)] sm:max-w-xl';
 			case 'full':
 				return 'w-full h-full';
 			default:
-				return 'w-full max-w-md mx-4';
+				return 'w-full max-w-[calc(100vw-2rem)] sm:max-w-md';
 		}
 	};
 
@@ -144,7 +144,7 @@ export const Modal: React.FC<ModalProps> = ({
 
 			{/* Modal */}
 			<div
-				className={`fixed ${getPositionClasses()} ${getSizeClasses()} dark:bg-gray-800 shadow-xl z-50 transition-all duration-300 ease-in-out ${getAnimationClasses()} ${className}`}
+				className={`fixed ${getPositionClasses()} ${getSizeClasses()} dark:bg-gray-800 shadow-xl z-50 transition-all duration-300 ease-in-out ${getAnimationClasses()} overflow-x-hidden ${className}`}
 				style={hasCustomBackground ? undefined : {
 					backgroundColor: 'var(--accent-white)'
 				}}
@@ -152,12 +152,12 @@ export const Modal: React.FC<ModalProps> = ({
 				<div className="flex flex-col h-full">
 					{/* Header */}
 					{(title || showCloseButton) && (
-						<div 
+						<div
 							className="flex items-center justify-between p-6 border-b dark:border-gray-700"
 							style={{ borderColor: 'var(--light-gray)' }}
 						>
 							{title && (
-								<h2 
+								<h2
 									className="font-inter text-lg font-semibold dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
