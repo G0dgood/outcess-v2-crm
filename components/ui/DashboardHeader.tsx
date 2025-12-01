@@ -200,10 +200,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	return (
 		<header id="header" >
 			<div className="flex items-center justify-between py-2.5">
-				{/* Menu Toggle - Hidden on Mobile */}
+				{/* Menu Toggle - Mobile Only */}
 				<button
 					onClick={onMobileMenuToggle}
-					className="hidden md:inline-flex p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+					className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
 					title="Menu"
 				>
 					<HamburgerMenuIcon className="w-6 h-6" />

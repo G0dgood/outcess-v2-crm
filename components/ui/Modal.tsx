@@ -68,17 +68,17 @@ export const Modal: React.FC<ModalProps> = ({
 	const getSizeClasses = () => {
 		switch (size) {
 			case 'sm':
-				return 'w-96';
+				return 'w-full max-w-sm mx-4';
 			case 'md':
-				return 'w-[500px]';
+				return 'w-full max-w-md mx-4';
 			case 'lg':
-				return 'w-[600px]';
+				return 'w-full max-w-lg mx-4';
 			case 'xl':
-				return 'w-[800px]';
+				return 'w-full max-w-xl mx-4';
 			case 'full':
 				return 'w-full h-full';
 			default:
-				return 'w-[500px]';
+				return 'w-full max-w-md mx-4';
 		}
 	};
 

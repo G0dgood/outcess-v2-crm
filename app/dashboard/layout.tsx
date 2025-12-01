@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import DashboardHeader from "@/components/ui/DashboardHeader";
 import DashboardSideNav from "@/components/ui/DashboardSideNav";
@@ -9,6 +9,7 @@ import OfflineBanner from "@/components/ui/OfflineBanner";
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const { setupData } = useSetup();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -17,6 +18,14 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
   };
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobileView(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
 
 
@@ -51,14 +60,16 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         />
       </Suspense>
 
-      {/* Mobile SideNav */}
-      <Suspense fallback={null}>
-        <MobileSideNav
-          activeItem="dashboard"
-          isOpen={isMobileMenuOpen}
-          onClose={closeMobileMenu}
-        />
-      </Suspense>
+      {/* Mobile SideNav - only render on mobile viewports */}
+      {isMobileView && (
+        <Suspense fallback={null}>
+          <MobileSideNav
+            activeItem="dashboard"
+            isOpen={isMobileMenuOpen}
+            onClose={closeMobileMenu}
+          />
+        </Suspense>
+      )}
 
       <main>{children}</main>
     </div>
