@@ -44,16 +44,16 @@ export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-			<div 
+			<div
 				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 overflow-hidden flex flex-col"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
-				<div 
+				<div
 					className="flex justify-between items-center p-6 border-b dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<h2 
+					<h2
 						className="text-xl font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
@@ -79,19 +79,19 @@ export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
 
 				{/* Content */}
 				<div className="flex-1 p-6">
-					<p 
+					<p
 						className="text-sm dark:text-gray-400"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
-						Are you sure you want to delete the <span 
+						Are you sure you want to delete the <span
 							className="font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
-                        >&apos;{statusName}&apos;</span> status? This action cannot be undone.
+						>&apos;{statusName}&apos;</span> status? This action cannot be undone.
 					</p>
 				</div>
 
 				{/* Footer */}
-				<div 
+				<div
 					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>

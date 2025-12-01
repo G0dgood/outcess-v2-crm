@@ -33,7 +33,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 			{/* Mobile Sidebar */}
 			{isMobileMenuOpen && (
 				<div className="lg:hidden fixed inset-0 z-50">
-					<div className="fixed inset-0 bg-black bg-opacity-50" onClick={closeMobileMenu}></div>
+					<div className="fixed inset-0 bg-black/10 bg-opacity-50" onClick={closeMobileMenu}></div>
 					<AdminMobileSideNav isOpen={isMobileMenuOpen} onClose={closeMobileMenu} />
 				</div>
 			)}

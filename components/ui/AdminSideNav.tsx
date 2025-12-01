@@ -16,6 +16,7 @@ interface AdminSideNavProps {
 	className?: string;
 	isMobileOpen?: boolean;
 	onMobileClose?: () => void;
+	isMobile?: boolean;
 }
 
 interface NavItem {
@@ -31,6 +32,7 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 	className = '',
 	isMobileOpen = false,
 	onMobileClose,
+	isMobile = false,
 }) => {
 	const router = useRouter();
 	const pathname = usePathname();
@@ -92,12 +94,12 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 			{/* Side Navigation - Desktop Only */}
 			<nav
 				ref={navRef}
-				id="side-nav"
+				id={isMobile ? 'side-nav-mobile' : 'side-nav'}
 				className={`
-					w-64 border-r dark:border-gray-700
-					hidden md:block relative h-auto transition-colors duration-300
-					${className}
-				`}
+                    w-64 border-r dark:border-gray-700
+                    ${isMobile ? 'block' : 'hidden md:block'} relative h-auto transition-colors duration-300
+                    ${className}
+                `}
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
@@ -149,7 +151,7 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 											{item.icon}
 										</div>
 										<span
-											className={`font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive ? 'text-white' : 'dark:text-gray-300'}`}
+											className={`font-inter whitespace-nowrap font-medium text-[14px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive ? 'text-white' : 'dark:text-gray-300'}`}
 											style={!isActive ? { color: 'var(--text-secondary)' } : {}}
 										>
 											{item.label}
@@ -172,4 +174,3 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 };
 
 export default AdminSideNav;
-

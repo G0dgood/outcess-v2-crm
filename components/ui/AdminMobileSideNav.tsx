@@ -82,7 +82,7 @@ const AdminMobileSideNav: React.FC<AdminMobileSideNavProps> = ({
 			<nav
 				ref={navRef}
 				className={`
-					fixed top-0 left-0 h-full w-64 dark:bg-gray-900 border-r dark:border-gray-700 z-50
+					fixed top-0 left-0 h-full  dark:bg-gray-900 border-r dark:border-gray-700 z-50
 					transform transition-transform duration-300 ease-in-out
 					${isAnimating ? 'translate-x-0' : '-translate-x-full'}
 				`}
@@ -105,11 +105,10 @@ const AdminMobileSideNav: React.FC<AdminMobileSideNavProps> = ({
 					</button>
 				</div>
 				{/* Navigation */}
-				<AdminSideNav isMobileOpen={isOpen} onMobileClose={onClose} />
+				<AdminSideNav isMobileOpen={isOpen} onMobileClose={onClose} isMobile />
 			</nav>
 		</>
 	);
 };
 
 export default AdminMobileSideNav;
-

@@ -87,7 +87,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
     // Simulate save operation
     saveTimeoutRef.current = window.setTimeout(() => {
-      console.log('Step completed:', currentStep);
       setIsLoading(false);
       toast.success("Step completed successfully!", {
         id: "save-progress",
