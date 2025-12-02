@@ -11,6 +11,7 @@ import PageHeading from '@/components/ui/PageHeading';
 import { UploadIcon, FileTextIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import Input from '@/components/ui/Input';
 import UploadBase from '@/components/ui/UploadBaseEmployee';
+import SelectedRecordsDrawerContent from './SelectedRecordsDrawerContent';
 
 interface FieldDefinition {
 	id: string;
@@ -23,6 +24,7 @@ interface SetupBookRecord {
 	id: string;
 	[key: string]: string | number | boolean; // Dynamic fields based on field definitions
 }
+
 
 const SetupBookPage: React.FC = () => {
 	const { setupData } = useSetup();
@@ -59,12 +61,6 @@ const SetupBookPage: React.FC = () => {
 		// You can add logic here to add the new records to the state
 		setIsUploadModalOpen(false);
 	};
-
-
-
-
-
-
 
 	const handleEditRecord = (record: SetupBookRecord) => {
 		setEditingRecord(record);
@@ -533,146 +529,14 @@ const SetupBookPage: React.FC = () => {
 					className={`fixed top-0 right-0 h-full w-full max-w-md dark:bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${isDrawerAnimating ? 'translate-x-0' : 'translate-x-full'}`}
 					style={{ backgroundColor: 'var(--accent-white)' }}
 				>
-					{/* Drawer Header */}
-					<div
-						className="flex justify-between items-center border-b dark:border-gray-700 p-6"
-						style={{ borderColor: 'var(--light-gray)' }}
-					>
-						<div className="flex items-center gap-3">
-							<FileTextIcon
-								className="w-5 h-5 dark:text-gray-300"
-								style={{ color: 'var(--text-primary)' }}
-							/>
-							<h2
-								className="font-inter text-lg font-semibold dark:text-gray-100"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								Selected Records ({selectedRecords.size})
-							</h2>
-						</div>
-						<button
-							onClick={() => setIsDrawerOpen(false)}
-							className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-							style={{ color: 'var(--text-tertiary)' }}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.color = 'var(--text-secondary)';
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.color = 'var(--text-tertiary)';
-							}}
-						>
-							<Icon name="Close_round_light" size="lg" />
-						</button>
-					</div>
-
-					{/* Drawer Content */}
-					<div className="overflow-y-auto h-[calc(100vh-80px)] p-6">
-						{selectedRecords.size === 0 ? (
-							<div className="flex flex-col items-center justify-center h-full text-center">
-								<FileTextIcon
-									className="w-12 h-12 mb-4 dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								/>
-								<p
-									className="text-sm dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								>
-									No records selected
-								</p>
-							</div>
-						) : (
-							<div className="space-y-4">
-								{records
-									.filter(record => selectedRecords.has(record.id))
-									.map((record) => (
-										<div
-											key={record.id}
-											className="p-4 dark:bg-gray-700 border dark:border-gray-600 rounded-lg"
-											style={{
-												backgroundColor: 'var(--bg-primary)',
-												borderColor: 'var(--light-gray)'
-											}}
-										>
-											{/* Record Header */}
-											<div className="mb-3">
-												<div className="flex items-center gap-2 mb-2">
-													<span
-														className="text-xs font-medium dark:text-gray-300"
-														style={{ color: 'var(--text-secondary)' }}
-													>
-														ID: {record.id}
-													</span>
-												</div>
-											</div>
-
-											{/* Record Fields */}
-											<div className="space-y-2">
-												{fieldDefinitions.map((field) => (
-													<div key={field.id} className="flex items-start justify-between text-xs">
-														<span
-															className="font-medium dark:text-gray-400 mr-2"
-															style={{ color: 'var(--text-tertiary)' }}
-														>
-															{field.name}:
-														</span>
-														<span
-															className="text-right flex-1 dark:text-gray-100"
-															style={{ color: 'var(--text-primary)', wordBreak: 'break-word' }}
-														>
-															{record[field.name] ? String(record[field.name]) : '-'}
-														</span>
-													</div>
-												))}
-											</div>
-
-											{/* Actions */}
-											<div className="flex gap-2 mt-3">
-												<button
-													onClick={() => {
-														handleEditRecord(record);
-														setIsDrawerOpen(false);
-													}}
-													className="flex-1 text-xs py-2 px-3 rounded border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
-													style={{
-														borderColor: 'var(--light-gray)',
-														color: 'var(--text-secondary)',
-														backgroundColor: 'transparent'
-													}}
-													onMouseEnter={(e) => {
-														e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-													}}
-													onMouseLeave={(e) => {
-														e.currentTarget.style.backgroundColor = 'transparent';
-													}}
-												>
-													Edit
-												</button>
-												<button
-													onClick={() => {
-														handleDeleteClick(record);
-														setIsDrawerOpen(false);
-													}}
-													className="flex-1 text-xs py-2 px-3 rounded border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
-													style={{
-														borderColor: 'var(--light-gray)',
-														color: '#DC2626',
-														backgroundColor: 'transparent'
-													}}
-													onMouseEnter={(e) => {
-														e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-													}}
-													onMouseLeave={(e) => {
-														e.currentTarget.style.backgroundColor = 'transparent';
-													}}
-												>
-													Delete
-												</button>
-											</div>
-										</div>
-									))}
-							</div>
-						)}
-					</div>
+					<SelectedRecordsDrawerContent
+						selectedRecords={selectedRecords}
+						fieldDefinitions={fieldDefinitions}
+						records={records}
+						onEdit={handleEditRecord}
+						onDelete={handleDeleteClick}
+						onClose={() => setIsDrawerOpen(false)}
+					/>
 				</div>
 			)}
 		</div>

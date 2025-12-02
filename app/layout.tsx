@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
 import { Roboto, Lato, Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "sonner";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import { PrivilegeProvider } from "@/contexts/PrivilegeContext";
-import { SocketProvider } from "@/contexts/SocketContext";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ReduxProvider } from "@/components/providers/ReduxProvider";
-import { NavigationProvider } from "@/components/providers/NavigationProvider";
+import NewProvider from "@/components/providers/NewProvider";
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -64,27 +58,9 @@ export default function RootLayout({
       <body
         className={`${roboto.variable} ${lato.variable} ${inter.variable} ${plusJakarta.variable} antialiased`}
       >
-        <ReduxProvider>
-          <ThemeProvider>
-            <AuthProvider>
-              <PrivilegeProvider>
-                <SocketProvider config={{ autoConnect: false }}>
-                  <NavigationProvider>
-                    {children}
-                    <Toaster
-                      position="top-right"
-                      richColors
-                      closeButton
-                      toastOptions={{
-                        style: { borderRadius: 0 }
-                      }}
-                    />
-                  </NavigationProvider>
-                </SocketProvider>
-              </PrivilegeProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </ReduxProvider>
+        <NewProvider>
+          {children}
+        </NewProvider>
       </body>
     </html>
   );
