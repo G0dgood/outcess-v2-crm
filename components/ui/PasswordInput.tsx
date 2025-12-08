@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 
 interface PasswordInputProps {
 	label: string;
+	name?: string;
+	id?: string;
 	placeholder?: string;
 	value?: string;
 	onChange?: (value: string) => void;
@@ -11,10 +13,13 @@ interface PasswordInputProps {
 	className?: string;
 	showHelpIcon?: boolean;
 	onHelpClick?: () => void;
+	autoComplete?: string;
 }
 
 export const PasswordInput: React.FC<PasswordInputProps> = ({
 	label,
+	name,
+	id,
 	placeholder = "Enter your password",
 	value,
 	onChange,
@@ -24,6 +29,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
 	className = '',
 	showHelpIcon = true,
 	onHelpClick,
+	autoComplete,
 }) => {
 	const [showPassword, setShowPassword] = useState(false);
 
@@ -44,14 +50,18 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
 		}
 	};
 
+	const inputId = id || name || `input-${label.replace(/\s+/g, '-').toLowerCase()}`;
+
 	return (
 		<div className={`password-container ${className}`}>
-			<label className="password-label">
+			<label className="password-label" htmlFor={inputId}>
 				{label}
 				{required && <span className="required-asterisk">*</span>}
 			</label>
 			<div className="password-input-wrapper">
 				<input
+					id={inputId}
+					name={name}
 					type={showPassword ? 'text' : 'password'}
 					value={value}
 					onChange={handleChange}
@@ -59,6 +69,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
 					disabled={disabled}
 					className={`password-field ${error ? 'error' : ''}`}
 					required={required}
+					autoComplete={autoComplete}
 				/>
 				<div className="password-icons">
 					{showHelpIcon && (

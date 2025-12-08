@@ -15,9 +15,12 @@ interface AddUserModalProps {
 		email: string;
 		phone: string;
 		role: string;
+		userId: string;
+		status: string;
 	}) => void;
 	roleOptions: { value: string; label: string; }[];
 	onAddFields?: () => void;
+	isLoading?: boolean;
 }
 
 export const AddUserModal: React.FC<AddUserModalProps> = ({
@@ -26,6 +29,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 	onSave,
 	roleOptions,
 	onAddFields,
+	isLoading = false,
 }) => {
 	const [formData, setFormData] = React.useState({
 		firstName: '',
@@ -33,35 +37,42 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 		email: '',
 		phone: '',
 		role: '',
+		userId: '',
+		status: '',
 	});
 
-    const handleInputChange = (field: string) => (value: string | string[]) => {
-        const stringValue = Array.isArray(value) ? value[0] : value;
-        setFormData(prev => ({ ...prev, [field]: stringValue }));
-    };
+	const statusOptions = [
+		{ value: 'active', label: 'Active' },
+		{ value: 'inactive', label: 'Inactive' },
+		{ value: 'pending', label: 'Pending' },
+	];
 
-	const handleSave = () => {
-		if (formData.firstName && formData.lastName && formData.email && formData.phone && formData.role) {
-			onSave(formData);
+	React.useEffect(() => {
+		if (!isOpen) {
 			setFormData({
 				firstName: '',
 				lastName: '',
 				email: '',
 				phone: '',
 				role: '',
+				userId: '',
+				status: '',
 			});
-			onClose();
+		}
+	}, [isOpen]);
+
+	const handleInputChange = (field: string) => (value: string | string[]) => {
+		const stringValue = Array.isArray(value) ? value[0] : value;
+		setFormData(prev => ({ ...prev, [field]: stringValue }));
+	};
+
+	const handleSave = () => {
+		if (formData.firstName && formData.lastName && formData.email && formData.phone && formData.role) {
+			onSave(formData);
 		}
 	};
 
 	const handleCancel = () => {
-		setFormData({
-			firstName: '',
-			lastName: '',
-			email: '',
-			phone: '',
-			role: '',
-		});
 		onClose();
 	};
 
@@ -126,6 +137,14 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 						type="email"
 						required
 					/>
+					<Input
+						label="userId"
+						placeholder="Enter userId"
+						value={formData.userId}
+						onChange={handleInputChange('userId')}
+						type="text"
+						required
+					/>
 
 					<Input
 						label="Phone"
@@ -144,14 +163,23 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 						onChange={handleInputChange('role')}
 						required
 					/>
+
+					<Dropdown
+						label="Status"
+						placeholder="Select Status"
+						options={statusOptions}
+						value={formData.status}
+						onChange={handleInputChange('status')}
+						required
+					/>
 				</div>
 
 				{/* Modal Footer */}
 				<div
-					className="flex justify-between items-center p-6 border-t dark:border-gray-700"
+					className="flex justify-between items-center p-6 border-t dark:border-gray-700 w-full"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<button
+					{/* <button
 						onClick={onAddFields}
 						className="dark:text-orange-400 dark:hover:text-orange-300 font-medium transition-colors"
 						style={{ color: '#F97316' }}
@@ -163,8 +191,8 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 						}}
 					>
 						Add Fields
-					</button>
-					<div className="flex gap-3">
+					</button> */}
+					<div className="flex gap-3 w-full justify-end">
 						<Button
 							variant="outline"
 							size="md"
@@ -176,7 +204,8 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 							variant="primary"
 							size="md"
 							onClick={handleSave}
-							disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.role}
+							disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.role || !formData.status || isLoading}
+							loading={isLoading}
 						>
 							Save
 						</Button>

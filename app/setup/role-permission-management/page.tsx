@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
@@ -8,84 +8,152 @@ import Toggle from '@/components/ui/Toggle';
 import CreateRoleModal from '@/components/ui/CreateRoleModal';
 import Icon from '@/components/ui/Icon';
 import { useSetup } from '@/contexts/SetupContext';
+import { useGetRolesByCompanyIdQuery, useCreateRoleMutation, useUpdateRoleMutation, useDeleteRoleMutation } from '@/store/services/roleApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { toast } from 'sonner';
 
 interface Role {
-	id: string;
-	name: string;
+	_id: string;
+	roleName: string;
 	description: string;
 	permissions: Record<string, boolean>;
+	companyId?: string;
 }
 
-
+interface ApiError {
+	data?: {
+		message?: string;
+	};
+	message?: string;
+}
 
 export default function RolePermissionManagementPage() {
 	const router = useRouter();
-	const { setupData, updateRoleManagementSettings } = useSetup();
+	const { setupData } = useSetup();
+	const { user } = useUserInfo();
 	const { roleManagementSettings } = setupData;
 	const [isCreateRoleModalOpen, setIsCreateRoleModalOpen] = useState(false);
 
-	const handlePermissionChange = (roleId: string, moduleId: string, enabled: boolean) => {
-		const updatedRoles = roleManagementSettings.roles.map(role =>
-			role.id === roleId
-				? { ...role, permissions: { ...role.permissions, [moduleId]: enabled } }
-				: role
-		);
-		updateRoleManagementSettings({ roles: updatedRoles });
-	};
+	const companyId = user?.company?._id || user?.companyId || '';
 
-	const handleCreateRole = (roleData: { name: string; description: string }) => {
-		// Generate unique ID to prevent duplicates
-		const baseId = roleData.name.toLowerCase().replace(/\s+/g, '-');
-		let uniqueId = baseId;
-		let counter = 1;
+	const { data: rolesData, isLoading, refetch } = useGetRolesByCompanyIdQuery(companyId, {
+		skip: !companyId,
+	});
 
-		// Check if ID already exists and make it unique
-		while (roleManagementSettings.roles.some(role => role.id === uniqueId)) {
-			uniqueId = `${baseId}-${counter}`;
-			counter++;
-		}
+	const [createRole] = useCreateRoleMutation();
+	const [updateRole] = useUpdateRoleMutation();
+	const [deleteRole] = useDeleteRoleMutation();
 
-		// Fallback to timestamp-based ID if name-based ID generation fails
-		if (counter > 100) {
-			uniqueId = `role-${Date.now()}`;
-		}
+	// Debugging logs
+	console.log('User Company ID:', companyId);
+	console.log('Roles Data from API:', rolesData);
 
-		const newRole: Role = {
-			id: uniqueId,
-			name: roleData.name,
-			description: roleData.description,
-			permissions: {
-				dashboard: false,
-				customerBook: false,
-				userManagement: false,
-				setupBook: false,
-				customerSMS: false,
-				report: false,
-				systemSetting: false,
-				auditLog: false,
+	// Transform API roles to local format or use API roles directly
+	const rawRoles = (Array.isArray(rolesData) ? rolesData :
+		(Array.isArray(rolesData?.data) ? rolesData.data :
+			(Array.isArray(rolesData?.roles) ? rolesData.roles :
+				(Array.isArray(rolesData?.docs) ? rolesData.docs :
+					[])))) as Role[];
+
+	// If roles array is empty but we have data in rolesData that looks like a single role or object of roles
+	// Try to extract from object values if it's an object of roles
+	const roles: Role[] = rawRoles.length > 0 ? rawRoles :
+		(rolesData && typeof rolesData === 'object' && !Array.isArray(rolesData) ?
+			Object.values(rolesData as Record<string, unknown>).filter((item): item is Role =>
+				typeof item === 'object' && item !== null && '_id' in item && 'roleName' in item
+			) : []);
+
+	useEffect(() => {
+		const ensureAdminRole = async () => {
+			if (!isLoading && rolesData && companyId) {
+				const hasAdmin = roles.some((role) => role.roleName.toLowerCase() === 'administrator');
+				if (!hasAdmin) {
+					try {
+						await createRole({
+							roleName: 'administrator',
+							description: 'Full access to all system features',
+							companyId: companyId,
+							permissions: {
+								dashboard: true,
+								customerBook: true,
+								userManagement: true,
+								setupBook: true,
+								customerSMS: true,
+								report: true,
+								systemSetting: true,
+								auditLog: true,
+							}
+						}).unwrap();
+						refetch();
+					} catch (error) {
+						console.error('Failed to create default administrator role:', error);
+					}
+				}
 			}
 		};
-		updateRoleManagementSettings({
-			roles: [...roleManagementSettings.roles, newRole]
-		});
+
+		ensureAdminRole();
+	}, [rolesData, companyId, createRole, refetch]);
+
+	const handlePermissionChange = async (roleId: string, moduleId: string, enabled: boolean) => {
+		const roleToUpdate = roles.find((r: Role) => r._id === roleId);
+		if (roleToUpdate) {
+			const currentPermissions = roleToUpdate.permissions || {};
+			// Start with a copy of current permissions to preserve all keys (including granular permissions)
+			const updatedPermissions: Record<string, boolean> = { ...currentPermissions };
+
+			// Ensure all modules are included to prevent data loss if backend does full replace
+			// and to ensure they have a value (default to false if missing)
+			roleManagementSettings.modules.forEach(module => {
+				if (updatedPermissions[module.id] === undefined) {
+					updatedPermissions[module.id] = false;
+				}
+			});
+
+			updatedPermissions[moduleId] = enabled;
+
+			// Construct full payload to ensure validation passes
+			// Some APIs require all fields even for updates, or validate presence of required fields
+			const payload = {
+				roleName: roleToUpdate.roleName,
+				description: roleToUpdate.description,
+				companyId: companyId,
+				permissions: updatedPermissions
+			};
+
+			try {
+				await updateRole({
+					id: roleId,
+					roleData: payload as any // Cast to any to bypass strict permission type check since we construct it dynamically
+				}).unwrap();
+				toast.success('Permission updated successfully');
+			} catch (error) {
+				const apiError = error as ApiError;
+				console.error('Failed to update permission:', error);
+				const errorMessage = apiError?.data?.message || apiError?.message || 'Failed to update permission';
+				toast.error(errorMessage);
+			}
+		}
 	};
 
-	const handleDeleteRole = (roleId: string) => {
-		// Prevent deletion of Administrator role
-		if (roleId === 'administrator') {
-			return;
+	const handleDeleteRole = async (roleId: string) => {
+		if (window.confirm('Are you sure you want to delete this role?')) {
+			try {
+				await deleteRole(roleId).unwrap();
+				toast.success('Role deleted successfully');
+			} catch (error) {
+				const apiError = error as ApiError;
+				console.error('Failed to delete role:', error);
+				const errorMessage = apiError?.data?.message || apiError?.message || 'Failed to delete role';
+				toast.error(errorMessage);
+			}
 		}
-		updateRoleManagementSettings({
-			roles: roleManagementSettings.roles.filter(role => role.id !== roleId)
-		});
 	};
 
 	const handleSaveChanges = () => {
-		console.log('Saving role permissions:', roleManagementSettings.roles);
 		// TODO: Implement save functionality
+		console.log('Save changes');
 	};
-
-
 
 	return (
 		<div className="w-full h-full">
@@ -126,9 +194,9 @@ export default function RolePermissionManagementPage() {
 
 			{/* Role Cards */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-				{roleManagementSettings.roles.map((role) => (
+				{roles.map((role: Role) => (
 					<div
-						key={role.id}
+						key={role._id}
 						className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative group"
 						style={{
 							backgroundColor: 'var(--accent-white)',
@@ -141,9 +209,9 @@ export default function RolePermissionManagementPage() {
 									<Icon name="darhboard" size="md" />
 								</div>
 							</div>
-							{role.id !== 'administrator' && (
+							{role.roleName.toLowerCase() !== 'administrator' && (
 								<button
-									onClick={() => handleDeleteRole(role.id)}
+									onClick={() => handleDeleteRole(role._id)}
 									className="duration-200 p-1 dark:hover:bg-red-900/20 rounded-full cursor-pointer w-8 h-8 flex items-center justify-center"
 									style={{
 										backgroundColor: 'transparent'
@@ -164,7 +232,7 @@ export default function RolePermissionManagementPage() {
 							className="font-lato font-medium text-base leading-[150%] dark:text-gray-100"
 							style={{ color: 'var(--text-secondary)' }}
 						>
-							{role.name}
+							{role.roleName}
 						</h3>
 						<p
 							className="font-lato font-normal text-[12px] leading-[150%] dark:text-gray-400"
@@ -214,13 +282,13 @@ export default function RolePermissionManagementPage() {
 								>
 									Features/Modules
 								</th>
-								{roleManagementSettings.roles.map((role) => (
+								{roles.map((role: Role) => (
 									<th
-										key={role.id}
+										key={role._id}
 										className="py-4 px-6 text-left text-xs sm:text-sm font-medium dark:text-gray-400 uppercase tracking-wider"
 										style={{ color: 'var(--text-primary)' }}
 									>
-										{role.name}
+										{role.roleName}
 									</th>
 								))}
 							</tr>
@@ -252,11 +320,11 @@ export default function RolePermissionManagementPage() {
 									>
 										{module.name}
 									</td>
-									{roleManagementSettings.roles.map((role) => (
-										<td key={`${role.id}-${module.id}`} className="py-4 px-6 text-center">
+									{roles.map((role: Role) => (
+										<td key={`${role._id}-${module.id}`} className="py-4 px-6 text-center">
 											<Toggle
-												checked={role.permissions[module.id]}
-												onChange={(enabled) => handlePermissionChange(role.id, module.id, enabled)}
+												checked={role.permissions?.[module.id] || false}
+												onChange={(enabled) => handlePermissionChange(role._id, module.id, enabled)}
 											/>
 										</td>
 									))}
@@ -291,7 +359,10 @@ export default function RolePermissionManagementPage() {
 			<CreateRoleModal
 				isOpen={isCreateRoleModalOpen}
 				onClose={() => setIsCreateRoleModalOpen(false)}
-				onCreate={handleCreateRole}
+				onSuccess={() => {
+					// Optionally refresh roles list or show success message
+					console.log('Role created successfully');
+				}}
 			/>
 		</div>
 	);

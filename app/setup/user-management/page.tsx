@@ -1,13 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import AddUserModal from '@/components/ui/AddUserModal';
 import EditUserModal from '@/components/ui/EditUserModal';
 import { useSetup } from '@/contexts/SetupContext';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
+import { useCreateTeamMemberMutation, useGetTeamMembersByCompanyIdQuery } from '@/store/services/teamMembersApi';
 import Icon from '@/components/ui/Icon';
+import { toast } from 'sonner';
 
 interface User {
 	id: string;
@@ -20,9 +24,25 @@ interface User {
 }
 
 export default function UserManagementPage() {
-	const { setupData, updateUserManagementSettings } = useSetup();
-	const { userManagementSettings, roleManagementSettings } = setupData;
+	const { setupData, updateUserManagementSettings, updateSetupData } = useSetup();
+	const { user } = useUserInfo();
+	const { userManagementSettings } = setupData;
 	const router = useRouter();
+
+	const companyId = setupData?.companyId || user?.companyId || user?.company?._id || '';
+
+	const { data: rolesDataResponse } = useGetRolesByCompanyIdQuery(companyId, {
+		skip: !companyId
+	});
+
+	console.log('setupData-----', setupData)
+
+	const { data: teamMembersResponse, isLoading: isTeamMembersLoading } = useGetTeamMembersByCompanyIdQuery(companyId, {
+		skip: !companyId
+	});
+
+	const [createTeamMember] = useCreateTeamMemberMutation();
+	const [isLoading, setIsLoading] = useState(false);
 
 	const [isAddingUser, setIsAddingUser] = useState(false);
 	const [editingUser, setEditingUser] = useState<string | null>(null);
@@ -33,10 +53,36 @@ export default function UserManagementPage() {
 		role: string;
 	} | null>(null);
 
-	const roleOptions = roleManagementSettings.roles.map(role => ({
-		value: role.id,
-		label: role.name
-	}));
+	const teamMembers = useMemo(() => {
+		if (!teamMembersResponse) return [];
+		const rawMembers = teamMembersResponse.data || teamMembersResponse.teamMembers || teamMembersResponse || [];
+		const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
+
+		return membersList.map((member: any) => ({
+			id: member._id,
+			name: member.name,
+			email: member.email,
+			phone: member.phone,
+			role: member.role?.roleName || member.role,
+			status: member.status,
+			lastLogin: member.lastLogin,
+			userId: member.userId
+		}));
+	}, [teamMembersResponse]);
+
+	const roleOptions = useMemo(() => {
+		if (!rolesDataResponse) return [];
+
+		const rawRoles = rolesDataResponse.data || rolesDataResponse.roles || rolesDataResponse || [];
+		const rolesList = Array.isArray(rawRoles) ? rawRoles : (rawRoles.docs || []);
+
+		if (rolesList.length === 0) return [];
+
+		return rolesList.map((role: any) => ({
+			value: role._id || role.id,
+			label: role.roleName
+		}));
+	}, [rolesDataResponse]);
 
 	const statusOptions = [
 		{ value: 'active', label: 'Active' },
@@ -44,25 +90,52 @@ export default function UserManagementPage() {
 		{ value: 'pending', label: 'Pending' }
 	];
 
-	const handleAddUser = (userData: {
+	const handleAddUser = async (userData: {
 		firstName: string;
 		lastName: string;
 		email: string;
 		phone: string;
 		role: string;
+		userId: string;
+		status: string;
 	}) => {
-		const user: User = {
-			id: Date.now().toString(),
-			name: `${userData.firstName} ${userData.lastName}`,
-			email: userData.email,
-			phone: userData.phone,
-			role: userData.role,
-			status: 'pending',
-			lastLogin: undefined
-		};
-		updateUserManagementSettings({
-			users: [...userManagementSettings.users, user]
-		});
+		setIsLoading(true);
+		try {
+			const payload = {
+				name: `${userData.firstName} ${userData.lastName}`,
+				email: userData.email,
+				phone: userData.phone,
+				role: userData.role,
+				companyId: companyId,
+				status: userData.status,
+				userId: userData.userId,
+			};
+
+			await createTeamMember(payload as any).unwrap();
+
+			const user: User = {
+				id: userData.userId || Date.now().toString(),
+				name: payload.name,
+				email: payload.email,
+				phone: payload.phone,
+				role: payload.role,
+				status: 'inactive',
+				lastLogin: undefined
+			};
+
+			updateUserManagementSettings({
+				users: [...userManagementSettings.users, user]
+			});
+
+			toast.success('Team member created successfully');
+			setIsAddingUser(false);
+		} catch (error: any) {
+			console.error('Failed to create team member:', error);
+			const errorMessage = error?.data?.error || error?.data?.message || 'Failed to create team member';
+			toast.error(errorMessage);
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	const handleDeleteUser = (userId: string) => {
@@ -333,7 +406,7 @@ export default function UserManagementPage() {
 									borderColor: 'var(--light-gray)'
 								}}
 							>
-								{userManagementSettings.users.length === 0 ? (
+								{teamMembers.length === 0 ? (
 									<tr>
 										<td colSpan={7} className="py-12 px-6">
 											<div className="flex flex-col items-center justify-center text-center">
@@ -359,11 +432,11 @@ export default function UserManagementPage() {
 										</td>
 									</tr>
 								) : (
-									userManagementSettings.users.map((user, index) => (
+									teamMembers.map((user: any, index: number) => (
 										<tr
 											key={user.id}
-											className={index !== userManagementSettings.users.length - 1 ? 'dark:border-gray-700' : ''}
-											style={index !== userManagementSettings.users.length - 1 ? { borderBottom: '1px solid', borderBottomColor: 'var(--light-gray)' } : {}}
+											className={index !== teamMembers.length - 1 ? 'dark:border-gray-700' : ''}
+											style={index !== teamMembers.length - 1 ? { borderBottom: '1px solid', borderBottomColor: 'var(--light-gray)' } : {}}
 										>
 											<td
 												className="py-4 px-6 font-inter text-sm dark:text-gray-100"
@@ -435,6 +508,7 @@ export default function UserManagementPage() {
 				onClose={() => setIsAddingUser(false)}
 				onSave={handleAddUser}
 				roleOptions={roleOptions}
+				isLoading={isLoading}
 			/>
 
 			{/* Edit User Modal */}

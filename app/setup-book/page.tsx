@@ -8,7 +8,7 @@ import Pagination from '@/components/ui/Pagination';
 import Checkbox from '@/components/ui/Checkbox';
 import { useSetup } from '@/contexts/SetupContext';
 import PageHeading from '@/components/ui/PageHeading';
-import { UploadIcon, FileTextIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
+import { UploadIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import Input from '@/components/ui/Input';
 import UploadBase from '@/components/ui/UploadBaseEmployee';
 import SelectedRecordsDrawerContent from './SelectedRecordsDrawerContent';

@@ -22,7 +22,7 @@ interface ArtworkCarouselProps {
 }
 
 const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
-	autoPlayInterval = 300000, // 5 minutes (5 * 60 * 1000)
+	autoPlayInterval = 1000, // 5 minutes (5 * 60 * 1000)
 	apiUrl = 'https://api.artic.edu/api/v1/artworks',
 }) => {
 	const [artworks, setArtworks] = useState<Artwork[]>([]);
@@ -34,6 +34,24 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 	const [isHovering, setIsHovering] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [hasMoreArtworks, setHasMoreArtworks] = useState(true);
+	const [isImageLoaded, setIsImageLoaded] = useState(false);
+
+	// Reset image loaded state when index changes
+	useEffect(() => {
+		setIsImageLoaded(false);
+	}, [currentIndex]);
+
+	// Check if the current image is already cached
+	useEffect(() => {
+		const currentImage = artworks[currentIndex];
+		if (currentImage && currentImage.image_id) {
+			const img = new Image();
+			img.src = `/api/image?url=${encodeURIComponent(getImageUrl(currentImage.image_id))}`;
+			if (img.complete) {
+				setIsImageLoaded(true);
+			}
+		}
+	}, [currentIndex, artworks]);
 
 	// Fetch artworks from API - show all types of art
 	const fetchArtworks = useCallback(async (pageToFetch: number = 1, append: boolean = false) => {
@@ -135,6 +153,26 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 			fetchArtworks(currentPage + 1, true);
 		}
 	}, [currentIndex, artworks.length, hasMoreArtworks, currentPage, isLoading, fetchArtworks]);
+
+	// Preload next image
+	useEffect(() => {
+		if (artworks.length === 0) return;
+
+		const nextIndex = (currentIndex + 1) % artworks.length;
+		const nextArtwork = artworks[nextIndex];
+
+		if (nextArtwork && nextArtwork.image_id) {
+			const link = document.createElement('link');
+			link.rel = 'preload';
+			link.as = 'image';
+			link.href = `/api/image?url=${encodeURIComponent(getImageUrl(nextArtwork.image_id))}`;
+			document.head.appendChild(link);
+
+			return () => {
+				document.head.removeChild(link);
+			};
+		}
+	}, [currentIndex, artworks]);
 
 	// Auto-play carousel
 	useEffect(() => {
@@ -256,20 +294,54 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 					onMouseMove={handleMouseMove}
 					onMouseEnter={handleMouseEnter}
 					onMouseLeave={handleMouseLeave}
+					style={{ position: 'relative' }}
 				>
+					{/* Thumbnail / Placeholder - visible until main image loads */}
+					{currentArtwork.thumbnail?.lqip && !isImageLoaded && (
+						<img
+							src={currentArtwork.thumbnail.lqip}
+							alt={currentArtwork.thumbnail?.alt_text || currentArtwork.title}
+							className="carousel-image"
+							style={{
+								position: 'absolute',
+								top: 0,
+								left: 0,
+								width: '100%',
+								height: '100%',
+								objectFit: 'cover',
+								filter: 'blur(10px)',
+								transform: 'scale(1.1)', // Prevent white edges from blur
+								zIndex: 1
+							}}
+						/>
+					)}
+
 					{imageErrors.has(currentArtwork.image_id) && currentArtwork.thumbnail?.lqip ? (
 						<img
 							src={currentArtwork.thumbnail.lqip}
 							alt={currentArtwork.thumbnail?.alt_text || currentArtwork.title}
 							className="carousel-image carousel-image-clickable"
+							style={{ zIndex: 2, position: 'relative' }}
 						/>
 					) : (
 						<img
-							src={getImageUrl(currentArtwork.image_id)}
+							key={currentArtwork.image_id}
+							src={`/api/image?url=${encodeURIComponent(getImageUrl(currentArtwork.image_id))}`}
 							alt={currentArtwork.thumbnail?.alt_text || currentArtwork.title}
 							className="carousel-image carousel-image-clickable"
-							onError={(e) => handleImageError(e, currentArtwork.image_id)}
-							crossOrigin="anonymous"
+							onLoad={() => setIsImageLoaded(true)}
+							onError={(e) => {
+								console.error('Image load failed for:', currentArtwork.image_id);
+								handleImageError(e, currentArtwork.image_id);
+								setIsImageLoaded(true); // Remove loading state on error
+							}}
+							loading="eager"
+							style={{
+								opacity: isImageLoaded ? 1 : 0,
+								transition: 'opacity 0.5s ease-in-out',
+								zIndex: 2,
+								position: 'relative'
+							}}
 						/>
 					)}
 					{/* Mouse tracker shadow */}

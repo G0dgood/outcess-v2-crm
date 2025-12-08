@@ -52,6 +52,7 @@ interface OutcomesModalProps {
 	setNewOutcome: React.Dispatch<React.SetStateAction<string>>;
 	callOutcomes: CallOutcome[];
 	onAddOutcome: () => void;
+	onUpdateOutcome: (id: string, name: string) => void;
 	onDeleteOutcome: (id: string) => void;
 }
 
@@ -144,9 +145,30 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 	setNewOutcome,
 	callOutcomes,
 	onAddOutcome,
+	onUpdateOutcome,
 	onDeleteOutcome
 }) => {
+	const [editingId, setEditingId] = useState<string | null>(null);
+
 	if (!isOpen) return null;
+
+	const handleEditClick = (outcome: CallOutcome) => {
+		setEditingId(outcome.id);
+		setNewOutcome(outcome.name);
+	};
+
+	const handleUpdateClick = () => {
+		if (editingId && newOutcome.trim()) {
+			onUpdateOutcome(editingId, newOutcome.trim());
+			setEditingId(null);
+			setNewOutcome('');
+		}
+	};
+
+	const handleCancelEdit = () => {
+		setEditingId(null);
+		setNewOutcome('');
+	};
 
 	return (
 		<div
@@ -190,12 +212,19 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 					<div className="flex gap-2">
 						<Input
 							label=""
-							placeholder="Add New Outcome"
+							placeholder={editingId ? "Update Outcome" : "Add New Outcome"}
 							value={newOutcome}
 							onChange={setNewOutcome}
-							className="flex-1"
+							className="h-12.5"
 						/>
-						<Button className='mt-2' variant="primary" size="md" onClick={onAddOutcome}>Add</Button>
+						{editingId ? (
+							<>
+								<Button className='' variant="primary" size="md" onClick={handleUpdateClick}>Update</Button>
+								<Button className='' variant="outline" size="md" onClick={handleCancelEdit}>Cancel</Button>
+							</>
+						) : (
+							<Button className='' variant="primary" size="md" onClick={onAddOutcome}>Add</Button>
+						)}
 					</div>
 
 					{/* Empty State */}
@@ -229,19 +258,34 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 									>
 										{outcome.name}
 									</span>
-									<button
-										onClick={() => onDeleteOutcome(outcome.id)}
-										className="dark:text-gray-500 dark:hover:text-red-400"
-										style={{ color: 'var(--text-tertiary)' }}
-										onMouseEnter={(e) => {
-											e.currentTarget.style.color = '#DC2626';
-										}}
-										onMouseLeave={(e) => {
-											e.currentTarget.style.color = 'var(--text-tertiary)';
-										}}
-									>
-										<Icon name="Trash_light" size="sm" />
-									</button>
+									<div className="flex items-center gap-2">
+										<button
+											onClick={() => handleEditClick(outcome)}
+											className="dark:text-gray-500 dark:hover:text-blue-400"
+											style={{ color: 'var(--text-tertiary)' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.color = 'var(--text-secondary)';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.color = 'var(--text-tertiary)';
+											}}
+										>
+											<Icon name="Edit_duotone_line" size="sm" />
+										</button>
+										<button
+											onClick={() => onDeleteOutcome(outcome.id)}
+											className="dark:text-gray-500 dark:hover:text-red-400"
+											style={{ color: 'var(--text-tertiary)' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.color = '#DC2626';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.color = 'var(--text-tertiary)';
+											}}
+										>
+											<Icon name="Trash_light" size="sm" />
+										</button>
+									</div>
 								</div>
 							))}
 						</div>
@@ -327,6 +371,13 @@ export default function KPIMetric({
 
 	const handleDeleteOutcome = (id: string) => {
 		const updatedOutcomes = callOutcomes.filter(o => o.id !== id);
+		onCallOutcomesChange(updatedOutcomes);
+	};
+
+	const handleUpdateOutcome = (id: string, name: string) => {
+		const updatedOutcomes = callOutcomes.map(o =>
+			o.id === id ? { ...o, name } : o
+		);
 		onCallOutcomesChange(updatedOutcomes);
 	};
 
@@ -422,6 +473,7 @@ export default function KPIMetric({
 				setNewOutcome={setNewOutcome}
 				callOutcomes={callOutcomes}
 				onAddOutcome={handleAddOutcome}
+				onUpdateOutcome={handleUpdateOutcome}
 				onDeleteOutcome={handleDeleteOutcome}
 			/>
 		</div>

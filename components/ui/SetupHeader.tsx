@@ -27,14 +27,8 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 	className = '',
 	onMobileMenuToggle,
 }) => {
-	const defaultUser: User = {
-		name: "John Doe",
-		role: "Administrator",
-		initials: "JD",
-	};
-
-	const userData: User = user || defaultUser;
-
+	// If no user is provided, we don't display user info
+	const userData = user;
 
 	return (
 		<header

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useUserInfo } from '@/contexts/UserInfoContext';
 
 interface SetupStep {
 	id: string;
@@ -99,6 +100,8 @@ interface RolePermissions {
 
 interface SetupData {
 	companyName: string;
+	companyId: string;
+	lineOfBusinessName: string;
 	timeZone: string;
 	industry: string;
 	businessSize: string;
@@ -186,10 +189,13 @@ interface SetupProviderProps {
 }
 
 export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
+	const { user } = useUserInfo();
 	const [currentStep, setCurrentStep] = useState(1);
 	const [isLoading, setIsLoading] = useState(false);
 	const [setupData, setSetupData] = useState<SetupData>({
 		companyName: '',
+		companyId: '',
+		lineOfBusinessName: '',
 		timeZone: '',
 		industry: '',
 		businessSize: '',
@@ -264,41 +270,41 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			],
 		},
 		permissionAccessSettings: {
-			selectedRole: 'administrator', // Default to the first role from roleManagementSettings
+			selectedRole: 'administrator',
 			rolePermissions: {
 				administrator: {},
 			},
 			permissionCategories: [
 				{
-					id: 'user-management',
+					id: 'userManagementAccess',
 					name: 'User Management',
 					icon: 'User_alt_light',
 					permissions: [
-						{ id: 'create-users', name: 'Create Users', description: 'Ability to create new user accounts' },
-						{ id: 'edit-users', name: 'Edit Users', description: 'Ability to modify existing user accounts' },
-						{ id: 'delete-users', name: 'Delete Users', description: 'Ability to remove user accounts' },
-						{ id: 'view-users', name: 'View Users', description: 'Ability to view user information' },
+						{ id: 'createUsers', name: 'Create Users', description: 'Ability to create new user accounts' },
+						{ id: 'editUsers', name: 'Edit Users', description: 'Ability to modify existing user accounts' },
+						{ id: 'deleteUsers', name: 'Delete Users', description: 'Ability to remove user accounts' },
+						{ id: 'viewUsers', name: 'View Users', description: 'Ability to view user information' },
 					],
 				},
 				{
-					id: 'customer-management',
+					id: 'customerManagement',
 					name: 'Customer Management',
 					icon: 'Group_light',
 					permissions: [
-						{ id: 'create-customers', name: 'Create Customers', description: 'Ability to add new customers' },
-						{ id: 'edit-customers', name: 'Edit Customers', description: 'Ability to modify customer information' },
-						{ id: 'delete-customers', name: 'Delete Customers', description: 'Ability to remove customers' },
-						{ id: 'view-customers', name: 'View Customers', description: 'Ability to view customer data' },
+						{ id: 'createCustomers', name: 'Create Customers', description: 'Ability to add new customers' },
+						{ id: 'editCustomers', name: 'Edit Customers', description: 'Ability to modify customer information' },
+						{ id: 'deleteCustomers', name: 'Delete Customers', description: 'Ability to remove customers' },
+						{ id: 'viewCustomers', name: 'View Customers', description: 'Ability to view customer data' },
 					],
 				},
 				{
-					id: 'dashboard-access',
+					id: 'dashboardAccess',
 					name: 'Dashboard Access',
 					icon: 'darhboard',
 					permissions: [
-						{ id: 'view-dashboard', name: 'View Dashboard', description: 'Access to dashboard overview' },
-						{ id: 'export-data', name: 'Export Data', description: 'Ability to export dashboard data' },
-						{ id: 'customize-dashboard', name: 'Customize Dashboard', description: 'Ability to modify dashboard layout' },
+						{ id: 'viewDashboard', name: 'View Dashboard', description: 'Access to dashboard overview' },
+						{ id: 'exportData', name: 'Export Data', description: 'Ability to export dashboard data' },
+						{ id: 'customizeDashboard', name: 'Customize Dashboard', description: 'Ability to modify dashboard layout' },
 					],
 				},
 			],
@@ -306,6 +312,48 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	});
 
 	// console.log('setupData----->', JSON.stringify(setupData, null, 2));
+
+	// Load from localStorage on mount
+	useEffect(() => {
+		if (typeof window !== 'undefined') {
+			const savedData = localStorage.getItem('peoplely-setup-data');
+			if (savedData) {
+				try {
+					const parsedData = JSON.parse(savedData);
+					setSetupData(prev => ({
+						...prev,
+						...parsedData,
+						// Ensure nested objects are merged correctly
+						dashboardSettings: {
+							...prev.dashboardSettings,
+							...(parsedData.dashboardSettings || {}),
+							// Ensure specific fields are preserved/merged correctly
+							dashboardName: parsedData.dashboardSettings?.dashboardName || prev.dashboardSettings.dashboardName,
+							callOutcomes: parsedData.dashboardSettings?.callOutcomes || prev.dashboardSettings.callOutcomes,
+							widgets: parsedData.dashboardSettings?.widgets || prev.dashboardSettings.widgets,
+							dispositions: parsedData.dashboardSettings?.dispositions || prev.dashboardSettings.dispositions,
+						}
+					}));
+				} catch (error) {
+					console.error('Error parsing setup data from localStorage:', error);
+				}
+			}
+		}
+	}, []);
+
+	// Save to localStorage whenever setupData changes
+	useEffect(() => {
+		if (typeof window !== 'undefined') {
+			localStorage.setItem('peoplely-setup-data', JSON.stringify(setupData));
+		}
+	}, [setupData]);
+
+	useEffect(() => {
+		const userCompanyId = user?.company?._id;
+		if (userCompanyId && !setupData.companyId) {
+			setSetupData(prev => ({ ...prev, companyId: userCompanyId }));
+		}
+	}, [user, setupData.companyId]);
 
 	const updateSetupData = (data: Partial<SetupData>) => {
 		setSetupData(prev => ({ ...prev, ...data }));

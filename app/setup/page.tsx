@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import SetupPage from './setup-page/page';
 import HeaderNavigationPage from './header-navigation/page';
 import DashboardPage from './dashboard/page';
@@ -8,9 +8,38 @@ import CustomerBookPage from './customer-book/page';
 import UserManagementPage from './user-management/page';
 import ReviewConfigurationPage from './review-configuration/page';
 import { useSetup } from '@/contexts/SetupContext';
+import { useLazyGetUserByIdQuery } from '@/store/services/authApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
 
 export default function Setup() {
 	const { currentStep } = useSetup();
+	const { user, updateUser } = useUserInfo();
+	const [triggerGetUser] = useLazyGetUserByIdQuery();
+
+
+
+	useEffect(() => {
+		const fetchUserData = async () => {
+			const userId = user?.id || (user as any)?._id;
+			if (userId) {
+				try {
+					const response = await triggerGetUser(userId).unwrap();
+					if (response?.user) {
+						const normalizedUser = {
+							...response.user,
+							id: response.user.id || response.user._id
+						};
+						updateUser(normalizedUser);
+						localStorage.setItem('peoplely-user', JSON.stringify(normalizedUser));
+					}
+				} catch (error) {
+					console.error('Failed to fetch user data:', error);
+				}
+			}
+		};
+
+		fetchUserData();
+	}, [user?.id, (user as any)?._id, triggerGetUser, updateUser]);
 
 	return (
 		<div className="w-full">

@@ -6,6 +6,7 @@ import { ProgressProvider } from '@bprogress/next/dist/app';
 import { ReduxProvider } from '@/components/providers/ReduxProvider';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { UserInfoProvider } from '@/contexts/UserInfoContext';
 import { PrivilegeProvider } from '@/contexts/PrivilegeContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import { NavigationProvider } from '@/components/providers/NavigationProvider';
@@ -24,21 +25,23 @@ const NewProvider: React.FC<NewProviderProps> = ({ children }) => {
         shallowRouting>
         <ThemeProvider>
           <AuthProvider>
-            <PrivilegeProvider>
-              <SocketProvider config={{ autoConnect: false }}>
-                <NavigationProvider>
-                  {children}
-                  <Toaster
-                    position="top-right"
-                    richColors
-                    closeButton
-                    toastOptions={{
-                      style: { borderRadius: 0 },
-                    }}
-                  />
-                </NavigationProvider>
-              </SocketProvider>
-            </PrivilegeProvider>
+            <UserInfoProvider>
+              <PrivilegeProvider>
+                <SocketProvider config={{ autoConnect: false }}>
+                  <NavigationProvider>
+                    {children}
+                    <Toaster
+                      position="top-right"
+                      richColors
+                      closeButton
+                      toastOptions={{
+                        style: { borderRadius: 0 },
+                      }}
+                    />
+                  </NavigationProvider>
+                </SocketProvider>
+              </PrivilegeProvider>
+            </UserInfoProvider>
           </AuthProvider>
         </ThemeProvider>
       </ProgressProvider>

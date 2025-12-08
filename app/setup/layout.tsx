@@ -5,11 +5,16 @@ import SetupSidebar from "@/components/ui/SetupSidebar";
 import React, { useRef, useState, useEffect } from "react";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
+import { useUserInfo } from "@/contexts/UserInfoContext";
+import { useCreateLineOfBusinessMutation } from "@/store/services/lineOfBusinessApi";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const { currentStep, isLoading, setIsLoading, onStepComplete, onStepBack, setupData } = useSetup();
+  const { user } = useUserInfo();
+  const [createLineOfBusiness] = useCreateLineOfBusinessMutation();
   const saveTimeoutRef = useRef<number | null>(null);
   const submitTimeoutRef = useRef<number | null>(null);
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
   const drawerRef = React.useRef<HTMLDivElement>(null);
@@ -54,7 +59,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (currentStep === 6) {
       // Final step - submit for approval
       handleSubmitForApproval();
@@ -70,6 +75,34 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     }
 
     setIsLoading(true);
+
+    if (currentStep === 1) {
+      try {
+        await createLineOfBusiness({
+          name: setupData.lineOfBusinessName,
+          timeZone: setupData.timeZone,
+          industry: setupData.industry,
+          businessSize: setupData.businessSize,
+          userId: user?.id,
+        }).unwrap();
+
+        toast.success("Step completed successfully!", {
+          description: "Line of Business created. Moving to the next step...",
+          duration: 2000,
+        });
+        onStepComplete();
+      } catch (error) {
+        console.error("Failed to create Line of Business:", error);
+        toast.error("Failed to save changes", {
+          description: "Could not create Line of Business. Please try again.",
+          duration: 4000,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     toast.loading("Saving your progress...", {
       id: "save-progress",
       action: {
@@ -130,9 +163,21 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     }, 2000);
   };
 
+  const headerUser = user ? {
+    name: user.name || `${(user as any).firstName || ''} ${(user as any).lastName || ''}`.trim() || (user as any).username || 'User',
+    role: user.role || 'Administrator',
+    avatar: user.avatar,
+    initials: (user.name || `${(user as any).firstName || ''} ${(user as any).lastName || ''}`.trim() || (user as any).username || 'U')
+      .split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
+  } : undefined;
+
   return (
     <div id="page-wrapper">
-      <SetupHeader title="CRM Setup Configurator" onMobileMenuToggle={() => setIsMobileMenuOpen(true)} />
+      <SetupHeader
+        title="CRM Setup Configurator"
+        user={headerUser}
+        onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
+      />
       {currentStep !== 6 ? <SetupSidebar currentStep={currentStep} className="hidden md:block" /> : <div id="side-nav" />}
       {isMobileMenuOpen && isMobileView && (
         <div className="fixed inset-0 z-50">

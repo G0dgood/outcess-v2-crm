@@ -9,6 +9,11 @@ export interface User {
     role?: string;
     companyId?: string;
     companyName?: string;
+    company?: {
+        _id?: string;
+        companyName?: string;
+        [key: string]: any;
+    };
     phone?: string;
     createdAt?: string;
     updatedAt?: string;
@@ -33,7 +38,7 @@ interface AuthState {
 }
 
 // Storage key for localStorage
-const AUTH_STORAGE_KEY = 'auth_data';
+const AUTH_STORAGE_KEY = 'peoplely-user';
 
 // Load initial state from localStorage
 const loadAuthFromStorage = (): Partial<AuthState> => {
@@ -48,15 +53,17 @@ const loadAuthFromStorage = (): Partial<AuthState> => {
 	}
 
 	try {
-		const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-		if (stored) {
-			const parsed = JSON.parse(stored);
+		const storedUser = localStorage.getItem('peoplely-user');
+		const storedToken = localStorage.getItem('token');
+		
+		if (storedUser && storedToken) {
+			const parsedUser = JSON.parse(storedUser);
 			return {
-				user: parsed.user || null,
-				tokens: parsed.tokens || null,
-				isAuthenticated: !!(parsed.user && parsed.tokens?.accessToken),
+				user: parsedUser,
+				tokens: { accessToken: storedToken },
+				isAuthenticated: true,
 				isLoading: false,
-				savedAt: parsed.savedAt || null,
+				savedAt: Date.now(),
 			};
 		}
 	} catch (error) {
@@ -78,14 +85,11 @@ const saveAuthToStorage = (state: AuthState) => {
 
 	try {
 		if (state.user && state.tokens) {
-			const dataToSave = {
-				user: state.user,
-				tokens: state.tokens,
-				savedAt: state.savedAt || Date.now(),
-			};
-			localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(dataToSave));
+			localStorage.setItem('peoplely-user', JSON.stringify(state.user));
+			localStorage.setItem('token', state.tokens.accessToken);
 		} else {
-			localStorage.removeItem(AUTH_STORAGE_KEY);
+			localStorage.removeItem('peoplely-user');
+			localStorage.removeItem('token');
 		}
 	} catch (error) {
 		console.error('Error saving auth data to storage:', error);
@@ -96,7 +100,8 @@ const saveAuthToStorage = (state: AuthState) => {
 const clearAuthFromStorage = () => {
 	if (typeof window === 'undefined') return;
 	try {
-		localStorage.removeItem(AUTH_STORAGE_KEY);
+		localStorage.removeItem('peoplely-user');
+		localStorage.removeItem('token');
 	} catch (error) {
 		console.error('Error clearing auth data from storage:', error);
 	}

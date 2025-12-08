@@ -24,7 +24,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 		<div id="page-wrapper">
 			<OfflineBanner />
 			<DashboardHeader
-				companyName={setupData.companyName || 'Fairmoney'}
+				companyName={setupData.companyName}
 				userName="John Doe"
 				userEmail="johndoe@example.com"
 				userIsOnline={true}

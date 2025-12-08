@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
@@ -8,6 +8,7 @@ import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
 import Checkbox from '@/components/ui/Checkbox';
 import { useSetup } from '@/contexts/SetupContext';
+import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
 import PageHeading from '@/components/ui/PageHeading';
 import { Pencil1Icon, TrashIcon, ExclamationTriangleIcon, PersonIcon } from '@radix-ui/react-icons';
 import AddUserModal from '@/components/ui/AddUserModal';
@@ -26,6 +27,9 @@ interface User {
 const UsersPage: React.FC = () => {
 	const router = useRouter();
 	const { setupData } = useSetup();
+	const companyId = setupData?.companyId || '674e2a8706e2361668e82d73';
+	const { data: rolesDataResponse } = useGetRolesByCompanyIdQuery(companyId);
+
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
@@ -116,11 +120,19 @@ const UsersPage: React.FC = () => {
 		}
 	};
 
-	const roleOptions = [
-		{ value: 'Agent', label: 'Agent' },
-		{ value: 'Supervisor', label: 'Supervisor' },
-		{ value: 'Admin', label: 'Admin' },
-	];
+	const roleOptions = useMemo(() => {
+		if (!rolesDataResponse) return [];
+
+		const rawRoles = rolesDataResponse.data || rolesDataResponse.roles || rolesDataResponse || [];
+		const rolesList = Array.isArray(rawRoles) ? rawRoles : (rawRoles.docs || []);
+
+		if (rolesList.length === 0) return [];
+
+		return rolesList.map((role: any) => ({
+			value: role.roleName,
+			label: role.roleName
+		}));
+	}, [rolesDataResponse]);
 
 
 

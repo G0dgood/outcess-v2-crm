@@ -1,14 +1,35 @@
 'use client';
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
 import { businessSizeOptions, industryOptions, timeZoneOptions } from '@/components/Options';
 import { useSetup } from '@/contexts/SetupContext';
+import { SetupSkeleton } from '@/components/ui/SetupSkeleton';
+import { useUserInfo } from '@/contexts/UserInfoContext';
 
 export default function SetupPage() {
 	const { setupData, updateSetupData } = useSetup();
+	const { user } = useUserInfo();
 	const [errors, setErrors] = useState<Record<string, string>>({});
+	const [isLoading, setIsLoading] = useState(true);
+
+	useEffect(() => {
+		// Pre-populate company name from user profile if available
+		if (user?.company?.companyName && !setupData.companyName) {
+			updateSetupData({ companyName: user.company.companyName });
+		}
+	}, [user?.company?.companyName, setupData.companyName]);
+
+	useEffect(() => {
+		// Simulate initial loading for smooth transition or data fetching
+		const timer = setTimeout(() => {
+			setIsLoading(false);
+		}, 800);
+		return () => clearTimeout(timer);
+	}, []);
+
+
+	console.log('setupData-----', setupData)
 
 	const handleInputChange = (field: string) => (value: string) => {
 		updateSetupData({ [field]: value });
@@ -24,11 +45,9 @@ export default function SetupPage() {
 		}
 	};
 
-
-
-
-
-
+	if (isLoading) {
+		return <SetupSkeleton />;
+	}
 
 	return (
 		<div className="w-full h-[70vh]">
@@ -76,12 +95,12 @@ export default function SetupPage() {
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 						<div className="space-y-5">
 							<Input
-								label="Company Name"
-								placeholder="Enter company name"
-								value={setupData.companyName}
-								onChange={handleInputChange('companyName')}
+								label="Line of business name"
+								placeholder="Enter line of business name"
+								value={setupData.lineOfBusinessName}
+								onChange={handleInputChange('lineOfBusinessName')}
 								required
-								error={errors.companyName}
+								error={errors.lineOfBusinessName}
 							/>
 
 							<Dropdown

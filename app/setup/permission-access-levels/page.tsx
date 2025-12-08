@@ -1,23 +1,96 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
 import Toggle from '@/components/ui/Toggle';
 import Icon from '@/components/ui/Icon';
 import { useSetup } from '@/contexts/SetupContext';
+import { useGetRolesByCompanyIdQuery, useUpdateRoleMutation } from '@/store/services/roleApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { toast } from 'sonner';
 
+interface Role {
+	_id: string;
+	roleName: string;
+	description: string;
+	permissions: Record<string, any>;
+	companyId?: string;
+}
 
-
-
-
-
+interface ApiError {
+	data?: {
+		message?: string;
+	};
+	message?: string;
+}
 
 export default function PermissionAccessLevelsPage() {
 	const router = useRouter();
 	const { setupData, updatePermissionAccessSettings } = useSetup();
-	const { permissionAccessSettings, roleManagementSettings } = setupData;
+	const { permissionAccessSettings } = setupData;
+	const { user } = useUserInfo();
+
+	const companyId = user?.company?._id || user?.companyId || '';
+
+	const { data: rolesData, isLoading } = useGetRolesByCompanyIdQuery(companyId, {
+		skip: !companyId,
+	});
+
+	const [updateRole] = useUpdateRoleMutation();
+
+	// Transform API roles to local format
+	const rawRoles = (Array.isArray(rolesData) ? rolesData :
+		(Array.isArray(rolesData?.data) ? rolesData.data :
+			(Array.isArray(rolesData?.roles) ? rolesData.roles :
+				(Array.isArray(rolesData?.docs) ? rolesData.docs :
+					[])))) as Role[];
+
+	const roles: Role[] = rawRoles.length > 0 ? rawRoles :
+		(rolesData && typeof rolesData === 'object' && !Array.isArray(rolesData) ?
+			Object.values(rolesData as Record<string, unknown>).filter((item): item is Role =>
+				typeof item === 'object' && item !== null && '_id' in item && 'roleName' in item
+			) : []);
+
+	// Sync fetched roles with context state
+	useEffect(() => {
+		if (roles.length > 0) {
+			const newRolePermissions: Record<string, Record<string, boolean>> = {};
+
+			// Initialize permissions for each role from API
+			roles.forEach(role => {
+				const rolePerms: Record<string, boolean> = {};
+				const apiPermissions = role.permissions || {};
+
+				// Flatten nested permissions based on categories
+				permissionAccessSettings.permissionCategories.forEach(category => {
+					const categoryData = apiPermissions[category.id];
+					if (categoryData && typeof categoryData === 'object') {
+						category.permissions.forEach(perm => {
+							if (categoryData[perm.id] !== undefined) {
+								rolePerms[perm.id] = categoryData[perm.id];
+							}
+						});
+					}
+				});
+
+				newRolePermissions[role._id] = rolePerms;
+			});
+
+			// If current selected role is not in the fetched roles, default to the first one
+			const currentSelectedRoleValid = roles.some(r => r._id === permissionAccessSettings.selectedRole);
+			const newSelectedRole = currentSelectedRoleValid ? permissionAccessSettings.selectedRole : roles[0]._id;
+
+			updatePermissionAccessSettings({
+				rolePermissions: {
+					...permissionAccessSettings.rolePermissions,
+					...newRolePermissions
+				},
+				selectedRole: newSelectedRole
+			});
+		}
+	}, [rolesData]); // specific dependency on data to trigger update
 
 	const handleRoleChange = (roleId: string) => {
 		updatePermissionAccessSettings({
@@ -40,10 +113,55 @@ export default function PermissionAccessLevelsPage() {
 		});
 	};
 
-	const handleSaveChanges = () => {
-		console.log('Saving permission changes:', permissionAccessSettings.rolePermissions);
-		// TODO: Implement save functionality
-		router.back();
+	const handleSaveChanges = async () => {
+		try {
+			const roleId = permissionAccessSettings.selectedRole;
+			const role = roles.find(r => r._id === roleId);
+
+			if (!role) {
+				toast.error('No role selected or role not found');
+				return;
+			}
+
+			const currentPermissions = role.permissions || {};
+			const modifiedPermissions = permissionAccessSettings.rolePermissions[roleId] || {};
+
+			// Deep clone current permissions to allow modification of nested objects
+			const finalPermissions = JSON.parse(JSON.stringify(currentPermissions));
+
+			// Merge granular permissions into categories
+			permissionAccessSettings.permissionCategories.forEach(category => {
+				// Ensure category object exists
+				if (!finalPermissions[category.id] || typeof finalPermissions[category.id] !== 'object') {
+					finalPermissions[category.id] = {};
+				}
+
+				category.permissions.forEach(perm => {
+					if (modifiedPermissions[perm.id] !== undefined) {
+						finalPermissions[category.id][perm.id] = modifiedPermissions[perm.id];
+					}
+				});
+			});
+
+			const payload = {
+				roleName: role.roleName,
+				description: role.description,
+				companyId: role.companyId || companyId,
+				permissions: finalPermissions
+			};
+
+			await updateRole({
+				id: roleId,
+				roleData: payload
+			}).unwrap();
+
+			toast.success('Permissions saved successfully');
+		} catch (error) {
+			const apiError = error as ApiError;
+			console.error('Failed to save permissions:', error);
+			const errorMessage = apiError?.data?.message || apiError?.message || 'Failed to save permissions';
+			toast.error(errorMessage);
+		}
 	};
 
 	const handleCancel = () => {
@@ -78,32 +196,32 @@ export default function PermissionAccessLevelsPage() {
 					className="flex gap-1 dark:bg-gray-700 p-1 w-fit"
 					style={{ backgroundColor: 'var(--bg-primary)' }}
 				>
-					{roleManagementSettings.roles.map((role) => (
+					{roles.map((role) => (
 						<button
-							key={role.id}
-							onClick={() => handleRoleChange(role.id)}
-							className={`px-4 py-2 cursor-pointer font-medium transition-colors font-lato text-base leading-[150%] dark:text-gray-300 ${permissionAccessSettings.selectedRole === role.id
+							key={role._id}
+							onClick={() => handleRoleChange(role._id)}
+							className={`px-4 py-2 cursor-pointer font-medium transition-colors font-lato text-base leading-[150%] dark:text-gray-300 ${permissionAccessSettings.selectedRole === role._id
 								? 'dark:bg-gray-100 dark:text-gray-900'
 								: 'dark:text-gray-400 dark:hover:text-gray-200'
 								}`}
-							style={permissionAccessSettings.selectedRole === role.id ? {
+							style={permissionAccessSettings.selectedRole === role._id ? {
 								backgroundColor: 'var(--text-primary)',
 								color: 'white'
 							} : {
 								color: 'var(--text-tertiary)'
 							}}
 							onMouseEnter={(e) => {
-								if (permissionAccessSettings.selectedRole !== role.id) {
+								if (permissionAccessSettings.selectedRole !== role._id) {
 									e.currentTarget.style.color = 'var(--text-secondary)';
 								}
 							}}
 							onMouseLeave={(e) => {
-								if (permissionAccessSettings.selectedRole !== role.id) {
+								if (permissionAccessSettings.selectedRole !== role._id) {
 									e.currentTarget.style.color = 'var(--text-tertiary)';
 								}
 							}}
 						>
-							{role.name}
+							{role.roleName}
 						</button>
 					))}
 				</div>

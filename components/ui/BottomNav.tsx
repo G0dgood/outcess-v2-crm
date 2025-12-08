@@ -22,6 +22,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 	showBack = true,
 	className = '',
 }) => {
+
+
 	return (
 		<div
 			id="footer"
