@@ -17,6 +17,17 @@ export interface RegisterResponse {
     token?: string;
 }
 
+export interface LoginRequest {
+    email: string;
+    password: string;
+}
+
+export interface LoginResponse {
+    message: string;
+    user?: any;
+    token?: string;
+}
+
 export interface UserResponse {
     user: any;
     message?: string;
@@ -34,6 +45,7 @@ export const authApi = createApi({
             return headers;
         },
     }),
+    tagTypes: ['User'],
     endpoints: (builder) => ({
         register: builder.mutation<RegisterResponse, RegisterRequest>({
             query: (credentials) => ({
@@ -41,11 +53,28 @@ export const authApi = createApi({
                 method: 'POST',
                 body: credentials,
             }),
+            invalidatesTags: ['User'],
+        }),
+        login: builder.mutation<LoginResponse, LoginRequest>({
+            query: (credentials) => ({
+                url: 'api/v1/users/login',
+                method: 'POST',
+                body: credentials,
+            }),
+            invalidatesTags: ['User'],
         }),
         getUserById: builder.query<UserResponse, string>({
             query: (id) => `api/v1/users/user/${id}`,
+            providesTags: ['User'],
+        }),
+        logout: builder.mutation<void, void>({
+            query: () => ({
+                url: 'api/v1/users/logout',
+                method: 'POST',
+            }),
+            invalidatesTags: ['User'],
         }),
     }),
 });
 
-export const { useRegisterMutation, useGetUserByIdQuery, useLazyGetUserByIdQuery } = authApi;
+export const { useRegisterMutation, useLoginMutation, useGetUserByIdQuery, useLazyGetUserByIdQuery, useLogoutMutation } = authApi;

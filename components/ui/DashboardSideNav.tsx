@@ -2,7 +2,8 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useSetup } from '@/contexts/SetupContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+
 import {
 	DashboardIcon,
 	FileTextIcon,
@@ -40,7 +41,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
 	const navRef = useRef<HTMLElement>(null);
 	const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
 
@@ -54,11 +55,36 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 	}, [pathname]);
 
 	const settingsSubItems = [
-		{ id: 'fields-tab', label: 'Fields', icon: 'users', path: '/settings?tab=fields' },
-		{ id: 'status-tab', label: 'Status', icon: 'id-card', path: '/settings?tab=status' },
-		{ id: 'permission-tab', label: 'Permission', icon: 'chart', path: '/settings?tab=permission' },
-		{ id: 'company-details-tab', label: 'Company Details', icon: 'settings', path: '/settings?tab=company-details' },
-		{ id: 'roles-tab', label: 'Roles', icon: 'book', path: '/settings?tab=roles' },
+		{
+			id: 'fields-tab',
+			label: 'Fields',
+			icon: 'users',
+			path: '/settings?tab=fields'
+		},
+		{
+			id: 'status-tab',
+			label: 'Status',
+			icon: 'id-card',
+			path: '/settings?tab=status'
+		},
+		{
+			id: 'permission-tab',
+			label: 'Permission',
+			icon: 'chart',
+			path: '/settings?tab=permission'
+		},
+		{
+			id: 'company-details-tab',
+			label: 'Company Details',
+			icon: 'settings',
+			path: '/settings?tab=company-details'
+		},
+		{
+			id: 'roles-tab',
+			label: 'Roles',
+			icon: 'book',
+			path: '/settings?tab=roles'
+		},
 	];
 
 	const navItems: NavItem[] = [
@@ -205,13 +231,13 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 											: 'dark:text-gray-300 hover:text-white'
 											}`}
 										style={{
-											backgroundColor: (isActive || (isSettings && isSettingsExpanded)) ? setupData.primaryColor || '#050711' : 'transparent',
+											backgroundColor: (isActive || (isSettings && isSettingsExpanded)) ? lineOfBusinessData?.primaryColor || '#050711' : 'transparent',
 											color: (isActive || (isSettings && isSettingsExpanded)) ? 'white' : 'var(--text-secondary)',
-											'--hover-bg': setupData.secondaryColor || '#6C8B7D'
+											'--hover-bg': lineOfBusinessData?.secondaryColor || '#6C8B7D'
 										} as React.CSSProperties}
 										onMouseEnter={(e) => {
 											if (!isActive && !(isSettings && isSettingsExpanded)) {
-												e.currentTarget.style.backgroundColor = setupData.secondaryColor || '#6C8B7D';
+												e.currentTarget.style.backgroundColor = lineOfBusinessData?.secondaryColor || '#6C8B7D';
 												// Update icon and text colors to white on hover
 												const icon = e.currentTarget.querySelector('.shrink-0') as HTMLElement;
 												const text = e.currentTarget.querySelector('.font-medium') as HTMLElement;
@@ -277,12 +303,12 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 															: 'dark:text-gray-400 hover:text-white'
 															}`}
 														style={{
-															backgroundColor: isSubActive ? setupData.primaryColor || '#050711' : 'transparent',
+															backgroundColor: isSubActive ? lineOfBusinessData?.primaryColor || '#050711' : 'transparent',
 															color: isSubActive ? 'white' : 'var(--text-tertiary)',
 														} as React.CSSProperties}
 														onMouseEnter={(e) => {
 															if (!isSubActive) {
-																e.currentTarget.style.backgroundColor = setupData.secondaryColor || '#6C8B7D';
+																e.currentTarget.style.backgroundColor = lineOfBusinessData?.secondaryColor || '#6C8B7D';
 																const icon = e.currentTarget.querySelector('.sub-icon') as HTMLElement;
 																const text = e.currentTarget.querySelector('.sub-text') as HTMLElement;
 																if (icon) icon.style.color = 'white';

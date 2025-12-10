@@ -5,20 +5,27 @@ import Button from './Button';
 import Input from './Input';
 import Textarea from './Textarea';
 import { Cross2Icon } from '@radix-ui/react-icons';
+import { useCreateRoleMutation } from '@/store/services/roleApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { toast } from 'sonner';
 
 interface CreateCustomRoleModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onCreate?: (data: { name: string; description: string }) => void;
+	onSuccess?: () => void;
 }
 
 export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 	isOpen,
 	onClose,
-	onCreate,
+	onSuccess,
 }) => {
 	const [roleName, setRoleName] = useState('');
 	const [roleDescription, setRoleDescription] = useState('');
+	const [createRole, { isLoading }] = useCreateRoleMutation();
+	const { user } = useUserInfo();
+	const { selectedLineOfBusinessId } = useLineOfBusiness();
 
 	useEffect(() => {
 		if (isOpen) {
@@ -46,10 +53,40 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 		};
 	}, [isOpen, onClose]);
 
-	const handleCreate = () => {
+	const handleCreate = async () => {
 		if (roleName.trim()) {
-			onCreate?.({ name: roleName, description: roleDescription });
-			onClose();
+			const companyId = user?.company?._id || user?.companyId;
+
+			if (!companyId) {
+				toast.error('Company ID is missing');
+				return;
+			}
+
+			try {
+				await createRole({
+					roleName: roleName,
+					description: roleDescription,
+					companyId: companyId,
+					lineOfBusinessId: selectedLineOfBusinessId || undefined,
+					permissions: {
+						dashboard: false,
+						customerBook: false,
+						userManagement: false,
+						setupBook: false,
+						customerSMS: false,
+						report: false,
+						systemSetting: false,
+						auditLog: false,
+					}
+				}).unwrap();
+
+				toast.success('Custom role created successfully');
+				onSuccess?.();
+				onClose();
+			} catch (error: any) {
+				console.error('Failed to create custom role:', error);
+				toast.error(error?.data?.message || 'Failed to create custom role');
+			}
 		}
 	};
 
@@ -62,17 +99,17 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-			<div 
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
+			<div
 				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
-				<div 
+				<div
 					className="flex justify-between items-center p-6 border-b dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<h2 
+					<h2
 						className="text-xl font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
@@ -115,7 +152,7 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div 
+				<div
 					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>

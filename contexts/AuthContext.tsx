@@ -40,10 +40,6 @@ interface AuthContextType {
 	isLoading: boolean;
 
 	// Authentication methods
-	login: (credentials: LoginCredentials) => Promise<void>;
-	logout: () => Promise<void>;
-	register: (data: RegisterData) => Promise<void>;
-	refreshToken: () => Promise<void>;
 	updateUser: (updates: Partial<User>) => void;
 
 	// Token management
@@ -221,176 +217,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 		}
 	}, [validateToken, getAccessToken, clearAuthData]);
 
-	// Login
-	const login = useCallback(async (credentials: LoginCredentials) => {
-		setIsLoading(true);
-		try {
-			// Replace with your actual API endpoint
-			const response = await fetch(`${apiBaseUrl}/auth/login`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					email: credentials.email,
-					password: credentials.password,
-				}),
-			});
-
-			if (!response.ok) {
-				const error = await response.json().catch(() => ({ message: 'Login failed' }));
-				throw new Error(error.message || 'Login failed');
-			}
-
-			const data = await response.json();
-
-			// Extract user and tokens from response
-			const userData: User = data.user || {
-				id: data.id || data.userId,
-				email: data.email || credentials.email,
-				name: data.name || data.fullName || '',
-				avatar: data.avatar,
-				role: data.role,
-				companyId: data.companyId,
-				companyName: data.companyName,
-				phone: data.phone,
-			};
-
-			const tokenData: AuthTokens = {
-				accessToken: data.accessToken || data.token,
-				refreshToken: data.refreshToken,
-				expiresIn: data.expiresIn || 3600, // Default 1 hour
-				tokenType: data.tokenType || 'Bearer',
-			};
-
-			setUser(userData);
-			setTokensState(tokenData);
-			saveAuthData(userData, tokenData);
-
-			// Save timestamp for expiration check
-			if (typeof window !== 'undefined') {
-				const stored = localStorage.getItem(storageKey);
-				if (stored) {
-					const parsed = JSON.parse(stored);
-					parsed.savedAt = Date.now();
-					localStorage.setItem(storageKey, JSON.stringify(parsed));
-				}
-			}
-		} catch (error) {
-			console.error('Login error:', error);
-			clearAuthData();
-			throw error;
-		} finally {
-			setIsLoading(false);
-		}
-	}, [apiBaseUrl, storageKey, saveAuthData, clearAuthData]);
-
-	// Register
-	const register = useCallback(async (data: RegisterData) => {
-		setIsLoading(true);
-		try {
-			const response = await fetch(`${apiBaseUrl}/auth/register`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(data),
-			});
-
-			if (!response.ok) {
-				const error = await response.json().catch(() => ({ message: 'Registration failed' }));
-				throw new Error(error.message || 'Registration failed');
-			}
-
-			const result = await response.json();
-
-			// After registration, you might want to auto-login
-			// or redirect to login page
-			if (result.user && result.accessToken) {
-				const userData: User = result.user;
-				const tokenData: AuthTokens = {
-					accessToken: result.accessToken,
-					refreshToken: result.refreshToken,
-					expiresIn: result.expiresIn || 3600,
-					tokenType: result.tokenType || 'Bearer',
-				};
-
-				setUser(userData);
-				setTokensState(tokenData);
-				saveAuthData(userData, tokenData);
-			}
-		} catch (error) {
-			console.error('Registration error:', error);
-			throw error;
-		} finally {
-			setIsLoading(false);
-		}
-	}, [apiBaseUrl, saveAuthData]);
-
-	// Refresh token
-	const refreshToken = useCallback(async () => {
-		const refreshTokenValue = getRefreshToken();
-		if (!refreshTokenValue) {
-			throw new Error('No refresh token available');
-		}
-
-		try {
-			const response = await fetch(`${apiBaseUrl}/auth/refresh`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ refreshToken: refreshTokenValue }),
-			});
-
-			if (!response.ok) {
-				throw new Error('Token refresh failed');
-			}
-
-			const data = await response.json();
-			const tokenData: AuthTokens = {
-				accessToken: data.accessToken || data.token,
-				refreshToken: data.refreshToken || refreshTokenValue,
-				expiresIn: data.expiresIn || 3600,
-				tokenType: data.tokenType || 'Bearer',
-			};
-
-			setTokens(tokenData);
-		} catch (error) {
-			console.error('Token refresh error:', error);
-			clearAuthData();
-			throw error;
-		}
-	}, [apiBaseUrl, getRefreshToken, setTokens, clearAuthData]);
-
-	// Logout
-	const logout = useCallback(async () => {
-		setIsLoading(true);
-		try {
-			const token = getAccessToken();
-			if (token) {
-				// Call logout endpoint to invalidate token on server
-				try {
-					await fetch(`${apiBaseUrl}/auth/logout`, {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							Authorization: `Bearer ${token}`,
-						},
-					});
-				} catch (error) {
-					console.error('Logout API error:', error);
-					// Continue with local logout even if API call fails
-				}
-			}
-		} catch (error) {
-			console.error('Logout error:', error);
-		} finally {
-			clearAuthData();
-			setIsLoading(false);
-		}
-	}, [apiBaseUrl, getAccessToken, clearAuthData]);
-
 	// Update user
 	const updateUser = useCallback((updates: Partial<User>) => {
 		if (user) {
@@ -402,40 +228,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 		}
 	}, [user, tokens, saveAuthData]);
 
-	// Auto-refresh token before expiration
-	useEffect(() => {
-		if (!tokens?.expiresIn || !tokens?.refreshToken) return;
-
-		const stored = localStorage.getItem(storageKey);
-		if (!stored) return;
-
-		try {
-			const parsed = JSON.parse(stored);
-			const savedAt = parsed.savedAt || Date.now();
-			const expiresAt = savedAt + (tokens.expiresIn * 1000);
-			const timeUntilExpiry = expiresAt - Date.now();
-			const refreshTime = timeUntilExpiry - 60000; // Refresh 1 minute before expiry
-
-			if (refreshTime > 0) {
-				const timeout = setTimeout(() => {
-					refreshToken().catch(console.error);
-				}, refreshTime);
-
-				return () => clearTimeout(timeout);
-			}
-		} catch (error) {
-			console.error('Error setting up token refresh:', error);
-		}
-	}, [tokens, storageKey, refreshToken]);
-
 	const contextValue: AuthContextType = {
 		user,
 		isAuthenticated: !!user && !!tokens?.accessToken && validateToken(),
 		isLoading,
-		login,
-		logout,
-		register,
-		refreshToken,
 		updateUser,
 		getAccessToken,
 		getRefreshToken,

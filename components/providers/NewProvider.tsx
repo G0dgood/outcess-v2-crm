@@ -8,6 +8,8 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { UserInfoProvider } from '@/contexts/UserInfoContext';
 import { PrivilegeProvider } from '@/contexts/PrivilegeContext';
+import { LineOfBusinessProvider } from '@/contexts/LineOfBusinessContext';
+import { SetupProvider } from '@/contexts/SetupContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import { NavigationProvider } from '@/components/providers/NavigationProvider';
 
@@ -26,21 +28,25 @@ const NewProvider: React.FC<NewProviderProps> = ({ children }) => {
         <ThemeProvider>
           <AuthProvider>
             <UserInfoProvider>
-              <PrivilegeProvider>
-                <SocketProvider config={{ autoConnect: false }}>
-                  <NavigationProvider>
-                    {children}
-                    <Toaster
-                      position="top-right"
-                      richColors
-                      closeButton
-                      toastOptions={{
-                        style: { borderRadius: 0 },
-                      }}
-                    />
-                  </NavigationProvider>
-                </SocketProvider>
-              </PrivilegeProvider>
+              <LineOfBusinessProvider>
+                <SetupProvider>
+                  <PrivilegeProvider>
+                    <SocketProvider config={{ autoConnect: false }}>
+                      <NavigationProvider>
+                        {children}
+                        <Toaster
+                          position="top-right"
+                          richColors
+                          closeButton
+                          toastOptions={{
+                            style: { borderRadius: 0 },
+                          }}
+                        />
+                      </NavigationProvider>
+                    </SocketProvider>
+                  </PrivilegeProvider>
+                </SetupProvider>
+              </LineOfBusinessProvider>
             </UserInfoProvider>
           </AuthProvider>
         </ThemeProvider>

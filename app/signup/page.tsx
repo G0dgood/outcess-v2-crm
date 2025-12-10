@@ -5,7 +5,6 @@ import Input from '@/components/ui/Input';
 import PasswordInput from '@/components/ui/PasswordInput';
 import Checkbox from '@/components/ui/Checkbox';
 import { useRouter } from 'next/navigation';
-import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import ArtworkCarousel from '@/components/ui/ArtworkCarousel';
 import { toast } from 'sonner';
@@ -18,9 +17,8 @@ import { setUser, setTokens, register as registerAction } from '@/store/slices/a
 export default function SignUpPage() {
 	const router = useRouter();
 	const dispatch = useDispatch();
-	const { setupData } = useSetup();
 	const { isDarkMode } = useTheme();
-	const primaryColor = setupData.primaryColor || '#050711';
+	const primaryColor = '#050711';
 	const [register] = useRegisterMutation();
 	const [createCompany] = useCreateCompanyMutation();
 	const [formData, setFormData] = useState({
@@ -407,6 +405,21 @@ export default function SignUpPage() {
 										(isLoading ? 'Creating Company...' : 'Finish Setup')
 								)}
 							</button>
+						</div>
+
+						<div className="signup-footer" style={{ marginTop: '24px', textAlign: 'center' }}>
+							<p className="signup-text" style={{ color: '#6D7280', fontSize: '14px' }}>
+								Already have an account?{' '}
+								<a
+									href="/login"
+									className="signup-link"
+									style={{ color: primaryColor, fontWeight: 600, textDecoration: 'none', transition: 'opacity 0.2s' }}
+									onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.8'; }}
+									onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+								>
+									Login
+								</a>
+							</p>
 						</div>
 					</form>
 				</div>

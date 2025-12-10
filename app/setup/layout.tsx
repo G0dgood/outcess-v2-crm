@@ -6,12 +6,14 @@ import React, { useRef, useState, useEffect } from "react";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
 import { useUserInfo } from "@/contexts/UserInfoContext";
-import { useCreateLineOfBusinessMutation } from "@/store/services/lineOfBusinessApi";
+import { useCreateLineOfBusinessMutation, useUpdateLineOfBusinessMutation, useLazyGetLineOfBusinessByCompanyIdQuery } from "@/store/services/lineOfBusinessApi";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-  const { currentStep, isLoading, setIsLoading, onStepComplete, onStepBack, setupData } = useSetup();
+  const { currentStep, isLoading, setIsLoading, onStepComplete, onStepBack, setupData, updateSetupData, isFetchingLineOfBusiness } = useSetup();
   const { user } = useUserInfo();
   const [createLineOfBusiness] = useCreateLineOfBusinessMutation();
+  const [updateLineOfBusiness] = useUpdateLineOfBusinessMutation();
+  const [getLineOfBusiness] = useLazyGetLineOfBusinessByCompanyIdQuery();
   const saveTimeoutRef = useRef<number | null>(null);
   const submitTimeoutRef = useRef<number | null>(null);
 
@@ -76,91 +78,297 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
     setIsLoading(true);
 
-    if (currentStep === 1) {
-      try {
-        await createLineOfBusiness({
-          name: setupData.lineOfBusinessName,
-          timeZone: setupData.timeZone,
-          industry: setupData.industry,
-          businessSize: setupData.businessSize,
-          userId: user?.id,
+    try {
+      if (currentStep === 1) {
+        if (setupData.lineOfBusinessId) {
+          try {
+            // If we already have an ID, update instead of create
+            await updateLineOfBusiness({
+              id: setupData.lineOfBusinessId,
+              data: {
+                name: setupData.lineOfBusinessName,
+                timeZone: setupData.timeZone,
+                industry: setupData.industry,
+                businessSize: setupData.businessSize,
+                companyName: setupData.companyName,
+                companyId: user?.company?.id || setupData.companyId,
+                lineOfBusinessName: setupData.lineOfBusinessName,
+              },
+            }).unwrap();
+
+            toast.success("Step completed successfully!", {
+              description: "Line of Business updated. Moving to the next step...",
+              duration: 2000,
+            });
+          } catch (updateError: any) {
+            // Check for various forms of "Not Found" error
+            const isNotFoundError =
+              updateError?.status === 404 ||
+              updateError?.data?.message ||
+              updateError?.message;
+
+            // If update fails because it's not found, fall back to create
+            if (isNotFoundError) {
+              console.warn("Line of Business not found (caught via error check), creating new one...");
+
+              // Create new Line of Business
+              let targetCompanyId = user?.company?.id || setupData.companyId;
+              const response = await createLineOfBusiness({
+                name: setupData.lineOfBusinessName,
+                timeZone: setupData.timeZone,
+                industry: setupData.industry,
+                businessSize: setupData.businessSize,
+                userId: user?.id,
+                companyName: setupData.companyName,
+                companyId: targetCompanyId,
+                lineOfBusinessName: setupData.lineOfBusinessName,
+              }).unwrap();
+
+              // Use the companyId from the response if we didn't have one, or to be sure
+              if (response.lineOfBusiness?.companyId) {
+                targetCompanyId = response.lineOfBusiness.companyId;
+              }
+
+              let setupDataUpdated = false;
+
+              if (targetCompanyId) {
+                try {
+                  const fetchedData = await getLineOfBusiness(targetCompanyId).unwrap();
+
+                  const fetchedLoB = fetchedData.lineOfBusiness || fetchedData;
+                  if (fetchedLoB && fetchedLoB._id) {
+                    updateSetupData({
+                      lineOfBusinessId: fetchedLoB._id,
+                      companyName: fetchedLoB.companyName || setupData.companyName,
+                      companyId: fetchedLoB.companyId || setupData.companyId,
+                      lineOfBusinessName: fetchedLoB.lineOfBusinessName || fetchedLoB.name || setupData.lineOfBusinessName,
+                      timeZone: fetchedLoB.timeZone || setupData.timeZone,
+                      industry: fetchedLoB.industry || setupData.industry,
+                      businessSize: fetchedLoB.businessSize || setupData.businessSize,
+                    });
+                    setupDataUpdated = true;
+                  }
+                } catch (fetchError) {
+                  console.warn("Failed to fetch Line of Business by Company ID:", fetchError);
+                }
+              }
+
+              // Fallback to response data if fetch failed or returned no ID
+              if (!setupDataUpdated && response.lineOfBusiness?._id) {
+                updateSetupData({
+                  lineOfBusinessId: response.lineOfBusiness._id,
+                  companyName: response.lineOfBusiness.companyName || setupData.companyName,
+                  companyId: response.lineOfBusiness.companyId || setupData.companyId,
+                  lineOfBusinessName: response.lineOfBusiness.lineOfBusinessName || response.lineOfBusiness.name || setupData.lineOfBusinessName,
+                  timeZone: response.lineOfBusiness.timeZone || setupData.timeZone,
+                  industry: response.lineOfBusiness.industry || setupData.industry,
+                  businessSize: response.lineOfBusiness.businessSize || setupData.businessSize,
+                });
+              }
+
+              toast.success("Step completed successfully!", {
+                description: "Line of Business created. Moving to the next step...",
+                duration: 2000,
+              });
+            } else {
+              throw updateError;
+            }
+          }
+        } else {
+          // Create new Line of Business
+          let targetCompanyId = user?.company?.id || setupData.companyId;
+          const response = await createLineOfBusiness({
+            name: setupData.lineOfBusinessName,
+            timeZone: setupData.timeZone,
+            industry: setupData.industry,
+            businessSize: setupData.businessSize,
+            userId: user?.id,
+            companyName: setupData.companyName,
+            companyId: targetCompanyId,
+            lineOfBusinessName: setupData.lineOfBusinessName,
+          }).unwrap();
+
+
+
+          let setupDataUpdated = false;
+
+          if (response.lineOfBusiness?._id) {
+            try {
+              const fetchedData = await getLineOfBusiness(targetCompanyId).unwrap();
+              const fetchedLoB = fetchedData.lineOfBusiness || fetchedData;
+              if (fetchedLoB && fetchedLoB._id) {
+                updateSetupData({
+                  lineOfBusinessId: fetchedLoB._id,
+                  companyName: fetchedLoB.companyName || setupData.companyName,
+                  companyId: fetchedLoB.companyId || setupData.companyId,
+                  lineOfBusinessName: fetchedLoB.lineOfBusinessName || fetchedLoB.name || setupData.lineOfBusinessName,
+                  timeZone: fetchedLoB.timeZone || setupData.timeZone,
+                  industry: fetchedLoB.industry || setupData.industry,
+                  businessSize: fetchedLoB.businessSize || setupData.businessSize,
+                });
+                setupDataUpdated = true;
+              }
+            } catch (fetchError) {
+              console.warn("Failed to fetch Line of Business by Company ID:", fetchError);
+            }
+          }
+
+          // Fallback to response data if fetch failed or returned no ID
+          if (!setupDataUpdated && response.lineOfBusiness?._id) {
+            console.log("Using creation response as fallback for Setup Data");
+            updateSetupData({
+              lineOfBusinessId: response.lineOfBusiness._id,
+              companyName: response.lineOfBusiness.companyName || setupData.companyName,
+              companyId: response.lineOfBusiness.companyId || setupData.companyId,
+              lineOfBusinessName: response.lineOfBusiness.lineOfBusinessName || response.lineOfBusiness.name || setupData.lineOfBusinessName,
+              timeZone: response.lineOfBusiness.timeZone || setupData.timeZone,
+              industry: response.lineOfBusiness.industry || setupData.industry,
+              businessSize: response.lineOfBusiness.businessSize || setupData.businessSize,
+            });
+          }
+
+          toast.success("Step completed successfully!", {
+            description: "Line of Business created. Moving to the next step...",
+            duration: 2000,
+          });
+        }
+      } else {
+        if (!setupData.lineOfBusinessId) {
+          throw new Error("Line of Business ID is missing. Please restart the setup.");
+        }
+
+        let updateData = {};
+        switch (currentStep) {
+          case 2:
+            updateData = {
+              selectedLayout: setupData.selectedLayout,
+              primaryColor: setupData.primaryColor,
+              secondaryColor: setupData.secondaryColor,
+              navigationSettings: setupData.navigationSettings,
+            };
+            break;
+          case 3:
+            updateData = {
+              dashboardSettings: setupData.dashboardSettings,
+            };
+            break;
+          case 4:
+            // Ensure configuredFields is a clean array before sending
+            const cleanConfiguredFields = setupData.customerBookSettings.configuredFields.map(field => ({
+              id: field.id,
+              name: field.name,
+              type: field.type,
+              required: field.required
+            }));
+
+            updateData = {
+              customerBookSettings: {
+                ...setupData.customerBookSettings,
+                configuredFields: cleanConfiguredFields
+              },
+            };
+            break;
+          case 5:
+            updateData = {
+              userManagementSettings: setupData.userManagementSettings,
+            };
+            break;
+        }
+
+        await updateLineOfBusiness({
+          id: setupData.lineOfBusinessId,
+          data: updateData,
         }).unwrap();
 
         toast.success("Step completed successfully!", {
-          description: "Line of Business created. Moving to the next step...",
+          description: "Changes saved. Moving to the next step...",
           duration: 2000,
         });
-        onStepComplete();
-      } catch (error) {
-        console.error("Failed to create Line of Business:", error);
-        toast.error("Failed to save changes", {
-          description: "Could not create Line of Business. Please try again.",
-          duration: 4000,
-        });
-      } finally {
-        setIsLoading(false);
       }
+
+      onStepComplete();
+    } catch (error: any) {
+      console.error("Failed to save changes:", error);
+
+      // Extract error message from various possible locations in the error object
+      let errorMessage = "An unexpected error occurred. Please try again.";
+
+      if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.data?.error) {
+        errorMessage = error.data.error;
+      } else if (typeof error?.data === 'string') {
+        errorMessage = error.data;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error("Failed to save changes", {
+        description: errorMessage,
+        duration: 4000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmitForApproval = async () => {
+    if (!setupData.lineOfBusinessId) {
+      toast.error("Error", {
+        description: "Line of Business ID is missing. Please restart the setup.",
+      });
       return;
     }
 
-    toast.loading("Saving your progress...", {
-      id: "save-progress",
-      action: {
-        label: "Cancel",
-        onClick: () => {
-          if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-            saveTimeoutRef.current = null;
-          }
-          setIsLoading(false);
-          toast.dismiss("save-progress");
-        }
-      }
-    });
-
-    // Simulate save operation
-    saveTimeoutRef.current = window.setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Step completed successfully!", {
-        id: "save-progress",
-        description: "Moving to the next step...",
-        duration: 2000,
-      });
-      onStepComplete(); // Move to next step
-    }, 1500);
-  };
-
-  const handleSubmitForApproval = () => {
     setIsLoading(true);
     toast.loading("Submitting for approval...", {
       id: "submit-progress",
-      action: {
-        label: "Cancel",
-        onClick: () => {
-          if (submitTimeoutRef.current) {
-            clearTimeout(submitTimeoutRef.current);
-            submitTimeoutRef.current = null;
-          }
-          setIsLoading(false);
-          toast.dismiss("submit-progress");
-        }
-      }
     });
 
-    // Simulate submission
-    submitTimeoutRef.current = window.setTimeout(() => {
-      console.log('CRM configuration submitted for approval:', setupData);
+    try {
+      // Update the final step data
+      await updateLineOfBusiness({
+        id: setupData.lineOfBusinessId,
+        data: {
+          roleManagementSettings: setupData.roleManagementSettings,
+          permissionAccessSettings: setupData.permissionAccessSettings,
+          status: 'pending_approval', // Assuming there's a status field
+        },
+      }).unwrap();
+
       setIsLoading(false);
       toast.success("Configuration submitted successfully!", {
         id: "submit-progress",
         description: "Your CRM setup is now under review.",
         duration: 3000,
       });
+
       // Navigate to dashboard after approval
       window.setTimeout(() => {
         window.location.href = '/dashboard';
       }, 2000);
-    }, 2000);
+    } catch (error: any) {
+      console.error("Failed to submit:", error);
+      setIsLoading(false);
+
+      // Extract error message from various possible locations in the error object
+      let errorMessage = "Could not submit configuration. Please try again.";
+
+      if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.data?.error) {
+        errorMessage = error.data.error;
+      } else if (typeof error?.data === 'string') {
+        errorMessage = error.data;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error("Submission Failed", {
+        id: "submit-progress",
+        description: errorMessage,
+      });
+    }
   };
 
   const headerUser = user ? {
@@ -190,9 +398,13 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       <BottomNav
         onSave={handleSave}
         onBack={handleBack}
-        isLoading={isLoading}
-        disabled={isLoading}
-        buttonText={isLoading ? (currentStep === 6 ? 'Submitting...' : 'Saving...') : (currentStep === 6 ? 'Submit for Approval' : 'Save & Continue')}
+        isLoading={isLoading || isFetchingLineOfBusiness}
+        disabled={isLoading || isFetchingLineOfBusiness}
+        buttonText={
+          isLoading ? (currentStep === 6 ? 'Submitting...' : 'Saving...') :
+            isFetchingLineOfBusiness ? 'Checking...' :
+              (currentStep === 6 ? 'Submit for Approval' : 'Save & Continue')
+        }
         backText={getBackButtonText()}
         showBack={currentStep > 1}
       />

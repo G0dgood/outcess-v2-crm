@@ -8,6 +8,10 @@ import Checkbox from './Checkbox';
 import IndividualRadio from './IndividualRadio';
 import ColorPicker from './ColorPicker';
 import { Cross2Icon } from '@radix-ui/react-icons';
+import { useCreateStatusMutation, useUpdateStatusMutation } from '@/store/services/statusApi';
+import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface StatusFormData {
 	name: string;
@@ -17,24 +21,25 @@ interface StatusFormData {
 	color: string;
 }
 
+interface RoleOption {
+	id: string;
+	label: string;
+}
+
 interface CreateStatusModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onCreate: (data: StatusFormData) => void;
 	initialData?: Partial<StatusFormData> | null;
+	statusId?: string;
 }
 
-const roleOptions = [
-	{ id: 'agents', label: 'Agents' },
-	{ id: 'supervisors', label: 'Supervisors' },
-	{ id: 'admin', label: 'Admin' },
-];
+// Removed static roleOptions
 
 export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 	isOpen,
 	onClose,
-	onCreate,
 	initialData,
+	statusId,
 }) => {
 	const [formData, setFormData] = useState<StatusFormData>({
 		name: '',
@@ -46,7 +51,35 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 	const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
-	const isEditMode = !!initialData;
+	const { user } = useUserInfo();
+	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const companyId = user?.companyId || user?.company?._id;
+
+	const { data: rolesData } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
+		skip: !selectedLineOfBusinessId
+	});
+
+	const roleOptions: RoleOption[] = React.useMemo(() => {
+		if (!rolesData) return [];
+
+		const rawRoles = (Array.isArray(rolesData) ? rolesData :
+			(Array.isArray((rolesData as any)?.data) ? (rolesData as any).data :
+				(Array.isArray((rolesData as any)?.roles) ? (rolesData as any).roles :
+					(Array.isArray((rolesData as any)?.docs) ? (rolesData as any).docs :
+						[]))));
+
+		return rawRoles
+			.filter((role: Role) => (role._id || role.id))
+			.map((role: Role) => ({
+				id: (role._id || role.id)!,
+				label: role.roleName
+			}));
+	}, [rolesData]);
+
+	const [createStatus, { isLoading: isCreating }] = useCreateStatusMutation();
+	const [updateStatus, { isLoading: isUpdating }] = useUpdateStatusMutation();
+
+	const isEditMode = !!statusId;
 
 	useEffect(() => {
 		if (isOpen && initialData) {
@@ -117,9 +150,32 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 		}));
 	};
 
-	const handleCreate = () => {
+	const handleCreate = async () => {
 		if (formData.name.trim()) {
-			onCreate(formData);
+			try {
+				if (isEditMode && statusId) {
+					// Update existing status
+					await updateStatus({
+						id: statusId,
+						statusData: formData
+					}).unwrap();
+				} else {
+					// Create new status
+					if (companyId) {
+						await createStatus({
+							...formData,
+							companyId,
+							lineOfBusinessId: selectedLineOfBusinessId || undefined
+						}).unwrap();
+					} else {
+						console.error("Company ID missing, cannot create status");
+						return;
+					}
+				}
+				onClose();
+			} catch (error) {
+				console.error("Failed to save status:", error);
+			}
 		}
 	};
 
@@ -128,8 +184,8 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 			return 'Select roles';
 		}
 		const selectedLabels = roleOptions
-			.filter(role => formData.selectedRoles.includes(role.id))
-			.map(role => role.label)
+			.filter((role: RoleOption) => formData.selectedRoles.includes(role.id))
+			.map((role: RoleOption) => role.label)
 			.join(', ');
 		return selectedLabels;
 	};
@@ -138,16 +194,16 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
-			<div 
+			<div
 				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
-				<div 
+				<div
 					className="flex justify-between items-center p-6 border-b dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<h2 
+					<h2
 						className="text-xl font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
@@ -197,7 +253,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 
 					{/* Role Selection */}
 					<div>
-						<label 
+						<label
 							className="block text-sm font-medium dark:text-gray-300 mb-3"
 							style={{ color: 'var(--text-secondary)' }}
 						>
@@ -250,19 +306,22 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 												{isRoleDropdownOpen && (
 													<div className="dropdown-menu">
 														<div className="dropdown-options">
-															{roleOptions.map((role) => (
+															{roleOptions.map((role: RoleOption) => (
 																<label
 																	key={role.id}
 																	className="dropdown-option flex items-center gap-3 cursor-pointer"
 																	onClick={(e) => e.stopPropagation()}
 																>
-																	<Checkbox
-																		checked={formData.selectedRoles.includes(role.id)}
-																		onChange={() => handleRoleToggle(role.id)}
-																		size="small"
-																		label={role.label}
-																	/>
-
+																	<div className="flex items-center gap-2">
+																		<Checkbox
+																			checked={formData.selectedRoles.includes(role.id)}
+																			onChange={() => handleRoleToggle(role.id)}
+																			size="medium"
+																		/>
+																		<span className="text-sm dark:text-gray-300" style={{ color: 'var(--text-primary)' }}>
+																			{role.label}
+																		</span>
+																	</div>
 																</label>
 															))}
 														</div>
@@ -278,7 +337,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div 
+				<div
 					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>

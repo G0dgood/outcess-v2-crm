@@ -1,18 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
 import Checkbox from '@/components/ui/Checkbox';
-import { useSetup } from '@/contexts/SetupContext';
-import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
+import { useGetTeamMembersByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
 import PageHeading from '@/components/ui/PageHeading';
 import { Pencil1Icon, TrashIcon, ExclamationTriangleIcon, PersonIcon } from '@radix-ui/react-icons';
 import AddUserModal from '@/components/ui/AddUserModal';
 import DeleteUserModal from '@/components/ui/DeleteUserModal';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 
 interface User {
 	id: string;
@@ -26,9 +27,9 @@ interface User {
 
 const UsersPage: React.FC = () => {
 	const router = useRouter();
-	const { setupData } = useSetup();
-	const companyId = setupData?.companyId || '674e2a8706e2361668e82d73';
-	const { data: rolesDataResponse } = useGetRolesByCompanyIdQuery(companyId);
+	const { lineOfBusinessData } = useLineOfBusiness();
+	const lineOfBusinessId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
+	const { data: teamMembersResponse, isLoading } = useGetTeamMembersByLineOfBusinessIdQuery(lineOfBusinessId, { skip: !lineOfBusinessId });
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
@@ -39,35 +40,32 @@ const UsersPage: React.FC = () => {
 	const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
 	const [showInfoBanner, setShowInfoBanner] = useState(true);
-	const [users, setUsers] = useState<User[]>([
-		{
-			id: 'Sup1109',
-			firstName: 'Jane',
-			lastName: 'Doe',
-			email: 'janedoe@example.com',
-			phone: '08023456789',
-			role: 'Agent',
-			loginStatus: 'Logged In',
-		},
-		{
-			id: 'Sup1110',
-			firstName: 'John',
-			lastName: 'Smith',
-			email: 'johnsmith@example.com',
-			phone: '08023456790',
-			role: 'Supervisor',
-			loginStatus: 'Logged Out',
-		},
-		{
-			id: 'Sup1111',
-			firstName: 'Alice',
-			lastName: 'Johnson',
-			email: 'alicejohnson@example.com',
-			phone: '08023456791',
-			role: 'Agent',
-			loginStatus: 'Logged In',
-		},
-	]);
+	const [users, setUsers] = useState<User[]>([]);
+
+	useEffect(() => {
+		if (teamMembersResponse) {
+			// Handle different response structures
+			const rawMembers = teamMembersResponse.data || teamMembersResponse.teamMembers || teamMembersResponse || [];
+			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
+
+			const mappedUsers = membersList.map((member: any) => {
+				const fullName = member.name || '';
+				const [firstName, ...lastNameParts] = fullName.split(' ');
+				const lastName = lastNameParts.join(' ');
+
+				return {
+					id: member._id || member.id,
+					firstName: member.firstName || firstName || '',
+					lastName: member.lastName || lastName || '',
+					email: member.email || '',
+					phone: member.phone || '',
+					role: typeof member.role === 'object' ? (member.role.roleName || member.role.name) : (member.role || 'Agent'),
+					loginStatus: member.status || member.loginStatus || 'Logged Out',
+				};
+			});
+			setUsers(mappedUsers);
+		}
+	}, [teamMembersResponse]);
 
 	const filteredUsers = users.filter(user =>
 		user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -120,19 +118,7 @@ const UsersPage: React.FC = () => {
 		}
 	};
 
-	const roleOptions = useMemo(() => {
-		if (!rolesDataResponse) return [];
-
-		const rawRoles = rolesDataResponse.data || rolesDataResponse.roles || rolesDataResponse || [];
-		const rolesList = Array.isArray(rawRoles) ? rawRoles : (rawRoles.docs || []);
-
-		if (rolesList.length === 0) return [];
-
-		return rolesList.map((role: any) => ({
-			value: role.roleName,
-			label: role.roleName
-		}));
-	}, [rolesDataResponse]);
+	const roleOptions: { value: string; label: string }[] = [];
 
 
 
@@ -285,12 +271,6 @@ const UsersPage: React.FC = () => {
 									className="dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
-									ID
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
 									First Name
 								</th>
 								<th
@@ -338,7 +318,11 @@ const UsersPage: React.FC = () => {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							{currentUsers.map((user) => (
+							{isLoading ? (
+								<SVGLoaderFetch colSpan={8} text={''} />
+							) : currentUsers.length === 0 ? (
+								<NoRecordFound colSpan={8} />
+							) : currentUsers?.map((user) => (
 								<tr
 									key={user.id}
 									className="dark:hover:bg-gray-700"
@@ -356,12 +340,6 @@ const UsersPage: React.FC = () => {
 											onChange={(checked) => handleSelectUser(user.id, checked)}
 											size="medium"
 										/>
-									</td>
-									<td
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{user.id}
 									</td>
 									<td
 										className="dark:text-gray-100"
@@ -449,8 +427,8 @@ const UsersPage: React.FC = () => {
 				onPageChange={setCurrentPage}
 				showEllipsis={true}
 				maxVisiblePages={5}
-				primaryColor={setupData.primaryColor}
-				secondaryColor={setupData.secondaryColor}
+				primaryColor={lineOfBusinessData?.primaryColor || '#000000'}
+				secondaryColor={lineOfBusinessData?.secondaryColor || '#000000'}
 			/>
 
 			{/* Add User Modal */}

@@ -35,8 +35,6 @@ export default function UserManagementPage() {
 		skip: !companyId
 	});
 
-	console.log('setupData-----', setupData)
-
 	const { data: teamMembersResponse, isLoading: isTeamMembersLoading } = useGetTeamMembersByCompanyIdQuery(companyId, {
 		skip: !companyId
 	});
@@ -85,9 +83,7 @@ export default function UserManagementPage() {
 	}, [rolesDataResponse]);
 
 	const statusOptions = [
-		{ value: 'active', label: 'Active' },
 		{ value: 'inactive', label: 'Inactive' },
-		{ value: 'pending', label: 'Pending' }
 	];
 
 	const handleAddUser = async (userData: {
@@ -98,6 +94,7 @@ export default function UserManagementPage() {
 		role: string;
 		userId: string;
 		status: string;
+		password?: string;
 	}) => {
 		setIsLoading(true);
 		try {
@@ -109,6 +106,8 @@ export default function UserManagementPage() {
 				companyId: companyId,
 				status: userData.status,
 				userId: userData.userId,
+				password: userData.password,
+				lineOfBusinessId: setupData.lineOfBusinessId,
 			};
 
 			await createTeamMember(payload as any).unwrap();

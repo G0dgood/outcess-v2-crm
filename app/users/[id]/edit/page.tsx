@@ -8,7 +8,7 @@ import Dropdown from '@/components/ui/Dropdown';
 import PageHeading from '@/components/ui/PageHeading';
 import BackButton from '@/components/ui/BackButton';
 import { ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons';
-import { useSetup } from '@/contexts/SetupContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface User {
 	id: string;
@@ -24,8 +24,8 @@ const EditUserPage: React.FC = () => {
 	const router = useRouter();
 	const params = useParams();
 	const userId = params.id as string;
-	const { setupData } = useSetup();
-	const primaryColor = setupData.primaryColor || '#050711';
+	const { lineOfBusinessData } = useLineOfBusiness();
+	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
 
 	const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
 	const [showAlert, setShowAlert] = useState(true);

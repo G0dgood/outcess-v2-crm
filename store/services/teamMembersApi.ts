@@ -52,6 +52,10 @@ export const teamMembersApi = createApi({
              query: (companyId) => `api/v1/team-members/company/${companyId}`,
              providesTags: ['TeamMembers'],
         }),
+        getTeamMembersByLineOfBusinessId: builder.query<any, string>({
+             query: (lineOfBusinessId) => `api/v1/team-members/line-of-business/${lineOfBusinessId}`,
+             providesTags: ['TeamMembers'],
+        }),
         getTeamMemberById: builder.query<any, string>({
             query: (id) => `api/v1/team-members/${id}`,
             providesTags: ['TeamMembers'],
@@ -78,6 +82,7 @@ export const {
     useCreateTeamMemberMutation, 
     useGetTeamMembersQuery, 
     useGetTeamMembersByCompanyIdQuery,
+    useGetTeamMembersByLineOfBusinessIdQuery,
     useGetTeamMemberByIdQuery,
     useUpdateTeamMemberMutation, 
     useDeleteTeamMemberMutation 

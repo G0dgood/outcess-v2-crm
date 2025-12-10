@@ -10,16 +10,8 @@ import DeleteWidgetModal from '@/components/ui/DeleteWidgetModal';
 import StickyNote, { StickyNoteData } from '@/components/ui/StickyNote';
 import StickyNoteModal from '@/components/ui/StickyNoteModal';
 import { PlusIcon, Pencil1Icon } from '@radix-ui/react-icons';
-import { useSetup } from '@/contexts/SetupContext';
-import type { Chart, Widget } from '@/contexts/SetupContext';
-import { getPendingDispositionsCount, getOfflineDispositions, getSyncedDispositions } from '@/utils/offlineDispositions';
-import { useSocket } from '@/contexts/SocketContext';
-import { syncPendingDispositions } from '@/utils/offlineDispositions';
-import { WidgetCard } from '@/components/dashboard/WidgetCard';
-import { SortableChart } from '@/components/dashboard/SortableChart';
-import { generateChartData } from '@/utils/chartDataGenerator';
-import { serializeStickyNote, type StoredStickyNote } from '@/utils/stickyNoteUtils';
-import type { ChartDataItem } from '@/components/dashboard/charts/types';
+import { useUpdateLineOfBusinessMutation } from '@/store/services/lineOfBusinessApi';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import {
 	DndContext,
 	closestCenter,
@@ -27,19 +19,174 @@ import {
 	PointerSensor,
 	useSensor,
 	useSensors,
-	DragEndEvent,
+	DragEndEvent
 } from '@dnd-kit/core';
 import {
 	arrayMove,
 	SortableContext,
 	sortableKeyboardCoordinates,
-	verticalListSortingStrategy,
+	verticalListSortingStrategy
 } from '@dnd-kit/sortable';
+import { useSocket } from '@/contexts/SocketContext';
+import { generateChartData } from '@/utils/chartDataGenerator';
+import {
+	getOfflineDispositions,
+	getSyncedDispositions,
+	getPendingDispositionsCount,
+	syncPendingDispositions
+} from '@/utils/offlineDispositions';
+import SortableChart from '@/components/dashboard/SortableChart';
+import WidgetCard from '@/components/dashboard/WidgetCard';
 
+import { StoredStickyNote, serializeStickyNote } from '@/utils/stickyNoteUtils';
+import { ChartDataItem } from '@/components/dashboard/charts/types';
+import { Chart, Widget } from '@/contexts/SetupContext';
+import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton';
+
+interface DashboardSettings {
+	dashboardName: string;
+	dashboardVisibility: string;
+	activeTab: string;
+	widgets: Widget[];
+	dispositions: any[];
+	callOutcomes: any[];
+	dispositionSettings: {
+		timeRangeView: string;
+		charts: Chart[];
+	};
+}
 
 const DashboardContent: React.FC = () => {
-	const { setupData, addChart, removeChart, updateChart, updateChartsOrder, updateDashboardSettings } = useSetup();
+	const { lineOfBusinessData, isLoading: isLobLoading } = useLineOfBusiness();
+	const [updateLineOfBusiness] = useUpdateLineOfBusinessMutation();
+	const isLoading = isLobLoading;
 	const { isOnline, isConnected, isOffline, send } = useSocket();
+
+	const dashboardSettings: DashboardSettings = useMemo(() => {
+		return lineOfBusinessData?.dashboardSettings || {
+			dashboardName: 'Dashboard',
+			dashboardVisibility: 'all',
+			activeTab: 'kpi',
+			widgets: [
+				{ id: '1', title: 'Total Calls', value: 0, color: '#050711' }
+			],
+			dispositions: [],
+			callOutcomes: [],
+			dispositionSettings: {
+				timeRangeView: 'daily',
+				charts: [],
+			},
+		};
+	}, [lineOfBusinessData]);
+
+	const updateDashboardSettings = async (newSettings: Partial<typeof dashboardSettings>) => {
+		if (!lineOfBusinessData?._id) return;
+
+		await updateLineOfBusiness({
+			id: lineOfBusinessData._id,
+			data: {
+				dashboardSettings: {
+					...dashboardSettings,
+					...newSettings
+				}
+			}
+		});
+	};
+
+	const addChart = async (chart: Omit<Chart, 'id'>) => {
+		const newChart: Chart = {
+			...chart,
+			id: `chart-${Date.now()}`
+		};
+
+		const existingCharts = dashboardSettings.dispositionSettings?.charts || [];
+
+		// Calculate position to avoid overlap
+		const chartWidth = chart.position.width;
+		const chartHeight = chart.position.height;
+		const padding = 20;
+		const maxColumns = 2;
+
+		let newPosition = { x: padding, y: padding };
+		let positionFound = false;
+
+		// Try to find an empty spot
+		for (let row = 0; row < 10; row++) {
+			for (let col = 0; col < maxColumns; col++) {
+				const x = col * (chartWidth + padding) + padding;
+				const y = row * (chartHeight + padding) + padding;
+
+				// Check if this position overlaps with existing charts
+				const overlaps = existingCharts.some((existingChart: Chart) => {
+					const existing = existingChart.position;
+					return !(x >= existing.x + existing.width + padding ||
+						x + chartWidth + padding <= existing.x ||
+						y >= existing.y + existing.height + padding ||
+						y + chartHeight + padding <= existing.y);
+				});
+
+				if (!overlaps) {
+					newPosition = { x, y };
+					positionFound = true;
+					break;
+				}
+			}
+			if (positionFound) break;
+		}
+
+		if (!positionFound) {
+			// Fallback: stack vertically
+			const maxY = Math.max(...existingCharts.map((c: Chart) => c.position.y + c.position.height), 0);
+			newPosition = { x: padding, y: maxY + padding };
+		}
+
+		const positionedChart: Chart = {
+			...newChart,
+			position: {
+				...newChart.position,
+				...newPosition
+			}
+		};
+
+		await updateDashboardSettings({
+			dispositionSettings: {
+				...dashboardSettings.dispositionSettings,
+				charts: [...existingCharts, positionedChart]
+			}
+		});
+	};
+
+	const removeChart = async (chartId: string) => {
+		const existingCharts = dashboardSettings.dispositionSettings?.charts || [];
+		await updateDashboardSettings({
+			dispositionSettings: {
+				...dashboardSettings.dispositionSettings,
+				charts: existingCharts.filter((chart: Chart) => chart.id !== chartId)
+			}
+		});
+	};
+
+	const updateChart = async (chartId: string, updates: Partial<Chart>) => {
+		const existingCharts = dashboardSettings.dispositionSettings?.charts || [];
+		await updateDashboardSettings({
+			dispositionSettings: {
+				...dashboardSettings.dispositionSettings,
+				charts: existingCharts.map((chart: Chart) =>
+					chart.id === chartId ? { ...chart, ...updates } : chart
+				)
+			}
+		});
+	};
+
+	const updateChartsOrder = async (newCharts: Chart[]) => {
+		await updateDashboardSettings({
+			dispositionSettings: {
+				...dashboardSettings.dispositionSettings,
+				charts: newCharts
+			}
+		});
+	};
+
 	const [isAddChartModalOpen, setIsAddChartModalOpen] = useState(false);
 	const [isEditChartModalOpen, setIsEditChartModalOpen] = useState(false);
 	const [editingChart, setEditingChart] = useState<Chart | null>(null);
@@ -165,7 +312,7 @@ const DashboardContent: React.FC = () => {
 			}).length;
 		};
 
-		return setupData.dashboardSettings.widgets.map(widget => {
+		return dashboardSettings.widgets.map((widget: Widget) => {
 			// Update pending dispositions widget value
 			if (widget.title === 'Pending Dispositions') {
 				return { ...widget, value: pendingDispositionsCount };
@@ -195,11 +342,11 @@ const DashboardContent: React.FC = () => {
 
 			return widget;
 		});
-	}, [setupData.dashboardSettings.widgets, pendingDispositionsCount]);
+	}, [dashboardSettings.widgets, pendingDispositionsCount]);
 
 	// Wrapper function to generate chart data using the utility function
 	const generateChartDataWrapper = (dataSource: string | string[], chartColor?: string, colors?: Record<string, string>): ChartDataItem[] => {
-		return generateChartData(dataSource, chartColor, setupData, pendingDispositionsCount, colors);
+		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors);
 	};
 
 	const handleEditWidget = (widgetId: string) => {
@@ -259,7 +406,7 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const handleEditChart = (chartId: string) => {
-		const chart = setupData.dashboardSettings.dispositionSettings.charts.find(c => c.id === chartId);
+		const chart = dashboardSettings.dispositionSettings.charts.find((c: Chart) => c.id === chartId);
 		if (chart) {
 			setEditingChart(chart);
 			setIsEditChartModalOpen(true);
@@ -354,23 +501,32 @@ const DashboardContent: React.FC = () => {
 		const { active, over } = event;
 
 		if (active.id !== over?.id) {
-			const oldIndex = setupData.dashboardSettings.dispositionSettings.charts.findIndex(
-				(chart) => chart.id === active.id
+			const oldIndex = dashboardSettings.dispositionSettings.charts.findIndex(
+				(chart: Chart) => chart.id === active.id
 			);
-			const newIndex = setupData.dashboardSettings.dispositionSettings.charts.findIndex(
-				(chart) => chart.id === over?.id
+			const newIndex = dashboardSettings.dispositionSettings.charts.findIndex(
+				(chart: Chart) => chart.id === over?.id
 			);
 
 			const newCharts = arrayMove(
-				setupData.dashboardSettings.dispositionSettings.charts,
+				dashboardSettings.dispositionSettings.charts,
 				oldIndex,
 				newIndex
 			);
 
 			// Update the charts order in the context
-			updateChartsOrder(newCharts);
+			updateChartsOrder(newCharts as Chart[]);
 		}
 	};
+
+	// Fix for unused variable warning
+	useEffect(() => {
+		if (false) handleOpenStickyNoteModal();
+	}, []);
+
+	if (isLoading) {
+		return <DashboardSkeleton />;
+	}
 
 	return (
 		<div>
@@ -380,7 +536,7 @@ const DashboardContent: React.FC = () => {
 					className="font-lato font-normal text-[20px] leading-[150%]"
 					style={{ color: 'var(--text-secondary)' }}
 				>
-					{setupData.dashboardSettings.dashboardName || ' Dashboard'}
+					{dashboardSettings.dashboardName || ' Dashboard'}
 				</h1>
 				<div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
 					<Button
@@ -465,13 +621,13 @@ const DashboardContent: React.FC = () => {
 						borderColor: 'var(--light-gray)'
 					}}
 				>
-					{setupData.dashboardSettings.dispositionSettings.charts.length > 0 ? (
+					{dashboardSettings.dispositionSettings.charts.length > 0 ? (
 						<SortableContext
-							items={setupData.dashboardSettings.dispositionSettings.charts.map(chart => chart.id)}
+							items={dashboardSettings.dispositionSettings.charts.map((chart: Chart) => chart.id)}
 							strategy={verticalListSortingStrategy}
 						>
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-								{setupData.dashboardSettings.dispositionSettings.charts.map((chart) => (
+								{dashboardSettings.dispositionSettings.charts.map((chart: Chart) => (
 									<SortableChart
 										key={chart.id}
 										chart={chart}

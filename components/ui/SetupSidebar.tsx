@@ -8,7 +8,6 @@ import {
 	BackpackIcon,
 	ChevronRightIcon
 } from '@radix-ui/react-icons';
-import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface SetupStep {
@@ -30,9 +29,8 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 	className = '',
 	isMobile = false,
 }) => {
-	const { setupData } = useSetup();
 	const { isDarkMode } = useTheme();
-	const secondaryColor = setupData.secondaryColor || '#6C8B7D';
+	const secondaryColor = '#6C8B7D';
 
 	const setupSteps: SetupStep[] = [
 		{

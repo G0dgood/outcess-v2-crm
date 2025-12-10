@@ -17,6 +17,7 @@ export interface CreateLineOfBusinessResponse {
 
 export const lineOfBusinessApi = createApi({
     reducerPath: 'lineOfBusinessApi',
+    tagTypes: ['LineOfBusiness'],
     baseQuery: fetchBaseQuery({ 
         baseUrl: process.env.base_url,
         prepareHeaders: (headers, { getState }) => {
@@ -34,11 +35,36 @@ export const lineOfBusinessApi = createApi({
                 method: 'POST',
                 body: data,
             }),
+            invalidatesTags: ['LineOfBusiness'],
         }),
         getLineOfBusiness: builder.query<any, string>({
              query: (id) => `api/v1/line-of-business/${id}`,
+             providesTags: ['LineOfBusiness'],
+        }),
+        getLineOfBusinessByCompanyId: builder.query<any, string>({
+            query: (companyId) => `api/v1/line-of-business/company/${companyId}`,
+            providesTags: ['LineOfBusiness'],
+        }),
+        getLineOfBusinessByCompanyIdForheader: builder.query<any, string>({
+            query: (companyId) => `api/v1/line-of-business/company/${companyId}/header`,
+            providesTags: ['LineOfBusiness'],
+        }),
+        updateLineOfBusiness: builder.mutation<any, { id: string; data: any }>({
+            query: ({ id, data }) => ({
+                url: `api/v1/line-of-business/${id}`,
+                method: 'PATCH',
+                body: data,
+            }),
+            invalidatesTags: ['LineOfBusiness'],
         }),
     }),
 });
 
-export const { useCreateLineOfBusinessMutation, useGetLineOfBusinessQuery } = lineOfBusinessApi;
+export const {
+    useCreateLineOfBusinessMutation,
+    useGetLineOfBusinessQuery,
+    useUpdateLineOfBusinessMutation, 
+    useGetLineOfBusinessByCompanyIdQuery, 
+    useLazyGetLineOfBusinessByCompanyIdQuery,
+    useGetLineOfBusinessByCompanyIdForheaderQuery
+} = lineOfBusinessApi;

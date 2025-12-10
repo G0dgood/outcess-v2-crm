@@ -13,9 +13,13 @@ import ThemeToggle from './ThemeToggle';
 import { plusJakartaStyle } from '../Options';
 import { useSocket } from '@/contexts/SocketContext';
 import { playNotificationSound } from '@/utils/soundEffects';
-import { useAuth } from '@/contexts/AuthContext';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { setNavigating } from '@/utils/navigationState';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useGetLineOfBusinessByCompanyIdForheaderQuery } from '@/store/services/lineOfBusinessApi';
+import { useLogoutMutation } from '@/store/services/authApi';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout as logoutAction } from '@/store/slices/authSlice';
 
 interface DashboardHeaderProps {
 	companyName?: string;
@@ -34,9 +38,9 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
-	companyName = 'Fairmoney',
-	userName = 'John Doe',
-	userEmail = 'johndoe@example.com',
+	companyName,
+	userName,
+	userEmail,
 	userAvatar,
 	userIsOnline = true,
 	onCompanyChange,
@@ -44,23 +48,51 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	onStatusClick,
 	onEditProfileClick,
 	onLogoutClick,
-	companyOptions = [
-		{ value: 'Fairmoney', label: 'Fairmoney' },
-		{ value: 'Company 2', label: 'Company 2' },
-		{ value: 'Company 3', label: 'Company 3' },
-	],
+	companyOptions = [],
 	onMobileMenuToggle,
 }) => {
 	const router = useRouter();
+	const dispatch = useDispatch();
 	const pathname = usePathname();
 	const [hasStickyNotes, setHasStickyNotes] = useState(false);
 	const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
 	const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
 	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket } = useSocket();
-	const { logout: authLogout, user: authUser } = useAuth();
+	const [logoutApi] = useLogoutMutation();
+
+	// Get user from Redux store
+	const reduxUser = useSelector((state: any) => state.auth.user);
+
+	// Determine the effective user to display
+	const displayUser = reduxUser ? {
+		...reduxUser,
+		name: reduxUser.name || reduxUser.username || `${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim() || 'User',
+		email: reduxUser.email,
+		avatar: reduxUser.avatar,
+		companyId: reduxUser.companyId || reduxUser.company?._id
+	} : null;
+
 	const previousUnreadCount = useRef(0);
 	const previousPathname = useRef(pathname);
 	const isNavigating = useRef(false);
+	const { setSelectedLineOfBusinessId, isLoading: isLobLoading, lineOfBusinessData: selectedLOBData } = useLineOfBusiness();
+	const companyId = selectedLOBData?.companyId || displayUser?.companyId || (displayUser?.company as any)?._id || '';
+
+	const { data: lineOfBusinessData } = useGetLineOfBusinessByCompanyIdForheaderQuery(companyId, {
+		skip: !companyId
+	});
+
+	const [lobOptions, setLobOptions] = useState<{ value: string; label: string; }[]>([]);
+
+	useEffect(() => {
+		if (lineOfBusinessData && lineOfBusinessData.lineOfBusinesses) {
+			const options = lineOfBusinessData.lineOfBusinesses.map((lob: any) => ({
+				value: lob._id,
+				label: lob.lineOfBusinessName
+			}));
+			setLobOptions(options);
+		}
+	}, [lineOfBusinessData]);
 
 	// Track navigation to prevent sounds during page switches
 	useEffect(() => {
@@ -122,11 +154,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	// Handle logout
 	const handleLogout = async () => {
 		try {
+			// Call API to invalidate session on server
+			await logoutApi().unwrap();
+
 			// Disconnect socket connection
 			disconnectSocket();
-
-			// Logout from auth context
-			await authLogout();
+			// Logout from Redux
+			dispatch(logoutAction());
 
 			// Show success message
 			toastSuccess('Logged out successfully');
@@ -137,6 +171,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 			}, 500);
 		} catch (error) {
 			console.error('Logout error:', error);
+
+			// Still perform client-side cleanup even if API fails
+			disconnectSocket();
+			dispatch(logoutAction());
+
 			// Even if there's an error, redirect to login
 			router.push('/login');
 		}
@@ -255,14 +294,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 					<Dropdown
 						label=""
-						value={companyName}
+						value={selectedLOBData?.lineOfBusiness?._id || selectedLOBData?._id || ''}
 						onChange={(value) => {
 							const stringValue = Array.isArray(value) ? value[0] : value;
-							onCompanyChange?.(stringValue);
+							if (stringValue) {
+								setSelectedLineOfBusinessId(stringValue);
+							}
 						}}
-						options={companyOptions}
-						className="min-w-[140px]"
-						inputClassName="h-8"
+						options={lobOptions}
+						placeholder={isLobLoading ? "Loading..." : "Select Business"}
+						className="min-w-[150px]"
 					/>
 
 					{/* Sticky Notes Icon - Only show if notes exist */}
@@ -300,11 +341,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 							<Icon name="Bell_light" size="3xl" />
 						</button>
 
-
-
-
-
-
 						<NotificationDropdown
 							isOpen={isNotificationPanelOpen}
 							onClose={() => setIsNotificationPanelOpen(false)}
@@ -326,9 +362,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 					{/* User Dropdown */}
 					<UserDropdown
-						userName={authUser?.name || userName}
-						userEmail={authUser?.email || userEmail}
-						userAvatar={authUser?.avatar || userAvatar}
+						userName={displayUser?.name || userName}
+						userEmail={displayUser?.email || userEmail}
+						userAvatar={displayUser?.avatar || userAvatar}
 						isOnline={userIsOnline && isOnline && !isOffline && socketStatus !== 'offline'}
 						onStatusClick={onStatusClick}
 						onEditProfileClick={onEditProfileClick}

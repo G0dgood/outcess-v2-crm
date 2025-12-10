@@ -1,9 +1,23 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
+export interface Role {
+    _id: string;
+    id?: string;
+    roleName: string;
+    description: string;
+    companyId: string;
+    lineOfBusinessId?: string;
+    permissions: Record<string, boolean>;
+    userCount?: number;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
 export interface CreateRoleRequest {
     roleName: string;
     description: string;
     companyId: string;
+    lineOfBusinessId?: string;
     permissions: Record<string, boolean>;
 }
 
@@ -34,11 +48,15 @@ export const roleApi = createApi({
             }),
             invalidatesTags: ['Roles'],
         }),
-        getRolesByCompanyId: builder.query<any, string>({
+        getRolesByCompanyId: builder.query<Role[], string>({
              query: (companyId) => `api/v1/roles/company/${companyId}`,
              providesTags: ['Roles'],
         }),
-        updateRole: builder.mutation<any, { id: string; roleData: Partial<CreateRoleRequest> }>({
+        getRolesByLineOfBusinessId: builder.query<Role[], string>({
+             query: (lineOfBusinessId) => `api/v1/roles/line-of-business/${lineOfBusinessId}`,
+             providesTags: ['Roles'],
+        }),
+        updateRole: builder.mutation<Role, { id: string; roleData: Partial<CreateRoleRequest> }>({
             query: ({ id, roleData }) => ({
                 url: `api/v1/roles/${id}`,
                 method: 'PATCH',
@@ -56,4 +74,4 @@ export const roleApi = createApi({
     }),
 });
 
-export const { useCreateRoleMutation, useGetRolesByCompanyIdQuery, useUpdateRoleMutation, useDeleteRoleMutation } = roleApi;
+export const { useCreateRoleMutation, useGetRolesByCompanyIdQuery, useGetRolesByLineOfBusinessIdQuery, useUpdateRoleMutation, useDeleteRoleMutation } = roleApi;

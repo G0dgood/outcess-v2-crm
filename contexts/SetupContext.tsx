@@ -1,7 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
 import { useUserInfo } from '@/contexts/UserInfoContext';
+import { useGetLineOfBusinessByCompanyIdQuery } from '@/store/services/lineOfBusinessApi';
+import { LineOfBusinessProvider, useLineOfBusiness } from './LineOfBusinessContext';
 
 interface SetupStep {
 	id: string;
@@ -99,6 +101,7 @@ interface RolePermissions {
 }
 
 interface SetupData {
+	lineOfBusinessId?: string;
 	companyName: string;
 	companyId: string;
 	lineOfBusinessName: string;
@@ -157,6 +160,7 @@ interface SetupContextType {
 	onStepComplete: () => void;
 	onStepBack: () => void;
 	isLoading: boolean;
+	isFetchingLineOfBusiness: boolean;
 	setIsLoading: (loading: boolean) => void;
 	setupData: SetupData;
 	updateSetupData: (data: Partial<SetupData>) => void;
@@ -190,9 +194,13 @@ interface SetupProviderProps {
 
 export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const { user } = useUserInfo();
+
+	// Initialize state first so we can use setupData in the query logic
 	const [currentStep, setCurrentStep] = useState(1);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isInitialized, setIsInitialized] = useState(false);
 	const [setupData, setSetupData] = useState<SetupData>({
+		lineOfBusinessId: '',
 		companyName: '',
 		companyId: '',
 		lineOfBusinessName: '',
@@ -311,7 +319,61 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		},
 	});
 
-	// console.log('setupData----->', JSON.stringify(setupData, null, 2));
+	// Use either user's company ID or the one from setupData (e.g., from localStorage)
+	const companyIdToUse = user?.company?._id || user?.company?.id || setupData.companyId;
+
+	const { data: existingLineOfBusiness, isLoading: isFetchingLineOfBusiness } = useGetLineOfBusinessByCompanyIdQuery(
+		companyIdToUse || '',
+		{ skip: !companyIdToUse }
+	);
+
+
+
+	useEffect(() => {
+		if (existingLineOfBusiness) {
+			const dataToUse = existingLineOfBusiness.lineOfBusiness || existingLineOfBusiness;
+			setSetupData(prev => ({
+				...prev,
+				lineOfBusinessId: dataToUse._id,
+				companyName: dataToUse.companyName || prev.companyName,
+				companyId: dataToUse.companyId || prev.companyId,
+				lineOfBusinessName: dataToUse.lineOfBusinessName || dataToUse.name || prev.lineOfBusinessName,
+				timeZone: dataToUse.timeZone || prev.timeZone,
+				industry: dataToUse.industry || prev.industry,
+				businessSize: dataToUse.businessSize || prev.businessSize,
+				selectedLayout: dataToUse.selectedLayout || prev.selectedLayout,
+				primaryColor: dataToUse.primaryColor || prev.primaryColor,
+				secondaryColor: dataToUse.secondaryColor || prev.secondaryColor,
+				navigationSettings: {
+					...prev.navigationSettings,
+					...(dataToUse.navigationSettings || {}),
+				},
+				dashboardSettings: {
+					...prev.dashboardSettings,
+					...(dataToUse.dashboardSettings || {}),
+				},
+				customerBookSettings: {
+					...prev.customerBookSettings,
+					...(dataToUse.customerBookSettings || {}),
+					configuredFields: Array.isArray(dataToUse.customerBookSettings?.configuredFields)
+						? dataToUse.customerBookSettings.configuredFields
+						: (prev.customerBookSettings.configuredFields || [])
+				},
+				userManagementSettings: {
+					...prev.userManagementSettings,
+					...(dataToUse.userManagementSettings || {}),
+				},
+				roleManagementSettings: {
+					...prev.roleManagementSettings,
+					...(dataToUse.roleManagementSettings || {}),
+				},
+				permissionAccessSettings: {
+					...prev.permissionAccessSettings,
+					...(dataToUse.permissionAccessSettings || {}),
+				},
+			}));
+		}
+	}, [existingLineOfBusiness]);
 
 	// Load from localStorage on mount
 	useEffect(() => {
@@ -338,18 +400,19 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 					console.error('Error parsing setup data from localStorage:', error);
 				}
 			}
+			setIsInitialized(true);
 		}
 	}, []);
 
 	// Save to localStorage whenever setupData changes
 	useEffect(() => {
-		if (typeof window !== 'undefined') {
+		if (typeof window !== 'undefined' && isInitialized) {
 			localStorage.setItem('peoplely-setup-data', JSON.stringify(setupData));
 		}
-	}, [setupData]);
+	}, [setupData, isInitialized]);
 
 	useEffect(() => {
-		const userCompanyId = user?.company?._id;
+		const userCompanyId = user?.company?._id || user?.company?.id;
 		if (userCompanyId && !setupData.companyId) {
 			setSetupData(prev => ({ ...prev, companyId: userCompanyId }));
 		}
@@ -658,6 +721,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		updateRoleManagementSettings,
 		updatePermissionAccessSettings,
 		setupSteps,
+		isFetchingLineOfBusiness,
 	};
 
 	return (

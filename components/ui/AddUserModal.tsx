@@ -17,6 +17,7 @@ interface AddUserModalProps {
 		role: string;
 		userId: string;
 		status: string;
+		password?: string;
 	}) => void;
 	roleOptions: { value: string; label: string; }[];
 	onAddFields?: () => void;
@@ -39,6 +40,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 		role: '',
 		userId: '',
 		status: '',
+		password: '',
 	});
 
 	const statusOptions = [
@@ -57,6 +59,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 				role: '',
 				userId: '',
 				status: '',
+				password: '',
 			});
 		}
 	}, [isOpen]);
@@ -67,7 +70,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 	};
 
 	const handleSave = () => {
-		if (formData.firstName && formData.lastName && formData.email && formData.phone && formData.role) {
+		if (formData.firstName && formData.lastName && formData.email && formData.phone && formData.role && formData.password) {
 			onSave(formData);
 		}
 	};
@@ -112,7 +115,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 				</div>
 
 				{/* Modal Form */}
-				<div className="p-6 space-y-6">
+				<div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
 					<Input
 						label="First Name"
 						placeholder="Enter First Name"
@@ -152,6 +155,15 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 						value={formData.phone}
 						onChange={handleInputChange('phone')}
 						type="tel"
+						required
+					/>
+
+					<Input
+						label="Password"
+						placeholder="Enter Password"
+						value={formData.password}
+						onChange={handleInputChange('password')}
+						type="password"
 						required
 					/>
 
@@ -204,7 +216,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 							variant="primary"
 							size="md"
 							onClick={handleSave}
-							disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.role || !formData.status || isLoading}
+							disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.role || !formData.status || !formData.password || isLoading}
 							loading={isLoading}
 						>
 							Save

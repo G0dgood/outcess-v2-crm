@@ -1,19 +1,25 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
+import { toast } from 'sonner';
 import Input from '@/components/ui/Input';
 import PasswordInput from '@/components/ui/PasswordInput';
 import Checkbox from '@/components/ui/Checkbox';
 import ArtworkCarousel from '@/components/ui/ArtworkCarousel';
 import PricingModal from '@/components/ui/PricingModal';
 import LoginTopHeader from '@/components/ui/LoginTopHeader';
-import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLoginMutation } from '@/store/services/authApi';
+import { login as loginAction } from '@/store/slices/authSlice';
 
 export default function LoginPage() {
-	const { setupData } = useSetup();
+	const router = useRouter();
+	const dispatch = useDispatch();
+	const [login] = useLoginMutation();
 	const { isDarkMode } = useTheme();
-	const primaryColor = setupData.primaryColor || '#050711';
+	const primaryColor = '#050711';
 	const [formData, setFormData] = useState({
 		email: '',
 		password: '',
@@ -52,12 +58,51 @@ export default function LoginPage() {
 		setErrors(newErrors);
 
 		if (Object.keys(newErrors).length === 0) {
-			// Simulate login API call
-			setTimeout(() => {
-				console.log('Login successful:', formData);
+			try {
+				const response = await login({
+					email: formData.email,
+					password: formData.password,
+				}).unwrap();
+
+				// Based on the provided response structure:
+				// { message: "...", user: { ...userFields, token: "..." } }
+				// The token is inside the user object.
+
+				const user = response.user || response;
+				const token = user?.token || response.token;
+
+				if (user && token) {
+					// Normalize user object
+					const normalizedUser = {
+						...user,
+						id: user.id || user._id
+					};
+
+					// Remove token from user object to keep it clean in state
+					// (Optional, but good practice if token is stored separately)
+					// const { token: _, ...userWithoutToken } = normalizedUser; 
+
+					dispatch(loginAction({
+						user: normalizedUser,
+						tokens: { accessToken: token }
+					}));
+
+					// Save to localStorage for persistence
+					localStorage.setItem('token', token);
+					localStorage.setItem('peoplely-user', JSON.stringify(normalizedUser));
+
+					toast.success('Login successful!');
+					router.push('/dashboard');
+				} else {
+					console.error('Login failed: Missing user or token in response', response);
+					toast.error('Login failed: Invalid response from server');
+					setIsLoading(false);
+				}
+			} catch (err: any) {
+				console.error('Login error:', err);
+				toast.error(err?.data?.message || 'Invalid email or password');
 				setIsLoading(false);
-				alert('Login successful!');
-			}, 1500);
+			}
 		} else {
 			setIsLoading(false);
 		}

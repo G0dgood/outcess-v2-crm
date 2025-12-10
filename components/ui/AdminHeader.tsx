@@ -9,6 +9,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { useRouter } from 'next/navigation';
 import { toastSuccess } from '@/utils/toastWithSound';
+import { useDispatch } from 'react-redux';
+import { useLogoutMutation } from '@/store/services/authApi';
+import { logout as logoutAction } from '@/store/slices/authSlice';
 
 interface AdminHeaderProps {
 	userName?: string;
@@ -32,17 +35,22 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 	onMobileMenuToggle,
 }) => {
 	const router = useRouter();
-	const { logout: authLogout, user: authUser } = useAuth();
+    const dispatch = useDispatch();
+	const { user: authUser } = useAuth();
 	const { disconnect: disconnectSocket } = useSocket();
+    const [logoutApi] = useLogoutMutation();
 
 	// Handle logout
 	const handleLogout = async () => {
 		try {
+            // Call API to invalidate session on server
+            await logoutApi().unwrap();
+
 			// Disconnect socket connection
 			disconnectSocket();
 
-			// Logout from auth context
-			await authLogout();
+			// Logout from Redux
+            dispatch(logoutAction());
 
 			// Show success message
 			toastSuccess('Logged out successfully');
@@ -53,6 +61,11 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 			}, 500);
 		} catch (error) {
 			console.error('Logout error:', error);
+            
+            // Still perform client-side cleanup
+            disconnectSocket();
+            dispatch(logoutAction());
+            
 			// Even if there's an error, redirect to login
 			router.push('/login');
 		}

@@ -99,15 +99,11 @@ export default function RolePermissionManagementPage() {
 		const roleToUpdate = roles.find((r: Role) => r._id === roleId);
 		if (roleToUpdate) {
 			const currentPermissions = roleToUpdate.permissions || {};
-			// Start with a copy of current permissions to preserve all keys (including granular permissions)
-			const updatedPermissions: Record<string, boolean> = { ...currentPermissions };
+			const updatedPermissions: Record<string, boolean> = {};
 
 			// Ensure all modules are included to prevent data loss if backend does full replace
-			// and to ensure they have a value (default to false if missing)
 			roleManagementSettings.modules.forEach(module => {
-				if (updatedPermissions[module.id] === undefined) {
-					updatedPermissions[module.id] = false;
-				}
+				updatedPermissions[module.id] = currentPermissions[module.id] || false;
 			});
 
 			updatedPermissions[moduleId] = enabled;

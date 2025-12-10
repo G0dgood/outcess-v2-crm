@@ -8,6 +8,7 @@ import { authApi } from './services/authApi';
 import { companyApi } from './services/companyApi';
 import { lineOfBusinessApi } from './services/lineOfBusinessApi';
 import { roleApi } from './services/roleApi';
+import { statusApi } from './services/statusApi';
 import { teamMembersApi } from './services/teamMembersApi';
 
 export const store = configureStore({
@@ -20,6 +21,7 @@ export const store = configureStore({
 		[companyApi.reducerPath]: companyApi.reducer,
 		[lineOfBusinessApi.reducerPath]: lineOfBusinessApi.reducer,
 		[roleApi.reducerPath]: roleApi.reducer,
+		[statusApi.reducerPath]: statusApi.reducer,
 		[teamMembersApi.reducerPath]: teamMembersApi.reducer,
 	},
 	middleware: (getDefaultMiddleware) =>
@@ -32,6 +34,7 @@ export const store = configureStore({
 			.concat(companyApi.middleware)
 			.concat(lineOfBusinessApi.middleware)
 			.concat(roleApi.middleware)
+			.concat(statusApi.middleware)
 			.concat(teamMembersApi.middleware),
 });
 

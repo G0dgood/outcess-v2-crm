@@ -1,12 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import CreateStatusModal from './CreateStatusModal';
 import DeleteStatusModal from './DeleteStatusModal';
 import { TrashIcon, Pencil1Icon } from '@radix-ui/react-icons';
 import SubPageHeading from './SubPageHeading';
 import PageHeading from './PageHeading';
+import { useSocket } from '@/contexts/SocketContext';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import {
+	useGetStatusesByLineOfBusinessIdQuery,
+	useDeleteStatusMutation
+} from '@/store/services/statusApi';
+import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
+import { NoRecordFound, SVGLoaderFetch } from '../Options';
 
 interface StatusItem {
 	id: string;
@@ -31,79 +40,127 @@ interface StatusProps {
 	className?: string;
 }
 
-const roleLabels: { [key: string]: string } = {
-	'agents': 'Agents',
-	'supervisors': 'Supervisors',
-	'admin': 'Admin',
-};
+// Removed static roleLabels
 
 const Status: React.FC<StatusProps> = ({ className = '' }) => {
-	const [statuses, setStatuses] = useState<StatusItem[]>([
-		{
-			id: '1',
-			name: 'Available/Ready',
-			description: 'The user is logged In and ready to receive calls.',
-			role: 'All users',
-			roleSelection: 'all',
-			color: '#10B981',
-		},
-		{
-			id: '2',
-			name: 'Busy',
-			description: 'The user is currently engaged in a call or activity and cannot receive new calls',
-			role: 'All users',
-			roleSelection: 'all',
-			color: '#EF4444',
-		},
-		{
-			id: '3',
-			name: 'On Call',
-			description: 'The user is actively on a call.',
-			role: 'Agents',
-			roleSelection: 'selected',
-			selectedRoles: ['agents'],
-			color: '#3B82F6',
-		},
-		{
-			id: '4',
-			name: 'After Call Work (ACW)',
-			description: 'The user is completing tasks related to a call after It has ended.',
-			role: 'Agents, Supervisors',
-			roleSelection: 'selected',
-			selectedRoles: ['agents', 'supervisors'],
-			color: '#F59E0B',
-		},
-		{
-			id: '5',
-			name: 'Away',
-			description: 'The user is temporarily unavailable but still logged In (restroom break).',
-			role: 'All users',
-			roleSelection: 'all',
-			color: '#A855F7',
-		},
-		{
-			id: '6',
-			name: 'On Break',
-			description: 'The user is taking a scheduled break.',
-			role: 'All users',
-			roleSelection: 'all',
-			color: '#6366F1',
-		},
-		{
-			id: '7',
-			name: 'In a Meeting',
-			description: 'The user is engaged In a meeting and unavailable for calls.',
-			role: 'Supervisors',
-			roleSelection: 'selected',
-			selectedRoles: ['supervisors'],
-			color: '#14B8A6',
-		},
-	]);
+	const [statuses, setStatuses] = useState<StatusItem[]>([]);
+	const { user } = useUserInfo();
+	const { selectedLineOfBusinessId } = useLineOfBusiness();
+
+	const { data: rolesData } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
+		skip: !selectedLineOfBusinessId
+	});
+
+	const roleLabels = React.useMemo(() => {
+		const data: any = rolesData;
+		if (!data) return {};
+
+		const rawRoles = (Array.isArray(data) ? data :
+			(Array.isArray(data?.data) ? data.data :
+				(Array.isArray(data?.roles) ? data.roles :
+					(Array.isArray(data?.docs) ? data.docs :
+						[]))));
+
+		return rawRoles.reduce((acc: { [key: string]: string }, role: Role) => {
+			const id = role._id || role.id;
+			if (id) {
+				acc[id] = role.roleName;
+			}
+			return acc;
+		}, {} as { [key: string]: string });
+	}, [rolesData]);
+
+	const { data: fetchedStatuses, isLoading } = useGetStatusesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
+		skip: !selectedLineOfBusinessId
+	});
+
+	useEffect(() => {
+		if (fetchedStatuses) {
+			const rawStatuses = (Array.isArray(fetchedStatuses) ? fetchedStatuses :
+				(Array.isArray((fetchedStatuses as any)?.data) ? (fetchedStatuses as any).data :
+					(Array.isArray((fetchedStatuses as any)?.statuses) ? (fetchedStatuses as any).statuses :
+						(Array.isArray((fetchedStatuses as any)?.docs) ? (fetchedStatuses as any).docs :
+							[]))));
+
+			const mappedStatuses = rawStatuses.map((status: StatusItem) => {
+				const roleDisplay = (status.roleSelection === 'all' || !status.roleSelection)
+					? 'All users'
+					: (status.selectedRoles || []).map((roleId: string) => roleLabels[roleId] || roleId).join(', ');
+
+				return {
+					...status,
+					role: roleDisplay,
+					roleSelection: status.roleSelection || 'all',
+					selectedRoles: status.selectedRoles || [],
+					color: status.color || '#6C8B7D',
+				};
+			});
+			setStatuses(mappedStatuses);
+		}
+	}, [fetchedStatuses, roleLabels]);
 
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 	const [editingStatus, setEditingStatus] = useState<StatusItem | null>(null);
 	const [deletingStatus, setDeletingStatus] = useState<StatusItem | null>(null);
+	const { socket, isConnected, emit } = useSocket();
+
+	useEffect(() => {
+		if (!socket || !isConnected) return;
+
+		const handleStatusCreated = (newStatus: any) => {
+			console.log("New Status Created:", newStatus);
+			setStatuses((prev) => {
+				if (prev.find(s => s.id === newStatus.id)) return prev;
+
+				const roleDisplay = (newStatus.roleSelection === 'all' || !newStatus.roleSelection)
+					? 'All users'
+					: (newStatus.selectedRoles || []).map((roleId: string) => roleLabels[roleId] || roleId).join(', ');
+
+				const formattedStatus: StatusItem = {
+					...newStatus,
+					role: roleDisplay,
+					roleSelection: newStatus.roleSelection || 'all',
+					selectedRoles: newStatus.selectedRoles || [],
+					color: newStatus.color || '#6C8B7D',
+				};
+				return [...prev, formattedStatus];
+			});
+		};
+
+		const handleStatusUpdated = (updatedStatus: any) => {
+			console.log("Status Updated:", updatedStatus);
+			setStatuses((prev) => prev.map((status) => {
+				if (status.id === updatedStatus.id) {
+					const roleDisplay = (updatedStatus.roleSelection === 'all' || !updatedStatus.roleSelection)
+						? 'All users'
+						: (updatedStatus.selectedRoles || []).map((roleId: string) => roleLabels[roleId] || roleId).join(', ');
+
+					return {
+						...status,
+						...updatedStatus,
+						role: roleDisplay
+					};
+				}
+				return status;
+			}));
+		};
+
+		const handleStatusDeleted = (statusId: string) => {
+			console.log("Status Deleted:", statusId);
+			setStatuses((prev) => prev.filter((status) => status.id !== statusId));
+		};
+
+		socket.on("statusCreated", handleStatusCreated);
+		socket.on("statusUpdated", handleStatusUpdated);
+		socket.on("statusDeleted", handleStatusDeleted);
+
+		return () => {
+			socket.off("statusCreated", handleStatusCreated);
+			socket.off("statusUpdated", handleStatusUpdated);
+			socket.off("statusDeleted", handleStatusDeleted);
+		};
+	}, [socket, isConnected]);
 
 	const formatRoleDisplay = (status: StatusItem): string => {
 		if (status.roleSelection === 'all' || !status.roleSelection) {
@@ -136,40 +193,17 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 		}
 	};
 
-	const handleCreate = (data: StatusFormData) => {
-		const roleDisplay = data.roleSelection === 'all'
-			? 'All users'
-			: data.selectedRoles.map(roleId => roleLabels[roleId] || roleId).join(', ');
+	const [deleteStatus] = useDeleteStatusMutation();
 
-		if (editingStatus) {
-			// Update existing status
-			setStatuses(prev => prev.map(status =>
-				status.id === editingStatus.id
-					? { ...status, ...data, role: roleDisplay }
-					: status
-			));
-		} else {
-			// Create new status
-			const newStatus: StatusItem = {
-				id: Date.now().toString(),
-				name: data.name,
-				description: data.description,
-				role: roleDisplay,
-				roleSelection: data.roleSelection,
-				selectedRoles: data.selectedRoles,
-				color: data.color || '#6C8B7D',
-			};
-			setStatuses(prev => [...prev, newStatus]);
-		}
-		setIsCreateModalOpen(false);
-		setEditingStatus(null);
-	};
-
-	const handleConfirmDelete = () => {
+	const handleConfirmDelete = async () => {
 		if (deletingStatus) {
-			setStatuses(prev => prev.filter(status => status.id !== deletingStatus.id));
-			setIsDeleteModalOpen(false);
-			setDeletingStatus(null);
+			try {
+				await deleteStatus(deletingStatus.id).unwrap();
+				setIsDeleteModalOpen(false);
+				setDeletingStatus(null);
+			} catch (error) {
+				console.error("Failed to delete status:", error);
+			}
 		}
 	};
 
@@ -250,18 +284,12 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							{statuses.length === 0 ? (
-								<tr>
-									<td
-										colSpan={4}
-										className="px-6 py-12 text-center dark:text-gray-400"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										No statuses configured yet.
-									</td>
-								</tr>
-							) : (
-								statuses.map((status) => (
+							{isLoading ? (
+								<SVGLoaderFetch colSpan={8} text={''} />
+							) : statuses.length === 0 ? (
+								<NoRecordFound colSpan={8} />
+							) :
+								(statuses.map((status) => (
 									<tr
 										key={status.id}
 										className="dark:hover:bg-gray-700 transition-colors"
@@ -346,7 +374,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 										</td>
 									</tr>
 								))
-							)}
+								)}
 						</tbody>
 					</table>
 				</div>
@@ -359,7 +387,6 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 					setIsCreateModalOpen(false);
 					setEditingStatus(null);
 				}}
-				onCreate={handleCreate}
 				initialData={editingStatus ? {
 					name: editingStatus.name,
 					description: editingStatus.description,
@@ -367,6 +394,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 					selectedRoles: editingStatus.selectedRoles || [],
 					color: editingStatus.color,
 				} : null}
+				statusId={editingStatus?.id}
 			/>
 
 			{/* Delete Status Modal */}

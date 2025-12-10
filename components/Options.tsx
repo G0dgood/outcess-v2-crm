@@ -79,7 +79,7 @@ const SVGLoaderFetch = ({ colSpan, text }: { colSpan: number; text: string }) =>
 			<div className="center-content flex flex-col justify-center items-center h-full">
 				<SVGLoader width={"40px"} height={"40px"} color={"var(--text-primary)"} />
 				<p className="mt-3">{text}</p>
-			</div>ź
+			</div>
 		</td>
 	</tr>
 );
