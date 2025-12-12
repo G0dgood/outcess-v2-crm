@@ -7,6 +7,7 @@ import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
 import PaginationSummary from '@/components/ui/PaginationSummary';
 import { useSetup } from '@/contexts/SetupContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface Business {
 	id: string;
@@ -18,7 +19,7 @@ interface Business {
 
 const BusinessesManagementPage: React.FC = () => {
 	const router = useRouter();
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness(); 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [statusFilter, setStatusFilter] = useState<string>('all');
 	const [currentPage, setCurrentPage] = useState(1);
@@ -279,8 +280,8 @@ const BusinessesManagementPage: React.FC = () => {
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={setupData.primaryColor}
-					secondaryColor={setupData.secondaryColor}
+					primaryColor={lineOfBusinessData.primaryColor}
+					secondaryColor={lineOfBusinessData.secondaryColor}
 				/>
 			</div>
 		</div>

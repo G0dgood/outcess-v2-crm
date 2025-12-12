@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react';
 import Button from './Button';
 import DateInput from './DateInput';
 import { CalendarIcon } from '@radix-ui/react-icons';
-import { useSetup } from '@/contexts/SetupContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface DateFilterProps {
 	onApply?: (filter: {
@@ -19,8 +19,8 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 	onApply,
 	onClose,
 }) => {
-	const { setupData } = useSetup();
-	const primaryColor = setupData?.primaryColor || '#050711';
+	const { lineOfBusinessData } = useLineOfBusiness();
+	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
 	const [selectedFilter, setSelectedFilter] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange'>('all');
 	const [fromDate, setFromDate] = useState('');
 	const [toDate, setToDate] = useState('');

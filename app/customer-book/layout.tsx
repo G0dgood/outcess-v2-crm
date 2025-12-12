@@ -7,9 +7,10 @@ import DashboardSideNav from '@/components/ui/DashboardSideNav';
 import MobileSideNav from '@/components/ui/MobileSideNav';
 import GlobalStickyNotes from '@/components/ui/GlobalStickyNotes';
 import OfflineBanner from '@/components/ui/OfflineBanner';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
 	const toggleMobileMenu = () => {
@@ -24,9 +25,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 		<div id="page-wrapper">
 			<OfflineBanner />
 			<DashboardHeader
-				companyName={setupData.companyName}
-				userName="John Doe"
-				userEmail="johndoe@example.com"
+				companyName={lineOfBusinessData.companyName}
 				userIsOnline={true}
 				onCompanyChange={(company) => console.log('Company changed:', company)}
 				onSettingsClick={() => console.log('Settings clicked')}

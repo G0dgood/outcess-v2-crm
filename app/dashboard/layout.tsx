@@ -5,9 +5,10 @@ import DashboardHeader from "@/components/ui/DashboardHeader";
 import DashboardSideNav from "@/components/ui/DashboardSideNav";
 import MobileSideNav from "@/components/ui/MobileSideNav";
 import OfflineBanner from "@/components/ui/OfflineBanner";
+import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-  const { setupData } = useSetup();
+  const { lineOfBusinessData } = useLineOfBusiness();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
 
@@ -40,9 +41,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     <div id="page-wrapper">
       <OfflineBanner />
       <DashboardHeader
-        companyName={setupData.companyName || 'Fairmoney'}
-        userName="John Doe"
-        userEmail="johndoe@example.com"
+        companyName={lineOfBusinessData.companyName || ''}
         userIsOnline={true}
         onCompanyChange={(company) => console.log('Company changed:', company)}
         onSettingsClick={() => console.log('Settings clicked')}

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Search from '@/components/ui/Search';
 import Pagination from '@/components/ui/Pagination';
 import PaginationSummary from '@/components/ui/PaginationSummary';
-import { useSetup } from '@/contexts/SetupContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface PendingBusiness {
 	id: string;
@@ -17,7 +17,7 @@ interface PendingBusiness {
 
 const PendingRequestPage: React.FC = () => {
 	const router = useRouter();
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(10);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -71,7 +71,7 @@ const PendingRequestPage: React.FC = () => {
 		<div>
 			{/* Header Section */}
 			<div className="mb-6">
-				<h1 
+				<h1
 					className="text-2xl font-semibold dark:text-gray-100 mb-2"
 					style={{ color: 'var(--text-primary)' }}
 				>
@@ -91,7 +91,7 @@ const PendingRequestPage: React.FC = () => {
 			</div>
 
 			{/* Businesses Table */}
-			<div 
+			<div
 				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
 				style={{
 					backgroundColor: 'var(--accent-white)',
@@ -99,11 +99,11 @@ const PendingRequestPage: React.FC = () => {
 				}}
 			>
 				<div className="overflow-x-auto">
-					<table 
+					<table
 						className="min-w-full divide-y dark:divide-gray-700"
 						style={{ borderColor: 'var(--light-gray)' }}
 					>
-						<thead 
+						<thead
 							className="dark:bg-gray-700 border-b dark:border-gray-700"
 							style={{
 								backgroundColor: 'var(--bg-primary)',
@@ -111,31 +111,31 @@ const PendingRequestPage: React.FC = () => {
 							}}
 						>
 							<tr>
-								<th 
+								<th
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Company Name
 								</th>
-								<th 
+								<th
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Registration Date
 								</th>
-								<th 
+								<th
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Industry
 								</th>
-								<th 
+								<th
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Status
 								</th>
-								<th 
+								<th
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -143,7 +143,7 @@ const PendingRequestPage: React.FC = () => {
 								</th>
 							</tr>
 						</thead>
-						<tbody 
+						<tbody
 							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
 							style={{
 								backgroundColor: 'var(--accent-white)',
@@ -152,8 +152,8 @@ const PendingRequestPage: React.FC = () => {
 						>
 							{paginatedBusinesses.length === 0 ? (
 								<tr>
-									<td 
-										colSpan={5} 
+									<td
+										colSpan={5}
 										className="px-6 py-12 text-center dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
@@ -162,8 +162,8 @@ const PendingRequestPage: React.FC = () => {
 								</tr>
 							) : (
 								paginatedBusinesses.map((business) => (
-									<tr 
-										key={business.id} 
+									<tr
+										key={business.id}
 										className="dark:hover:bg-gray-700 transition-colors"
 										style={{ borderColor: 'var(--light-gray)' }}
 										onMouseEnter={(e) => {
@@ -174,7 +174,7 @@ const PendingRequestPage: React.FC = () => {
 										}}
 									>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span 
+											<span
 												className="text-sm font-medium dark:text-gray-100"
 												style={{ color: 'var(--text-primary)' }}
 											>
@@ -182,7 +182,7 @@ const PendingRequestPage: React.FC = () => {
 											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span 
+											<span
 												className="text-sm dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
@@ -190,7 +190,7 @@ const PendingRequestPage: React.FC = () => {
 											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span 
+											<span
 												className="text-sm dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
@@ -198,7 +198,7 @@ const PendingRequestPage: React.FC = () => {
 											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span 
+											<span
 												className="inline-flex px-2 py-1 text-xs font-semibold rounded-full dark:bg-yellow-900/30 dark:text-yellow-400"
 												style={{
 													backgroundColor: 'rgba(251, 146, 60, 0.1)',
@@ -250,8 +250,8 @@ const PendingRequestPage: React.FC = () => {
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={setupData.primaryColor}
-					secondaryColor={setupData.secondaryColor}
+					primaryColor={lineOfBusinessData.primaryColor}
+					secondaryColor={lineOfBusinessData.secondaryColor}
 				/>
 			</div>
 		</div>

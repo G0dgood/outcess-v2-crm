@@ -68,6 +68,22 @@ export const teamMembersApi = createApi({
             }),
             invalidatesTags: ['TeamMembers'],
         }),
+        updateTeamMemberPassword: builder.mutation<any, { id: string; password: string }>({
+            query: ({ id, password }) => ({
+                url: `api/v1/team-members/${id}/password`,
+                method: 'PATCH',
+                body: { password },
+            }),
+            invalidatesTags: ['TeamMembers'],
+        }),
+        adminResetTeamMemberPasswordById: builder.mutation<any, { id: string; password: string }>({
+            query: ({ id, password }) => ({
+                url: `api/v1/team-members/admin/reset-password/${id}`,
+                method: 'PATCH',
+                body: { password },
+            }),
+            invalidatesTags: ['TeamMembers'],
+        }),
         deleteTeamMember: builder.mutation<any, string>({
             query: (id) => ({
                 url: `api/v1/team-members/${id}`,
@@ -85,5 +101,7 @@ export const {
     useGetTeamMembersByLineOfBusinessIdQuery,
     useGetTeamMemberByIdQuery,
     useUpdateTeamMemberMutation, 
+    useUpdateTeamMemberPasswordMutation,
+    useAdminResetTeamMemberPasswordByIdMutation,
     useDeleteTeamMemberMutation 
 } = teamMembersApi;

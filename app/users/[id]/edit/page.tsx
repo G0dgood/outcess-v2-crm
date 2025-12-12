@@ -8,7 +8,10 @@ import Dropdown from '@/components/ui/Dropdown';
 import PageHeading from '@/components/ui/PageHeading';
 import BackButton from '@/components/ui/BackButton';
 import { ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { toast } from 'sonner';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useGetTeamMemberByIdQuery, useUpdateTeamMemberPasswordMutation, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation } from '@/store/services/teamMembersApi';
+import { useGetRolesByLineOfBusinessIdQuery } from '@/store/services/roleApi';
 
 interface User {
 	id: string;
@@ -24,8 +27,17 @@ const EditUserPage: React.FC = () => {
 	const router = useRouter();
 	const params = useParams();
 	const userId = params.id as string;
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { lineOfBusinessData, selectedLineOfBusinessId } = useLineOfBusiness();
 	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+
+	const { data: userResponse, isLoading: isUserLoading } = useGetTeamMemberByIdQuery(userId);
+	const { data: rolesData } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
+		skip: !selectedLineOfBusinessId
+	});
+
+	const [updateTeamMember, { isLoading: isUpdating }] = useUpdateTeamMemberMutation();
+	// const [updateTeamMemberPassword, { isLoading: isUpdatingPassword }] = useUpdateTeamMemberPasswordMutation();
+	const [adminResetTeamMemberPassword, { isLoading: isResettingPassword }] = useAdminResetTeamMemberPasswordByIdMutation();
 
 	const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
 	const [showAlert, setShowAlert] = useState(true);
@@ -42,70 +54,71 @@ const EditUserPage: React.FC = () => {
 		status: true,
 	});
 
-	const [loading, setLoading] = useState(true);
-
-	// Mock user data - in a real app, fetch from API using userId
-	const mockUsers: User[] = useMemo(() => ([
-		{
-			id: 'Sup1109',
-			firstName: 'Jane',
-			lastName: 'Doe',
-			email: 'janedoe@example.com',
-			phone: '08023456789',
-			role: 'Agent',
-			loginStatus: 'Logged In',
-		},
-		{
-			id: 'Sup1110',
-			firstName: 'John',
-			lastName: 'Smith',
-			email: 'johnsmith@example.com',
-			phone: '08023456790',
-			role: 'Supervisor',
-			loginStatus: 'Logged Out',
-		},
-		{
-			id: 'Sup1111',
-			firstName: 'Alice',
-			lastName: 'Johnson',
-			email: 'alicejohnson@example.com',
-			phone: '08023456791',
-			role: 'Agent',
-			loginStatus: 'Logged In',
-		},
-	]), []);
-
 	useEffect(() => {
-		// Find user by ID
-		const user = mockUsers.find(u => u.id === userId);
-		if (user) {
+		if (userResponse) {
+			const user = userResponse.teamMember || userResponse.data || userResponse;
+			console.log('Fetched user data:', user);
+
+			// Handle name splitting if firstName/lastName are missing
+			let fName = user.firstName || '';
+			let lName = user.lastName || '';
+
+			if (!fName && !lName && user.name) {
+				const parts = user.name.split(' ');
+				fName = parts[0];
+				lName = parts.slice(1).join(' ');
+			}
+
 			setFormData({
-				firstName: user.firstName,
-				lastName: user.lastName,
-				email: user.email,
-				phone: user.phone,
-				role: user.role,
-				status: user.loginStatus === 'Logged In',
+				firstName: fName,
+				lastName: lName,
+				email: user.email || '',
+				phone: user.phone || '',
+				role: typeof user.role === 'object' ? (user.role.roleName || user.role.name) : (user.role || ''),
+				status: user.status === 'Active' || user.status === 'active' || user.loginStatus === 'Logged In' || user.isActive === true || user.status === true,
 			});
 		}
-		setLoading(false);
-	}, [userId, mockUsers]);
+	}, [userResponse]);
 
-	const roleOptions = [
-		{ value: 'Agent', label: 'Agent' },
-		{ value: 'Supervisor', label: 'Supervisor' },
-		{ value: 'Admin', label: 'Admin' },
-	];
+	const roleOptions = useMemo(() => {
+		if (!rolesData) return [];
+
+		const rawRoles = (Array.isArray(rolesData) ? rolesData :
+			(Array.isArray((rolesData as any)?.data) ? (rolesData as any).data :
+				(Array.isArray((rolesData as any)?.roles) ? (rolesData as any).roles :
+					(Array.isArray((rolesData as any)?.docs) ? (rolesData as any).docs :
+						[]))));
+
+		return rawRoles
+			.filter((role: any) => (role._id || role.id))
+			.map((role: any) => ({
+				value: role.roleName, // Using roleName as value to match current implementation
+				label: role.roleName
+			}));
+	}, [rolesData]);
 
 	const handleInputChange = (field: string) => (value: string | boolean) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
 	};
 
-	const handleSave = () => {
-		console.log('Saving user:', formData);
-		// Implement save logic here
-		// After saving, navigate back to users page
-		router.push('/users');
+	const handleSave = async () => {
+		try {
+			await updateTeamMember({
+				id: userId,
+				data: {
+					firstName: formData.firstName,
+					lastName: formData.lastName,
+					phone: formData.phone,
+					role: formData.role,
+					status: formData.status ? 'Active' : 'Inactive'
+				}
+			}).unwrap();
+			toast.success('User updated successfully');
+			router.push('/users');
+		} catch (error) {
+			console.error('Failed to update user:', error);
+			toast.error('Failed to update user');
+		}
 	};
 
 	const handleCancel = () => {
@@ -116,19 +129,24 @@ const EditUserPage: React.FC = () => {
 		setPasswordData(prev => ({ ...prev, [field]: value }));
 	};
 
-	const handleChangePassword = () => {
+	const handleChangePassword = async () => {
 		if (passwordData.newPassword && passwordData.confirmPassword) {
 			if (passwordData.newPassword === passwordData.confirmPassword) {
-				console.log('Changing password for user:', userId);
-				// Implement password change logic here
-				router.push('/users');
+				try {
+					await adminResetTeamMemberPassword({ id: userId, password: passwordData.newPassword }).unwrap();
+					toast.success('Password updated successfully');
+					router.push('/users');
+				} catch (error) {
+					console.error('Failed to update password:', error);
+					toast.error('Failed to update password');
+				}
 			} else {
-				alert('Passwords do not match');
+				toast.error('Passwords do not match');
 			}
 		}
 	};
 
-	if (loading) {
+	if (isUserLoading) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
 				<div>Loading...</div>
@@ -430,7 +448,7 @@ const EditUserPage: React.FC = () => {
 							onClick={handleChangePassword}
 							disabled={!passwordData.newPassword || !passwordData.confirmPassword}
 						>
-							Change Password
+							{isResettingPassword ? 'Resetting...' : 'Change Password'}
 						</Button>
 					</div>
 				</div>

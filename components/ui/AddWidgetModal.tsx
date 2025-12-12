@@ -9,6 +9,7 @@ import { Modal } from './Modal';
 import { useSetup } from '@/contexts/SetupContext';
 import { getOfflineDispositions, getSyncedDispositions } from '@/utils/offlineDispositions';
 import type { Widget } from '@/contexts/SetupContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface AddWidgetModalProps {
 	isOpen: boolean;
@@ -30,11 +31,12 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 	onClose,
 	onSave,
 }) => {
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
+	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
 	const [formData, setFormData] = useState<Omit<Widget, 'id'>>({
 		title: '',
 		value: 0,
-		color: '#050711',
+		color: primaryColor,
 	});
 
 	// Calculate value based on selected disposition field
@@ -90,8 +92,8 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		options.push(...commonTitles);
 
 		// Add call outcomes if available
-		if (setupData.dashboardSettings.callOutcomes && setupData.dashboardSettings.callOutcomes.length > 0) {
-			setupData.dashboardSettings.callOutcomes.forEach((outcome) => {
+		if (lineOfBusinessData.dashboardSettings.callOutcomes && lineOfBusinessData.dashboardSettings.callOutcomes.length > 0) {
+			lineOfBusinessData.dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
 				options.push({
 					value: outcome.name,
 					label: outcome.name,
@@ -100,8 +102,8 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		}
 
 		// Add disposition categories if available
-		if (setupData.dashboardSettings.dispositions && setupData.dashboardSettings.dispositions.length > 0) {
-			setupData.dashboardSettings.dispositions.forEach((disposition) => {
+		if (lineOfBusinessData.dashboardSettings.dispositions && lineOfBusinessData.dashboardSettings.dispositions.length > 0) {
+			lineOfBusinessData.dashboardSettings.dispositions.forEach((disposition: { name: any; }) => {
 				options.push({
 					value: disposition.name,
 					label: disposition.name,
@@ -110,7 +112,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		}
 
 		return options;
-	}, [setupData.dashboardSettings.callOutcomes, setupData.dashboardSettings.dispositions]);
+	}, [lineOfBusinessData.dashboardSettings.callOutcomes, lineOfBusinessData.dashboardSettings.dispositions]);
 
 	const handleInputChange = (field: string) => (value: string | number) => {
 		setFormData(prev => ({ ...prev, [field]: value }));

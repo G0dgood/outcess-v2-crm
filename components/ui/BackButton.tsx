@@ -3,8 +3,8 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon } from '@radix-ui/react-icons';
-import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface BackButtonProps {
 	onClick?: () => void;
@@ -20,9 +20,9 @@ const BackButton: React.FC<BackButtonProps> = ({
 	useCustomColor = true,
 }) => {
 	const router = useRouter();
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
 	const { isDarkMode } = useTheme();
-	const primaryColor = setupData?.primaryColor || '#050711';
+	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
 
 	const handleClick = () => {
 		if (onClick) {

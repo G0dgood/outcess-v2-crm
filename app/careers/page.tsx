@@ -1,5 +1,4 @@
 'use client';
-
 import React from 'react';
 import LandingHeader from '@/components/ui/LandingHeader';
 import LandingFooter from '@/components/ui/landing/LandingFooter';

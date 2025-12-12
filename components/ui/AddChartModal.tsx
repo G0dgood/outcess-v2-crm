@@ -8,6 +8,7 @@ import Icon from './Icon';
 import { ColorPicker } from './ColorPicker';
 import { useSocket } from '@/contexts/SocketContext';
 import { useSetup } from '@/contexts/SetupContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface AddChartModalProps {
 	isOpen: boolean;
@@ -60,7 +61,8 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 	onSave,
 }) => {
 	const { isOffline } = useSocket();
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
+
 	const [formData, setFormData] = useState({
 		title: '',
 		type: 'pie' as const,
@@ -96,8 +98,8 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		options.push(...commonOptions);
 
 		// Add call outcomes if available
-		if (setupData.dashboardSettings.callOutcomes && setupData.dashboardSettings.callOutcomes.length > 0) {
-			setupData.dashboardSettings.callOutcomes.forEach((outcome) => {
+		if (lineOfBusinessData.dashboardSettings.callOutcomes && lineOfBusinessData.dashboardSettings.callOutcomes.length > 0) {
+			lineOfBusinessData.dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
 				options.push({
 					value: outcome.name,
 					label: outcome.name,
@@ -106,8 +108,8 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		}
 
 		// Add disposition categories if available
-		if (setupData.dashboardSettings.dispositions && setupData.dashboardSettings.dispositions.length > 0) {
-			setupData.dashboardSettings.dispositions.forEach((disposition) => {
+		if (lineOfBusinessData.dashboardSettings.dispositions && lineOfBusinessData.dashboardSettings.dispositions.length > 0) {
+			lineOfBusinessData.dashboardSettings.dispositions.forEach((disposition: { name: string }) => {
 				options.push({
 					value: disposition.name,
 					label: disposition.name,
@@ -119,7 +121,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		options.push({ value: 'custom', label: 'Custom Data' });
 
 		return options;
-	}, [setupData.dashboardSettings.callOutcomes, setupData.dashboardSettings.dispositions]);
+	}, [lineOfBusinessData.dashboardSettings.callOutcomes, lineOfBusinessData.dashboardSettings.dispositions]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
 		// For non-multiple fields, ensure we only use string values

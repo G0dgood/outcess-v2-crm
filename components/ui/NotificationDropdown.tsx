@@ -3,9 +3,9 @@
 import React, { useEffect, useRef } from 'react';
 import { PersonIcon } from '@radix-ui/react-icons';
 import { usePathname } from 'next/navigation';
-import { useSetup } from '@/contexts/SetupContext';
 import { playNotificationSound } from '@/utils/soundEffects';
 import { setNavigating } from '@/utils/navigationState';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface NotificationUser {
 	name: string;
@@ -37,9 +37,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	className = '',
 	onShowMore
 }) => {
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
 	const pathname = usePathname();
-	const primaryColor = setupData.primaryColor || '#050711';
+	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
 	const hasPlayedOpenSound = useRef(false);
 	const playedNotificationIds = useRef<Set<string>>(new Set());
 	const previousPathname = useRef(pathname);

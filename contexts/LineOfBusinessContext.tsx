@@ -18,7 +18,24 @@ interface LineOfBusinessProviderProps {
 }
 
 export const LineOfBusinessProvider: React.FC<LineOfBusinessProviderProps> = ({ children, initialLineOfBusinessId }) => {
-    const [selectedLineOfBusinessId, setSelectedLineOfBusinessId] = useState<string | null>(initialLineOfBusinessId || null);
+    const [selectedLineOfBusinessId, setSelectedLineOfBusinessIdState] = useState<string | null>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('selectedLineOfBusinessId');
+            if (saved) return saved;
+        }
+        return initialLineOfBusinessId || null;
+    });
+
+    const setSelectedLineOfBusinessId = (id: string | null) => {
+        setSelectedLineOfBusinessIdState(id);
+        if (typeof window !== 'undefined') {
+            if (id) {
+                localStorage.setItem('selectedLineOfBusinessId', id);
+            } else {
+                localStorage.removeItem('selectedLineOfBusinessId');
+            }
+        }
+    };
 
     const { data: lineOfBusinessData, isLoading, isFetching } = useGetLineOfBusinessQuery(
         selectedLineOfBusinessId || '',

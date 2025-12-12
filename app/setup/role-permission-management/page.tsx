@@ -44,15 +44,11 @@ export default function RolePermissionManagementPage() {
 	const [updateRole] = useUpdateRoleMutation();
 	const [deleteRole] = useDeleteRoleMutation();
 
-	// Debugging logs
-	console.log('User Company ID:', companyId);
-	console.log('Roles Data from API:', rolesData);
-
 	// Transform API roles to local format or use API roles directly
-	const rawRoles = (Array.isArray(rolesData) ? rolesData :
-		(Array.isArray(rolesData?.data) ? rolesData.data :
-			(Array.isArray(rolesData?.roles) ? rolesData.roles :
-				(Array.isArray(rolesData?.docs) ? rolesData.docs :
+	const rawRoles: Role[] = (Array.isArray(rolesData) ? rolesData :
+		(Array.isArray((rolesData as any)?.data) ? (rolesData as any).data :
+			(Array.isArray((rolesData as any)?.roles) ? (rolesData as any).roles :
+				(Array.isArray((rolesData as any)?.docs) ? (rolesData as any).docs :
 					[])))) as Role[];
 
 	// If roles array is empty but we have data in rolesData that looks like a single role or object of roles

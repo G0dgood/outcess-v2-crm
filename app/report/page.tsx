@@ -7,19 +7,19 @@ import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
 import DateFilter from '@/components/ui/DateFilter';
 import { MixerHorizontalIcon } from '@radix-ui/react-icons';
-import { useSetup } from '@/contexts/SetupContext';
 import PageHeading from '@/components/ui/PageHeading';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface ReportData {
-    id: string;
-    agentName: string;
-    agentId: string;
-    date: string;
-    [key: string]: string | number | boolean;
+	id: string;
+	agentName: string;
+	agentId: string;
+	date: string;
+	[key: string]: string | number | boolean;
 }
 
 const ReportPage: React.FC = () => {
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -264,8 +264,8 @@ const ReportPage: React.FC = () => {
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={setupData.primaryColor}
-					secondaryColor={setupData.secondaryColor}
+					primaryColor={lineOfBusinessData.primaryColor}
+					secondaryColor={lineOfBusinessData.secondaryColor}
 				/>
 			)}
 		</div>

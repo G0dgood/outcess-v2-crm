@@ -29,7 +29,7 @@ export default function SetupPage() {
 	}, []);
 
 
-	console.log('setupData-----', setupData)
+
 
 	const handleInputChange = (field: string) => (value: string) => {
 		updateSetupData({ [field]: value });

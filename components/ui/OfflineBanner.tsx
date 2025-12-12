@@ -63,7 +63,7 @@ const OfflineBanner: React.FC = () => {
 	if (isReconnected) {
 		return (
 			<div
-				className="fixed top-0 left-0 right-0 z-[100] text-white px-4 py-3 shadow-lg transition-all duration-300 animate-in slide-in-from-top"
+				className="fixed top-0 left-0 right-0 z-[9999] text-white px-4 py-3 shadow-lg transition-all duration-300 animate-in slide-in-from-top"
 				style={{
 					backgroundColor: 'var(--status-success)',
 					color: 'var(--text-inverse)',
@@ -109,7 +109,7 @@ const OfflineBanner: React.FC = () => {
 	if (networkSpeed === 'slow' && isOnline && status === 'connected') {
 		return (
 			<div
-				className="fixed top-0 left-0 right-0 z-[100] text-white px-4 py-3 shadow-lg transition-all duration-300"
+				className="fixed top-0 left-0 right-0 z-[9999] text-white px-4 py-3 shadow-lg transition-all duration-300"
 				style={{
 					backgroundColor: 'var(--status-warning)',
 					color: 'var(--text-inverse)',
@@ -153,7 +153,7 @@ const OfflineBanner: React.FC = () => {
 	if (isOffline || status === 'offline' || !isOnline) {
 		return (
 			<div
-				className="fixed top-0 left-0 right-0 z-[100] text-white px-4 py-3 shadow-lg transition-all duration-300"
+				className="fixed top-0 left-0 right-0 z-[9999] text-white px-4 py-3 shadow-lg transition-all duration-300"
 				style={{
 					backgroundColor: 'var(--status-error)',
 					color: 'var(--text-inverse)',

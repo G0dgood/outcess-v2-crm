@@ -7,8 +7,8 @@ import Dropdown from './Dropdown';
 import { ColorPicker } from './ColorPicker';
 import { Modal } from './Modal';
 import { useSocket } from '@/contexts/SocketContext';
-import { useSetup } from '@/contexts/SetupContext';
 import type { Chart } from '@/contexts/SetupContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface EditChartModalProps {
 	isOpen: boolean;
@@ -50,7 +50,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 	chart,
 }) => {
 	const { isOffline } = useSocket();
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
 	const [formData, setFormData] = useState<Omit<Chart, 'id'>>({
 		title: '',
 		type: 'pie',
@@ -123,8 +123,8 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		options.push(...commonOptions);
 
 		// Add call outcomes if available
-		if (setupData.dashboardSettings.callOutcomes && setupData.dashboardSettings.callOutcomes.length > 0) {
-			setupData.dashboardSettings.callOutcomes.forEach((outcome) => {
+		if (lineOfBusinessData.dashboardSettings.callOutcomes && lineOfBusinessData.dashboardSettings.callOutcomes.length > 0) {
+			lineOfBusinessData.dashboardSettings.callOutcomes.forEach((outcome: { name: any; }) => {
 				options.push({
 					value: outcome.name,
 					label: outcome.name,
@@ -133,8 +133,8 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		}
 
 		// Add disposition categories if available
-		if (setupData.dashboardSettings.dispositions && setupData.dashboardSettings.dispositions.length > 0) {
-			setupData.dashboardSettings.dispositions.forEach((disposition) => {
+		if (lineOfBusinessData.dashboardSettings.dispositions && lineOfBusinessData.dashboardSettings.dispositions.length > 0) {
+			lineOfBusinessData.dashboardSettings.dispositions.forEach((disposition: { name: any; }) => {
 				options.push({
 					value: disposition.name,
 					label: disposition.name,
@@ -146,7 +146,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		options.push({ value: 'Custom Data', label: 'Custom Data' });
 
 		return options;
-	}, [setupData.dashboardSettings.callOutcomes, setupData.dashboardSettings.dispositions]);
+	}, [lineOfBusinessData.dashboardSettings.callOutcomes, lineOfBusinessData.dashboardSettings.dispositions]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
 		// For non-multiple fields, ensure we only use string values

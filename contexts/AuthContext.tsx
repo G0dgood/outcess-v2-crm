@@ -88,14 +88,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 		}
 
 		try {
-			const stored = localStorage.getItem(storageKey);
-			if (stored) {
-				const parsed = JSON.parse(stored);
-				if (parsed.user) {
-					setUser(parsed.user);
-				}
-				if (parsed.tokens) {
-					setTokensState(parsed.tokens);
+			// Try loading from individual keys first (app standard)
+			const storedUser = localStorage.getItem('peoplely-user');
+			const storedToken = localStorage.getItem('token');
+			
+			if (storedUser && storedToken) {
+				const parsedUser = JSON.parse(storedUser);
+				setUser(parsedUser);
+				setTokensState({ accessToken: storedToken });
+			} else {
+				// Fallback to legacy/bundled storage key
+				const stored = localStorage.getItem(storageKey);
+				if (stored) {
+					const parsed = JSON.parse(stored);
+					if (parsed.user) {
+						setUser(parsed.user);
+					}
+					if (parsed.tokens) {
+						setTokensState(parsed.tokens);
+					}
 				}
 			}
 		} catch (error) {

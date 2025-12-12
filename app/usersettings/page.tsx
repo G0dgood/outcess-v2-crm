@@ -3,7 +3,10 @@ import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { useSetup } from "@/contexts/SetupContext";
+import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useGetUserByIdQuery } from "@/store/services/authApi";
+import { useEffect } from "react";
 import {
 	PersonIcon,
 	LockClosedIcon,
@@ -23,18 +26,22 @@ import { toast } from "sonner";
 
 
 export default function SettingsPage() {
-	const { setupData } = useSetup();
 	const { isDarkMode, toggleTheme } = useTheme();
-	const primaryColor = setupData.primaryColor || '#9333EA';
-	const secondaryColor = setupData.secondaryColor || '#6C8B7D';
+	const { lineOfBusinessData } = useLineOfBusiness();
+	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const secondaryColor = lineOfBusinessData?.secondaryColor || '#6C8B7D';
 
-	console.log('secondaryColor', secondaryColor);
+	const { user } = useAuth();
+	const { data: userData, isLoading: isUserLoading } = useGetUserByIdQuery(user?.id || '', {
+		skip: !user?.id
+	});
+
+
 	const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'email' | 'preferences' | 'sound'>('profile');
 
 	// Loading states
 	const [isProfileLoading, setIsProfileLoading] = useState(false);
 	const [isPasswordLoading, setIsPasswordLoading] = useState(false);
-	const [isLoadingUserData, setIsLoadingUserData] = useState(false);
 
 	// Profile section
 	const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -45,7 +52,19 @@ export default function SettingsPage() {
 		email: '',
 	});
 
-	// Fetch user data on component mount
+	useEffect(() => {
+		if (userData?.user) {
+			setProfileData({
+				fullName: userData.user.firstName && userData.user.lastName
+					? `${userData.user.firstName} ${userData.user.lastName}`
+					: userData.user.name || '',
+				username: userData.user.username || '',
+				phone: userData.user.phone || '',
+				email: userData.user.email || '',
+			});
+		}
+	}, [userData]);
+
 
 
 	// Password section
@@ -60,12 +79,7 @@ export default function SettingsPage() {
 		confirm: false,
 	});
 
-	// // Email section
-	// const [emailData, setEmailData] = useState({
-	// 	newEmail: '',
-	// 	verificationCode: '',
-	// });
-	// const [isEmailVerifying, setIsEmailVerifying] = useState(false);
+
 
 	// Credit cards section
 
@@ -105,12 +119,16 @@ export default function SettingsPage() {
 
 	const handleProfileCancel = () => {
 		// Reset to original values from auth context
-		setProfileData({
-			fullName: 'kishan kumar',
-			username: 'kishan',
-			phone: '1234567890',
-			email: 'kishan@example.com',
-		});
+		if (userData?.user) {
+			setProfileData({
+				fullName: userData.user.firstName && userData.user.lastName
+					? `${userData.user.firstName} ${userData.user.lastName}`
+					: userData.user.name || '',
+				username: userData.user.username || '',
+				phone: userData.user.phone || '',
+				email: userData.user.email || '',
+			});
+		}
 		setIsEditingProfile(false);
 	};
 
@@ -314,7 +332,7 @@ export default function SettingsPage() {
 
 				{/* Profile Section */}
 				{activeSection === 'profile' && (
-					isLoadingUserData ? (
+					isUserLoading ? (
 						<ProfileSkeleton />
 					) : (
 						<div className="py-6">
@@ -349,10 +367,10 @@ export default function SettingsPage() {
 									{!isEditingProfile ? (
 										<Button
 											onClick={() => setIsEditingProfile(true)}
-											disabled={isLoadingUserData}
+											disabled={isUserLoading}
 											style={{ backgroundColor: primaryColor }}
 										>
-											{isLoadingUserData ? 'Loading...' : 'Edit Profile'}
+											{isUserLoading ? 'Loading...' : 'Edit Profile'}
 										</Button>
 									) : (
 										<div className="space-x-3">

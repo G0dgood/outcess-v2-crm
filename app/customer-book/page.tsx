@@ -6,11 +6,11 @@ import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
 import PageHeading from '@/components/ui/PageHeading';
 import Search from '@/components/ui/Search';
-import { useSetup } from '@/contexts/SetupContext';
 import AddCustomerModal from '@/components/ui/AddCustomerModal';
 import CustomerDetailsModal from '@/components/ui/CustomerDetailsModal';
 import { ArrowRightIcon } from '@radix-ui/react-icons';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface Customer {
 	id: string;
@@ -21,7 +21,7 @@ interface Customer {
 }
 
 const CustomerBookPage: React.FC = () => {
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
@@ -263,8 +263,8 @@ const CustomerBookPage: React.FC = () => {
 				onPageChange={setCurrentPage}
 				showEllipsis={true}
 				maxVisiblePages={5}
-				primaryColor={setupData.primaryColor}
-				secondaryColor={setupData.secondaryColor}
+				primaryColor={lineOfBusinessData.primaryColor}
+				secondaryColor={lineOfBusinessData.secondaryColor}
 			/>
 
 			{/* Add Customer Modal */}

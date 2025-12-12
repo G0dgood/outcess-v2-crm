@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSetup } from '@/contexts/SetupContext';
 import { PersonIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { sampleNotifications } from '@/data/notifications';
 import Pagination from './Pagination';
 import Search from './Search';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface NotificationsModalProps {
 	isOpen: boolean;
@@ -16,8 +16,8 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 	isOpen,
 	onClose,
 }) => {
-	const { setupData } = useSetup();
-	const primaryColor = setupData.primaryColor || '#050711';
+	const { lineOfBusinessData } = useLineOfBusiness();
+	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
@@ -183,8 +183,8 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 							<button
 								onClick={() => setFilter('all')}
 								className={`px-4 py-2 text-sm font-medium transition-colors ${filter === 'all'
-										? 'dark:bg-gray-700 dark:text-gray-100'
-										: 'dark:text-gray-400 dark:hover:text-gray-200'
+									? 'dark:bg-gray-700 dark:text-gray-100'
+									: 'dark:text-gray-400 dark:hover:text-gray-200'
 									}`}
 								style={{
 									backgroundColor: filter === 'all' ? 'var(--bg-primary)' : 'transparent',
@@ -208,8 +208,8 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 							<button
 								onClick={() => setFilter('unread')}
 								className={`px-4 py-2 text-sm font-medium transition-colors ${filter === 'unread'
-										? 'dark:bg-gray-700 dark:text-gray-100'
-										: 'dark:text-gray-400 dark:hover:text-gray-200'
+									? 'dark:bg-gray-700 dark:text-gray-100'
+									: 'dark:text-gray-400 dark:hover:text-gray-200'
 									}`}
 								style={{
 									backgroundColor: filter === 'unread' ? 'var(--bg-primary)' : 'transparent',
@@ -233,8 +233,8 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 							<button
 								onClick={() => setFilter('read')}
 								className={`px-4 py-2 text-sm font-medium transition-colors ${filter === 'read'
-										? 'dark:bg-gray-700 dark:text-gray-100'
-										: 'dark:text-gray-400 dark:hover:text-gray-200'
+									? 'dark:bg-gray-700 dark:text-gray-100'
+									: 'dark:text-gray-400 dark:hover:text-gray-200'
 									}`}
 								style={{
 									backgroundColor: filter === 'read' ? 'var(--bg-primary)' : 'transparent',

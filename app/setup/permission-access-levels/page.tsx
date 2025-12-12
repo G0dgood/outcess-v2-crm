@@ -41,10 +41,10 @@ export default function PermissionAccessLevelsPage() {
 	const [updateRole] = useUpdateRoleMutation();
 
 	// Transform API roles to local format
-	const rawRoles = (Array.isArray(rolesData) ? rolesData :
-		(Array.isArray(rolesData?.data) ? rolesData.data :
-			(Array.isArray(rolesData?.roles) ? rolesData.roles :
-				(Array.isArray(rolesData?.docs) ? rolesData.docs :
+	const rawRoles: Role[] = (Array.isArray(rolesData) ? rolesData :
+		(Array.isArray((rolesData as any)?.data) ? (rolesData as any).data :
+			(Array.isArray((rolesData as any)?.roles) ? (rolesData as any).roles :
+				(Array.isArray((rolesData as any)?.docs) ? (rolesData as any).docs :
 					[])))) as Role[];
 
 	const roles: Role[] = rawRoles.length > 0 ? rawRoles :

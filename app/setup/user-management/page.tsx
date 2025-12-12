@@ -71,8 +71,8 @@ export default function UserManagementPage() {
 	const roleOptions = useMemo(() => {
 		if (!rolesDataResponse) return [];
 
-		const rawRoles = rolesDataResponse.data || rolesDataResponse.roles || rolesDataResponse || [];
-		const rolesList = Array.isArray(rawRoles) ? rawRoles : (rawRoles.docs || []);
+		const rawRoles = rolesDataResponse || [];
+		const rolesList = Array.isArray(rawRoles) ? rawRoles : (Array.isArray((rawRoles as any).docs) ? (rawRoles as any).docs : []);
 
 		if (rolesList.length === 0) return [];
 

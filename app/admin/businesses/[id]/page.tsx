@@ -5,8 +5,8 @@ import Button from '@/components/ui/Button';
 import DeactivateBusinessModal from '@/components/ui/DeactivateBusinessModal';
 import Pagination from '@/components/ui/Pagination';
 import PaginationSummary from '@/components/ui/PaginationSummary';
-import { useSetup } from '@/contexts/SetupContext';
 import { CalendarIcon, MixerHorizontalIcon, UploadIcon } from '@radix-ui/react-icons';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface BusinessDetailProps {
 	params: {
@@ -15,7 +15,7 @@ interface BusinessDetailProps {
 }
 
 const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
 	const [activeTab, setActiveTab] = useState('overview');
 	const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState(10);
@@ -286,7 +286,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 				<div className="flex items-center gap-6">
 					{tabs.map((tab) => {
 						const isActive = activeTab === tab.id;
-						const activeColor = setupData.primaryColor || '#2563EB';
+						const activeColor = lineOfBusinessData.primaryColor || '#2563EB';
 						return (
 							<button
 								key={tab.id}
@@ -690,8 +690,8 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 							onPageChange={setCurrentPage}
 							showEllipsis={true}
 							maxVisiblePages={5}
-							primaryColor={setupData.primaryColor}
-							secondaryColor={setupData.secondaryColor}
+							primaryColor={lineOfBusinessData.primaryColor}
+							secondaryColor={lineOfBusinessData.secondaryColor}
 							className="mt-0"
 						/>
 					</div>
@@ -824,8 +824,8 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 							onPageChange={setBillingCurrentPage}
 							showEllipsis={true}
 							maxVisiblePages={5}
-							primaryColor={setupData.primaryColor}
-							secondaryColor={setupData.secondaryColor}
+							primaryColor={lineOfBusinessData.primaryColor}
+							secondaryColor={lineOfBusinessData.secondaryColor}
 							className="mt-0"
 						/>
 					</div>

@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from './Icon';
 import { ArrowLeftIcon } from '@radix-ui/react-icons';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useGetStatusesByLineOfBusinessIdQuery } from '@/store/services/statusApi';
 
 interface UserDropdownProps {
 	userName: string;
@@ -25,7 +27,60 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 	const router = useRouter();
 	const [isOpen, setIsOpen] = useState(false);
 	const [isStatusOpen, setIsStatusOpen] = useState(false);
+	const [mounted, setMounted] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
+	const { selectedLineOfBusinessId } = useLineOfBusiness();
+
+	const { data: fetchedStatuses, isLoading } = useGetStatusesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
+		skip: !selectedLineOfBusinessId
+	});
+
+	const [statusOptions, setStatusOptions] = useState<{ value: string; label: string; color?: string }[]>([
+		{ value: 'online', label: 'Online', color: '#10B981' }, // Green
+		{ value: 'lunch', label: 'Lunch Break', color: '#F59E0B' }, // Orange
+		{ value: 'restroom', label: 'Restroom Break', color: '#3B82F6' }, // Blue
+		{ value: 'offline', label: 'Offline', color: '#6B7280' }, // Gray
+	]);
+
+	useEffect(() => {
+		if (fetchedStatuses) {
+			const rawStatuses = (Array.isArray(fetchedStatuses) ? fetchedStatuses :
+				(Array.isArray((fetchedStatuses as any)?.data) ? (fetchedStatuses as any).data :
+					(Array.isArray((fetchedStatuses as any)?.statuses) ? (fetchedStatuses as any).statuses :
+						(Array.isArray((fetchedStatuses as any)?.docs) ? (fetchedStatuses as any).docs :
+							[]))));
+
+			const mappedStatuses = rawStatuses.map((status: any) => ({
+				value: status.id || status._id,
+				label: status.name,
+				color: status.color || '#6C8B7D'
+			}));
+
+			if (mappedStatuses.length > 0) {
+				setStatusOptions(mappedStatuses);
+			} else {
+				// Fallback to default options if no dynamic statuses found
+				setStatusOptions([
+					{ value: 'online', label: 'Online', color: '#10B981' },
+					{ value: 'lunch', label: 'Lunch Break', color: '#F59E0B' },
+					{ value: 'restroom', label: 'Restroom Break', color: '#3B82F6' },
+					{ value: 'offline', label: 'Offline', color: '#6B7280' },
+				]);
+			}
+		} else if (!isLoading && !selectedLineOfBusinessId) {
+			// Fallback if no LOB selected
+			setStatusOptions([
+				{ value: 'online', label: 'Online', color: '#10B981' },
+				{ value: 'lunch', label: 'Lunch Break', color: '#F59E0B' },
+				{ value: 'restroom', label: 'Restroom Break', color: '#3B82F6' },
+				{ value: 'offline', label: 'Offline', color: '#6B7280' },
+			]);
+		}
+	}, [fetchedStatuses, isLoading, selectedLineOfBusinessId]);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	// Close dropdown when clicking outside
 	useEffect(() => {
@@ -49,15 +104,9 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 		}
 	}, [isStatusOpen]);
 
-	const statusOptions = [
-		{ value: 'online', label: 'Online' },
-		{ value: 'lunch', label: 'Lunch Break' },
-		{ value: 'restroom', label: 'Restroom Break' },
-		{ value: 'offline', label: 'Offline' },
-	];
+
 
 	const handleStatusSelect = (status: string) => {
-		console.log('Status selected:', status);
 		setIsStatusOpen(false);
 		setIsOpen(false);
 	};
@@ -67,7 +116,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 			<button
 				onClick={() => setIsOpen(!isOpen)}
 				className="p-1 rounded-full transition-colors cursor-pointer"
-				title={userName}
+				title={mounted ? userName : ''}
 				style={{
 					color: 'var(--text-tertiary)',
 					backgroundColor: 'transparent'
@@ -85,7 +134,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 					{userAvatar ? (
 						<img
 							src={userAvatar}
-							alt={userName}
+							alt={mounted ? userName : ''}
 							className="w-8 h-8 rounded-full border-2"
 							style={{ borderColor: 'var(--light-gray)' }}
 						/>
@@ -101,7 +150,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 								className="font-semibold text-sm"
 								style={{ color: 'var(--text-primary)' }}
 							>
-								{userName.charAt(0).toUpperCase()}
+								{mounted ? userName.charAt(0).toUpperCase() : ''}
 							</span>
 						</div>
 					)}
@@ -283,7 +332,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 							<button
 								key={option.value}
 								onClick={() => handleStatusSelect(option.value)}
-								className="w-full px-4 py-2 text-left cursor-pointer font-lato font-medium text-[16px] leading-[150%] transition-colors"
+								className="w-full px-4 py-2 text-left cursor-pointer font-lato font-medium text-[16px] leading-[150%] transition-colors flex items-center gap-2"
 								style={{
 									color: 'var(--text-primary)',
 									backgroundColor: 'transparent'
@@ -295,6 +344,12 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 									e.currentTarget.style.backgroundColor = 'transparent';
 								}}
 							>
+								{option.color && (
+									<span
+										className="w-3 h-3 rounded-full"
+										style={{ backgroundColor: option.color }}
+									/>
+								)}
 								{option.label}
 							</button>
 						))}

@@ -9,6 +9,7 @@ import { useSetup } from '@/contexts/SetupContext';
 import PageHeading from '@/components/ui/PageHeading';
 import { ChatBubbleIcon } from '@radix-ui/react-icons';
 import Icon from '@/components/ui/Icon';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface SMS {
 	id: string;
@@ -21,7 +22,7 @@ interface SMS {
 }
 
 const SMSPage: React.FC = () => {
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedSMS, setSelectedSMS] = useState<Set<string>>(new Set());
@@ -311,7 +312,7 @@ const SMSPage: React.FC = () => {
 											title={sms.message}
 											onClick={() => setViewingSMS(sms)}
 											onMouseEnter={(e) => {
-												e.currentTarget.style.color = setupData.primaryColor || '#050711';
+												e.currentTarget.style.color = lineOfBusinessData.primaryColor || '#050711';
 											}}
 											onMouseLeave={(e) => {
 												e.currentTarget.style.color = 'var(--text-primary)';
@@ -364,8 +365,8 @@ const SMSPage: React.FC = () => {
 				onPageChange={setCurrentPage}
 				showEllipsis={true}
 				maxVisiblePages={5}
-				primaryColor={setupData.primaryColor}
-				secondaryColor={setupData.secondaryColor}
+				primaryColor={lineOfBusinessData.primaryColor}
+				secondaryColor={lineOfBusinessData.secondaryColor}
 			/>
 
 			{/* Selected SMS Drawer */}

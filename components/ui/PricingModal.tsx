@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Modal from './Modal';
 import Button from './Button';
 import { CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
-import { useSetup } from '@/contexts/SetupContext';
 
 interface PricingModalProps {
 	isOpen: boolean;
@@ -29,12 +28,11 @@ const PricingModal: React.FC<PricingModalProps> = ({
 	onClose,
 	onSelectPlan,
 }) => {
-	const { setupData } = useSetup();
 	const router = useRouter();
 	const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
-	const primaryColor = setupData.primaryColor || '#9333EA';
-	const secondaryColor = setupData.secondaryColor || '#6C8B7D';
+	const primaryColor = '#050711';
+	const secondaryColor = '#6C8B7D';
 
 	const plans: PricingPlan[] = [
 		{

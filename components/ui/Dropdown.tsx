@@ -33,18 +33,27 @@ export const Dropdown: React.FC<DropdownProps> = ({
 	multiple = false,
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
+	const [mounted, setMounted] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
 	const isMultiple = multiple;
-	const selectedValues: string[] = isMultiple 
+	const selectedValues: string[] = isMultiple
 		? (Array.isArray(value) ? value : [])
 		: (typeof value === 'string' && value ? [value] : []);
-	
+
 	const selectedOption = !isMultiple && typeof value === 'string'
 		? options.find(option => option.value === value)
 		: null;
 
 	const getDisplayText = () => {
+		if (!mounted) {
+			return placeholder;
+		}
+
 		if (isMultiple) {
 			if (selectedValues.length === 0) {
 				return placeholder;
@@ -182,12 +191,12 @@ export const Dropdown: React.FC<DropdownProps> = ({
 											<span className="dropdown-checkbox" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
 												{isSelected(option.value) ? (
 													<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-														<rect x="2" y="2" width="12" height="12" rx="2" fill="currentColor" stroke="currentColor" strokeWidth="1.5"/>
-														<path d="M5 8L7 10L11 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+														<rect x="2" y="2" width="12" height="12" rx="2" fill="currentColor" stroke="currentColor" strokeWidth="1.5" />
+														<path d="M5 8L7 10L11 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 													</svg>
 												) : (
 													<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-														<rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+														<rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
 													</svg>
 												)}
 											</span>

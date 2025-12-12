@@ -9,11 +9,12 @@ import Checkbox from '@/components/ui/Checkbox';
 import { useSetup } from '@/contexts/SetupContext';
 import { SetupProvider } from '@/contexts/SetupContext';
 import { ChevronDownIcon } from '@radix-ui/react-icons';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 function PaymentPageContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
 
 	const planName = searchParams.get('plan') || 'Pro';
 	const planPrice = searchParams.get('price') || '$12/month';
@@ -45,7 +46,7 @@ function PaymentPageContent() {
 	// Calculate price based on order billing cycle
 	const orderPrice = orderBillingCycle === 'annual' ? Math.round(baseMonthlyPrice * 12 * 0.83) : baseMonthlyPrice;
 
-	const primaryColor = setupData.primaryColor || '#9333EA';
+	const primaryColor = lineOfBusinessData.primaryColor || '#9333EA';
 
 	const countries = [
 		{ value: 'US', label: 'United States' },
@@ -313,7 +314,7 @@ function PaymentPageContent() {
 										<h4 className="text-2xl font-bold text-gray-900">{planName}</h4>
 										<ChevronDownIcon className="w-5 h-5 text-gray-400" />
 									</div>
-									<p className="text-sm text-gray-600">{setupData.companyName || 'Your'} workspace</p>
+									<p className="text-sm text-gray-600">{lineOfBusinessData.companyName || ''} workspace</p>
 								</div>
 
 								{/* Billing Cycle */}

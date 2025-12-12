@@ -19,6 +19,7 @@ import {
 import PageHeading from "@/components/ui/PageHeading";
 import SubPageHeading from "@/components/ui/SubPageHeading";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
 
 interface CreditCardInfo {
 	id: string;
@@ -30,10 +31,10 @@ interface CreditCardInfo {
 }
 
 export default function SettingsPage() {
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
 	const { isDarkMode, toggleTheme } = useTheme();
-	const primaryColor = setupData.primaryColor || '#9333EA';
-	const secondaryColor = setupData.secondaryColor || '#6C8B7D';
+	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const secondaryColor = lineOfBusinessData.secondaryColor || '#6C8B7D';
 
 	const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'email' | 'payment' | 'preferences'>('profile');
 

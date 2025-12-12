@@ -44,7 +44,6 @@ interface StatusProps {
 
 const Status: React.FC<StatusProps> = ({ className = '' }) => {
 	const [statuses, setStatuses] = useState<StatusItem[]>([]);
-	const { user } = useUserInfo();
 	const { selectedLineOfBusinessId } = useLineOfBusiness();
 
 	const { data: rolesData } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
@@ -82,13 +81,22 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 						(Array.isArray((fetchedStatuses as any)?.docs) ? (fetchedStatuses as any).docs :
 							[]))));
 
-			const mappedStatuses = rawStatuses.map((status: StatusItem) => {
+			const mappedStatuses = rawStatuses.map((status: any) => {
+				const statusId = status.id || status._id;
 				const roleDisplay = (status.roleSelection === 'all' || !status.roleSelection)
 					? 'All users'
-					: (status.selectedRoles || []).map((roleId: string) => roleLabels[roleId] || roleId).join(', ');
+					: (status.selectedRoles || []).map((role: any) => {
+						if (typeof role === 'string') {
+							return roleLabels[role] || role;
+						} else if (role && typeof role === 'object') {
+							return role.roleName || roleLabels[role.id] || roleLabels[role._id] || '';
+						}
+						return '';
+					}).filter(Boolean).join(', ');
 
 				return {
 					...status,
+					id: statusId,
 					role: roleDisplay,
 					roleSelection: status.roleSelection || 'all',
 					selectedRoles: status.selectedRoles || [],
@@ -110,15 +118,25 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 
 		const handleStatusCreated = (newStatus: any) => {
 			console.log("New Status Created:", newStatus);
+			const statusId = newStatus.id || newStatus._id;
+
 			setStatuses((prev) => {
-				if (prev.find(s => s.id === newStatus.id)) return prev;
+				if (prev.find(s => s.id === statusId)) return prev;
 
 				const roleDisplay = (newStatus.roleSelection === 'all' || !newStatus.roleSelection)
 					? 'All users'
-					: (newStatus.selectedRoles || []).map((roleId: string) => roleLabels[roleId] || roleId).join(', ');
+					: (newStatus.selectedRoles || []).map((role: any) => {
+						if (typeof role === 'string') {
+							return roleLabels[role] || role;
+						} else if (role && typeof role === 'object') {
+							return role.roleName || roleLabels[role.id] || roleLabels[role._id] || '';
+						}
+						return '';
+					}).filter(Boolean).join(', ');
 
 				const formattedStatus: StatusItem = {
 					...newStatus,
+					id: statusId,
 					role: roleDisplay,
 					roleSelection: newStatus.roleSelection || 'all',
 					selectedRoles: newStatus.selectedRoles || [],
@@ -130,15 +148,25 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 
 		const handleStatusUpdated = (updatedStatus: any) => {
 			console.log("Status Updated:", updatedStatus);
+			const statusId = updatedStatus.id || updatedStatus._id;
+
 			setStatuses((prev) => prev.map((status) => {
-				if (status.id === updatedStatus.id) {
+				if (status.id === statusId) {
 					const roleDisplay = (updatedStatus.roleSelection === 'all' || !updatedStatus.roleSelection)
 						? 'All users'
-						: (updatedStatus.selectedRoles || []).map((roleId: string) => roleLabels[roleId] || roleId).join(', ');
+						: (updatedStatus.selectedRoles || []).map((role: any) => {
+							if (typeof role === 'string') {
+								return roleLabels[role] || role;
+							} else if (role && typeof role === 'object') {
+								return role.roleName || roleLabels[role.id] || roleLabels[role._id] || '';
+							}
+							return '';
+						}).filter(Boolean).join(', ');
 
 					return {
 						...status,
 						...updatedStatus,
+						id: statusId,
 						role: roleDisplay
 					};
 				}
@@ -167,7 +195,14 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 			return 'All users';
 		}
 		if (status.selectedRoles && status.selectedRoles.length > 0) {
-			return status.selectedRoles.map(roleId => roleLabels[roleId] || roleId).join(', ');
+			return status.selectedRoles.map((role: any) => {
+				if (typeof role === 'string') {
+					return roleLabels[role] || role;
+				} else if (role && typeof role === 'object') {
+					return role.roleName || roleLabels[role.id] || roleLabels[role._id] || '';
+				}
+				return '';
+			}).filter(Boolean).join(', ');
 		}
 		return status.role;
 	};

@@ -12,6 +12,7 @@ import { UploadIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import Input from '@/components/ui/Input';
 import UploadBase from '@/components/ui/UploadBaseEmployee';
 import SelectedRecordsDrawerContent from './SelectedRecordsDrawerContent';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface FieldDefinition {
 	id: string;
@@ -27,7 +28,7 @@ interface SetupBookRecord {
 
 
 const SetupBookPage: React.FC = () => {
-	const { setupData } = useSetup();
+	const { lineOfBusinessData } = useLineOfBusiness();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -349,8 +350,8 @@ const SetupBookPage: React.FC = () => {
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={setupData.primaryColor}
-					secondaryColor={setupData.secondaryColor}
+					primaryColor={lineOfBusinessData.primaryColor}
+					secondaryColor={lineOfBusinessData.secondaryColor}
 				/>
 			)}
 

@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
 import { useSetup } from '@/contexts/SetupContext';
 
@@ -19,7 +18,6 @@ interface ConfigurationCard {
 }
 
 export default function ReviewConfigurationPage(): React.JSX.Element {
-	const router = useRouter();
 	const { setupData, setCurrentStep } = useSetup();
 
 

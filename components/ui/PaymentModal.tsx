@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Modal from './Modal';
 import Button from './Button';
 import Input from './Input';
-import { useSetup } from '@/contexts/SetupContext';
 
 interface PaymentModalProps {
 	isOpen: boolean;
@@ -23,7 +22,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 	billingCycle,
 	onPaymentSuccess,
 }) => {
-	const { setupData } = useSetup();
 	const [formData, setFormData] = useState({
 		cardNumber: '',
 		expiryDate: '',
@@ -35,7 +33,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isProcessing, setIsProcessing] = useState(false);
 
-	const primaryColor = setupData.primaryColor || '#9333EA';
+	const primaryColor = '#050711';
 
 	const handleInputChange = (field: string) => (value: string) => {
 		// Format card number

@@ -38,23 +38,25 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
-	companyName,
-	userName,
-	userEmail,
-	userAvatar,
+
 	userIsOnline = true,
 	onCompanyChange,
 	onNotificationsClick,
 	onStatusClick,
 	onEditProfileClick,
 	onLogoutClick,
-	companyOptions = [],
 	onMobileMenuToggle,
 }) => {
 	const router = useRouter();
 	const dispatch = useDispatch();
 	const pathname = usePathname();
+	const [mounted, setMounted] = useState(false);
 	const [hasStickyNotes, setHasStickyNotes] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
 	const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
 	const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
 	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket } = useSocket();
@@ -64,7 +66,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const reduxUser = useSelector((state: any) => state.auth.user);
 
 	// Determine the effective user to display
-	const displayUser = reduxUser ? {
+	const displayUser = mounted && reduxUser ? {
 		...reduxUser,
 		name: reduxUser.name || reduxUser.username || `${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim() || 'User',
 		email: reduxUser.email,
@@ -75,7 +77,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const previousUnreadCount = useRef(0);
 	const previousPathname = useRef(pathname);
 	const isNavigating = useRef(false);
-	const { setSelectedLineOfBusinessId, isLoading: isLobLoading, lineOfBusinessData: selectedLOBData } = useLineOfBusiness();
+	const { setSelectedLineOfBusinessId, isLoading: isLobLoading, lineOfBusinessData: selectedLOBData, selectedLineOfBusinessId } = useLineOfBusiness();
 	const companyId = selectedLOBData?.companyId || displayUser?.companyId || (displayUser?.company as any)?._id || '';
 
 	const { data: lineOfBusinessData } = useGetLineOfBusinessByCompanyIdForheaderQuery(companyId, {
@@ -91,8 +93,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				label: lob.lineOfBusinessName
 			}));
 			setLobOptions(options);
+
+			// Auto-select first LOB if none selected
+			if (options.length > 0 && !selectedLineOfBusinessId) {
+				setSelectedLineOfBusinessId(options[0].value);
+			}
 		}
-	}, [lineOfBusinessData]);
+	}, [lineOfBusinessData, selectedLineOfBusinessId]);
 
 	// Track navigation to prevent sounds during page switches
 	useEffect(() => {
@@ -362,9 +369,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 					{/* User Dropdown */}
 					<UserDropdown
-						userName={displayUser?.name || userName}
-						userEmail={displayUser?.email || userEmail}
-						userAvatar={displayUser?.avatar || userAvatar}
+						userName={displayUser?.name || ""}
+						userEmail={displayUser?.email || ""}
+						userAvatar={displayUser?.avatar || ""}
 						isOnline={userIsOnline && isOnline && !isOffline && socketStatus !== 'offline'}
 						onStatusClick={onStatusClick}
 						onEditProfileClick={onEditProfileClick}
