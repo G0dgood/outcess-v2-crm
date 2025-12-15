@@ -6,10 +6,13 @@ import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
 import PaginationSummary from '@/components/ui/PaginationSummary';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetTeamMembersByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByLineOfBusinessIdQuery, useGetTeamMembersBySupervisorIdQuery } from '@/store/services/teamMembersApi';
 import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
+import { useSocket } from '@/contexts/SocketContext';
+import { toastSuccess } from '@/utils/toastWithSound';
 
 interface TeamMember {
+	_id: string;
 	agentId: string;
 	fullName: string;
 	email: string;
@@ -23,7 +26,9 @@ interface TeamMember {
 const TeamMembersPage: React.FC = () => {
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const lineOfBusinessId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
-	const { data: teamMembersResponse, isLoading } = useGetTeamMembersByLineOfBusinessIdQuery(lineOfBusinessId, { skip: !lineOfBusinessId });
+	const supervisorId = "693d83a4412528325bdefd87";
+	const { data: teamMembersResponse, isLoading } = useGetTeamMembersBySupervisorIdQuery(supervisorId);
+	const { socket } = useSocket();
 
 	const [teamMembersData, setTeamMembersData] = useState<TeamMember[]>([]);
 	const [searchTerm, setSearchTerm] = useState('');
@@ -38,6 +43,7 @@ const TeamMembersPage: React.FC = () => {
 			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
 
 			const mappedMembers: TeamMember[] = membersList.map((member: any) => ({
+				_id: member._id || member.id,
 				agentId: member.agentId || member._id || member.id || 'N/A',
 				fullName: member.name || `${member.firstName || ''} ${member.lastName || ''}`.trim(),
 				email: member.email || '',
@@ -50,6 +56,38 @@ const TeamMembersPage: React.FC = () => {
 			setTeamMembersData(mappedMembers);
 		}
 	}, [teamMembersResponse]);
+
+	// Socket connection for real-time status updates
+	useEffect(() => {
+		if (!socket) return;
+
+		// Join the supervisor's room
+		socket.emit('join', supervisorId);
+
+		// Listen for status updates
+		const handleStatusUpdate = (data: any) => {
+			console.log('Team Member Updated:', data);
+			// data: { teamMemberId, name, status, timestamp }
+
+			setTeamMembersData(prevMembers => prevMembers.map(member => {
+				if (member._id === data.teamMemberId || member.agentId === data.teamMemberId) {
+					// Show toast notification
+					toastSuccess(`${member.fullName} is now ${data.status}`);
+					return {
+						...member,
+						status: data.status,
+					};
+				}
+				return member;
+			}));
+		};
+
+		socket.on('teamMemberStatusUpdate', handleStatusUpdate);
+
+		return () => {
+			socket.off('teamMemberStatusUpdate', handleStatusUpdate);
+		};
+	}, [socket, supervisorId]);
 
 	const supervisors = useMemo(() => {
 		const unique = new Set(teamMembersData.map(member => member.supervisor));
@@ -153,19 +191,7 @@ const TeamMembersPage: React.FC = () => {
 						}}
 						inputClassName="h-10 whitespace-nowrap"
 					/>
-					<Dropdown
-						label="Team"
-						options={teams.map(value => ({
-							value,
-							label: value === 'all' ? 'All Teams' : value,
-						}))}
-						value={teamFilter}
-						onChange={(val) => {
-							if (Array.isArray(val)) return;
-							setTeamFilter(val);
-						}}
-						inputClassName="h-10 whitespace-nowrap"
-					/>
+
 				</div>
 			</div>
 
@@ -275,7 +301,6 @@ const TeamMembersPage: React.FC = () => {
 										</td>
 										<td className="px-6 py-4" style={statusStylesTable(member.status)}>
 											<span
-												// className="inline-flex items-center  text-xs font-semibold rounded-full"
 												style={statusStyles(member.status)}
 											>
 												{member.status}

@@ -8,17 +8,9 @@ import Toggle from '@/components/ui/Toggle';
 import CreateRoleModal from '@/components/ui/CreateRoleModal';
 import Icon from '@/components/ui/Icon';
 import { useSetup } from '@/contexts/SetupContext';
-import { useGetRolesByCompanyIdQuery, useCreateRoleMutation, useUpdateRoleMutation, useDeleteRoleMutation } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery, useCreateRoleMutation, useUpdateRoleMutation, useDeleteRoleMutation, Role, RolePermission } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
-
-interface Role {
-	_id: string;
-	roleName: string;
-	description: string;
-	permissions: Record<string, boolean>;
-	companyId?: string;
-}
 
 interface ApiError {
 	data?: {
@@ -53,11 +45,16 @@ export default function RolePermissionManagementPage() {
 
 	// If roles array is empty but we have data in rolesData that looks like a single role or object of roles
 	// Try to extract from object values if it's an object of roles
-	const roles: Role[] = rawRoles.length > 0 ? rawRoles :
+	const extractedRoles: Role[] = rawRoles.length > 0 ? rawRoles :
 		(rolesData && typeof rolesData === 'object' && !Array.isArray(rolesData) ?
-			Object.values(rolesData as Record<string, unknown>).filter((item): item is Role =>
+			Object.values(rolesData as any).filter((item): item is Role =>
 				typeof item === 'object' && item !== null && '_id' in item && 'roleName' in item
 			) : []);
+
+	// Deduplicate roles to prevent key collisions
+	const roles = React.useMemo(() => {
+		return Array.from(new Map(extractedRoles.map(role => [role._id, role])).values());
+	}, [extractedRoles]);
 
 	useEffect(() => {
 		const ensureAdminRole = async () => {
@@ -65,20 +62,23 @@ export default function RolePermissionManagementPage() {
 				const hasAdmin = roles.some((role) => role.roleName.toLowerCase() === 'administrator');
 				if (!hasAdmin) {
 					try {
+						const adminPermissions: RolePermission[] = roleManagementSettings.modules.map(module => ({
+							id: '',
+							moduleName: module.name,
+							access: true,
+							permissions: {
+								view: true,
+								edit: true,
+								delete: true,
+								create: true
+							}
+						}));
+
 						await createRole({
 							roleName: 'administrator',
 							description: 'Full access to all system features',
 							companyId: companyId,
-							permissions: {
-								dashboard: true,
-								customerBook: true,
-								userManagement: true,
-								setupBook: true,
-								customerSMS: true,
-								report: true,
-								systemSetting: true,
-								auditLog: true,
-							}
+							permissions: adminPermissions
 						}).unwrap();
 						refetch();
 					} catch (error) {
@@ -89,20 +89,40 @@ export default function RolePermissionManagementPage() {
 		};
 
 		ensureAdminRole();
-	}, [rolesData, companyId, createRole, refetch]);
+	}, [rolesData, companyId, createRole, refetch, roleManagementSettings.modules]);
 
 	const handlePermissionChange = async (roleId: string, moduleId: string, enabled: boolean) => {
 		const roleToUpdate = roles.find((r: Role) => r._id === roleId);
 		if (roleToUpdate) {
-			const currentPermissions = roleToUpdate.permissions || {};
-			const updatedPermissions: Record<string, boolean> = {};
+			const moduleName = roleManagementSettings.modules.find(m => m.id === moduleId)?.name;
+			if (!moduleName) return;
 
-			// Ensure all modules are included to prevent data loss if backend does full replace
-			roleManagementSettings.modules.forEach(module => {
-				updatedPermissions[module.id] = currentPermissions[module.id] || false;
-			});
+			const currentPermissions = roleToUpdate.permissions || [];
+			const updatedPermissions = currentPermissions.map(p => ({
+				...p,
+				permissions: { ...p.permissions }
+			}));
 
-			updatedPermissions[moduleId] = enabled;
+			const permissionIndex = updatedPermissions.findIndex(p => p.moduleName === moduleName);
+
+			if (permissionIndex >= 0) {
+				updatedPermissions[permissionIndex] = {
+					...updatedPermissions[permissionIndex],
+					access: enabled
+				};
+			} else {
+				updatedPermissions.push({
+					id: '',
+					moduleName: moduleName,
+					access: enabled,
+					permissions: {
+						view: false,
+						edit: false,
+						delete: false,
+						create: false
+					}
+				});
+			}
 
 			// Construct full payload to ensure validation passes
 			// Some APIs require all fields even for updates, or validate presence of required fields
@@ -315,7 +335,7 @@ export default function RolePermissionManagementPage() {
 									{roles.map((role: Role) => (
 										<td key={`${role._id}-${module.id}`} className="py-4 px-6 text-center">
 											<Toggle
-												checked={role.permissions?.[module.id] || false}
+												checked={role.permissions?.find((p: RolePermission) => p.moduleName === module.name)?.access || false}
 												onChange={(enabled) => handlePermissionChange(role._id, module.id, enabled)}
 											/>
 										</td>

@@ -15,7 +15,7 @@ export const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
 	isOpen,
 	onClose,
 	onConfirm,
-	userName = 'this user',
+	userName,
 }) => {
 	if (!isOpen) return null;
 
@@ -36,12 +36,12 @@ export const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
 						className="font-lato font-medium text-[16px] leading-[150%] dark:text-gray-100 mb-5"
 						style={{ color: 'var(--text-primary)' }}
 					>
-                    Are you sure you want to delete {userName} from the CRM?
+						Are you sure you want to delete {userName} from the CRM?
 					</h2>
 
 					{/* Warning Message */}
 					<div
-						className="mb-6 p-4 dark:bg-orange-900/30 border dark:border-orange-800 flex items-start gap-3 rounded"
+						className="mb-6 p-4 dark:bg-orange-900/30 border dark:border-orange-800 flex items-start gap-3"
 						style={{
 							backgroundColor: 'rgba(251, 146, 60, 0.1)',
 							borderColor: 'rgba(251, 146, 60, 0.3)'

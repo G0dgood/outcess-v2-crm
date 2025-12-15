@@ -28,8 +28,8 @@ const SettingsPage: React.FC = () => {
 		switch (activeTab) {
 			case 'roles':
 				return <Roles />;
-			case 'fields':
-				return <Fields />;
+			// case 'fields':
+			// 	return <Fields />;
 			case 'status':
 				return <Status />;
 			case 'permission':
@@ -37,7 +37,7 @@ const SettingsPage: React.FC = () => {
 			case 'company-details':
 				return <CompanyDetails />;
 			default:
-				return <Fields />;
+				return <Status />;
 		}
 	};
 

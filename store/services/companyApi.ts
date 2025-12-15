@@ -22,7 +22,17 @@ export const companyApi = createApi({
                 body: companyData,
             }),
         }),
+        getCompanyById: builder.query<any, string>({
+            query: (id) => `api/v1/companies/${id}`,
+        }),
+        updateCompany: builder.mutation<any, { id: string; data: any }>({
+            query: ({ id, data }) => ({
+                url: `api/v1/companies/${id}`,
+                method: 'PATCH',
+                body: data,
+            }),
+        }),
     }),
 });
 
-export const { useCreateCompanyMutation } = companyApi;
+export const { useCreateCompanyMutation, useGetCompanyByIdQuery, useUpdateCompanyMutation } = companyApi;

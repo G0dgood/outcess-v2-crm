@@ -10,19 +10,15 @@ interface ModulePermissionModalProps {
 	onClose: () => void;
 	onSave: (roles: string[]) => void;
 	selectedRoles: string[];
+	availableRoles: { id: string; label: string }[];
 }
-
-const roleOptions = [
-	{ id: 'admin', label: 'Admin' },
-	{ id: 'agent', label: 'Agent' },
-	{ id: 'supervisor', label: 'Supervisor' },
-];
 
 export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 	isOpen,
 	onClose,
 	onSave,
 	selectedRoles: initialSelectedRoles,
+	availableRoles,
 }) => {
 	const [selectedRoles, setSelectedRoles] = useState<string[]>(initialSelectedRoles);
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -95,7 +91,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 	if (!isOpen) return null;
 
 	const selectedRoleLabels = selectedRoles.map(roleId => {
-		const role = roleOptions.find(r => r.id === roleId);
+		const role = availableRoles.find(r => r.id === roleId);
 		return { id: roleId, label: role ? role.label : roleId };
 	});
 
@@ -226,7 +222,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 								}}
 							>
 								<div className="py-2">
-									{roleOptions.map((role) => (
+									{availableRoles.map((role) => (
 										<label
 											key={role.id}
 											className="flex items-center gap-3 px-4 py-2 dark:hover:bg-gray-700 cursor-pointer"

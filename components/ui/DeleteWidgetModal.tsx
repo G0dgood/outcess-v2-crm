@@ -49,7 +49,7 @@ export const DeleteWidgetModal: React.FC<DeleteWidgetModalProps> = ({
 						className="font-lato font-normal text-[13px] leading-[150%] dark:text-orange-400"
 						style={{ color: '#EA580C' }}
 					>
-                        Are you sure you want to delete <span className="font-semibold">&apos;{widgetTitle}&apos;</span>? This action cannot be undone.
+						Are you sure you want to delete <span className="font-semibold">&apos;{widgetTitle}&apos;</span>? This action cannot be undone.
 					</div>
 				</div>
 

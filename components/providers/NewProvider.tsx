@@ -12,6 +12,7 @@ import { LineOfBusinessProvider } from '@/contexts/LineOfBusinessContext';
 import { SetupProvider } from '@/contexts/SetupContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import { NavigationProvider } from '@/components/providers/NavigationProvider';
+import { RealTimeUpdates } from '@/components/providers/RealTimeUpdates';
 
 interface NewProviderProps {
   children: React.ReactNode;
@@ -33,6 +34,7 @@ const NewProvider: React.FC<NewProviderProps> = ({ children }) => {
                   <PrivilegeProvider>
                     <SocketProvider config={{ autoConnect: false }}>
                       <NavigationProvider>
+                        <RealTimeUpdates />
                         {children}
                         <Toaster
                           position="top-right"

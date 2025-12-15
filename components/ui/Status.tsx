@@ -15,7 +15,8 @@ import {
 	useDeleteStatusMutation
 } from '@/store/services/statusApi';
 import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
-import { NoRecordFound, SVGLoaderFetch } from '../Options';
+import { NoRecordFound } from '../Options';
+import StatusSkeleton from '@/components/skeletons/StatusSkeleton';
 
 interface StatusItem {
 	id: string;
@@ -55,15 +56,15 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 		if (!data) return {};
 
 		const rawRoles = (Array.isArray(data) ? data :
-			(Array.isArray(data?.data) ? data.data :
-				(Array.isArray(data?.roles) ? data.roles :
-					(Array.isArray(data?.docs) ? data.docs :
+			(Array.isArray(data?.data) ? data?.data :
+				(Array.isArray(data?.roles) ? data?.roles :
+					(Array.isArray(data?.docs) ? data?.docs :
 						[]))));
 
 		return rawRoles.reduce((acc: { [key: string]: string }, role: Role) => {
-			const id = role._id || role.id;
+			const id = role?._id || role?.id;
 			if (id) {
-				acc[id] = role.roleName;
+				acc[id] = role?.roleName;
 			}
 			return acc;
 		}, {} as { [key: string]: string });
@@ -242,8 +243,13 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 		}
 	};
 
+	if (isLoading) {
+		return <StatusSkeleton className={className} />;
+	}
+
 	return (
 		<div className={`w-full h-full ${className}`}>
+			{/* Header Section */}
 			<div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 				<div className="flex-1">
 					<PageHeading
@@ -319,9 +325,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							{isLoading ? (
-								<SVGLoaderFetch colSpan={8} text={''} />
-							) : statuses.length === 0 ? (
+							{statuses.length === 0 ? (
 								<NoRecordFound colSpan={8} />
 							) :
 								(statuses.map((status) => (

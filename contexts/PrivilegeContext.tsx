@@ -18,28 +18,31 @@ export type PermissionAction =
 	| 'view'
 	| 'create'
 	| 'edit'
-	| 'delete'
-	| 'export'
-	| 'manage';
+	| 'delete';
 
-export interface Permission {
-	moduleId: ModuleId;
-	actions: PermissionAction[];
+export interface RoleModulePermission {
+	id: string;
+	moduleName: string;
+	access: boolean;
+	permissions: {
+		view: boolean;
+		edit: boolean;
+		delete: boolean;
+		create: boolean;
+	};
 }
 
 export interface UserRole {
-	id: string;
-	name: string;
-	description: string;
-	permissions: Record<ModuleId, boolean>;
+	roleName: string;
+	permissions: RoleModulePermission[];
+	id?: string;
+	description?: string;
 }
 
 export interface UserPrivileges {
 	userId: string;
 	roleId: string;
 	role: UserRole | null;
-	permissions: Record<ModuleId, boolean>;
-	customPermissions?: Permission[];
 }
 
 interface PrivilegeContextType {
@@ -55,81 +58,22 @@ interface PrivilegeContextType {
 
 	// Privilege management
 	setUserPrivileges: (privileges: UserPrivileges) => void;
-	updateUserPrivileges: (updates: Partial<UserPrivileges>) => void;
 	clearPrivileges: () => void;
-
-	// Role management helpers
-	getAvailableRoles: () => UserRole[];
-	setAvailableRoles: (roles: UserRole[]) => void;
+	isAdmin: boolean;
 }
 
 const PrivilegeContext = createContext<PrivilegeContextType | undefined>(undefined);
 
-// Default roles (can be overridden)
-const defaultRoles: UserRole[] = [
-	{
-		id: 'administrator',
-		name: 'Administrator',
-		description: 'Full access to the system',
-		permissions: {
-			dashboard: true,
-			customerBook: true,
-			userManagement: true,
-			setupBook: true,
-			customerSMS: true,
-			report: true,
-			systemSetting: true,
-			auditLog: true,
-			teamMembers: true,
-		},
-	},
-	{
-		id: 'supervisor',
-		name: 'Supervisor',
-		description: 'Manage team and view reports',
-		permissions: {
-			dashboard: true,
-			customerBook: true,
-			userManagement: false,
-			setupBook: false,
-			customerSMS: true,
-			report: true,
-			systemSetting: false,
-			auditLog: true,
-			teamMembers: true,
-		},
-	},
-	{
-		id: 'agent',
-		name: 'Agent',
-		description: 'Basic access to customer and call management',
-		permissions: {
-			dashboard: true,
-			customerBook: true,
-			userManagement: false,
-			setupBook: false,
-			customerSMS: true,
-			report: false,
-			systemSetting: false,
-			auditLog: false,
-			teamMembers: false,
-		},
-	},
-];
-
 interface PrivilegeProviderProps {
 	children: ReactNode;
 	initialPrivileges?: UserPrivileges;
-	initialRoles?: UserRole[];
 }
 
 export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 	children,
 	initialPrivileges,
-	initialRoles
 }) => {
 	const [userPrivileges, setUserPrivilegesState] = useState<UserPrivileges | null>(null);
-	const [availableRoles, setAvailableRolesState] = useState<UserRole[]>(initialRoles || defaultRoles);
 	const [isLoading, setIsLoading] = useState(true);
 
 	// Initialize from localStorage or initial props
@@ -166,16 +110,33 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		}
 	}, [userPrivileges]);
 
+	// Helper to match moduleId with moduleName
+	const findModulePermission = (moduleId: string): RoleModulePermission | undefined => {
+		if (!userPrivileges?.role?.permissions) return undefined;
+
+		const normalize = (str: string) => str.replace(/\s+/g, '').toLowerCase();
+		const target = normalize(moduleId);
+
+		return userPrivileges.role.permissions.find(p => normalize(p.moduleName) === target);
+	};
+
 	// Check if user has permission for a specific module
 	const hasPermission = (moduleId: ModuleId): boolean => {
 		if (!userPrivileges) return false;
 
 		// Administrator always has all permissions
-		if (userPrivileges.roleId === 'administrator') {
+		if (userPrivileges.role?.roleName === 'Administrator' || userPrivileges.role?.roleName === 'admin' ||
+			userPrivileges.roleId === 'administrator') {
 			return true;
 		}
 
-		return userPrivileges.permissions[moduleId] === true;
+		// Check granular permissions first
+		const modulePermission = findModulePermission(moduleId);
+		if (modulePermission) {
+			return modulePermission.access;
+		}
+
+		return false;
 	};
 
 	// Check if user has permission for any of the provided modules
@@ -193,67 +154,34 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		if (!userPrivileges) return false;
 
 		// Administrator can do everything
-		if (userPrivileges.roleId === 'administrator') {
+		if (userPrivileges.role?.roleName === 'Administrator' || userPrivileges.role?.roleName === 'admin' || userPrivileges.roleId === 'administrator') {
 			return true;
 		}
 
-		// Check module access first
-		if (!hasPermission(moduleId)) {
+		const modulePermission = findModulePermission(moduleId);
+
+		// If we have granular permissions, use them
+		if (modulePermission) {
+			if (!modulePermission.access) return false;
+
+			if (!action) return true;
+
+			if (action === 'view' ||
+				action === 'create' ||
+				action === 'edit' ||
+				action === 'delete') {
+				return modulePermission.permissions[action];
+			}
+
 			return false;
 		}
 
-		// If no specific action required, module access is enough
-		if (!action) {
-			return true;
-		}
-
-		// Check custom permissions for specific actions
-		if (userPrivileges.customPermissions) {
-			const modulePermission = userPrivileges.customPermissions.find(
-				p => p.moduleId === moduleId
-			);
-			if (modulePermission) {
-				return modulePermission.actions.includes(action);
-			}
-		}
-
-		// Default: if module access is granted, allow all actions
-		// (unless custom permissions restrict it)
-		return true;
+		return false;
 	};
 
 	// Set user privileges
 	const setUserPrivileges = (privileges: UserPrivileges) => {
-		// Find and attach role object if roleId is provided
-		if (privileges.roleId && !privileges.role) {
-			const role = availableRoles.find(r => r.id === privileges.roleId);
-			if (role) {
-				privileges.role = role;
-				// Sync permissions from role if not explicitly provided
-				if (!privileges.permissions || Object.keys(privileges.permissions).length === 0) {
-					privileges.permissions = { ...role.permissions };
-				}
-			}
-		}
 		setUserPrivilegesState(privileges);
-	};
-
-	// Update user privileges partially
-	const updateUserPrivileges = (updates: Partial<UserPrivileges>) => {
-		if (!userPrivileges) return;
-
-		const updated = { ...userPrivileges, ...updates };
-
-		// If roleId changed, update role and permissions
-		if (updates.roleId && updates.roleId !== userPrivileges.roleId) {
-			const role = availableRoles.find(r => r.id === updates.roleId);
-			if (role) {
-				updated.role = role;
-				updated.permissions = { ...role.permissions };
-			}
-		}
-
-		setUserPrivilegesState(updated);
 	};
 
 	// Clear user privileges
@@ -266,15 +194,14 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		}
 	};
 
-	// Get available roles
-	const getAvailableRoles = (): UserRole[] => {
-		return availableRoles;
-	};
-
-	// Set available roles
-	const setAvailableRoles = (roles: UserRole[]) => {
-		setAvailableRolesState(roles);
-	};
+	const isAdmin = React.useMemo(() => {
+		if (!userPrivileges) return false;
+		return (
+			userPrivileges.role?.roleName === 'Administrator' ||
+			userPrivileges.role?.roleName === 'admin' ||
+			userPrivileges.roleId === 'administrator'
+		);
+	}, [userPrivileges]);
 
 	const contextValue: PrivilegeContextType = {
 		userPrivileges,
@@ -284,10 +211,8 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		hasAllPermissions,
 		canAccess,
 		setUserPrivileges,
-		updateUserPrivileges,
 		clearPrivileges,
-		getAvailableRoles,
-		setAvailableRoles,
+		isAdmin,
 	};
 
 	return (

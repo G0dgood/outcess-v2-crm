@@ -7,17 +7,9 @@ import BackButton from '@/components/ui/BackButton';
 import Toggle from '@/components/ui/Toggle';
 import Icon from '@/components/ui/Icon';
 import { useSetup } from '@/contexts/SetupContext';
-import { useGetRolesByCompanyIdQuery, useUpdateRoleMutation } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery, useUpdateRoleMutation, Role, RolePermission } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
-
-interface Role {
-	_id: string;
-	roleName: string;
-	description: string;
-	permissions: Record<string, any>;
-	companyId?: string;
-}
 
 interface ApiError {
 	data?: {
@@ -25,6 +17,23 @@ interface ApiError {
 	};
 	message?: string;
 }
+
+const getModuleForCategory = (categoryId: string): string => {
+	switch (categoryId) {
+		case 'userManagementAccess': return 'User Management';
+		case 'customerManagement': return 'Customer Book';
+		case 'dashboardAccess': return 'Dashboard';
+		default: return '';
+	}
+};
+
+const getPermissionType = (permissionId: string): keyof RolePermission['permissions'] | null => {
+	if (permissionId.startsWith('create')) return 'create';
+	if (permissionId.startsWith('edit') || permissionId.startsWith('customize')) return 'edit';
+	if (permissionId.startsWith('delete')) return 'delete';
+	if (permissionId.startsWith('view')) return 'view';
+	return null;
+};
 
 export default function PermissionAccessLevelsPage() {
 	const router = useRouter();
@@ -47,11 +56,16 @@ export default function PermissionAccessLevelsPage() {
 				(Array.isArray((rolesData as any)?.docs) ? (rolesData as any).docs :
 					[])))) as Role[];
 
-	const roles: Role[] = rawRoles.length > 0 ? rawRoles :
+	const extractedRoles: Role[] = rawRoles.length > 0 ? rawRoles :
 		(rolesData && typeof rolesData === 'object' && !Array.isArray(rolesData) ?
-			Object.values(rolesData as Record<string, unknown>).filter((item): item is Role =>
+			Object.values(rolesData as any).filter((item): item is Role =>
 				typeof item === 'object' && item !== null && '_id' in item && 'roleName' in item
 			) : []);
+
+	// Deduplicate roles to prevent key collisions
+	const roles = React.useMemo(() => {
+		return Array.from(new Map(extractedRoles.map(role => [role._id, role])).values());
+	}, [extractedRoles]);
 
 	// Sync fetched roles with context state
 	useEffect(() => {
@@ -61,19 +75,23 @@ export default function PermissionAccessLevelsPage() {
 			// Initialize permissions for each role from API
 			roles.forEach(role => {
 				const rolePerms: Record<string, boolean> = {};
-				const apiPermissions = role.permissions || {};
+				const apiPermissions = role.permissions || [];
 
-				// Flatten nested permissions based on categories
-				permissionAccessSettings.permissionCategories.forEach(category => {
-					const categoryData = apiPermissions[category.id];
-					if (categoryData && typeof categoryData === 'object') {
-						category.permissions.forEach(perm => {
-							if (categoryData[perm.id] !== undefined) {
-								rolePerms[perm.id] = categoryData[perm.id];
-							}
-						});
-					}
-				});
+				if (Array.isArray(apiPermissions)) {
+					permissionAccessSettings.permissionCategories.forEach(category => {
+						const moduleName = getModuleForCategory(category.id);
+						const rolePermission = apiPermissions.find(p => p.moduleName === moduleName);
+
+						if (rolePermission) {
+							category.permissions.forEach(perm => {
+								const type = getPermissionType(perm.id);
+								if (type) {
+									rolePerms[perm.id] = rolePermission.permissions[type];
+								}
+							});
+						}
+					});
+				}
 
 				newRolePermissions[role._id] = rolePerms;
 			});
@@ -123,22 +141,37 @@ export default function PermissionAccessLevelsPage() {
 				return;
 			}
 
-			const currentPermissions = role.permissions || {};
+			const currentPermissions = role.permissions || [];
 			const modifiedPermissions = permissionAccessSettings.rolePermissions[roleId] || {};
 
-			// Deep clone current permissions to allow modification of nested objects
-			const finalPermissions = JSON.parse(JSON.stringify(currentPermissions));
+			// Deep clone current permissions
+			const updatedPermissions = currentPermissions.map(p => ({
+				...p,
+				permissions: { ...p.permissions }
+			}));
 
 			// Merge granular permissions into categories
 			permissionAccessSettings.permissionCategories.forEach(category => {
-				// Ensure category object exists
-				if (!finalPermissions[category.id] || typeof finalPermissions[category.id] !== 'object') {
-					finalPermissions[category.id] = {};
+				const moduleName = getModuleForCategory(category.id);
+				if (!moduleName) return;
+
+				let rolePermission = updatedPermissions.find(p => p.moduleName === moduleName);
+
+				// Create if not exists
+				if (!rolePermission) {
+					rolePermission = {
+						id: '',
+						moduleName: moduleName,
+						access: true,
+						permissions: { view: false, edit: false, delete: false, create: false }
+					};
+					updatedPermissions.push(rolePermission);
 				}
 
 				category.permissions.forEach(perm => {
-					if (modifiedPermissions[perm.id] !== undefined) {
-						finalPermissions[category.id][perm.id] = modifiedPermissions[perm.id];
+					const type = getPermissionType(perm.id);
+					if (type && modifiedPermissions[perm.id] !== undefined) {
+						rolePermission!.permissions[type] = modifiedPermissions[perm.id];
 					}
 				});
 			});
@@ -147,7 +180,7 @@ export default function PermissionAccessLevelsPage() {
 				roleName: role.roleName,
 				description: role.description,
 				companyId: role.companyId || companyId,
-				permissions: finalPermissions
+				permissions: updatedPermissions
 			};
 
 			await updateRole({

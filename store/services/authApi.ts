@@ -18,13 +18,15 @@ export interface RegisterResponse {
 }
 
 export interface LoginRequest {
-    email: string;
+    email?: string;
+    userId?: string;
     password: string;
 }
 
 export interface LoginResponse {
     message: string;
     user?: any;
+    teamMember?: any;
     token?: string;
 }
 
@@ -63,6 +65,14 @@ export const authApi = createApi({
             }),
             invalidatesTags: ['User'],
         }),
+        teamMemberLogin: builder.mutation<LoginResponse, LoginRequest>({
+            query: (credentials) => ({
+                url: 'api/v1/team-members/login',
+                method: 'POST',
+                body: credentials,
+            }),
+            invalidatesTags: ['User'],
+        }),
         getUserById: builder.query<UserResponse, string>({
             query: (id) => `api/v1/users/user/${id}`,
             providesTags: ['User'],
@@ -77,4 +87,4 @@ export const authApi = createApi({
     }),
 });
 
-export const { useRegisterMutation, useLoginMutation, useGetUserByIdQuery, useLazyGetUserByIdQuery, useLogoutMutation } = authApi;
+export const { useRegisterMutation, useLoginMutation, useTeamMemberLoginMutation, useGetUserByIdQuery, useLazyGetUserByIdQuery, useLogoutMutation } = authApi;

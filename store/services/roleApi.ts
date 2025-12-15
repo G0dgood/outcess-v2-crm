@@ -1,5 +1,17 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
+export interface RolePermission {
+    id: string;
+    moduleName: string;
+    access: boolean;
+    permissions: {
+        view: boolean;
+        edit: boolean;
+        delete: boolean;
+        create: boolean;
+    };
+}
+
 export interface Role {
     _id: string;
     id?: string;
@@ -7,7 +19,7 @@ export interface Role {
     description: string;
     companyId: string;
     lineOfBusinessId?: string;
-    permissions: Record<string, boolean>;
+    permissions: RolePermission[];
     userCount?: number;
     createdAt?: string;
     updatedAt?: string;
@@ -18,12 +30,34 @@ export interface CreateRoleRequest {
     description: string;
     companyId: string;
     lineOfBusinessId?: string;
-    permissions: Record<string, boolean>;
+    permissions: RolePermission[];
 }
 
 export interface CreateRoleResponse {
     message: string;
     role?: any;
+}
+
+export interface GetRolesResponse {
+    message?: string;
+    roles: Role[];
+}
+
+export interface PermissionTemplate {
+    id: string;
+    moduleName: string;
+    access: boolean;
+    permissions: {
+        view: boolean;
+        edit: boolean;
+        delete: boolean;
+        create: boolean;
+    };
+}
+
+export interface GetPermissionTemplatesResponse {
+    message: string;
+    roles: Role[];
 }
 
 export const roleApi = createApi({
@@ -38,7 +72,7 @@ export const roleApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ['Roles'],
+    tagTypes: ['Roles', 'PermissionTemplates'],
     endpoints: (builder) => ({
         createRole: builder.mutation<CreateRoleResponse, CreateRoleRequest>({
             query: (roleData) => ({
@@ -48,13 +82,17 @@ export const roleApi = createApi({
             }),
             invalidatesTags: ['Roles'],
         }),
-        getRolesByCompanyId: builder.query<Role[], string>({
+        getRolesByCompanyId: builder.query<GetRolesResponse, string>({
              query: (companyId) => `api/v1/roles/company/${companyId}`,
              providesTags: ['Roles'],
         }),
-        getRolesByLineOfBusinessId: builder.query<Role[], string>({
+        getRolesByLineOfBusinessId: builder.query<GetRolesResponse, string>({
              query: (lineOfBusinessId) => `api/v1/roles/line-of-business/${lineOfBusinessId}`,
              providesTags: ['Roles'],
+        }),
+        getPermissionWithPrivilege: builder.query<GetPermissionTemplatesResponse, string>({
+             query: (lineOfBusinessId) => `api/v1/roles/permissions/keys?lineOfBusinessId=${lineOfBusinessId}`,
+             providesTags: ['PermissionTemplates'],
         }),
         updateRole: builder.mutation<Role, { id: string; roleData: Partial<CreateRoleRequest> }>({
             query: ({ id, roleData }) => ({
@@ -74,4 +112,11 @@ export const roleApi = createApi({
     }),
 });
 
-export const { useCreateRoleMutation, useGetRolesByCompanyIdQuery, useGetRolesByLineOfBusinessIdQuery, useUpdateRoleMutation, useDeleteRoleMutation } = roleApi;
+export const { 
+    useCreateRoleMutation, 
+    useGetRolesByCompanyIdQuery, 
+    useGetRolesByLineOfBusinessIdQuery, 
+    useGetPermissionWithPrivilegeQuery,
+    useUpdateRoleMutation, 
+    useDeleteRoleMutation 
+} = roleApi;

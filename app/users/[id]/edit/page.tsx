@@ -10,8 +10,10 @@ import BackButton from '@/components/ui/BackButton';
 import { ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetTeamMemberByIdQuery, useUpdateTeamMemberPasswordMutation, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation } from '@/store/services/teamMembersApi';
+import { useGetTeamMemberByIdQuery, useUpdateTeamMemberPasswordMutation, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery } from '@/store/services/teamMembersApi';
 import { useGetRolesByLineOfBusinessIdQuery } from '@/store/services/roleApi';
+
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface User {
 	id: string;
@@ -52,7 +54,15 @@ const EditUserPage: React.FC = () => {
 		phone: '',
 		role: '',
 		status: true,
+		supervisorId: '',
 	});
+
+	const [fetchRoleId, setFetchRoleId] = useState<string>('');
+
+	const { data: supervisorsResponse } = useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery(
+		{ lineOfBusinessId: selectedLineOfBusinessId || '', roleId: fetchRoleId || '' },
+		{ skip: !selectedLineOfBusinessId || !fetchRoleId }
+	);
 
 	useEffect(() => {
 		if (userResponse) {
@@ -76,6 +86,7 @@ const EditUserPage: React.FC = () => {
 				phone: user.phone || '',
 				role: typeof user.role === 'object' ? (user.role.roleName || user.role.name) : (user.role || ''),
 				status: user.status === 'Active' || user.status === 'active' || user.loginStatus === 'Logged In' || user.isActive === true || user.status === true,
+				supervisorId: user.supervisorId || '',
 			});
 		}
 	}, [userResponse]);
@@ -97,6 +108,38 @@ const EditUserPage: React.FC = () => {
 			}));
 	}, [rolesData]);
 
+	const supervisorOptions = useMemo(() => {
+		if (!supervisorsResponse) return [];
+		const rawSupervisors = supervisorsResponse.teamMembers || supervisorsResponse.data || supervisorsResponse || [];
+		const supervisorsList = Array.isArray(rawSupervisors) ? rawSupervisors : (rawSupervisors.docs || []);
+		return supervisorsList.map((supervisor: any) => ({
+			value: (supervisor._id || supervisor.id || '') as string,
+			label: supervisor.name || `${supervisor.firstName || ''} ${supervisor.lastName || ''}`.trim()
+		}));
+	}, [supervisorsResponse]);
+
+	// Update fetchRoleId when role changes or rolesData loads
+	useEffect(() => {
+		if (formData.role && rolesData) {
+			const rawRoles = (Array.isArray(rolesData) ? rolesData :
+				(Array.isArray((rolesData as any)?.data) ? (rolesData as any).data :
+					(Array.isArray((rolesData as any)?.roles) ? (rolesData as any).roles :
+						(Array.isArray((rolesData as any)?.docs) ? (rolesData as any).docs :
+							[]))));
+
+			// Always fetch supervisors if we have the Supervisor role available
+			const supervisorRole = rawRoles.find((r: any) => r.roleName?.toLowerCase() === 'supervisor');
+			if (supervisorRole) {
+				setFetchRoleId(supervisorRole._id || supervisorRole.id);
+			}
+		}
+	}, [formData.role, rolesData]);
+
+	const shouldShowSupervisor = useMemo(() => {
+		const r = formData.role.toLowerCase();
+		return r === 'agent' || r === 'supervisor';
+	}, [formData.role]);
+
 	const handleInputChange = (field: string) => (value: string | boolean) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
 	};
@@ -110,7 +153,8 @@ const EditUserPage: React.FC = () => {
 					lastName: formData.lastName,
 					phone: formData.phone,
 					role: formData.role,
-					status: formData.status ? 'Active' : 'Inactive'
+					status: formData.status ? 'Active' : 'Inactive',
+					supervisorId: formData.supervisorId
 				}
 			}).unwrap();
 			toast.success('User updated successfully');
@@ -148,8 +192,69 @@ const EditUserPage: React.FC = () => {
 
 	if (isUserLoading) {
 		return (
-			<div className="flex items-center justify-center min-h-screen">
-				<div>Loading...</div>
+			<div className="w-full">
+				<div className="mb-4">
+					<Skeleton className="h-8 w-24" />
+				</div>
+				<div
+					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6"
+					style={{
+						backgroundColor: 'var(--accent-white)',
+						borderColor: 'var(--light-gray)'
+					}}
+				>
+					<div className="flex items-center gap-4 mb-4">
+						<Skeleton className="w-16 h-16 rounded-full" />
+						<div className="space-y-2">
+							<Skeleton className="h-8 w-48" />
+							<Skeleton className="h-4 w-32" />
+							<Skeleton className="h-4 w-24" />
+						</div>
+					</div>
+					<div className="flex gap-6 border-b dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
+						<Skeleton className="h-8 w-20" />
+						<Skeleton className="h-8 w-20" />
+					</div>
+				</div>
+				<div
+					className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+					style={{
+						backgroundColor: 'var(--accent-white)',
+						borderColor: 'var(--light-gray)'
+					}}
+				>
+					<Skeleton className="h-8 w-32 mb-6" />
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div className="space-y-2">
+							<Skeleton className="h-4 w-20" />
+							<Skeleton className="h-10 w-full" />
+						</div>
+						<div className="space-y-2">
+							<Skeleton className="h-4 w-20" />
+							<Skeleton className="h-10 w-full" />
+						</div>
+						<div className="space-y-2">
+							<Skeleton className="h-4 w-20" />
+							<Skeleton className="h-10 w-full" />
+						</div>
+						<div className="space-y-2">
+							<Skeleton className="h-4 w-20" />
+							<Skeleton className="h-10 w-full" />
+						</div>
+						<div className="space-y-2">
+							<Skeleton className="h-4 w-20" />
+							<Skeleton className="h-10 w-full" />
+						</div>
+						<div className="space-y-2">
+							<Skeleton className="h-4 w-20" />
+							<Skeleton className="h-10 w-full" />
+						</div>
+					</div>
+					<div className="flex justify-end gap-3 mt-8 pt-6 border-t dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
+						<Skeleton className="h-10 w-24" />
+						<Skeleton className="h-10 w-24" />
+					</div>
+				</div>
 			</div>
 		);
 	}
@@ -309,6 +414,16 @@ const EditUserPage: React.FC = () => {
 							options={roleOptions}
 							placeholder="Select Role"
 						/>
+
+						{shouldShowSupervisor && (
+							<Dropdown
+								label="Supervisor"
+								placeholder="Select Supervisor"
+								options={supervisorOptions}
+								value={formData.supervisorId}
+								onChange={(value) => handleInputChange('supervisorId')(Array.isArray(value) ? value[0] : value)}
+							/>
+						)}
 
 						<div>
 							<label

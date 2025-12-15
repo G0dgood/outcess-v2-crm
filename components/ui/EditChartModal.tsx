@@ -71,15 +71,15 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		if (chart) {
 			// Convert single string to array for backward compatibility
 			const dataSource = Array.isArray(chart.dataSource)
-				? chart.dataSource
-				: chart.dataSource ? [chart.dataSource] : [];
+				? chart?.dataSource
+				: chart?.dataSource ? [chart?.dataSource] : [];
 
 			// Initialize colors from chart.colors or create from chart.color
 			const colors: Record<string, string> = {};
 			if (chart.colors) {
 				// Use existing colors map
-				Object.assign(colors, chart.colors);
-			} else if (chart.color && dataSource.length > 0) {
+				Object.assign(colors, chart?.colors);
+			} else if (chart?.color && dataSource?.length > 0) {
 				// Initialize colors from single color for all data sources
 				dataSource.forEach(source => {
 					colors[source] = chart.color || '#050711';
@@ -87,13 +87,13 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 			}
 
 			setFormData({
-				title: chart.title || '',
-				type: chart.type || 'pie',
+				title: chart?.title || '',
+				type: chart?.type || 'pie',
 				dataSource,
-				timeRange: chart.timeRange || 'daily',
-				color: chart.color || '#050711',
+				timeRange: chart?.timeRange || 'daily',
+				color: chart?.color || '#050711',
 				colors,
-				position: chart.position || {
+				position: chart?.position || {
 					x: 20,
 					y: 20,
 					width: 400,
@@ -123,21 +123,21 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		options.push(...commonOptions);
 
 		// Add call outcomes if available
-		if (lineOfBusinessData.dashboardSettings.callOutcomes && lineOfBusinessData.dashboardSettings.callOutcomes.length > 0) {
-			lineOfBusinessData.dashboardSettings.callOutcomes.forEach((outcome: { name: any; }) => {
+		if (lineOfBusinessData?.dashboardSettings?.callOutcomes && lineOfBusinessData?.dashboardSettings?.callOutcomes?.length > 0) {
+			lineOfBusinessData?.dashboardSettings?.callOutcomes.forEach((outcome: { name: any; }) => {
 				options.push({
-					value: outcome.name,
-					label: outcome.name,
+					value: outcome?.name,
+					label: outcome?.name,
 				});
 			});
 		}
 
 		// Add disposition categories if available
-		if (lineOfBusinessData.dashboardSettings.dispositions && lineOfBusinessData.dashboardSettings.dispositions.length > 0) {
-			lineOfBusinessData.dashboardSettings.dispositions.forEach((disposition: { name: any; }) => {
+		if (lineOfBusinessData?.dashboardSettings?.dispositions && lineOfBusinessData?.dashboardSettings?.dispositions?.length > 0) {
+			lineOfBusinessData?.dashboardSettings?.dispositions.forEach((disposition: { name: any; }) => {
 				options.push({
-					value: disposition.name,
-					label: disposition.name,
+					value: disposition?.name,
+					label: disposition?.name,
 				});
 			});
 		}
@@ -146,7 +146,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		options.push({ value: 'Custom Data', label: 'Custom Data' });
 
 		return options;
-	}, [lineOfBusinessData.dashboardSettings.callOutcomes, lineOfBusinessData.dashboardSettings.dispositions]);
+	}, [lineOfBusinessData?.dashboardSettings?.callOutcomes, lineOfBusinessData?.dashboardSettings?.dispositions]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
 		// For non-multiple fields, ensure we only use string values
@@ -167,7 +167,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 			const newColors = { ...prev.colors };
 			dataSourceArray.forEach(source => {
 				if (!newColors[source]) {
-					newColors[source] = prev.color || '#050711';
+					newColors[source] = prev?.color || '#050711';
 				}
 			});
 			// Remove colors for deselected data sources
@@ -184,7 +184,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		setFormData(prev => ({
 			...prev,
 			colors: {
-				...prev.colors,
+				...prev?.colors,
 				[dataSource]: color
 			}
 		}));
@@ -235,13 +235,13 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 			}
 
 			setFormData({
-				title: chart.title || '',
-				type: chart.type || 'pie',
+				title: chart?.title || '',
+				type: chart?.type || 'pie',
 				dataSource,
-				timeRange: chart.timeRange || 'daily',
-				color: chart.color || '#050711',
+				timeRange: chart?.timeRange || 'daily',
+				color: chart?.color || '#050711',
 				colors,
-				position: chart.position || {
+				position: chart?.position || {
 					x: 20,
 					y: 20,
 					width: 400,
@@ -263,7 +263,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 				<Input
 					label="Chart Title"
 					placeholder="Enter chart title"
-					value={formData.title}
+					value={formData?.title}
 					onChange={handleInputChange('title')}
 					required
 				/>
@@ -272,7 +272,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 					label="Chart Type"
 					placeholder="Select chart type"
 					options={chartTypeOptions}
-					value={formData.type}
+					value={formData?.type}
 					onChange={handleInputChange('type')}
 					required
 				/>
@@ -281,10 +281,10 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 					label="Data Sources"
 					placeholder="Select data sources"
 					options={dataSourceOptions}
-					value={Array.isArray(formData.dataSource)
+					value={Array.isArray(formData?.dataSource)
 						? formData.dataSource
-						: (typeof formData.dataSource === 'string' && formData.dataSource)
-							? [formData.dataSource]
+						: (typeof formData?.dataSource === 'string' && formData?.dataSource)
+							? [formData?.dataSource]
 							: []}
 					onChange={handleDataSourceChange}
 					required
@@ -292,7 +292,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 				/>
 
 				{/* Color pickers for each selected data source */}
-				{Array.isArray(formData.dataSource) && formData.dataSource.length > 0 && (
+				{Array.isArray(formData?.dataSource) && formData?.dataSource?.length > 0 && (
 					<div className="space-y-3">
 						<label
 							className="block text-sm font-medium dark:text-gray-300"
@@ -300,8 +300,8 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 						>
 							Data Source Colors
 						</label>
-						{formData.dataSource.map((source: string) => {
-							const sourceLabel = dataSourceOptions.find(opt => opt.value === source)?.label || source;
+						{formData?.dataSource?.map((source: string) => {
+							const sourceLabel = dataSourceOptions?.find(opt => opt.value === source)?.label || source;
 							return (
 								<div key={source} className="flex items-center gap-3">
 									<span

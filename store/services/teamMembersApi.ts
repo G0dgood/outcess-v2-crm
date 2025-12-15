@@ -10,16 +10,20 @@ export interface TeamMember {
     status?: string;
     lastLogin?: string;
     companyId?: string;
+    supervisorId?: string;
 }
 
 export interface CreateTeamMemberRequest {
-    firstName: string;
-    lastName: string;
+    name: string;
     email: string;
     phone: string;
     role: string;
     companyId: string;
+    lineOfBusinessId?: string;
     password?: string;
+    supervisorId?: string;
+    status?: string;
+    userId?: string;
 }
 
 export const teamMembersApi = createApi({
@@ -54,6 +58,14 @@ export const teamMembersApi = createApi({
         }),
         getTeamMembersByLineOfBusinessId: builder.query<any, string>({
              query: (lineOfBusinessId) => `api/v1/team-members/line-of-business/${lineOfBusinessId}`,
+             providesTags: ['TeamMembers'],
+        }),
+        getTeamMembersByLineOfBusinessIdAndRoleId: builder.query<any, { lineOfBusinessId: string; roleId: string }>({
+             query: ({ lineOfBusinessId, roleId }) => `api/v1/team-members/line-of-business/${lineOfBusinessId}/role/${roleId}`,
+             providesTags: ['TeamMembers'],
+        }),
+        getTeamMembersBySupervisorId: builder.query<any, string>({
+             query: (supervisorId) => `api/v1/team-members/supervisor/${supervisorId}`,
              providesTags: ['TeamMembers'],
         }),
         getTeamMemberById: builder.query<any, string>({
@@ -99,6 +111,8 @@ export const {
     useGetTeamMembersQuery, 
     useGetTeamMembersByCompanyIdQuery,
     useGetTeamMembersByLineOfBusinessIdQuery,
+    useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery,
+    useGetTeamMembersBySupervisorIdQuery,
     useGetTeamMemberByIdQuery,
     useUpdateTeamMemberMutation, 
     useUpdateTeamMemberPasswordMutation,

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import Input from './Input';
 import LogoUpload from './LogoUpload';
@@ -13,29 +13,60 @@ import { BusinessHourData } from './AddBusinessHourModal';
 import { Pencil1Icon } from '@radix-ui/react-icons';
 import PageHeading from './PageHeading';
 import SupPageHeading from './SubPageHeading';
+import { useGetCompanyByIdQuery, useUpdateCompanyMutation } from '@/store/services/companyApi';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { toastSuccess, toastError } from '@/utils/toastWithSound';
+import CompanyDetailsSkeleton from '@/components/skeletons/CompanyDetailsSkeleton';
 
 interface CompanyDetailsProps {
 	className?: string;
 }
 
 const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
+	const { lineOfBusinessData } = useLineOfBusiness();
+	const [updateCompany, { isLoading: isUpdating }] = useUpdateCompanyMutation();
+
+	console.log('lineOfBusinessData-----', lineOfBusinessData?.lineOfBusiness?.companyId)
+
 	const [activeTab, setActiveTab] = useState<'company-detail' | 'business-hour' | 'currencies'>('company-detail');
 	const [isEditMode, setIsEditMode] = useState(false);
 	const [isBusinessHourEditMode, setIsBusinessHourEditMode] = useState(false);
 	const [isAddShiftHourModalOpen, setIsAddShiftHourModalOpen] = useState(false);
 	const [isAddCurrencyModalOpen, setIsAddCurrencyModalOpen] = useState(false);
 	const [isAddBusinessHourModalOpen, setIsAddBusinessHourModalOpen] = useState(false);
-    const [selectedShiftHour, setSelectedShiftHour] = useState<ShiftHour | null>(null);
-    const [currencies, setCurrencies] = useState<Currency[]>([]);
-    const [businessHours, setBusinessHours] = useState<BusinessHourData[]>([]);
+	const [selectedShiftHour, setSelectedShiftHour] = useState<ShiftHour | null>(null);
+	const [currencies, setCurrencies] = useState<Currency[]>([]);
+	const [businessHours, setBusinessHours] = useState<BusinessHourData[]>([]);
 	const [formData, setFormData] = useState({
-		companyName: 'Uconnect',
+		companyName: '',
 		phoneNumber: '',
 		website: '',
 		state: '',
 		country: '',
 		timeZone: '(GMT 1:0) Western African Time (Africa/Lagos)',
+		description: '',
+		logo: '',
 	});
+
+	// Fetch company details
+	const { data: companyData, isLoading, error } = useGetCompanyByIdQuery(lineOfBusinessData?.lineOfBusiness?.companyId);
+
+	useEffect(() => {
+		if (companyData?.company) {
+			const { company } = companyData;
+			setFormData(prev => ({
+				...prev,
+				companyName: company.companyName || '',
+				phoneNumber: company.phoneNumber || company.phone || '',
+				website: company.website || '',
+				state: company.state || '',
+				country: company.country || '',
+				timeZone: company.timeZone || prev.timeZone,
+				description: company.description || '',
+				logo: company.logo || '',
+			}));
+		}
+	}, [companyData]);
 	const [businessHourData, setBusinessHourData] = useState({
 		businessDays: 'Monday - Sunday',
 		businessHours: '24 Hours',
@@ -55,10 +86,30 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
 	};
 
-	const handleSave = () => {
-		console.log('Saving company details:', formData);
-		setIsEditMode(false);
-		// Implement save logic here
+	const handleSave = async () => {
+		try {
+			const payload = {
+				companyName: formData.companyName,
+				description: formData.description,
+				phone: formData.phoneNumber,
+				website: formData.website,
+				country: formData.country,
+				timeZone: formData.timeZone,
+				logo: formData.logo,
+				state: formData.state,
+			};
+
+			await updateCompany({
+				id: lineOfBusinessData?.lineOfBusiness?.companyId,
+				data: payload
+			}).unwrap();
+
+			toastSuccess('Company details updated successfully');
+			setIsEditMode(false);
+		} catch (err) {
+			console.error('Failed to update company:', err);
+			toastError('Failed to update company details');
+		}
 	};
 
 	const formatTime = (time: string): string => {
@@ -81,6 +132,10 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 		AUD: 'A$ 1,224,067.34',
 	};
 
+	if (isLoading) {
+		return <CompanyDetailsSkeleton className={className} />;
+	}
+
 	return (
 		<div className={`w-full h-full pb-8 ${className}`}>
 			{/* Header with Edit Button */}
@@ -100,7 +155,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 				)}
 			</div>
 
-			<div 
+			<div
 				className="dark:bg-gray-800 border dark:border-gray-700 p-6"
 				style={{
 					backgroundColor: 'var(--accent-white)',
@@ -108,7 +163,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 				}}
 			>
 				{/* Tabs */}
-				<div 
+				<div
 					className="mb-6 border-b dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
@@ -207,6 +262,13 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 								disabled={!isEditMode}
 							/>
 							<Input
+								label="Description"
+								placeholder="Enter description"
+								value={formData.description}
+								onChange={handleInputChange('description')}
+								disabled={!isEditMode}
+							/>
+							<Input
 								label="Phone Number"
 								placeholder="Enter phone number"
 								value={formData.phoneNumber}
@@ -267,7 +329,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 
 						{/* Logo Upload Section */}
 						<div>
-							<label 
+							<label
 								className="block text-sm font-medium dark:text-gray-300 mb-2"
 								style={{ color: 'var(--text-secondary)' }}
 							>
@@ -297,6 +359,8 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 									variant="primary"
 									size="md"
 									onClick={handleSave}
+									loading={isUpdating}
+									disabled={isUpdating}
 								>
 									Save
 								</Button>
@@ -311,7 +375,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 						<div>
 							<div className="flex items-center justify-between mb-4">
 								<div className="flex items-center gap-2">
-									<h2 
+									<h2
 										className="text-2xl font-semibold dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
@@ -351,7 +415,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 							/>
 
 							{businessHourData.businessDays ? (
-								<div 
+								<div
 									className="dark:bg-gray-800 border dark:border-gray-700 p-6 space-y-4"
 									style={{
 										backgroundColor: 'var(--accent-white)',
@@ -360,7 +424,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 								>
 									<div className="flex items-center justify-between">
 										<div>
-											<label 
+											<label
 												className="block text-sm font-medium dark:text-gray-400 mb-1"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
@@ -372,7 +436,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 													onChange={(value) => setBusinessHourData(prev => ({ ...prev, businessDays: value }))}
 													placeholder="Enter business days" label={''} />
 											) : (
-												<p 
+												<p
 													className="text-base dark:text-gray-100 font-medium"
 													style={{ color: 'var(--text-primary)' }}
 												>
@@ -383,7 +447,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 									</div>
 									<div className="flex items-center justify-between">
 										<div>
-											<label 
+											<label
 												className="block text-sm font-medium dark:text-gray-400 mb-1"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
@@ -395,7 +459,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 													onChange={(value) => setBusinessHourData(prev => ({ ...prev, businessHours: value }))}
 													placeholder="Enter business hours" label={''} />
 											) : (
-												<p 
+												<p
 													className="text-base dark:text-gray-100 font-medium"
 													style={{ color: 'var(--text-primary)' }}
 												>
@@ -428,14 +492,14 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 									)}
 								</div>
 							) : (
-								<div 
+								<div
 									className="dark:bg-gray-800 border dark:border-gray-700 p-6 min-h-[200px] flex items-center justify-center"
 									style={{
 										backgroundColor: 'var(--accent-white)',
 										borderColor: 'var(--light-gray)'
 									}}
 								>
-									<p 
+									<p
 										className="dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
@@ -449,13 +513,13 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 						<div>
 							<div className="flex items-start justify-between mb-4">
 								<div className="flex-1">
-									<h2 
+									<h2
 										className="text-2xl font-semibold dark:text-gray-100 mb-2"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										Shift Hour
 									</h2>
-									<p 
+									<p
 										className="dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
@@ -475,7 +539,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 							</div>
 
 							{/* Shift Hours Table */}
-							<div 
+							<div
 								className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
 								style={{
 									backgroundColor: 'var(--accent-white)',
@@ -483,11 +547,11 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 								}}
 							>
 								<div className="overflow-x-auto">
-									<table 
+									<table
 										className="min-w-full divide-y dark:divide-gray-700"
 										style={{ borderColor: 'var(--light-gray)' }}
 									>
-										<thead 
+										<thead
 											className="dark:bg-gray-700 border-b dark:border-gray-700"
 											style={{
 												backgroundColor: 'var(--bg-primary)',
@@ -495,25 +559,25 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 											}}
 										>
 											<tr>
-												<th 
+												<th
 													className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
 													style={{ color: 'var(--text-primary)' }}
 												>
 													Shift Name
 												</th>
-												<th 
+												<th
 													className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
 													style={{ color: 'var(--text-primary)' }}
 												>
 													Shift Days
 												</th>
-												<th 
+												<th
 													className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
 													style={{ color: 'var(--text-primary)' }}
 												>
 													Shift Timing
 												</th>
-												<th 
+												<th
 													className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
 													style={{ color: 'var(--text-primary)' }}
 												>
@@ -521,7 +585,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 												</th>
 											</tr>
 										</thead>
-										<tbody 
+										<tbody
 											className="dark:bg-gray-800 divide-y dark:divide-gray-700"
 											style={{
 												backgroundColor: 'var(--accent-white)',
@@ -530,8 +594,8 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 										>
 											{shiftHours.length === 0 ? (
 												<tr>
-													<td 
-														colSpan={4} 
+													<td
+														colSpan={4}
 														className="px-6 py-12 text-center dark:text-gray-400"
 														style={{ color: 'var(--text-tertiary)' }}
 													>
@@ -539,9 +603,9 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 													</td>
 												</tr>
 											) : (
-												shiftHours.map((shift) => (
-													<tr 
-														key={shift.id} 
+												shiftHours?.map((shift) => (
+													<tr
+														key={shift.id}
 														className="dark:hover:bg-gray-700 transition-colors"
 														style={{ borderColor: 'var(--light-gray)' }}
 														onMouseEnter={(e) => {
@@ -551,25 +615,25 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 															e.currentTarget.style.backgroundColor = 'var(--accent-white)';
 														}}
 													>
-														<td 
+														<td
 															className="px-6 py-4 whitespace-nowrap font-medium dark:text-gray-100"
 															style={{ color: 'var(--text-primary)' }}
 														>
 															{shift.shiftName}
 														</td>
-														<td 
+														<td
 															className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
 															style={{ color: 'var(--text-primary)' }}
 														>
 															{shift.shiftDays}
 														</td>
-														<td 
+														<td
 															className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
 															style={{ color: 'var(--text-primary)' }}
 														>
 															{shift.shiftStartTime} - {shift.shiftEndTime}
 														</td>
-														<td 
+														<td
 															className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
 															style={{ color: 'var(--text-primary)' }}
 														>
@@ -665,18 +729,18 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 						{/* Header Section */}
 						<div className="flex items-start justify-between">
 							<div className="flex-1">
-								<h2 
+								<h2
 									className="text-2xl font-semibold dark:text-gray-100 mb-2"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Currencies
 								</h2>
-                            <p 
-                                className="dark:text-gray-400"
-                                style={{ color: 'var(--text-tertiary)' }}
-                            >
-                                Configure your organization&apos;s currency settings on this page.
-                            </p>
+								<p
+									className="dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Configure your organization&apos;s currency settings on this page.
+								</p>
 							</div>
 							<Button
 								variant="primary"
@@ -690,7 +754,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 						</div>
 
 						{/* Currencies Content */}
-						<div 
+						<div
 							className="dark:bg-gray-800 border dark:border-gray-700 p-6 min-h-[400px]"
 							style={{
 								backgroundColor: 'var(--accent-white)',
@@ -699,7 +763,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 						>
 							{currencies.length === 0 ? (
 								<div className="flex items-center justify-center h-full">
-									<p 
+									<p
 										className="dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
@@ -709,21 +773,21 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 							) : (
 								<div className="space-y-4">
 									{currencies.map((currency, index) => (
-										<div 
-											key={index} 
+										<div
+											key={index}
 											className="border dark:border-gray-700 p-4 rounded-lg"
 											style={{
 												borderColor: 'var(--light-gray)',
 												backgroundColor: 'var(--accent-white)'
 											}}
 										>
-											<p 
+											<p
 												className="font-medium dark:text-gray-100"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												{currency.name}
 											</p>
-											<p 
+											<p
 												className="text-sm dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>

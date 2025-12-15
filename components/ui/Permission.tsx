@@ -1,19 +1,20 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import RenameModuleModal from './RenameModuleModal';
-import ModulePermissionModal from './ModulePermissionModal';
+import React, { useState, useEffect } from 'react';
 import Checkbox from './Checkbox';
 import Toggle from './Toggle';
-import { DotsHorizontalIcon } from '@radix-ui/react-icons';
+import { ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons';
 import PageHeading from './PageHeading';
 import SubPageHeading from './SubPageHeading';
+import Button from './Button';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useGetPermissionWithPrivilegeQuery, useUpdateRoleMutation, RolePermission, Role } from '@/store/services/roleApi';
+import { toastError, toastSuccess, toastInfo } from '@/utils/toastWithSound';
+import PermissionSkeleton from '@/components/skeletons/PermissionSkeleton';
 
 interface PermissionItem {
 	id: string;
 	moduleName: string;
-	sharedTo: string;
-	selectedRoles?: string[];
 	dateCreated?: string;
 	access: boolean;
 	permissions: {
@@ -24,460 +25,302 @@ interface PermissionItem {
 	};
 }
 
+// Helper to map RolePermission (API) to PermissionItem (UI)
+const mapRolePermissionToItem = (p: RolePermission): PermissionItem => {
+	return {
+		id: p.id,
+		moduleName: p.moduleName,
+		access: p.access,
+		permissions: p.permissions
+	};
+};
+
 interface PermissionProps {
 	className?: string;
 }
 
-const roleLabels: { [key: string]: string } = {
-	'admin': 'Admin',
-	'agent': 'Agent',
-	'supervisor': 'Supervisor',
-};
-
 const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
-	const [permissions, setPermissions] = useState<PermissionItem[]>([
-		{
-			id: '1',
-			moduleName: 'Dashboard',
-			sharedTo: 'Admin, Agent',
-			selectedRoles: ['admin', 'agent'],
-			dateCreated: 'Jan 15, 2024',
-			access: true,
-			permissions: {
-				view: true,
-				edit: false,
-				delete: false,
-				create: false,
-			},
-		},
-		{
-			id: '2',
-			moduleName: 'Customer Book',
-			sharedTo: 'All roles',
-			selectedRoles: ['admin', 'agent', 'supervisor'],
-			dateCreated: 'Jan 10, 2024',
-			access: true,
-			permissions: {
-				view: true,
-				edit: false,
-				delete: false,
-				create: false,
-			},
-		},
-		{
-			id: '3',
-			moduleName: 'Users',
-			sharedTo: 'All roles',
-			selectedRoles: ['admin', 'agent', 'supervisor'],
-			dateCreated: 'Dec 28, 2023',
-			access: true,
-			permissions: {
-				view: true,
-				edit: false,
-				delete: false,
-				create: false,
-			},
-		},
-		{
-			id: '4',
-			moduleName: 'Setup Book',
-			sharedTo: 'All roles',
-			selectedRoles: ['admin', 'agent', 'supervisor'],
-			dateCreated: 'Dec 15, 2023',
-			access: true,
-			permissions: {
-				view: true,
-				edit: false,
-				delete: false,
-				create: false,
-			},
-		},
-		{
-			id: '5',
-			moduleName: 'Report',
-			sharedTo: 'All roles',
-			selectedRoles: ['admin', 'agent', 'supervisor'],
-			dateCreated: 'Dec 5, 2023',
-			access: true,
-			permissions: {
-				view: true,
-				edit: false,
-				delete: false,
-				create: false,
-			},
-		},
-		{
-			id: '6',
-			moduleName: 'System Configuration',
-			sharedTo: 'All roles',
-			selectedRoles: ['admin', 'agent', 'supervisor'],
-			dateCreated: 'Nov 20, 2023',
-			access: true,
-			permissions: {
-				view: true,
-				edit: false,
-				delete: false,
-				create: false,
-			},
-		},
-	]);
+	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	// Note: API returns { roles: Role[] } now
+	const { data: permissionData, isLoading } = useGetPermissionWithPrivilegeQuery(selectedLineOfBusinessId || '', {
+		skip: !selectedLineOfBusinessId
+	});
 
-	const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-	const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
-	const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
-	const [editingPermission, setEditingPermission] = useState<PermissionItem | null>(null);
-	const menuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+	// State now holds the roles with their permissions
+	const [rolesPermissions, setRolesPermissions] = useState<Role[]>([]);
 
-	// Close menu when clicking outside
 	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (openMenuId) {
-				const clickedElement = event.target as Node;
-				const menuElement = menuRefs.current[openMenuId];
-				if (menuElement && !menuElement.contains(clickedElement)) {
-					setOpenMenuId(null);
-				}
-			}
-		};
+		if (permissionData && permissionData.roles) {
+			console.log('Permission Data:', permissionData);
+			setRolesPermissions(permissionData.roles);
+		} else if (permissionData) {
+			console.log('Permission Data (no roles):', permissionData);
+		}
+	}, [permissionData]);
 
-		if (openMenuId) {
-			// Use setTimeout to avoid closing immediately when clicking the button
-			const timeoutId = setTimeout(() => {
-				document.addEventListener('mousedown', handleClickOutside);
-			}, 0);
+	const [updateRole, { isLoading: isUpdating }] = useUpdateRoleMutation();
+	const [updatingRoleIds, setUpdatingRoleIds] = useState<string[]>([]);
 
-			return () => {
-				clearTimeout(timeoutId);
-				document.removeEventListener('mousedown', handleClickOutside);
+	const handleSaveRole = async (role: Role) => {
+		const roleId = role._id || role.id!;
+		if (updatingRoleIds.includes(roleId)) return;
+
+		setUpdatingRoleIds(prev => [...prev, roleId]);
+		try {
+			const roleData = {
+				roleName: role.roleName,
+				description: role.description,
+				companyId: role.companyId,
+				lineOfBusinessId: role.lineOfBusinessId,
+				permissions: role.permissions
 			};
-		}
-	}, [openMenuId]);
-
-	const handleMenuToggle = (id: string, e?: React.MouseEvent) => {
-		if (e) {
-			e.stopPropagation();
-		}
-		setOpenMenuId(openMenuId === id ? null : id);
-	};
-
-	const handleRename = (permission: PermissionItem) => {
-		setEditingPermission(permission);
-		setIsRenameModalOpen(true);
-		setOpenMenuId(null);
-	};
-
-	const handleModulePermission = (permission: PermissionItem) => {
-		setEditingPermission(permission);
-		setIsPermissionModalOpen(true);
-		setOpenMenuId(null);
-	};
-
-	const handleRenameSave = (newName: string) => {
-		if (editingPermission) {
-			setPermissions(prev => prev.map(p =>
-				p.id === editingPermission.id
-					? { ...p, moduleName: newName }
-					: p
-			));
-			setEditingPermission(null);
+			await updateRole({ id: roleId, roleData }).unwrap();
+			toastSuccess('Permissions updated successfully');
+		} catch (error) {
+			console.error('Failed to update permissions:', error);
+			toastError('Failed to update permissions');
+		} finally {
+			setUpdatingRoleIds(prev => prev.filter(id => id !== roleId));
 		}
 	};
 
-	const handlePermissionSave = (roles: string[]) => {
-		if (editingPermission) {
-			const sharedTo = roles.length === 3 ? 'All roles' : roles.map(roleId => roleLabels[roleId] || roleId).join(', ');
-			setPermissions(prev => prev.map(p =>
-				p.id === editingPermission.id
-					? { ...p, selectedRoles: roles, sharedTo }
-					: p
-			));
-			setEditingPermission(null);
+	const handleAccessToggle = (roleId: string, permissionId: string, value: boolean) => {
+		setRolesPermissions(prev => prev.map(role => {
+			const currentRoleId = role._id || role.id;
+			if (currentRoleId === roleId) {
+				return {
+					...role,
+					permissions: role.permissions.map(p =>
+						p.id === permissionId ? { ...p, access: value } : p
+					)
+				};
+			}
+			return role;
+		}));
+	};
+
+	const handlePermissionChange = (roleId: string, permissionId: string, type: 'view' | 'edit' | 'delete' | 'create', value: boolean) => {
+		// Check access first
+		const role = rolesPermissions.find(r => (r._id || r.id) === roleId);
+		if (role) {
+			const permission = role.permissions.find(p => p.id === permissionId);
+			if (permission && !permission.access) {
+				toastError('Please enable access first');
+				return;
+			}
 		}
+
+		setRolesPermissions(prev => prev.map(role => {
+			const currentRoleId = role._id || role.id;
+			if (currentRoleId === roleId) {
+				return {
+					...role,
+					permissions: role.permissions.map(p =>
+						p.id === permissionId ? {
+							...p,
+							permissions: { ...p.permissions, [type]: value }
+						} : p
+					)
+				};
+			}
+			return role;
+		}));
 	};
 
-	const handleAccessToggle = (id: string, value: boolean) => {
-		setPermissions(prev => prev.map(p =>
-			p.id === id
-				? { ...p, access: value }
-				: p
-		));
+	// Accordion State
+	const [openRoleIds, setOpenRoleIds] = useState<string[]>([]);
+	const toggleAccordion = (roleId: string) => {
+		setOpenRoleIds(prev =>
+			prev.includes(roleId) ? prev.filter(id => id !== roleId) : [...prev, roleId]
+		);
 	};
 
-	const handlePermissionChange = (id: string, permissionType: 'view' | 'edit' | 'delete' | 'create', value: boolean) => {
-		setPermissions(prev => prev.map(p =>
-			p.id === id
-				? { ...p, permissions: { ...p.permissions, [permissionType]: value } }
-				: p
-		));
-	};
+	if (isLoading) {
+		return <PermissionSkeleton className={className} />;
+	}
 
 	return (
 		<div className={`w-full h-full ${className}`}>
 			{/* Header Section */}
-			<div className="mb-6">
-				<PageHeading
-					text="Permission"
-				/>
-				<SubPageHeading
-					text="Keep your team organized and efficient by ensuring every user has access to the right assets."
-				/>
-			</div>
-
-			{/* Permission Table */}
-			<div 
-				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
-				style={{
-					backgroundColor: 'var(--accent-white)',
-					borderColor: 'var(--light-gray)'
-				}}
-			>
-				<div className="overflow-x-auto">
-					<table 
-						className="min-w-full divide-y dark:divide-gray-700"
-						style={{ borderColor: 'var(--light-gray)' }}
-					>
-						<thead 
-							className="dark:bg-gray-700 border-b dark:border-gray-700"
-							style={{ 
-								backgroundColor: 'var(--bg-primary)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
-							<tr>
-								<th 
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Module Name
-								</th>
-								<th 
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Shared To
-								</th>
-								<th 
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Date Created
-								</th>
-								<th 
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Access
-								</th>
-								<th 
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Permission
-								</th>
-								<th 
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Action
-								</th>
-							</tr>
-						</thead>
-						<tbody 
-							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
-							style={{
-								backgroundColor: 'var(--accent-white)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
-							{permissions.length === 0 ? (
-								<tr>
-									<td 
-										colSpan={6} 
-										className="px-6 py-12 text-center dark:text-gray-400"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										No permissions configured yet.
-									</td>
-								</tr>
-							) : (
-								permissions.map((permission) => (
-									<tr 
-										key={permission.id} 
-										className="dark:hover:bg-gray-700 transition-colors"
-										style={{ borderColor: 'var(--light-gray)' }}
-										onMouseEnter={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-										}}
-										onMouseLeave={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-										}}
-									>
-										<td className="px-6 py-4 whitespace-nowrap">
-											<span 
-												className="font-medium dark:text-gray-100"
-												style={{ color: 'var(--text-primary)' }}
-											>
-												{permission.moduleName}
-											</span>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap">
-											<span 
-												className="text-sm dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{permission.sharedTo}
-											</span>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap">
-											<span 
-												className="text-sm dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{permission.dateCreated || ''}
-											</span>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap">
-											<Toggle
-												checked={permission.access}
-												onChange={(checked) => handleAccessToggle(permission.id, checked)}
-											/>
-										</td>
-										<td className="px-6 py-4">
-											<div className="flex items-center gap-4">
-												<Checkbox
-													checked={permission.permissions.view}
-													onChange={(checked) => handlePermissionChange(permission.id, 'view', checked)}
-													label="View"
-													size="medium"
-												/>
-												<Checkbox
-													checked={permission.permissions.edit}
-													onChange={(checked) => handlePermissionChange(permission.id, 'edit', checked)}
-													label="Edit"
-													size="medium"
-												/>
-												<Checkbox
-													checked={permission.permissions.delete}
-													onChange={(checked) => handlePermissionChange(permission.id, 'delete', checked)}
-													label="Delete"
-													size="medium"
-												/>
-												<Checkbox
-													checked={permission.permissions.create}
-													onChange={(checked) => handlePermissionChange(permission.id, 'create', checked)}
-													label="Create"
-													size="medium"
-												/>
-											</div>
-										</td>
-										<td className="px-2 py-2 whitespace-nowrap">
-											<div
-												className="relative"
-												ref={(el) => {
-													if (menuRefs && menuRefs.current) {
-														menuRefs.current[permission.id] = el;
-													}
-												}}
-											>
-												{/* Action Button */}
-												<button
-													onClick={() => handleMenuToggle(permission.id)}
-													className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
-													style={{ color: 'var(--text-tertiary)' }}
-													onMouseEnter={(e) => {
-														e.currentTarget.style.color = 'var(--text-secondary)';
-														e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-													}}
-													onMouseLeave={(e) => {
-														e.currentTarget.style.color = 'var(--text-tertiary)';
-														e.currentTarget.style.backgroundColor = 'transparent';
-													}}
-													aria-label="Actions"
-													aria-expanded={openMenuId === permission.id}
-												>
-													<DotsHorizontalIcon className="w-4 h-4" />
-												</button>
-
-												{/* Dropdown Menu */}
-												{openMenuId === permission.id && (
-													<div 
-														className="absolute right-0 w-48 dark:bg-gray-800 border dark:border-gray-700 shadow-lg z-50"
-														style={{
-															backgroundColor: 'var(--accent-white)',
-															borderColor: 'var(--light-gray)'
-														}}
-													>
-														<div className="flex flex-col">
-															<button
-																onClick={() => handleRename(permission)}
-																className="w-full px-4 py-2 text-left text-sm dark:text-gray-300 dark:hover:bg-gray-700 transition-colors dark:border-gray-700 cursor-pointer"
-																style={{
-																	color: 'var(--text-secondary)',
-																	backgroundColor: 'transparent',
-																	borderColor: 'var(--light-gray)'
-																}}
-																onMouseEnter={(e) => {
-																	e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-																}}
-																onMouseLeave={(e) => {
-																	e.currentTarget.style.backgroundColor = 'transparent';
-																}}
-															>
-																Rename
-															</button>
-															<button
-																onClick={() => handleModulePermission(permission)}
-																className="w-full px-4 py-2 text-left text-sm dark:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-																style={{
-																	color: 'var(--text-secondary)',
-																	backgroundColor: 'transparent'
-																}}
-																onMouseEnter={(e) => {
-																	e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-																}}
-																onMouseLeave={(e) => {
-																	e.currentTarget.style.backgroundColor = 'transparent';
-																}}
-															>
-																Module Permission
-															</button>
-														</div>
-													</div>
-												)}
-											</div>
-										</td>
-									</tr>
-								))
-							)}
-						</tbody>
-					</table>
+			<div className="mb-6 flex justify-between items-end">
+				<div>
+					<PageHeading
+						text="Permission"
+					/>
+					<SubPageHeading
+						text="Keep your team organized and efficient by ensuring every user has access to the right assets."
+					/>
 				</div>
 			</div>
 
-			{/* Rename Module Modal */}
-			<RenameModuleModal
-				isOpen={isRenameModalOpen}
-				onClose={() => {
-					setIsRenameModalOpen(false);
-					setEditingPermission(null);
-				}}
-				onSave={handleRenameSave}
-				currentName={editingPermission?.moduleName || ''}
-			/>
+			{/* Content: List of Role Accordions */}
+			<div className="space-y-4 pb-20">
+				{!isLoading && rolesPermissions.length === 0 && (
+					<div className="text-center py-10 text-gray-500">
+						No roles found or permissions data is missing.
+					</div>
+				)}
+				{rolesPermissions.map(role => {
+					const roleId = role._id || role.id || 'unknown';
+					const isOpen = openRoleIds.includes(roleId);
+					return (
+						<div
+							key={roleId}
+							className="border dark:border-gray-700 overflow-hidden"
+							style={{ borderColor: 'var(--light-gray)' }}
+						>
+							<div
+								className="w-full px-6 py-4 flex justify-between items-center transition-colors"
+								style={{ backgroundColor: 'var(--accent-white)' }}
+							>
+								<div
+									className="flex-1 flex items-center cursor-pointer"
+									onClick={() => toggleAccordion(roleId)}
+								>
+									<span
+										className="font-medium text-lg dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{role.roleName}
+									</span>
+								</div>
 
-			{/* Module Permission Modal */}
-			<ModulePermissionModal
-				isOpen={isPermissionModalOpen}
-				onClose={() => {
-					setIsPermissionModalOpen(false);
-					setEditingPermission(null);
-				}}
-				onSave={handlePermissionSave}
-				selectedRoles={editingPermission?.selectedRoles || []}
-			/>
+								<div className="flex items-center gap-4">
+									<Button
+										onClick={() => {
+											handleSaveRole(role);
+										}}
+										loading={updatingRoleIds.includes(roleId)}
+										size="sm"
+										variant="primary"
+									>
+										Update
+									</Button>
+									<button
+										onClick={() => toggleAccordion(roleId)}
+										className="focus:outline-none"
+									>
+										{isOpen ? <ChevronUpIcon className="w-5 h-5" /> : <ChevronDownIcon className="w-5 h-5" />}
+									</button>
+								</div>
+							</div>
+
+							{isOpen && (
+								<div
+									className="border-t dark:border-gray-700"
+									style={{ borderColor: 'var(--light-gray)' }}
+								>
+									<div className="overflow-x-auto">
+										<table
+											className="min-w-full divide-y dark:divide-gray-700"
+											style={{ borderColor: 'var(--light-gray)' }}
+										>
+											<thead
+												className="dark:bg-gray-700 border-b dark:border-gray-700"
+												style={{
+													backgroundColor: 'var(--bg-primary)',
+													borderColor: 'var(--light-gray)'
+												}}
+											>
+												<tr>
+													<th
+														className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+														style={{ color: 'var(--text-primary)' }}
+													>
+														Module Name
+													</th>
+													<th
+														className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+														style={{ color: 'var(--text-primary)' }}
+													>
+														Access
+													</th>
+													<th
+														className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+														style={{ color: 'var(--text-primary)' }}
+													>
+														Permission
+													</th>
+												</tr>
+											</thead>
+											<tbody
+												className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+												style={{
+													backgroundColor: 'var(--accent-white)',
+													borderColor: 'var(--light-gray)'
+												}}
+											>
+												{role.permissions.map(p => {
+													const permissionItem = mapRolePermissionToItem(p);
+													const roleId = role._id || role.id || 'unknown';
+													return (
+														<tr
+															key={p.id}
+															className="dark:hover:bg-gray-700 transition-colors"
+															style={{ borderColor: 'var(--light-gray)' }}
+															onMouseEnter={(e) => {
+																e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+															}}
+															onMouseLeave={(e) => {
+																e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+															}}
+														>
+															<td className="px-6 py-4 whitespace-nowrap">
+																<span
+																	className="font-medium dark:text-gray-100"
+																	style={{ color: 'var(--text-primary)' }}
+																>
+																	{permissionItem.moduleName}
+																</span>
+															</td>
+															<td className="px-6 py-4 whitespace-nowrap">
+																<Toggle
+																	checked={permissionItem.access}
+																	onChange={(checked) => handleAccessToggle(roleId, p.id, checked)}
+																/>
+															</td>
+															<td className="px-6 py-4">
+																<div className="flex items-center gap-12">
+																	<Checkbox
+																		checked={p.permissions.view}
+																		onChange={(checked) => handlePermissionChange(roleId, p.id, 'view', checked)}
+																		label="View"
+																		size="medium"
+																	/>
+																	<Checkbox
+																		checked={p.permissions.edit}
+																		onChange={(checked) => handlePermissionChange(roleId, p.id, 'edit', checked)}
+																		label="Edit"
+																		size="medium"
+																	/>
+																	<Checkbox
+																		checked={p.permissions.delete}
+																		onChange={(checked) => handlePermissionChange(roleId, p.id, 'delete', checked)}
+																		label="Delete"
+																		size="medium"
+																	/>
+																	<Checkbox
+																		checked={p.permissions.create}
+																		onChange={(checked) => handlePermissionChange(roleId, p.id, 'create', checked)}
+																		label="Create"
+																		size="medium"
+																	/>
+																</div>
+															</td>
+														</tr>
+													);
+												})}
+											</tbody>
+										</table>
+									</div>
+								</div>
+							)}
+						</div>
+					);
+				})}
+			</div>
 		</div>
 	);
 };
 
 export default Permission;
-

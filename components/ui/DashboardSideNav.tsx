@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { usePrivilege, ModuleId } from '@/contexts/PrivilegeContext';
 
 import {
 	DashboardIcon,
@@ -17,6 +18,7 @@ import {
 	Link2Icon
 } from '@radix-ui/react-icons';
 import Group from '@/components/setupIcon/Group';
+import DashboardSideNavSkeleton from '@/components/skeletons/DashboardSideNavSkeleton';
 
 interface DashboardSideNavProps {
 	activeItem?: string;
@@ -41,7 +43,8 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { lineOfBusinessData, isLoading: isLobLoading } = useLineOfBusiness();
+	const { canAccess, isLoading: isPrivilegeLoading } = usePrivilege();
 	const navRef = useRef<HTMLElement>(null);
 	const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
 
@@ -54,13 +57,17 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		}
 	}, [pathname]);
 
+	if (isLobLoading || isPrivilegeLoading) {
+		return <DashboardSideNavSkeleton />;
+	}
+
 	const settingsSubItems = [
-		{
-			id: 'fields-tab',
-			label: 'Fields',
-			icon: 'users',
-			path: '/settings?tab=fields'
-		},
+		// {
+		// 	id: 'fields-tab',
+		// 	label: 'Fields',
+		// 	icon: 'users',
+		// 	path: '/settings?tab=fields'
+		// },
 		{
 			id: 'status-tab',
 			label: 'Status',
@@ -144,6 +151,31 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		},
 	];
 
+	const moduleMapping: Record<string, ModuleId> = {
+		'dashboard': 'dashboard',
+		'customer-book': 'customerBook',
+		'users': 'userManagement',
+		'team-members': 'teamMembers',
+		'sms': 'customerSMS',
+		'integrations': 'systemSetting',
+		'setup-book': 'setupBook',
+		'report': 'report',
+		'settings': 'systemSetting',
+	};
+
+	const subModuleMapping: Record<string, ModuleId> = {
+		'status-tab': 'systemSetting',
+		'permission-tab': 'userManagement',
+		'company-details-tab': 'systemSetting',
+		'roles-tab': 'userManagement',
+	};
+
+	const visibleNavItems = navItems.filter(item => {
+		const moduleId = moduleMapping[item.id];
+		if (!moduleId) return true;
+		return canAccess(moduleId, 'view');
+	});
+
 	const handleItemClick = (item: NavItem, e?: React.MouseEvent) => {
 		if (item.id === 'settings') {
 			e?.stopPropagation();
@@ -218,7 +250,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 				<div className="p-4">
 					{/* Navigation Items */}
 					<div className="space-y-2">
-						{navItems.map((item) => {
+						{visibleNavItems.map((item) => {
 							const isActive = activeItem === item.id;
 							const isSettings = item.id === 'settings';
 
@@ -288,7 +320,10 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 											className="ml-4 mt-1 space-y-1 border-l-2 dark:border-gray-600 pl-2"
 											style={{ borderColor: 'var(--light-gray)' }}
 										>
-											{settingsSubItems.map((subItem) => {
+											{settingsSubItems.filter(subItem => {
+												const moduleId = subModuleMapping[subItem.id];
+												return moduleId ? canAccess(moduleId, 'view') : true;
+											}).map((subItem) => {
 												// Get the tab value from the URL query parameter
 												const currentTab = searchParams?.get('tab');
 												// Extract tab name from subItem.path (e.g., '/settings?tab=fields' -> 'fields')

@@ -16,10 +16,12 @@ import { playNotificationSound } from '@/utils/soundEffects';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { setNavigating } from '@/utils/navigationState';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useGetLineOfBusinessByCompanyIdForheaderQuery } from '@/store/services/lineOfBusinessApi';
 import { useLogoutMutation } from '@/store/services/authApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout as logoutAction } from '@/store/slices/authSlice';
+import { statusApi } from '@/store/services/statusApi';
 
 interface DashboardHeaderProps {
 	companyName?: string;
@@ -59,8 +61,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 	const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
 	const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
-	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket } = useSocket();
+	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket, socket } = useSocket();
 	const [logoutApi] = useLogoutMutation();
+	const { userPrivileges, isAdmin } = usePrivilege();
 
 	// Get user from Redux store
 	const reduxUser = useSelector((state: any) => state.auth.user);
@@ -100,6 +103,28 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 			}
 		}
 	}, [lineOfBusinessData, selectedLineOfBusinessId]);
+
+	// Socket integration for Line of Business updates
+	useEffect(() => {
+		if (!socket || !selectedLineOfBusinessId) return;
+
+		// Join the Line of Business room
+		socket.emit("joinLineOfBusiness", selectedLineOfBusinessId);
+		console.log(`Socket: Joined Line of Business room ${selectedLineOfBusinessId}`);
+
+		// Listen for status list updates
+		const handleStatusListUpdate = (data: any) => {
+			console.log("Socket: Status list updated", data);
+			// Invalidate RTK Query cache for statuses
+			dispatch(statusApi.util.invalidateTags(['Statuses']));
+		};
+
+		socket.on("statusListUpdated", handleStatusListUpdate);
+
+		return () => {
+			socket.off("statusListUpdated", handleStatusListUpdate);
+		};
+	}, [socket, selectedLineOfBusinessId, dispatch]);
 
 	// Track navigation to prevent sounds during page switches
 	useEffect(() => {
@@ -299,19 +324,22 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					{/* Dark/Light Mode Toggle */}
 					<ThemeToggle />
 
-					<Dropdown
-						label=""
-						value={selectedLOBData?.lineOfBusiness?._id || selectedLOBData?._id || ''}
-						onChange={(value) => {
-							const stringValue = Array.isArray(value) ? value[0] : value;
-							if (stringValue) {
-								setSelectedLineOfBusinessId(stringValue);
-							}
-						}}
-						options={lobOptions}
-						placeholder={isLobLoading ? "Loading..." : "Select Business"}
-						className="min-w-[150px]"
-					/>
+					{/* LOB Dropdown - Only for Administrator */}
+					{isAdmin && (
+						<Dropdown
+							label=""
+							value={selectedLOBData?.lineOfBusiness?._id || selectedLOBData?._id || ''}
+							onChange={(value) => {
+								const stringValue = Array.isArray(value) ? value[0] : value;
+								if (stringValue) {
+									setSelectedLineOfBusinessId(stringValue);
+								}
+							}}
+							options={lobOptions}
+							placeholder={isLobLoading ? "Loading..." : "Select Business"}
+							className="min-w-[150px]"
+						/>
+					)}
 
 					{/* Sticky Notes Icon - Only show if notes exist */}
 					{hasStickyNotes && (
@@ -332,7 +360,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 							}}
 							title="View Sticky Notes"
 						>
-							<Icon name="Edit_duotone_line" size="3xl" />
+							<Icon name="Edit_duotone_line" size="lg"/>
 							{/* Indicator dot */}
 							<span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
 						</button>

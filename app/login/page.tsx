@@ -11,17 +11,21 @@ import ArtworkCarousel from '@/components/ui/ArtworkCarousel';
 import PricingModal from '@/components/ui/PricingModal';
 import LoginTopHeader from '@/components/ui/LoginTopHeader';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useLoginMutation } from '@/store/services/authApi';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useLoginMutation, useTeamMemberLoginMutation } from '@/store/services/authApi';
 import { login as loginAction } from '@/store/slices/authSlice';
 
 export default function LoginPage() {
 	const router = useRouter();
 	const dispatch = useDispatch();
 	const [login] = useLoginMutation();
+	const [teamMemberLogin] = useTeamMemberLoginMutation();
 	const { isDarkMode } = useTheme();
+	const { setUserPrivileges } = usePrivilege();
 	const primaryColor = '#050711';
+	const [loginMethod, setLoginMethod] = useState<'email' | 'userId'>('email');
 	const [formData, setFormData] = useState({
-		email: '',
+		emailOrUserId: '',
 		password: '',
 		rememberMe: false,
 	});
@@ -45,10 +49,8 @@ export default function LoginPage() {
 
 		const newErrors: Record<string, string> = {};
 
-		if (!formData.email.trim()) {
-			newErrors.email = 'Email is required';
-		} else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-			newErrors.email = 'Please enter a valid email';
+		if (!formData.emailOrUserId.trim()) {
+			newErrors.emailOrUserId = 'Email or User ID is required';
 		}
 
 		if (!formData.password.trim()) {
@@ -59,16 +61,29 @@ export default function LoginPage() {
 
 		if (Object.keys(newErrors).length === 0) {
 			try {
-				const response = await login({
-					email: formData.email,
-					password: formData.password,
-				}).unwrap();
+				// Determine if input is email or userId
+				const isEmail = /\S+@\S+\.\S+/.test(formData.emailOrUserId);
+
+				let response;
+
+				if (isEmail) {
+					response = await login({
+						email: formData.emailOrUserId,
+						password: formData.password,
+					}).unwrap();
+				} else {
+					response = await teamMemberLogin({
+						userId: formData.emailOrUserId,
+						password: formData.password,
+					}).unwrap();
+				}
 
 				// Based on the provided response structure:
-				// { message: "...", user: { ...userFields, token: "..." } }
-				// The token is inside the user object.
+				// For email login: { message: "...", user: { ...userFields, token: "..." } }
+				// For userId login: { message: "...", teamMember: { ...userFields, token: "..." } }
+				// The token is inside the user/teamMember object.
 
-				const user = response.user || response;
+				const user = response.user || response.teamMember || response;
 				const token = user?.token || response.token;
 
 				if (user && token) {
@@ -90,6 +105,17 @@ export default function LoginPage() {
 					// Save to localStorage for persistence
 					localStorage.setItem('token', token);
 					localStorage.setItem('peoplely-user', JSON.stringify(normalizedUser));
+
+					// Update PrivilegeContext with the user's role and permissions
+					if (normalizedUser.role && typeof normalizedUser.role === 'object') {
+						const privileges = {
+							userId: normalizedUser.id,
+							roleId: normalizedUser.role.roleName || 'custom',
+							role: normalizedUser.role,
+						};
+						setUserPrivileges(privileges);
+						localStorage.setItem('userPrivileges', JSON.stringify(privileges));
+					}
 
 					toast.success('Login successful!');
 					router.push('/dashboard');
@@ -142,13 +168,13 @@ export default function LoginPage() {
 
 					<form onSubmit={handleSubmit} className="login-form">
 						<Input
-							label="Email"
-							placeholder="you@company.com"
-							type="email"
-							value={formData.email}
-							onChange={handleInputChange('email')}
+							label="Email or User ID"
+							placeholder="Enter your email or user ID"
+							type="text"
+							value={formData.emailOrUserId}
+							onChange={handleInputChange('emailOrUserId')}
 							required
-							error={errors.email}
+							error={errors.emailOrUserId}
 						/>
 
 						<PasswordInput

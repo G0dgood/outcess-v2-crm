@@ -8,7 +8,7 @@ import AddUserModal from '@/components/ui/AddUserModal';
 import EditUserModal from '@/components/ui/EditUserModal';
 import { useSetup } from '@/contexts/SetupContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
+import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
 import { useCreateTeamMemberMutation, useGetTeamMembersByCompanyIdQuery } from '@/store/services/teamMembersApi';
 import Icon from '@/components/ui/Icon';
 import { toast } from 'sonner';
@@ -30,9 +30,10 @@ export default function UserManagementPage() {
 	const router = useRouter();
 
 	const companyId = setupData?.companyId || user?.companyId || user?.company?._id || '';
+	const lineOfBusinessId = setupData?.lineOfBusinessId || '';
 
-	const { data: rolesDataResponse } = useGetRolesByCompanyIdQuery(companyId, {
-		skip: !companyId
+	const { data: rolesDataResponse } = useGetRolesByLineOfBusinessIdQuery(lineOfBusinessId, {
+		skip: !lineOfBusinessId
 	});
 
 	const { data: teamMembersResponse, isLoading: isTeamMembersLoading } = useGetTeamMembersByCompanyIdQuery(companyId, {
@@ -71,16 +72,22 @@ export default function UserManagementPage() {
 	const roleOptions = useMemo(() => {
 		if (!rolesDataResponse) return [];
 
-		const rawRoles = rolesDataResponse || [];
-		const rolesList = Array.isArray(rawRoles) ? rawRoles : (Array.isArray((rawRoles as any).docs) ? (rawRoles as any).docs : []);
+		const rolesList = rolesDataResponse.roles || [];
 
 		if (rolesList.length === 0) return [];
 
-		return rolesList.map((role: any) => ({
+		return rolesList.map((role: Role) => ({
 			value: role._id || role.id,
 			label: role.roleName
 		}));
 	}, [rolesDataResponse]);
+
+	const supervisorOptions = useMemo(() => {
+		return teamMembers.map((member: any) => ({
+			value: member.id,
+			label: member.name
+		}));
+	}, [teamMembers]);
 
 	const statusOptions = [
 		{ value: 'inactive', label: 'Inactive' },
@@ -95,6 +102,7 @@ export default function UserManagementPage() {
 		userId: string;
 		status: string;
 		password?: string;
+		supervisorId?: string;
 	}) => {
 		setIsLoading(true);
 		try {
@@ -104,13 +112,14 @@ export default function UserManagementPage() {
 				phone: userData.phone,
 				role: userData.role,
 				companyId: companyId,
-				status: userData.status,
-				userId: userData.userId,
+				status: userData.status || 'Active',
+				userId: userData.userId || undefined,
 				password: userData.password,
-				lineOfBusinessId: setupData.lineOfBusinessId,
+				lineOfBusinessId: setupData.lineOfBusinessId || undefined,
+				supervisorId: userData.supervisorId || undefined,
 			};
 
-			await createTeamMember(payload as any).unwrap();
+			await createTeamMember(payload).unwrap();
 
 			const user: User = {
 				id: userData.userId || Date.now().toString(),
@@ -507,6 +516,7 @@ export default function UserManagementPage() {
 				onClose={() => setIsAddingUser(false)}
 				onSave={handleAddUser}
 				roleOptions={roleOptions}
+				supervisorOptions={supervisorOptions}
 				isLoading={isLoading}
 			/>
 

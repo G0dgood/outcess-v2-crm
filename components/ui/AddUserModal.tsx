@@ -1,38 +1,31 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Input from './Input';
 import Dropdown from './Dropdown';
 import Button from './Button';
 import { Cross2Icon } from '@radix-ui/react-icons';
+import { useCreateTeamMemberMutation, useGetTeamMembersBySupervisorIdQuery, useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery } from '@/store/services/teamMembersApi';
+import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { toast } from 'sonner';
 
 interface AddUserModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onSave: (userData: {
-		firstName: string;
-		lastName: string;
-		email: string;
-		phone: string;
-		role: string;
-		userId: string;
-		status: string;
-		password?: string;
-	}) => void;
-	roleOptions: { value: string; label: string; }[];
-	onAddFields?: () => void;
-	isLoading?: boolean;
 }
 
 export const AddUserModal: React.FC<AddUserModalProps> = ({
 	isOpen,
 	onClose,
-	onSave,
-	roleOptions,
-	onAddFields,
-	isLoading = false,
 }) => {
-	const [formData, setFormData] = React.useState({
+	const { user } = useUserInfo();
+	const { lineOfBusinessData } = useLineOfBusiness();
+	const lineOfBusinessId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
+	const companyId = user?.companyId || user?.company?._id || '';
+
+	const [formData, setFormData] = useState({
 		firstName: '',
 		lastName: '',
 		email: '',
@@ -41,15 +34,24 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 		userId: '',
 		status: '',
 		password: '',
+		supervisorId: '',
 	});
 
-	const statusOptions = [
-		{ value: 'active', label: 'Active' },
-		{ value: 'inactive', label: 'Inactive' },
-		{ value: 'pending', label: 'Pending' },
-	];
+	const [fetchRoleId, setFetchRoleId] = useState<string>('');
 
-	React.useEffect(() => {
+	// API Hooks
+	const { data: rolesResponse } = useGetRolesByLineOfBusinessIdQuery(lineOfBusinessId, { skip: !lineOfBusinessId });
+	const { data: supervisorsResponse } = useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery(
+		{ lineOfBusinessId, roleId: fetchRoleId || '' },
+		{ skip: !lineOfBusinessId || !fetchRoleId }
+	);
+	const [createTeamMember, { isLoading }] = useCreateTeamMemberMutation();
+
+	console.log('supervisorsResponse---', supervisorsResponse)
+
+
+	// Reset form when modal opens/closes
+	useEffect(() => {
 		if (!isOpen) {
 			setFormData({
 				firstName: '',
@@ -58,28 +60,88 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 				phone: '',
 				role: '',
 				userId: '',
-				status: '',
-				password: '',
+				status: 'inactive',
+				password: '123456',
+				supervisorId: '',
 			});
+			setFetchRoleId('');
 		}
 	}, [isOpen]);
+
+	// Prepare Options
+	const roleOptions = useMemo(() => {
+		if (!rolesResponse) return [];
+		const rawRoles = rolesResponse.roles || [];
+		return rawRoles.map((role: Role) => ({
+			value: (role._id || role.id || '') as string,
+			label: (role.roleName || '') as string
+		}));
+	}, [rolesResponse]);
+
+	const supervisorOptions = useMemo(() => {
+		if (!supervisorsResponse) return [];
+		const rawSupervisors = supervisorsResponse.teamMembers || supervisorsResponse.data || supervisorsResponse || [];
+		const supervisorsList = Array.isArray(rawSupervisors) ? rawSupervisors : (rawSupervisors.docs || []);
+		return supervisorsList.map((supervisor: any) => ({
+			value: (supervisor._id || supervisor.id || '') as string,
+			label: supervisor.name || `${supervisor.firstName || ''} ${supervisor.lastName || ''}`.trim()
+		}));
+	}, [supervisorsResponse]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
 		const stringValue = Array.isArray(value) ? value[0] : value;
 		setFormData(prev => ({ ...prev, [field]: stringValue }));
-	};
 
-	const handleSave = () => {
-		if (formData.firstName && formData.lastName && formData.email && formData.phone && formData.role && formData.password) {
-			onSave(formData);
+		if (field === 'role') {
+			const selectedRole = rolesResponse?.roles?.find((r: any) => (r._id === stringValue || r.id === stringValue));
+			if (selectedRole?.roleName?.toLowerCase() === 'supervisor') {
+				setFetchRoleId(stringValue);
+			} else {
+				setFetchRoleId('');
+			}
 		}
 	};
 
-	const handleCancel = () => {
-		onClose();
+	const handleSave = async () => {
+		if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.role || !formData.password || !formData.userId) {
+			return;
+		}
+
+		if (!companyId) {
+			toast.error('Company ID is missing');
+			return;
+		}
+
+		try {
+			const payload = {
+				name: `${formData.firstName} ${formData.lastName}`,
+				email: formData.email,
+				phone: formData.phone,
+				role: formData.role,
+				companyId: companyId,
+				lineOfBusinessId: lineOfBusinessId || undefined,
+				supervisorId: formData.supervisorId || undefined,
+				password: formData.password,
+				userId: formData.userId || undefined,
+				status: formData.status || 'inactive',
+			};
+
+			console.log('Creating user with payload:', payload);
+
+			await createTeamMember(payload).unwrap();
+
+			toast.success('User created successfully');
+			onClose();
+		} catch (error: any) {
+			console.error('Failed to create user:', error);
+			toast.error(error?.data?.message || 'Failed to create user');
+		}
 	};
 
 	if (!isOpen) return null;
+
+	const selectedRoleLabel = roleOptions.find(opt => opt.value === formData.role)?.label.toLowerCase();
+	const shouldShowSupervisor = selectedRoleLabel === 'agent' || selectedRoleLabel === 'supervisor';
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -176,14 +238,17 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 						required
 					/>
 
-					<Dropdown
-						label="Status"
-						placeholder="Select Status"
-						options={statusOptions}
-						value={formData.status}
-						onChange={handleInputChange('status')}
-						required
-					/>
+					{shouldShowSupervisor && (
+						<Dropdown
+							label="Supervisor"
+							placeholder="Select Supervisor"
+							options={supervisorOptions}
+							value={formData.supervisorId}
+							onChange={handleInputChange('supervisorId')}
+						/>
+					)}
+
+
 				</div>
 
 				{/* Modal Footer */}
@@ -191,24 +256,11 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 					className="flex justify-between items-center p-6 border-t dark:border-gray-700 w-full"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					{/* <button
-						onClick={onAddFields}
-						className="dark:text-orange-400 dark:hover:text-orange-300 font-medium transition-colors"
-						style={{ color: '#F97316' }}
-						onMouseEnter={(e) => {
-							e.currentTarget.style.color = '#EA580C';
-						}}
-						onMouseLeave={(e) => {
-							e.currentTarget.style.color = '#F97316';
-						}}
-					>
-						Add Fields
-					</button> */}
 					<div className="flex gap-3 w-full justify-end">
 						<Button
 							variant="outline"
 							size="md"
-							onClick={handleCancel}
+							onClick={onClose}
 						>
 							Cancel
 						</Button>
@@ -229,3 +281,4 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 };
 
 export default AddUserModal;
+

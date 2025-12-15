@@ -1,15 +1,13 @@
 'use client';
 
 import React, { useState, Suspense } from 'react';
-import { SetupProvider, useSetup } from '@/contexts/SetupContext';
+import { SetupProvider } from '@/contexts/SetupContext';
 import DashboardHeader from '@/components/ui/DashboardHeader';
 import DashboardSideNav from '@/components/ui/DashboardSideNav';
 import MobileSideNav from '@/components/ui/MobileSideNav';
 import GlobalStickyNotes from '@/components/ui/GlobalStickyNotes';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-	const { lineOfBusinessData } = useLineOfBusiness();
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
 	const toggleMobileMenu = () => {
@@ -23,11 +21,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 	return (
 		<div id="page-wrapper">
 			<DashboardHeader
-				companyName={lineOfBusinessData.companyName || ''}
-				userName="John Doe"
-				userEmail="johndoe@example.com"
-				userIsOnline={true}
-				onCompanyChange={(company) => console.log('Company changed:', company)}
+				userIsOnline={true} 
 				onSettingsClick={() => console.log('Settings clicked')}
 				onStatusClick={() => console.log('Status clicked')}
 				onEditProfileClick={() => console.log('Edit profile clicked')}

@@ -98,8 +98,8 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		options.push(...commonOptions);
 
 		// Add call outcomes if available
-		if (lineOfBusinessData.dashboardSettings.callOutcomes && lineOfBusinessData.dashboardSettings.callOutcomes.length > 0) {
-			lineOfBusinessData.dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
+		if (lineOfBusinessData?.dashboardSettings?.callOutcomes && lineOfBusinessData?.dashboardSettings?.callOutcomes?.length > 0) {
+			lineOfBusinessData?.dashboardSettings?.callOutcomes.forEach((outcome: { name: string }) => {
 				options.push({
 					value: outcome.name,
 					label: outcome.name,
@@ -108,11 +108,11 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		}
 
 		// Add disposition categories if available
-		if (lineOfBusinessData.dashboardSettings.dispositions && lineOfBusinessData.dashboardSettings.dispositions.length > 0) {
+		if (lineOfBusinessData?.dashboardSettings?.dispositions && lineOfBusinessData?.dashboardSettings?.dispositions?.length > 0) {
 			lineOfBusinessData.dashboardSettings.dispositions.forEach((disposition: { name: string }) => {
 				options.push({
-					value: disposition.name,
-					label: disposition.name,
+					value: disposition?.name,
+					label: disposition?.name,
 				});
 			});
 		}
@@ -121,7 +121,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		options.push({ value: 'custom', label: 'Custom Data' });
 
 		return options;
-	}, [lineOfBusinessData.dashboardSettings.callOutcomes, lineOfBusinessData.dashboardSettings.dispositions]);
+	}, [lineOfBusinessData?.dashboardSettings?.callOutcomes, lineOfBusinessData?.dashboardSettings?.dispositions]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
 		// For non-multiple fields, ensure we only use string values
@@ -147,7 +147,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 			});
 			// Remove colors for deselected data sources
 			Object.keys(newColors).forEach(source => {
-				if (!dataSourceArray.includes(source)) {
+				if (!dataSourceArray?.includes(source)) {
 					delete newColors[source];
 				}
 			});

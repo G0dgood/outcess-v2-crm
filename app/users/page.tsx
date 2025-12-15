@@ -7,13 +7,16 @@ import Search from '@/components/ui/Search';
 import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
 import Checkbox from '@/components/ui/Checkbox';
-import { useGetTeamMembersByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByLineOfBusinessIdQuery, useCreateTeamMemberMutation } from '@/store/services/teamMembersApi';
+import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
 import PageHeading from '@/components/ui/PageHeading';
 import { Pencil1Icon, TrashIcon, ExclamationTriangleIcon, PersonIcon } from '@radix-ui/react-icons';
 import AddUserModal from '@/components/ui/AddUserModal';
 import DeleteUserModal from '@/components/ui/DeleteUserModal';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useUserInfo } from '@/contexts/UserInfoContext';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
+import { toast } from 'sonner';
 
 interface User {
 	id: string;
@@ -86,23 +89,6 @@ const UsersPage: React.FC = () => {
 		setIsAddUserModalOpen(true);
 	};
 
-	const handleSaveUser = (userData: {
-		firstName: string;
-		lastName: string;
-		email: string;
-		phone: string;
-		role: string;
-	}) => {
-		console.log('Saving user:', userData);
-		// Implement save user logic here
-		// For now, just close the modal
-		setIsAddUserModalOpen(false);
-	};
-
-	const handleAddFields = () => {
-		console.log('Add Fields clicked');
-		// Implement add fields logic here
-	};
 
 	const handleDeleteClick = (user: User) => {
 		setDeleteUser({
@@ -117,9 +103,6 @@ const UsersPage: React.FC = () => {
 			setDeleteUser(null);
 		}
 	};
-
-	const roleOptions: { value: string; label: string }[] = [];
-
 
 
 	const handleSelectAll = (checked: boolean) => {
@@ -167,6 +150,9 @@ const UsersPage: React.FC = () => {
 		}
 	}, [isDrawerOpen]);
 
+
+
+
 	return (
 		<div>
 			{/* Title and Action Buttons */}
@@ -174,8 +160,6 @@ const UsersPage: React.FC = () => {
 				<PageHeading
 					text="Users"
 				/>
-
-
 				{/* Search Bar */}
 			</div>
 			<div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -435,9 +419,6 @@ const UsersPage: React.FC = () => {
 			<AddUserModal
 				isOpen={isAddUserModalOpen}
 				onClose={() => setIsAddUserModalOpen(false)}
-				onSave={handleSaveUser}
-				roleOptions={roleOptions}
-				onAddFields={handleAddFields}
 			/>
 
 			{/* Delete User Modal */}

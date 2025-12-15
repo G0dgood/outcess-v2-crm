@@ -63,14 +63,14 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 			// Count all dispositions
 			const offlineDispositions = getOfflineDispositions();
 			const syncedDispositions = getSyncedDispositions();
-			setFormData(prev => ({ ...prev, value: offlineDispositions.length + syncedDispositions.length }));
+			setFormData(prev => ({ ...prev, value: offlineDispositions.length + syncedDispositions?.length }));
 		} else {
 			// For other titles, keep the manual value or set to 0
-			if (formData.value === 0 && formData.title) {
+			if (formData?.value === 0 && formData?.title) {
 				// Don't reset if user manually set a value
 			}
 		}
-	}, [formData.title]);
+	}, [formData?.title]);
 
 	// Build dropdown options from available data
 	const widgetTitleOptions = useMemo(() => {
@@ -92,27 +92,27 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		options.push(...commonTitles);
 
 		// Add call outcomes if available
-		if (lineOfBusinessData.dashboardSettings.callOutcomes && lineOfBusinessData.dashboardSettings.callOutcomes.length > 0) {
-			lineOfBusinessData.dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
+		if (lineOfBusinessData?.dashboardSettings?.callOutcomes && lineOfBusinessData?.dashboardSettings?.callOutcomes.length > 0) {
+			lineOfBusinessData?.dashboardSettings?.callOutcomes.forEach((outcome: { name: string }) => {
 				options.push({
-					value: outcome.name,
-					label: outcome.name,
+					value: outcome?.name,
+					label: outcome?.name,
 				});
 			});
 		}
 
 		// Add disposition categories if available
-		if (lineOfBusinessData.dashboardSettings.dispositions && lineOfBusinessData.dashboardSettings.dispositions.length > 0) {
-			lineOfBusinessData.dashboardSettings.dispositions.forEach((disposition: { name: any; }) => {
+		if (lineOfBusinessData?.dashboardSettings?.dispositions && lineOfBusinessData?.dashboardSettings?.dispositions?.length > 0) {
+			lineOfBusinessData?.dashboardSettings?.dispositions.forEach((disposition: { name: any; }) => {
 				options.push({
-					value: disposition.name,
-					label: disposition.name,
+					value: disposition?.name,
+					label: disposition?.name,
 				});
 			});
 		}
 
 		return options;
-	}, [lineOfBusinessData.dashboardSettings.callOutcomes, lineOfBusinessData.dashboardSettings.dispositions]);
+	}, [lineOfBusinessData?.dashboardSettings?.callOutcomes, lineOfBusinessData?.dashboardSettings?.dispositions]);
 
 	const handleInputChange = (field: string) => (value: string | number) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
@@ -120,12 +120,12 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 
 	const isValueAutoCalculated = useMemo(() => {
 		return DISPOSITION_FIELDS.some(f => f.value === formData.title) ||
-			formData.title === 'Pending Dispositions' ||
-			formData.title === 'Total Dispositions';
-	}, [formData.title]);
+			formData?.title === 'Pending Dispositions' ||
+			formData?.title === 'Total Dispositions';
+	}, [formData?.title]);
 
 	const handleSave = () => {
-		if (formData.title.trim()) {
+		if (formData?.title.trim()) {
 			onSave(formData);
 			// Reset form
 			setFormData({

@@ -536,7 +536,7 @@ const DashboardContent: React.FC = () => {
 					className="font-lato font-normal text-[20px] leading-[150%]"
 					style={{ color: 'var(--text-secondary)' }}
 				>
-					{dashboardSettings.dashboardName || ' Dashboard'}
+					{dashboardSettings?.dashboardName || ' Dashboard'}
 				</h1>
 				<div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
 					<Button
