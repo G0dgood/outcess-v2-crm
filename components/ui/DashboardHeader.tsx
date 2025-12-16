@@ -8,7 +8,6 @@ import UserDropdown from './UserDropdown';
 import { HamburgerMenuIcon } from '@radix-ui/react-icons';
 import NotificationDropdown from './NotificationDropdown';
 import NotificationsModal from './NotificationsModal';
-import { sampleNotifications } from '@/data/notifications';
 import ThemeToggle from './ThemeToggle';
 import { plusJakartaStyle } from '../Options';
 import { useSocket } from '@/contexts/SocketContext';
@@ -22,6 +21,7 @@ import { useLogoutMutation } from '@/store/services/authApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout as logoutAction } from '@/store/slices/authSlice';
 import { statusApi } from '@/store/services/statusApi';
+import { useGetNotificationsByLineOfBusinessIdQuery, useMarkNotificationAsReadMutation } from '@/store/services/notificationApi';
 
 interface DashboardHeaderProps {
 	companyName?: string;
@@ -87,6 +87,15 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		skip: !companyId
 	});
 
+	// Notifications integration
+	const { data: notificationsData } = useGetNotificationsByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
+		skip: !selectedLineOfBusinessId,
+		pollingInterval: 30000 // Poll every 30 seconds as fallback
+	});
+
+	const [markAsRead] = useMarkNotificationAsReadMutation();
+	const notifications = notificationsData?.notifications || [];
+
 	const [lobOptions, setLobOptions] = useState<{ value: string; label: string; }[]>([]);
 
 	useEffect(() => {
@@ -146,12 +155,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		// Don't play sounds if we're navigating between pages
 		if (isNavigating.current) {
 			// Update the count but don't play sounds
-			const unreadNotifications = sampleNotifications.filter(n => !n.isRead);
+			const unreadNotifications = notifications.filter(n => !n.isRead);
 			previousUnreadCount.current = unreadNotifications.length;
 			return;
 		}
 
-		const unreadNotifications = sampleNotifications.filter(n => !n.isRead);
+		const unreadNotifications = notifications.filter(n => !n.isRead);
 		const unreadCount = unreadNotifications.length;
 
 		// Play sound when new unread notifications arrive (count increases)
@@ -166,7 +175,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		}
 
 		previousUnreadCount.current = unreadCount;
-	}, [pathname]);
+	}, [pathname, notifications]);
 
 	const handleNotificationClick = () => {
 		// Don't play sound if we're navigating - NotificationDropdown will handle it
@@ -360,7 +369,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 							}}
 							title="View Sticky Notes"
 						>
-							<Icon name="Edit_duotone_line" size="lg"/>
+							<Icon name="Edit_duotone_line" size="lg" />
 							{/* Indicator dot */}
 							<span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
 						</button>
@@ -379,11 +388,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 						<NotificationDropdown
 							isOpen={isNotificationPanelOpen}
 							onClose={() => setIsNotificationPanelOpen(false)}
-							notifications={sampleNotifications}
+							notifications={notifications}
 							onShowMore={() => {
 								setIsNotificationPanelOpen(false);
 								setIsNotificationsModalOpen(true);
 							}}
+							onMarkAsRead={(id) => markAsRead(id)}
 						/>
 					</div>
 
@@ -392,6 +402,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 						<NotificationsModal
 							isOpen={isNotificationsModalOpen}
 							onClose={() => setIsNotificationsModalOpen(false)}
+							notifications={notifications}
+							onMarkAsRead={(id) => markAsRead(id)}
 						/>
 					)}
 

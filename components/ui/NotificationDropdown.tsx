@@ -6,21 +6,7 @@ import { usePathname } from 'next/navigation';
 import { playNotificationSound } from '@/utils/soundEffects';
 import { setNavigating } from '@/utils/navigationState';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-
-interface NotificationUser {
-	name: string;
-	avatar?: string;
-	icon?: string;
-}
-
-interface Notification {
-	id: string;
-	type: 'follow' | 'like' | 'join_request' | 'group_activity' | 'comment' | 'welcome';
-	user: NotificationUser;
-	message: string;
-	timestamp: string;
-	isRead: boolean;
-}
+import { Notification, NotificationUser } from '@/store/services/notificationApi';
 
 interface NotificationDropdownProps {
 	isOpen: boolean;
@@ -28,6 +14,7 @@ interface NotificationDropdownProps {
 	notifications: Notification[];
 	className?: string;
 	onShowMore?: () => void;
+	onMarkAsRead?: (id: string) => void;
 }
 
 const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
@@ -35,7 +22,8 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	onClose,
 	notifications,
 	className = '',
-	onShowMore
+	onShowMore,
+	onMarkAsRead
 }) => {
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const pathname = usePathname();
@@ -166,7 +154,12 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 						{notifications.map((notification) => (
 							<div
 								key={notification.id}
-								className={`p-4 border-b dark:border-gray-700 dark:hover:bg-gray-700 transition-colors ${!notification.isRead ? 'dark:bg-green-900/20' : 'dark:bg-gray-800'
+								onClick={() => {
+									if (!notification.isRead && onMarkAsRead) {
+										onMarkAsRead(notification.id);
+									}
+								}}
+								className={`p-4 border-b dark:border-gray-700 dark:hover:bg-gray-700 transition-colors cursor-pointer ${!notification.isRead ? 'dark:bg-green-900/20' : 'dark:bg-gray-800'
 									}`}
 								style={{
 									borderColor: 'var(--light-gray)',

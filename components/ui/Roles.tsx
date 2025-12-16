@@ -32,9 +32,9 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 	useEffect(() => {
 		if (rolesData) {
 			const rawRoles = (Array.isArray(rolesData) ? rolesData :
-				(Array.isArray(rolesData?.data) ? rolesData.data :
+				(Array.isArray((rolesData as any)?.data) ? (rolesData as any).data :
 					(Array.isArray(rolesData?.roles) ? rolesData.roles :
-						(Array.isArray(rolesData?.docs) ? rolesData.docs :
+						(Array.isArray((rolesData as any)?.docs) ? (rolesData as any).docs :
 							[]))));
 
 			const mappedRoles: Role[] = rawRoles?.map((role: any) => ({

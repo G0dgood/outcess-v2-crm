@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { PersonIcon, Cross2Icon } from '@radix-ui/react-icons';
-import { sampleNotifications } from '@/data/notifications';
+import { Notification } from '@/store/services/notificationApi';
 import Pagination from './Pagination';
 import Search from './Search';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
@@ -10,11 +10,15 @@ import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 interface NotificationsModalProps {
 	isOpen: boolean;
 	onClose: () => void;
+	notifications: Notification[];
+	onMarkAsRead?: (id: string) => void;
 }
 
 const NotificationsModal: React.FC<NotificationsModalProps> = ({
 	isOpen,
 	onClose,
+	notifications,
+	onMarkAsRead
 }) => {
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
@@ -70,7 +74,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
 	// Filter and search notifications
 	const filteredNotifications = useMemo(() => {
-		let filtered = sampleNotifications;
+		let filtered = notifications;
 
 		// Apply read/unread filter
 		if (filter === 'unread') {
@@ -99,9 +103,9 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 	// Update current page when filters change
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [filter, searchTerm]);
+	}, [filter, searchTerm, notifications]);
 
-	const unreadCount = sampleNotifications.filter(n => !n.isRead).length;
+	const unreadCount = notifications.filter(n => !n.isRead).length;
 
 	if (!shouldRender) return null;
 
@@ -274,7 +278,12 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 								{paginatedNotifications.map((notification) => (
 									<div
 										key={notification.id}
-										className={`p-4 border-b dark:border-gray-700 dark:hover:bg-gray-700 transition-colors ${!notification.isRead ? 'dark:bg-green-900/20' : 'dark:bg-gray-800'
+										onClick={() => {
+											if (!notification.isRead && onMarkAsRead) {
+												onMarkAsRead(notification.id);
+											}
+										}}
+										className={`p-4 border-b dark:border-gray-700 dark:hover:bg-gray-700 transition-colors cursor-pointer ${!notification.isRead ? 'dark:bg-green-900/20' : 'dark:bg-gray-800'
 											}`}
 										style={{
 											borderColor: 'var(--light-gray)',

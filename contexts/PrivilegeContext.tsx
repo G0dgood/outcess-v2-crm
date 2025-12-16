@@ -152,7 +152,7 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 					updateUser({
 						...user,
 						role: {
-							...user.role,
+							...(user.role as any),
 							permissions: data.role.permissions
 						} as any
 					});
