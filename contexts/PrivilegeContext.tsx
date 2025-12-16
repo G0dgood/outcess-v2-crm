@@ -1,6 +1,10 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useSocket } from '@/contexts/SocketContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { toastInfo } from '@/utils/toastWithSound';
 
 // Permission/Module types
 export type ModuleId =
@@ -75,6 +79,9 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 }) => {
 	const [userPrivileges, setUserPrivilegesState] = useState<UserPrivileges | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
+	const { socket } = useSocket();
+	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { user, updateUser } = useAuth();
 
 	// Initialize from localStorage or initial props
 	useEffect(() => {
@@ -109,6 +116,76 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 			}
 		}
 	}, [userPrivileges]);
+
+	// Socket integration for real-time role updates
+	useEffect(() => {
+		if (!socket || !selectedLineOfBusinessId) return;
+
+		// Join the Line of Business room
+		console.log('PrivilegeContext: Joining LineOfBusiness room:', selectedLineOfBusinessId);
+		socket.emit("joinLineOfBusiness", selectedLineOfBusinessId);
+
+		const handleUpdateRole = (data: any) => {
+			console.log("PrivilegeContext: Role updated event received:", data);
+
+			if (!userPrivileges || !userPrivileges.role) return;
+
+			// Check if the updated role matches the logged-in user's role
+			const currentRoleId = userPrivileges.roleId || userPrivileges.role.id || (userPrivileges.role as any)._id;
+			const updatedRoleId = data.role._id || data.role.id;
+
+			if (userPrivileges.role.roleName === data.role.roleName || (currentRoleId && updatedRoleId && currentRoleId === updatedRoleId)) {
+
+				// Update the user's permissions in state immediately
+				const updatedUserPrivileges = {
+					...userPrivileges,
+					role: {
+						...userPrivileges.role,
+						permissions: data.role.permissions
+					}
+				};
+
+				setUserPrivilegesState(updatedUserPrivileges);
+
+				// Update AuthContext user
+				if (user) {
+					updateUser({
+						...user,
+						role: {
+							...user.role,
+							permissions: data.role.permissions
+						} as any
+					});
+				}
+
+				// Update LocalStorage
+				try {
+					localStorage.setItem('userPrivileges', JSON.stringify(updatedUserPrivileges));
+
+					// Also update the main user object in localStorage
+					const storedUser = localStorage.getItem('peoplely-user');
+					if (storedUser) {
+						const parsedUser = JSON.parse(storedUser);
+						if (parsedUser.role && typeof parsedUser.role === 'object') {
+							parsedUser.role.permissions = data.role.permissions;
+							localStorage.setItem('peoplely-user', JSON.stringify(parsedUser));
+						}
+					}
+				} catch (error) {
+					console.error('Error saving privileges to localStorage:', error);
+				}
+
+				// Show a toast notification
+				toastInfo("Your permissions have been updated.");
+			}
+		};
+
+		socket.on("updateRole", handleUpdateRole);
+
+		return () => {
+			socket.off("updateRole", handleUpdateRole);
+		};
+	}, [socket, selectedLineOfBusinessId, userPrivileges]);
 
 	// Helper to match moduleId with moduleName
 	const findModulePermission = (moduleId: string): RoleModulePermission | undefined => {

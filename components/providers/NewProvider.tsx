@@ -29,10 +29,10 @@ const NewProvider: React.FC<NewProviderProps> = ({ children }) => {
         <ThemeProvider>
           <AuthProvider>
             <UserInfoProvider>
-              <LineOfBusinessProvider>
-                <SetupProvider>
-                  <PrivilegeProvider>
-                    <SocketProvider config={{ autoConnect: false }}>
+              <SocketProvider config={{ autoConnect: false }}>
+                <LineOfBusinessProvider>
+                  <SetupProvider>
+                    <PrivilegeProvider>
                       <NavigationProvider>
                         <RealTimeUpdates />
                         {children}
@@ -45,10 +45,10 @@ const NewProvider: React.FC<NewProviderProps> = ({ children }) => {
                           }}
                         />
                       </NavigationProvider>
-                    </SocketProvider>
-                  </PrivilegeProvider>
-                </SetupProvider>
-              </LineOfBusinessProvider>
+                    </PrivilegeProvider>
+                  </SetupProvider>
+                </LineOfBusinessProvider>
+              </SocketProvider>
             </UserInfoProvider>
           </AuthProvider>
         </ThemeProvider>

@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { useSocket } from '@/contexts/SocketContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { updateUser as updateReduxUser } from '@/store/slices/authSlice';
@@ -10,15 +11,31 @@ import { updateUser as updateReduxUser } from '@/store/slices/authSlice';
 export const RealTimeUpdates: React.FC = () => {
   const { socket, isConnected, emit, on, off } = useSocket();
   const { user, updateUser } = useAuth();
+  const { selectedLineOfBusinessId } = useLineOfBusiness();
   const dispatch = useDispatch();
 
   useEffect(() => {
     // Step 1: Connect and Join the 'Room'
-    if (isConnected && user?.lineOfBusinessId) {
-      console.log('Joining LineOfBusiness room:', user.lineOfBusinessId);
-      emit('joinLineOfBusiness', user.lineOfBusinessId);
+    if (isConnected && user) {
+      // Join User Room
+      console.log('Joining User room:', user.id);
+      emit('join', user.id);
+
+      // Join Company Room
+      const companyId = user.companyId || (user.company as any)?._id || (user.company as any)?.id;
+      if (companyId) {
+        console.log('Joining Company room:', companyId);
+        emit('join', companyId);
+      }
+
+      // Join LineOfBusiness Room
+      const lobId = selectedLineOfBusinessId || user.lineOfBusinessId;
+      if (lobId) {
+        console.log('Joining LineOfBusiness room:', lobId);
+        emit('joinLineOfBusiness', lobId);
+      }
     }
-  }, [isConnected, user?.lineOfBusinessId, emit]);
+  }, [isConnected, user, selectedLineOfBusinessId, emit]);
 
   useEffect(() => {
     if (!socket) return;
