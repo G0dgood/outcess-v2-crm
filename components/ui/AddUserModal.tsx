@@ -5,7 +5,7 @@ import Input from './Input';
 import Dropdown from './Dropdown';
 import Button from './Button';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { useCreateTeamMemberMutation, useGetTeamMembersBySupervisorIdQuery, useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery } from '@/store/services/teamMembersApi';
+import { useCreateTeamMemberMutation, useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery } from '@/store/services/teamMembersApi';
 import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
@@ -82,10 +82,13 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 		if (!supervisorsResponse) return [];
 		const rawSupervisors = supervisorsResponse.teamMembers || supervisorsResponse.data || supervisorsResponse || [];
 		const supervisorsList = Array.isArray(rawSupervisors) ? rawSupervisors : (rawSupervisors.docs || []);
-		return supervisorsList.map((supervisor: any) => ({
-			value: (supervisor._id || supervisor.id || '') as string,
-			label: supervisor.name || `${supervisor.firstName || ''} ${supervisor.lastName || ''}`.trim()
-		}));
+		return supervisorsList.map((supervisor: unknown) => {
+			const s = supervisor as any;
+			return {
+				value: (s._id || s.id || '') as string,
+				label: s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim()
+			};
+		});
 	}, [supervisorsResponse]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
@@ -93,7 +96,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 		setFormData(prev => ({ ...prev, [field]: stringValue }));
 
 		if (field === 'role') {
-			const selectedRole = rolesResponse?.roles?.find((r: any) => (r._id === stringValue || r.id === stringValue));
+			const selectedRole = rolesResponse?.roles?.find((r: Role) => (r._id === stringValue || r.id === stringValue));
 			if (selectedRole?.roleName?.toLowerCase() === 'supervisor') {
 				setFetchRoleId(stringValue);
 			} else {
@@ -132,9 +135,10 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 
 			toast.success('User created successfully');
 			onClose();
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error('Failed to create user:', error);
-			toast.error(error?.data?.message || 'Failed to create user');
+			const err = error as any;
+			toast.error(err?.data?.message || 'Failed to create user');
 		}
 	};
 

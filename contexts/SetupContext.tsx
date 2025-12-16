@@ -14,7 +14,7 @@ interface SetupStep {
 	completed: boolean;
 }
 
-interface DispositionCategory {
+export interface DispositionCategory {
 	id: string;
 	name: string;
 	color: string;
@@ -28,7 +28,7 @@ export interface Widget {
 	callOutcome?: string;
 }
 
-interface CallOutcome {
+export interface CallOutcome {
 	id: string;
 	name: string;
 }

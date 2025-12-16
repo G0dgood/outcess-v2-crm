@@ -63,12 +63,12 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 		if (!rolesData) return [];
 
 		const rawRoles = (Array.isArray(rolesData) ? rolesData :
-			(Array.isArray((rolesData as any)?.data) ? (rolesData as any).data :
-				(Array.isArray((rolesData as any)?.roles) ? (rolesData as any).roles :
-					(Array.isArray((rolesData as any)?.docs) ? (rolesData as any).docs :
+			(Array.isArray((rolesData as unknown as { data?: unknown })?.data) ? (rolesData as unknown as { data: unknown[] }).data :
+				(Array.isArray((rolesData as unknown as { roles?: unknown })?.roles) ? (rolesData as unknown as { roles: unknown[] }).roles :
+					(Array.isArray((rolesData as unknown as { docs?: unknown })?.docs) ? (rolesData as unknown as { docs: unknown[] }).docs :
 						[]))));
 
-		return rawRoles
+		return (rawRoles as Role[])
 			.filter((role: Role) => (role._id || role.id))
 			.map((role: Role) => ({
 				id: (role._id || role.id)!,
@@ -76,8 +76,8 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 			}));
 	}, [rolesData]);
 
-	const [createStatus, { isLoading: isCreating }] = useCreateStatusMutation();
-	const [updateStatus, { isLoading: isUpdating }] = useUpdateStatusMutation();
+	const [createStatus] = useCreateStatusMutation();
+	const [updateStatus] = useUpdateStatusMutation();
 
 	const isEditMode = !!statusId;
 

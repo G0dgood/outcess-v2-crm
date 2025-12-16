@@ -23,7 +23,8 @@ export default function LoginPage() {
 	const { isDarkMode } = useTheme();
 	const { setUserPrivileges } = usePrivilege();
 	const primaryColor = '#050711';
-	const [loginMethod, setLoginMethod] = useState<'email' | 'userId'>('email');
+	// loginMethod is determined dynamically based on input value (email vs userId)
+	// const [loginMethod, setLoginMethod] = useState<'email' | 'userId'>('email');
 	const [formData, setFormData] = useState({
 		emailOrUserId: '',
 		password: '',
@@ -124,9 +125,10 @@ export default function LoginPage() {
 					toast.error('Login failed: Invalid response from server');
 					setIsLoading(false);
 				}
-			} catch (err: any) {
+			} catch (err: unknown) {
 				console.error('Login error:', err);
-				toast.error(err?.data?.message || 'Invalid email or password');
+				const errorMessage = (err as { data?: { message?: string } })?.data?.message || 'Invalid email or password';
+				toast.error(errorMessage);
 				setIsLoading(false);
 			}
 		} else {

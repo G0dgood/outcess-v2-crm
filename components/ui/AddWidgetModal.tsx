@@ -6,7 +6,6 @@ import Input from './Input';
 import Dropdown from './Dropdown';
 import { ColorPicker } from './ColorPicker';
 import { Modal } from './Modal';
-import { useSetup } from '@/contexts/SetupContext';
 import { getOfflineDispositions, getSyncedDispositions } from '@/utils/offlineDispositions';
 import type { Widget } from '@/contexts/SetupContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
@@ -70,7 +69,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 				// Don't reset if user manually set a value
 			}
 		}
-	}, [formData?.title]);
+	}, [formData?.title, formData?.value]);
 
 	// Build dropdown options from available data
 	const widgetTitleOptions = useMemo(() => {
@@ -103,10 +102,11 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 
 		// Add disposition categories if available
 		if (lineOfBusinessData?.dashboardSettings?.dispositions && lineOfBusinessData?.dashboardSettings?.dispositions?.length > 0) {
-			lineOfBusinessData?.dashboardSettings?.dispositions.forEach((disposition: { name: any; }) => {
+			lineOfBusinessData?.dashboardSettings?.dispositions.forEach((disposition: { name: unknown }) => {
+				const name = disposition?.name as string;
 				options.push({
-					value: disposition?.name,
-					label: disposition?.name,
+					value: name,
+					label: name,
 				});
 			});
 		}

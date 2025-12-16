@@ -7,16 +7,13 @@ import Search from '@/components/ui/Search';
 import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
 import Checkbox from '@/components/ui/Checkbox';
-import { useGetTeamMembersByLineOfBusinessIdQuery, useCreateTeamMemberMutation } from '@/store/services/teamMembersApi';
-import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
+import { useGetTeamMembersByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
 import PageHeading from '@/components/ui/PageHeading';
 import { Pencil1Icon, TrashIcon, ExclamationTriangleIcon, PersonIcon } from '@radix-ui/react-icons';
 import AddUserModal from '@/components/ui/AddUserModal';
 import DeleteUserModal from '@/components/ui/DeleteUserModal';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useUserInfo } from '@/contexts/UserInfoContext';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
-import { toast } from 'sonner';
 
 interface User {
 	id: string;
@@ -51,19 +48,20 @@ const UsersPage: React.FC = () => {
 			const rawMembers = teamMembersResponse.data || teamMembersResponse.teamMembers || teamMembersResponse || [];
 			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
 
-			const mappedUsers = membersList.map((member: any) => {
-				const fullName = member.name || '';
+			const mappedUsers = membersList.map((member: unknown) => {
+				const m = member as any;
+				const fullName = m.name || '';
 				const [firstName, ...lastNameParts] = fullName.split(' ');
 				const lastName = lastNameParts.join(' ');
 
 				return {
-					id: member._id || member.id,
-					firstName: member.firstName || firstName || '',
-					lastName: member.lastName || lastName || '',
-					email: member.email || '',
-					phone: member.phone || '',
-					role: typeof member.role === 'object' ? (member.role.roleName || member.role.name) : (member.role || 'Agent'),
-					loginStatus: member.status || member.loginStatus || 'Logged Out',
+					id: m._id || m.id,
+					firstName: m.firstName || firstName || '',
+					lastName: m.lastName || lastName || '',
+					email: m.email || '',
+					phone: m.phone || '',
+					role: typeof m.role === 'object' ? (m.role.roleName || m.role.name) : (m.role || 'Agent'),
+					loginStatus: m.status || m.loginStatus || 'Logged Out',
 				};
 			});
 			setUsers(mappedUsers);

@@ -23,7 +23,7 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 }) => {
 	const [roleName, setRoleName] = useState('');
 	const [roleDescription, setRoleDescription] = useState('');
-	const [createRole, { isLoading }] = useCreateRoleMutation();
+	const [createRole] = useCreateRoleMutation();
 	const { user } = useUserInfo();
 	const { selectedLineOfBusinessId } = useLineOfBusiness();
 
@@ -68,24 +68,16 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 					description: roleDescription,
 					companyId: companyId,
 					lineOfBusinessId: selectedLineOfBusinessId || undefined,
-					permissions: {
-						dashboard: false,
-						customerBook: false,
-						userManagement: false,
-						setupBook: false,
-						customerSMS: false,
-						report: false,
-						systemSetting: false,
-						auditLog: false,
-					}
+					permissions: []
 				}).unwrap();
 
 				toast.success('Custom role created successfully');
 				onSuccess?.();
 				onClose();
-			} catch (error: any) {
+			} catch (error: unknown) {
 				console.error('Failed to create custom role:', error);
-				toast.error(error?.data?.message || 'Failed to create custom role');
+				const errorMessage = (error as { data?: { message?: string } })?.data?.message || 'Failed to create custom role';
+				toast.error(errorMessage);
 			}
 		}
 	};

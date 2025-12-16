@@ -8,7 +8,7 @@ import Toggle from '@/components/ui/Toggle';
 import CreateRoleModal from '@/components/ui/CreateRoleModal';
 import Icon from '@/components/ui/Icon';
 import { useSetup } from '@/contexts/SetupContext';
-import { useGetRolesByCompanyIdQuery, useCreateRoleMutation, useUpdateRoleMutation, useDeleteRoleMutation, Role, RolePermission } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery, useCreateRoleMutation, useUpdateRoleMutation, useDeleteRoleMutation, Role, RolePermission, CreateRoleRequest } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
 
@@ -36,25 +36,25 @@ export default function RolePermissionManagementPage() {
 	const [updateRole] = useUpdateRoleMutation();
 	const [deleteRole] = useDeleteRoleMutation();
 
-	// Transform API roles to local format or use API roles directly
-	const rawRoles: Role[] = (Array.isArray(rolesData) ? rolesData :
-		(Array.isArray((rolesData as any)?.data) ? (rolesData as any).data :
-			(Array.isArray((rolesData as any)?.roles) ? (rolesData as any).roles :
-				(Array.isArray((rolesData as any)?.docs) ? (rolesData as any).docs :
-					[])))) as Role[];
-
-	// If roles array is empty but we have data in rolesData that looks like a single role or object of roles
-	// Try to extract from object values if it's an object of roles
-	const extractedRoles: Role[] = rawRoles.length > 0 ? rawRoles :
-		(rolesData && typeof rolesData === 'object' && !Array.isArray(rolesData) ?
-			Object.values(rolesData as any).filter((item): item is Role =>
-				typeof item === 'object' && item !== null && '_id' in item && 'roleName' in item
-			) : []);
-
 	// Deduplicate roles to prevent key collisions
 	const roles = React.useMemo(() => {
+		// Transform API roles to local format or use API roles directly
+		const rawRoles = (Array.isArray(rolesData) ? rolesData :
+			(Array.isArray((rolesData as unknown as { data?: Role[] }).data) ? (rolesData as unknown as { data?: Role[] }).data :
+				(Array.isArray((rolesData as unknown as { roles?: Role[] }).roles) ? (rolesData as unknown as { roles?: Role[] }).roles :
+					(Array.isArray((rolesData as unknown as { docs?: Role[] }).docs) ? (rolesData as unknown as { docs?: Role[] }).docs :
+						[])))) as Role[];
+
+		// If roles array is empty but we have data in rolesData that looks like a single role or object of roles
+		// Try to extract from object values if it's an object of roles
+		const extractedRoles = rawRoles.length > 0 ? rawRoles :
+			(rolesData && typeof rolesData === 'object' && !Array.isArray(rolesData) ?
+				Object.values(rolesData as unknown as Record<string, unknown>).filter((item): item is Role =>
+					typeof item === 'object' && item !== null && '_id' in item && 'roleName' in item
+				) : []);
+
 		return Array.from(new Map(extractedRoles.map(role => [role._id, role])).values());
-	}, [extractedRoles]);
+	}, [rolesData]);
 
 	useEffect(() => {
 		const ensureAdminRole = async () => {
@@ -89,7 +89,7 @@ export default function RolePermissionManagementPage() {
 		};
 
 		ensureAdminRole();
-	}, [rolesData, companyId, createRole, refetch, roleManagementSettings.modules]);
+	}, [rolesData, companyId, createRole, refetch, roleManagementSettings.modules, isLoading, roles]);
 
 	const handlePermissionChange = async (roleId: string, moduleId: string, enabled: boolean) => {
 		const roleToUpdate = roles.find((r: Role) => r._id === roleId);
@@ -136,7 +136,7 @@ export default function RolePermissionManagementPage() {
 			try {
 				await updateRole({
 					id: roleId,
-					roleData: payload as any // Cast to any to bypass strict permission type check since we construct it dynamically
+					roleData: payload as Partial<CreateRoleRequest>
 				}).unwrap();
 				toast.success('Permission updated successfully');
 			} catch (error) {

@@ -12,7 +12,7 @@ import { useRegisterMutation } from '@/store/services/authApi';
 import { useCreateCompanyMutation } from '@/store/services/companyApi';
 
 import { useDispatch } from 'react-redux';
-import { setUser, setTokens, register as registerAction } from '@/store/slices/authSlice';
+import { setUser, register as registerAction } from '@/store/slices/authSlice';
 
 export default function SignUpPage() {
 	const router = useRouter();
@@ -146,8 +146,8 @@ export default function SignUpPage() {
 				} else {
 					toast.error('Account created but user ID is missing.');
 				}
-			} catch (err: any) {
-				toast.error(err?.data?.message || 'Failed to create account');
+			} catch (err: unknown) {
+				toast.error((err as any)?.data?.message || 'Failed to create account');
 			} finally {
 				setIsLoading(false);
 			}
@@ -180,8 +180,8 @@ export default function SignUpPage() {
 			await createCompany(payload).unwrap();
 			toast.success('Company profile created successfully!');
 			router.push('/setup');
-		} catch (err: any) {
-			toast.error(err?.data?.message || 'Failed to create company profile');
+		} catch (err: unknown) {
+			toast.error((err as any)?.data?.message || 'Failed to create company profile');
 		} finally {
 			setIsLoading(false);
 		}

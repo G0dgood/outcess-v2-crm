@@ -6,7 +6,7 @@ import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
 import PaginationSummary from '@/components/ui/PaginationSummary';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetTeamMembersByLineOfBusinessIdQuery, useGetTeamMembersBySupervisorIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersBySupervisorIdQuery } from '@/store/services/teamMembersApi';
 import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
 import { useSocket } from '@/contexts/SocketContext';
 import { toastSuccess } from '@/utils/toastWithSound';
@@ -25,7 +25,6 @@ interface TeamMember {
 
 const TeamMembersPage: React.FC = () => {
 	const { lineOfBusinessData } = useLineOfBusiness();
-	const lineOfBusinessId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
 	const supervisorId = "693d83a4412528325bdefd87";
 	const { data: teamMembersResponse, isLoading } = useGetTeamMembersBySupervisorIdQuery(supervisorId);
 	const { socket } = useSocket();
@@ -35,24 +34,26 @@ const TeamMembersPage: React.FC = () => {
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [supervisorFilter, setSupervisorFilter] = useState('all');
-	const [teamFilter, setTeamFilter] = useState('all');
 
 	useEffect(() => {
 		if (teamMembersResponse) {
 			const rawMembers = teamMembersResponse.data || teamMembersResponse.teamMembers || teamMembersResponse || [];
 			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
 
-			const mappedMembers: TeamMember[] = membersList.map((member: any) => ({
-				_id: member._id || member.id,
-				agentId: member.agentId || member._id || member.id || 'N/A',
-				fullName: member.name || `${member.firstName || ''} ${member.lastName || ''}`.trim(),
-				email: member.email || '',
-				phone: member.phone || '',
-				role: (typeof member.role === 'object' ? (member.role.roleName || member.role.name) : (member.role || 'agent')).toLowerCase() as any,
-				supervisor: member.supervisor?.name || member.supervisor || 'Unassigned',
-				status: (member.status === 'Logged In' || member.loginStatus === 'Logged In') ? 'Logged In' : 'Logged Out',
-				team: member.team?.name || member.team || 'Unassigned'
-			}));
+			const mappedMembers: TeamMember[] = membersList.map((member: unknown) => {
+				const m = member as any;
+				return {
+					_id: m._id || m.id,
+					agentId: m.agentId || m._id || m.id || 'N/A',
+					fullName: m.name || `${m.firstName || ''} ${m.lastName || ''}`.trim(),
+					email: m.email || '',
+					phone: m.phone || '',
+					role: (typeof m.role === 'object' ? (m.role.roleName || m.role.name) : (m.role || 'agent')).toLowerCase() as TeamMember['role'],
+					supervisor: m.supervisor?.name || m.supervisor || 'Unassigned',
+					status: (m.status === 'Logged In' || m.loginStatus === 'Logged In') ? 'Logged In' : 'Logged Out',
+					team: m.team?.name || m.team || 'Unassigned'
+				};
+			});
 			setTeamMembersData(mappedMembers);
 		}
 	}, [teamMembersResponse]);
@@ -65,17 +66,18 @@ const TeamMembersPage: React.FC = () => {
 		socket.emit('join', supervisorId);
 
 		// Listen for status updates
-		const handleStatusUpdate = (data: any) => {
+		const handleStatusUpdate = (data: unknown) => {
 			console.log('Team Member Updated:', data);
 			// data: { teamMemberId, name, status, timestamp }
+			const updateData = data as { teamMemberId: string; status: TeamMember['status'] };
 
 			setTeamMembersData(prevMembers => prevMembers.map(member => {
-				if (member._id === data.teamMemberId || member.agentId === data.teamMemberId) {
+				if (member._id === updateData.teamMemberId || member.agentId === updateData.teamMemberId) {
 					// Show toast notification
-					toastSuccess(`${member.fullName} is now ${data.status}`);
+					toastSuccess(`${member.fullName} is now ${updateData.status}`);
 					return {
 						...member,
-						status: data.status,
+						status: updateData.status,
 					};
 				}
 				return member;
@@ -94,11 +96,6 @@ const TeamMembersPage: React.FC = () => {
 		return ['all', ...Array.from(unique)];
 	}, []);
 
-	const teams = useMemo(() => {
-		const unique = new Set(teamMembersData.map(member => member.team));
-		return ['all', ...Array.from(unique)];
-	}, []);
-
 	const filteredMembers = useMemo(() => {
 		return teamMembersData.filter(member => {
 			const matchesSearch =
@@ -108,11 +105,10 @@ const TeamMembersPage: React.FC = () => {
 				member.email.toLowerCase().includes(searchTerm.toLowerCase());
 
 			const matchesSupervisor = supervisorFilter === 'all' || member.supervisor === supervisorFilter;
-			const matchesTeam = teamFilter === 'all' || member.team === teamFilter;
 
-			return matchesSearch && matchesSupervisor && matchesTeam;
+			return matchesSearch && matchesSupervisor;
 		});
-	}, [searchTerm, supervisorFilter, teamFilter, teamMembersData]);
+	}, [searchTerm, supervisorFilter, teamMembersData]);
 
 	const totalPages = Math.max(1, Math.ceil(filteredMembers.length / itemsPerPage));
 	const currentMembers = filteredMembers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);

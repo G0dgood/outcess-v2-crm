@@ -22,10 +22,11 @@ export const RealTimeUpdates: React.FC = () => {
       emit('join', user.id);
 
       // Join Company Room
-      const companyId = user.companyId || (user.company as any)?._id || (user.company as any)?.id;
+      const userCompany = user.company as unknown;
+      const companyId = user.companyId || (userCompany as any)?._id || (userCompany as any)?.id;
       if (companyId) {
         console.log('Joining Company room:', companyId);
-        emit('join', companyId);
+        emit('joinCompany', companyId);
       }
 
       // Join LineOfBusiness Room
@@ -41,29 +42,31 @@ export const RealTimeUpdates: React.FC = () => {
     if (!socket) return;
 
     // Step 2: Listen for the roleUpdated Event
-    const handleRoleUpdated = (updatedRoleData: any) => {
+    const handleRoleUpdated = (updatedRoleData: unknown) => {
       console.log('Role updated event received:', updatedRoleData);
+      const data = updatedRoleData as any;
 
       // The payload might be the full user object or just the role changes.
       // Based on the guide: "This event will carry the updated user data (including the new role/permissions)."
       // So we expect updatedUser.
 
       // Check if the update is for the current user
-      if (updatedRoleData.id === user?.id || updatedRoleData._id === user?.id) {
+      if (data.id === user?.id || data._id === user?.id) {
         // Update AuthContext state
-        updateUser(updatedRoleData);
+        updateUser(data);
 
         // Update Redux state
-        dispatch(updateReduxUser(updatedRoleData));
+        dispatch(updateReduxUser(data));
 
         toast.info('Your permissions have been updated.');
       }
     };
 
     // Step 3: Listen for the Notification (Optional)
-    const handleNotification = (data: any) => {
+    const handleNotification = (data: unknown) => {
       console.log('Notification received:', data);
-      toast(data.message || 'New notification received');
+      const notification = data as any;
+      toast(notification.message || 'New notification received');
     };
 
     on('roleUpdated', handleRoleUpdated);

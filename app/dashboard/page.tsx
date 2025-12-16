@@ -40,7 +40,7 @@ import WidgetCard from '@/components/dashboard/WidgetCard';
 
 import { StoredStickyNote, serializeStickyNote } from '@/utils/stickyNoteUtils';
 import { ChartDataItem } from '@/components/dashboard/charts/types';
-import { Chart, Widget } from '@/contexts/SetupContext';
+import { Chart, Widget, DispositionCategory, CallOutcome } from '@/contexts/SetupContext';
 import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton';
 
 interface DashboardSettings {
@@ -48,8 +48,8 @@ interface DashboardSettings {
 	dashboardVisibility: string;
 	activeTab: string;
 	widgets: Widget[];
-	dispositions: any[];
-	callOutcomes: any[];
+	dispositions: DispositionCategory[];
+	callOutcomes: CallOutcome[];
 	dispositionSettings: {
 		timeRangeView: string;
 		charts: Chart[];

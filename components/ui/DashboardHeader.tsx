@@ -42,7 +42,6 @@ interface DashboardHeaderProps {
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 	userIsOnline = true,
-	onCompanyChange,
 	onNotificationsClick,
 	onStatusClick,
 	onEditProfileClick,
@@ -63,10 +62,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
 	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket, socket } = useSocket();
 	const [logoutApi] = useLogoutMutation();
-	const { userPrivileges, isAdmin } = usePrivilege();
+	const { isAdmin } = usePrivilege();
 
 	// Get user from Redux store
-	const reduxUser = useSelector((state: any) => state.auth.user);
+	const reduxUser = useSelector((state: { auth: { user: any } }) => state.auth.user);
 
 	// Determine the effective user to display
 	const displayUser = mounted && reduxUser ? {
@@ -81,7 +80,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const previousPathname = useRef(pathname);
 	const isNavigating = useRef(false);
 	const { setSelectedLineOfBusinessId, isLoading: isLobLoading, lineOfBusinessData: selectedLOBData, selectedLineOfBusinessId } = useLineOfBusiness();
-	const companyId = selectedLOBData?.companyId || displayUser?.companyId || (displayUser?.company as any)?._id || '';
+	const companyId = selectedLOBData?.companyId || displayUser?.companyId || (displayUser?.company as { _id: string })?._id || '';
 
 	const { data: lineOfBusinessData } = useGetLineOfBusinessByCompanyIdForheaderQuery(companyId, {
 		skip: !companyId
@@ -94,13 +93,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	});
 
 	const [markAsRead] = useMarkNotificationAsReadMutation();
-	const notifications = notificationsData?.notifications || [];
+	const notifications = React.useMemo(() => notificationsData?.notifications || [], [notificationsData]);
 
 	const [lobOptions, setLobOptions] = useState<{ value: string; label: string; }[]>([]);
 
 	useEffect(() => {
 		if (lineOfBusinessData && lineOfBusinessData.lineOfBusinesses) {
-			const options = lineOfBusinessData.lineOfBusinesses.map((lob: any) => ({
+			const options = lineOfBusinessData.lineOfBusinesses.map((lob: { _id: string; lineOfBusinessName: string }) => ({
 				value: lob._id,
 				label: lob.lineOfBusinessName
 			}));
@@ -111,7 +110,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				setSelectedLineOfBusinessId(options[0].value);
 			}
 		}
-	}, [lineOfBusinessData, selectedLineOfBusinessId]);
+	}, [lineOfBusinessData, selectedLineOfBusinessId, setSelectedLineOfBusinessId]);
 
 	// Socket integration for Line of Business updates
 	useEffect(() => {
@@ -122,7 +121,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		console.log(`Socket: Joined Line of Business room ${selectedLineOfBusinessId}`);
 
 		// Listen for status list updates
-		const handleStatusListUpdate = (data: any) => {
+		const handleStatusListUpdate = (data: unknown) => {
 			console.log("Socket: Status list updated", data);
 			// Invalidate RTK Query cache for statuses
 			dispatch(statusApi.util.invalidateTags(['Statuses']));

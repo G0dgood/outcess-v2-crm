@@ -10,20 +10,10 @@ import BackButton from '@/components/ui/BackButton';
 import { ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetTeamMemberByIdQuery, useUpdateTeamMemberPasswordMutation, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery } from '@/store/services/teamMembersApi';
 import { useGetRolesByLineOfBusinessIdQuery } from '@/store/services/roleApi';
 
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface User {
-	id: string;
-	firstName: string;
-	lastName: string;
-	email: string;
-	phone: string;
-	role: string;
-	loginStatus: string;
-}
 
 const EditUserPage: React.FC = () => {
 	const router = useRouter();
@@ -37,7 +27,7 @@ const EditUserPage: React.FC = () => {
 		skip: !selectedLineOfBusinessId
 	});
 
-	const [updateTeamMember, { isLoading: isUpdating }] = useUpdateTeamMemberMutation();
+	const [updateTeamMember] = useUpdateTeamMemberMutation();
 	// const [updateTeamMemberPassword, { isLoading: isUpdatingPassword }] = useUpdateTeamMemberPasswordMutation();
 	const [adminResetTeamMemberPassword, { isLoading: isResettingPassword }] = useAdminResetTeamMemberPasswordByIdMutation();
 
@@ -101,21 +91,30 @@ const EditUserPage: React.FC = () => {
 						[]))));
 
 		return rawRoles
-			.filter((role: any) => (role._id || role.id))
-			.map((role: any) => ({
-				value: role.roleName, // Using roleName as value to match current implementation
-				label: role.roleName
-			}));
+			.filter((role: unknown) => {
+				const r = role as any;
+				return r._id || r.id;
+			})
+			.map((role: unknown) => {
+				const r = role as any;
+				return {
+					value: r.roleName, // Using roleName as value to match current implementation
+					label: r.roleName
+				};
+			});
 	}, [rolesData]);
 
 	const supervisorOptions = useMemo(() => {
 		if (!supervisorsResponse) return [];
 		const rawSupervisors = supervisorsResponse.teamMembers || supervisorsResponse.data || supervisorsResponse || [];
 		const supervisorsList = Array.isArray(rawSupervisors) ? rawSupervisors : (rawSupervisors.docs || []);
-		return supervisorsList.map((supervisor: any) => ({
-			value: (supervisor._id || supervisor.id || '') as string,
-			label: supervisor.name || `${supervisor.firstName || ''} ${supervisor.lastName || ''}`.trim()
-		}));
+		return supervisorsList.map((supervisor: unknown) => {
+			const s = supervisor as any;
+			return {
+				value: (s._id || s.id || '') as string,
+				label: s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim()
+			};
+		});
 	}, [supervisorsResponse]);
 
 	// Update fetchRoleId when role changes or rolesData loads

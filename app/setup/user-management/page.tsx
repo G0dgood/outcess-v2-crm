@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import AddUserModal from '@/components/ui/AddUserModal';
@@ -24,7 +25,7 @@ interface User {
 }
 
 export default function UserManagementPage() {
-	const { setupData, updateUserManagementSettings, updateSetupData } = useSetup();
+	const { setupData, updateUserManagementSettings } = useSetup();
 	const { user } = useUserInfo();
 	const { userManagementSettings } = setupData;
 	const router = useRouter();
@@ -36,7 +37,7 @@ export default function UserManagementPage() {
 		skip: !lineOfBusinessId
 	});
 
-	const { data: teamMembersResponse, isLoading: isTeamMembersLoading } = useGetTeamMembersByCompanyIdQuery(companyId, {
+	const { data: teamMembersResponse } = useGetTeamMembersByCompanyIdQuery(companyId, {
 		skip: !companyId
 	});
 
@@ -57,16 +58,19 @@ export default function UserManagementPage() {
 		const rawMembers = teamMembersResponse.data || teamMembersResponse.teamMembers || teamMembersResponse || [];
 		const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
 
-		return membersList.map((member: any) => ({
-			id: member._id,
-			name: member.name,
-			email: member.email,
-			phone: member.phone,
-			role: member.role?.roleName || member.role,
-			status: member.status,
-			lastLogin: member.lastLogin,
-			userId: member.userId
-		}));
+		return membersList.map((member: unknown) => {
+			const m = member as any;
+			return {
+				id: m._id,
+				name: m.name,
+				email: m.email,
+				phone: m.phone,
+				role: m.role?.roleName || m.role,
+				status: m.status,
+				lastLogin: m.lastLogin,
+				userId: m.userId
+			};
+		});
 	}, [teamMembersResponse]);
 
 	const roleOptions = useMemo(() => {
@@ -77,16 +81,19 @@ export default function UserManagementPage() {
 		if (rolesList.length === 0) return [];
 
 		return rolesList.map((role: Role) => ({
-			value: role._id || role.id,
+			value: role._id || role.id || '',
 			label: role.roleName
-		}));
+		})).filter(option => option.value !== '');
 	}, [rolesDataResponse]);
 
 	const supervisorOptions = useMemo(() => {
-		return teamMembers.map((member: any) => ({
-			value: member.id,
-			label: member.name
-		}));
+		return teamMembers.map((member: unknown) => {
+			const m = member as any;
+			return {
+				value: m.id,
+				label: m.name
+			};
+		});
 	}, [teamMembers]);
 
 	const statusOptions = [
@@ -137,9 +144,9 @@ export default function UserManagementPage() {
 
 			toast.success('Team member created successfully');
 			setIsAddingUser(false);
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error('Failed to create team member:', error);
-			const errorMessage = error?.data?.error || error?.data?.message || 'Failed to create team member';
+			const errorMessage = (error as any)?.data?.error || (error as any)?.data?.message || 'Failed to create team member';
 			toast.error(errorMessage);
 		} finally {
 			setIsLoading(false);
@@ -418,9 +425,11 @@ export default function UserManagementPage() {
 									<tr>
 										<td colSpan={7} className="py-12 px-6">
 											<div className="flex flex-col items-center justify-center text-center">
-												<img
+												<Image
 													src="/illustrations/Avatar-Neutral-Add-2--Streamline-Ux.png"
 													alt="No users added"
+													width={128}
+													height={128}
 													className="w-32 h-32 mb-4 opacity-60"
 												/>
 												<h3
@@ -440,69 +449,72 @@ export default function UserManagementPage() {
 										</td>
 									</tr>
 								) : (
-									teamMembers.map((user: any, index: number) => (
-										<tr
-											key={user.id}
-											className={index !== teamMembers.length - 1 ? 'dark:border-gray-700' : ''}
-											style={index !== teamMembers.length - 1 ? { borderBottom: '1px solid', borderBottomColor: 'var(--light-gray)' } : {}}
-										>
-											<td
-												className="py-4 px-6 font-inter text-sm dark:text-gray-100"
-												style={{ color: 'var(--text-primary)' }}
+									teamMembers.map((user: unknown, index: number) => {
+										const u = user as any;
+										return (
+											<tr
+												key={u.id}
+												className={index !== teamMembers.length - 1 ? 'dark:border-gray-700' : ''}
+												style={index !== teamMembers.length - 1 ? { borderBottom: '1px solid', borderBottomColor: 'var(--light-gray)' } : {}}
 											>
-												{user.name}
-											</td>
-											<td
-												className="py-4 px-6 font-inter text-sm dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{user.email}
-											</td>
-											<td
-												className="py-4 px-6 font-inter text-sm dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{user.phone}
-											</td>
-											<td
-												className="py-4 px-6 font-inter text-sm dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{user.role}
-											</td>
-											<td className="py-4 px-6">
-												<Dropdown
-													label=""
-													value={user.status}
-													onChange={(value) => handleStatusChange(user.id, value as string)}
-													options={statusOptions}
-													className="min-w-[120px]"
-												/>
-											</td>
-											<td
-												className="py-4 px-6 font-inter text-sm dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
-											</td>
-											<td className="py-4 px-6 text-sm font-medium">
-												<div className='flex flex-row gap-3'>
-													<button
-														onClick={() => handleEditUser(user.id)}
-														className='cursor-pointer'
-													>
-														<Icon name="Edit_duotone_line" size={"lg"} />
-													</button>
-													<button
-														onClick={() => handleDeleteUser(user.id)}
-														className='cursor-pointer'
-													>
-														<Icon name="Trash_light" size={"lg"} />
-													</button>
-												</div>
-											</td>
-										</tr>
-									))
+												<td
+													className="py-4 px-6 font-inter text-sm dark:text-gray-100"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													{u.name}
+												</td>
+												<td
+													className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+													style={{ color: 'var(--text-tertiary)' }}
+												>
+													{u.email}
+												</td>
+												<td
+													className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+													style={{ color: 'var(--text-tertiary)' }}
+												>
+													{u.phone}
+												</td>
+												<td
+													className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+													style={{ color: 'var(--text-tertiary)' }}
+												>
+													{u.role}
+												</td>
+												<td className="py-4 px-6">
+													<Dropdown
+														label=""
+														value={u.status}
+														onChange={(value) => handleStatusChange(u.id, value as string)}
+														options={statusOptions}
+														className="min-w-[120px]"
+													/>
+												</td>
+												<td
+													className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+													style={{ color: 'var(--text-tertiary)' }}
+												>
+													{u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}
+												</td>
+												<td className="py-4 px-6 text-sm font-medium">
+													<div className='flex flex-row gap-3'>
+														<button
+															onClick={() => handleEditUser(u.id)}
+															className='cursor-pointer'
+														>
+															<Icon name="Edit_duotone_line" size={"lg"} />
+														</button>
+														<button
+															onClick={() => handleDeleteUser(u.id)}
+															className='cursor-pointer'
+														>
+															<Icon name="Trash_light" size={"lg"} />
+														</button>
+													</div>
+												</td>
+											</tr>
+										);
+									})
 								)}
 							</tbody>
 						</table>
