@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetRolesByLineOfBusinessIdQuery } from '@/store/services/roleApi';
 import RolesSkeleton from '@/components/skeletons/RolesSkeleton';
@@ -32,12 +31,12 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 	useEffect(() => {
 		if (rolesData) {
 			const rawRoles = (Array.isArray(rolesData) ? rolesData :
-				(Array.isArray((rolesData as unknown as { data?: any[] }).data) ? (rolesData as unknown as { data?: any[] }).data :
-					(Array.isArray((rolesData as unknown as { roles?: any[] }).roles) ? (rolesData as unknown as { roles?: any[] }).roles :
-						(Array.isArray((rolesData as unknown as { docs?: any[] }).docs) ? (rolesData as unknown as { docs?: any[] }).docs :
+				(Array.isArray((rolesData as unknown as { data?: unknown[] }).data) ? (rolesData as unknown as { data?: unknown[] }).data :
+					(Array.isArray((rolesData as unknown as { roles?: unknown[] }).roles) ? (rolesData as unknown as { roles?: unknown[] }).roles :
+						(Array.isArray((rolesData as unknown as { docs?: unknown[] }).docs) ? (rolesData as unknown as { docs?: unknown[] }).docs :
 							[]))));
 
-			const mappedRoles: Role[] = (rawRoles || []).map((role: { _id?: string; id?: string; roleName: string; userCount?: number }) => ({
+			const mappedRoles: Role[] = ((rawRoles as { _id?: string; id?: string; roleName: string; userCount?: number }[]) || []).map((role) => ({
 				id: role?._id || role.id || '',
 				name: role?.roleName,
 				userCount: role?.userCount || 0

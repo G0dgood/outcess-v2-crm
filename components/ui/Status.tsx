@@ -8,7 +8,6 @@ import { TrashIcon, Pencil1Icon } from '@radix-ui/react-icons';
 import SubPageHeading from './SubPageHeading';
 import PageHeading from './PageHeading';
 import { useSocket } from '@/contexts/SocketContext';
-import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import {
 	useGetStatusesByLineOfBusinessIdQuery,
@@ -18,6 +17,16 @@ import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleA
 import { NoRecordFound } from '../Options';
 import StatusSkeleton from '@/components/skeletons/StatusSkeleton';
 
+interface RawStatus {
+	id?: string;
+	_id?: string;
+	name: string;
+	description: string;
+	roleSelection?: 'all' | 'selected';
+	selectedRoles?: (string | Role)[];
+	color?: string;
+}
+
 interface StatusItem {
 	id: string;
 	name: string;
@@ -26,14 +35,6 @@ interface StatusItem {
 	roleSelection?: 'all' | 'selected';
 	selectedRoles?: string[];
 	icon?: string;
-	color: string;
-}
-
-interface StatusFormData {
-	name: string;
-	description: string;
-	roleSelection: 'all' | 'selected';
-	selectedRoles: string[];
 	color: string;
 }
 
@@ -52,14 +53,14 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 	});
 
 	const roleLabels = React.useMemo(() => {
-		const data: any = rolesData;
+		const data = rolesData as unknown;
 		if (!data) return {};
 
 		const rawRoles = (Array.isArray(data) ? data :
-			(Array.isArray(data?.data) ? data?.data :
-				(Array.isArray(data?.roles) ? data?.roles :
-					(Array.isArray(data?.docs) ? data?.docs :
-						[]))));
+			(Array.isArray((data as { data?: unknown[] }).data) ? (data as { data?: unknown[] }).data :
+				(Array.isArray((data as { roles?: unknown[] }).roles) ? (data as { roles?: unknown[] }).roles :
+					(Array.isArray((data as { docs?: unknown[] }).docs) ? (data as { docs?: unknown[] }).docs :
+						[])))) as Role[];
 
 		return rawRoles.reduce((acc: { [key: string]: string }, role: Role) => {
 			const id = role?._id || role?.id;
@@ -77,20 +78,20 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 	useEffect(() => {
 		if (fetchedStatuses) {
 			const rawStatuses = (Array.isArray(fetchedStatuses) ? fetchedStatuses :
-				(Array.isArray((fetchedStatuses as any)?.data) ? (fetchedStatuses as any).data :
-					(Array.isArray((fetchedStatuses as any)?.statuses) ? (fetchedStatuses as any).statuses :
-						(Array.isArray((fetchedStatuses as any)?.docs) ? (fetchedStatuses as any).docs :
-							[]))));
+				(Array.isArray((fetchedStatuses as unknown as { data?: unknown[] }).data) ? (fetchedStatuses as unknown as { data?: unknown[] }).data :
+					(Array.isArray((fetchedStatuses as unknown as { statuses?: unknown[] }).statuses) ? (fetchedStatuses as unknown as { statuses?: unknown[] }).statuses :
+						(Array.isArray((fetchedStatuses as unknown as { docs?: unknown[] }).docs) ? (fetchedStatuses as unknown as { docs?: unknown[] }).docs :
+							[])))) as RawStatus[];
 
-			const mappedStatuses = rawStatuses.map((status: any) => {
-				const statusId = status.id || status._id;
+			const mappedStatuses = rawStatuses.map((status) => {
+				const statusId = status.id || status._id || '';
 				const roleDisplay = (status.roleSelection === 'all' || !status.roleSelection)
 					? 'All users'
-					: (status.selectedRoles || []).map((role: any) => {
+					: (status.selectedRoles || []).map((role) => {
 						if (typeof role === 'string') {
 							return roleLabels[role] || role;
 						} else if (role && typeof role === 'object') {
-							return role.roleName || roleLabels[role.id] || roleLabels[role._id] || '';
+							return role.roleName || roleLabels[role.id || ''] || roleLabels[role._id || ''] || '';
 						}
 						return '';
 					}).filter(Boolean).join(', ');
@@ -100,11 +101,11 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 					id: statusId,
 					role: roleDisplay,
 					roleSelection: status.roleSelection || 'all',
-					selectedRoles: status.selectedRoles || [],
+					selectedRoles: (status.selectedRoles || []).map(r => typeof r === 'string' ? r : (r._id || r.id || '')),
 					color: status.color || '#6C8B7D',
 				};
 			});
-			setStatuses(mappedStatuses);
+			setStatuses(mappedStatuses as StatusItem[]);
 		}
 	}, [fetchedStatuses, roleLabels]);
 
@@ -112,12 +113,12 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 	const [editingStatus, setEditingStatus] = useState<StatusItem | null>(null);
 	const [deletingStatus, setDeletingStatus] = useState<StatusItem | null>(null);
-	const { socket, isConnected, emit } = useSocket();
+	const { socket, isConnected } = useSocket();
 
 	useEffect(() => {
 		if (!socket || !isConnected) return;
 
-		const handleStatusCreated = (newStatus: any) => {
+		const handleStatusCreated = (newStatus: RawStatus) => {
 			console.log("New Status Created:", newStatus);
 			const statusId = newStatus.id || newStatus._id;
 
@@ -126,28 +127,30 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 
 				const roleDisplay = (newStatus.roleSelection === 'all' || !newStatus.roleSelection)
 					? 'All users'
-					: (newStatus.selectedRoles || []).map((role: any) => {
+					: (newStatus.selectedRoles || []).map((role) => {
 						if (typeof role === 'string') {
 							return roleLabels[role] || role;
 						} else if (role && typeof role === 'object') {
-							return role.roleName || roleLabels[role.id] || roleLabels[role._id] || '';
+							return role.roleName || roleLabels[role.id || ''] || roleLabels[role._id || ''] || '';
 						}
 						return '';
 					}).filter(Boolean).join(', ');
 
 				const formattedStatus: StatusItem = {
 					...newStatus,
-					id: statusId,
+					id: statusId || '',
+					name: newStatus.name,
+					description: newStatus.description,
 					role: roleDisplay,
 					roleSelection: newStatus.roleSelection || 'all',
-					selectedRoles: newStatus.selectedRoles || [],
+					selectedRoles: (newStatus.selectedRoles || []).map(r => typeof r === 'string' ? r : (r._id || r.id || '')),
 					color: newStatus.color || '#6C8B7D',
 				};
 				return [...prev, formattedStatus];
 			});
 		};
 
-		const handleStatusUpdated = (updatedStatus: any) => {
+		const handleStatusUpdated = (updatedStatus: RawStatus) => {
 			console.log("Status Updated:", updatedStatus);
 			const statusId = updatedStatus.id || updatedStatus._id;
 
@@ -155,11 +158,11 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 				if (status.id === statusId) {
 					const roleDisplay = (updatedStatus.roleSelection === 'all' || !updatedStatus.roleSelection)
 						? 'All users'
-						: (updatedStatus.selectedRoles || []).map((role: any) => {
+						: (updatedStatus.selectedRoles || []).map((role) => {
 							if (typeof role === 'string') {
 								return roleLabels[role] || role;
 							} else if (role && typeof role === 'object') {
-								return role.roleName || roleLabels[role.id] || roleLabels[role._id] || '';
+								return role.roleName || roleLabels[role.id || ''] || roleLabels[role._id || ''] || '';
 							}
 							return '';
 						}).filter(Boolean).join(', ');
@@ -167,8 +170,9 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 					return {
 						...status,
 						...updatedStatus,
-						id: statusId,
-						role: roleDisplay
+						id: statusId || '',
+						role: roleDisplay,
+						selectedRoles: (updatedStatus.selectedRoles || []).map(r => typeof r === 'string' ? r : (r._id || r.id || '')),
 					};
 				}
 				return status;
@@ -189,20 +193,15 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 			socket.off("statusUpdated", handleStatusUpdated);
 			socket.off("statusDeleted", handleStatusDeleted);
 		};
-	}, [socket, isConnected]);
+	}, [socket, isConnected, roleLabels]);
 
 	const formatRoleDisplay = (status: StatusItem): string => {
 		if (status.roleSelection === 'all' || !status.roleSelection) {
 			return 'All users';
 		}
 		if (status.selectedRoles && status.selectedRoles.length > 0) {
-			return status.selectedRoles.map((role: any) => {
-				if (typeof role === 'string') {
-					return roleLabels[role] || role;
-				} else if (role && typeof role === 'object') {
-					return role.roleName || roleLabels[role.id] || roleLabels[role._id] || '';
-				}
-				return '';
+			return status.selectedRoles.map((roleId) => {
+				return roleLabels[roleId] || roleId;
 			}).filter(Boolean).join(', ');
 		}
 		return status.role;

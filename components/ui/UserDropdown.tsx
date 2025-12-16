@@ -44,14 +44,13 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 
 	useEffect(() => {
 		if (fetchedStatuses) {
-			const rawStatuses: any[] = (Array.isArray(fetchedStatuses) ? fetchedStatuses :
-				(Array.isArray((fetchedStatuses as unknown as { data?: any[] }).data) ? (fetchedStatuses as unknown as { data?: any[] }).data :
-					(Array.isArray((fetchedStatuses as unknown as { statuses?: any[] }).statuses) ? (fetchedStatuses as unknown as { statuses?: any[] }).statuses :
-						(Array.isArray((fetchedStatuses as unknown as { docs?: any[] }).docs) ? (fetchedStatuses as unknown as { docs?: any[] }).docs :
+			const rawStatuses = (Array.isArray(fetchedStatuses) ? fetchedStatuses :
+				(Array.isArray((fetchedStatuses as unknown as { data?: unknown[] }).data) ? (fetchedStatuses as unknown as { data?: unknown[] }).data :
+					(Array.isArray((fetchedStatuses as unknown as { statuses?: unknown[] }).statuses) ? (fetchedStatuses as unknown as { statuses?: unknown[] }).statuses :
+						(Array.isArray((fetchedStatuses as unknown as { docs?: unknown[] }).docs) ? (fetchedStatuses as unknown as { docs?: unknown[] }).docs :
 							[])))) || [];
 
-			const safeStatuses: any[] = rawStatuses || [];
-			const mappedStatuses = safeStatuses.map((status: { id?: string; _id?: string; name: string; color?: string }) => ({
+			const mappedStatuses = (rawStatuses as { id?: string; _id?: string; name: string; color?: string }[]).map((status) => ({
 				value: status.id || status._id || '',
 				label: status.name,
 				color: status.color || '#6C8B7D'
