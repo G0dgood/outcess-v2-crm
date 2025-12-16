@@ -211,7 +211,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				router.push('/login');
 			}, 500);
 		} catch (error) {
-			console.error('Logout error:', error);
+			console.warn('Logout API failed, proceeding with local logout:', error);
 
 			// Still perform client-side cleanup even if API fails
 			disconnectSocket();

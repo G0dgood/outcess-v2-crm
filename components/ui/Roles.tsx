@@ -22,7 +22,7 @@ interface RolesProps {
 }
 
 const Roles: React.FC<RolesProps> = ({ className = '' }) => {
-	const { user } = useUserInfo();
+	// const { user } = useUserInfo(); // user is unused
 	const { selectedLineOfBusinessId } = useLineOfBusiness();
 	const { data: rolesData, isLoading } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', { skip: !selectedLineOfBusinessId });
 
@@ -32,13 +32,13 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 	useEffect(() => {
 		if (rolesData) {
 			const rawRoles = (Array.isArray(rolesData) ? rolesData :
-				(Array.isArray((rolesData as any)?.data) ? (rolesData as any).data :
-					(Array.isArray(rolesData?.roles) ? rolesData.roles :
-						(Array.isArray((rolesData as any)?.docs) ? (rolesData as any).docs :
+				(Array.isArray((rolesData as unknown as { data?: any[] }).data) ? (rolesData as unknown as { data?: any[] }).data :
+					(Array.isArray((rolesData as unknown as { roles?: any[] }).roles) ? (rolesData as unknown as { roles?: any[] }).roles :
+						(Array.isArray((rolesData as unknown as { docs?: any[] }).docs) ? (rolesData as unknown as { docs?: any[] }).docs :
 							[]))));
 
-			const mappedRoles: Role[] = rawRoles?.map((role: any) => ({
-				id: role?._id || role.id,
+			const mappedRoles: Role[] = (rawRoles || []).map((role: { _id?: string; id?: string; roleName: string; userCount?: number }) => ({
+				id: role?._id || role.id || '',
 				name: role?.roleName,
 				userCount: role?.userCount || 0
 			}));

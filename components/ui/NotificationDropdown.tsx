@@ -49,7 +49,14 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
 	// Map notification type to sound type
 	const getSoundTypeForNotification = (type: Notification['type']): 'follow' | 'like' | 'join_request' | 'group_activity' | 'comment' | 'welcome' | 'notification' => {
-		return type;
+		switch (type) {
+			case 'status_created':
+			case 'role_updated':
+			case 'custom_alert':
+				return 'notification';
+			default:
+				return type;
+		}
 	};
 
 	// Play sound when notification panel opens (but not during navigation)

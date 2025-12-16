@@ -43,29 +43,31 @@ export default function PermissionAccessLevelsPage() {
 
 	const companyId = user?.company?._id || user?.companyId || '';
 
-	const { data: rolesData, isLoading } = useGetRolesByCompanyIdQuery(companyId, {
+	const { data: rolesData } = useGetRolesByCompanyIdQuery(companyId, {
 		skip: !companyId,
 	});
 
 	const [updateRole] = useUpdateRoleMutation();
 
 	// Transform API roles to local format
-	const rawRoles: Role[] = (Array.isArray(rolesData) ? rolesData :
-		(Array.isArray((rolesData as any)?.data) ? (rolesData as any).data :
-			(Array.isArray((rolesData as any)?.roles) ? (rolesData as any).roles :
-				(Array.isArray((rolesData as any)?.docs) ? (rolesData as any).docs :
-					[])))) as Role[];
-
-	const extractedRoles: Role[] = rawRoles.length > 0 ? rawRoles :
-		(rolesData && typeof rolesData === 'object' && !Array.isArray(rolesData) ?
-			Object.values(rolesData as any).filter((item): item is Role =>
-				typeof item === 'object' && item !== null && '_id' in item && 'roleName' in item
-			) : []);
-
-	// Deduplicate roles to prevent key collisions
 	const roles = React.useMemo(() => {
+		if (!rolesData) return [];
+
+		const rawRoles: Role[] = (Array.isArray(rolesData) ? rolesData :
+			(Array.isArray((rolesData as unknown as { data?: Role[] }).data) ? (rolesData as unknown as { data?: Role[] }).data :
+				(Array.isArray((rolesData as unknown as { roles?: Role[] }).roles) ? (rolesData as unknown as { roles?: Role[] }).roles :
+					(Array.isArray((rolesData as unknown as { docs?: Role[] }).docs) ? (rolesData as unknown as { docs?: Role[] }).docs :
+						[])))) as Role[];
+
+		const extractedRoles: Role[] = rawRoles.length > 0 ? rawRoles :
+			(rolesData && typeof rolesData === 'object' && !Array.isArray(rolesData) ?
+				Object.values(rolesData as unknown as Record<string, unknown>).filter((item): item is Role =>
+					typeof item === 'object' && item !== null && '_id' in item && 'roleName' in item
+				) : []);
+
+		// Deduplicate roles to prevent key collisions
 		return Array.from(new Map(extractedRoles.map(role => [role._id, role])).values());
-	}, [extractedRoles]);
+	}, [rolesData]);
 
 	// Sync fetched roles with context state
 	useEffect(() => {

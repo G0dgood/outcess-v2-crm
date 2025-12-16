@@ -16,11 +16,10 @@ export default function Setup() {
 	const { user, updateUser } = useUserInfo();
 	const [triggerGetUser] = useLazyGetUserByIdQuery();
 
-
+	const userId = user?.id || (user as { _id?: string } | null)?._id;
 
 	useEffect(() => {
 		const fetchUserData = async () => {
-			const userId = user?.id || (user as any)?._id;
 			if (userId) {
 				try {
 					const response = await triggerGetUser(userId).unwrap();
@@ -39,7 +38,7 @@ export default function Setup() {
 		};
 
 		fetchUserData();
-	}, [user?.id, (user as any)?._id, triggerGetUser, updateUser]);
+	}, [userId, triggerGetUser, updateUser]);
 
 	return (
 		<div className="w-full">

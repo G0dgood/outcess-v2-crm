@@ -60,7 +60,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 				router.push('/login');
 			}, 500);
 		} catch (error) {
-			console.error('Logout error:', error);
+			console.warn('Logout API failed, proceeding with local logout:', error);
             
             // Still perform client-side cleanup
             disconnectSocket();

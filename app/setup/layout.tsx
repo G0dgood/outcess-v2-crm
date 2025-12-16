@@ -2,7 +2,7 @@
 import BottomNav from "@/components/ui/BottomNav";
 import SetupHeader from "@/components/ui/SetupHeader";
 import SetupSidebar from "@/components/ui/SetupSidebar";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
 import { useUserInfo } from "@/contexts/UserInfoContext";
@@ -14,8 +14,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const [createLineOfBusiness] = useCreateLineOfBusinessMutation();
   const [updateLineOfBusiness] = useUpdateLineOfBusinessMutation();
   const [getLineOfBusiness] = useLazyGetLineOfBusinessByCompanyIdQuery();
-  const saveTimeoutRef = useRef<number | null>(null);
-  const submitTimeoutRef = useRef<number | null>(null);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
@@ -95,12 +93,13 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                 lineOfBusinessName: setupData.lineOfBusinessName,
               },
             }).unwrap();
-
+            
             toast.success("Step completed successfully!", {
               description: "Line of Business updated. Moving to the next step...",
               duration: 2000,
             });
-          } catch (updateError: any) {
+          } catch (err: unknown) {
+            const updateError = err as { status?: number; data?: { message?: string }; message?: string };
             // Check for various forms of "Not Found" error
             const isNotFoundError =
               updateError?.status === 404 ||
@@ -176,7 +175,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           }
         } else {
           // Create new Line of Business
-          let targetCompanyId = user?.company?.id || setupData.companyId;
+          const targetCompanyId = user?.company?.id || setupData.companyId;
           const response = await createLineOfBusiness({
             name: setupData.lineOfBusinessName,
             timeZone: setupData.timeZone,
@@ -287,15 +286,16 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       }
 
       onStepComplete();
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string; error?: string } | string; message?: string };
       console.error("Failed to save changes:", error);
 
       // Extract error message from various possible locations in the error object
       let errorMessage = "An unexpected error occurred. Please try again.";
 
-      if (error?.data?.message) {
+      if (typeof error?.data === 'object' && error.data && 'message' in error.data && typeof error.data.message === 'string') {
         errorMessage = error.data.message;
-      } else if (error?.data?.error) {
+      } else if (typeof error?.data === 'object' && error.data && 'error' in error.data && typeof error.data.error === 'string') {
         errorMessage = error.data.error;
       } else if (typeof error?.data === 'string') {
         errorMessage = error.data;
@@ -347,16 +347,17 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       window.setTimeout(() => {
         window.location.href = '/dashboard';
       }, 2000);
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string; error?: string } | string; message?: string };
       console.error("Failed to submit:", error);
       setIsLoading(false);
 
       // Extract error message from various possible locations in the error object
       let errorMessage = "Could not submit configuration. Please try again.";
 
-      if (error?.data?.message) {
+      if (typeof error?.data === 'object' && error.data && 'message' in error.data && typeof error.data.message === 'string') {
         errorMessage = error.data.message;
-      } else if (error?.data?.error) {
+      } else if (typeof error?.data === 'object' && error.data && 'error' in error.data && typeof error.data.error === 'string') {
         errorMessage = error.data.error;
       } else if (typeof error?.data === 'string') {
         errorMessage = error.data;
@@ -372,10 +373,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   };
 
   const headerUser = user ? {
-    name: user.name || `${(user as any).firstName || ''} ${(user as any).lastName || ''}`.trim() || (user as any).username || 'User',
+    name: user.name || `${(user['firstName'] as string) || ''} ${(user['lastName'] as string) || ''}`.trim() || (user['username'] as string) || 'User',
     role: user.role || 'Administrator',
     avatar: user.avatar,
-    initials: (user.name || `${(user as any).firstName || ''} ${(user as any).lastName || ''}`.trim() || (user as any).username || 'U')
+    initials: (user.name || `${(user['firstName'] as string) || ''} ${(user['lastName'] as string) || ''}`.trim() || (user['username'] as string) || 'U')
       .split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
   } : undefined;
 

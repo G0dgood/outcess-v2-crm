@@ -44,14 +44,15 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 
 	useEffect(() => {
 		if (fetchedStatuses) {
-			const rawStatuses = (Array.isArray(fetchedStatuses) ? fetchedStatuses :
-				(Array.isArray((fetchedStatuses as any)?.data) ? (fetchedStatuses as any).data :
-					(Array.isArray((fetchedStatuses as any)?.statuses) ? (fetchedStatuses as any).statuses :
-						(Array.isArray((fetchedStatuses as any)?.docs) ? (fetchedStatuses as any).docs :
-							[]))));
+			const rawStatuses: any[] = (Array.isArray(fetchedStatuses) ? fetchedStatuses :
+				(Array.isArray((fetchedStatuses as unknown as { data?: any[] }).data) ? (fetchedStatuses as unknown as { data?: any[] }).data :
+					(Array.isArray((fetchedStatuses as unknown as { statuses?: any[] }).statuses) ? (fetchedStatuses as unknown as { statuses?: any[] }).statuses :
+						(Array.isArray((fetchedStatuses as unknown as { docs?: any[] }).docs) ? (fetchedStatuses as unknown as { docs?: any[] }).docs :
+							[])))) || [];
 
-			const mappedStatuses = rawStatuses.map((status: any) => ({
-				value: status.id || status._id,
+			const safeStatuses: any[] = rawStatuses || [];
+			const mappedStatuses = safeStatuses.map((status: { id?: string; _id?: string; name: string; color?: string }) => ({
+				value: status.id || status._id || '',
 				label: status.name,
 				color: status.color || '#6C8B7D'
 			}));

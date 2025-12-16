@@ -124,7 +124,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 
 		// Add call outcomes if available
 		if (lineOfBusinessData?.dashboardSettings?.callOutcomes && lineOfBusinessData?.dashboardSettings?.callOutcomes?.length > 0) {
-			lineOfBusinessData?.dashboardSettings?.callOutcomes.forEach((outcome: { name: any; }) => {
+			lineOfBusinessData?.dashboardSettings?.callOutcomes.forEach((outcome: { name: string; }) => {
 				options.push({
 					value: outcome?.name,
 					label: outcome?.name,
@@ -134,7 +134,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 
 		// Add disposition categories if available
 		if (lineOfBusinessData?.dashboardSettings?.dispositions && lineOfBusinessData?.dashboardSettings?.dispositions?.length > 0) {
-			lineOfBusinessData?.dashboardSettings?.dispositions.forEach((disposition: { name: any; }) => {
+			lineOfBusinessData?.dashboardSettings?.dispositions.forEach((disposition: { name: string; }) => {
 				options.push({
 					value: disposition?.name,
 					label: disposition?.name,
