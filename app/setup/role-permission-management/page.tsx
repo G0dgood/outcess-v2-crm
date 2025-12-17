@@ -39,22 +39,8 @@ export default function RolePermissionManagementPage() {
 	const roles = React.useMemo(() => {
 		if (!rolesData) return [];
 
-		// Transform API roles to local format or use API roles directly
-		const rawRoles = (Array.isArray(rolesData) ? rolesData :
-			(rolesData && typeof rolesData === 'object' && 'data' in rolesData && Array.isArray((rolesData as any).data) ? (rolesData as any).data :
-				(rolesData && typeof rolesData === 'object' && 'roles' in rolesData && Array.isArray((rolesData as any).roles) ? (rolesData as any).roles :
-					(rolesData && typeof rolesData === 'object' && 'docs' in rolesData && Array.isArray((rolesData as any).docs) ? (rolesData as any).docs :
-						[])))) as Role[];
-
-		// If roles array is empty but we have data in rolesData that looks like a single role or object of roles
-		// Try to extract from object values if it's an object of roles
-		const extractedRoles = rawRoles.length > 0 ? rawRoles :
-			(rolesData && typeof rolesData === 'object' && !Array.isArray(rolesData) ?
-				Object.values(rolesData as unknown as Record<string, unknown>).filter((item): item is Role =>
-					typeof item === 'object' && item !== null && '_id' in item && 'roleName' in item
-				) : []);
-
-		return Array.from(new Map(extractedRoles.map(role => [role._id, role])).values());
+		const rawRoles: Role[] = rolesData.roles || [];
+		return Array.from(new Map(rawRoles.map(role => [role._id, role])).values());
 	}, [rolesData]);
 
 	useEffect(() => {

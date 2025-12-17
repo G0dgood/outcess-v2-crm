@@ -69,7 +69,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const reduxUser = useSelector((state: { auth: { user: User | null } }) => state.auth.user);
 
 	// Determine the effective user to display
-	const displayUser = mounted && reduxUser ? {
+	const displayUser: { name: string; email?: string; avatar?: string; companyId?: string } | null = mounted && reduxUser ? {
 		...reduxUser,
 		name: reduxUser.name || reduxUser.username || `${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim() || 'User',
 		email: reduxUser.email,

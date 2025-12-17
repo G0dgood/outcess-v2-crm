@@ -374,7 +374,11 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   const headerUser = user ? {
     name: user.name || `${(user['firstName'] as string) || ''} ${(user['lastName'] as string) || ''}`.trim() || (user['username'] as string) || 'User',
-    role: typeof user.role === 'string' ? user.role : (user.role as any)?.roleName || 'Administrator',
+    role: (() => {
+      type RoleLike = string | { roleName?: string };
+      const roleValue = user.role as RoleLike | undefined;
+      return typeof roleValue === 'string' ? roleValue : roleValue?.roleName || 'Administrator';
+    })(),
     avatar: user.avatar,
     initials: (user.name || `${(user['firstName'] as string) || ''} ${(user['lastName'] as string) || ''}`.trim() || (user['username'] as string) || 'U')
       .split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
