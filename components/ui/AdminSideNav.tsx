@@ -121,13 +121,13 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({
 											: 'dark:text-gray-300 hover:text-white dark:hover:text-white'
 											}`}
 										style={{
-											backgroundColor: isActive ? lineOfBusinessData.primaryColor || '#050711' : 'transparent',
+											backgroundColor: isActive ? lineOfBusinessData?.primaryColor || '#050711' : 'transparent',
 											color: isActive ? 'white' : 'var(--text-secondary)',
-											'--hover-bg': lineOfBusinessData.secondaryColor || '#6C8B7D'
+											'--hover-bg': lineOfBusinessData?.secondaryColor || '#6C8B7D'
 										} as React.CSSProperties}
 										onMouseEnter={(e) => {
 											if (!isActive) {
-												e.currentTarget.style.backgroundColor = lineOfBusinessData.secondaryColor || '#6C8B7D';
+												e.currentTarget.style.backgroundColor = lineOfBusinessData?.secondaryColor || '#6C8B7D';
 												// Update icon and text colors to white on hover
 												const icon = e.currentTarget.querySelector('.shrink-0') as HTMLElement;
 												const text = e.currentTarget.querySelector('.font-medium') as HTMLElement;

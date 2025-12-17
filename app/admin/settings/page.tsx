@@ -34,7 +34,7 @@ export default function SettingsPage() {
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const { isDarkMode, toggleTheme } = useTheme();
 	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
-	const secondaryColor = lineOfBusinessData.secondaryColor || '#6C8B7D';
+	const secondaryColor = lineOfBusinessData?.secondaryColor || '#6C8B7D';
 
 	const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'email' | 'payment' | 'preferences'>('profile');
 

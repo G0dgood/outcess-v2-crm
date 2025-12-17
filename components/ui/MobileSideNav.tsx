@@ -325,7 +325,7 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 										onClick={(e) => handleItemClick(item, e)}
 										className="cursor-pointer w-full flex items-center gap-3 px-4 py-3 transition-all duration-200"
 										style={{
-											backgroundColor: (isActive || (isSettings && isSettingsExpanded)) ? lineOfBusinessData.primaryColor || '#050711' : 'transparent',
+											backgroundColor: (isActive || (isSettings && isSettingsExpanded)) ? lineOfBusinessData?.primaryColor || '#050711' : 'transparent',
 											color: (isActive || (isSettings && isSettingsExpanded)) ? 'white' : 'var(--text-secondary)'
 										}}
 										onMouseEnter={(e) => {
@@ -397,12 +397,12 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 														onClick={() => handleSubItemClick(subItem)}
 														className="cursor-pointer w-full flex items-center gap-3 px-4 py-2 transition-all duration-200"
 														style={{
-															backgroundColor: isSubActive ? lineOfBusinessData.primaryColor || '#050711' : 'transparent',
+															backgroundColor: isSubActive ? lineOfBusinessData?.primaryColor || '#050711' : 'transparent',
 															color: isSubActive ? 'white' : 'var(--text-tertiary)'
 														}}
 														onMouseEnter={(e) => {
 															if (!isSubActive) {
-																e.currentTarget.style.backgroundColor = lineOfBusinessData.secondaryColor || '#6C8B7D';
+																e.currentTarget.style.backgroundColor = lineOfBusinessData?.secondaryColor || '#6C8B7D';
 																const icon = e.currentTarget.querySelector('.sub-icon') as HTMLElement;
 																const text = e.currentTarget.querySelector('.sub-text') as HTMLElement;
 																if (icon) icon.style.color = 'white';

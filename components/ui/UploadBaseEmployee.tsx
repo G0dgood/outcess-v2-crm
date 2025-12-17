@@ -68,7 +68,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
   onUploadComplete,
 }) => {
   const { lineOfBusinessData } = useLineOfBusiness();
-  const primaryColor = lineOfBusinessData.primaryColor || '#050711';
+  const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
   const [progress, setProgress] = useState(0);
   const [show, setShow] = useState(false);
   const [jsonData, setJSONData] = useState<CsvRow[]>([]);

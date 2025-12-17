@@ -20,10 +20,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 		setIsMobileMenuOpen(false);
 	};
 
-	return (
-		<div id="page-wrapper">
-			<DashboardHeader
-				companyName={lineOfBusinessData.companyName || ''}
+		return (
+			<div id="page-wrapper">
+				<DashboardHeader
+				companyName={lineOfBusinessData?.companyName || ''}
 				userName="John Doe"
 				userEmail="johndoe@example.com"
 				userIsOnline={true}
