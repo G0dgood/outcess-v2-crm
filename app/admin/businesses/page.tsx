@@ -280,8 +280,8 @@ const BusinessesManagementPage: React.FC = () => {
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={lineOfBusinessData.primaryColor}
-					secondaryColor={lineOfBusinessData.secondaryColor}
+					primaryColor={lineOfBusinessData?.primaryColor || '#050711'}
+					secondaryColor={lineOfBusinessData?.secondaryColor || '#6C8B7D'}
 				/>
 			</div>
 		</div>
