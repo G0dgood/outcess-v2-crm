@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useGetLineOfBusinessByCompanyIdQuery } from '@/store/services/lineOfBusinessApi';
+import { useGetLineOfBusinessByCompanyIdQuery, useGetLineOfBusinessQuery } from '@/store/services/lineOfBusinessApi';
 import { LineOfBusinessProvider, useLineOfBusiness } from './LineOfBusinessContext';
 
 interface SetupStep {
@@ -194,6 +194,7 @@ interface SetupProviderProps {
 
 export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const { user } = useUserInfo();
+	const { selectedLineOfBusinessId } = useLineOfBusiness();
 
 	// Initialize state first so we can use setupData in the query logic
 	const [currentStep, setCurrentStep] = useState(1);
@@ -322,56 +323,64 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	// Use either user's company ID or the one from setupData (e.g., from localStorage)
 	const companyIdToUse = user?.company?._id || user?.company?.id || setupData.companyId;
 
-	const { data: existingLineOfBusiness, isLoading: isFetchingLineOfBusiness } = useGetLineOfBusinessByCompanyIdQuery(
-		companyIdToUse || '',
-		{ skip: !companyIdToUse }
+	const { data: specificLineOfBusiness, isLoading: isFetchingSpecificLOB } = useGetLineOfBusinessQuery(
+		selectedLineOfBusinessId || '',
+		{ skip: !selectedLineOfBusinessId }
 	);
 
+	const { data: companyLineOfBusiness, isLoading: isFetchingCompanyLOB } = useGetLineOfBusinessByCompanyIdQuery(
+		companyIdToUse || '',
+		{ skip: !!selectedLineOfBusinessId || !companyIdToUse }
+	);
 
+	const existingLineOfBusiness = selectedLineOfBusinessId ? specificLineOfBusiness : companyLineOfBusiness;
+	const isFetchingLineOfBusiness = selectedLineOfBusinessId ? isFetchingSpecificLOB : isFetchingCompanyLOB;
 
 	useEffect(() => {
 		if (existingLineOfBusiness) {
 			const dataToUse = existingLineOfBusiness.lineOfBusiness || existingLineOfBusiness;
-			setSetupData(prev => ({
-				...prev,
-				lineOfBusinessId: dataToUse._id,
-				companyName: dataToUse.companyName || prev.companyName,
-				companyId: dataToUse.companyId || prev.companyId,
-				lineOfBusinessName: dataToUse.lineOfBusinessName || dataToUse.name || prev.lineOfBusinessName,
-				timeZone: dataToUse.timeZone || prev.timeZone,
-				industry: dataToUse.industry || prev.industry,
-				businessSize: dataToUse.businessSize || prev.businessSize,
-				selectedLayout: dataToUse.selectedLayout || prev.selectedLayout,
-				primaryColor: dataToUse.primaryColor || prev.primaryColor,
-				secondaryColor: dataToUse.secondaryColor || prev.secondaryColor,
-				navigationSettings: {
-					...prev.navigationSettings,
-					...(dataToUse.navigationSettings || {}),
-				},
-				dashboardSettings: {
-					...prev.dashboardSettings,
-					...(dataToUse.dashboardSettings || {}),
-				},
-				customerBookSettings: {
-					...prev.customerBookSettings,
-					...(dataToUse.customerBookSettings || {}),
-					configuredFields: Array.isArray(dataToUse.customerBookSettings?.configuredFields)
-						? dataToUse.customerBookSettings.configuredFields
-						: (prev.customerBookSettings.configuredFields || [])
-				},
-				userManagementSettings: {
-					...prev.userManagementSettings,
-					...(dataToUse.userManagementSettings || {}),
-				},
-				roleManagementSettings: {
-					...prev.roleManagementSettings,
-					...(dataToUse.roleManagementSettings || {}),
-				},
-				permissionAccessSettings: {
-					...prev.permissionAccessSettings,
-					...(dataToUse.permissionAccessSettings || {}),
-				},
-			}));
+			if (dataToUse) {
+				setSetupData(prev => ({
+					...prev,
+					lineOfBusinessId: dataToUse._id,
+					companyName: dataToUse.companyName || prev.companyName,
+					companyId: dataToUse.companyId || prev.companyId,
+					lineOfBusinessName: dataToUse.lineOfBusinessName || dataToUse.name || prev.lineOfBusinessName,
+					timeZone: dataToUse.timeZone || prev.timeZone,
+					industry: dataToUse.industry || prev.industry,
+					businessSize: dataToUse.businessSize || prev.businessSize,
+					selectedLayout: dataToUse.selectedLayout || prev.selectedLayout,
+					primaryColor: dataToUse.primaryColor || prev.primaryColor,
+					secondaryColor: dataToUse.secondaryColor || prev.secondaryColor,
+					navigationSettings: {
+						...prev.navigationSettings,
+						...(dataToUse.navigationSettings || {}),
+					},
+					dashboardSettings: {
+						...prev.dashboardSettings,
+						...(dataToUse.dashboardSettings || {}),
+					},
+					customerBookSettings: {
+						...prev.customerBookSettings,
+						...(dataToUse.customerBookSettings || {}),
+						configuredFields: Array.isArray(dataToUse.customerBookSettings?.configuredFields)
+							? dataToUse.customerBookSettings.configuredFields
+							: (prev.customerBookSettings.configuredFields || [])
+					},
+					userManagementSettings: {
+						...prev.userManagementSettings,
+						...(dataToUse.userManagementSettings || {}),
+					},
+					roleManagementSettings: {
+						...prev.roleManagementSettings,
+						...(dataToUse.roleManagementSettings || {}),
+					},
+					permissionAccessSettings: {
+						...prev.permissionAccessSettings,
+						...(dataToUse.permissionAccessSettings || {}),
+					},
+				}));
+			}
 		}
 	}, [existingLineOfBusiness]);
 

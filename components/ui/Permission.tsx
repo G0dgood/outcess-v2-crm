@@ -37,13 +37,16 @@ const mapRolePermissionToItem = (p: RolePermission): PermissionItem => {
 
 interface PermissionProps {
 	className?: string;
+	lineOfBusinessId?: string;
 }
 
-const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
+const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessId }) => {
 	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const targetId = lineOfBusinessId || selectedLineOfBusinessId;
+
 	// Note: API returns { roles: Role[] } now
-	const { data: permissionData, isLoading } = useGetPermissionWithPrivilegeQuery(selectedLineOfBusinessId || '', {
-		skip: !selectedLineOfBusinessId
+	const { data: permissionData, isLoading } = useGetPermissionWithPrivilegeQuery(targetId || '', {
+		skip: !targetId
 	});
 
 	// State now holds the roles with their permissions

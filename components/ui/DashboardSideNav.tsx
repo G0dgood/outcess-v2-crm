@@ -15,7 +15,8 @@ import {
 	ChevronRightIcon,
 	ChevronDownIcon,
 	ChatBubbleIcon,
-	Link2Icon
+	Link2Icon,
+	MixerHorizontalIcon
 } from '@radix-ui/react-icons';
 import Group from '@/components/setupIcon/Group';
 import DashboardSideNavSkeleton from '@/components/skeletons/DashboardSideNavSkeleton';
@@ -144,6 +145,12 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 			path: '/report',
 		},
 		{
+			id: 'configuration',
+			label: 'Configuration',
+			icon: 'configuration',
+			path: '/configuration',
+		},
+		{
 			id: 'settings',
 			label: 'Settings',
 			icon: 'settings',
@@ -160,6 +167,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		'integrations': 'systemSetting',
 		'setup-book': 'setupBook',
 		'report': 'report',
+		'configuration': 'systemSetting',
 		'settings': 'systemSetting',
 	};
 
@@ -226,6 +234,8 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 				return <ChatBubbleIcon {...iconProps} />;
 			case 'integrations':
 				return <Link2Icon {...iconProps} />;
+			case 'configuration':
+				return <MixerHorizontalIcon {...iconProps} />;
 			default:
 				return null;
 		}

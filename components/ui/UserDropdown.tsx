@@ -8,8 +8,8 @@ import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetStatusesByLineOfBusinessIdQuery } from '@/store/services/statusApi';
 
 interface UserDropdownProps {
-	userName: string;
-	userEmail: string;
+	userName?: string;
+	userEmail?: string;
 	userAvatar?: string;
 	isOnline?: boolean;
 	onStatusClick?: () => void;
@@ -18,8 +18,8 @@ interface UserDropdownProps {
 }
 
 const UserDropdown: React.FC<UserDropdownProps> = ({
-	userName,
-	userEmail,
+	userName = '',
+	userEmail = '',
 	userAvatar,
 	isOnline = true,
 	onLogoutClick,

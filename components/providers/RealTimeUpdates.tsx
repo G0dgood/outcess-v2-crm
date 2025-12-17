@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
-import { updateUser as updateReduxUser } from '@/store/slices/authSlice';
+import { updateUser as updateReduxUser, User } from '@/store/slices/authSlice';
 
 export const RealTimeUpdates: React.FC = () => {
   const { socket, isConnected, emit, on, off } = useSocket();
@@ -23,7 +23,7 @@ export const RealTimeUpdates: React.FC = () => {
 
       // Join Company Room
       const userCompany = user.company as unknown;
-      const companyId = user.companyId || (userCompany as any)?._id || (userCompany as any)?.id;
+      const companyId = user.companyId || (userCompany as { _id?: string })?._id || (userCompany as { id?: string })?.id;
       if (companyId) {
         console.log('Joining Company room:', companyId);
         emit('joinCompany', companyId);
@@ -44,7 +44,7 @@ export const RealTimeUpdates: React.FC = () => {
     // Step 2: Listen for the roleUpdated Event
     const handleRoleUpdated = (updatedRoleData: unknown) => {
       console.log('Role updated event received:', updatedRoleData);
-      const data = updatedRoleData as any;
+      const data = updatedRoleData as User;
 
       // The payload might be the full user object or just the role changes.
       // Based on the guide: "This event will carry the updated user data (including the new role/permissions)."
@@ -65,7 +65,7 @@ export const RealTimeUpdates: React.FC = () => {
     // Step 3: Listen for the Notification (Optional)
     const handleNotification = (data: unknown) => {
       console.log('Notification received:', data);
-      const notification = data as any;
+      const notification = data as { message?: string };
       toast(notification.message || 'New notification received');
     };
 

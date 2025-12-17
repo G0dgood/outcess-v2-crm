@@ -14,7 +14,8 @@ import {
 	ChevronRightIcon,
 	ChevronDownIcon,
 	ChatBubbleIcon,
-	Link2Icon
+	Link2Icon,
+	MixerHorizontalIcon
 } from '@radix-ui/react-icons';
 import Group from '@/components/setupIcon/Group';
 import Icon from '@/components/ui/Icon';
@@ -117,6 +118,12 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 			path: '/report',
 		},
 		{
+			id: 'configuration',
+			label: 'Configuration',
+			icon: 'configuration',
+			path: '/configuration',
+		},
+		{
 			id: 'settings',
 			label: 'Settings',
 			icon: 'settings',
@@ -178,6 +185,8 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 				return <ChatBubbleIcon {...iconProps} />;
 			case 'integrations':
 				return <Link2Icon {...iconProps} />;
+			case 'configuration':
+				return <MixerHorizontalIcon {...iconProps} />;
 			default:
 				return null;
 		}

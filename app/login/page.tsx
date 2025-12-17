@@ -126,8 +126,11 @@ export default function LoginPage() {
 					setIsLoading(false);
 				}
 			} catch (err: unknown) {
-				console.error('Login error:', err);
-				const errorMessage = (err as { data?: { message?: string } })?.data?.message || 'Invalid email or password';
+				console.error('Login error object:', err);
+				console.log('Login error stringified:', JSON.stringify(err, null, 2));
+				const errorMessage = (err as { data?: { message?: string } })?.data?.message || 
+									 (err as { message?: string })?.message || 
+									 'Invalid email or password';
 				toast.error(errorMessage);
 				setIsLoading(false);
 			}

@@ -41,17 +41,32 @@ const TeamMembersPage: React.FC = () => {
 			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
 
 			const mappedMembers: TeamMember[] = membersList.map((member: unknown) => {
-				const m = member as any;
+				const m = member as {
+					_id?: string;
+					id?: string;
+					agentId?: string;
+					name?: string;
+					firstName?: string;
+					lastName?: string;
+					email?: string;
+					phone?: string;
+					role?: string | { roleName?: string; name?: string };
+					supervisor?: string | { name?: string };
+					status?: string;
+					loginStatus?: string;
+					team?: string | { name?: string };
+				};
 				return {
-					_id: m._id || m.id,
+					_id: m._id || m.id || '',
 					agentId: m.agentId || m._id || m.id || 'N/A',
 					fullName: m.name || `${m.firstName || ''} ${m.lastName || ''}`.trim(),
 					email: m.email || '',
 					phone: m.phone || '',
-					role: (typeof m.role === 'object' ? (m.role.roleName || m.role.name) : (m.role || 'agent')).toLowerCase() as TeamMember['role'],
-					supervisor: m.supervisor?.name || m.supervisor || 'Unassigned',
-					status: (m.status === 'Logged In' || m.loginStatus === 'Logged In') ? 'Logged In' : 'Logged Out',
-					team: m.team?.name || m.team || 'Unassigned'
+					role: (typeof m.role === 'object' ? (m.role?.roleName || m.role?.name) : (m.role || 'agent'))?.toLowerCase() as TeamMember['role'],
+					supervisor: (typeof m.supervisor === 'object' ? m.supervisor?.name : m.supervisor) || 'Unassigned',
+					status: (m.status === 'Logged In' || 
+						m.loginStatus === 'Logged In') ? 'Logged In' : 'Logged Out',
+					team: (typeof m.team === 'object' ? m.team?.name : m.team) || 'Unassigned'
 				};
 			});
 			setTeamMembersData(mappedMembers);

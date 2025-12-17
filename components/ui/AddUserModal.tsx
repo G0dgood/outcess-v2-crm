@@ -19,6 +19,7 @@ interface AddUserModalProps {
 export const AddUserModal: React.FC<AddUserModalProps> = ({
 	isOpen,
 	onClose,
+
 }) => {
 	const { user } = useUserInfo();
 	const { lineOfBusinessData } = useLineOfBusiness();
@@ -83,7 +84,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 		const rawSupervisors = supervisorsResponse.teamMembers || supervisorsResponse.data || supervisorsResponse || [];
 		const supervisorsList = Array.isArray(rawSupervisors) ? rawSupervisors : (rawSupervisors.docs || []);
 		return supervisorsList.map((supervisor: unknown) => {
-			const s = supervisor as any;
+			const s = supervisor as { _id?: string; id?: string; name?: string; firstName?: string; lastName?: string };
 			return {
 				value: (s._id || s.id || '') as string,
 				label: s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim()
@@ -137,7 +138,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 			onClose();
 		} catch (error: unknown) {
 			console.error('Failed to create user:', error);
-			const err = error as any;
+			const err = error as { data?: { message?: string } };
 			toast.error(err?.data?.message || 'Failed to create user');
 		}
 	};

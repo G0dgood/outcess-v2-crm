@@ -49,18 +49,29 @@ const UsersPage: React.FC = () => {
 			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
 
 			const mappedUsers = membersList.map((member: unknown) => {
-				const m = member as any;
+				const m = member as {
+					_id?: string;
+					id?: string;
+					name?: string;
+					firstName?: string;
+					lastName?: string;
+					email?: string;
+					phone?: string;
+					role?: string | { roleName?: string; name?: string };
+					status?: string;
+					loginStatus?: string;
+				};
 				const fullName = m.name || '';
 				const [firstName, ...lastNameParts] = fullName.split(' ');
 				const lastName = lastNameParts.join(' ');
 
 				return {
-					id: m._id || m.id,
+					id: m._id || m.id || '',
 					firstName: m.firstName || firstName || '',
 					lastName: m.lastName || lastName || '',
 					email: m.email || '',
 					phone: m.phone || '',
-					role: typeof m.role === 'object' ? (m.role.roleName || m.role.name) : (m.role || 'Agent'),
+					role: typeof m.role === 'object' ? (m.role?.roleName || m.role?.name || '') : (m.role || 'Agent'),
 					loginStatus: m.status || m.loginStatus || 'Logged Out',
 				};
 			});

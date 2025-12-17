@@ -147,7 +147,7 @@ export default function SignUpPage() {
 					toast.error('Account created but user ID is missing.');
 				}
 			} catch (err: unknown) {
-				toast.error((err as any)?.data?.message || 'Failed to create account');
+				toast.error((err as { data?: { message?: string } })?.data?.message || 'Failed to create account');
 			} finally {
 				setIsLoading(false);
 			}
@@ -181,7 +181,7 @@ export default function SignUpPage() {
 			toast.success('Company profile created successfully!');
 			router.push('/setup');
 		} catch (err: unknown) {
-			toast.error((err as any)?.data?.message || 'Failed to create company profile');
+			toast.error((err as { data?: { message?: string } })?.data?.message || 'Failed to create company profile');
 		} finally {
 			setIsLoading(false);
 		}

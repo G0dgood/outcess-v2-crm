@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import AddUserModal from '@/components/ui/AddUserModal';
@@ -10,7 +9,7 @@ import EditUserModal from '@/components/ui/EditUserModal';
 import { useSetup } from '@/contexts/SetupContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
-import { useCreateTeamMemberMutation, useGetTeamMembersByCompanyIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByCompanyIdQuery } from '@/store/services/teamMembersApi';
 import Icon from '@/components/ui/Icon';
 import { toast } from 'sonner';
 
@@ -22,6 +21,24 @@ interface User {
 	role: string;
 	status: 'active' | 'inactive' | 'pending';
 	lastLogin?: string;
+}
+
+interface TeamMember {
+	_id: string;
+	name: string;
+	email: string;
+	phone: string;
+	role: { roleName: string } | string;
+	status: 'active' | 'inactive' | 'pending';
+	lastLogin?: string;
+	userId: string;
+}
+
+interface ApiError {
+	data?: {
+		error?: string;
+		message?: string;
+	};
 }
 
 export default function UserManagementPage() {
@@ -37,12 +54,9 @@ export default function UserManagementPage() {
 		skip: !lineOfBusinessId
 	});
 
-	const { data: teamMembersResponse } = useGetTeamMembersByCompanyIdQuery(companyId, {
+	const { data: teamMembersResponse, isLoading: isTeamMembersLoading } = useGetTeamMembersByCompanyIdQuery(companyId, {
 		skip: !companyId
 	});
-
-	const [createTeamMember] = useCreateTeamMemberMutation();
-	const [isLoading, setIsLoading] = useState(false);
 
 	const [isAddingUser, setIsAddingUser] = useState(false);
 	const [editingUser, setEditingUser] = useState<string | null>(null);
@@ -58,19 +72,16 @@ export default function UserManagementPage() {
 		const rawMembers = teamMembersResponse.data || teamMembersResponse.teamMembers || teamMembersResponse || [];
 		const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
 
-		return membersList.map((member: unknown) => {
-			const m = member as any;
-			return {
-				id: m._id,
-				name: m.name,
-				email: m.email,
-				phone: m.phone,
-				role: m.role?.roleName || m.role,
-				status: m.status,
-				lastLogin: m.lastLogin,
-				userId: m.userId
-			};
-		});
+		return membersList.map((member: TeamMember) => ({
+			id: member._id,
+			name: member.name,
+			email: member.email,
+			phone: member.phone,
+			role: (member.role && typeof member.role === 'object') ? member.role.roleName : (member.role || ''),
+			status: member.status,
+			lastLogin: member.lastLogin,
+			userId: member.userId
+		}));
 	}, [teamMembersResponse]);
 
 	const roleOptions = useMemo(() => {
@@ -83,75 +94,12 @@ export default function UserManagementPage() {
 		return rolesList.map((role: Role) => ({
 			value: role._id || role.id || '',
 			label: role.roleName
-		})).filter(option => option.value !== '');
+		}));
 	}, [rolesDataResponse]);
-
-	const supervisorOptions = useMemo(() => {
-		return teamMembers.map((member: unknown) => {
-			const m = member as any;
-			return {
-				value: m.id,
-				label: m.name
-			};
-		});
-	}, [teamMembers]);
 
 	const statusOptions = [
 		{ value: 'inactive', label: 'Inactive' },
 	];
-
-	const handleAddUser = async (userData: {
-		firstName: string;
-		lastName: string;
-		email: string;
-		phone: string;
-		role: string;
-		userId: string;
-		status: string;
-		password?: string;
-		supervisorId?: string;
-	}) => {
-		setIsLoading(true);
-		try {
-			const payload = {
-				name: `${userData.firstName} ${userData.lastName}`,
-				email: userData.email,
-				phone: userData.phone,
-				role: userData.role,
-				companyId: companyId,
-				status: userData.status || 'Active',
-				userId: userData.userId || undefined,
-				password: userData.password,
-				lineOfBusinessId: setupData.lineOfBusinessId || undefined,
-				supervisorId: userData.supervisorId || undefined,
-			};
-
-			await createTeamMember(payload).unwrap();
-
-			const user: User = {
-				id: userData.userId || Date.now().toString(),
-				name: payload.name,
-				email: payload.email,
-				phone: payload.phone,
-				role: payload.role,
-				status: 'inactive',
-				lastLogin: undefined
-			};
-
-			updateUserManagementSettings({
-				users: [...userManagementSettings.users, user]
-			});
-
-			toast.success('Team member created successfully');
-			setIsAddingUser(false);
-		} catch (error: unknown) {
-			console.error('Failed to create team member:', error);
-			const errorMessage = (error as any)?.data?.error || (error as any)?.data?.message || 'Failed to create team member';
-			toast.error(errorMessage);
-		} finally {
-			setIsLoading(false);
-		}
-	};
 
 	const handleDeleteUser = (userId: string) => {
 		updateUserManagementSettings({
@@ -273,44 +221,6 @@ export default function UserManagementPage() {
 							</Button>
 						</div>
 					</div>
-
-					{/* Access Controls Card */}
-					<div
-						className="dark:bg-gray-800 border dark:border-gray-700 p-6"
-						style={{
-							backgroundColor: 'var(--accent-white)',
-							borderColor: 'var(--light-gray)'
-						}}
-					>
-						<div className="flex flex-col w-full sm:w-[300px]">
-							<div
-								className="w-12 h-12 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4"
-								style={{ backgroundColor: 'var(--bg-primary)' }}
-							>
-								<Icon name="Chield_light" size="xl" />
-							</div>
-							<h3
-								className="font-inter text-lg font-semibold dark:text-gray-100 mb-2"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								Access Controls
-							</h3>
-							<p
-								className="font-lato text-sm dark:text-gray-400 mb-4"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								Define detailed permissions and access levels for each role.
-							</p>
-							<Button
-								variant="primary"
-								size="md"
-								onClick={() => router.push('/setup/permission-access-levels')}
-								className="w-full"
-							>
-								Set Permissions
-							</Button>
-						</div>
-					</div>
 				</div>
 			</div>
 
@@ -425,11 +335,9 @@ export default function UserManagementPage() {
 									<tr>
 										<td colSpan={7} className="py-12 px-6">
 											<div className="flex flex-col items-center justify-center text-center">
-												<Image
+												<img
 													src="/illustrations/Avatar-Neutral-Add-2--Streamline-Ux.png"
 													alt="No users added"
-													width={128}
-													height={128}
 													className="w-32 h-32 mb-4 opacity-60"
 												/>
 												<h3
@@ -449,72 +357,69 @@ export default function UserManagementPage() {
 										</td>
 									</tr>
 								) : (
-									teamMembers.map((user: unknown, index: number) => {
-										const u = user as any;
-										return (
-											<tr
-												key={u.id}
-												className={index !== teamMembers.length - 1 ? 'dark:border-gray-700' : ''}
-												style={index !== teamMembers.length - 1 ? { borderBottom: '1px solid', borderBottomColor: 'var(--light-gray)' } : {}}
+									teamMembers.map((user: User, index: number) => (
+										<tr
+											key={user.id}
+											className={index !== teamMembers.length - 1 ? 'dark:border-gray-700' : ''}
+											style={index !== teamMembers.length - 1 ? { borderBottom: '1px solid', borderBottomColor: 'var(--light-gray)' } : {}}
+										>
+											<td
+												className="py-4 px-6 font-inter text-sm dark:text-gray-100"
+												style={{ color: 'var(--text-primary)' }}
 											>
-												<td
-													className="py-4 px-6 font-inter text-sm dark:text-gray-100"
-													style={{ color: 'var(--text-primary)' }}
-												>
-													{u.name}
-												</td>
-												<td
-													className="py-4 px-6 font-inter text-sm dark:text-gray-400"
-													style={{ color: 'var(--text-tertiary)' }}
-												>
-													{u.email}
-												</td>
-												<td
-													className="py-4 px-6 font-inter text-sm dark:text-gray-400"
-													style={{ color: 'var(--text-tertiary)' }}
-												>
-													{u.phone}
-												</td>
-												<td
-													className="py-4 px-6 font-inter text-sm dark:text-gray-400"
-													style={{ color: 'var(--text-tertiary)' }}
-												>
-													{u.role}
-												</td>
-												<td className="py-4 px-6">
-													<Dropdown
-														label=""
-														value={u.status}
-														onChange={(value) => handleStatusChange(u.id, value as string)}
-														options={statusOptions}
-														className="min-w-[120px]"
-													/>
-												</td>
-												<td
-													className="py-4 px-6 font-inter text-sm dark:text-gray-400"
-													style={{ color: 'var(--text-tertiary)' }}
-												>
-													{u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}
-												</td>
-												<td className="py-4 px-6 text-sm font-medium">
-													<div className='flex flex-row gap-3'>
-														<button
-															onClick={() => handleEditUser(u.id)}
-															className='cursor-pointer'
-														>
-															<Icon name="Edit_duotone_line" size={"lg"} />
-														</button>
-														<button
-															onClick={() => handleDeleteUser(u.id)}
-															className='cursor-pointer'
-														>
-															<Icon name="Trash_light" size={"lg"} />
-														</button>
-													</div>
-												</td>
-											</tr>
-										);
-									})
+												{user.name}
+											</td>
+											<td
+												className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{user.email}
+											</td>
+											<td
+												className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{user.phone}
+											</td>
+											<td
+												className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{user.role}
+											</td>
+											<td className="py-4 px-6">
+												<Dropdown
+													label=""
+													value={user.status}
+													onChange={(value) => handleStatusChange(user.id, value as string)}
+													options={statusOptions}
+													className="min-w-[120px]"
+												/>
+											</td>
+											<td
+												className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+											</td>
+											<td className="py-4 px-6 text-sm font-medium">
+												<div className='flex flex-row gap-3'>
+													<button
+														onClick={() => handleEditUser(user.id)}
+														className='cursor-pointer'
+													>
+														<Icon name="Edit_duotone_line" size={"lg"} />
+													</button>
+													<button
+														onClick={() => handleDeleteUser(user.id)}
+														className='cursor-pointer'
+													>
+														<Icon name="Trash_light" size={"lg"} />
+													</button>
+												</div>
+											</td>
+										</tr>
+									))
 								)}
 							</tbody>
 						</table>
@@ -526,10 +431,6 @@ export default function UserManagementPage() {
 			<AddUserModal
 				isOpen={isAddingUser}
 				onClose={() => setIsAddingUser(false)}
-				onSave={handleAddUser}
-				roleOptions={roleOptions}
-				supervisorOptions={supervisorOptions}
-				isLoading={isLoading}
 			/>
 
 			{/* Edit User Modal */}
@@ -545,7 +446,3 @@ export default function UserManagementPage() {
 		</div>
 	);
 }
-
-{/* <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-	<path d="M8 1V15M1 8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-</svg> */}

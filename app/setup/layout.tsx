@@ -93,7 +93,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                 lineOfBusinessName: setupData.lineOfBusinessName,
               },
             }).unwrap();
-            
+
             toast.success("Step completed successfully!", {
               description: "Line of Business updated. Moving to the next step...",
               duration: 2000,
@@ -374,7 +374,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   const headerUser = user ? {
     name: user.name || `${(user['firstName'] as string) || ''} ${(user['lastName'] as string) || ''}`.trim() || (user['username'] as string) || 'User',
-    role: user.role || 'Administrator',
+    role: typeof user.role === 'string' ? user.role : (user.role as any)?.roleName || 'Administrator',
     avatar: user.avatar,
     initials: (user.name || `${(user['firstName'] as string) || ''} ${(user['lastName'] as string) || ''}`.trim() || (user['username'] as string) || 'U')
       .split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()

@@ -56,15 +56,14 @@ const EditUserPage: React.FC = () => {
 
 	useEffect(() => {
 		if (userResponse) {
-			const user = userResponse.teamMember || userResponse.data || userResponse;
-			console.log('Fetched user data:', user);
+			const user = userResponse?.teamMember || userResponse.data || userResponse;
 
 			// Handle name splitting if firstName/lastName are missing
-			let fName = user.firstName || '';
-			let lName = user.lastName || '';
+			let fName = user?.firstName || '';
+			let lName = user?.lastName || '';
 
-			if (!fName && !lName && user.name) {
-				const parts = user.name.split(' ');
+			if (!fName && !lName && user?.name) {
+				const parts = user?.name.split(' ');
 				fName = parts[0];
 				lName = parts.slice(1).join(' ');
 			}
@@ -72,11 +71,15 @@ const EditUserPage: React.FC = () => {
 			setFormData({
 				firstName: fName,
 				lastName: lName,
-				email: user.email || '',
-				phone: user.phone || '',
-				role: typeof user.role === 'object' ? (user.role.roleName || user.role.name) : (user.role || ''),
-				status: user.status === 'Active' || user.status === 'active' || user.loginStatus === 'Logged In' || user.isActive === true || user.status === true,
-				supervisorId: user.supervisorId || '',
+				email: user?.email || '',
+				phone: user?.phone || '',
+				role: typeof user.role === 'object' ? (user?.role?._id || user?.role?.id) : (user?.role || ''),
+				status: user?.status === 'Active' ||
+					user?.status === 'active' ||
+					user?.loginStatus === 'Logged In' ||
+					user?.isActive === true ||
+					user?.status === true,
+				supervisorId: user?.supervisorId || '',
 			});
 		}
 	}, [userResponse]);
@@ -85,20 +88,20 @@ const EditUserPage: React.FC = () => {
 		if (!rolesData) return [];
 
 		const rawRoles = (Array.isArray(rolesData) ? rolesData :
-			(Array.isArray((rolesData as any)?.data) ? (rolesData as any).data :
-				(Array.isArray((rolesData as any)?.roles) ? (rolesData as any).roles :
-					(Array.isArray((rolesData as any)?.docs) ? (rolesData as any).docs :
+			(Array.isArray((rolesData as unknown as { data: unknown[] })?.data) ? (rolesData as unknown as { data: unknown[] }).data :
+				(Array.isArray((rolesData as unknown as { roles: unknown[] })?.roles) ? (rolesData as unknown as { roles: unknown[] }).roles :
+					(Array.isArray((rolesData as unknown as { docs: unknown[] })?.docs) ? (rolesData as unknown as { docs: unknown[] }).docs :
 						[]))));
 
 		return rawRoles
 			.filter((role: unknown) => {
-				const r = role as any;
+				const r = role as { _id?: string; id?: string };
 				return r._id || r.id;
 			})
 			.map((role: unknown) => {
-				const r = role as any;
+				const r = role as { roleName: string; _id?: string; id?: string };
 				return {
-					value: r.roleName, // Using roleName as value to match current implementation
+					value: r._id || r.id || '',
 					label: r.roleName
 				};
 			});
@@ -106,13 +109,13 @@ const EditUserPage: React.FC = () => {
 
 	const supervisorOptions = useMemo(() => {
 		if (!supervisorsResponse) return [];
-		const rawSupervisors = supervisorsResponse.teamMembers || supervisorsResponse.data || supervisorsResponse || [];
+		const rawSupervisors = supervisorsResponse?.teamMembers || supervisorsResponse?.data || supervisorsResponse || [];
 		const supervisorsList = Array.isArray(rawSupervisors) ? rawSupervisors : (rawSupervisors.docs || []);
 		return supervisorsList.map((supervisor: unknown) => {
-			const s = supervisor as any;
+			const s = supervisor as { _id?: string; id?: string; name?: string; firstName?: string; lastName?: string };
 			return {
-				value: (s._id || s.id || '') as string,
-				label: s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim()
+				value: (s?._id || s?.id || '') as string,
+				label: s?.name || `${s?.firstName || ''} ${s?.lastName || ''}`.trim()
 			};
 		});
 	}, [supervisorsResponse]);
@@ -121,23 +124,32 @@ const EditUserPage: React.FC = () => {
 	useEffect(() => {
 		if (formData.role && rolesData) {
 			const rawRoles = (Array.isArray(rolesData) ? rolesData :
-				(Array.isArray((rolesData as any)?.data) ? (rolesData as any).data :
-					(Array.isArray((rolesData as any)?.roles) ? (rolesData as any).roles :
-						(Array.isArray((rolesData as any)?.docs) ? (rolesData as any).docs :
+				(Array.isArray((rolesData as unknown as { data: unknown[] })?.data) ? (rolesData as unknown as { data: unknown[] }).data :
+					(Array.isArray((rolesData as unknown as { roles: unknown[] })?.roles) ? (rolesData as unknown as { roles: unknown[] }).roles :
+						(Array.isArray((rolesData as unknown as { docs: unknown[] })?.docs) ? (rolesData as unknown as { docs: unknown[] }).docs :
 							[]))));
 
 			// Always fetch supervisors if we have the Supervisor role available
-			const supervisorRole = rawRoles.find((r: any) => r.roleName?.toLowerCase() === 'supervisor');
+			const supervisorRole = rawRoles.find((r: { roleName?: string; _id?: string; id?: string }) => r.roleName?.toLowerCase() === 'supervisor');
 			if (supervisorRole) {
-				setFetchRoleId(supervisorRole._id || supervisorRole.id);
+				setFetchRoleId(supervisorRole._id || supervisorRole.id || '');
 			}
 		}
-	}, [formData.role, rolesData]);
+	}, [formData?.role, rolesData]);
 
 	const shouldShowSupervisor = useMemo(() => {
-		const r = formData.role.toLowerCase();
+		if (!rolesData || !formData?.role) return false;
+
+		const rawRoles = (Array.isArray(rolesData) ? rolesData :
+			(Array.isArray((rolesData as unknown as { data: unknown[] })?.data) ? (rolesData as unknown as { data: unknown[] }).data :
+				(Array.isArray((rolesData as unknown as { roles: unknown[] })?.roles) ? (rolesData as unknown as { roles: unknown[] }).roles :
+					(Array.isArray((rolesData as unknown as { docs: unknown[] })?.docs) ? (rolesData as unknown as { docs: unknown[] }).docs :
+						[]))));
+
+		const selectedRole = rawRoles.find((r: { _id?: string; id?: string }) => (r._id || r.id) === formData.role);
+		const r = selectedRole?.roleName?.toLowerCase();
 		return r === 'agent' || r === 'supervisor';
-	}, [formData.role]);
+	}, [formData?.role, rolesData]);
 
 	const handleInputChange = (field: string) => (value: string | boolean) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
@@ -148,12 +160,12 @@ const EditUserPage: React.FC = () => {
 			await updateTeamMember({
 				id: userId,
 				data: {
-					firstName: formData.firstName,
-					lastName: formData.lastName,
-					phone: formData.phone,
-					role: formData.role,
-					status: formData.status ? 'Active' : 'Inactive',
-					supervisorId: formData.supervisorId
+					firstName: formData?.firstName,
+					lastName: formData?.lastName,
+					phone: formData?.phone,
+					role: formData?.role,
+					status: formData?.status ? 'Active' : 'Inactive',
+					supervisorId: formData?.supervisorId
 				}
 			}).unwrap();
 			toast.success('User updated successfully');
@@ -400,7 +412,7 @@ const EditUserPage: React.FC = () => {
 
 						<Input
 							label="Mobile"
-							value={formData.phone}
+							value={formData?.phone}
 							onChange={handleInputChange('phone')}
 							placeholder="Enter Mobile Number"
 							type="tel"
@@ -408,7 +420,7 @@ const EditUserPage: React.FC = () => {
 
 						<Dropdown
 							label="Role"
-							value={formData.role}
+							value={formData?.role}
 							onChange={(value) => handleInputChange('role')(Array.isArray(value) ? value[0] : value)}
 							options={roleOptions}
 							placeholder="Select Role"
@@ -419,7 +431,7 @@ const EditUserPage: React.FC = () => {
 								label="Supervisor"
 								placeholder="Select Supervisor"
 								options={supervisorOptions}
-								value={formData.supervisorId}
+								value={formData?.supervisorId}
 								onChange={(value) => handleInputChange('supervisorId')(Array.isArray(value) ? value[0] : value)}
 							/>
 						)}
@@ -436,12 +448,12 @@ const EditUserPage: React.FC = () => {
 									className="text-sm dark:text-gray-300"
 									style={{ color: 'var(--text-secondary)' }}
 								>
-									{formData.status ? 'Active' : 'Inactive'}
+									{formData?.status ? 'Active' : 'Inactive'}
 								</span>
 								<label className="relative inline-flex items-center cursor-pointer">
 									<input
 										type="checkbox"
-										checked={formData.status}
+										checked={formData?.status}
 										onChange={(e) => handleInputChange('status')(e.target.checked)}
 										className="sr-only peer"
 									/>
@@ -537,7 +549,7 @@ const EditUserPage: React.FC = () => {
 
 						<Input
 							label="Confirm new password"
-							value={passwordData.confirmPassword}
+							value={passwordData?.confirmPassword}
 							onChange={handlePasswordChange('confirmPassword')}
 							placeholder="Confirm new password"
 							type="password"
@@ -560,7 +572,7 @@ const EditUserPage: React.FC = () => {
 							variant="primary"
 							size="md"
 							onClick={handleChangePassword}
-							disabled={!passwordData.newPassword || !passwordData.confirmPassword}
+							disabled={!passwordData?.newPassword || !passwordData?.confirmPassword}
 						>
 							{isResettingPassword ? 'Resetting...' : 'Change Password'}
 						</Button>

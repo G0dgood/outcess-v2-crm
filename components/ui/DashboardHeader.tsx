@@ -19,11 +19,12 @@ import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useGetLineOfBusinessByCompanyIdForheaderQuery } from '@/store/services/lineOfBusinessApi';
 import { useLogoutMutation } from '@/store/services/authApi';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout as logoutAction } from '@/store/slices/authSlice';
+import { logout as logoutAction, User } from '@/store/slices/authSlice';
 import { statusApi } from '@/store/services/statusApi';
 import { useGetNotificationsByLineOfBusinessIdQuery, useMarkNotificationAsReadMutation } from '@/store/services/notificationApi';
 
 interface DashboardHeaderProps {
+	name?: string;
 	companyName?: string;
 	userName?: string;
 	userEmail?: string;
@@ -65,7 +66,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const { isAdmin } = usePrivilege();
 
 	// Get user from Redux store
-	const reduxUser = useSelector((state: { auth: { user: any } }) => state.auth.user);
+	const reduxUser = useSelector((state: { auth: { user: User | null } }) => state.auth.user);
 
 	// Determine the effective user to display
 	const displayUser = mounted && reduxUser ? {
@@ -96,6 +97,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const notifications = React.useMemo(() => notificationsData?.notifications || [], [notificationsData]);
 
 	const [lobOptions, setLobOptions] = useState<{ value: string; label: string; }[]>([]);
+	const safeUserName = String(displayUser?.name ?? '');
 
 	useEffect(() => {
 		if (lineOfBusinessData && lineOfBusinessData.lineOfBusinesses) {
@@ -408,7 +410,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 					{/* User Dropdown */}
 					<UserDropdown
-						userName={displayUser?.name || ""}
+						userName={safeUserName}
 						userEmail={displayUser?.email || ""}
 						userAvatar={displayUser?.avatar || ""}
 						isOnline={userIsOnline && isOnline && !isOffline && socketStatus !== 'offline'}

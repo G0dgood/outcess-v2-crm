@@ -4,11 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
-import Toggle from '@/components/ui/Toggle';
 import CreateRoleModal from '@/components/ui/CreateRoleModal';
 import Icon from '@/components/ui/Icon';
+import Permission from '@/components/ui/Permission';
 import { useSetup } from '@/contexts/SetupContext';
-import { useGetRolesByCompanyIdQuery, useCreateRoleMutation, useUpdateRoleMutation, useDeleteRoleMutation, Role, RolePermission, CreateRoleRequest } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery, useCreateRoleMutation, useDeleteRoleMutation, Role, RolePermission } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
 
@@ -33,16 +33,17 @@ export default function RolePermissionManagementPage() {
 	});
 
 	const [createRole] = useCreateRoleMutation();
-	const [updateRole] = useUpdateRoleMutation();
 	const [deleteRole] = useDeleteRoleMutation();
 
 	// Deduplicate roles to prevent key collisions
 	const roles = React.useMemo(() => {
+		if (!rolesData) return [];
+
 		// Transform API roles to local format or use API roles directly
 		const rawRoles = (Array.isArray(rolesData) ? rolesData :
-			(Array.isArray((rolesData as unknown as { data?: Role[] }).data) ? (rolesData as unknown as { data?: Role[] }).data :
-				(Array.isArray((rolesData as unknown as { roles?: Role[] }).roles) ? (rolesData as unknown as { roles?: Role[] }).roles :
-					(Array.isArray((rolesData as unknown as { docs?: Role[] }).docs) ? (rolesData as unknown as { docs?: Role[] }).docs :
+			(rolesData && typeof rolesData === 'object' && 'data' in rolesData && Array.isArray((rolesData as any).data) ? (rolesData as any).data :
+				(rolesData && typeof rolesData === 'object' && 'roles' in rolesData && Array.isArray((rolesData as any).roles) ? (rolesData as any).roles :
+					(rolesData && typeof rolesData === 'object' && 'docs' in rolesData && Array.isArray((rolesData as any).docs) ? (rolesData as any).docs :
 						[])))) as Role[];
 
 		// If roles array is empty but we have data in rolesData that looks like a single role or object of roles
@@ -91,68 +92,12 @@ export default function RolePermissionManagementPage() {
 		ensureAdminRole();
 	}, [rolesData, companyId, createRole, refetch, roleManagementSettings.modules, isLoading, roles]);
 
-	const handlePermissionChange = async (roleId: string, moduleId: string, enabled: boolean) => {
-		const roleToUpdate = roles.find((r: Role) => r._id === roleId);
-		if (roleToUpdate) {
-			const moduleName = roleManagementSettings.modules.find(m => m.id === moduleId)?.name;
-			if (!moduleName) return;
-
-			const currentPermissions = roleToUpdate.permissions || [];
-			const updatedPermissions = currentPermissions.map(p => ({
-				...p,
-				permissions: { ...p.permissions }
-			}));
-
-			const permissionIndex = updatedPermissions.findIndex(p => p.moduleName === moduleName);
-
-			if (permissionIndex >= 0) {
-				updatedPermissions[permissionIndex] = {
-					...updatedPermissions[permissionIndex],
-					access: enabled
-				};
-			} else {
-				updatedPermissions.push({
-					id: '',
-					moduleName: moduleName,
-					access: enabled,
-					permissions: {
-						view: false,
-						edit: false,
-						delete: false,
-						create: false
-					}
-				});
-			}
-
-			// Construct full payload to ensure validation passes
-			// Some APIs require all fields even for updates, or validate presence of required fields
-			const payload = {
-				roleName: roleToUpdate.roleName,
-				description: roleToUpdate.description,
-				companyId: companyId,
-				permissions: updatedPermissions
-			};
-
-			try {
-				await updateRole({
-					id: roleId,
-					roleData: payload as Partial<CreateRoleRequest>
-				}).unwrap();
-				toast.success('Permission updated successfully');
-			} catch (error) {
-				const apiError = error as ApiError;
-				console.error('Failed to update permission:', error);
-				const errorMessage = apiError?.data?.message || apiError?.message || 'Failed to update permission';
-				toast.error(errorMessage);
-			}
-		}
-	};
-
 	const handleDeleteRole = async (roleId: string) => {
 		if (window.confirm('Are you sure you want to delete this role?')) {
 			try {
 				await deleteRole(roleId).unwrap();
 				toast.success('Role deleted successfully');
+				refetch();
 			} catch (error) {
 				const apiError = error as ApiError;
 				console.error('Failed to delete role:', error);
@@ -160,11 +105,6 @@ export default function RolePermissionManagementPage() {
 				toast.error(errorMessage);
 			}
 		}
-	};
-
-	const handleSaveChanges = () => {
-		// TODO: Implement save functionality
-		console.log('Save changes');
 	};
 
 	return (
@@ -196,9 +136,7 @@ export default function RolePermissionManagementPage() {
 						onClick={() => setIsCreateRoleModalOpen(true)}
 						className="flex items-center gap-2 w-full sm:w-auto justify-center"
 					>
-						<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M8 1V15M1 8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-						</svg>
+						<Icon name="plus" className="w-4 h-4" />
 						Create New Role
 					</Button>
 				</div>
@@ -256,116 +194,8 @@ export default function RolePermissionManagementPage() {
 				))}
 			</div>
 
-			{/* Module Permission Overview */}
-			<div
-				className="dark:bg-gray-800 border dark:border-gray-700"
-				style={{
-					backgroundColor: 'var(--accent-white)',
-					borderColor: 'var(--light-gray)'
-				}}
-			>
-				<div
-					className="p-6 border-b dark:border-gray-700"
-					style={{ borderColor: 'var(--light-gray)' }}
-				>
-					<h2
-						className="font-inter text-lg sm:text-xl font-semibold dark:text-gray-100"
-						style={{ color: 'var(--text-primary)' }}
-					>
-						Module Permission Overview
-					</h2>
-				</div>
-
-				<div className="overflow-x-auto">
-					<table className="min-w-full">
-						<thead
-							className="dark:bg-gray-700"
-							style={{ backgroundColor: 'var(--bg-primary)' }}
-						>
-							<tr
-								style={{
-									borderBottom: '1px solid',
-									borderBottomColor: 'var(--light-gray)'
-								}}
-							>
-								<th
-									className="py-4 px-6 text-left text-xs sm:text-sm font-medium dark:text-gray-400 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Features/Modules
-								</th>
-								{roles.map((role: Role) => (
-									<th
-										key={role._id}
-										className="py-4 px-6 text-left text-xs sm:text-sm font-medium dark:text-gray-400 uppercase tracking-wider"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{role.roleName}
-									</th>
-								))}
-							</tr>
-						</thead>
-						<tbody
-							className="dark:bg-gray-800"
-							style={{
-								backgroundColor: 'var(--accent-white)'
-							}}
-						>
-							{roleManagementSettings.modules.map((module, index) => (
-								<tr
-									key={module.id}
-									className="dark:hover:bg-gray-700"
-									style={{
-										borderBottom: index !== roleManagementSettings.modules.length - 1 ? '1px solid' : 'none',
-										borderBottomColor: index !== roleManagementSettings.modules.length - 1 ? 'var(--light-gray)' : 'transparent'
-									}}
-									onMouseEnter={(e) => {
-										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-									}}
-									onMouseLeave={(e) => {
-										e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-									}}
-								>
-									<td
-										className="py-4 px-6 text-xs sm:text-sm font-medium dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{module.name}
-									</td>
-									{roles.map((role: Role) => (
-										<td key={`${role._id}-${module.id}`} className="py-4 px-6 text-center">
-											<Toggle
-												checked={role.permissions?.find((p: RolePermission) => p.moduleName === module.name)?.access || false}
-												onChange={(enabled) => handlePermissionChange(role._id, module.id, enabled)}
-											/>
-										</td>
-									))}
-								</tr>
-							))}
-						</tbody>
-					</table>
-				</div>
-			</div>
-
-			{/* Action Buttons */}
-			<div className="flex flex-col sm:flex-row sm:justify-end gap-3 mt-6">
-				<Button
-					variant="outline"
-					size="md"
-					onClick={() => router.back()}
-					className="w-full sm:w-auto"
-				>
-					Cancel
-				</Button>
-				<Button
-					variant="primary"
-					size="md"
-					onClick={handleSaveChanges}
-					className="w-full sm:w-auto"
-				>
-					Save Change
-				</Button>
-			</div>
+			{/* Permission Component */}
+			<Permission lineOfBusinessId={setupData.lineOfBusinessId} className="mt-8" />
 
 			{/* Create Role Modal */}
 			<CreateRoleModal
@@ -374,6 +204,7 @@ export default function RolePermissionManagementPage() {
 				onSuccess={() => {
 					// Optionally refresh roles list or show success message
 					console.log('Role created successfully');
+					refetch();
 				}}
 			/>
 		</div>
