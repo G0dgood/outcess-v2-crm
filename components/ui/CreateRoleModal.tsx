@@ -5,9 +5,10 @@ import Input from './Input';
 import Textarea from './Textarea';
 import Button from './Button';
 import Icon from './Icon';
-import { useCreateRoleMutation } from '@/store/services/roleApi';
+import { useCreateRoleMutation, RolePermission } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
+import { useSetup } from '@/contexts/SetupContext';
 
 interface CreateRoleModalProps {
 	isOpen: boolean;
@@ -37,6 +38,7 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
 	});
 	const [createRole, { isLoading }] = useCreateRoleMutation();
 	const { user } = useUserInfo();
+	const { setupData } = useSetup();
 
 	const handleInputChange = (field: string) => (value: string) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
@@ -72,20 +74,24 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
 
 		if (user?.company?._id) {
 			try {
+				const modules = setupData.roleManagementSettings?.modules || [];
+				const defaultPermissions: RolePermission[] = modules.map((module: { name: string }) => ({
+					id: '',
+					moduleName: module.name,
+					access: false,
+					permissions: {
+						view: false,
+						edit: false,
+						delete: false,
+						create: false,
+					},
+				}));
+
 				await createRole({
 					roleName: formData.name,
 					description: formData.description,
 					companyId: user.company?._id,
-					permissions: {
-						dashboard: false,
-						customerBook: false,
-						userManagement: false,
-						setupBook: false,
-						customerSMS: false,
-						report: false,
-						systemSetting: false,
-						auditLog: false,
-					}
+					permissions: defaultPermissions
 				}).unwrap();
 
 				toast.success('Role created successfully');
@@ -190,5 +196,4 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
 };
 
 export default CreateRoleModal;
-
 
