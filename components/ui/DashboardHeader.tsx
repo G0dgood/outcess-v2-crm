@@ -69,19 +69,26 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const reduxUser = useSelector((state: { auth: { user: User | null } }) => state.auth.user);
 
 	// Determine the effective user to display
-	const displayUser: { name: string; email?: string; avatar?: string; companyId?: string } | null = mounted && reduxUser ? {
-		...reduxUser,
-		name: reduxUser.name || reduxUser.username || `${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim() || 'User',
-		email: reduxUser.email,
-		avatar: reduxUser.avatar,
-		companyId: reduxUser.companyId || reduxUser.company?._id
-	} : null;
+	const displayUser =
+		mounted && reduxUser
+			? {
+				name:
+					String(
+						reduxUser.name ||
+						`${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim() ||
+						'User'
+					),
+				email: reduxUser.email,
+				avatar: reduxUser.avatar,
+				companyId: reduxUser.companyId || reduxUser.company?._id,
+			}
+			: null;
 
 	const previousUnreadCount = useRef(0);
 	const previousPathname = useRef(pathname);
 	const isNavigating = useRef(false);
 	const { setSelectedLineOfBusinessId, isLoading: isLobLoading, lineOfBusinessData: selectedLOBData, selectedLineOfBusinessId } = useLineOfBusiness();
-	const companyId = selectedLOBData?.companyId || displayUser?.companyId || (displayUser?.company as { _id: string })?._id || '';
+	const companyId = selectedLOBData?.companyId || displayUser?.companyId || (reduxUser?.company as { _id?: string })?._id || '';
 
 	const { data: lineOfBusinessData } = useGetLineOfBusinessByCompanyIdForheaderQuery(companyId, {
 		skip: !companyId

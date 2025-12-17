@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, use as usePromise } from 'react';
 import Button from '@/components/ui/Button';
 import DeactivateBusinessModal from '@/components/ui/DeactivateBusinessModal';
 import Pagination from '@/components/ui/Pagination';
@@ -8,13 +8,8 @@ import PaginationSummary from '@/components/ui/PaginationSummary';
 import { CalendarIcon, MixerHorizontalIcon, UploadIcon } from '@radix-ui/react-icons';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
-interface BusinessDetailProps {
-	params: {
-		id: string;
-	};
-}
-
-const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
+export default function BusinessDetailPage({ params }: { params: Promise<{ id: string }> }) {
+	const { id } = usePromise(params);
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const [activeTab, setActiveTab] = useState('overview');
 	const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
@@ -262,7 +257,7 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 	};
 
 	const handleConfirmDeactivate = (reason: string) => {
-		console.log('Deactivate business:', params.id, 'Reason:', reason);
+		console.log('Deactivate business:', id, 'Reason:', reason);
 		// TODO: Implement deactivate business logic with reason
 	};
 
@@ -1019,6 +1014,3 @@ const BusinessDetailPage: React.FC<BusinessDetailProps> = ({ params }) => {
 		</div>
 	);
 };
-
-export default BusinessDetailPage;
-
