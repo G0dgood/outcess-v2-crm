@@ -1,20 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, use as usePromise } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Textarea from '@/components/ui/Textarea';
-import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
-interface PendingRequestDetailProps {
-	params: {
-		id: string;
-	};
-}
-
-const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params }) => {
+function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
+	const { id } = usePromise(params);
 	const router = useRouter();
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const { isDarkMode } = useTheme();
@@ -73,13 +67,13 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 	];
 
 	const handleReject = () => {
-		console.log('Reject request:', params.id, { reviewNotes });
+		console.log('Reject request:', id, { reviewNotes });
 		// TODO: Implement reject request logic
 		router.push('/admin/pending-request');
 	};
 
 	const handleApprove = () => {
-		console.log('Approve business:', params.id, { reviewNotes });
+		console.log('Approve business:', id, { reviewNotes });
 		// TODO: Implement approve business logic
 		router.push('/admin/pending-request');
 	};
@@ -128,8 +122,8 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 								key={tab.id}
 								onClick={() => setActiveTab(tab.id)}
 								className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${isActive
-										? ''
-										: 'border-transparent dark:text-gray-400'
+									? ''
+									: 'border-transparent dark:text-gray-400'
 									}`}
 								style={{
 									borderBottomColor: isActive ? activeColor : 'transparent',
@@ -670,4 +664,3 @@ const PendingRequestDetailPage: React.FC<PendingRequestDetailProps> = ({ params 
 };
 
 export default PendingRequestDetailPage;
-
