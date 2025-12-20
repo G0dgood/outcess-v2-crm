@@ -2,53 +2,64 @@
 
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
-import Icon from '@/components/ui/Icon';
-import Pagination from '@/components/ui/Pagination';
 import PageHeading from '@/components/ui/PageHeading';
-import Search from '@/components/ui/Search';
+import SearchWithSend from '@/components/ui/SearchWithSend';
 import AddCustomerModal from '@/components/ui/AddCustomerModal';
 import CustomerDetailsModal from '@/components/ui/CustomerDetailsModal';
 import { ArrowRightIcon } from '@radix-ui/react-icons';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useGetSetupBookBySearchIdQuery } from '@/store/services/setupBookApi';
 
 interface Customer {
 	id: string;
-	firstName: string;
-	lastName: string;
-	email: string;
-	phone: string;
+	[key: string]: any;
 }
 
 const CustomerBookPage: React.FC = () => {
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const [searchTerm, setSearchTerm] = useState('');
+	const [searchQuery, setSearchQuery] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
 	const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-	const [customers, setCustomers] = useState<Customer[]>([
-		{
-			id: '1',
-			firstName: 'Jane',
-			lastName: 'Doe',
-			email: 'janedoe@example.com',
-			phone: '08023456789'
-		},
-		{
-			id: '2',
-			firstName: 'John',
-			lastName: 'Tom',
-			email: 'janetom@example.com',
-			phone: '08023456789'
-		}
-	]);
 
-	const filteredCustomers = customers.filter(customer =>
-		customer.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		customer.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		customer.phone.includes(searchTerm)
+
+	console.log('lineOfBusinessData----->', lineOfBusinessData)
+
+	// Fetch customer by SearchId
+	const { data: searchResult, isLoading, isError } = useGetSetupBookBySearchIdQuery(
+		{ searchId: searchQuery },
+		{ skip: !searchQuery }
 	);
+
+	const [customers, setCustomers] = useState<Customer[]>([]);
+	const [tableHeaders, setTableHeaders] = useState<string[]>([]);
+
+	// Update customers list when search result is found
+	React.useEffect(() => {
+		if (searchResult?.data) {
+			const data = searchResult.data as any[]; // Cast to any[] to handle the structure flexibly
+			if (Array.isArray(data) && data.length > 0) {
+				// Dynamically extract headers from the first item, excluding internal fields like _id, id, __v
+				const firstItem = data[0];
+				const headers = Object.keys(firstItem).filter(key => !['_id', 'id', '__v', 'companyId', 'lineOfBusinessId'].includes(key));
+				setTableHeaders(headers);
+
+				const mappedCustomers: Customer[] = data.map((item: any) => ({
+					id: item.id || item._id,
+					...item
+				}));
+				setCustomers(mappedCustomers);
+			}
+		}
+	}, [searchResult]);
+
+	const handleSearch = (value: string) => {
+		setSearchQuery(value);
+	};
+
+	const filteredCustomers = customers;
 
 	const handleAddCustomer = () => {
 		setIsAddCustomerModalOpen(true);
@@ -73,21 +84,10 @@ const CustomerBookPage: React.FC = () => {
 		// Implement add fields logic here
 	};
 
-	const handleImport = () => {
-		console.log('Import clicked');
-		// Implement import functionality
+	const handleViewCustomer = (customer: Customer) => {
+		setSelectedCustomer(customer);
 	};
 
-	const handleViewCustomer = (customerId: string) => {
-		const customer = customers.find(c => c.id === customerId);
-		if (customer) {
-			setSelectedCustomer(customer);
-		}
-	};
-
-
-
-	const totalPages = 10;
 
 	return (
 		<div>
@@ -98,12 +98,13 @@ const CustomerBookPage: React.FC = () => {
 
 			{/* Search & Actions */}
 			<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-				<Search
+				<SearchWithSend
 					placeholder="Search"
 					value={searchTerm}
 					onChange={(value) => setSearchTerm(value)}
-					className="w-full sm:w-auto"
-					maxWidth="w-full"
+					onSearch={handleSearch}
+					className="w-full sm:w-auto min-w-[300px]"
+					buttonColor={lineOfBusinessData?.primaryColor}
 				/>
 				<div className="flex   items-center justify-end sm:justify-start gap-2 sm:gap-3 whitespace-nowrap">
 					<Button
@@ -114,15 +115,7 @@ const CustomerBookPage: React.FC = () => {
 					>
 						Add Customer
 					</Button>
-					<Button
-						variant="primary"
-						size="md"
-						onClick={handleImport}
-						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
-					>
-						Import
-						<Icon name="share" size="sm" />
-					</Button>
+
 				</div>
 			</div>
 
@@ -147,35 +140,15 @@ const CustomerBookPage: React.FC = () => {
 							}}
 						>
 							<tr>
-								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									<div className="flex items-center gap-2">
-										<span>First Name</span>
-										<span className="dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }}>
-											<Icon name="Question_mark_light" size="sm" />
-										</span>
-									</div>
-								</th>
-								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Last Name
-								</th>
-								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Email
-								</th>
-								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Phone
-								</th>
+								{tableHeaders.map((header) => (
+									<th
+										key={header}
+										className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{header}
+									</th>
+								))}
 								<th
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
@@ -191,11 +164,11 @@ const CustomerBookPage: React.FC = () => {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							{false ? (
-								<SVGLoaderFetch colSpan={8} text="Loading customers..." />
+							{isLoading ? (
+								<SVGLoaderFetch colSpan={tableHeaders.length + 1} text="Searching customer..." />
 							) : filteredCustomers?.length === 0 ? (
-								<NoRecordFound colSpan={8} />
-							) : filteredCustomers.map((customer) => (
+								<NoRecordFound colSpan={tableHeaders.length + 1} />
+							) : filteredCustomers?.map((customer) => (
 								<tr
 									key={customer.id}
 									className="dark:hover:bg-gray-700"
@@ -207,33 +180,18 @@ const CustomerBookPage: React.FC = () => {
 										e.currentTarget.style.backgroundColor = 'var(--accent-white)';
 									}}
 								>
-									<td
-										className="px-6 py-4 whitespace-nowrap font-medium dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{customer.firstName}
-									</td>
-									<td
-										className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{customer.lastName}
-									</td>
-									<td
-										className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{customer.email}
-									</td>
-									<td
-										className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{customer.phone}
-									</td>
+									{tableHeaders?.map((header) => (
+										<td
+											key={`${customer.id}-${header}`}
+											className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+											style={{ color: 'var(--text-primary)' }}
+										>
+											{customer[header]}
+										</td>
+									))}
 									<td className="px-6 py-4 whitespace-nowrap">
 										<button
-											onClick={() => handleViewCustomer(customer.id)}
+											onClick={() => handleViewCustomer(customer)}
 											className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer"
 											style={{ color: 'var(--text-secondary)' }}
 											onMouseEnter={(e) => {
@@ -256,16 +214,8 @@ const CustomerBookPage: React.FC = () => {
 				</div>
 			</div>
 
-			{/* Pagination */}
-			<Pagination
-				currentPage={currentPage}
-				totalPages={totalPages}
-				onPageChange={setCurrentPage}
-				showEllipsis={true}
-				maxVisiblePages={5}
-				primaryColor={lineOfBusinessData?.primaryColor || '#050711'}
-				secondaryColor={lineOfBusinessData?.secondaryColor || '#6C8B7D'}
-			/>
+
+
 
 			{/* Add Customer Modal */}
 			<AddCustomerModal

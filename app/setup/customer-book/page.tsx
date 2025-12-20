@@ -29,7 +29,8 @@ export default function CustomerBookPage() {
 	const { setupData, updateCustomerBookSettings } = useSetup();
 	const { customerBookSettings } = setupData;
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [selectedFieldType, setSelectedFieldType] = useState<string>('text');
+	const [selectedFieldType, setSelectedFieldType] = useState<string>('single-line-text');
+	const [editingField, setEditingField] = useState<CustomerField | null>(null);
 
 	const availableFieldTypes: FieldType[] = [
 		{ id: 'single-line-text', name: 'Single-Line Text', description: 'Add a single line of text' },
@@ -51,20 +52,42 @@ export default function CustomerBookPage() {
 	};
 
 	const handleAddField = (fieldType: FieldType) => {
+		setEditingField(null);
 		setSelectedFieldType(fieldType.id);
 		setIsModalOpen(true);
 	};
 
+	const handleEditField = (field: CustomerField) => {
+		setEditingField(field);
+		setSelectedFieldType(field.type);
+		setIsModalOpen(true);
+	};
+
 	const handleAddFieldFromModal = (fieldData: { name: string; type: string; required: boolean }) => {
-		const newField: CustomerField = {
-			id: Date.now().toString(),
-			name: fieldData.name,
-			type: fieldData.type,
-			required: fieldData.required,
-		};
-		updateCustomerBookSettings({
-			configuredFields: [...customerBookSettings.configuredFields, newField]
-		});
+		if (editingField) {
+			const updatedField: CustomerField = {
+				...editingField,
+				name: fieldData.name,
+				type: fieldData.type,
+				required: fieldData.required,
+			};
+			updateCustomerBookSettings({
+				configuredFields: customerBookSettings.configuredFields.map(field =>
+					field.id === editingField.id ? updatedField : field
+				)
+			});
+			setEditingField(null);
+		} else {
+			const newField: CustomerField = {
+				id: Date.now().toString(),
+				name: fieldData.name,
+				type: fieldData.type,
+				required: fieldData.required,
+			};
+			updateCustomerBookSettings({
+				configuredFields: [...customerBookSettings.configuredFields, newField]
+			});
+		}
 	};
 
 	const renderFieldPreview = (fieldType: FieldType) => {
@@ -221,7 +244,11 @@ export default function CustomerBookPage() {
 					<Button
 						variant="primary"
 						size="md"
-						onClick={() => setIsModalOpen(true)}
+						onClick={() => {
+							setEditingField(null);
+							setSelectedFieldType('single-line-text');
+							setIsModalOpen(true);
+						}}
 						className="flex items-center gap-2 w-full sm:w-auto justify-center"
 					>
 						<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -318,7 +345,15 @@ export default function CustomerBookPage() {
 											</span>
 										)}
 									</td>
-									<td className="py-4 px-6">
+									<td className="py-4 px-6 flex items-center gap-2">
+										<button
+											onClick={() => handleEditField(field)}
+											className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+										>
+											<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+												<path d="M11 2L14 5L4.5 14.5H1.5V11.5L11 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+											</svg>
+										</button>
 										<button
 											onClick={() => handleDeleteField(field.id)}
 											className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
@@ -396,6 +431,7 @@ export default function CustomerBookPage() {
 				onClose={() => setIsModalOpen(false)}
 				onAddField={handleAddFieldFromModal}
 				fieldType={selectedFieldType}
+				initialData={editingField}
 			/>
 		</div>
 	);

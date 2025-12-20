@@ -41,7 +41,6 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
-
 	userIsOnline = true,
 	onNotificationsClick,
 	onStatusClick,
@@ -95,9 +94,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	});
 
 	// Notifications integration
-	const { data: notificationsData } = useGetNotificationsByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
+	const { data: notificationsData, refetch: refetchNotifications } = useGetNotificationsByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
 		skip: !selectedLineOfBusinessId,
-		pollingInterval: 30000 // Poll every 30 seconds as fallback
+		// pollingInterval: 30000 // Poll every 30 seconds as fallback
 	});
 
 	const [markAsRead] = useMarkNotificationAsReadMutation();
@@ -109,8 +108,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	useEffect(() => {
 		if (lineOfBusinessData && lineOfBusinessData.lineOfBusinesses) {
 			const options = lineOfBusinessData.lineOfBusinesses.map((lob: { _id: string; lineOfBusinessName: string }) => ({
-				value: lob._id,
-				label: lob.lineOfBusinessName
+				value: lob?._id,
+				label: lob?.lineOfBusinessName
 			}));
 			setLobOptions(options);
 
@@ -136,12 +135,20 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 			dispatch(statusApi.util.invalidateTags(['Statuses']));
 		};
 
+		// Listen for notification updates
+		const handleNotificationUpdate = () => {
+			console.log("Socket: Notification updated");
+			refetchNotifications();
+		};
+
 		socket.on("statusListUpdated", handleStatusListUpdate);
+		socket.on("notificationUpdated", handleNotificationUpdate);
 
 		return () => {
 			socket.off("statusListUpdated", handleStatusListUpdate);
+			socket.off("notificationUpdated", handleNotificationUpdate);
 		};
-	}, [socket, selectedLineOfBusinessId, dispatch]);
+	}, [socket, selectedLineOfBusinessId, dispatch, refetchNotifications]);
 
 	// Track navigation to prevent sounds during page switches
 	useEffect(() => {

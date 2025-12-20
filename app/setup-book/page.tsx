@@ -6,13 +6,18 @@ import Search from '@/components/ui/Search';
 import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
 import Checkbox from '@/components/ui/Checkbox';
-import { useSetup } from '@/contexts/SetupContext';
 import PageHeading from '@/components/ui/PageHeading';
-import { UploadIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
+import { UploadIcon, Pencil1Icon, TrashIcon, PlusIcon } from '@radix-ui/react-icons';
 import Input from '@/components/ui/Input';
-import UploadBase from '@/components/ui/UploadBaseEmployee';
+import UploadBaseSetupBook from '@/components/ui/UploadBaseSetupBook';
+import CreateRecordModal from '@/components/ui/CreateRecordModal';
 import SelectedRecordsDrawerContent from './SelectedRecordsDrawerContent';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import SampleCsvDownloader from '@/components/ui/SampleCsvDownloader';
+import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
+import EditRecordModal from '@/components/ui/EditRecordModal';
+import { useGetSetupBookByLineOfBusinessIdQuery, useDeleteSetupBookRecordsMutation, useGetSetupBookBySearchIdQuery } from '@/store/services/setupBookApi';
+import { toast } from 'sonner';
 
 interface FieldDefinition {
 	id: string;
@@ -29,38 +34,86 @@ interface SetupBookRecord {
 
 const SetupBookPage: React.FC = () => {
 	const { lineOfBusinessData } = useLineOfBusiness();
+	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
+	// Assuming searchId is available in lineOfBusinessData.lineOfBusiness.customerBookSettings or similar
+	// Based on user request, we need to make sure searchId is included. 
+	// I'll check where searchId might come from. If not in context, I'll assume it needs to be passed or is part of settings.
+	// For now, let's assume it's part of the lineOfBusinessData or we need to extract it.
+	// Let's look at the console log from line 39: console.log('lineOfBusiness-----0', setupBookHeaderFields)
+	// The user mentioned "searchId". Let's check if it's in lineOfBusinessData.
+	const searchId = lineOfBusinessData?.lineOfBusiness?.customerBookSettings?.searchId;
+
+	const setupBookHeaderFields = lineOfBusinessData?.lineOfBusiness?.customerBookSettings?.configuredFields
+
+	console.log('lineOfBusiness-----0', setupBookHeaderFields)
+
+
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 	const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 	const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
 	const [editingRecord, setEditingRecord] = useState<SetupBookRecord | null>(null);
 	const [deleteRecord, setDeleteRecord] = useState<{ id: string; name: string } | null>(null);
-	const [fieldDefinitions, setFieldDefinitions] = useState<FieldDefinition[]>([
-		{ id: '1', name: 'Name', type: 'text', required: true },
-		{ id: '2', name: 'Phone', type: 'phone', required: true },
-		{ id: '3', name: 'Email', type: 'email', required: false },
-	]);
-	const [records, setRecords] = useState<SetupBookRecord[]>([
-		{ id: '1', Name: 'John Doe', Phone: '08012345678', Email: 'john.doe@example.com' },
-		{ id: '2', Name: 'Jane Smith', Phone: '08087654321', Email: 'jane.smith@example.com' },
-		{ id: '3', Name: 'Bob Johnson', Phone: '08011223344', Email: 'bob.johnson@example.com' },
-		{ id: '4', Name: 'Alice Williams', Phone: '08055667788', Email: 'alice.williams@example.com' },
-		{ id: '5', Name: 'Charlie Brown', Phone: '08099887766', Email: 'charlie.brown@example.com' },
-		{ id: '6', Name: 'David Miller', Phone: '08044332211', Email: 'david.miller@example.com' },
-	]);
+	const [fieldDefinitions, setFieldDefinitions] = useState<FieldDefinition[]>(setupBookHeaderFields || []);
+	
+	// Determine which query to use based on searchId presence
+	// If searchId is available, use useGetSetupBookBySearchIdQuery
+	// Otherwise, fallback to useGetSetupBookByLineOfBusinessIdQuery (or keep existing logic)
+	// Assuming if searchId exists, we should prioritize it as per user instruction "add getSetupBookBySearchId"
+	
+	const { data: recordsBySearchId, isLoading: isFetchingBySearchId } = useGetSetupBookBySearchIdQuery(
+		{
+			searchId: searchId || '',
+			search: searchTerm,
+			page: currentPage,
+			limit: 10
+		},
+		{ skip: !searchId }
+	);
+
+	const { data: recordsByLobId, isLoading: isFetchingByLobId } = useGetSetupBookByLineOfBusinessIdQuery(
+		{
+			id: lobId,
+			search: searchTerm,
+			page: currentPage,
+			limit: 10
+		},
+		{ skip: !!searchId || !lobId } // Skip if searchId is present (since we use the other query) or lobId is missing
+	);
+
+	const apiRecords = searchId ? recordsBySearchId : recordsByLobId;
+	const isFetchingRecords = searchId ? isFetchingBySearchId : isFetchingByLobId;
+
+	useEffect(() => {
+		if (setupBookHeaderFields) {
+			setFieldDefinitions(setupBookHeaderFields);
+		}
+	}, [setupBookHeaderFields]);
+
+	const [records, setRecords] = useState<SetupBookRecord[]>([]);
+
+	useEffect(() => {
+		if (apiRecords?.data) {
+			setRecords(apiRecords.data as unknown as SetupBookRecord[]);
+		}
+	}, [apiRecords]);
+
+	console.log('lineOfBusinessData----', lineOfBusinessData)
 
 	const handleUpload = () => {
 		setIsUploadModalOpen(true);
 	};
 
-	const handleUploadComplete = (data: Record<string, string>[]) => {
-		console.log('Upload completed with data:', data);
-		// Process the uploaded data and update records
-		// You can add logic here to add the new records to the state
-		setIsUploadModalOpen(false);
+	const handleCreateRecord = () => {
+		setIsCreateModalOpen(true);
+	};
+
+	const handleUploadComplete = async (data: Record<string, string>[], file?: File) => {
+		// setIsUploadModalOpen(false);
 	};
 
 	const handleEditRecord = (record: SetupBookRecord) => {
@@ -90,34 +143,42 @@ const SetupBookPage: React.FC = () => {
 		});
 	};
 
-	const handleConfirmDelete = () => {
-		if (deleteRecord) {
-			setRecords(prevRecords => prevRecords.filter(record => record.id !== deleteRecord.id));
-			// Remove from selected if it was selected
-			setSelectedRecords(prev => {
-				const newSelected = new Set(prev);
-				newSelected.delete(deleteRecord.id);
-				if (newSelected.size === 0) {
-					setIsDrawerOpen(false);
-				}
-				return newSelected;
-			});
-			setDeleteRecord(null);
+	const [deleteSetupBookRecords] = useDeleteSetupBookRecordsMutation();
+
+	const handleConfirmDelete = async () => {
+		if (deleteRecord && lobId) {
+			try {
+				await deleteSetupBookRecords({
+					lineOfBusinessId: lobId,
+					id: deleteRecord.id
+				}).unwrap();
+
+				toast.success("Record deleted successfully");
+
+				// Remove from selected if it was selected
+				setSelectedRecords(prev => {
+					const newSelected = new Set(prev);
+					newSelected.delete(deleteRecord.id);
+					if (newSelected.size === 0) {
+						setIsDrawerOpen(false);
+					}
+					return newSelected;
+				});
+				setDeleteRecord(null);
+			} catch (error: any) {
+				toast.error("Failed to delete record", {
+					description: error?.data?.message || "An error occurred while deleting the record"
+				});
+			}
+		} else if (!lobId) {
+			toast.error("Missing Line of Business ID");
 		}
 	};
 
-	const filteredRecords = records.filter(record => {
-		if (!searchTerm) return true;
-		const searchLower = searchTerm.toLowerCase();
-		return fieldDefinitions.some(field => {
-			const value = record[field.name];
-			return value && String(value).toLowerCase().includes(searchLower);
-		});
-	});
+	const filteredRecords = records;
 
-	const totalPages = Math.ceil(filteredRecords.length / 10);
-	const startIndex = (currentPage - 1) * 10;
-	const paginatedRecords = filteredRecords.slice(startIndex, startIndex + 10);
+	const totalPages = apiRecords?.pagination?.totalPages || 1;
+	const paginatedRecords = records;
 
 	const handleSelectAll = (checked: boolean) => {
 		if (checked) {
@@ -183,6 +244,19 @@ const SetupBookPage: React.FC = () => {
 					showClearButton={true}
 				/>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
+					<SampleCsvDownloader
+						fields={setupBookHeaderFields}
+						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+					/>
+					<Button
+						size="md"
+						onClick={handleCreateRecord}
+						variant="outline"
+						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+					>
+						<PlusIcon className="w-4 h-4" />
+						Create Record
+					</Button>
 					<Button
 						size="md"
 						onClick={handleUpload}
@@ -223,13 +297,13 @@ const SetupBookPage: React.FC = () => {
 										size="medium"
 									/>
 								</th>
-								{fieldDefinitions.map((field) => (
+								{fieldDefinitions?.map((field) => (
 									<th
-										key={field.id}
+										key={field?.id}
 										className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
 										style={{ color: 'var(--text-primary)' }}
 									>
-										{field.name}
+										{field?.name}
 									</th>
 								))}
 								<th
@@ -247,9 +321,9 @@ const SetupBookPage: React.FC = () => {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							{filteredRecords.length === 0 ? (
+							{filteredRecords?.length === 0 ? (
 								<tr>
-									<td colSpan={fieldDefinitions.length + 2} className="px-6 py-12 text-center">
+									<td colSpan={fieldDefinitions?.length + 2} className="px-6 py-12 text-center">
 										<div className="flex flex-col items-center justify-center">
 											<div className="mb-4">
 												<Icon name="upload-cloud" size="4xl" className="text-gray-300 dark:text-gray-600" />
@@ -289,7 +363,7 @@ const SetupBookPage: React.FC = () => {
 												size="medium"
 											/>
 										</td>
-										{fieldDefinitions.map((field) => (
+										{fieldDefinitions?.map((field) => (
 											<td
 												key={field.id}
 												className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
@@ -343,7 +417,7 @@ const SetupBookPage: React.FC = () => {
 			</div>
 
 			{/* Pagination */}
-			{filteredRecords.length > 0 && (
+			{filteredRecords?.length > 0 && (
 				<Pagination
 					currentPage={currentPage}
 					totalPages={totalPages}
@@ -356,173 +430,45 @@ const SetupBookPage: React.FC = () => {
 			)}
 
 			{/* Upload Modal */}
-			<UploadBase
+			<UploadBaseSetupBook
 				isOpen={isUploadModalOpen}
 				onClose={() => setIsUploadModalOpen(false)}
 				showButton={false}
 				onUploadComplete={handleUploadComplete}
+				searchId={searchId}
+			/>
+
+			{/* Create Record Modal */}
+			<CreateRecordModal
+				isOpen={isCreateModalOpen}
+				onClose={() => setIsCreateModalOpen(false)}
+				fieldDefinitions={fieldDefinitions}
+				searchId={searchId}
+				onSuccess={() => {
+					// Optionally refresh the list or handle success
+					console.log('Record created successfully');
+				}}
 			/>
 
 			{/* Edit Record Modal */}
-			{editingRecord && (
-				<div
-					className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-					onClick={() => setEditingRecord(null)}
-				>
-					<div
-						className="dark:bg-gray-800 w-full max-w-2xl mx-4 shadow-lg"
-						style={{ backgroundColor: 'var(--accent-white)' }}
-						onClick={(e) => e.stopPropagation()}
-					>
-						{/* Modal Header */}
-						<div
-							className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6"
-							style={{ borderColor: 'var(--light-gray)' }}
-						>
-							<h2
-								className="font-inter text-xl font-semibold dark:text-gray-100"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								Edit Record
-							</h2>
-							<button
-								onClick={() => setEditingRecord(null)}
-								className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-								style={{ color: 'var(--text-tertiary)' }}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.color = 'var(--text-secondary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.color = 'var(--text-tertiary)';
-								}}
-							>
-								<Icon name="Close_round_light" size="lg" />
-							</button>
-						</div>
-
-						{/* Modal Form */}
-						<div className="p-6 space-y-4">
-							{fieldDefinitions.map((field) => (
-								<Input
-									key={field.id}
-									label={field.name}
-									placeholder={`Enter ${field.name}`}
-									value={String(editingRecord[field.name] || '')}
-									onChange={(value) => {
-										setEditingRecord(prev => prev ? { ...prev, [field.name]: value } : null);
-									}}
-									type={field.type === 'phone' ? 'tel' : field.type === 'email' ? 'email' : field.type === 'number' ? 'number' : 'text'}
-									required={field.required}
-								/>
-							))}
-						</div>
-
-						{/* Modal Footer */}
-						<div
-							className="flex justify-end gap-3 p-6 border-t dark:border-gray-700"
-							style={{ borderColor: 'var(--light-gray)' }}
-						>
-							<Button
-								variant="outline"
-								size="md"
-								onClick={() => setEditingRecord(null)}
-							>
-								Cancel
-							</Button>
-							<Button
-								variant="primary"
-								size="md"
-								onClick={() => {
-									handleSaveEdit(editingRecord);
-								}}
-							>
-								Save Changes
-							</Button>
-						</div>
-					</div>
-				</div>
-			)}
+			<EditRecordModal
+				isOpen={!!editingRecord}
+				record={editingRecord}
+				fieldDefinitions={fieldDefinitions}
+				onClose={() => setEditingRecord(null)}
+				onSave={(updatedRecord) => {
+					handleSaveEdit(updatedRecord);
+					setEditingRecord(null);
+				}}
+			/>
 
 			{/* Delete Record Modal */}
-			{deleteRecord && (
-				<div
-					className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-					onClick={() => setDeleteRecord(null)}
-				>
-					<div
-						className="dark:bg-gray-800 w-full max-w-md mx-4 shadow-lg"
-						style={{ backgroundColor: 'var(--accent-white)' }}
-						onClick={(e) => e.stopPropagation()}
-					>
-						{/* Modal Header */}
-						<div
-							className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6"
-							style={{ borderColor: 'var(--light-gray)' }}
-						>
-							<h2
-								className="font-inter text-xl font-semibold dark:text-gray-100"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								Delete Record
-							</h2>
-							<button
-								onClick={() => setDeleteRecord(null)}
-								className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-								style={{ color: 'var(--text-tertiary)' }}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.color = 'var(--text-secondary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.color = 'var(--text-tertiary)';
-								}}
-							>
-								<Icon name="Close_round_light" size="lg" />
-							</button>
-						</div>
-
-						{/* Modal Content */}
-						<div className="p-6">
-							<p
-								className="text-sm dark:text-gray-300 mb-6"
-								style={{ color: 'var(--text-secondary)' }}
-							>
-								Are you sure you want to delete the record <strong>{deleteRecord.name}</strong>? This action cannot be undone.
-							</p>
-						</div>
-
-						{/* Modal Footer */}
-						<div
-							className="flex justify-end gap-3 p-6 border-t dark:border-gray-700"
-							style={{ borderColor: 'var(--light-gray)' }}
-						>
-							<Button
-								variant="outline"
-								size="md"
-								onClick={() => setDeleteRecord(null)}
-							>
-								Cancel
-							</Button>
-							<Button
-								variant="primary"
-								size="md"
-								onClick={handleConfirmDelete}
-								style={{
-									backgroundColor: '#DC2626',
-									color: 'white'
-								}}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.backgroundColor = '#B91C1C';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.backgroundColor = '#DC2626';
-								}}
-							>
-								Delete
-							</Button>
-						</div>
-					</div>
-				</div>
-			)}
+			<DeleteRecordModal
+				isOpen={!!deleteRecord}
+				recordName={deleteRecord?.name || ''}
+				onClose={() => setDeleteRecord(null)}
+				onConfirm={handleConfirmDelete}
+			/>
 
 			{/* Selected Records Drawer */}
 			{shouldRenderDrawer && (

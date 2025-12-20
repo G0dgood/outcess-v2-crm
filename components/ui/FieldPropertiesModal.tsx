@@ -12,6 +12,7 @@ interface FieldPropertiesModalProps {
 	onClose: () => void;
 	onAddField: (fieldData: FieldData) => void;
 	fieldType?: string;
+	initialData?: FieldData | null;
 }
 
 interface FieldData {
@@ -21,14 +22,15 @@ interface FieldData {
 }
 
 const fieldTypeOptions = [
-	{ value: 'text', label: 'Text Field' },
-	{ value: 'email', label: 'Email Field' },
-	{ value: 'phone', label: 'Phone Field' },
-	{ value: 'number', label: 'Number Field' },
-	{ value: 'date', label: 'Date Field' },
-	{ value: 'textarea', label: 'Multi-Line Text' },
+	{ value: 'single-line-text', label: 'Single-Line Text' },
+	{ value: 'email', label: 'Email' },
+	{ value: 'phone', label: 'Phone' },
+	{ value: 'number', label: 'Number' },
+	{ value: 'date', label: 'Date' },
+	{ value: 'date-time', label: 'Date/Time' },
+	{ value: 'multi-line-text', label: 'Multi-Line Text' },
 	{ value: 'dropdown', label: 'Drop-down' },
-	{ value: 'radio', label: 'Radio Select' },
+	{ value: 'radio-select', label: 'Radio Select' },
 	{ value: 'checkbox', label: 'Checkbox' },
 ];
 
@@ -36,7 +38,8 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 	isOpen,
 	onClose,
 	onAddField,
-	fieldType = 'text'
+	fieldType = 'single-line-text',
+	initialData = null
 }) => {
 	const [fieldName, setFieldName] = useState('');
 	const [selectedType, setSelectedType] = useState(fieldType);
@@ -45,11 +48,17 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 	// Reset form when modal opens
 	useEffect(() => {
 		if (isOpen) {
-			setFieldName('');
-			setSelectedType(fieldType);
-			setIsRequired(false);
+			if (initialData) {
+				setFieldName(initialData.name);
+				setSelectedType(initialData.type);
+				setIsRequired(initialData.required);
+			} else {
+				setFieldName('');
+				setSelectedType(fieldType);
+				setIsRequired(false);
+			}
 		}
-	}, [isOpen, fieldType]);
+	}, [isOpen, fieldType, initialData]);
 
 	const handleSubmit = () => {
 		if (!fieldName.trim()) return;
@@ -70,9 +79,10 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 			case 'phone': return 'Enter phone number';
 			case 'number': return 'Enter number';
 			case 'date': return 'Select date';
-			case 'textarea': return 'Enter text...';
+			case 'date-time': return 'Select date & time';
+			case 'multi-line-text': return 'Enter text...';
 			case 'dropdown': return 'Select option';
-			case 'radio': return 'Select option';
+			case 'radio-select': return 'Select option';
 			case 'checkbox': return 'Select options';
 			default: return 'Enter text';
 		}
@@ -83,7 +93,7 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 		const placeholder = getPlaceholderText();
 
 		switch (selectedType) {
-			case 'textarea':
+			case 'multi-line-text':
 				return (
 					<div>
 						<label 
@@ -127,7 +137,7 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 						</select>
 					</div>
 				);
-			case 'radio':
+			case 'radio-select':
 				return (
 					<div>
 						<label 

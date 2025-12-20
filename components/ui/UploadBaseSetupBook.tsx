@@ -1,15 +1,17 @@
 "use client";
 import React, { useState, useRef } from "react";
 import { Cross2Icon, UploadIcon } from "@radix-ui/react-icons";
-import { useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
 import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
+import { useCreateSetupBookMutation } from "@/store/services/setupBookApi";
+import UploadAlert from "@/components/ui/UploadAlert";
 
 interface UploadBaseProps {
   isOpen?: boolean;
   onClose?: () => void;
   showButton?: boolean;
   onUploadComplete?: (data: CsvRow[], file?: File) => void;
+  searchId?: string;
 }
 
 // Simple CSV parser function
@@ -61,32 +63,36 @@ const parseCSV = (text: string, header: boolean = true): CsvRow[] => {
   return data;
 };
 
-const UploadBase: React.FC<UploadBaseProps> = ({
+const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
   isOpen: externalIsOpen,
   onClose: externalOnClose,
   showButton = true,
   onUploadComplete,
+  searchId,
 }) => {
   const { lineOfBusinessData } = useLineOfBusiness();
+  const lobId = lineOfBusinessData?.lineOfBusiness?._id;
+  const companyId = lineOfBusinessData?.lineOfBusiness
+    ?.companyId;
+
+  console.log('companyId--->', companyId)
+
   const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
   const [progress, setProgress] = useState(0);
   const [show, setShow] = useState(false);
   const [jsonData, setJSONData] = useState<CsvRow[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [isSuccess] = useState(false);
-  const [isError] = useState(false);
-  const [isLoading] = useState(false);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
-  type ApiError = { data?: { message?: string } };
-  const [error] = useState<ApiError | null>(null);
+
+  const [createSetupBook, { isLoading, isSuccess, isError, error, reset }] = useCreateSetupBookMutation();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-
-
+  console.log('lineOfBusinessData--->', lineOfBusinessData)
   // Use external control if provided, otherwise use internal state
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : show;
   const handleClose = () => {
+    reset(); // Reset the mutation state
     if (externalOnClose) {
       externalOnClose();
     } else {
@@ -98,9 +104,18 @@ const UploadBase: React.FC<UploadBaseProps> = ({
     setFileToUpload(null);
   };
 
+  const handleAlertDismiss = () => {
+    reset(); // Reset the mutation state
+    setProgress(0);
+    setJSONData([]);
+    setIsDragOver(false);
+    setFileToUpload(null);
+  };
+
   const handleShow = () => setShow(true);
 
   const onClickReset = () => {
+    reset(); // Reset the mutation state
     setProgress(0);
     setJSONData([]);
     setIsDragOver(false);
@@ -189,40 +204,73 @@ const UploadBase: React.FC<UploadBaseProps> = ({
 
   const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!fileToUpload) return;
 
     try {
       setProgress(30);
 
+      let fileToSend = fileToUpload;
+
+      if (jsonData.length > 0 && searchId) {
+        // Reconstruct CSV with searchId
+        const headers = Object.keys(jsonData[0]);
+        const newHeaders = [...headers, 'searchId'];
+
+        const csvLines = jsonData.map(row => {
+          const values = headers.map(header => {
+            let val = row[header] || '';
+            if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+              val = `"${val.replace(/"/g, '""')}"`;
+            }
+            return val;
+          });
+          values.push(searchId);
+          return values.join(',');
+        });
+
+        const newContent = [newHeaders.join(','), ...csvLines].join('\n');
+        const blob = new Blob([newContent], { type: 'text/csv' });
+        fileToSend = new File([blob], fileToUpload.name, { type: 'text/csv' });
+      }
+
+      const formData = new FormData();
+
+      // if (companyId && typeof companyId === 'object') {
+      //   companyId = companyId._id || companyId.id;
+      // }
+
+      if (!companyId || !lobId ) {
+        toast.error("Missing required information", {
+          description: "Line of Business ID, Company ID, or Search ID is missing.",
+          duration: 5000,
+        });
+        setProgress(0);
+        return;
+      }
+
+      formData.append('companyId', companyId);
+      formData.append('lineOfBusinessId', lobId);
+      formData.append('searchId', searchId);
+      formData.append('file', fileToSend);
+
+      await createSetupBook(formData).unwrap();
 
       setProgress(100);
 
-      // Extract data from the API response
-      const { created, updated, failed } = { created: [], updated: [], failed: [] };
-
-      const successCount = created.length;
-      const skippedCount = updated.length;
-      const failedCount = failed.length;
-      const skippedDetails = updated.join(", ");
-      const failedDetails = failed
-        .map((item: { email?: string; reason?: string }) => `${item.email || "Unknown email"}: ${item.reason || "Unknown reason"}`)
-        .join("; ");
-
-      if (successCount || skippedCount || failedCount) {
-        toast.success("Upload summary", {
-          description: `Success: ${successCount}, Skipped: ${skippedCount}${skippedDetails ? ` (${skippedDetails})` : ""}, Failed: ${failedCount}${failedDetails ? ` (${failedDetails})` : ""}`,
-          duration: 5000,
-        });
-      }
+      toast.success("Upload successful", {
+        description: "Setup book created successfully",
+        duration: 5000,
+      });
 
       // Call onUploadComplete callback if provided
-      if (onUploadComplete && jsonData.length > 0) {
-        onUploadComplete(jsonData, fileToUpload || undefined);
+      if (onUploadComplete) {
+        onUploadComplete(jsonData, fileToUpload);
       }
-    } catch (err: unknown) {
+    } catch (err: any) {
       setProgress(0);
 
       toast.error("Upload Failed", {
-        description: (typeof err === "object" && err && (err as { data?: { message?: string } }).data?.message) || "An error occurred while uploading employees",
+        description: err?.data?.message || "An error occurred while uploading records",
         duration: 5000,
       });
     }
@@ -233,7 +281,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
       {showButton && (
         <button
           onClick={handleShow}
-          className="cursor-pointer flex flex-col md:flex-row justify-center items-center px-2 py-[8px] gap-2 md:w-[150px] h-[40px] font-normal text-[14px] leading-[150%] text-[#FFFFFF]"
+          className="cursor-pointer flex flex-col md:flex-row justify-center items-center px-2 py-8px gap-2 md:w-[150px] h-40px font-normal text-[14px] leading-[150%] text-[#FFFFFF]"
           style={{ backgroundColor: primaryColor }}
         >
           Upload
@@ -254,7 +302,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                 className="text-xl font-semibold dark:text-gray-100"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Upload CSV File
+                Upload Setup Book CSV
               </h2>
               <button
                 onClick={handleClose}
@@ -276,62 +324,19 @@ const UploadBase: React.FC<UploadBaseProps> = ({
 
             <form className="mt-4 space-y-4" onSubmit={submitHandler}>
               {isError && (
-                <div
-                  className="dark:bg-red-900/30 dark:text-red-400 px-4 py-2 relative flex justify-between items-center"
-                  style={{
-                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                    color: '#DC2626'
-                  }}
-                >
-                  <p>
-                    <i className="fas fa-exclamation-circle mr-2" />{" "}
-                    {error?.data?.message || "Upload failed"}
-                  </p>
-                  <button
-                    onClick={onClickReset}
-                    className="dark:text-red-400 dark:hover:text-red-300"
-                    style={{ color: '#DC2626' }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = '#991B1B';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = '#DC2626';
-                    }}
-                  >
-                    <i className="fas fa-times" />
-                  </button>
-                </div>
+                <UploadAlert
+                  type="error"
+                  message={(error as any)?.data?.message || "Upload failed"}
+                  onClose={onClickReset}
+                />
               )}
 
               {isSuccess && (
-                <div
-                  className="dark:bg-green-900/30 dark:text-green-400 px-4 py-2 relative flex justify-between items-center"
-                  style={{
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    color: '#22C55E'
-                  }}
-                >
-                  <p>
-                    <i className="fas fa-check-circle mr-2" /> Upload
-                    successful!
-                  </p>
-                  <button
-                    onClick={onClickReset}
-                    className="dark:text-gray-400 dark:hover:text-red-400 text-lg"
-                    style={{ color: 'var(--text-tertiary)' }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = '#DC2626';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = 'var(--text-tertiary)';
-                    }}
-                  >
-                    <Cross2Icon
-                      className="w-5 h-5 dark:text-gray-400 dark:hover:text-gray-200"
-                      style={{ color: 'var(--text-tertiary)' }}
-                    />
-                  </button>
-                </div>
+                <UploadAlert
+                  type="success"
+                  message="Upload successful!"
+                  onClose={handleAlertDismiss}
+                />
               )}
 
               <div
@@ -466,10 +471,8 @@ const UploadBase: React.FC<UploadBaseProps> = ({
           </div>
         </div>
       )}
-
-
     </>
   );
 };
 
-export default UploadBase;
+export default UploadBaseSetupBook;

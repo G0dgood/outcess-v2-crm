@@ -37,7 +37,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 			{/* Desktop SideNav */}
 			<Suspense fallback={null}>
 				<DashboardSideNav
-					activeItem="report"
+					activeItem="configuration"
 					isMobileOpen={false}
 					onMobileClose={() => { }}
 				/>
@@ -46,7 +46,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 			{/* Mobile SideNav */}
 			<Suspense fallback={null}>
 				<MobileSideNav
-					activeItem="report"
+					activeItem="configuration"
 					isOpen={isMobileMenuOpen}
 					onClose={closeMobileMenu}
 				/>

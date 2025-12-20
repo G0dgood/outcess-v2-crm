@@ -1,19 +1,22 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GearIcon } from '@radix-ui/react-icons';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetLineOfBusinessByCompanyIdForheaderQuery } from '@/store/services/lineOfBusinessApi';
 import { Skeleton } from '@/components/ui/skeleton';
+import Button from '@/components/ui/Button';
+import Search from '@/components/ui/Search';
+import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 
 export default function ConfigurationPage() {
 	const router = useRouter();
 	const { user } = useUserInfo();
 	const { setSelectedLineOfBusinessId } = useLineOfBusiness();
 	const companyId = user?.companyId || user?.company?._id || '';
-
+	const [searchTerm, setSearchTerm] = useState('');
 	const { data: lineOfBusinessData, isLoading } = useGetLineOfBusinessByCompanyIdForheaderQuery(companyId, {
 		skip: !companyId
 	});
@@ -22,26 +25,7 @@ export default function ConfigurationPage() {
 		return lineOfBusinessData?.lineOfBusinesses || [];
 	}, [lineOfBusinessData]);
 
-	if (isLoading) {
-		return (
-			<div className="p-6">
-				<div className="mb-6">
-					<Skeleton className="h-8 w-48 mb-2" />
-					<Skeleton className="h-4 w-64" />
-				</div>
-				<div className="border rounded-lg overflow-hidden">
-					<div className="p-4 border-b">
-						<Skeleton className="h-6 w-full" />
-					</div>
-					<div className="p-4">
-						<Skeleton className="h-12 w-full mb-2" />
-						<Skeleton className="h-12 w-full mb-2" />
-						<Skeleton className="h-12 w-full" />
-					</div>
-				</div>
-			</div>
-		);
-	}
+	 
 
 	return (
 		<div>
@@ -61,6 +45,32 @@ export default function ConfigurationPage() {
 				</p>
 			</div>
 
+			<div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+				<Search
+					placeholder="Search"
+					value={searchTerm}
+					onChange={setSearchTerm}
+					className="w-full sm:w-auto"
+					maxWidth="w-full"
+					onSearch={(value) => console.log('Search triggered:', value)}
+					onClear={() => console.log('Search cleared')}
+					showClearButton={true}
+				/>
+				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
+					<Button
+						variant="primary"
+						size="md"
+						onClick={() => {
+							setSelectedLineOfBusinessId(null);
+							localStorage.removeItem('peoplely-setup-data');
+							router.push('/setup');
+						}}
+						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+					>
+						Line of Businesses
+					</Button>
+				</div>
+			</div>
 			{/* Line of Business Table */}
 			<div
 				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
@@ -128,18 +138,11 @@ export default function ConfigurationPage() {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							{lineOfBusinesses.length === 0 ? (
-								<tr>
-									<td
-										colSpan={4}
-										className="px-6 py-12 text-center dark:text-gray-400"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										No line of businesses found.
-									</td>
-								</tr>
-							) : (
-								lineOfBusinesses.map((lob: { _id: string; lineOfBusinessName: string; createdAt?: string }) => (
+							{isLoading ? (
+								<SVGLoaderFetch colSpan={8} text={''} />
+							) : lineOfBusinesses.length === 0 ? (
+								<NoRecordFound colSpan={8} />
+							) : lineOfBusinesses.map((lob: { _id: string; lineOfBusinessName: string; createdAt?: string }) => (
 									<tr
 										key={lob._id}
 										className="dark:hover:bg-gray-700 transition-colors"
@@ -184,8 +187,7 @@ export default function ConfigurationPage() {
 											</button>
 										</td>
 									</tr>
-								))
-							)}
+								)) }
 						</tbody>
 					</table>
 				</div>
