@@ -21,6 +21,12 @@ interface CreateRecordModalProps {
 	searchId?: string;
 }
 
+interface ApiError {
+	data?: {
+		message?: string;
+	};
+}
+
 const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 	isOpen,
 	fieldDefinitions,
@@ -28,11 +34,13 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 	onSuccess,
 	searchId,
 }) => {
-	const [formData, setFormData] = useState<Record<string, any>>({});
+	const [formData, setFormData] = useState<Record<string, string | number | boolean>>({});
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
 	const companyIdRaw = lineOfBusinessData?.lineOfBusiness?.companyId;
-	const companyId = typeof companyIdRaw === 'object' ? (companyIdRaw as any)._id || (companyIdRaw as any).id : companyIdRaw;
+	const companyId = typeof companyIdRaw === 'object' && companyIdRaw !== null
+		? (companyIdRaw as { _id?: string; id?: string })._id || (companyIdRaw as { _id?: string; id?: string }).id
+		: companyIdRaw as string | undefined;
 
 	const [manualSearchId, setManualSearchId] = useState(searchId || '');
 	const [createSetupBook, { isLoading }] = useCreateSetupBookMutation();
@@ -95,9 +103,10 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 				toast.success("Record created successfully");
 				onSuccess();
 				onClose();
-			} catch (error: any) {
+			} catch (error: unknown) {
+				const apiError = error as ApiError;
 				toast.error("Failed to create record", {
-					description: error?.data?.message || "An error occurred while creating the record"
+					description: apiError?.data?.message || "An error occurred while creating the record"
 				});
 			}
 		} else {

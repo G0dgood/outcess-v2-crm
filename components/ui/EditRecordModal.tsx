@@ -15,10 +15,16 @@ interface FieldDefinition {
 
 interface EditRecordModalProps {
 	isOpen: boolean;
-	record: Record<string, any> | null;
+	record: Record<string, string | number | boolean | null> | null;
 	fieldDefinitions: FieldDefinition[];
 	onClose: () => void;
-	onSave: (updatedRecord: Record<string, any>) => void;
+	onSave: (updatedRecord: Record<string, string | number | boolean | null>) => void;
+}
+
+interface ApiError {
+	data?: {
+		message?: string;
+	};
 }
 
 const EditRecordModal: React.FC<EditRecordModalProps> = ({
@@ -28,7 +34,7 @@ const EditRecordModal: React.FC<EditRecordModalProps> = ({
 	onClose,
 	onSave,
 }) => {
-	const [formData, setFormData] = useState<Record<string, any> | null>(null);
+	const [formData, setFormData] = useState<Record<string, string | number | boolean | null> | null>(null);
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
 	const [updateSetupBookRecords, { isLoading }] = useUpdateSetupBookRecordsMutation();
@@ -48,26 +54,27 @@ const EditRecordModal: React.FC<EditRecordModalProps> = ({
 	const handleSave = async () => {
 		if (formData && lobId) {
 			try {
-                const { id, ...updateData } = formData;
+				const { id, ...updateData } = formData;
 				await updateSetupBookRecords({
 					lineOfBusinessId: lobId,
 					data: {
-             id: id,
-             update: updateData
-           }
+						id: id,
+						update: updateData
+					}
 				}).unwrap();
-				
+
 				toast.success("Record updated successfully");
 				onSave(formData);
 				onClose();
-			} catch (error: any) {
+			} catch (error: unknown) {
+				const apiError = error as ApiError;
 				toast.error("Failed to update record", {
-					description: error?.data?.message || "An error occurred while updating the record"
+					description: apiError?.data?.message || "An error occurred while updating the record"
 				});
 			}
 		} else if (!lobId) {
-            toast.error("Missing Line of Business ID");
-        }
+			toast.error("Missing Line of Business ID");
+		}
 	};
 
 	return (

@@ -5,7 +5,7 @@ import { FileTextIcon } from '@radix-ui/react-icons';
 import Icon from '@/components/ui/Icon';
 
 type FieldDef = { id: string; name: string };
-type RecordType = { id: string } & Record<string, string | number | boolean>;
+type RecordType = { id: string } & Record<string, string | number | boolean | null>;
 
 interface SelectedRecordsDrawerContentProps {
   selectedRecords: Set<string>;

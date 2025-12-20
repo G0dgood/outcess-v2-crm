@@ -5,7 +5,7 @@ import Button from './Button';
 import FillDispositionModal, { DispositionFormData } from './FillDispositionModal';
 import SMSModal from './SMSModal';
 import DispositionHistoryModal from './DispositionHistoryModal';
-import { Cross2Icon, ChatBubbleIcon, ClipboardIcon, PersonIcon, EnvelopeClosedIcon, HomeIcon, MobileIcon, IdCardIcon } from '@radix-ui/react-icons';
+import { Cross2Icon, ChatBubbleIcon, ClipboardIcon, PersonIcon, EnvelopeClosedIcon, HomeIcon, MobileIcon } from '@radix-ui/react-icons';
 import { getOfflineDispositions, OfflineDisposition, getSyncedDispositions, SyncedDisposition } from '@/utils/offlineDispositions';
 import { useAuth } from '@/contexts/AuthContext';
 import { NoRecordFound, SVGLoaderFetch } from '../Options';
@@ -33,7 +33,7 @@ interface CustomerDetailsModalProps {
 	onClose: () => void;
 	customer: {
 		id: string;
-		[key: string]: any;
+		[key: string]: string | number | boolean | null | undefined;
 	} | null;
 }
 
@@ -344,7 +344,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 																className="text-base dark:text-gray-100 font-semibold break-all"
 																style={{ color: 'var(--text-primary)' }}
 															>
-																{value || '-'}
+																{value ? String(value) : '-'}
 															</p>
 														</div>
 													</div>
@@ -552,7 +552,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 					}}
 					initialData={selectedDispositionData}
 					customerId={customer?.id}
-					customerName={customer ? `${customer.firstName} ${customer.lastName}`.trim() : undefined}
+					customerName={customer ? `${String(customer.firstName || '')} ${String(customer.lastName || '')}`.trim() : undefined}
 				/>
 
 				{/* SMS Modal */}
@@ -563,7 +563,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 						console.log('Send SMS:', data);
 						// Implement send SMS logic here
 					}}
-					initialPhone={customer.phone}
+					initialPhone={customer.phone ? String(customer.phone) : undefined}
 				/>
 
 				{/* Disposition History Modal */}

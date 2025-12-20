@@ -8,7 +8,6 @@ import Pagination from '@/components/ui/Pagination';
 import Checkbox from '@/components/ui/Checkbox';
 import PageHeading from '@/components/ui/PageHeading';
 import { UploadIcon, Pencil1Icon, TrashIcon, PlusIcon } from '@radix-ui/react-icons';
-import Input from '@/components/ui/Input';
 import UploadBaseSetupBook from '@/components/ui/UploadBaseSetupBook';
 import CreateRecordModal from '@/components/ui/CreateRecordModal';
 import SelectedRecordsDrawerContent from './SelectedRecordsDrawerContent';
@@ -28,7 +27,7 @@ interface FieldDefinition {
 
 interface SetupBookRecord {
 	id: string;
-	[key: string]: string | number | boolean; // Dynamic fields based on field definitions
+	[key: string]: string | number | boolean | null; // Dynamic fields based on field definitions
 }
 
 
@@ -59,12 +58,12 @@ const SetupBookPage: React.FC = () => {
 	const [editingRecord, setEditingRecord] = useState<SetupBookRecord | null>(null);
 	const [deleteRecord, setDeleteRecord] = useState<{ id: string; name: string } | null>(null);
 	const [fieldDefinitions, setFieldDefinitions] = useState<FieldDefinition[]>(setupBookHeaderFields || []);
-	
+
 	// Determine which query to use based on searchId presence
 	// If searchId is available, use useGetSetupBookBySearchIdQuery
 	// Otherwise, fallback to useGetSetupBookByLineOfBusinessIdQuery (or keep existing logic)
 	// Assuming if searchId exists, we should prioritize it as per user instruction "add getSetupBookBySearchId"
-	
+
 	const { data: recordsBySearchId, isLoading: isFetchingBySearchId } = useGetSetupBookBySearchIdQuery(
 		{
 			searchId: searchId || '',
@@ -86,7 +85,6 @@ const SetupBookPage: React.FC = () => {
 	);
 
 	const apiRecords = searchId ? recordsBySearchId : recordsByLobId;
-	const isFetchingRecords = searchId ? isFetchingBySearchId : isFetchingByLobId;
 
 	useEffect(() => {
 		if (setupBookHeaderFields) {
@@ -112,7 +110,7 @@ const SetupBookPage: React.FC = () => {
 		setIsCreateModalOpen(true);
 	};
 
-	const handleUploadComplete = async (data: Record<string, string>[], file?: File) => {
+	const handleUploadComplete = async () => {
 		// setIsUploadModalOpen(false);
 	};
 
@@ -120,7 +118,7 @@ const SetupBookPage: React.FC = () => {
 		setEditingRecord(record);
 	};
 
-	const handleSaveEdit = (updatedData: Record<string, string | number | boolean>) => {
+	const handleSaveEdit = (updatedData: Record<string, string | number | boolean | null>) => {
 		if (editingRecord) {
 			setRecords(prevRecords =>
 				prevRecords.map(record =>

@@ -13,14 +13,14 @@ import { useGetSetupBookBySearchIdQuery } from '@/store/services/setupBookApi';
 
 interface Customer {
 	id: string;
-	[key: string]: any;
+	[key: string]: string | number | boolean | null | undefined;
 }
 
 const CustomerBookPage: React.FC = () => {
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
-	const [currentPage, setCurrentPage] = useState(1);
+	// const [currentPage, setCurrentPage] = useState(1);
 	const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
 	const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
@@ -28,7 +28,7 @@ const CustomerBookPage: React.FC = () => {
 	console.log('lineOfBusinessData----->', lineOfBusinessData)
 
 	// Fetch customer by SearchId
-	const { data: searchResult, isLoading, isError } = useGetSetupBookBySearchIdQuery(
+	const { data: searchResult, isLoading, isError: _isError } = useGetSetupBookBySearchIdQuery(
 		{ searchId: searchQuery },
 		{ skip: !searchQuery }
 	);
@@ -39,17 +39,20 @@ const CustomerBookPage: React.FC = () => {
 	// Update customers list when search result is found
 	React.useEffect(() => {
 		if (searchResult?.data) {
-			const data = searchResult.data as any[]; // Cast to any[] to handle the structure flexibly
+			const data = searchResult.data as unknown[];
 			if (Array.isArray(data) && data.length > 0) {
 				// Dynamically extract headers from the first item, excluding internal fields like _id, id, __v
-				const firstItem = data[0];
+				const firstItem = data[0] as Record<string, unknown>;
 				const headers = Object.keys(firstItem).filter(key => !['_id', 'id', '__v', 'companyId', 'lineOfBusinessId'].includes(key));
 				setTableHeaders(headers);
 
-				const mappedCustomers: Customer[] = data.map((item: any) => ({
-					id: item.id || item._id,
-					...item
-				}));
+				const mappedCustomers: Customer[] = data.map((item) => {
+					const record = item as Record<string, unknown>;
+					return {
+						id: (record.id as string) || (record._id as string),
+						...(record as Record<string, string | number | boolean | null | undefined>)
+					};
+				});
 				setCustomers(mappedCustomers);
 			}
 		}

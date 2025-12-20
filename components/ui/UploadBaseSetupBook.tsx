@@ -63,6 +63,12 @@ const parseCSV = (text: string, header: boolean = true): CsvRow[] => {
   return data;
 };
 
+interface ApiError {
+  data?: {
+    message?: string;
+  };
+}
+
 const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
   isOpen: externalIsOpen,
   onClose: externalOnClose,
@@ -163,7 +169,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
           description: `${parsedData.length} records loaded`,
           duration: 3000,
         });
-      } catch (error) {
+      } catch {
         toast.error("Failed to parse CSV", {
           description: "Please check the file format",
           duration: 3000,
@@ -239,7 +245,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
       //   companyId = companyId._id || companyId.id;
       // }
 
-      if (!companyId || !lobId ) {
+      if (!companyId || !lobId) {
         toast.error("Missing required information", {
           description: "Line of Business ID, Company ID, or Search ID is missing.",
           duration: 5000,
@@ -250,7 +256,9 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
 
       formData.append('companyId', companyId);
       formData.append('lineOfBusinessId', lobId);
-      formData.append('searchId', searchId);
+      if (searchId) {
+        formData.append('searchId', searchId);
+      }
       formData.append('file', fileToSend);
 
       await createSetupBook(formData).unwrap();
@@ -266,11 +274,12 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
       if (onUploadComplete) {
         onUploadComplete(jsonData, fileToUpload);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
       setProgress(0);
 
       toast.error("Upload Failed", {
-        description: err?.data?.message || "An error occurred while uploading records",
+        description: apiError?.data?.message || "An error occurred while uploading records",
         duration: 5000,
       });
     }
@@ -326,7 +335,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
               {isError && (
                 <UploadAlert
                   type="error"
-                  message={(error as any)?.data?.message || "Upload failed"}
+                  message={(error as ApiError)?.data?.message || "Upload failed"}
                   onClose={onClickReset}
                 />
               )}
