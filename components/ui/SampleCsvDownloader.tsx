@@ -2,8 +2,13 @@ import React from 'react';
 import Button from '@/components/ui/Button';
 import { DownloadIcon } from '@radix-ui/react-icons';
 
+interface Field {
+	name: string;
+	[key: string]: unknown;
+}
+
 interface SampleCsvDownloaderProps {
-	fields: any[];
+	fields: Field[];
 	className?: string;
 }
 
@@ -15,7 +20,7 @@ const SampleCsvDownloader: React.FC<SampleCsvDownloaderProps> = ({ fields, class
 		}
 
 		// Extract field names for the header
-		const headers = fields.map((field: any) => field.name);
+		const headers = fields.map((field) => field.name);
 
 		// Create CSV content (just headers)
 		const csvContent = headers.join(',');

@@ -31,6 +31,12 @@ interface SetupBookRecord {
 }
 
 
+interface ApiError {
+	data?: {
+		message?: string;
+	};
+}
+
 const SetupBookPage: React.FC = () => {
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
@@ -64,7 +70,7 @@ const SetupBookPage: React.FC = () => {
 	// Otherwise, fallback to useGetSetupBookByLineOfBusinessIdQuery (or keep existing logic)
 	// Assuming if searchId exists, we should prioritize it as per user instruction "add getSetupBookBySearchId"
 
-	const { data: recordsBySearchId, isLoading: isFetchingBySearchId } = useGetSetupBookBySearchIdQuery(
+	const { data: recordsBySearchId, isLoading: _isFetchingBySearchId } = useGetSetupBookBySearchIdQuery(
 		{
 			searchId: searchId || '',
 			search: searchTerm,
@@ -74,7 +80,7 @@ const SetupBookPage: React.FC = () => {
 		{ skip: !searchId }
 	);
 
-	const { data: recordsByLobId, isLoading: isFetchingByLobId } = useGetSetupBookByLineOfBusinessIdQuery(
+	const { data: recordsByLobId, isLoading: _isFetchingByLobId } = useGetSetupBookByLineOfBusinessIdQuery(
 		{
 			id: lobId,
 			search: searchTerm,
@@ -163,9 +169,10 @@ const SetupBookPage: React.FC = () => {
 					return newSelected;
 				});
 				setDeleteRecord(null);
-			} catch (error: any) {
+			} catch (error: unknown) {
+				const apiError = error as ApiError;
 				toast.error("Failed to delete record", {
-					description: error?.data?.message || "An error occurred while deleting the record"
+					description: apiError?.data?.message || "An error occurred while deleting the record"
 				});
 			}
 		} else if (!lobId) {
@@ -243,7 +250,7 @@ const SetupBookPage: React.FC = () => {
 				/>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
 					<SampleCsvDownloader
-						fields={setupBookHeaderFields}
+						fields={setupBookHeaderFields || []}
 						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
 					/>
 					<Button
