@@ -45,6 +45,7 @@ const TeamMembersPage: React.FC = () => {
 					_id?: string;
 					id?: string;
 					agentId?: string;
+					userId?: string;
 					name?: string;
 					firstName?: string;
 					lastName?: string;
@@ -58,13 +59,13 @@ const TeamMembersPage: React.FC = () => {
 				};
 				return {
 					_id: m._id || m.id || '',
-					agentId: m.agentId || m._id || m.id || 'N/A',
+					agentId: m.userId || 'N/A', // Prioritize userId from API response
 					fullName: m.name || `${m.firstName || ''} ${m.lastName || ''}`.trim(),
 					email: m.email || '',
 					phone: m.phone || '',
 					role: (typeof m.role === 'object' ? (m.role?.roleName || m.role?.name) : (m.role || 'agent'))?.toLowerCase() as TeamMember['role'],
 					supervisor: (typeof m.supervisor === 'object' ? m.supervisor?.name : m.supervisor) || 'Unassigned',
-					status: (m.status === 'Logged In' || 
+					status: (m.status === 'Logged In' ||
 						m.loginStatus === 'Logged In') ? 'Logged In' : 'Logged Out',
 					team: (typeof m.team === 'object' ? m.team?.name : m.team) || 'Unassigned'
 				};
@@ -245,7 +246,7 @@ const TeamMembersPage: React.FC = () => {
 							}}
 						>
 							<tr>
-								{['Full Name', 'Email', 'Phone No', 'Role', 'Supervisor', 'Logged In Status'].map((heading) => (
+								{['User ID', 'Full Name', 'Email', 'Phone No', 'Role', 'Supervisor', 'Logged In Status'].map((heading) => (
 									<th
 										key={heading}
 										className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-300"
@@ -264,11 +265,11 @@ const TeamMembersPage: React.FC = () => {
 							}}
 						>
 							{isLoading ? (
-								<SVGLoaderFetch colSpan={6} text={''} />
-							) : currentMembers.length === 0 ? (
-								<NoRecordFound colSpan={6} />
+								<SVGLoaderFetch colSpan={7} text={''} />
+							) : currentMembers?.length === 0 ? (
+								<NoRecordFound colSpan={7} />
 							) : (
-								currentMembers.map((member, index) => (
+								currentMembers?.map((member, index) => (
 									<tr
 										key={`${member.agentId}-${index}`}
 										className="dark:hover:bg-gray-700 transition-colors"
@@ -284,7 +285,13 @@ const TeamMembersPage: React.FC = () => {
 											className="px-6 py-4 text-sm dark:text-gray-100"
 											style={{ color: 'var(--text-primary)' }}
 										>
-											{member.fullName}
+											{member?.agentId}
+										</td>
+										<td
+											className="px-6 py-4 text-sm dark:text-gray-100"
+											style={{ color: 'var(--text-primary)' }}
+										>
+											{member?.fullName}
 										</td>
 										<td
 											className="px-6 py-4 text-sm dark:text-gray-400"

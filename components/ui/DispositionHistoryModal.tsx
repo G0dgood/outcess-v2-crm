@@ -3,23 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { getOfflineDispositions, OfflineDisposition, getSyncedDispositions, SyncedDisposition } from '@/utils/offlineDispositions';
-
-interface DispositionHistoryItem {
-	id: string;
-	date: string;
-	time: string;
-	agent: string;
-	timeSpent: string;
-	agentId?: string;
-	callAnswered?: string;
-	reasonForNonPayment?: string;
-	reasonForNotWatching?: string;
-	commitmentDate?: string;
-	amountToPay?: string;
-	dateTime?: string;
-	comment?: string;
-}
+import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, DispositionHistoryItem } from '@/utils/offlineDispositions';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useGetDispositionsByCustomerQuery, useGetDispositionsByAgentIdQuery } from '@/store/services/dispositionApi';
 
 interface DispositionHistoryModalProps {
 	isOpen: boolean;
@@ -27,6 +13,16 @@ interface DispositionHistoryModalProps {
 	dispositionItem?: DispositionHistoryItem | null;
 	showOfflineDispositions?: boolean;
 	customerId?: string;
+	agentId?: string;
+}
+
+interface SyncedDispositionViewModel {
+	id: string;
+	customerName?: string;
+	dispositionData: DispositionFieldEntry[];
+	syncedAt: string;
+	agent?: string;
+	agentId?: string;
 }
 
 export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = ({
@@ -35,11 +31,47 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 	dispositionItem,
 	showOfflineDispositions = true,
 	customerId,
+	agentId,
 }) => {
+	const { selectedLineOfBusinessId } = useLineOfBusiness();
 	const [offlineDispositions, setOfflineDispositions] = useState<OfflineDisposition[]>([]);
-	const [syncedDispositions, setSyncedDispositions] = useState<SyncedDisposition[]>([]);
 
-	// Load offline and synced dispositions
+	const { data: customerData, isLoading: isLoadingCustomerHistory } = useGetDispositionsByCustomerQuery(
+		{
+			lineOfBusinessId: selectedLineOfBusinessId || '',
+			customerId: customerId || '',
+			page: 1,
+			limit: 50
+		},
+		{ skip: !isOpen || !customerId || !selectedLineOfBusinessId }
+	);
+
+	const { data: agentData, isLoading: isLoadingAgentHistory } = useGetDispositionsByAgentIdQuery(
+		{
+			lineOfBusinessId: selectedLineOfBusinessId || '',
+			agentId: agentId || '',
+			page: 1,
+			limit: 50
+		},
+		{ skip: !isOpen || !agentId || !selectedLineOfBusinessId }
+	);
+
+	const apiData = customerId ? customerData : agentData;
+
+	const syncedDispositions: SyncedDispositionViewModel[] = React.useMemo(() => {
+		if (!apiData) return [];
+		const list = Array.isArray(apiData) ? apiData : (apiData.data || []);
+		return list.map((item: any) => ({
+			id: item._id || item.id,
+			customerName: item.customer?.Name || item.customerName,
+			dispositionData: (item.fillDisposition || item.dispositionData || []) as DispositionFieldEntry[],
+			syncedAt: item.timestamp || item.createdAt || item.syncedAt,
+			agent: item.agent?.name || item.agent || 'Unknown Agent',
+			agentId: item.agent?._id || item.agentId
+		}));
+	}, [apiData]);
+
+	// Load offline dispositions
 	useEffect(() => {
 		if (isOpen && showOfflineDispositions) {
 			const allOffline = getOfflineDispositions();
@@ -47,11 +79,9 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 				? allOffline.filter(d => d.customerId === customerId)
 				: allOffline;
 			setOfflineDispositions(filtered);
-
-			const allSynced = getSyncedDispositions(customerId);
-			setSyncedDispositions(allSynced);
 		}
 	}, [isOpen, showOfflineDispositions, customerId]);
+
 	useEffect(() => {
 		if (isOpen) {
 			document.body.style.overflow = 'hidden';
@@ -147,7 +177,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 							</h3>
 
 							{/* Synced Dispositions */}
-							{syncedDispositions.map((synced) => (
+							{syncedDispositions.map((synced: SyncedDispositionViewModel) => (
 								<div
 									key={synced.id}
 									className="border dark:border-gray-600 p-4 rounded-lg"
@@ -173,35 +203,27 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 										)}
 									</div>
 									<div className="grid grid-cols-2 gap-4 text-sm">
-										<div>
-											<span style={{ color: 'var(--text-tertiary)' }}>Call Answered: </span>
-											<span style={{ color: 'var(--text-primary)' }}>{synced.callAnswered || '-'}</span>
-										</div>
-										<div>
-											<span style={{ color: 'var(--text-tertiary)' }}>Amount: </span>
-											<span style={{ color: 'var(--text-primary)' }}>{synced.amountToPay || '-'}</span>
-										</div>
+										{synced.dispositionData?.map((field: DispositionFieldEntry) => (
+											<div key={field.fieldId}>
+												<span style={{ color: 'var(--text-tertiary)' }}>{field.fieldName}: </span>
+												<span style={{ color: 'var(--text-primary)' }}>{String(field.fieldValue || '-')}</span>
+											</div>
+										))}
 										<div>
 											<span style={{ color: 'var(--text-tertiary)' }}>Date: </span>
-											<span style={{ color: 'var(--text-primary)' }}>{synced.date || '-'}</span>
+											<span style={{ color: 'var(--text-primary)' }}>{new Date(synced.syncedAt).toLocaleDateString()}</span>
 										</div>
 										<div>
 											<span style={{ color: 'var(--text-tertiary)' }}>Time: </span>
-											<span style={{ color: 'var(--text-primary)' }}>{synced.time || '-'}</span>
+											<span style={{ color: 'var(--text-primary)' }}>{new Date(synced.syncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
 										</div>
 										<div>
 											<span style={{ color: 'var(--text-tertiary)' }}>Agent: </span>
-											<span style={{ color: 'var(--text-primary)' }}>{synced.agent || '-'}</span>
+											<span style={{ color: 'var(--text-primary)' }}>{String(synced.agent || '-')}</span>
 										</div>
 									</div>
-									{synced.comment && (
-										<div className="mt-3">
-											<span style={{ color: 'var(--text-tertiary)' }}>Comment: </span>
-											<span style={{ color: 'var(--text-primary)' }}>{synced.comment}</span>
-										</div>
-									)}
 									<div className="mt-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
-										Synced: {new Date(synced.syncedAt).toLocaleString()}
+										Synced: {new Date(synced.syncedAt!).toLocaleString()}
 									</div>
 								</div>
 							))}
@@ -210,7 +232,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 							{offlineDispositions.map((offline) => (
 								<div
 									key={offline.id}
-									className="border dark:border-gray-600 p-4  "
+									className="border dark:border-gray-600 p-4 rounded-lg"
 									style={{
 										backgroundColor: 'var(--bg-primary)',
 										borderColor: 'var(--light-gray)'
@@ -233,29 +255,21 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 										)}
 									</div>
 									<div className="grid grid-cols-2 gap-4 text-sm">
-										<div>
-											<span style={{ color: 'var(--text-tertiary)' }}>Call Answered: </span>
-											<span style={{ color: 'var(--text-primary)' }}>{offline.callAnswered || '-'}</span>
-										</div>
-										<div>
-											<span style={{ color: 'var(--text-tertiary)' }}>Amount: </span>
-											<span style={{ color: 'var(--text-primary)' }}>{offline.amountToPay || '-'}</span>
-										</div>
+										{offline.dispositionData?.map((field) => (
+											<div key={field.fieldId}>
+												<span style={{ color: 'var(--text-tertiary)' }}>{field.fieldName}: </span>
+												<span style={{ color: 'var(--text-primary)' }}>{String(field.fieldValue || '-')}</span>
+											</div>
+										))}
 										<div>
 											<span style={{ color: 'var(--text-tertiary)' }}>Date: </span>
-											<span style={{ color: 'var(--text-primary)' }}>{offline.date || '-'}</span>
+											<span style={{ color: 'var(--text-primary)' }}>{new Date(offline.createdAt).toLocaleDateString()}</span>
 										</div>
 										<div>
 											<span style={{ color: 'var(--text-tertiary)' }}>Time: </span>
-											<span style={{ color: 'var(--text-primary)' }}>{offline.time || '-'}</span>
+											<span style={{ color: 'var(--text-primary)' }}>{new Date(offline.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
 										</div>
 									</div>
-									{offline.comment && (
-										<div className="mt-3">
-											<span style={{ color: 'var(--text-tertiary)' }}>Comment: </span>
-											<span style={{ color: 'var(--text-primary)' }}>{offline.comment}</span>
-										</div>
-									)}
 									<div className="mt-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
 										Created: {new Date(offline.createdAt).toLocaleString()}
 									</div>
@@ -323,107 +337,44 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 
 							{/* Call Details Section */}
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-								<div>
-									<label
-										className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										Call Answered
-									</label>
-									<p
-										className="text-base dark:text-gray-100 font-medium"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{dispositionItem.callAnswered || '-'}
-									</p>
-								</div>
-								<div>
-									<label
-										className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										Reason For Non Payment
-									</label>
-									<p
-										className="text-base dark:text-gray-100 font-medium"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{dispositionItem.reasonForNonPayment || '-'}
-									</p>
-								</div>
-								<div>
-									<label
-										className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										Reason for not watching
-									</label>
-									<p
-										className="text-base dark:text-gray-100 font-medium"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{dispositionItem.reasonForNotWatching || '-'}
-									</p>
-								</div>
-								<div>
-									<label
-										className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										Commitment Date
-									</label>
-									<p
-										className="text-base dark:text-gray-100 font-medium"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{dispositionItem.commitmentDate || '-'}
-									</p>
-								</div>
-								<div>
-									<label
-										className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										Amount to Pay
-									</label>
-									<p
-										className="text-base dark:text-gray-100 font-medium"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{dispositionItem.amountToPay || '-'}
-									</p>
-								</div>
-								<div>
-									<label
-										className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										Date and Time
-									</label>
-									<p
-										className="text-base dark:text-gray-100 font-medium"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{dispositionItem.dateTime || `${dispositionItem.commitmentDate || ''} ${dispositionItem.time || ''}`.trim() || '-'}
-									</p>
-								</div>
+								{dispositionItem.dispositionData?.map((field) => (
+									<div key={field.fieldId}>
+										<label
+											className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
+											style={{ color: 'var(--text-tertiary)' }}
+										>
+											{field.fieldName}
+										</label>
+										<p
+											className="text-base dark:text-gray-100 font-medium"
+											style={{ color: 'var(--text-primary)' }}
+										>
+											{field.fieldType === 'checkbox'
+												? (field.fieldValue ? 'Yes' : 'No')
+												: String(field.fieldValue || '-')
+											}
+										</p>
+									</div>
+								))}
 							</div>
 
 							{/* Comment Section */}
-							<div>
-								<label
-									className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
-									style={{ color: 'var(--text-tertiary)' }}
-								>
-									Comment
-								</label>
-								<p
-									className="text-base dark:text-gray-100 font-medium"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									{dispositionItem.comment || '-'}
-								</p>
-							</div>
+							{dispositionItem?.comment && (
+								<div>
+									<label
+										className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
+										style={{ color: 'var(--text-tertiary)' }}
+									>
+										Comment
+									</label>
+									<p
+										className="text-base dark:text-gray-100 font-medium"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{String(dispositionItem.comment)}
+									</p>
+								</div>
+							)}
 						</>
 					)}
 				</div>

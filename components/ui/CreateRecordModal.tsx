@@ -16,8 +16,7 @@ interface FieldDefinition {
 interface CreateRecordModalProps {
 	isOpen: boolean;
 	fieldDefinitions: FieldDefinition[];
-	onClose: () => void;
-	onSuccess: () => void;
+	onClose: () => void; 
 	searchId?: string;
 }
 
@@ -30,8 +29,7 @@ interface ApiError {
 const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 	isOpen,
 	fieldDefinitions,
-	onClose,
-	onSuccess,
+	onClose, 
 	searchId,
 }) => {
 	const [formData, setFormData] = useState<Record<string, string | number | boolean>>({});
@@ -100,8 +98,7 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 
 				await createSetupBook(uploadFormData).unwrap();
 
-				toast.success("Record created successfully");
-				onSuccess();
+				toast.success("Record created successfully"); 
 				onClose();
 			} catch (error: unknown) {
 				const apiError = error as ApiError;

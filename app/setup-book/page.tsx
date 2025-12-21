@@ -17,6 +17,7 @@ import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
 import EditRecordModal from '@/components/ui/EditRecordModal';
 import { useGetSetupBookByLineOfBusinessIdQuery, useDeleteSetupBookRecordsMutation, useGetSetupBookBySearchIdQuery } from '@/store/services/setupBookApi';
 import { toast } from 'sonner';
+import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 
 interface FieldDefinition {
 	id: string;
@@ -51,8 +52,6 @@ const SetupBookPage: React.FC = () => {
 	const setupBookHeaderFields = lineOfBusinessData?.lineOfBusiness?.customerBookSettings?.configuredFields
 
 	console.log('lineOfBusiness-----0', setupBookHeaderFields)
-
-
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -80,7 +79,7 @@ const SetupBookPage: React.FC = () => {
 		{ skip: !searchId }
 	);
 
-	const { data: recordsByLobId, isLoading: _isFetchingByLobId } = useGetSetupBookByLineOfBusinessIdQuery(
+	const { data: recordsByLobId, isLoading } = useGetSetupBookByLineOfBusinessIdQuery(
 		{
 			id: lobId,
 			search: searchTerm,
@@ -232,7 +231,6 @@ const SetupBookPage: React.FC = () => {
 
 	return (
 		<div>
-			{/* Title */}
 			<PageHeading
 				text="Setup Book"
 			/>
@@ -326,96 +324,78 @@ const SetupBookPage: React.FC = () => {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							{filteredRecords?.length === 0 ? (
-								<tr>
-									<td colSpan={fieldDefinitions?.length + 2} className="px-6 py-12 text-center">
-										<div className="flex flex-col items-center justify-center">
-											<div className="mb-4">
-												<Icon name="upload-cloud" size="4xl" className="text-gray-300 dark:text-gray-600" />
-											</div>
-											<h3
-												className="text-lg font-medium dark:text-gray-100 mb-2"
-												style={{ color: 'var(--text-primary)' }}
+
+
+							{isLoading ? (
+								<SVGLoaderFetch colSpan={8} text={''} />
+							) : filteredRecords.length === 0 ? (
+								<NoRecordFound colSpan={8} />
+							) : paginatedRecords.map((record) => (
+								<tr
+									key={record.id}
+									className="dark:hover:bg-gray-700"
+									style={{ borderColor: 'var(--light-gray)' }}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+									}}
+								>
+									<td className="px-6 py-4 whitespace-nowrap">
+										<Checkbox
+											checked={selectedRecords.has(record.id)}
+											onChange={(checked) => handleSelectRecord(record.id, checked)}
+											size="medium"
+										/>
+									</td>
+									{fieldDefinitions?.map((field) => (
+										<td
+											key={field.id}
+											className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+											style={{ color: 'var(--text-primary)' }}
+										>
+											{record[field.name] || '-'}
+										</td>
+									))}
+									<td>
+										<div className="flex items-center gap-2">
+											<button
+												onClick={() => handleEditRecord(record)}
+												className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+												style={{ color: 'var(--text-secondary)' }}
+												onMouseEnter={(e) => {
+													e.currentTarget.style.color = '#2563EB';
+													e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+												}}
+												onMouseLeave={(e) => {
+													e.currentTarget.style.color = 'var(--text-secondary)';
+													e.currentTarget.style.backgroundColor = 'transparent';
+												}}
+												title="Edit Record"
 											>
-												No Data Found
-											</h3>
-											<p
-												className="dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
+												<Pencil1Icon className="w-5 h-5" />
+											</button>
+											<button
+												onClick={() => handleDeleteClick(record)}
+												className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
+												style={{ color: 'var(--text-secondary)' }}
+												onMouseEnter={(e) => {
+													e.currentTarget.style.color = '#DC2626';
+													e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+												}}
+												onMouseLeave={(e) => {
+													e.currentTarget.style.color = 'var(--text-secondary)';
+													e.currentTarget.style.backgroundColor = 'transparent';
+												}}
+												title="Delete Record"
 											>
-												{searchTerm ? 'No records match your search.' : 'Upload your call list to get started.'}
-											</p>
+												<TrashIcon className="w-5 h-5" />
+											</button>
 										</div>
 									</td>
 								</tr>
-							) : (
-								paginatedRecords.map((record) => (
-									<tr
-										key={record.id}
-										className="dark:hover:bg-gray-700"
-										style={{ borderColor: 'var(--light-gray)' }}
-										onMouseEnter={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-										}}
-										onMouseLeave={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-										}}
-									>
-										<td className="px-6 py-4 whitespace-nowrap">
-											<Checkbox
-												checked={selectedRecords.has(record.id)}
-												onChange={(checked) => handleSelectRecord(record.id, checked)}
-												size="medium"
-											/>
-										</td>
-										{fieldDefinitions?.map((field) => (
-											<td
-												key={field.id}
-												className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
-												style={{ color: 'var(--text-primary)' }}
-											>
-												{record[field.name] || '-'}
-											</td>
-										))}
-										<td>
-											<div className="flex items-center gap-2">
-												<button
-													onClick={() => handleEditRecord(record)}
-													className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
-													style={{ color: 'var(--text-secondary)' }}
-													onMouseEnter={(e) => {
-														e.currentTarget.style.color = '#2563EB';
-														e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
-													}}
-													onMouseLeave={(e) => {
-														e.currentTarget.style.color = 'var(--text-secondary)';
-														e.currentTarget.style.backgroundColor = 'transparent';
-													}}
-													title="Edit Record"
-												>
-													<Pencil1Icon className="w-5 h-5" />
-												</button>
-												<button
-													onClick={() => handleDeleteClick(record)}
-													className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
-													style={{ color: 'var(--text-secondary)' }}
-													onMouseEnter={(e) => {
-														e.currentTarget.style.color = '#DC2626';
-														e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-													}}
-													onMouseLeave={(e) => {
-														e.currentTarget.style.color = 'var(--text-secondary)';
-														e.currentTarget.style.backgroundColor = 'transparent';
-													}}
-													title="Delete Record"
-												>
-													<TrashIcon className="w-5 h-5" />
-												</button>
-											</div>
-										</td>
-									</tr>
-								))
-							)}
+							))}
 						</tbody>
 					</table>
 				</div>
@@ -449,10 +429,6 @@ const SetupBookPage: React.FC = () => {
 				onClose={() => setIsCreateModalOpen(false)}
 				fieldDefinitions={fieldDefinitions}
 				searchId={searchId}
-				onSuccess={() => {
-					// Optionally refresh the list or handle success
-					console.log('Record created successfully');
-				}}
 			/>
 
 			{/* Edit Record Modal */}

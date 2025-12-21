@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetLineOfBusinessByCompanyIdQuery, useGetLineOfBusinessQuery } from '@/store/services/lineOfBusinessApi';
-import { LineOfBusinessProvider, useLineOfBusiness } from './LineOfBusinessContext';
+import {  useLineOfBusiness } from './LineOfBusinessContext';
 
 interface SetupStep {
 	id: string;
@@ -134,6 +134,7 @@ interface SetupData {
 		callOutcomes: CallOutcome[];
 		dispositionSettings: {
 			timeRangeView: 'daily' | 'weekly' | 'monthly';
+			chartType: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
 			charts: Chart[];
 		};
 	};

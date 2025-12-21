@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import Icon from '@/components/ui/Icon';
@@ -9,29 +9,74 @@ import DateFilter from '@/components/ui/DateFilter';
 import { MixerHorizontalIcon } from '@radix-ui/react-icons';
 import PageHeading from '@/components/ui/PageHeading';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useGetDispositionsByLineOfBusinessReportQuery } from '@/store/services/dispositionApi';
 
 interface ReportData {
 	id: string;
-	agentName: string;
-	agentId: string;
-	date: string;
-	[key: string]: string | number | boolean;
+	[key: string]: any;
 }
 
 const ReportPage: React.FC = () => {
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { lineOfBusinessData, selectedLineOfBusinessId } = useLineOfBusiness();
+	const { data: apiData, isLoading } = useGetDispositionsByLineOfBusinessReportQuery(
+		{ lineOfBusinessId: selectedLineOfBusinessId || '' },
+		{ skip: !selectedLineOfBusinessId }
+	);
+
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
 	const filterButtonRef = useRef<HTMLDivElement>(null);
-	const [reportData] = useState<ReportData[]>([
-		{ id: '1', agentName: 'Sarah Johnson', agentId: 'AGT-001', date: '2024-01-15' },
-		{ id: '2', agentName: 'Michael Chen', agentId: 'AGT-002', date: '2024-01-16' },
-		{ id: '3', agentName: 'Emily Davis', agentId: 'AGT-003', date: '2024-01-17' },
-		{ id: '4', agentName: 'James Wilson', agentId: 'AGT-004', date: '2024-01-18' },
-		{ id: '5', agentName: 'Lisa Martinez', agentId: 'AGT-005', date: '2024-01-19' },
-		{ id: '6', agentName: 'Robert Taylor', agentId: 'AGT-006', date: '2024-01-20' },
-	]);
+
+	const reportData: ReportData[] = useMemo(() => {
+		if (!apiData) return [];
+		const list = Array.isArray(apiData) ? apiData : apiData.data || [];
+
+		return list.map((item: any) => {
+			const row: any = {
+				id: item._id || item.id,
+				'Agent Name': item.agent?.name || 'Unknown',
+				'Date': item.timestamp ? new Date(item.timestamp).toLocaleDateString() + ' ' + new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
+			};
+
+			// Flatten fillDisposition
+			if (Array.isArray(item.fillDisposition)) {
+				item.fillDisposition.forEach((field: any) => {
+					if (field.fieldName) {
+						row[field.fieldName] = field.fieldValue;
+					}
+				});
+			}
+
+			return row;
+		});
+	}, [apiData]);
+
+	const dynamicHeaders = useMemo(() => {
+		if (reportData.length === 0) return [];
+		const headers = new Set<string>();
+		// Default headers that should always be present
+		const priorityHeaders = ['Agent Name', 'Date'];
+
+		// Add all keys from all items
+		reportData.forEach(item => {
+			Object.keys(item).forEach(key => {
+				if (key !== 'id' && key !== '_id') {
+					headers.add(key);
+				}
+			});
+		});
+
+		// Convert to array and sort: priority headers first, then others alphabetically
+		return Array.from(headers).sort((a, b) => {
+			const indexA = priorityHeaders.indexOf(a);
+			const indexB = priorityHeaders.indexOf(b);
+			if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+			if (indexA !== -1) return -1;
+			if (indexB !== -1) return 1;
+			return a.localeCompare(b);
+		});
+	}, [reportData]);
 
 	// Close filter dropdown when clicking outside
 	useEffect(() => {
@@ -73,10 +118,8 @@ const ReportPage: React.FC = () => {
 	const filteredReports = reportData.filter(report => {
 		if (!searchTerm) return true;
 		const searchLower = searchTerm.toLowerCase();
-		return (
-			report.agentName.toLowerCase().includes(searchLower) ||
-			report.agentId.toLowerCase().includes(searchLower) ||
-			report.date.toLowerCase().includes(searchLower)
+		return Object.values(report).some(value =>
+			String(value).toLowerCase().includes(searchLower)
 		);
 	});
 
@@ -168,24 +211,24 @@ const ReportPage: React.FC = () => {
 							}}
 						>
 							<tr>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Agent Name
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Agent ID
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Date
-								</th>
+								{dynamicHeaders.length > 0 ? (
+									dynamicHeaders.map(header => (
+										<th
+											key={header}
+											className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-100 whitespace-nowrap"
+											style={{ color: 'var(--text-primary)' }}
+										>
+											{header}
+										</th>
+									))
+								) : (
+									<th
+										className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-100 whitespace-nowrap"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										No Data
+									</th>
+								)}
 							</tr>
 						</thead>
 						<tbody
@@ -195,9 +238,18 @@ const ReportPage: React.FC = () => {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							{filteredReports.length === 0 ? (
+							{isLoading ? (
 								<tr>
-									<td colSpan={3} className="px-6 py-12 text-center">
+									<td colSpan={dynamicHeaders.length || 1} className="px-6 py-12 text-center">
+										<div className="flex flex-col items-center justify-center">
+											<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white mb-2"></div>
+											<p className="dark:text-gray-400">Loading reports...</p>
+										</div>
+									</td>
+								</tr>
+							) : filteredReports.length === 0 ? (
+								<tr>
+									<td colSpan={dynamicHeaders.length || 1} className="px-6 py-12 text-center">
 										<div className="flex flex-col items-center justify-center">
 											<div className="mb-4">
 												<Icon name="Bar_chart_light" size="4xl" className="text-gray-300 dark:text-gray-600" />
@@ -230,24 +282,15 @@ const ReportPage: React.FC = () => {
 											e.currentTarget.style.backgroundColor = 'var(--accent-white)';
 										}}
 									>
-										<td
-											className="font-medium dark:text-gray-100"
-											style={{ color: 'var(--text-primary)' }}
-										>
-											{report.agentName}
-										</td>
-										<td
-											className="dark:text-gray-100"
-											style={{ color: 'var(--text-primary)' }}
-										>
-											{report.agentId}
-										</td>
-										<td
-											className="dark:text-gray-100"
-											style={{ color: 'var(--text-primary)' }}
-										>
-											{report.date}
-										</td>
+										{dynamicHeaders.map(header => (
+											<td
+												key={`${report.id}-${header}`}
+												className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+												style={{ color: 'var(--text-primary)' }}
+											>
+												{String(report[header] || '-')}
+											</td>
+										))}
 									</tr>
 								))
 							)}

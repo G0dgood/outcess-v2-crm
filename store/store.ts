@@ -12,6 +12,7 @@ import { statusApi } from './services/statusApi';
 import { teamMembersApi } from './services/teamMembersApi';
 import { notificationApi } from './services/notificationApi';
 import { setupBookApi } from './services/setupBookApi';
+import { dispositionApi } from './services/dispositionApi';
 
 export const store = configureStore({
 	reducer: {
@@ -27,6 +28,7 @@ export const store = configureStore({
 		[teamMembersApi.reducerPath]: teamMembersApi.reducer,
 		[notificationApi.reducerPath]: notificationApi.reducer,
 		[setupBookApi.reducerPath]: setupBookApi.reducer,
+		[dispositionApi.reducerPath]: dispositionApi.reducer,
 	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({
@@ -41,7 +43,8 @@ export const store = configureStore({
 			.concat(statusApi.middleware)
 			.concat(teamMembersApi.middleware)
 			.concat(notificationApi.middleware)
-			.concat(setupBookApi.middleware),
+			.concat(setupBookApi.middleware)
+			.concat(dispositionApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

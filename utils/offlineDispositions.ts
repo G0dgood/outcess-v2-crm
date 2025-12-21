@@ -3,17 +3,38 @@
  * Manages disposition data when offline, storing in localStorage and syncing when online
  */
 
-import { DispositionFormData } from '@/components/ui/FillDispositionModal';
 import type { SocketMessage } from '@/contexts/SocketContext';
 
-export interface OfflineDisposition extends DispositionFormData {
+export interface DispositionFieldEntry {
+	fieldId: string;
+	fieldName: string;
+	fieldValue: string | number | boolean | undefined;
+	fieldType: string;
+}
+
+export interface DispositionHistoryItem {
+	id: string;
+	date: string;
+	time: string;
+	agent: string;
+	isOffline?: boolean;
+	offlineStatus?: 'pending' | 'synced' | 'failed';
+	agentId?: string;
+	dispositionData?: DispositionFieldEntry[];
+	timestamp?: number;
+	[key: string]: any;
+}
+
+export interface OfflineDisposition {
 	id: string;
 	customerId?: string;
 	customerName?: string;
+	lineOfBusinessId?: string;
 	status: 'pending' | 'synced' | 'failed';
 	createdAt: string;
 	updatedAt: string;
 	syncedAt?: string;
+	dispositionData: DispositionFieldEntry[];
 }
 
 const STORAGE_KEY = 'offline_dispositions';
@@ -40,15 +61,17 @@ export const getOfflineDispositions = (): OfflineDisposition[] => {
  * Save a disposition offline
  */
 export const saveOfflineDisposition = (
-	disposition: DispositionFormData,
+	dispositionData: DispositionFieldEntry[],
 	customerId?: string,
-	customerName?: string
+	customerName?: string,
+	lineOfBusinessId?: string
 ): OfflineDisposition => {
 	const offlineDisposition: OfflineDisposition = {
-		...disposition,
+		dispositionData,
 		id: `offline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
 		customerId,
 		customerName,
+		lineOfBusinessId,
 		status: 'pending',
 		createdAt: new Date().toISOString(),
 		updatedAt: new Date().toISOString(),
@@ -130,7 +153,10 @@ export const syncPendingDispositions = async (
 				sendFn({
 					type: 'disposition',
 					payload: {
-						...disposition,
+						fillDisposition: disposition.dispositionData,
+						customerId: disposition.customerId,
+						customerName: disposition.customerName,
+						lineOfBusinessId: disposition.lineOfBusinessId,
 						timestamp: new Date().toISOString(),
 					},
 				});
@@ -157,29 +183,33 @@ export const syncPendingDispositions = async (
  */
 const SYNCED_DISPOSITIONS_KEY = 'synced_dispositions';
 
-export interface SyncedDisposition extends DispositionFormData {
+export interface SyncedDisposition {
 	id: string;
 	customerId?: string;
 	customerName?: string;
+	lineOfBusinessId?: string;
 	syncedAt: string;
 	agent?: string;
 	agentId?: string;
+	dispositionData: DispositionFieldEntry[];
 }
 
 export const saveSyncedDisposition = (
-	disposition: DispositionFormData,
+	dispositionData: DispositionFieldEntry[],
 	customerId?: string,
 	customerName?: string,
 	agent?: string,
-	agentId?: string
+	agentId?: string,
+	lineOfBusinessId?: string
 ): SyncedDisposition => {
 	const syncedDisposition: SyncedDisposition = {
-		...disposition,
+		dispositionData,
 		id: `synced-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
 		customerId,
 		customerName,
-		agent: agent || 'Current User',
-		agentId: agentId || 'user.001',
+		lineOfBusinessId,
+		agent: agent ,
+		agentId: agentId,
 		syncedAt: new Date().toISOString(),
 	};
 

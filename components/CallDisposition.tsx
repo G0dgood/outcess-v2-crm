@@ -23,7 +23,7 @@ import {
 	Tooltip,
 	Legend,
 } from 'chart.js';
-import { Pie } from 'react-chartjs-2';
+import { Pie, Bar, Line, Doughnut, PolarArea, Radar, Scatter, Bubble } from 'react-chartjs-2';
 
 ChartJS.register(
 	CategoryScale,
@@ -42,6 +42,10 @@ interface DispositionCategory {
 	id: string;
 	name: string;
 	color: string;
+	fieldType: string;
+	dropdownOptions?: string[];
+	sortOrder?: string;
+	isRequired?: boolean;
 }
 
 interface CallDispositionProps {
@@ -293,6 +297,8 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 		color: '#050711'
 	});
 
+	console.log('setupData-->', setupData)
+
 	const timeRangeOptions = [
 		{ value: 'daily', label: 'Daily' },
 		{ value: 'weekly', label: 'Weekly' },
@@ -324,6 +330,8 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 	];
 
 	// Generate chart data from call outcomes
+	const isLineOrRadar = ['line', 'radar'].includes(dispositionSettings.chartType || 'pie');
+
 	const chartData = {
 		labels: dispositions.length > 0 ? dispositions.map(d => d.name) : ['No dispositions configured'],
 		datasets: [
@@ -332,7 +340,7 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 				data: dispositions.length > 0 ? dispositions.map(() => Math.floor(Math.random() * 100) + 10) : [0],
 				backgroundColor: dispositions.length > 0 ? dispositions.map(d => d.color) : ['#E5E7EB'],
 				borderColor: dispositions.length > 0 ? dispositions.map(d => d.color) : ['#E5E7EB'],
-				borderWidth: 0,
+				borderWidth: isLineOrRadar ? 2 : 0,
 			},
 		],
 	};
@@ -378,8 +386,25 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 			},
 		};
 
-		// Default to pie chart for disposition visualization
-		return <Pie data={chartData} options={commonOptions} />;
+		switch (dispositionSettings.chartType) {
+			case 'bar':
+				return <Bar data={chartData} options={commonOptions} />;
+			case 'line':
+				return <Line data={chartData} options={commonOptions} />;
+			case 'doughnut':
+				return <Doughnut data={chartData} options={commonOptions} />;
+			case 'polarArea':
+				return <PolarArea data={chartData} options={commonOptions} />;
+			case 'radar':
+				return <Radar data={chartData} options={commonOptions} />;
+			case 'scatter':
+				return <Scatter data={chartData} options={commonOptions} />;
+			case 'bubble':
+				return <Bubble data={chartData} options={commonOptions} />;
+			case 'pie':
+			default:
+				return <Pie data={chartData} options={commonOptions} />;
+		}
 	};
 
 	const handleAddDisposition = () => {
@@ -399,11 +424,11 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 		if (disposition) {
 			setEditingDisposition(disposition);
 			setDispositionForm({
-				fieldType: 'dropdown',
+				fieldType: disposition.fieldType || 'dropdown',
 				fieldLabel: disposition.name,
-				dropdownOptions: [''],
-				sortOrder: 'entered',
-				isRequired: false,
+				dropdownOptions: disposition.dropdownOptions || [''],
+				sortOrder: disposition.sortOrder || 'entered',
+				isRequired: disposition.isRequired || false,
 				color: disposition.color
 			});
 			setIsEditDispositionModalOpen(true);
@@ -435,7 +460,11 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 			const updatedDisposition: DispositionCategory = {
 				id: editingDisposition.id,
 				name: dispositionForm.fieldLabel,
-				color: dispositionForm.color
+				color: dispositionForm.color,
+				fieldType: dispositionForm.fieldType,
+				dropdownOptions: dispositionForm.dropdownOptions,
+				sortOrder: dispositionForm.sortOrder,
+				isRequired: dispositionForm.isRequired
 			};
 			const updatedDispositions = dispositions.map(d =>
 				d.id === editingDisposition.id ? updatedDisposition : d
@@ -448,7 +477,11 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 			const newDisposition: DispositionCategory = {
 				id: Date.now().toString(),
 				name: dispositionForm.fieldLabel,
-				color: dispositionForm.color
+				color: dispositionForm.color,
+				fieldType: dispositionForm.fieldType,
+				dropdownOptions: dispositionForm.dropdownOptions,
+				sortOrder: dispositionForm.sortOrder,
+				isRequired: dispositionForm.isRequired
 			};
 			const updatedDispositions = [...dispositions, newDisposition];
 			onDispositionsChange(updatedDispositions);
@@ -585,15 +618,15 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 						</h2>
 						<Dropdown
 							label=""
-							value={dispositionSettings.timeRangeView}
+							value={dispositionSettings.chartType || 'pie'}
 							onChange={(value) => updateDashboardSettings({
 								dispositionSettings: {
 									...dispositionSettings,
-									timeRangeView: value as 'daily' | 'weekly' | 'monthly'
+									chartType: value as 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble'
 								}
 							})}
-							options={timeRangeOptions}
-							className="min-w-[120px]"
+							options={chartTypeOptions}
+							className="min-w-[150px]"
 							inputClassName="h-10 ml-4"
 						/>
 					</div>
@@ -612,13 +645,13 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 								<div key={disposition.id} className="flex items-center gap-2">
 									<div
 										className="w-3 h-3 rounded-sm"
-										style={{ backgroundColor: disposition.color }}
+										style={{ backgroundColor: disposition?.color }}
 									></div>
 									<span
 										className="font-lato text-sm dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
-										{disposition.name}
+										{disposition?.name}
 									</span>
 								</div>
 							))

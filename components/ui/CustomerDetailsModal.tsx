@@ -2,31 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import Button from './Button';
-import FillDispositionModal, { DispositionFormData } from './FillDispositionModal';
+import FillDispositionModal, { DispositionFormState } from './FillDispositionModal';
 import SMSModal from './SMSModal';
 import DispositionHistoryModal from './DispositionHistoryModal';
 import { Cross2Icon, ChatBubbleIcon, ClipboardIcon, PersonIcon, EnvelopeClosedIcon, HomeIcon, MobileIcon } from '@radix-ui/react-icons';
-import { getOfflineDispositions, OfflineDisposition, getSyncedDispositions, SyncedDisposition } from '@/utils/offlineDispositions';
-import { useAuth } from '@/contexts/AuthContext';
+import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, DispositionHistoryItem } from '@/utils/offlineDispositions';
 import { NoRecordFound, SVGLoaderFetch } from '../Options';
-
-interface DispositionHistoryItem {
-	id: string;
-	date: string;
-	time: string;
-	agent: string;
-	timeSpent: string;
-	isOffline?: boolean;
-	offlineStatus?: 'pending' | 'synced' | 'failed';
-	agentId?: string;
-	callAnswered?: string;
-	reasonForNonPayment?: string;
-	reasonForNotWatching?: string;
-	commitmentDate?: string;
-	amountToPay?: string;
-	dateTime?: string;
-	comment?: string;
-}
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useGetDispositionsByCustomerQuery } from '@/store/services/dispositionApi';
 
 interface CustomerDetailsModalProps {
 	isOpen: boolean;
@@ -45,28 +28,34 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 
 	console.log('CustomerDetailsModalProps----->', customer);
 
-	const [pageSize, setPageSize] = useState(3);
-	const [isLoading, setIsLoading] = useState(false);
+	const [pageSize] = useState(3);
+	const [isLoading] = useState(false);
 	const [isFillDispositionModalOpen, setIsFillDispositionModalOpen] = useState(false);
 	const [isSMSModalOpen, setIsSMSModalOpen] = useState(false);
 	const [isDispositionHistoryModalOpen, setIsDispositionHistoryModalOpen] = useState(false);
-	const [selectedDispositionData, setSelectedDispositionData] = useState<Partial<DispositionFormData> | undefined>(undefined);
+	const [selectedDispositionData, setSelectedDispositionData] = useState<Partial<DispositionFormState> | undefined>(undefined);
 	const [selectedDispositionHistoryItem, setSelectedDispositionHistoryItem] = useState<DispositionHistoryItem | null>(null);
 	const [isAnimating, setIsAnimating] = useState(false);
 	const [shouldRender, setShouldRender] = useState(false);
 	const [offlineDispositions, setOfflineDispositions] = useState<OfflineDisposition[]>([]);
-	const [syncedDispositions, setSyncedDispositions] = useState<SyncedDisposition[]>([]);
-	const { user: authUser } = useAuth();
+	const { selectedLineOfBusinessId } = useLineOfBusiness();
 
-	// Load all dispositions (offline and synced) for this customer
+	const { data: apiData, isLoading: isApiLoading } = useGetDispositionsByCustomerQuery(
+		{
+			lineOfBusinessId: selectedLineOfBusinessId || '',
+			customerId: customer?.id || '',
+			page: 1,
+			limit: 50
+		},
+		{ skip: !isOpen || !customer?.id || !selectedLineOfBusinessId }
+	);
+
+	// Load offline dispositions for this customer
 	useEffect(() => {
 		if (isOpen && customer?.id) {
 			const allOffline = getOfflineDispositions();
 			const customerOffline = allOffline.filter(d => d.customerId === customer.id);
 			setOfflineDispositions(customerOffline);
-
-			const allSynced = getSyncedDispositions(customer.id);
-			setSyncedDispositions(allSynced);
 		}
 	}, [isOpen, customer?.id, isFillDispositionModalOpen]);
 
@@ -113,33 +102,46 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 		};
 	}, [isOpen, onClose]);
 
-	if (!shouldRender || !customer) return null;
-
 	// Combine synced and offline dispositions (no static data)
-	const combinedDispositions: DispositionHistoryItem[] = [
-		...syncedDispositions.map((synced): DispositionHistoryItem => ({
-			id: synced.id,
-			date: synced.date || new Date(synced.syncedAt).toLocaleDateString(),
-			time: synced.time || new Date(synced.syncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-			agent: synced.agent || authUser?.name || 'Current User',
-			timeSpent: '-',
-			isOffline: false,
-		})),
-		...offlineDispositions.map((offline): DispositionHistoryItem => ({
-			id: offline.id,
-			date: offline.date || new Date(offline.createdAt).toLocaleDateString(),
-			time: offline.time || new Date(offline.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-			agent: 'Offline Entry',
-			timeSpent: '-',
-			isOffline: true,
-			offlineStatus: offline.status,
-		})),
-	].sort((a, b) => {
-		// Sort by date (newest first)
-		const dateA = new Date(a.date).getTime();
-		const dateB = new Date(b.date).getTime();
-		return dateB - dateA;
-	});
+	const combinedDispositions: DispositionHistoryItem[] = React.useMemo(() => {
+		const syncedList = apiData ? (Array.isArray(apiData) ? apiData : apiData.data || []) : [];
+		const mappedSynced = syncedList.map((item: any) => ({
+				id: item._id || item.id,
+				date: new Date(item.timestamp || item.createdAt || item.syncedAt).toLocaleDateString(),
+				time: new Date(item.timestamp || item.createdAt || item.syncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+				agent: item.agent?.name || item.agent || 'Unknown Agent',
+				isOffline: false,
+				dispositionData: item.fillDisposition || item.dispositionData || [],
+				timestamp: new Date(item.timestamp || item.createdAt || item.syncedAt).getTime()
+			}));
+
+			const mappedOffline = offlineDispositions.map((offline): any => {
+				const dateStr = new Date(offline.createdAt).toLocaleDateString();
+				const timeStr = new Date(offline.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+				return {
+					id: offline.id,
+					date: dateStr,
+					time: timeStr,
+					agent: 'Offline Entry',
+					isOffline: true,
+					offlineStatus: offline?.status,
+					dispositionData: offline?.dispositionData,
+					timestamp: new Date(offline?.createdAt).getTime()
+				};
+			});
+
+		return [...mappedSynced, ...mappedOffline].sort((a, b) => b.timestamp - a.timestamp);
+	}, [apiData, offlineDispositions]);
+
+	const dynamicHeaders = React.useMemo(() => {
+		const headers = new Set<string>();
+		combinedDispositions.forEach(item => {
+			item.dispositionData?.forEach((field: any) => {
+				if (field.fieldName) headers.add(field.fieldName);
+			});
+		});
+		return Array.from(headers);
+	}, [combinedDispositions]);
 
 	const handleViewDetails = (dispositionId: string) => {
 		const disposition = combinedDispositions.find(item => item.id === dispositionId);
@@ -150,54 +152,23 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 				if (offlineData) {
 					const enrichedDisposition: DispositionHistoryItem = {
 						...disposition,
+						dispositionData: offlineData.dispositionData,
 						agentId: 'Offline Entry',
-						callAnswered: offlineData.callAnswered || '-',
-						reasonForNonPayment: offlineData.reasonForNonPayment || '-',
-						reasonForNotWatching: offlineData.reasonForNotWatching || '-',
-						commitmentDate: offlineData.commitmentDate || '-',
-						amountToPay: offlineData.amountToPay || '-',
-						dateTime: `${offlineData.date || ''} ${offlineData.time || ''}`.trim() || '-',
-						comment: offlineData.comment || '-',
 					};
 					setSelectedDispositionHistoryItem(enrichedDisposition);
 					setIsDispositionHistoryModalOpen(true);
 					return;
 				}
 			}
-			// If it's a synced disposition, get the full data
-			const syncedData = syncedDispositions.find(d => d.id === dispositionId);
-			if (syncedData) {
-				const enrichedDisposition: DispositionHistoryItem = {
-					...disposition,
-					agentId: syncedData.agentId || 'user.001',
-					callAnswered: syncedData.callAnswered || '-',
-					reasonForNonPayment: syncedData.reasonForNonPayment || '-',
-					reasonForNotWatching: syncedData.reasonForNotWatching || '-',
-					commitmentDate: syncedData.commitmentDate || '-',
-					amountToPay: syncedData.amountToPay || '-',
-					dateTime: `${syncedData.date || ''} ${syncedData.time || ''}`.trim() || '-',
-					comment: syncedData.comment || '-',
-				};
-				setSelectedDispositionHistoryItem(enrichedDisposition);
-				setIsDispositionHistoryModalOpen(true);
-				return;
-			}
-			// For regular dispositions, use sample data
-			const enrichedDisposition: DispositionHistoryItem = {
-				...disposition,
-				agentId: 'agent.107693', // Sample agent ID
-				callAnswered: 'Yes',
-				reasonForNonPayment: 'No money',
-				reasonForNotWatching: 'No light',
-				commitmentDate: '12/11/25',
-				amountToPay: '3,000',
-				dateTime: '12/11/25 02:34',
-				comment: 'The customer is willing to pay',
-			};
-			setSelectedDispositionHistoryItem(enrichedDisposition);
+			// If it's a synced disposition, get the full data from API list
+			// The disposition object already contains the data from apiData mapping
+			setSelectedDispositionHistoryItem(disposition);
 			setIsDispositionHistoryModalOpen(true);
+			return;
 		}
 	};
+
+	if (!shouldRender || !customer) return null;
 
 	return (
 		<div>
@@ -419,12 +390,15 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 											>
 												Agent
 											</th>
-											<th
-												className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-												style={{ color: 'var(--text-primary)' }}
-											>
-												Time Spent
-											</th>
+											{dynamicHeaders.map((header) => (
+												<th
+													key={header}
+													className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													{header}
+												</th>
+											))}
 											<th
 												className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
 												style={{ color: 'var(--text-primary)' }}
@@ -440,10 +414,10 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 											borderColor: 'var(--light-gray)'
 										}}
 									>
-										{isLoading ? (
-											<SVGLoaderFetch colSpan={8} text={''} />
+										{isApiLoading ? (
+											<SVGLoaderFetch colSpan={5 + dynamicHeaders.length} text={''} />
 										) : combinedDispositions.length === 0 ? (
-											<NoRecordFound colSpan={8} />
+											<NoRecordFound colSpan={5 + dynamicHeaders.length} />
 										) : combinedDispositions?.slice(0, pageSize).map((item) => (
 											<tr
 												key={item.id}
@@ -501,12 +475,18 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 												>
 													{item.agent}
 												</td>
-												<td
-													className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
-													style={{ color: 'var(--text-primary)' }}
-												>
-													{item.timeSpent}
-												</td>
+												{dynamicHeaders?.map((header) => {
+													const field = item.dispositionData?.find((f: any) => f.fieldName === header);
+													return (
+														<td
+															key={header}
+															className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+															style={{ color: 'var(--text-primary)' }}
+														>
+															{field ? String(field.fieldValue) : '-'}
+														</td>
+													);
+												})}
 												<td className="px-6 py-4 whitespace-nowrap">
 													<button
 														onClick={() => handleViewDetails(item.id)}
@@ -543,16 +523,14 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 						// Refresh the dispositions list
 						if (customer?.id) {
 							const allOffline = getOfflineDispositions();
-							const customerOffline = allOffline.filter(d => d.customerId === customer.id);
+							const customerOffline = allOffline.filter(d => d?.customerId === customer?.id);
 							setOfflineDispositions(customerOffline);
-
-							const allSynced = getSyncedDispositions(customer.id);
-							setSyncedDispositions(allSynced);
+							// API data automatically refetches due to tag invalidation
 						}
 					}}
 					initialData={selectedDispositionData}
 					customerId={customer?.id}
-					customerName={customer ? `${String(customer.firstName || '')} ${String(customer.lastName || '')}`.trim() : undefined}
+					customerName={customer ? `${String(customer?.firstName || '')} ${String(customer?.lastName || '')}`.trim() : undefined}
 				/>
 
 				{/* SMS Modal */}
@@ -563,7 +541,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 						console.log('Send SMS:', data);
 						// Implement send SMS logic here
 					}}
-					initialPhone={customer.phone ? String(customer.phone) : undefined}
+					initialPhone={customer?.phone ? String(customer.phone) : undefined}
 				/>
 
 				{/* Disposition History Modal */}
