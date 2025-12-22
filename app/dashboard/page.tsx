@@ -199,6 +199,7 @@ const DashboardContent: React.FC = () => {
 	const [stickyNotes, setStickyNotes] = useState<StickyNoteData[]>([]);
 	const [editingNote, setEditingNote] = useState<StickyNoteData | undefined>(undefined);
 	const [isLoaded, setIsLoaded] = useState(false);
+	const [hydrated, setHydrated] = useState(false);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -216,6 +217,7 @@ const DashboardContent: React.FC = () => {
 
 	// Load sticky notes from localStorage on mount
 	useEffect(() => {
+		setHydrated(true);
 		const loadStickyNotes = () => {
 			try {
 				const savedNotes = localStorage.getItem('stickyNotes');
@@ -524,7 +526,7 @@ const DashboardContent: React.FC = () => {
 		if (false) handleOpenStickyNoteModal();
 	}, []);
 
-	if (isLoading) {
+	if (hydrated && isLoading) {
 		return <DashboardSkeleton />;
 	}
 

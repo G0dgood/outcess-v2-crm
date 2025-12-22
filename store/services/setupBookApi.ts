@@ -84,15 +84,15 @@ export const setupBookApi = createApi({
             },
             providesTags: ['SetupBook'],
         }),
-        getSetupBookBySearchId: builder.query<SetupBookResponse, { searchId: string; page?: number; limit?: number; search?: string }>({
-            query: ({ searchId, page, limit, search }) => {
+        getSetupBookBySearchId: builder.query<SetupBookResponse, { lineOfBusinessId: string; searchId: string; page?: number; limit?: number; search?: string }>({
+            query: ({ lineOfBusinessId, searchId, page, limit, search }) => {
                 const params = new URLSearchParams();
                 if (page) params.append('page', page.toString());
                 if (limit) params.append('limit', limit.toString());
                 if (search) params.append('search', search);
                 
                 const queryString = params.toString();
-                return `api/v1/setup-books/record/${searchId}${queryString ? `?${queryString}` : ''}`;
+                return `api/v1/setup-books/${lineOfBusinessId}/record/${searchId}${queryString ? `?${queryString}` : ''}`;
             },
             providesTags: ['SetupBook'],
         }),

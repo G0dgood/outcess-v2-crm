@@ -6,10 +6,11 @@ import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
 import PaginationSummary from '@/components/ui/PaginationSummary';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetTeamMembersBySupervisorIdQuery } from '@/store/services/teamMembersApi';
+import { useGetSupervisorsByLineOfBusinessIdQuery, useGetTeamMembersBySupervisorIdQuery, useGetTeamMembersByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
 import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
 import { useSocket } from '@/contexts/SocketContext';
 import { toastSuccess } from '@/utils/toastWithSound';
+import { useUserInfo } from '@/contexts/UserInfoContext';
 
 interface TeamMember {
 	_id: string;
@@ -24,16 +25,26 @@ interface TeamMember {
 }
 
 const TeamMembersPage: React.FC = () => {
+	const { user } = useUserInfo();
 	const { lineOfBusinessData } = useLineOfBusiness();
-	const supervisorId = "693d83a4412528325bdefd87";
-	const { data: teamMembersResponse, isLoading } = useGetTeamMembersBySupervisorIdQuery(supervisorId);
+	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
+	const [supervisorFilter, setSupervisorFilter] = useState('');
+
+	const { data: teamMembersResponse, isLoading } = useGetTeamMembersBySupervisorIdQuery(supervisorFilter, {
+		skip: !supervisorFilter
+	});
+
+	const { data: supervisorsData } = useGetSupervisorsByLineOfBusinessIdQuery(lobId || '', {
+		skip: !lobId
+	});
 	const { socket } = useSocket();
+
+	const supervisorId = supervisorFilter;
 
 	const [teamMembersData, setTeamMembersData] = useState<TeamMember[]>([]);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [currentPage, setCurrentPage] = useState(1);
-	const [supervisorFilter, setSupervisorFilter] = useState('all');
 
 	useEffect(() => {
 		if (teamMembersResponse) {
@@ -108,9 +119,25 @@ const TeamMembersPage: React.FC = () => {
 	}, [socket, supervisorId]);
 
 	const supervisors = useMemo(() => {
-		const unique = new Set(teamMembersData.map(member => member.supervisor));
-		return ['all', ...Array.from(unique)];
-	}, []);
+		if (!supervisorsData) return [];
+		const rawSupervisors = supervisorsData.teamMembers || supervisorsData.data || (Array.isArray(supervisorsData) ? supervisorsData : []);
+
+		const uniqueSupervisors = rawSupervisors.map((s: any) => ({
+			label: s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim(),
+			value: s._id || s.id
+		})).filter((s: any) => s.label && s.value);
+
+		const uniqueMap = new Map();
+		uniqueSupervisors.forEach((s: any) => uniqueMap.set(s.value, s));
+
+		return Array.from(uniqueMap.values()) as { label: string; value: string }[];
+	}, [supervisorsData]);
+
+	useEffect(() => {
+		if (supervisors.length > 0 && !supervisorFilter) {
+			setSupervisorFilter(supervisors[0].value);
+		}
+	}, [supervisors, supervisorFilter]);
 
 	const filteredMembers = useMemo(() => {
 		return teamMembersData.filter(member => {
@@ -120,11 +147,9 @@ const TeamMembersPage: React.FC = () => {
 				member.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
 				member.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-			const matchesSupervisor = supervisorFilter === 'all' || member.supervisor === supervisorFilter;
-
-			return matchesSearch && matchesSupervisor;
+			return matchesSearch;
 		});
-	}, [searchTerm, supervisorFilter, teamMembersData]);
+	}, [searchTerm, teamMembersData]);
 
 	const totalPages = Math.max(1, Math.ceil(filteredMembers.length / itemsPerPage));
 	const currentMembers = filteredMembers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -192,10 +217,7 @@ const TeamMembersPage: React.FC = () => {
 				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 w-auto">
 					<Dropdown
 						label="Supervisor"
-						options={supervisors.map(value => ({
-							value,
-							label: value === 'all' ? 'All Supervisors' : value,
-						}))}
+						options={supervisors}
 						value={supervisorFilter}
 						onChange={(val) => {
 							if (Array.isArray(val)) return;

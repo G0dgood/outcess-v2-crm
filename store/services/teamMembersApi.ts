@@ -68,6 +68,10 @@ export const teamMembersApi = createApi({
              query: (supervisorId) => `api/v1/team-members/supervisor/${supervisorId}`,
              providesTags: ['TeamMembers'],
         }),
+        getSupervisorsByLineOfBusinessId: builder.query<any, string>({
+            query: (lineOfBusinessId) => `api/v1/team-members/line-of-business/${lineOfBusinessId}/supervisors`,
+            providesTags: ['TeamMembers'],
+        }),
         getTeamMemberById: builder.query<any, string>({
             query: (id) => `api/v1/team-members/${id}`,
             providesTags: ['TeamMembers'],
@@ -113,6 +117,7 @@ export const {
     useGetTeamMembersByLineOfBusinessIdQuery,
     useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery,
     useGetTeamMembersBySupervisorIdQuery,
+    useGetSupervisorsByLineOfBusinessIdQuery,
     useGetTeamMemberByIdQuery,
     useUpdateTeamMemberMutation, 
     useUpdateTeamMemberPasswordMutation,

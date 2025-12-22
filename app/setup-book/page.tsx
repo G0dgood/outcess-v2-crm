@@ -71,12 +71,13 @@ const SetupBookPage: React.FC = () => {
 
 	const { data: recordsBySearchId, isLoading: _isFetchingBySearchId } = useGetSetupBookBySearchIdQuery(
 		{
+			lineOfBusinessId: lobId || '',
 			searchId: searchId || '',
 			search: searchTerm,
 			page: currentPage,
 			limit: 10
 		},
-		{ skip: !searchId }
+		{ skip: !searchId || !lobId }
 	);
 
 	const { data: recordsByLobId, isLoading } = useGetSetupBookByLineOfBusinessIdQuery(

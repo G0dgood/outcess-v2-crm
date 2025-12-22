@@ -10,6 +10,8 @@ import { MixerHorizontalIcon } from '@radix-ui/react-icons';
 import PageHeading from '@/components/ui/PageHeading';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetDispositionsByLineOfBusinessReportQuery } from '@/store/services/dispositionApi';
+import { useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
+import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 
 interface ReportData {
 	id: string;
@@ -22,11 +24,20 @@ const ReportPage: React.FC = () => {
 		{ lineOfBusinessId: selectedLineOfBusinessId || '' },
 		{ skip: !selectedLineOfBusinessId }
 	);
-
+	const { data: supervisorsData } = useGetSupervisorsByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
+		skip: !selectedLineOfBusinessId
+	});
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
 	const filterButtonRef = useRef<HTMLDivElement>(null);
+
+	const supervisors = useMemo(() => {
+		if (!supervisorsData) return [];
+		return Array.isArray(supervisorsData) ? supervisorsData : supervisorsData.data || [];
+	}, [supervisorsData]);
+
+	console.log('Supervisors:', supervisors);
 
 	const reportData: ReportData[] = useMemo(() => {
 		if (!apiData) return [];
@@ -239,38 +250,11 @@ const ReportPage: React.FC = () => {
 							}}
 						>
 							{isLoading ? (
-								<tr>
-									<td colSpan={dynamicHeaders.length || 1} className="px-6 py-12 text-center">
-										<div className="flex flex-col items-center justify-center">
-											<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white mb-2"></div>
-											<p className="dark:text-gray-400">Loading reports...</p>
-										</div>
-									</td>
-								</tr>
-							) : filteredReports.length === 0 ? (
-								<tr>
-									<td colSpan={dynamicHeaders.length || 1} className="px-6 py-12 text-center">
-										<div className="flex flex-col items-center justify-center">
-											<div className="mb-4">
-												<Icon name="Bar_chart_light" size="4xl" className="text-gray-300 dark:text-gray-600" />
-											</div>
-											<h3
-												className="text-lg font-medium dark:text-gray-100 mb-2"
-												style={{ color: 'var(--text-primary)' }}
-											>
-												No Data Found
-											</h3>
-											<p
-												className="dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{searchTerm ? 'No reports match your search.' : 'No report data available.'}
-											</p>
-										</div>
-									</td>
-								</tr>
-							) : (
-								paginatedReports.map((report) => (
+								<SVGLoaderFetch colSpan={8} text={''} />
+							) : paginatedReports.length === 0 ? (
+								<NoRecordFound colSpan={8} />
+							) :
+								(paginatedReports?.map((report) => (
 									<tr
 										key={report.id}
 										className="dark:hover:bg-gray-700"
@@ -293,7 +277,7 @@ const ReportPage: React.FC = () => {
 										))}
 									</tr>
 								))
-							)}
+								)}
 						</tbody>
 					</table>
 				</div>

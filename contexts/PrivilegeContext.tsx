@@ -191,7 +191,7 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 	const findModulePermission = (moduleId: string): RoleModulePermission | undefined => {
 		if (!userPrivileges?.role?.permissions) return undefined;
 
-		const normalize = (str: string) => str.replace(/\s+/g, '').toLowerCase();
+		const normalize = (str?: string) => (str ?? '').replace(/\s+/g, '').toLowerCase();
 		const target = normalize(moduleId);
 
 		return userPrivileges.role.permissions.find(p => normalize(p.moduleName) === target);
@@ -308,4 +308,3 @@ export const usePrivilege = () => {
 };
 
 export default PrivilegeContext;
-

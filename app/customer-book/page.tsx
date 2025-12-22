@@ -10,6 +10,7 @@ import { ArrowRightIcon } from '@radix-ui/react-icons';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetSetupBookBySearchIdQuery } from '@/store/services/setupBookApi';
+import { toast } from 'sonner';
 
 interface Customer {
 	id: string;
@@ -18,6 +19,7 @@ interface Customer {
 
 const CustomerBookPage: React.FC = () => {
 	const { lineOfBusinessData } = useLineOfBusiness();
+	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
 	const [searchTerm, setSearchTerm] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
 	// const [currentPage, setCurrentPage] = useState(1);
@@ -28,9 +30,9 @@ const CustomerBookPage: React.FC = () => {
 	console.log('lineOfBusinessData----->', lineOfBusinessData)
 
 	// Fetch customer by SearchId
-	const { data: searchResult, isLoading, isError: _isError } = useGetSetupBookBySearchIdQuery(
-		{ searchId: searchQuery },
-		{ skip: !searchQuery }
+	const { data: searchResult, isLoading, isError, error } = useGetSetupBookBySearchIdQuery(
+		{ lineOfBusinessId: lobId || '', searchId: searchQuery },
+		{ skip: !searchQuery || !lobId }
 	);
 
 	const [customers, setCustomers] = useState<Customer[]>([]);
@@ -54,9 +56,19 @@ const CustomerBookPage: React.FC = () => {
 					};
 				});
 				setCustomers(mappedCustomers);
+			} else {
+				setCustomers([]);
+			}
+		} else if (isError) {
+			setCustomers([]);
+			if (error && 'data' in error) {
+				const errorData = (error as any).data;
+				if (errorData?.message === "Record not found") {
+					toast.error(errorData?.message);
+				}
 			}
 		}
-	}, [searchResult]);
+	}, [searchResult, isError, error]);
 
 	const handleSearch = (value: string) => {
 		setSearchQuery(value);
