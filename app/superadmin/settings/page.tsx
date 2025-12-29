@@ -22,6 +22,20 @@ import SubPageHeading from "@/components/ui/SubPageHeading";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
 
+interface ExtendedUser {
+	firstName?: string;
+	lastName?: string;
+	username?: string;
+	[key: string]: unknown;
+}
+
+interface ApiError {
+	data?: {
+		message?: string;
+	};
+	message?: string;
+}
+
 interface CreditCardInfo {
 	id: string;
 	last4: string;
@@ -61,8 +75,8 @@ export default function SettingsPage() {
 	useEffect(() => {
 		if (user) {
 			setProfileData({
-				fullName: user.name || `${(user as any).firstName || ''} ${(user as any).lastName || ''}`.trim(),
-				username: (user as any).username || '',
+				fullName: user.name || `${(user as ExtendedUser).firstName || ''} ${(user as ExtendedUser).lastName || ''}`.trim(),
+				username: (user as ExtendedUser).username || '',
 				phone: user.phone || '',
 				email: user.email || '',
 			});
@@ -145,9 +159,10 @@ export default function SettingsPage() {
 				phone: profileData.phone,
 				firstName,
 				lastName
-			} as any);
+			});
 
-		} catch (error: any) {
+		} catch (err: unknown) {
+			const error = err as ApiError;
 			console.error('Error updating profile:', error);
 			toast.error(error?.data?.message || 'Failed to update profile. Please try again.');
 		} finally {
@@ -159,8 +174,8 @@ export default function SettingsPage() {
 		// Reset to original values from auth context
 		if (user) {
 			setProfileData({
-				fullName: user.name || `${(user as any).firstName || ''} ${(user as any).lastName || ''}`.trim(),
-				username: (user as any).username || '',
+				fullName: user.name || `${(user as ExtendedUser).firstName || ''} ${(user as ExtendedUser).lastName || ''}`.trim(),
+				username: (user as ExtendedUser).username || '',
 				phone: user.phone || '',
 				email: user.email || '',
 			});
@@ -205,7 +220,8 @@ export default function SettingsPage() {
 				confirm: false,
 			});
 
-		} catch (error: any) {
+		} catch (err: unknown) {
+			const error = err as ApiError;
 			console.error('Error updating password:', error);
 			toast.error(error?.data?.message || 'Failed to update password. Please try again.');
 		} finally {
