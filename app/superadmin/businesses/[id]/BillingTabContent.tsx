@@ -15,10 +15,10 @@ interface BillingTabContentProps {
 
 const BillingTabContent: React.FC<BillingTabContentProps> = ({ billingHistory }) => {
     const { lineOfBusinessData } = useLineOfBusiness();
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage] = useState(10);
 
-    const totalPages = Math.ceil(billingHistory.length / itemsPerPage);
+	const totalPages = Math.ceil(billingHistory.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedBilling = useMemo(() => {

@@ -6,7 +6,7 @@ import Input from './Input';
 import Dropdown from './Dropdown';
 import { ColorPicker } from './ColorPicker';
 import { Modal } from './Modal';
-import { getOfflineDispositions, getSyncedDispositions } from '@/utils/offlineDispositions';
+import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from '@/utils/offlineDispositions';
 import type { Widget } from '@/contexts/SetupContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useSocket } from '@/contexts/SocketContext';
@@ -49,7 +49,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 			// Count dispositions with this category
 			const count = allDispositions.filter(disp => {
 				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-					const field = disp.dispositionData.find((f: any) => f.fieldName === disposition.name);
+					const field = disp.dispositionData.find((f: DispositionFieldEntry) => f.fieldName === disposition.name);
 					if (field) {
 						const value = field.fieldValue;
 						return value && value.toString().trim() !== '' && value !== '-';
@@ -83,7 +83,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 				// Don't reset if user manually set a value
 			}
 		}
-	}, [formData?.title, formData?.value]);
+	}, [formData?.title, formData?.value, lineOfBusinessData?.lineOfBusiness?.dashboardSettings]);
 
 	// Build dropdown options from available data
 	const widgetTitleOptions = useMemo(() => {

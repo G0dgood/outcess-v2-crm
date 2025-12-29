@@ -46,50 +46,50 @@ const UsersTabContent: React.FC<UsersTabContentProps> = ({ users, isLoading }) =
  };
 
  const getRoleName = (role: User['role']) => {
-  if (typeof role === 'string') return role;
-  return role?.roleName || '-';
- };
+		if (typeof role === 'string') return role;
+		return role?.roleName || '-';
+	};
 
- const formatValue = (key: string, value: any): React.ReactNode => {
-  if (value === null || value === undefined) return '-';
+	const formatValue = (key: string, value: unknown): React.ReactNode => {
+		if (value === null || value === undefined) return '-';
 
-  if (key === 'createdAt' || key === 'updatedAt' || key.toLowerCase().includes('date')) {
-   return formatDate(value);
-  }
+		if (key === 'createdAt' || key === 'updatedAt' || key.toLowerCase().includes('date')) {
+			return formatDate(value as string);
+		}
 
-  if (key === 'role' && typeof value === 'object') {
-   return getRoleName(value);
-  }
+		if (key === 'role' && typeof value === 'object') {
+			return getRoleName(value as User['role']);
+		}
 
-  if (typeof value === 'boolean') {
-   return (
-    <span
-     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${value
-      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-      }`}
-    >
-     {value ? 'Yes' : 'No'}
-    </span>
-   );
-  }
+		if (typeof value === 'boolean') {
+			return (
+				<span
+					className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${value
+						? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+						: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+						}`}
+				>
+					{value ? 'Yes' : 'No'}
+				</span>
+			);
+		}
 
-  if (key === 'status') {
-   return (
-    <span
-     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${value === 'Active'
-      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-      }`}
-    >
-     {value}
-    </span>
-   );
-  }
+		if (key === 'status') {
+			return (
+				<span
+					className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${value === 'Active'
+						? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+						: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+						}`}
+				>
+					{value as string}
+				</span>
+			);
+		}
 
-  if (typeof value === 'object') {
-   return JSON.stringify(value);
-  }
+		if (typeof value === 'object') {
+			return JSON.stringify(value);
+		}
 
   return (
    <span

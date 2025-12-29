@@ -8,7 +8,7 @@ import { ColorPicker } from './ColorPicker';
 import { Modal } from './Modal';
 import type { Widget } from '@/contexts/SetupContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { getOfflineDispositions, getSyncedDispositions } from '@/utils/offlineDispositions';
+import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from '@/utils/offlineDispositions';
 
 interface EditWidgetModalProps {
 	isOpen: boolean;
@@ -78,7 +78,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			const allDispositions = [...offlineDispositions, ...syncedDispositions];
 			const count = allDispositions.filter(disp => {
 				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-					const field = disp.dispositionData.find((f: any) => f.fieldName === disposition.name);
+					const field = disp.dispositionData.find((f: DispositionFieldEntry) => f.fieldName === disposition.name);
 					if (field) {
 						const value = field.fieldValue;
 						return value && value.toString().trim() !== '' && value !== '-';
@@ -102,7 +102,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			}).length;
 			setFormData(prev => ({ ...prev, value: count }));
 		}
-	}, [formData?.title]);
+	}, [formData?.title, lineOfBusinessData?.lineOfBusiness?.dashboardSettings]);
 
 	const isValueAutoCalculated = useMemo(() => {
 		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;

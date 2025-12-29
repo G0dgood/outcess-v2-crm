@@ -20,6 +20,91 @@ interface ActivityLogTabContentProps {
  isLoading: boolean;
 }
 
+// Helper function to render details with bold formatting
+const renderDetails = (details: string) => {
+ if (!details) return '-';
+ // Replace **text** with <strong>text</strong>
+ const parts = details.split(/(\*\*[^*]+\*\*)/g);
+ return (
+  <span
+   className="text-sm dark:text-gray-100"
+   style={{ color: 'var(--text-primary)' }}
+  >
+   {parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+     const text = part.slice(2, -2);
+     return <strong key={index}>{text}</strong>;
+    }
+    return part;
+   })}
+  </span>
+ );
+};
+
+const formatDate = (dateString: string) => {
+ if (!dateString) return '-';
+ return new Date(dateString).toLocaleString('en-GB', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit'
+ });
+};
+
+const getUserName = (user: ActivityLogItem['user']) => {
+ if (typeof user === 'string') return user;
+ return user?.name || 'Unknown User';
+};
+
+const formatValue = (key: string, value: unknown): React.ReactNode => {
+ if (value === null || value === undefined) return '-';
+
+ if (key === 'timestamp' || key === 'createdAt' || key.toLowerCase().includes('date')) {
+  return formatDate(value as string);
+ }
+
+ if (key === 'details') {
+  return renderDetails(value as string);
+ }
+
+ if (key === 'user') {
+  return (
+   <span
+    className="text-sm font-medium dark:text-gray-100"
+    style={{ color: 'var(--text-primary)' }}
+   >
+    {getUserName(value as ActivityLogItem['user'])}
+   </span>
+  );
+ }
+
+ if (key === 'role') {
+  return (
+   <span
+    className="text-sm dark:text-gray-400"
+    style={{ color: 'var(--text-tertiary)' }}
+   >
+    {value as string}
+   </span>
+  );
+ }
+
+ if (typeof value === 'object') {
+  return JSON.stringify(value);
+ }
+
+ return (
+  <span
+   className="text-sm dark:text-gray-100"
+   style={{ color: 'var(--text-primary)' }}
+  >
+   {String(value)}
+  </span>
+ );
+};
+
 const ActivityLogTabContent: React.FC<ActivityLogTabContentProps> = ({ activityLog, isLoading }) => {
  const { canAccess } = usePrivilege();
  const canView = canAccess('auditLog', 'view');
@@ -35,103 +120,18 @@ const ActivityLogTabContent: React.FC<ActivityLogTabContentProps> = ({ activityL
   return activityLog.slice(startIndex, endIndex);
  }, [activityLog, startIndex, endIndex]);
 
- if (!canView) {
-  return null;
- }
-
- // Helper function to render details with bold formatting
- const renderDetails = (details: string) => {
-  if (!details) return '-';
-  // Replace **text** with <strong>text</strong>
-  const parts = details.split(/(\*\*[^*]+\*\*)/g);
-  return (
-   <span
-    className="text-sm dark:text-gray-100"
-    style={{ color: 'var(--text-primary)' }}
-   >
-    {parts.map((part, index) => {
-     if (part.startsWith('**') && part.endsWith('**')) {
-      const text = part.slice(2, -2);
-      return <strong key={index}>{text}</strong>;
-     }
-     return part;
-    })}
-   </span>
-  );
- };
-
- const formatDate = (dateString: string) => {
-  if (!dateString) return '-';
-  return new Date(dateString).toLocaleString('en-GB', {
-   day: '2-digit',
-   month: '2-digit',
-   year: 'numeric',
-   hour: '2-digit',
-   minute: '2-digit',
-   second: '2-digit'
-  });
- };
-
- const getUserName = (user: ActivityLogItem['user']) => {
-  if (typeof user === 'string') return user;
-  return user?.name || 'Unknown User';
- };
-
- const formatValue = (key: string, value: any): React.ReactNode => {
-  if (value === null || value === undefined) return '-';
-
-  if (key === 'timestamp' || key === 'createdAt' || key.toLowerCase().includes('date')) {
-   return formatDate(value);
-  }
-
-  if (key === 'details') {
-   return renderDetails(value);
-  }
-
-  if (key === 'user') {
-   return (
-    <span
-     className="text-sm font-medium dark:text-gray-100"
-     style={{ color: 'var(--text-primary)' }}
-    >
-     {getUserName(value)}
-    </span>
-   );
-  }
-
-  if (key === 'role') {
-   return (
-    <span
-     className="text-sm dark:text-gray-400"
-     style={{ color: 'var(--text-tertiary)' }}
-    >
-     {value}
-    </span>
-   );
-  }
-
-  if (typeof value === 'object') {
-   return JSON.stringify(value);
-  }
-
-  return (
-   <span
-    className="text-sm dark:text-gray-100"
-    style={{ color: 'var(--text-primary)' }}
-   >
-    {String(value)}
-   </span>
-  );
- };
-
  const columns = useMemo(() => {
   if (!activityLog || activityLog.length === 0) return [];
   return Object.keys(activityLog[0]).map((key) => ({
    header: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
    key,
-   render: (item: any) => formatValue(key, item[key])
+   render: (item: ActivityLogItem) => formatValue(key, item[key as keyof ActivityLogItem])
   }));
  }, [activityLog]);
+
+ if (!canView) {
+  return null;
+ }
 
  return (
   <div>
