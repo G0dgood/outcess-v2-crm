@@ -5,7 +5,6 @@ import Icon from './Icon';
 import { plusJakartaStyle } from '../Options';
 
 interface LoginTopHeaderProps {
-  email: string;
   plan: string;
   primaryColor: string;
   onUpgradeClick: () => void;
@@ -27,7 +26,7 @@ const LoginTopHeader: React.FC<LoginTopHeaderProps> = ({ primaryColor, onUpgrade
         <div className="flex-1 md:flex-none">
           <div className="hidden md:flex items-center gap-2">
             <Icon name="peoplelyHalf" size="lg" />
-            <span className="font-semibold text-[18px] leading-[28px] flex items-center text-[#050711]"
+            <span className="font-semibold text-[18px] leading-7 flex items-center text-[#050711]"
               style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>Peoplely</span>
           </div>
         </div>

@@ -127,7 +127,6 @@ export default function SettingsPage() {
 
 		setIsProfileLoading(true);
 		try {
-			console.log('Sending profile update request:', profileData);
 
 			// Split full name into first and last name
 			const nameParts = profileData.fullName.trim().split(/\s+/);
@@ -146,7 +145,6 @@ export default function SettingsPage() {
 				data: updateData
 			}).unwrap();
 
-			console.log('Profile update response data:', response);
 
 			toast.success('Profile updated successfully!');
 			setIsEditingProfile(false);

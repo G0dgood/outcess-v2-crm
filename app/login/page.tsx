@@ -135,11 +135,33 @@ export default function LoginPage() {
 					setIsLoading(false);
 				}
 			} catch (err: unknown) {
-				console.error('Login error object:', err);
-				console.log('Login error stringified:', JSON.stringify(err, null, 2));
-				const errorMessage = (err as { data?: { message?: string } })?.data?.message ||
-					(err as { message?: string })?.message ||
-					'Invalid email or password';
+				// Enhanced error logging
+				if (typeof err === 'object' && err !== null) {
+					console.log('Login error details:', {
+						status: (err as any).status,
+						data: (err as any).data,
+						message: (err as any).message,
+						error: (err as any).error,
+					});
+				}
+
+				let errorMessage = 'Invalid email or password';
+
+				if (err && typeof err === 'object') {
+					// Handle RTK Query FetchBaseQueryError with data.message
+					if ('data' in err && (err as any).data?.message) {
+						errorMessage = (err as any).data.message;
+					}
+					// Handle RTK Query SerializedError or standard Error
+					else if ('message' in err) {
+						errorMessage = (err as any).message;
+					}
+					// Handle RTK Query FetchBaseQueryError string error
+					else if ('error' in err && typeof (err as any).error === 'string') {
+						errorMessage = (err as any).error;
+					}
+				}
+
 				toast.error(errorMessage);
 				setIsLoading(false);
 			}
@@ -151,7 +173,6 @@ export default function LoginPage() {
 	return (
 		<div className="login-container">
 			<LoginTopHeader
-				email="chinedu.go@gmail.com"
 				plan="Free plan"
 				primaryColor={primaryColor}
 				onUpgradeClick={() => setIsPricingModalOpen(true)}

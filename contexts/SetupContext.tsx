@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetLineOfBusinessByCompanyIdQuery, useGetLineOfBusinessQuery } from '@/store/services/lineOfBusinessApi';
 import { useLineOfBusiness } from './LineOfBusinessContext';
@@ -137,8 +137,19 @@ export interface SetupData {
 		dispositions: DispositionCategory[];
 		callOutcomes: CallOutcome[];
 		dispositionSettings: {
-			timeRangeView: 'daily' | 'weekly' | 'monthly';
-			chartType: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
+			timeRangeView:
+			'daily' |
+			'weekly' |
+			'monthly';
+			chartType:
+			'bar' |
+			'line' |
+			'pie' |
+			'doughnut' |
+			'polarArea' |
+			'radar' |
+			'scatter' |
+			'bubble';
 			charts: Chart[];
 		};
 	};
@@ -274,14 +285,38 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				}
 			],
 			modules: [
-				{ id: 'dashboard', name: 'Dashboard' },
-				{ id: 'customerBook', name: 'Customer Book' },
-				{ id: 'userManagement', name: 'User Management' },
-				{ id: 'setupBook', name: 'Setup Book' },
-				{ id: 'customerSMS', name: 'Customer SMS' },
-				{ id: 'report', name: 'Report' },
-				{ id: 'systemSetting', name: 'System Setting' },
-				{ id: 'auditLog', name: 'Audit Log' },
+				{
+					id: 'dashboard',
+					name: 'Dashboard'
+				},
+				{
+					id: 'customerBook',
+					name: 'Customer Book'
+				},
+				{
+					id: 'userManagement',
+					name: 'User Management'
+				},
+				{
+					id: 'setupBook',
+					name: 'Setup Book'
+				},
+				{
+					id: 'customerSMS',
+					name: 'Customer SMS'
+				},
+				{
+					id: 'report',
+					name: 'Report'
+				},
+				{
+					id: 'systemSetting',
+					name: 'System Setting'
+				},
+				{
+					id: 'auditLog',
+					name: 'Audit Log'
+				},
 			],
 		},
 		permissionAccessSettings: {
@@ -295,10 +330,25 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 					name: 'User Management',
 					icon: 'User_alt_light',
 					permissions: [
-						{ id: 'createUsers', name: 'Create Users', description: 'Ability to create new user accounts' },
-						{ id: 'editUsers', name: 'Edit Users', description: 'Ability to modify existing user accounts' },
-						{ id: 'deleteUsers', name: 'Delete Users', description: 'Ability to remove user accounts' },
-						{ id: 'viewUsers', name: 'View Users', description: 'Ability to view user information' },
+						{
+							id: 'createUsers',
+							name: 'Create Users',
+							description: 'Ability to create new user accounts'
+						},
+						{
+							id: 'editUsers',
+							name: 'Edit Users',
+							description: 'Ability to modify existing user accounts'
+						},
+						{
+							id: 'deleteUsers',
+							name: 'Delete Users', description: 'Ability to remove user accounts'
+						},
+						{
+							id: 'viewUsers',
+							name: 'View Users',
+							description: 'Ability to view user information'
+						},
 					],
 				},
 				{
@@ -306,10 +356,26 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 					name: 'Customer Management',
 					icon: 'Group_light',
 					permissions: [
-						{ id: 'createCustomers', name: 'Create Customers', description: 'Ability to add new customers' },
-						{ id: 'editCustomers', name: 'Edit Customers', description: 'Ability to modify customer information' },
-						{ id: 'deleteCustomers', name: 'Delete Customers', description: 'Ability to remove customers' },
-						{ id: 'viewCustomers', name: 'View Customers', description: 'Ability to view customer data' },
+						{
+							id: 'createCustomers',
+							name: 'Create Customers',
+							description: 'Ability to add new customers'
+						},
+						{
+							id: 'editCustomers',
+							name: 'Edit Customers',
+							description: 'Ability to modify customer information'
+						},
+						{
+							id: 'deleteCustomers',
+							name: 'Delete Customers',
+							description: 'Ability to remove customers'
+						},
+						{
+							id: 'viewCustomers',
+							name: 'View Customers',
+							description: 'Ability to view customer data'
+						},
 					],
 				},
 				{
@@ -317,9 +383,21 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 					name: 'Dashboard Access',
 					icon: 'darhboard',
 					permissions: [
-						{ id: 'viewDashboard', name: 'View Dashboard', description: 'Access to dashboard overview' },
-						{ id: 'exportData', name: 'Export Data', description: 'Ability to export dashboard data' },
-						{ id: 'customizeDashboard', name: 'Customize Dashboard', description: 'Ability to modify dashboard layout' },
+						{
+							id: 'viewDashboard',
+							name: 'View Dashboard',
+							description: 'Access to dashboard overview'
+						},
+						{
+							id: 'exportData',
+							name: 'Export Data',
+							description: 'Ability to export dashboard data'
+						},
+						{
+							id: 'customizeDashboard',
+							name: 'Customize Dashboard',
+							description: 'Ability to modify dashboard layout'
+						},
 					],
 				},
 			],
@@ -402,17 +480,16 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 						...parsedData,
 						// Ensure nested objects are merged correctly
 						dashboardSettings: {
-							...prev.dashboardSettings,
+							...prev?.dashboardSettings,
 							...(parsedData.dashboardSettings || {}),
 							// Ensure specific fields are preserved/merged correctly
-							dashboardName: parsedData.dashboardSettings?.dashboardName || prev.dashboardSettings.dashboardName,
-							callOutcomes: parsedData.dashboardSettings?.callOutcomes || prev.dashboardSettings.callOutcomes,
-							widgets: parsedData.dashboardSettings?.widgets || prev.dashboardSettings.widgets,
-							dispositions: parsedData.dashboardSettings?.dispositions || prev.dashboardSettings.dispositions,
+							dashboardName: parsedData.dashboardSettings?.dashboardName || prev?.dashboardSettings?.dashboardName,
+							callOutcomes: parsedData.dashboardSettings?.callOutcomes || prev?.dashboardSettings?.callOutcomes,
+							widgets: parsedData.dashboardSettings?.widgets || prev?.dashboardSettings?.widgets,
+							dispositions: parsedData.dashboardSettings?.dispositions || prev?.dashboardSettings?.dispositions,
 						}
 					}));
 				} catch (error) {
-					console.error('Error parsing setup data from localStorage:', error);
 				}
 			}
 			setIsInitialized(true);
