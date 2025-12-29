@@ -22,6 +22,71 @@ interface UsersTabContentProps {
  isLoading: boolean
 }
 
+const formatDate = (dateString: string) => {
+ if (!dateString) return '-';
+ return new Date(dateString).toLocaleDateString('en-GB', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric'
+ });
+};
+
+const getRoleName = (role: User['role']) => {
+ if (typeof role === 'string') return role;
+ return role?.roleName || '-';
+};
+
+const formatValue = (key: string, value: unknown): React.ReactNode => {
+ if (value === null || value === undefined) return '-';
+
+ if (key === 'createdAt' || key === 'updatedAt' || key.toLowerCase().includes('date')) {
+  return formatDate(value as string);
+ }
+
+ if (key === 'role' && typeof value === 'object') {
+  return getRoleName(value as User['role']);
+ }
+
+ if (typeof value === 'boolean') {
+  return (
+   <span
+    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${value
+     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+     : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+     }`}
+   >
+    {value ? 'Yes' : 'No'}
+   </span>
+  );
+ }
+
+ if (key === 'status') {
+  return (
+   <span
+    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${value === 'Active'
+     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+     : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+     }`}
+   >
+    {value as string}
+   </span>
+  );
+ }
+
+ if (typeof value === 'object') {
+  return JSON.stringify(value);
+ }
+
+ return (
+  <span
+   className="text-sm dark:text-gray-400"
+   style={{ color: 'var(--text-tertiary)' }}
+  >
+   {String(value)}
+  </span>
+ );
+};
+
 const UsersTabContent: React.FC<UsersTabContentProps> = ({ users, isLoading }) => {
  const { lineOfBusinessData } = useLineOfBusiness();
  const [currentPage, setCurrentPage] = useState(1);
@@ -34,79 +99,13 @@ const UsersTabContent: React.FC<UsersTabContentProps> = ({ users, isLoading }) =
   return users.slice(startIndex, endIndex);
  }, [users, startIndex, endIndex]);
 
- console.log('users---->', users)
-
- const formatDate = (dateString: string) => {
-  if (!dateString) return '-';
-  return new Date(dateString).toLocaleDateString('en-GB', {
-   day: '2-digit',
-   month: '2-digit',
-   year: 'numeric'
-  });
- };
-
- const getRoleName = (role: User['role']) => {
-		if (typeof role === 'string') return role;
-		return role?.roleName || '-';
-	};
-
-	const formatValue = (key: string, value: unknown): React.ReactNode => {
-		if (value === null || value === undefined) return '-';
-
-		if (key === 'createdAt' || key === 'updatedAt' || key.toLowerCase().includes('date')) {
-			return formatDate(value as string);
-		}
-
-		if (key === 'role' && typeof value === 'object') {
-			return getRoleName(value as User['role']);
-		}
-
-		if (typeof value === 'boolean') {
-			return (
-				<span
-					className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${value
-						? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-						: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-						}`}
-				>
-					{value ? 'Yes' : 'No'}
-				</span>
-			);
-		}
-
-		if (key === 'status') {
-			return (
-				<span
-					className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${value === 'Active'
-						? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-						: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-						}`}
-				>
-					{value as string}
-				</span>
-			);
-		}
-
-		if (typeof value === 'object') {
-			return JSON.stringify(value);
-		}
-
-  return (
-   <span
-    className="text-sm dark:text-gray-400"
-    style={{ color: 'var(--text-tertiary)' }}
-   >
-    {String(value)}
-   </span>
-  );
- };
 
  const columns = useMemo(() => {
   if (!users || users.length === 0) return [];
   return Object.keys(users[0]).map((key) => ({
    header: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
    key,
-   render: (user: any) => formatValue(key, user[key])
+   render: (user: User) => formatValue(key, user[key as keyof User])
   }));
  }, [users]);
 

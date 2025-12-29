@@ -1,20 +1,56 @@
 'use client';
 
-import React, { useState, useMemo, use as usePromise } from 'react';
+import { tabs } from '@/components/Options';
+import BusinessDetailSkeleton from '@/components/skeletons/BusinessDetailSkeleton';
+import BackButton from '@/components/ui/BackButton';
 import Button from '@/components/ui/Button';
 import DeactivateBusinessModal from '@/components/ui/DeactivateBusinessModal';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useSuperAdminGetTeamMembersByCompanyIdQuery, useSuperAdminGetActivityLogsByCompanyIdQuery, useSuperAdminGetCompanyDetailsQuery } from '@/store/services/companyApi';
-import UsersTabContent from './UsersTabContent';
-import BillingTabContent from './BillingTabContent';
+import { useSuperAdminGetActivityLogsByCompanyIdQuery, useSuperAdminGetCompanyDetailsQuery, useSuperAdminGetTeamMembersByCompanyIdQuery } from '@/store/services/companyApi';
+import React, { use as usePromise, useMemo, useState } from 'react';
+import { ActivityLogItem } from './ActivityLogTabContent';
 import ActivityLogTabContent from './ActivityLogTabContent';
+import BillingTabContent from './BillingTabContent';
 import OverviewTabContent from './OverviewTabContent';
-import { tabs } from '@/components/Options';
-import { SVGLoader } from '@/components/SVGLoader';
-import BusinessDetailSkeleton from '@/components/skeletons/BusinessDetailSkeleton';
-import BackButton from '@/components/ui/BackButton';
+import UsersTabContent, { User } from './UsersTabContent';
 
+interface TeamMemberResponse {
+	_id: string;
+	id?: string;
+	name?: string;
+	firstName?: string;
+	lastName?: string;
+	email?: string;
+	phone?: string;
+	role?: User['role'];
+	status?: string;
+	createdAt?: string;
+	isActive?: boolean;
+	[key: string]: unknown;
+}
 
+interface TeamMembersData {
+	teamMembers?: TeamMemberResponse[];
+	data?: TeamMemberResponse[];
+}
+
+interface ActivityLogResponse {
+	_id: string;
+	id?: string;
+	createdAt?: string;
+	timestamp?: string;
+	user?: unknown;
+	role?: string;
+	action?: string;
+	details?: string;
+	description?: string;
+	[key: string]: unknown;
+}
+
+interface ActivityLogsData {
+	activityLogs?: ActivityLogResponse[];
+	data?: ActivityLogResponse[];
+}
 
 export default function BusinessDetailPage({ params }: { params: Promise<{ id: string }> }) {
 	const { id } = usePromise(params);
@@ -24,9 +60,9 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 
 	const { data: companyDetailsData, isLoading: isLoadingCompanyDetails } = useSuperAdminGetCompanyDetailsQuery(id);
 
-console.log('companyDetailsData------>',companyDetailsData)
+	console.log('companyDetailsData------>', companyDetailsData)
 
-	
+
 	const businessData = useMemo(() => {
 		if (!companyDetailsData?.businessData) return null;
 		return companyDetailsData.businessData;
@@ -38,31 +74,33 @@ console.log('companyDetailsData------>',companyDetailsData)
 	const users = useMemo(() => {
 		if (!teamMembersData) return [];
 		// Handle different response structures
-		const members = Array.isArray(teamMembersData) ? teamMembersData : (teamMembersData?.teamMembers || teamMembersData?.data || []);
+		const data = teamMembersData as TeamMembersData | TeamMemberResponse[];
+		const members = Array.isArray(data) ? data : (data.teamMembers || data.data || []);
 
-		return members?.map((member: any) => ({
-			_id: member?._id || member.id,
+		return members?.map((member: TeamMemberResponse) => ({
+			_id: member?._id || member.id || '',
 			name: member?.name || (member.firstName && member.lastName ? `${member.firstName} ${member.lastName}` : 'Unknown User'),
 			email: member?.email || 'No Email',
 			phone: member?.phone || '-',
 			role: member?.role || { roleName: 'User', _id: 'temp' },
-			status: member?.status,
+			status: member?.status || 'Unknown',
 			createdAt: member?.createdAt || new Date().toISOString(),
-			isActive: member?.isActive
+			isActive: member?.isActive || false
 		}));
 	}, [teamMembersData]);
 
 	const mappedActivityLogs = useMemo(() => {
 		if (!activityLogsData) return [];
 		// Handle different response structures if needed
-		const logs = Array.isArray(activityLogsData) ? activityLogsData : (activityLogsData?.activityLogs || activityLogsData?.data || []);
+		const data = activityLogsData as ActivityLogsData | ActivityLogResponse[];
+		const logs = Array.isArray(data) ? data : (data.activityLogs || data.data || []);
 
-		return logs?.map((log: any) => ({
-			_id: log._id || log.id,
+		return logs?.map((log: ActivityLogResponse) => ({
+			_id: log._id || log.id || '',
 			timestamp: log.createdAt || log.timestamp || new Date().toISOString(),
-			user: log.user,
-			role: log.role,
-			action: log.action,
+			user: log.user as ActivityLogItem['user'],
+			role: log.role || '',
+			action: log.action || '',
 			details: log.details || log.description || '-'
 		}));
 	}, [activityLogsData]);

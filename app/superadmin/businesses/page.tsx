@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import Search from '@/components/ui/Search';
+import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
-import PaginationSummary from '@/components/ui/PaginationSummary';
+import Search from '@/components/ui/Search';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetAllCompaniesQuery } from '@/store/services/companyApi';
-import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
+import { useRouter } from 'next/navigation';
+import React, { useMemo, useState } from 'react';
 
 interface Business {
 	id: string;
@@ -18,13 +17,25 @@ interface Business {
 	contactPerson: string;
 }
 
+interface CompanyResponse {
+	_id: string;
+	companyName: string;
+	status?: string;
+	[key: string]: unknown;
+}
+
+interface CompaniesData {
+	companies?: CompanyResponse[];
+	data?: CompanyResponse[];
+}
+
 const BusinessesManagementPage: React.FC = () => {
 	const router = useRouter();
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [statusFilter, setStatusFilter] = useState<string>('all');
 	const [currentPage, setCurrentPage] = useState(1);
-	const [itemsPerPage, setItemsPerPage] = useState(10);
+	const [itemsPerPage] = useState(10);
 
 	const { data: companiesData, isLoading } = useGetAllCompaniesQuery();
 
@@ -33,15 +44,17 @@ const BusinessesManagementPage: React.FC = () => {
 	const businesses: Business[] = useMemo(() => {
 		if (!companiesData) return [];
 		// Handle both array response or object with data property or object with companies property
-		const list = Array.isArray(companiesData) ? companiesData :
-			(Array.isArray(companiesData.companies) ? companiesData.companies :
-				(companiesData.data || []));
+		const data = companiesData as CompaniesData | CompanyResponse[];
+		const list = Array.isArray(data) ? data :
+			(Array.isArray((data as CompaniesData).companies) ? (data as CompaniesData).companies :
+				((data as CompaniesData).data || []));
 
-		return list.map((company: any) => ({
+		return (list || []).map((company: CompanyResponse) => ({
 			id: company._id,
 			companyName: company.companyName,
-			status: company.status || "inactive" as 'Active' | 'Inactive', // Default status as not provided in API
+			status: (company.status || "inactive") as 'Active' | 'Inactive', // Default status as not provided in API
 			users: 0, // Default user count as not provided in API 
+			contactPerson: ''
 		}));
 	}, [companiesData]);
 
