@@ -3,9 +3,24 @@
  * Generates chart data based on data source and chart color
  */
 
-import { getOfflineDispositions, getSyncedDispositions } from './offlineDispositions';
+import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from './offlineDispositions';
 import { filterDispositionsByTimeRange } from './filterUtils';
 import type { ChartDataItem } from '@/components/dashboard/charts/types';
+
+interface SetupData {
+	dashboardSettings: {
+		dispositions?: Array<{ name: string; color?: string }>;
+		callOutcomes?: Array<{ name: string }>;
+		dispositionSettings?: {
+			timeRangeView?: string;
+		};
+	};
+}
+
+interface DispositionItem {
+	dispositionData?: DispositionFieldEntry[];
+	[key: string]: unknown;
+}
 
 // Disposition field mappings (same as AddWidgetModal)
 // Removed static DISPOSITION_FIELDS as per request to use dynamic data
@@ -91,18 +106,10 @@ export const generateColorVariations = (baseColor: string, count: number): strin
 export const generateChartData = (
 	dataSource: string | string[],
 	chartColor: string | undefined,
-	setupData: {
-		dashboardSettings: {
-			dispositions?: Array<{ name: string; color?: string }>;
-			callOutcomes?: Array<{ name: string }>;
-			dispositionSettings?: {
-				timeRangeView?: string;
-			};
-		};
-	},
+	setupData: SetupData,
 	pendingDispositionsCount: number,
 	colors?: Record<string, string>, // Map of data source to color
-	providedDispositions?: any[]
+	providedDispositions?: DispositionItem[]
 ): ChartDataItem[] => {
 	// Handle multiple data sources
 	if (Array.isArray(dataSource) && dataSource.length > 1) {
@@ -132,7 +139,15 @@ export const generateChartData = (
 						itemColor = colorVariations[index % colorVariations.length] || item.color;
 					} else {
 						// Use default colors
-						const defaultColors = ['#FF6B6B', '#4ECDC4', '#A8E6CF', '#FFD93D', '#6BCF7F', '#95A5A6', '#E74C3C', '#3498DB'];
+						const defaultColors = [
+							'#FF6B6B',
+							'#4ECDC4',
+							'#A8E6CF', 
+							'#FFD93D', 
+							'#6BCF7F',
+							'#95A5A6', 
+							'#E74C3C',
+							'#3498DB'];
 						itemColor = defaultColors[index % defaultColors.length] || item.color;
 					}
 					labelMap.set(item.label, {
@@ -164,25 +179,17 @@ export const generateChartData = (
 const generateSingleSourceData = (
 	dataSource: string,
 	chartColor: string | undefined,
-	setupData: {
-		dashboardSettings: {
-			dispositions?: Array<{ name: string; color?: string }>;
-			callOutcomes?: Array<{ name: string }>;
-			dispositionSettings?: {
-				timeRangeView?: string;
-			};
-		};
-	},
+	setupData: SetupData,
 	pendingDispositionsCount: number,
-	providedDispositions?: any[]
+	providedDispositions?: DispositionItem[]
 ): ChartDataItem[] => {
-	let allDispositions;
+	let allDispositions: DispositionItem[];
 	if (providedDispositions) {
 		allDispositions = providedDispositions;
 	} else {
 		const allOfflineDispositions = getOfflineDispositions();
 		const allSyncedDispositions = getSyncedDispositions();
-		allDispositions = [...allOfflineDispositions, ...allSyncedDispositions];
+		allDispositions = [...allOfflineDispositions, ...allSyncedDispositions] as unknown as DispositionItem[];
 	}
 
 	// Filter by time range if specified
@@ -203,7 +210,7 @@ const generateSingleSourceData = (
 
 				// Check dispositionData array
 				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-					const field = disp.dispositionData.find((f: any) => f.fieldName === disposition.name);
+					const field = disp.dispositionData.find((f: DispositionFieldEntry) => f.fieldName === disposition.name);
 					if (field) {
 						value = field.fieldValue?.toString().trim();
 					}
@@ -240,7 +247,7 @@ const generateSingleSourceData = (
 			// Count call outcomes (fieldValue matches outcome name)
 			const count = dispositionsToCount.filter(disp => {
 				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-					return disp.dispositionData.some((f: any) =>
+					return disp.dispositionData.some((f: DispositionFieldEntry) =>
 						f.fieldValue && f.fieldValue.toString().toLowerCase() === outcome.name.toLowerCase()
 					);
 				}

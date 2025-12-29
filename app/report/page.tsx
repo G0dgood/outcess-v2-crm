@@ -16,7 +16,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip
 
 interface ReportData {
 	id: string;
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 const ReportPage: React.FC = () => {
@@ -61,7 +61,7 @@ const ReportPage: React.FC = () => {
 		{ skip: !selectedLineOfBusinessId || !isAgent || !user?._id || isPrivilegeLoading }
 	);
 
-	const apiData = isAgent ? agentApiData : lobApiData;
+	const apiData = isAgent ? (agentApiData as { data: unknown[] } | unknown[]) : (lobApiData as { data: unknown[] } | unknown[]);
 	const isLoading = isPrivilegeLoading || (isAgent ? isAgentLoading : isLobLoading);
 
 	const [searchTerm, setSearchTerm] = useState('');
@@ -86,15 +86,17 @@ const ReportPage: React.FC = () => {
 
 	const reportData: ReportData[] = useMemo(() => {
 		if (!apiData) return [];
-		let list = [];
+		let list: any[] = [];
 		if (isAgent) {
-			list = (Array.isArray(apiData) ? apiData : apiData.data || []);
+			const data = apiData as { data: any[] } | any[];
+			list = (Array.isArray(data) ? data : (data as { data: any[] }).data || []);
 		} else {
-			list = Array.isArray(apiData) ? apiData : apiData.data || [];
+			const data = apiData as { data: any[] } | any[];
+			list = Array.isArray(data) ? data : (data as { data: any[] }).data || [];
 		}
 
 		return list.map((item: any) => {
-			const row: any = {
+			const row: ReportData = {
 				id: item._id || item.id,
 				'Agent Name': item.agent?.name || 'Unknown',
 				'Date': item.timestamp ? new Date(item.timestamp).toLocaleDateString() + ' ' + new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
@@ -189,7 +191,7 @@ const ReportPage: React.FC = () => {
 	});
 
 	const totalPages = isAgent
-		? (apiData?.totalPages || 1)
+		? ((apiData as { totalPages?: number })?.totalPages || 1)
 		: Math.ceil(filteredReports.length / 10);
 
 	const startIndex = isAgent ? 0 : (currentPage - 1) * 10;

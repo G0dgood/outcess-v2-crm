@@ -69,7 +69,7 @@ const CustomerBookPage: React.FC = () => {
 		} else if (isError) {
 			setCustomers([]);
 			if (error && 'data' in error) {
-				const errorData = (error as any).data;
+				const errorData = (error as { data: { message?: string } }).data;
 				if (errorData?.message === "Record not found") {
 					toast.error(errorData?.message);
 				}

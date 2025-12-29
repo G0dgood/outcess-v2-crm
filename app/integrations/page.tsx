@@ -25,11 +25,11 @@ interface Integration {
 }
 
 const IntegrationsPage: React.FC = () => {
-    const { canAccess } = usePrivilege();
-    const canAccessModule = canAccess('systemSetting');
-    const canEdit = canAccess('systemSetting', 'edit');
+	const { canAccess } = usePrivilege();
+	const canAccessModule = canAccess('systemSetting');
+	const canEdit = canAccess('systemSetting', 'edit');
 
-    const [integrations, setIntegrations] = useState<Integration[]>([
+	const [integrations, setIntegrations] = useState<Integration[]>([
 		{
 			id: 'slack',
 			name: 'Slack',
@@ -83,7 +83,7 @@ const IntegrationsPage: React.FC = () => {
 	};
 
 	const handleConnect = () => {
-		if (!connectingIntegration) return;
+		if (!connectingIntegration || !canEdit) return;
 
 		setIntegrations(prev =>
 			prev.map(integration =>
@@ -116,6 +116,7 @@ const IntegrationsPage: React.FC = () => {
 	};
 
 	const handleDisconnect = (integrationId: string) => {
+		if (!canEdit) return;
 		setIntegrations(prev =>
 			prev.map(integration =>
 				integration.id === integrationId
@@ -336,10 +337,10 @@ const IntegrationsPage: React.FC = () => {
 										<br />
 										2. Create a new app or select an existing one
 										<br />
-                                        3. Go to &quot;OAuth & Permissions&quot; and copy your Bot User OAuth Token
-                                        </p>
-                                </div>
-                        )}
+										3. Go to &quot;OAuth & Permissions&quot; and copy your Bot User OAuth Token
+									</p>
+								</div>
+							)}
 						</>
 					)}
 				</div>

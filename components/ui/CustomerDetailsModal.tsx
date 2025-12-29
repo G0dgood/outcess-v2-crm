@@ -20,6 +20,17 @@ interface CustomerDetailsModalProps {
 	} | null;
 }
 
+interface ApiDispositionItem {
+	_id?: string;
+	id?: string;
+	timestamp?: string;
+	createdAt?: string;
+	syncedAt?: string;
+	agent?: { name: string } | string;
+	fillDisposition?: DispositionFieldEntry[];
+	dispositionData?: DispositionFieldEntry[];
+}
+
 export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 	isOpen,
 	onClose,
@@ -29,7 +40,6 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 	console.log('CustomerDetailsModalProps----->', customer);
 
 	const [pageSize] = useState(3);
-	const [isLoading] = useState(false);
 	const [isFillDispositionModalOpen, setIsFillDispositionModalOpen] = useState(false);
 	const [isSMSModalOpen, setIsSMSModalOpen] = useState(false);
 	const [isDispositionHistoryModalOpen, setIsDispositionHistoryModalOpen] = useState(false);
@@ -105,38 +115,38 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 	// Combine synced and offline dispositions (no static data)
 	const combinedDispositions: DispositionHistoryItem[] = React.useMemo(() => {
 		const syncedList = apiData ? (Array.isArray(apiData) ? apiData : apiData.data || []) : [];
-		const mappedSynced = syncedList.map((item: any) => ({
-				id: item._id || item.id,
-				date: new Date(item.timestamp || item.createdAt || item.syncedAt).toLocaleDateString(),
-				time: new Date(item.timestamp || item.createdAt || item.syncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-				agent: item.agent?.name || item.agent || 'Unknown Agent',
-				isOffline: false,
-				dispositionData: item.fillDisposition || item.dispositionData || [],
-				timestamp: new Date(item.timestamp || item.createdAt || item.syncedAt).getTime()
-			}));
+		const mappedSynced = syncedList.map((item: ApiDispositionItem) => ({
+			id: item._id || item.id || '',
+			date: new Date(item.timestamp || item.createdAt || item.syncedAt || '').toLocaleDateString(),
+			time: new Date(item.timestamp || item.createdAt || item.syncedAt || '').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+			agent: (typeof item.agent === 'object' ? item.agent?.name : item.agent) || 'Unknown Agent',
+			isOffline: false,
+			dispositionData: item.fillDisposition || item.dispositionData || [],
+			timestamp: new Date(item.timestamp || item.createdAt || item.syncedAt || '').getTime()
+		}));
 
-			const mappedOffline = offlineDispositions.map((offline): any => {
-				const dateStr = new Date(offline.createdAt).toLocaleDateString();
-				const timeStr = new Date(offline.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-				return {
-					id: offline.id,
-					date: dateStr,
-					time: timeStr,
-					agent: 'Offline Entry',
-					isOffline: true,
-					offlineStatus: offline?.status,
-					dispositionData: offline?.dispositionData,
-					timestamp: new Date(offline?.createdAt).getTime()
-				};
-			});
+		const mappedOffline = offlineDispositions.map((offline): DispositionHistoryItem => {
+			const dateStr = new Date(offline.createdAt).toLocaleDateString();
+			const timeStr = new Date(offline.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+			return {
+				id: offline.id,
+				date: dateStr,
+				time: timeStr,
+				agent: 'Offline Entry',
+				isOffline: true,
+				offlineStatus: offline?.status,
+				dispositionData: offline?.dispositionData,
+				timestamp: new Date(offline?.createdAt).getTime()
+			};
+		});
 
-		return [...mappedSynced, ...mappedOffline].sort((a, b) => b.timestamp - a.timestamp);
+		return [...mappedSynced, ...mappedOffline].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 	}, [apiData, offlineDispositions]);
 
 	const dynamicHeaders = React.useMemo(() => {
 		const headers = new Set<string>();
 		combinedDispositions.forEach(item => {
-			item.dispositionData?.forEach((field: any) => {
+			item.dispositionData?.forEach((field: DispositionFieldEntry) => {
 				if (field.fieldName) headers.add(field.fieldName);
 			});
 		});
@@ -476,7 +486,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 													{item.agent}
 												</td>
 												{dynamicHeaders?.map((header) => {
-													const field = item.dispositionData?.find((f: any) => f.fieldName === header);
+													const field = item.dispositionData?.find((f: DispositionFieldEntry) => f.fieldName === header);
 													return (
 														<td
 															key={header}
@@ -518,7 +528,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 						setIsFillDispositionModalOpen(false);
 						setSelectedDispositionData(undefined);
 					}}
-					onSave={(data) => {
+					onSave={() => {
 						// Save to synced dispositions if online, or it will be saved offline automatically
 						// Refresh the dispositions list
 						if (customer?.id) {

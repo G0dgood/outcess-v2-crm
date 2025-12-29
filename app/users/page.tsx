@@ -35,11 +35,11 @@ const UsersPage: React.FC = () => {
 	const { data: teamMembersResponse, isLoading } = useGetTeamMembersByLineOfBusinessIdQuery(lineOfBusinessId, { skip: !lineOfBusinessId });
 	const [deleteTeamMember] = useDeleteTeamMemberMutation();
 	const { canAccess } = usePrivilege();
-	const canAccessModule = canAccess('userManagement');
-	const canView = canAccess('userManagement', 'view');
-	const canCreate = canAccess('userManagement', 'create');
-	const canEdit = canAccess('userManagement', 'edit');
-	const canDelete = canAccess('userManagement', 'delete');
+	const canAccessModule = canAccess('teamMembers');
+	const canView = canAccess('teamMembers', 'view');
+	const canCreate = canAccess('teamMembers', 'create');
+	const canEdit = canAccess('teamMembers', 'edit');
+	const canDelete = canAccess('teamMembers', 'delete');
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
@@ -203,14 +203,16 @@ const UsersPage: React.FC = () => {
 					showClearButton={true}
 				/>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
-					<Button
-						variant="primary"
-						size="md"
-						onClick={handleAddUser}
-						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
-					>
-						Add User
-					</Button>
+					{canCreate && (
+						<Button
+							variant="primary"
+							size="md"
+							onClick={handleAddUser}
+							className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+						>
+							Add User
+						</Button>
+					)}
 				</div>
 			</div>
 

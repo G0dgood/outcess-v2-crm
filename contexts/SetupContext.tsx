@@ -100,7 +100,7 @@ interface RolePermissions {
 	};
 }
 
-interface SetupData {
+export interface SetupData {
 	lineOfBusinessId?: string;
 	companyName: string;
 	companyId: string;

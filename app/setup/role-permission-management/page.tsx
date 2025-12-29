@@ -11,6 +11,7 @@ import { useSetup } from '@/contexts/SetupContext';
 import { useGetRolesByCompanyIdQuery, useCreateRoleMutation, useDeleteRoleMutation, Role, RolePermission } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 interface ApiError {
 	data?: {
@@ -24,6 +25,12 @@ export default function RolePermissionManagementPage() {
 	const { setupData } = useSetup();
 	const { user } = useUserInfo();
 	const { roleManagementSettings } = setupData;
+	const { canAccess } = usePrivilege();
+	const canView = canAccess('userManagement', 'view');
+	const canCreate = canAccess('userManagement', 'create');
+	const canDelete = canAccess('userManagement', 'delete');
+	const canEdit = canAccess('userManagement', 'edit');
+
 	const [isCreateRoleModalOpen, setIsCreateRoleModalOpen] = useState(false);
 
 	const companyId = user?.company?._id || user?.companyId || '';
@@ -79,6 +86,7 @@ export default function RolePermissionManagementPage() {
 	}, [rolesData, companyId, createRole, refetch, roleManagementSettings.modules, isLoading, roles]);
 
 	const handleDeleteRole = async (roleId: string) => {
+		if (!canDelete) return;
 		if (window.confirm('Are you sure you want to delete this role?')) {
 			try {
 				await deleteRole(roleId).unwrap();
@@ -92,6 +100,10 @@ export default function RolePermissionManagementPage() {
 			}
 		}
 	};
+
+	if (!canView) {
+		return null;
+	}
 
 	return (
 		<div className="w-full h-full">
@@ -116,15 +128,17 @@ export default function RolePermissionManagementPage() {
 							</p>
 						</div>
 					</div>
-					<Button
-						variant="primary"
-						size="md"
-						onClick={() => setIsCreateRoleModalOpen(true)}
-						className="flex items-center gap-2 w-full sm:w-auto justify-center"
-					>
-						<Icon name="plus" className="w-4 h-4" />
-						Create New Role
-					</Button>
+					{canCreate && (
+						<Button
+							variant="primary"
+							size="md"
+							onClick={() => setIsCreateRoleModalOpen(true)}
+							className="flex items-center gap-2 w-full sm:w-auto justify-center"
+						>
+							<Icon name="plus" className="w-4 h-4" />
+							Create New Role
+						</Button>
+					)}
 				</div>
 			</div>
 
@@ -145,7 +159,7 @@ export default function RolePermissionManagementPage() {
 									<Icon name="darhboard" size="md" />
 								</div>
 							</div>
-							{role.roleName.toLowerCase() !== 'administrator' && (
+							{role.roleName.toLowerCase() !== 'administrator' && canDelete && (
 								<button
 									onClick={() => handleDeleteRole(role._id)}
 									className="duration-200 p-1 dark:hover:bg-red-900/20 rounded-full cursor-pointer w-8 h-8 flex items-center justify-center"

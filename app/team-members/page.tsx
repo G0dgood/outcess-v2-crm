@@ -6,12 +6,12 @@ import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
 import PaginationSummary from '@/components/ui/PaginationSummary';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetSupervisorsByLineOfBusinessIdQuery, useGetTeamMembersBySupervisorIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersBySupervisorIdQuery } from '@/store/services/teamMembersApi';
 import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
 import { useSocket } from '@/contexts/SocketContext';
 import { toastSuccess } from '@/utils/toastWithSound';
-import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
 
 interface TeamMember {
 	_id: string;
@@ -25,8 +25,20 @@ interface TeamMember {
 	team: string;
 }
 
+interface SupervisorRaw {
+	_id?: string;
+	id?: string;
+	name?: string;
+	firstName?: string;
+	lastName?: string;
+}
+
+interface SupervisorOption {
+	label: string;
+	value: string;
+}
+
 const TeamMembersPage: React.FC = () => {
-	const { user } = useUserInfo();
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
 	const [supervisorFilter, setSupervisorFilter] = useState('');
@@ -51,9 +63,9 @@ const TeamMembersPage: React.FC = () => {
 
 	useEffect(() => {
 		if (teamMembersResponse) {
-			const rawMembers = teamMembersResponse?.data || teamMembersResponse?.teamMembers || 
-			teamMembersResponse || [];
-			
+			const rawMembers = teamMembersResponse?.data || teamMembersResponse?.teamMembers ||
+				teamMembersResponse || [];
+
 			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
 
 			const mappedMembers: TeamMember[] = membersList.map((member: unknown) => {
@@ -135,15 +147,15 @@ const TeamMembersPage: React.FC = () => {
 		if (!supervisorsData) return [];
 		const rawSupervisors = supervisorsData.teamMembers || supervisorsData.data || (Array.isArray(supervisorsData) ? supervisorsData : []);
 
-		const uniqueSupervisors = rawSupervisors.map((s: any) => ({
+		const uniqueSupervisors = rawSupervisors.map((s: SupervisorRaw) => ({
 			label: s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim(),
-			value: s._id || s.id
-		})).filter((s: any) => s.label && s.value);
+			value: s._id || s.id || ''
+		})).filter((s: SupervisorOption) => s.label && s.value);
 
 		const uniqueMap = new Map();
-		uniqueSupervisors.forEach((s: any) => uniqueMap.set(s.value, s));
+		uniqueSupervisors.forEach((s: SupervisorOption) => uniqueMap.set(s.value, s));
 
-		return Array.from(uniqueMap.values()) as { label: string; value: string }[];
+		return Array.from(uniqueMap.values()) as SupervisorOption[];
 	}, [supervisorsData]);
 
 	useEffect(() => {

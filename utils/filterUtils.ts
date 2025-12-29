@@ -1,5 +1,13 @@
 
-export const filterDispositionsByTimeRange = (dispositions: any[], timeRange: string) => {
+interface DateFilterable {
+	createdAt?: string | number | Date;
+	syncedAt?: string | number | Date;
+	date?: string | number | Date;
+	timestamp?: string | number | Date;
+	[key: string]: unknown;
+}
+
+export const filterDispositionsByTimeRange = <T extends DateFilterable>(dispositions: T[], timeRange: string): T[] => {
     if (!timeRange || timeRange === 'all') return dispositions;
     
     return dispositions.filter(disp => {
@@ -7,7 +15,7 @@ export const filterDispositionsByTimeRange = (dispositions: any[], timeRange: st
         const dateStr = disp.createdAt || disp.syncedAt || disp.date || disp.timestamp;
         if (!dateStr) return false;
         
-        const date = new Date(dateStr);
+        const date = new Date(dateStr as string | number | Date);
         // Check if date is valid
         if (isNaN(date.getTime())) return false;
         

@@ -35,29 +35,24 @@ import {
 	getOfflineDispositions,
 	getSyncedDispositions,
 	getPendingDispositionsCount,
-	syncPendingDispositions
+	syncPendingDispositions,
+	DispositionFieldEntry
 } from '@/utils/offlineDispositions';
 import SortableChart from '@/components/dashboard/SortableChart';
 import WidgetCard from '@/components/dashboard/WidgetCard';
 
 import { StoredStickyNote, serializeStickyNote } from '@/utils/stickyNoteUtils';
 import { ChartDataItem } from '@/components/dashboard/charts/types';
-import { Chart, Widget, DispositionCategory, CallOutcome, useSetup } from '@/contexts/SetupContext';
+import { Chart, Widget, DispositionCategory, CallOutcome, useSetup, SetupData } from '@/contexts/SetupContext';
 import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 
-interface DashboardSettings {
-	dashboardName: string;
-	dashboardVisibility: string;
-	activeTab: string;
-	widgets: Widget[];
-	dispositions: DispositionCategory[];
-	callOutcomes: CallOutcome[];
-	dispositionSettings: {
-		timeRangeView: string;
-		chartType: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
-		charts: Chart[];
-	};
+// Use shared type from SetupContext for consistency
+type DashboardSettings = SetupData['dashboardSettings'];
+
+interface CombinedDispositionItem {
+	dispositionData?: DispositionFieldEntry[];
+	[key: string]: unknown;
 }
 
 const DashboardContent: React.FC = () => {
@@ -129,7 +124,7 @@ const DashboardContent: React.FC = () => {
 
 	const updateDashboardSettings = async (newSettings: Partial<typeof dashboardSettings>) => {
 		// Always update local SetupContext for immediate UI feedback
-		updateDashboardSettingsLocal(newSettings as any);
+		updateDashboardSettingsLocal(newSettings);
 		// If offline, skip server
 		if (isOffline) return;
 		const lobId = lineOfBusinessData?._id || lineOfBusinessData?.lineOfBusiness?._id || setupData?.lineOfBusinessId;
@@ -378,7 +373,8 @@ const DashboardContent: React.FC = () => {
 		// Note: apiDispositions might be empty array, which is valid. 
 		// Check if it's an array to confirm it's loaded.
 		const synced = Array.isArray(apiDispositions) ? apiDispositions : getSyncedDispositions();
-		return [...offline, ...synced];
+		return [...offline, ...synced] as CombinedDispositionItem[];
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [apiDispositions, pendingDispositionsCount]);
 
 	// Get widgets from context and update values dynamically based on disposition data
@@ -392,7 +388,7 @@ const DashboardContent: React.FC = () => {
 			return filteredDispositions.filter(disp => {
 				// Check dispositionData array
 				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-					const field = disp.dispositionData.find((f: any) => f.fieldName === fieldName);
+					const field = disp.dispositionData.find((f: DispositionFieldEntry) => f.fieldName === fieldName);
 					if (field) {
 						const value = field.fieldValue;
 						return value && value.toString().trim() !== '' && value !== '-';
@@ -401,7 +397,7 @@ const DashboardContent: React.FC = () => {
 
 				// Fallback for direct property access (legacy support)
 				const fieldValue = disp[fieldName as keyof typeof disp];
-				return fieldValue && fieldValue.toString().trim() !== '' && fieldValue !== '-';
+				return fieldValue && String(fieldValue).trim() !== '' && fieldValue !== '-';
 			}).length;
 		};
 
@@ -434,7 +430,7 @@ const DashboardContent: React.FC = () => {
 			if (isCallOutcome) {
 				const count = filteredDispositions.filter(disp => {
 					if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-						return disp.dispositionData.some((f: any) =>
+						return disp.dispositionData.some((f: DispositionFieldEntry) =>
 							f.fieldValue && f.fieldValue.toString().toLowerCase() === widget.title.toLowerCase()
 						);
 					}
@@ -445,7 +441,7 @@ const DashboardContent: React.FC = () => {
 
 			return widget;
 		});
-	}, [dashboardSettings, combinedDispositions]);
+	}, [dashboardSettings, combinedDispositions, pendingDispositionsCount]);
 
 	// Wrapper function to generate chart data using the utility function
 	const generateChartDataWrapper = (dataSource: string | string[], chartColor?: string, colors?: Record<string, string>): ChartDataItem[] => {
@@ -661,83 +657,83 @@ const DashboardContent: React.FC = () => {
 				</div>
 			)}
 			{canAccessDashboard && (
-			<>
-			{/* Dashboard Title and Action Buttons */}
-			<div className="flex justify-between items-center mb-8">
-				<h1
-					className="font-lato font-normal text-[20px] leading-[150%]"
-					style={{ color: 'var(--text-secondary)' }}
-				>
-					{dashboardSettings?.dashboardName || ' Dashboard'}
-				</h1>
-				<div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-					<div className="w-40">
-						<Dropdown
-							label=""
-							placeholder="Time Range"
-							options={[
-								{ value: 'daily', label: 'Daily' },
-								{ value: 'weekly', label: 'Weekly' },
-								{ value: 'monthly', label: 'Monthly' },
-								{ value: 'yearly', label: 'Yearly' },
-								{ value: 'all', label: 'All Time' },
-							]}
-							value={dashboardSettings.dispositionSettings?.timeRangeView || 'daily'}
-							onChange={(value) => updateDashboardSettings({
-								dispositionSettings: {
-									...dashboardSettings.dispositionSettings,
-									timeRangeView: value as string,
-								}
-							})}
-							className="!mb-0"
-						/>
-					</div>
-					<Button
-						variant="primary"
-						size="md"
-						onClick={handleAddWidget}
-						disabled={!canCreate}
-						// style={primaryButtonStyle}
-						className="transition-all duration-200 px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm"
-						onMouseEnter={(event) => handlePrimaryHover(event, true)}
-						onMouseLeave={(event) => handlePrimaryHover(event, false)}
-					>
-						<PlusIcon className="w-4 h-4" />
-						<span className="ml-2 hidden sm:inline">Add Widget</span>
-					</Button>
-					<Button
-						variant="primary"
-						size="md"
-						onClick={handleCreateStickyNoteDirectly}
-						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
-						// style={outlineButtonStyle}
-						onMouseEnter={(event) => handlePrimaryHover(event, true)}
-						onMouseLeave={(event) => handlePrimaryHover(event, false)}
-					>
-						<Pencil1Icon className="w-4 h-4" />
-						<span className="hidden sm:inline">Note</span>
-					</Button>
-					<Button
-						variant="primary"
-						size="md"
-						onClick={() => setIsAddChartModalOpen(true)}
-						disabled={!canCreate}
-						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
-						// style={outlineButtonStyle}
-						onMouseEnter={(event) => handlePrimaryHover(event, true)}
-						onMouseLeave={(event) => handlePrimaryHover(event, false)}
-					>
-						<PlusIcon className="w-4 h-4" />
-						<span className="hidden sm:inline">Add Chart</span>
-						{isOffline && (
-							<span
-								className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
-								style={{ backgroundColor: '#DC350' }}
-								title="Offline mode"
-							/>
-						)}
-					</Button>
-					{/* <Button
+				<>
+					{/* Dashboard Title and Action Buttons */}
+					<div className="flex justify-between items-center mb-8">
+						<h1
+							className="font-lato font-normal text-[20px] leading-[150%]"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							{dashboardSettings?.dashboardName || ' Dashboard'}
+						</h1>
+						<div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+							<div className="w-40">
+								<Dropdown
+									label=""
+									placeholder="Time Range"
+									options={[
+										{ value: 'daily', label: 'Daily' },
+										{ value: 'weekly', label: 'Weekly' },
+										{ value: 'monthly', label: 'Monthly' },
+										{ value: 'yearly', label: 'Yearly' },
+										{ value: 'all', label: 'All Time' },
+									]}
+									value={dashboardSettings.dispositionSettings?.timeRangeView || 'daily'}
+									onChange={(value) => updateDashboardSettings({
+										dispositionSettings: {
+											...dashboardSettings.dispositionSettings,
+											timeRangeView: value as unknown as 'daily' | 'weekly' | 'monthly',
+										}
+									})}
+									className="!mb-0"
+								/>
+							</div>
+							<Button
+								variant="primary"
+								size="md"
+								onClick={handleAddWidget}
+								disabled={!canCreate}
+								// style={primaryButtonStyle}
+								className="transition-all duration-200 px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm"
+								onMouseEnter={(event) => handlePrimaryHover(event, true)}
+								onMouseLeave={(event) => handlePrimaryHover(event, false)}
+							>
+								<PlusIcon className="w-4 h-4" />
+								<span className="ml-2 hidden sm:inline">Add Widget</span>
+							</Button>
+							<Button
+								variant="primary"
+								size="md"
+								onClick={handleCreateStickyNoteDirectly}
+								className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+								// style={outlineButtonStyle}
+								onMouseEnter={(event) => handlePrimaryHover(event, true)}
+								onMouseLeave={(event) => handlePrimaryHover(event, false)}
+							>
+								<Pencil1Icon className="w-4 h-4" />
+								<span className="hidden sm:inline">Note</span>
+							</Button>
+							<Button
+								variant="primary"
+								size="md"
+								onClick={() => setIsAddChartModalOpen(true)}
+								disabled={!canCreate}
+								className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+								// style={outlineButtonStyle}
+								onMouseEnter={(event) => handlePrimaryHover(event, true)}
+								onMouseLeave={(event) => handlePrimaryHover(event, false)}
+							>
+								<PlusIcon className="w-4 h-4" />
+								<span className="hidden sm:inline">Add Chart</span>
+								{isOffline && (
+									<span
+										className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
+										style={{ backgroundColor: '#DC350' }}
+										title="Offline mode"
+									/>
+								)}
+							</Button>
+							{/* <Button
 						variant="primary"
 						size="md"
 						onClick={handleImport}
@@ -746,199 +742,199 @@ const DashboardContent: React.FC = () => {
 						Import
 						<Icon name="share" size="sm" />
 					</Button> */}
-				</div>
-			</div>
+						</div>
+					</div>
 
-			{/* Widget Cards */}
-			{canView ? (
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-					{widgets.map((widget: Widget) => (
-						<WidgetCard
-							key={widget.id}
-							widgetId={widget.id}
-							title={widget.title}
-							value={widget.value}
-							onEdit={handleEditWidget}
-							onDelete={handleDeleteWidget}
-							canEdit={canEdit}
-							canDelete={canDelete}
-						/>
-					))}
-				</div>
-			) : (
-				<div
-					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-8"
-					style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
-				>
-					<h3 className="font-inter text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
-						View Restricted
-					</h3>
-					<p className="font-lato text-sm" style={{ color: 'var(--text-tertiary)' }}>
-						You do not have permission to view widgets and charts.
-					</p>
-				</div>
-			)}
-
-			{/* Charts Grid Container */}
-			<DndContext
-				sensors={sensors}
-				collisionDetection={closestCenter}
-				onDragEnd={handleDragEnd}
-			>
-				<div
-					className="dark:bg-gray-800 border dark:border-gray-700 p-4"
-					style={{
-						backgroundColor: 'var(--accent-white)',
-						borderColor: 'var(--light-gray)'
-					}}
-				>
-					{canView && dashboardSettings.dispositionSettings.charts.length > 0 ? (
-						<SortableContext
-							items={dashboardSettings.dispositionSettings.charts.map((chart: Chart) => chart.id)}
-							strategy={verticalListSortingStrategy}
-						>
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-								{dashboardSettings.dispositionSettings.charts.map((chart: Chart) => (
-									<SortableChart
-										key={chart.id}
-										chart={chart}
-										generateChartData={generateChartDataWrapper}
-										onRemoveChart={handleRemoveChart}
-										onEditChart={handleEditChart}
-										canEdit={canEdit}
-										canDelete={canDelete}
-									/>
-								))}
-							</div>
-						</SortableContext>
+					{/* Widget Cards */}
+					{canView ? (
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+							{widgets.map((widget: Widget) => (
+								<WidgetCard
+									key={widget.id}
+									widgetId={widget.id}
+									title={widget.title}
+									value={widget.value}
+									onEdit={handleEditWidget}
+									onDelete={handleDeleteWidget}
+									canEdit={canEdit}
+									canDelete={canDelete}
+								/>
+							))}
+						</div>
 					) : (
-						<div className="p-12 flex flex-col items-center justify-center">
-							<svg
-								width="120"
-								height="120"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="1.5"
-								className="mb-6"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								<path
-									d="M3 3V21H21"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-								/>
-								<path
-									d="M7 16L12 11L16 15L21 10"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-								/>
-								<path
-									d="M21 10V3H14"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-								/>
-								<circle cx="7" cy="16" r="1.5" fill="currentColor" />
-								<circle cx="12" cy="11" r="1.5" fill="currentColor" />
-								<circle cx="16" cy="15" r="1.5" fill="currentColor" />
-								<circle cx="21" cy="10" r="1.5" fill="currentColor" />
-							</svg>
-							<h3
-								className="font-inter text-lg font-semibold mb-2"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								No Charts Configured
+						<div
+							className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-8"
+							style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
+						>
+							<h3 className="font-inter text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
+								View Restricted
 							</h3>
-							<p
-								className="font-inter text-sm text-center mb-6 max-w-md"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								Add your first chart to visualize your disposition data and track important metrics.
+							<p className="font-lato text-sm" style={{ color: 'var(--text-tertiary)' }}>
+								You do not have permission to view widgets and charts.
 							</p>
-							{canCreate && (
-								<Button
-									variant="primary"
-									size="md"
-									onClick={() => setIsAddChartModalOpen(true)}
-									className="flex items-center gap-2 px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm"
-								>
-									<PlusIcon className="w-4 h-4" />
-									<span className="hidden sm:inline">Add Chart</span>
-								</Button>
-							)}
 						</div>
 					)}
-				</div>
-			</DndContext>
 
-			{/* Sticky Notes - Always visible on the page */}
-			{stickyNotes.filter(note => !note.isHidden).map((note) => (
-				<StickyNote
-					key={note.id}
-					note={note}
-					onUpdate={handleUpdateStickyNote}
-					onDelete={handleDeleteStickyNote}
-				/>
-			))}
+					{/* Charts Grid Container */}
+					<DndContext
+						sensors={sensors}
+						collisionDetection={closestCenter}
+						onDragEnd={handleDragEnd}
+					>
+						<div
+							className="dark:bg-gray-800 border dark:border-gray-700 p-4"
+							style={{
+								backgroundColor: 'var(--accent-white)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
+							{canView && dashboardSettings.dispositionSettings.charts.length > 0 ? (
+								<SortableContext
+									items={dashboardSettings.dispositionSettings.charts.map((chart: Chart) => chart.id)}
+									strategy={verticalListSortingStrategy}
+								>
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+										{dashboardSettings.dispositionSettings.charts.map((chart: Chart) => (
+											<SortableChart
+												key={chart.id}
+												chart={chart}
+												generateChartData={generateChartDataWrapper}
+												onRemoveChart={handleRemoveChart}
+												onEditChart={handleEditChart}
+												canEdit={canEdit}
+												canDelete={canDelete}
+											/>
+										))}
+									</div>
+								</SortableContext>
+							) : (
+								<div className="p-12 flex flex-col items-center justify-center">
+									<svg
+										width="120"
+										height="120"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="1.5"
+										className="mb-6"
+										style={{ color: 'var(--text-tertiary)' }}
+									>
+										<path
+											d="M3 3V21H21"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+										/>
+										<path
+											d="M7 16L12 11L16 15L21 10"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+										/>
+										<path
+											d="M21 10V3H14"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+										/>
+										<circle cx="7" cy="16" r="1.5" fill="currentColor" />
+										<circle cx="12" cy="11" r="1.5" fill="currentColor" />
+										<circle cx="16" cy="15" r="1.5" fill="currentColor" />
+										<circle cx="21" cy="10" r="1.5" fill="currentColor" />
+									</svg>
+									<h3
+										className="font-inter text-lg font-semibold mb-2"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										No Charts Configured
+									</h3>
+									<p
+										className="font-inter text-sm text-center mb-6 max-w-md"
+										style={{ color: 'var(--text-tertiary)' }}
+									>
+										Add your first chart to visualize your disposition data and track important metrics.
+									</p>
+									{canCreate && (
+										<Button
+											variant="primary"
+											size="md"
+											onClick={() => setIsAddChartModalOpen(true)}
+											className="flex items-center gap-2 px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm"
+										>
+											<PlusIcon className="w-4 h-4" />
+											<span className="hidden sm:inline">Add Chart</span>
+										</Button>
+									)}
+								</div>
+							)}
+						</div>
+					</DndContext>
 
-			{/* Add Chart Modal */}
-			<AddChartModal
-				isOpen={isAddChartModalOpen}
-				onClose={() => setIsAddChartModalOpen(false)}
-				onSave={handleAddChart}
-			/>
+					{/* Sticky Notes - Always visible on the page */}
+					{stickyNotes.filter(note => !note.isHidden).map((note) => (
+						<StickyNote
+							key={note.id}
+							note={note}
+							onUpdate={handleUpdateStickyNote}
+							onDelete={handleDeleteStickyNote}
+						/>
+					))}
 
-			{/* Edit Chart Modal */}
-			<EditChartModal
-				isOpen={isEditChartModalOpen}
-				onClose={() => {
-					setIsEditChartModalOpen(false);
-					setEditingChart(null);
-				}}
-				onSave={handleSaveChart}
-				chart={editingChart}
-			/>
+					{/* Add Chart Modal */}
+					<AddChartModal
+						isOpen={isAddChartModalOpen}
+						onClose={() => setIsAddChartModalOpen(false)}
+						onSave={handleAddChart}
+					/>
 
-			{/* Add Widget Modal */}
-			<AddWidgetModal
-				isOpen={isAddWidgetModalOpen}
-				onClose={() => setIsAddWidgetModalOpen(false)}
-				onSave={handleSaveNewWidget}
-			/>
+					{/* Edit Chart Modal */}
+					<EditChartModal
+						isOpen={isEditChartModalOpen}
+						onClose={() => {
+							setIsEditChartModalOpen(false);
+							setEditingChart(null);
+						}}
+						onSave={handleSaveChart}
+						chart={editingChart}
+					/>
 
-			{/* Edit Widget Modal */}
-			<EditWidgetModal
-				isOpen={isEditWidgetModalOpen}
-				onClose={() => {
-					setIsEditWidgetModalOpen(false);
-					setEditingWidget(null);
-				}}
-				onSave={handleSaveWidget}
-				widget={editingWidget}
-			/>
+					{/* Add Widget Modal */}
+					<AddWidgetModal
+						isOpen={isAddWidgetModalOpen}
+						onClose={() => setIsAddWidgetModalOpen(false)}
+						onSave={handleSaveNewWidget}
+					/>
 
-			{/* Delete Widget Modal */}
-			<DeleteWidgetModal
-				isOpen={isDeleteWidgetModalOpen}
-				onClose={() => {
-					setIsDeleteWidgetModalOpen(false);
-					setDeletingWidget(null);
-				}}
-				onConfirm={handleConfirmDelete}
-				widgetTitle={deletingWidget?.title}
-			/>
+					{/* Edit Widget Modal */}
+					<EditWidgetModal
+						isOpen={isEditWidgetModalOpen}
+						onClose={() => {
+							setIsEditWidgetModalOpen(false);
+							setEditingWidget(null);
+						}}
+						onSave={handleSaveWidget}
+						widget={editingWidget}
+					/>
 
-			{/* Sticky Note Modal */}
-			<StickyNoteModal
-				isOpen={isStickyNoteModalOpen}
-				onClose={() => {
-					setIsStickyNoteModalOpen(false);
-					setEditingNote(undefined);
-				}}
-				onSave={handleCreateStickyNote}
-				note={editingNote}
-			/>
-			</>
+					{/* Delete Widget Modal */}
+					<DeleteWidgetModal
+						isOpen={isDeleteWidgetModalOpen}
+						onClose={() => {
+							setIsDeleteWidgetModalOpen(false);
+							setDeletingWidget(null);
+						}}
+						onConfirm={handleConfirmDelete}
+						widgetTitle={deletingWidget?.title}
+					/>
+
+					{/* Sticky Note Modal */}
+					<StickyNoteModal
+						isOpen={isStickyNoteModalOpen}
+						onClose={() => {
+							setIsStickyNoteModalOpen(false);
+							setEditingNote(undefined);
+						}}
+						onSave={handleCreateStickyNote}
+						note={editingNote}
+					/>
+				</>
 			)}
 		</div>
 	);
@@ -951,10 +947,5 @@ import {
 import { useUserInfo } from '@/contexts/UserInfoContext';
 
 export default function DashboardPage() {
-	const { canAccess, isAdmin } = usePrivilege();
-	const { user } = useUserInfo();
-	const { selectedLineOfBusiness, selectedLineOfBusinessId } = useLineOfBusiness();
-	const [selectedTab, setSelectedTab] = useState<'overview' | 'analytics' | 'reports'>('overview');
-
 	return <DashboardContent />;
 }

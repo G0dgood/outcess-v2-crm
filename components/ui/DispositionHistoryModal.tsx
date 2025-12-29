@@ -25,6 +25,20 @@ interface SyncedDispositionViewModel {
 	agentId?: string;
 }
 
+interface ApiDispositionItem {
+	_id?: string;
+	id?: string;
+	customer?: { Name: string };
+	customerName?: string;
+	fillDisposition?: DispositionFieldEntry[];
+	dispositionData?: DispositionFieldEntry[];
+	timestamp?: string;
+	createdAt?: string;
+	syncedAt?: string;
+	agent?: { name: string; _id?: string } | string;
+	agentId?: string;
+}
+
 export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = ({
 	isOpen,
 	onClose,
@@ -36,7 +50,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 	const { selectedLineOfBusinessId } = useLineOfBusiness();
 	const [offlineDispositions, setOfflineDispositions] = useState<OfflineDisposition[]>([]);
 
-	const { data: customerData, isLoading: isLoadingCustomerHistory } = useGetDispositionsByCustomerQuery(
+	const { data: customerData } = useGetDispositionsByCustomerQuery(
 		{
 			lineOfBusinessId: selectedLineOfBusinessId || '',
 			customerId: customerId || '',
@@ -46,7 +60,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 		{ skip: !isOpen || !customerId || !selectedLineOfBusinessId }
 	);
 
-	const { data: agentData, isLoading: isLoadingAgentHistory } = useGetDispositionsByAgentIdQuery(
+	const { data: agentData } = useGetDispositionsByAgentIdQuery(
 		{
 			lineOfBusinessId: selectedLineOfBusinessId || '',
 			agentId: agentId || '',
@@ -61,13 +75,13 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 	const syncedDispositions: SyncedDispositionViewModel[] = React.useMemo(() => {
 		if (!apiData) return [];
 		const list = Array.isArray(apiData) ? apiData : (apiData.data || []);
-		return list.map((item: any) => ({
-			id: item._id || item.id,
+		return list.map((item: ApiDispositionItem) => ({
+			id: item._id || item.id || '',
 			customerName: item.customer?.Name || item.customerName,
 			dispositionData: (item.fillDisposition || item.dispositionData || []) as DispositionFieldEntry[],
-			syncedAt: item.timestamp || item.createdAt || item.syncedAt,
-			agent: item.agent?.name || item.agent || 'Unknown Agent',
-			agentId: item.agent?._id || item.agentId
+			syncedAt: item.timestamp || item.createdAt || item.syncedAt || '',
+			agent: (typeof item.agent === 'object' ? item.agent?.name : item.agent) || 'Unknown Agent',
+			agentId: (typeof item.agent === 'object' ? item.agent?._id : undefined) || item.agentId
 		}));
 	}, [apiData]);
 

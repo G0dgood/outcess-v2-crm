@@ -26,6 +26,13 @@ interface FillDispositionModalProps {
 	customerName?: string;
 }
 
+interface ApiError {
+	data?: {
+		error?: string;
+		message?: string;
+	};
+}
+
 export type DispositionFormState = Record<string, string | number | boolean | undefined>;
 
 interface DispositionField {
@@ -53,7 +60,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	customerId,
 	customerName,
 }) => {
-	const { isOnline, isConnected, isOffline, send } = useSocket();
+	const { isConnected, isOffline, send } = useSocket();
 	const { user: authUser } = useAuth();
 	const { lineOfBusinessData, selectedLineOfBusinessId } = useLineOfBusiness();
 	const [createDisposition] = useCreateDispositionMutation();
@@ -219,11 +226,11 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					onClose();
 					return;
 				}
-			} catch (error: any) {
+			} catch (error: unknown) {
 				console.error('Error saving disposition online:', error);
 
 				// If the server returns a specific error message (e.g. validation error), show it
-				const serverError = error?.data?.error || error?.data?.message;
+				const serverError = (error as ApiError)?.data?.error || (error as ApiError)?.data?.message;
 				if (serverError) {
 					toastError(serverError);
 					// Do not return here - continue to save offline
