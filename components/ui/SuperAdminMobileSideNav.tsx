@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Cross2Icon } from '@radix-ui/react-icons';
+import SuperAdminSideNav from './SuperAdminSideNav';
 
 
 interface SuperAdminMobileSideNavProps {
@@ -105,7 +106,7 @@ const SuperAdminMobileSideNav: React.FC<SuperAdminMobileSideNavProps> = ({
 					</button>
 				</div>
 				{/* Navigation */}
-				<SuperAdminMobileSideNav isMobileOpen={isOpen} onMobileClose={onClose} isMobile />
+				<SuperAdminSideNav isMobileOpen={isOpen} onMobileClose={onClose} isMobile />
 			</nav>
 		</>
 	);
