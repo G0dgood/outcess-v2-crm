@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { roleApi } from './roleApi';
 
 export interface TeamMember {
     id: string;
@@ -47,6 +48,12 @@ export const teamMembersApi = createApi({
                 body: data,
             }),
             invalidatesTags: ['TeamMembers'],
+            async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+                try {
+                    await queryFulfilled;
+                    dispatch(roleApi.util.invalidateTags(['Roles']));
+                } catch {}
+            },
         }),
         getTeamMembers: builder.query<any, void>({
              query: () => 'api/v1/team-members',
@@ -83,6 +90,12 @@ export const teamMembersApi = createApi({
                 body: data,
             }),
             invalidatesTags: ['TeamMembers'],
+            async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+                try {
+                    await queryFulfilled;
+                    dispatch(roleApi.util.invalidateTags(['Roles']));
+                } catch {}
+            },
         }),
         updateTeamMemberPassword: builder.mutation<any, { id: string; password: string }>({
             query: ({ id, password }) => ({
@@ -106,6 +119,12 @@ export const teamMembersApi = createApi({
                 method: 'DELETE',
             }),
             invalidatesTags: ['TeamMembers'],
+            async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+                try {
+                    await queryFulfilled;
+                    dispatch(roleApi.util.invalidateTags(['Roles']));
+                } catch {}
+            },
         }),
     }),
 });
@@ -113,14 +132,14 @@ export const teamMembersApi = createApi({
 export const { 
     useCreateTeamMemberMutation, 
     useGetTeamMembersQuery, 
-    useGetTeamMembersByCompanyIdQuery,
+    useGetTeamMembersByCompanyIdQuery, 
     useGetTeamMembersByLineOfBusinessIdQuery,
     useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery,
     useGetTeamMembersBySupervisorIdQuery,
     useGetSupervisorsByLineOfBusinessIdQuery,
     useGetTeamMemberByIdQuery,
-    useUpdateTeamMemberMutation, 
+    useUpdateTeamMemberMutation,
     useUpdateTeamMemberPasswordMutation,
     useAdminResetTeamMemberPasswordByIdMutation,
-    useDeleteTeamMemberMutation 
+    useDeleteTeamMemberMutation,
 } = teamMembersApi;

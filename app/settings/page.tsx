@@ -3,16 +3,27 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Roles from '@/components/ui/Roles';
+import GeneralSettings from '@/components/ui/GeneralSettings';
 import CompanyDetails from '@/components/ui/CompanyDetails';
 import Fields from '@/components/ui/Fields';
 import Status from '@/components/ui/Status';
 import Permission from '@/components/ui/Permission';
+import { usePrivilege, ModuleId } from '@/contexts/PrivilegeContext';
 
 type SettingsTab = 'settings' | 'fields' | 'status' | 'permission' | 'company-details' | 'roles';
+
+const subModuleMapping: Record<string, ModuleId> = {
+	'settings': 'systemSetting',
+	'status': 'systemSetting',
+	'permission': 'userManagement',
+	'company-details': 'systemSetting',
+	'roles': 'userManagement',
+};
 
 const SettingsPage: React.FC = () => {
 	const searchParams = useSearchParams();
 	const [activeTab, setActiveTab] = useState<SettingsTab | null>(null);
+	const { canAccess } = usePrivilege();
 
 	useEffect(() => {
 		const tab = searchParams.get('tab') as SettingsTab;
@@ -25,7 +36,16 @@ const SettingsPage: React.FC = () => {
 	}, [searchParams]);
 
 	const renderContent = () => {
+		if (!activeTab) return <Status />;
+		
+		const moduleId = subModuleMapping[activeTab];
+		if (moduleId && !canAccess(moduleId, 'view')) {
+			return null;
+		}
+
 		switch (activeTab) {
+			case 'settings':
+				return <GeneralSettings />;
 			case 'roles':
 				return <Roles />;
 			// case 'fields':

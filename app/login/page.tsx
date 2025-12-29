@@ -21,7 +21,7 @@ export default function LoginPage() {
 	const [login] = useLoginMutation();
 	const [teamMemberLogin] = useTeamMemberLoginMutation();
 	const { isDarkMode } = useTheme();
-	const { setUserPrivileges } = usePrivilege();
+	const { setUserPrivileges, isSuperAdmin } = usePrivilege();
 	const primaryColor = '#050711';
 	// loginMethod is determined dynamically based on input value (email vs userId)
 	// const [loginMethod, setLoginMethod] = useState<'email' | 'userId'>('email');
@@ -111,7 +111,7 @@ export default function LoginPage() {
 					if (normalizedUser.role && typeof normalizedUser.role === 'object') {
 						const privileges = {
 							userId: normalizedUser.id,
-							roleId: normalizedUser.role.roleName || 'custom',
+							roleId: normalizedUser.role.roleName,
 							role: normalizedUser.role,
 						};
 						setUserPrivileges(privileges);
@@ -119,7 +119,16 @@ export default function LoginPage() {
 					}
 
 					toast.success('Login successful!');
-					router.push('/dashboard');
+
+					// Check for Super Admin role
+					const roleName = normalizedUser.role?.roleName ||
+						(typeof normalizedUser.role === 'string' ? normalizedUser.role : '');
+
+					if (roleName.toLowerCase() === 'super admin') {
+						router.push('/superadmin/dashboard');
+					} else {
+						router.push('/dashboard');
+					}
 				} else {
 					console.error('Login failed: Missing user or token in response', response);
 					toast.error('Login failed: Invalid response from server');
@@ -128,9 +137,9 @@ export default function LoginPage() {
 			} catch (err: unknown) {
 				console.error('Login error object:', err);
 				console.log('Login error stringified:', JSON.stringify(err, null, 2));
-				const errorMessage = (err as { data?: { message?: string } })?.data?.message || 
-									 (err as { message?: string })?.message || 
-									 'Invalid email or password';
+				const errorMessage = (err as { data?: { message?: string } })?.data?.message ||
+					(err as { message?: string })?.message ||
+					'Invalid email or password';
 				toast.error(errorMessage);
 				setIsLoading(false);
 			}

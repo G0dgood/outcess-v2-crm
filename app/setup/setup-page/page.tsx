@@ -15,8 +15,8 @@ export default function SetupPage() {
 
 	useEffect(() => {
 		// Pre-populate company name from user profile if available
-		if (user?.company?.companyName && !setupData.companyName) {
-			updateSetupData({ companyName: user.company.companyName });
+		if (user?.company?.companyName && !setupData?.companyName) {
+			updateSetupData({ companyName: user?.company?.companyName });
 		}
 	}, [user?.company?.companyName, setupData.companyName]);
 

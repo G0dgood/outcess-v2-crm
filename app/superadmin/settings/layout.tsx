@@ -1,9 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import { SetupProvider } from "@/contexts/SetupContext";
-import AdminHeader from "@/components/ui/AdminHeader";
-import AdminSideNav from "@/components/ui/AdminSideNav";
-import AdminMobileSideNav from "@/components/ui/AdminMobileSideNav";
+import SuperAdminMobileSideNav from "@/components/ui/SuperAdminMobileSideNav";
+import SuperAdminSideNav from "@/components/ui/SuperAdminSideNav";
+import SuperAdminHeader from "@/components/ui/SuperAdminHeader";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -18,7 +18,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
 	return (
 		<div id="page-wrapper">
-			<AdminHeader
+			<SuperAdminHeader
 				userName="Admin User"
 				userEmail="admin@example.com"
 				isOnline={true}
@@ -28,13 +28,13 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
 
 			{/* Desktop Sidebar */}
-			<AdminSideNav activeItem="dashboard" />
+			<SuperAdminSideNav activeItem="settings" />
 
 			{/* Mobile Sidebar */}
 			{isMobileMenuOpen && (
 				<div className="lg:hidden fixed inset-0 z-50">
-					<div className="fixed inset-0 bg-black/10 bg-opacity-50" onClick={closeMobileMenu}></div>
-					<AdminMobileSideNav isOpen={isMobileMenuOpen} onClose={closeMobileMenu} />
+					<div className="fixed inset-0 bg-black bg-opacity-50" onClick={closeMobileMenu}></div>
+					<SuperAdminMobileSideNav isOpen={isMobileMenuOpen} onClose={closeMobileMenu} />
 				</div>
 			)}
 
@@ -51,3 +51,4 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
 		</SetupProvider>
 	);
 }
+

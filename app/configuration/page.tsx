@@ -11,9 +11,16 @@ import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 
+import { usePrivilege } from '@/contexts/PrivilegeContext';
+
 export default function ConfigurationPage() {
 	const router = useRouter();
 	const { user } = useUserInfo();
+	const { canAccess } = usePrivilege();
+	const canAccessModule = canAccess('systemSetting');
+	const canCreate = canAccess('systemSetting', 'create');
+	const canEdit = canAccess('systemSetting', 'edit');
+
 	const { setSelectedLineOfBusinessId } = useLineOfBusiness();
 	const companyId = user?.companyId || user?.company?._id || '';
 	const [searchTerm, setSearchTerm] = useState('');
@@ -25,7 +32,9 @@ export default function ConfigurationPage() {
 		return lineOfBusinessData?.lineOfBusinesses || [];
 	}, [lineOfBusinessData]);
 
-	 
+	if (!canAccessModule) {
+		return null;
+	}
 
 	return (
 		<div>
@@ -57,18 +66,20 @@ export default function ConfigurationPage() {
 					showClearButton={true}
 				/>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
-					<Button
-						variant="primary"
-						size="md"
-						onClick={() => {
-							setSelectedLineOfBusinessId(null);
-							localStorage.removeItem('peoplely-setup-data');
-							router.push('/setup');
-						}}
-						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
-					>
-						Line of Businesses
-					</Button>
+					{canCreate && (
+						<Button
+							variant="primary"
+							size="md"
+							onClick={() => {
+								setSelectedLineOfBusinessId(null);
+								localStorage.removeItem('peoplely-setup-data');
+								router.push('/setup');
+							}}
+							className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+						>
+							Line of Businesses
+						</Button>
+					)}
 				</div>
 			</div>
 			{/* Line of Business Table */}
@@ -175,16 +186,18 @@ export default function ConfigurationPage() {
 										<td
 											className="px-6 py-4 whitespace-nowrap text-sm font-medium"
 										>
-											<button
-												onClick={() => {
-													setSelectedLineOfBusinessId(lob._id);
-													router.push('/setup');
-												}}
-												className="p-2 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700"
-												title="Configure"
-											>
-												<GearIcon width={18} height={18} style={{ color: 'var(--text-primary)' }} />
-											</button>
+											{canEdit && (
+												<button
+													onClick={() => {
+														setSelectedLineOfBusinessId(lob._id);
+														router.push('/setup');
+													}}
+													className="p-2 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700"
+													title="Configure"
+												>
+													<GearIcon width={18} height={18} style={{ color: 'var(--text-primary)' }} />
+												</button>
+											)}
 										</td>
 									</tr>
 								)) }

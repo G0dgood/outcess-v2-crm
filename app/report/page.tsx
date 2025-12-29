@@ -3,15 +3,16 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
-import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
 import DateFilter from '@/components/ui/DateFilter';
 import { MixerHorizontalIcon } from '@radix-ui/react-icons';
 import PageHeading from '@/components/ui/PageHeading';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetDispositionsByLineOfBusinessReportQuery } from '@/store/services/dispositionApi';
-import { useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useGetDispositionsByLineOfBusinessReportQuery, useGetDispositionsByAgentReportQuery } from '@/store/services/dispositionApi';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
 
 interface ReportData {
 	id: string;
@@ -20,28 +21,77 @@ interface ReportData {
 
 const ReportPage: React.FC = () => {
 	const { lineOfBusinessData, selectedLineOfBusinessId } = useLineOfBusiness();
-	const { data: apiData, isLoading } = useGetDispositionsByLineOfBusinessReportQuery(
-		{ lineOfBusinessId: selectedLineOfBusinessId || '' },
-		{ skip: !selectedLineOfBusinessId }
-	);
-	const { data: supervisorsData } = useGetSupervisorsByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
-		skip: !selectedLineOfBusinessId
-	});
-	const [searchTerm, setSearchTerm] = useState('');
+	const { user } = useUserInfo();
+	const { canAccess, isAdmin, isLoading: isPrivilegeLoading } = usePrivilege();
+	const canView = canAccess('report', 'view');
 	const [currentPage, setCurrentPage] = useState(1);
+
+	const formatDate = (date: Date) => {
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const day = String(date.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	};
+
+	const [dateRange, setDateRange] = useState<{ startDate: string; endDate: string }>(() => {
+		const today = formatDate(new Date());
+		return { startDate: `${today}T00:00:00.000Z`, endDate: `${today}T23:59:59.999Z` };
+	});
+
+	const isAgent = !isAdmin;
+
+	const { data: lobApiData, isLoading: isLobLoading } = useGetDispositionsByLineOfBusinessReportQuery(
+		{
+			lineOfBusinessId: selectedLineOfBusinessId || '',
+			startDate: dateRange.startDate,
+			endDate: dateRange.endDate
+		},
+		{ skip: !selectedLineOfBusinessId || isAgent || isPrivilegeLoading }
+	);
+
+	const { data: agentApiData, isLoading: isAgentLoading } = useGetDispositionsByAgentReportQuery(
+		{
+			lineOfBusinessId: selectedLineOfBusinessId || '',
+			agentId: user?._id || '',
+			page: currentPage,
+			limit: 10,
+			startDate: dateRange.startDate,
+			endDate: dateRange.endDate
+		},
+		{ skip: !selectedLineOfBusinessId || !isAgent || !user?._id || isPrivilegeLoading }
+	);
+
+	const apiData = isAgent ? agentApiData : lobApiData;
+	const isLoading = isPrivilegeLoading || (isAgent ? isAgentLoading : isLobLoading);
+
+	const [searchTerm, setSearchTerm] = useState('');
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
 	const filterButtonRef = useRef<HTMLDivElement>(null);
+	const [tooltipLength, setTooltipLength] = useState(10);
+	const [filterType, setFilterType] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange'>('today');
+	const [customFromDate, setCustomFromDate] = useState('');
+	const [customToDate, setCustomToDate] = useState('');
 
-	const supervisors = useMemo(() => {
-		if (!supervisorsData) return [];
-		return Array.isArray(supervisorsData) ? supervisorsData : supervisorsData.data || [];
-	}, [supervisorsData]);
+	useEffect(() => {
+		const savedLength = localStorage.getItem('report_tooltip_length');
+		if (savedLength) {
+			const parsed = parseInt(savedLength, 10);
+			if (!isNaN(parsed) && parsed > 0) {
+				setTooltipLength(parsed);
+			}
+		}
+	}, []);
 
-	console.log('Supervisors:', supervisors);
+
 
 	const reportData: ReportData[] = useMemo(() => {
 		if (!apiData) return [];
-		const list = Array.isArray(apiData) ? apiData : apiData.data || [];
+		let list = [];
+		if (isAgent) {
+			list = (Array.isArray(apiData) ? apiData : apiData.data || []);
+		} else {
+			list = Array.isArray(apiData) ? apiData : apiData.data || [];
+		}
 
 		return list.map((item: any) => {
 			const row: any = {
@@ -61,7 +111,7 @@ const ReportPage: React.FC = () => {
 
 			return row;
 		});
-	}, [apiData]);
+	}, [apiData, isAgent]);
 
 	const dynamicHeaders = useMemo(() => {
 		if (reportData.length === 0) return [];
@@ -117,12 +167,16 @@ const ReportPage: React.FC = () => {
 	};
 
 	const handleFilterApply = (filter: {
-		type: 'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange';
-		from?: string;
-		to?: string;
+		startDate: string;
+		endDate: string;
+		filterType: 'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange';
+		fromDate?: string;
+		toDate?: string;
 	}) => {
-		console.log('Filter applied:', filter);
-		// Implement filter logic here
+		setDateRange({ startDate: filter.startDate, endDate: filter.endDate });
+		setFilterType(filter.filterType);
+		if (filter.fromDate) setCustomFromDate(filter.fromDate);
+		if (filter.toDate) setCustomToDate(filter.toDate);
 		setIsFilterOpen(false);
 	};
 
@@ -134,9 +188,16 @@ const ReportPage: React.FC = () => {
 		);
 	});
 
-	const totalPages = Math.ceil(filteredReports.length / 10);
-	const startIndex = (currentPage - 1) * 10;
+	const totalPages = isAgent
+		? (apiData?.totalPages || 1)
+		: Math.ceil(filteredReports.length / 10);
+
+	const startIndex = isAgent ? 0 : (currentPage - 1) * 10;
 	const paginatedReports = filteredReports.slice(startIndex, startIndex + 10);
+
+	if (!canView) {
+		return null;
+	}
 
 	return (
 		<div>
@@ -182,10 +243,13 @@ const ReportPage: React.FC = () => {
 							Filter Report
 						</button>
 						{isFilterOpen && (
-							<div className="absolute top-full left-0 mt-2 z-50">
+							<div className="absolute top-full right-0 mt-2 z-50">
 								<DateFilter
 									onApply={handleFilterApply}
 									onClose={() => setIsFilterOpen(false)}
+									initialFilter={filterType}
+									initialFromDate={customFromDate}
+									initialToDate={customToDate}
 								/>
 							</div>
 						)}
@@ -272,7 +336,20 @@ const ReportPage: React.FC = () => {
 												className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
 												style={{ color: 'var(--text-primary)' }}
 											>
-												{String(report[header] || '-')}
+												{String(report[header] || '-').length > tooltipLength ? (
+													<Tooltip>
+														<TooltipTrigger asChild>
+															<span className="cursor-pointer">
+																{String(report[header] || '-').substring(0, tooltipLength)}...
+															</span>
+														</TooltipTrigger>
+														<TooltipContent>
+															<p>{String(report[header] || '-')}</p>
+														</TooltipContent>
+													</Tooltip>
+												) : (
+													String(report[header] || '-')
+												)}
 											</td>
 										))}
 									</tr>
@@ -284,7 +361,7 @@ const ReportPage: React.FC = () => {
 			</div>
 
 			{/* Pagination */}
-			{filteredReports.length > 0 && (
+			{filteredReports?.length > 0 && (
 				<Pagination
 					currentPage={currentPage}
 					totalPages={totalPages}

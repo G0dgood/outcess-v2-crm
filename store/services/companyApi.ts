@@ -32,7 +32,19 @@ export const companyApi = createApi({
                 body: data,
             }),
         }),
+        getAllCompanies: builder.query<any, void>({
+            query: () => 'api/v1/super-admin/companies',
+        }),
+        superAdminGetTeamMembersByCompanyId: builder.query<any, string>({
+            query: (companyId) => `api/v1/super-admin/companies/${companyId}/team-members`,
+        }),
+        superAdminGetActivityLogsByCompanyId: builder.query<any, string>({
+            query: (companyId) => `api/v1/super-admin/companies/${companyId}/activity-logs`,
+        }),
+        superAdminGetCompanyDetails: builder.query<any, string>({
+            query: (companyId) => `api/v1/super-admin/companies/${companyId}/details`,
+        }),
     }),
 });
 
-export const { useCreateCompanyMutation, useGetCompanyByIdQuery, useUpdateCompanyMutation } = companyApi;
+export const { useCreateCompanyMutation, useGetCompanyByIdQuery, useUpdateCompanyMutation, useGetAllCompaniesQuery, useSuperAdminGetTeamMembersByCompanyIdQuery, useSuperAdminGetActivityLogsByCompanyIdQuery, useSuperAdminGetCompanyDetailsQuery } = companyApi;

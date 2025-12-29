@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetLineOfBusinessByCompanyIdQuery, useGetLineOfBusinessQuery } from '@/store/services/lineOfBusinessApi';
-import {  useLineOfBusiness } from './LineOfBusinessContext';
+import { useLineOfBusiness } from './LineOfBusinessContext';
 
 interface SetupStep {
 	id: string;
@@ -237,6 +237,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			callOutcomes: [],
 			dispositionSettings: {
 				timeRangeView: 'daily',
+				chartType: 'pie',
 				charts: [],
 			},
 		},

@@ -35,6 +35,10 @@ export interface UserResponse {
     message?: string;
 }
 
+export interface LogoutRequest {
+    userId: string;
+}
+
 export const authApi = createApi({
     reducerPath: 'authApi',
     baseQuery: fetchBaseQuery({ 
@@ -77,14 +81,48 @@ export const authApi = createApi({
             query: (id) => `api/v1/users/user/${id}`,
             providesTags: ['User'],
         }),
-        logout: builder.mutation<void, void>({
-            query: () => ({
+        logout: builder.mutation<void, LogoutRequest>({
+            query: (body) => ({
                 url: 'api/v1/users/logout',
                 method: 'POST',
+                body,
             }),
             invalidatesTags: ['User'],
+        }),
+        teamMemberLogout: builder.mutation<void, LogoutRequest>({
+            query: (body) => ({
+                url: 'api/v1/team-members/logout',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['User'],
+        }),
+        updateUser: builder.mutation<UserResponse, { id: string; data: Partial<RegisterRequest> }>({
+            query: ({ id, data }) => ({
+                url: `api/v1/users/user/${id}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['User'],
+        }),
+        changePassword: builder.mutation<void, { userId: string; oldPassword?: string; newPassword: string }>({
+            query: (body) => ({
+                url: 'api/v1/users/reset-password', // Assuming reset-password or change-password
+                method: 'POST',
+                body,
+            }),
         }),
     }),
 });
 
-export const { useRegisterMutation, useLoginMutation, useTeamMemberLoginMutation, useGetUserByIdQuery, useLazyGetUserByIdQuery, useLogoutMutation } = authApi;
+export const { 
+    useRegisterMutation, 
+    useLoginMutation, 
+    useTeamMemberLoginMutation, 
+    useGetUserByIdQuery, 
+    useLazyGetUserByIdQuery, 
+    useLogoutMutation, 
+    useTeamMemberLogoutMutation,
+    useUpdateUserMutation,
+    useChangePasswordMutation
+} = authApi;

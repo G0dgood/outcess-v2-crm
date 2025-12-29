@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Button from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import AddChartModal from '@/components/ui/AddChartModal';
 import EditChartModal from '@/components/ui/EditChartModal';
 import AddWidgetModal from '@/components/ui/AddWidgetModal';
@@ -12,6 +13,7 @@ import StickyNoteModal from '@/components/ui/StickyNoteModal';
 import { PlusIcon, Pencil1Icon } from '@radix-ui/react-icons';
 import { useUpdateLineOfBusinessMutation } from '@/store/services/lineOfBusinessApi';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { filterDispositionsByTimeRange, getDateRangeFromTimeRange } from '@/utils/filterUtils';
 import {
 	DndContext,
 	closestCenter,
@@ -40,8 +42,9 @@ import WidgetCard from '@/components/dashboard/WidgetCard';
 
 import { StoredStickyNote, serializeStickyNote } from '@/utils/stickyNoteUtils';
 import { ChartDataItem } from '@/components/dashboard/charts/types';
-import { Chart, Widget, DispositionCategory, CallOutcome } from '@/contexts/SetupContext';
+import { Chart, Widget, DispositionCategory, CallOutcome, useSetup } from '@/contexts/SetupContext';
 import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 interface DashboardSettings {
 	dashboardName: string;
@@ -52,18 +55,28 @@ interface DashboardSettings {
 	callOutcomes: CallOutcome[];
 	dispositionSettings: {
 		timeRangeView: string;
+		chartType: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
 		charts: Chart[];
 	};
 }
 
 const DashboardContent: React.FC = () => {
 	const { lineOfBusinessData, isLoading: isLobLoading } = useLineOfBusiness();
+	const { setupData, addChart: addChartLocal, removeChart: removeChartLocal, updateChart: updateChartLocal, updateChartsOrder: updateChartsOrderLocal, updateDashboardSettings: updateDashboardSettingsLocal } = useSetup();
 	const [updateLineOfBusiness] = useUpdateLineOfBusinessMutation();
 	const isLoading = isLobLoading;
 	const { isOnline, isConnected, isOffline, send } = useSocket();
+	const { canAccess, isAdmin } = usePrivilege();
+	const { user } = useUserInfo();
+	const canAccessDashboard = canAccess('dashboard');
+	const canView = canAccess('dashboard', 'view');
+	const canCreate = canAccess('dashboard', 'create');
+	const canEdit = canAccess('dashboard', 'edit');
+	const canDelete = canAccess('dashboard', 'delete');
 
 	const dashboardSettings: DashboardSettings = useMemo(() => {
-		return lineOfBusinessData?.dashboardSettings || {
+		const source = setupData?.dashboardSettings || lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
+		return source || {
 			dashboardName: 'Dashboard',
 			dashboardVisibility: 'all',
 			activeTab: 'kpi',
@@ -74,16 +87,56 @@ const DashboardContent: React.FC = () => {
 			callOutcomes: [],
 			dispositionSettings: {
 				timeRangeView: 'daily',
+				chartType: 'pie',
 				charts: [],
 			},
 		};
-	}, [lineOfBusinessData]);
+	}, [lineOfBusinessData, setupData]);
+
+	// Fetch Report Data
+	const lobId = lineOfBusinessData?._id || lineOfBusinessData?.lineOfBusiness?._id || setupData?.lineOfBusinessId;
+	const timeRange = dashboardSettings.dispositionSettings?.timeRangeView || 'daily';
+	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange]);
+
+	const { data: lobReportData } = useGetDispositionsByLineOfBusinessReportQuery(
+		{
+			lineOfBusinessId: lobId || '',
+			startDate: dateRange.startDate || '',
+			endDate: dateRange.endDate || '',
+		},
+		{ skip: !lobId || !isAdmin || !dateRange.startDate }
+	);
+
+	const { data: agentReportData } = useGetDispositionsByAgentReportQuery(
+		{
+			lineOfBusinessId: lobId || '',
+			agentId: user?._id || '',
+			startDate: dateRange.startDate || '',
+			endDate: dateRange.endDate || '',
+			page: 1,
+			limit: 10000,
+		},
+		{ skip: !lobId || isAdmin || !user?._id || !dateRange.startDate }
+	);
+
+	const apiDispositions = useMemo(() => {
+		if (isAdmin) {
+			return lobReportData?.data || (Array.isArray(lobReportData) ? lobReportData : []);
+		} else {
+			return agentReportData?.data || (Array.isArray(agentReportData) ? agentReportData : []);
+		}
+	}, [isAdmin, lobReportData, agentReportData]);
 
 	const updateDashboardSettings = async (newSettings: Partial<typeof dashboardSettings>) => {
-		if (!lineOfBusinessData?._id) return;
+		// Always update local SetupContext for immediate UI feedback
+		updateDashboardSettingsLocal(newSettings as any);
+		// If offline, skip server
+		if (isOffline) return;
+		const lobId = lineOfBusinessData?._id || lineOfBusinessData?.lineOfBusiness?._id || setupData?.lineOfBusinessId;
+		if (!lobId) return;
 
 		await updateLineOfBusiness({
-			id: lineOfBusinessData._id,
+			id: lobId,
 			data: {
 				dashboardSettings: {
 					...dashboardSettings,
@@ -94,6 +147,10 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const addChart = async (chart: Omit<Chart, 'id'>) => {
+		if (!canCreate) return;
+		// Always store locally into SetupContext first (authoritative dispositionSettings)
+		addChartLocal(chart);
+		if (isOffline) return;
 		const newChart: Chart = {
 			...chart,
 			id: `chart-${Date.now()}`
@@ -150,13 +207,18 @@ const DashboardContent: React.FC = () => {
 
 		await updateDashboardSettings({
 			dispositionSettings: {
-				...dashboardSettings.dispositionSettings,
+				...dashboardSettings?.dispositionSettings,
 				charts: [...existingCharts, positionedChart]
 			}
 		});
 	};
 
 	const removeChart = async (chartId: string) => {
+		if (!canDelete) return;
+		if (isOffline) {
+			removeChartLocal(chartId);
+			return;
+		}
 		const existingCharts = dashboardSettings.dispositionSettings?.charts || [];
 		await updateDashboardSettings({
 			dispositionSettings: {
@@ -167,6 +229,11 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const updateChart = async (chartId: string, updates: Partial<Chart>) => {
+		if (!canEdit) return;
+		if (isOffline) {
+			updateChartLocal(chartId, updates);
+			return;
+		}
 		const existingCharts = dashboardSettings.dispositionSettings?.charts || [];
 		await updateDashboardSettings({
 			dispositionSettings: {
@@ -179,6 +246,11 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const updateChartsOrder = async (newCharts: Chart[]) => {
+		if (!canEdit) return;
+		if (isOffline) {
+			updateChartsOrderLocal(newCharts);
+			return;
+		}
 		await updateDashboardSettings({
 			dispositionSettings: {
 				...dashboardSettings.dispositionSettings,
@@ -299,59 +371,89 @@ const DashboardContent: React.FC = () => {
 		}
 	}, [isOnline, isConnected, send]);
 
+	const combinedDispositions = useMemo(() => {
+		const offline = getOfflineDispositions();
+		// If we have API data, use it as the source of "synced" data
+		// Otherwise fallback to local synced data
+		// Note: apiDispositions might be empty array, which is valid. 
+		// Check if it's an array to confirm it's loaded.
+		const synced = Array.isArray(apiDispositions) ? apiDispositions : getSyncedDispositions();
+		return [...offline, ...synced];
+	}, [apiDispositions, pendingDispositionsCount]);
+
 	// Get widgets from context and update values dynamically based on disposition data
 	const widgets = useMemo(() => {
-		// Get all dispositions for calculations
-		const allOfflineDispositions = getOfflineDispositions();
-		const allSyncedDispositions = getSyncedDispositions();
-		const allDispositions = [...allOfflineDispositions, ...allSyncedDispositions];
+		// Filter dispositions based on time range
+		const timeRange = dashboardSettings.dispositionSettings?.timeRangeView || 'daily';
+		const filteredDispositions = filterDispositionsByTimeRange(combinedDispositions, timeRange);
 
 		// Calculate disposition field counts
-		const calculateDispositionFieldCount = (fieldKey: string): number => {
-			return allDispositions.filter(disp => {
-				const fieldValue = disp[fieldKey as keyof typeof disp];
+		const calculateDispositionFieldCount = (fieldName: string): number => {
+			return filteredDispositions.filter(disp => {
+				// Check dispositionData array
+				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
+					const field = disp.dispositionData.find((f: any) => f.fieldName === fieldName);
+					if (field) {
+						const value = field.fieldValue;
+						return value && value.toString().trim() !== '' && value !== '-';
+					}
+				}
+
+				// Fallback for direct property access (legacy support)
+				const fieldValue = disp[fieldName as keyof typeof disp];
 				return fieldValue && fieldValue.toString().trim() !== '' && fieldValue !== '-';
 			}).length;
 		};
 
-		return dashboardSettings.widgets.map((widget: Widget) => {
+		return dashboardSettings?.widgets?.map((widget: Widget) => {
 			// Update pending dispositions widget value
 			if (widget.title === 'Pending Dispositions') {
 				return { ...widget, value: pendingDispositionsCount };
 			}
 
 			// Update total dispositions widget value
-			if (widget.title === 'Total Dispositions') {
-				return { ...widget, value: allDispositions.length };
+			if (widget.title === 'Total Dispositions' || widget.title === 'Total Calls') {
+				return { ...widget, value: filteredDispositions.length };
 			}
 
-			// Update disposition field-based widgets
-			if (widget.title === 'Call Answered') {
-				return { ...widget, value: calculateDispositionFieldCount('callAnswered') };
+			// Check if widget title corresponds to a disposition field
+			// We check if the widget title matches any disposition name in the settings
+			const isDispositionField = dashboardSettings.dispositions?.some(
+				(d: DispositionCategory) => d.name === widget.title
+			);
+
+			if (isDispositionField) {
+				return { ...widget, value: calculateDispositionFieldCount(widget.title) };
 			}
-			if (widget.title === 'Reason For Non Payment') {
-				return { ...widget, value: calculateDispositionFieldCount('reasonForNonPayment') };
-			}
-			if (widget.title === 'Commitment Date') {
-				return { ...widget, value: calculateDispositionFieldCount('commitmentDate') };
-			}
-			if (widget.title === 'Amount To Pay') {
-				return { ...widget, value: calculateDispositionFieldCount('amountToPay') };
-			}
-			if (widget.title === 'Reason For Not Watching') {
-				return { ...widget, value: calculateDispositionFieldCount('reasonForNotWatching') };
+
+			// Check if widget title corresponds to a call outcome
+			const isCallOutcome = dashboardSettings.callOutcomes?.some(
+				(o: CallOutcome) => o.name.toLowerCase() === widget.title.toLowerCase()
+			);
+
+			if (isCallOutcome) {
+				const count = filteredDispositions.filter(disp => {
+					if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
+						return disp.dispositionData.some((f: any) =>
+							f.fieldValue && f.fieldValue.toString().toLowerCase() === widget.title.toLowerCase()
+						);
+					}
+					return false;
+				}).length;
+				return { ...widget, value: count };
 			}
 
 			return widget;
 		});
-	}, [dashboardSettings.widgets, pendingDispositionsCount]);
+	}, [dashboardSettings, combinedDispositions]);
 
 	// Wrapper function to generate chart data using the utility function
 	const generateChartDataWrapper = (dataSource: string | string[], chartColor?: string, colors?: Record<string, string>): ChartDataItem[] => {
-		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors);
+		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, combinedDispositions);
 	};
 
 	const handleEditWidget = (widgetId: string) => {
+		if (!canEdit) return;
 		const widget = widgets.find((w: Widget) => w.id === widgetId);
 		if (widget) {
 			setEditingWidget(widget);
@@ -360,6 +462,7 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const handleDeleteWidget = (widgetId: string) => {
+		if (!canDelete) return;
 		const widget = widgets.find((w: Widget) => w.id === widgetId);
 		if (widget) {
 			setDeletingWidget(widget);
@@ -368,6 +471,7 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const handleConfirmDelete = () => {
+		if (!canDelete) return;
 		if (deletingWidget) {
 			const updatedWidgets = widgets.filter((w: Widget) => w.id !== deletingWidget.id);
 			updateDashboardSettings({
@@ -379,6 +483,7 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const handleSaveWidget = (widget: Widget) => {
+		if (!canEdit) return;
 		const updatedWidgets = widgets.map((w: Widget) => w.id === widget.id ? widget : w);
 		updateDashboardSettings({
 			widgets: updatedWidgets,
@@ -388,10 +493,12 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const handleAddWidget = () => {
+		if (!canCreate) return;
 		setIsAddWidgetModalOpen(true);
 	};
 
 	const handleSaveNewWidget = (widgetData: Omit<Widget, 'id'>) => {
+		if (!canCreate) return;
 		const newWidget: Widget = {
 			...widgetData,
 			id: `widget-${Date.now()}`,
@@ -404,10 +511,12 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const handleAddChart = (chartData: Omit<Chart, 'id'>) => {
+		if (!canCreate) return;
 		addChart(chartData);
 	};
 
 	const handleEditChart = (chartId: string) => {
+		if (!canEdit) return;
 		const chart = dashboardSettings.dispositionSettings.charts.find((c: Chart) => c.id === chartId);
 		if (chart) {
 			setEditingChart(chart);
@@ -416,18 +525,23 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const handleSaveChart = (chart: Chart) => {
-		updateChart(chart.id, {
+		if (!canEdit) return;
+		// Persist all editable fields, including colors map for multi-source charts
+		const updates: Partial<Chart> = {
 			title: chart.title,
 			type: chart.type,
 			dataSource: chart.dataSource,
 			timeRange: chart.timeRange,
 			color: chart.color,
-		});
+			colors: chart.colors
+		};
+		updateChart(chart.id, updates);
 		setIsEditChartModalOpen(false);
 		setEditingChart(null);
 	};
 
 	const handleRemoveChart = (chartId: string) => {
+		if (!canDelete) return;
 		removeChart(chartId);
 	};
 
@@ -500,6 +614,7 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const handleDragEnd = (event: DragEndEvent) => {
+		if (!canEdit) return;
 		const { active, over } = event;
 
 		if (active.id !== over?.id) {
@@ -532,6 +647,21 @@ const DashboardContent: React.FC = () => {
 
 	return (
 		<div>
+			{!canAccessDashboard && (
+				<div
+					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-8"
+					style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
+				>
+					<h2 className="font-inter text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+						Access Restricted
+					</h2>
+					<p className="font-lato text-sm" style={{ color: 'var(--text-tertiary)' }}>
+						You do not have access permission to view the dashboard.
+					</p>
+				</div>
+			)}
+			{canAccessDashboard && (
+			<>
 			{/* Dashboard Title and Action Buttons */}
 			<div className="flex justify-between items-center mb-8">
 				<h1
@@ -541,10 +671,32 @@ const DashboardContent: React.FC = () => {
 					{dashboardSettings?.dashboardName || ' Dashboard'}
 				</h1>
 				<div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+					<div className="w-40">
+						<Dropdown
+							label=""
+							placeholder="Time Range"
+							options={[
+								{ value: 'daily', label: 'Daily' },
+								{ value: 'weekly', label: 'Weekly' },
+								{ value: 'monthly', label: 'Monthly' },
+								{ value: 'yearly', label: 'Yearly' },
+								{ value: 'all', label: 'All Time' },
+							]}
+							value={dashboardSettings.dispositionSettings?.timeRangeView || 'daily'}
+							onChange={(value) => updateDashboardSettings({
+								dispositionSettings: {
+									...dashboardSettings.dispositionSettings,
+									timeRangeView: value as string,
+								}
+							})}
+							className="!mb-0"
+						/>
+					</div>
 					<Button
 						variant="primary"
 						size="md"
 						onClick={handleAddWidget}
+						disabled={!canCreate}
 						// style={primaryButtonStyle}
 						className="transition-all duration-200 px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm"
 						onMouseEnter={(event) => handlePrimaryHover(event, true)}
@@ -569,6 +721,7 @@ const DashboardContent: React.FC = () => {
 						variant="primary"
 						size="md"
 						onClick={() => setIsAddChartModalOpen(true)}
+						disabled={!canCreate}
 						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
 						// style={outlineButtonStyle}
 						onMouseEnter={(event) => handlePrimaryHover(event, true)}
@@ -597,18 +750,34 @@ const DashboardContent: React.FC = () => {
 			</div>
 
 			{/* Widget Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-				{widgets.map((widget: Widget) => (
-					<WidgetCard
-						key={widget.id}
-						widgetId={widget.id}
-						title={widget.title}
-						value={widget.value}
-						onEdit={handleEditWidget}
-						onDelete={handleDeleteWidget}
-					/>
-				))}
-			</div>
+			{canView ? (
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+					{widgets.map((widget: Widget) => (
+						<WidgetCard
+							key={widget.id}
+							widgetId={widget.id}
+							title={widget.title}
+							value={widget.value}
+							onEdit={handleEditWidget}
+							onDelete={handleDeleteWidget}
+							canEdit={canEdit}
+							canDelete={canDelete}
+						/>
+					))}
+				</div>
+			) : (
+				<div
+					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-8"
+					style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
+				>
+					<h3 className="font-inter text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
+						View Restricted
+					</h3>
+					<p className="font-lato text-sm" style={{ color: 'var(--text-tertiary)' }}>
+						You do not have permission to view widgets and charts.
+					</p>
+				</div>
+			)}
 
 			{/* Charts Grid Container */}
 			<DndContext
@@ -623,7 +792,7 @@ const DashboardContent: React.FC = () => {
 						borderColor: 'var(--light-gray)'
 					}}
 				>
-					{dashboardSettings.dispositionSettings.charts.length > 0 ? (
+					{canView && dashboardSettings.dispositionSettings.charts.length > 0 ? (
 						<SortableContext
 							items={dashboardSettings.dispositionSettings.charts.map((chart: Chart) => chart.id)}
 							strategy={verticalListSortingStrategy}
@@ -636,6 +805,8 @@ const DashboardContent: React.FC = () => {
 										generateChartData={generateChartDataWrapper}
 										onRemoveChart={handleRemoveChart}
 										onEditChart={handleEditChart}
+										canEdit={canEdit}
+										canDelete={canDelete}
 									/>
 								))}
 							</div>
@@ -684,15 +855,17 @@ const DashboardContent: React.FC = () => {
 							>
 								Add your first chart to visualize your disposition data and track important metrics.
 							</p>
-							<Button
-								variant="primary"
-								size="md"
-								onClick={() => setIsAddChartModalOpen(true)}
-								className="flex items-center gap-2 px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm"
-							>
-								<PlusIcon className="w-4 h-4" />
-								<span className="hidden sm:inline">Add Chart</span>
-							</Button>
+							{canCreate && (
+								<Button
+									variant="primary"
+									size="md"
+									onClick={() => setIsAddChartModalOpen(true)}
+									className="flex items-center gap-2 px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm"
+								>
+									<PlusIcon className="w-4 h-4" />
+									<span className="hidden sm:inline">Add Chart</span>
+								</Button>
+							)}
 						</div>
 					)}
 				</div>
@@ -765,10 +938,23 @@ const DashboardContent: React.FC = () => {
 				onSave={handleCreateStickyNote}
 				note={editingNote}
 			/>
+			</>
+			)}
 		</div>
 	);
 };
 
+import {
+	useGetDispositionsByLineOfBusinessReportQuery,
+	useGetDispositionsByAgentReportQuery,
+} from '@/store/services/dispositionApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+
 export default function DashboardPage() {
+	const { canAccess, isAdmin } = usePrivilege();
+	const { user } = useUserInfo();
+	const { selectedLineOfBusiness, selectedLineOfBusinessId } = useLineOfBusiness();
+	const [selectedTab, setSelectedTab] = useState<'overview' | 'analytics' | 'reports'>('overview');
+
 	return <DashboardContent />;
 }

@@ -1,5 +1,7 @@
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { ExclamationTriangleIcon, FaceIcon } from '@radix-ui/react-icons';
 import { SVGLoader } from './SVGLoader';
+
+
 const timeZoneOptions = [
 	{ value: 'UTC-12', label: 'UTC-12 (Baker Island)' },
 	{ value: 'UTC-11', label: 'UTC-11 (American Samoa)' },
@@ -60,7 +62,7 @@ const NoRecordFound = ({ colSpan }: { colSpan: number }) => {
 		<tr>
 			<td colSpan={colSpan} className="h-[300px] p-0 m-auto border-b-0">
 				<div className="center-content flex flex-col justify-center items-center h-full">
-					<ExclamationTriangleIcon className="w-16 h-16" color={'var(--text-primary)'} />
+					<FaceIcon className="w-16 h-16" color={'var(--text-primary)'} />
 					<p
 						id="mt-3 !underline-none"
 						style={{ color: 'var(--text-primary)' }}>
@@ -84,4 +86,21 @@ const SVGLoaderFetch = ({ colSpan, text }: { colSpan: number; text: string }) =>
 	</tr>
 );
 
-export { timeZoneOptions, industryOptions, businessSizeOptions, plusJakartaStyle, NoRecordFound, SVGLoaderFetch };
+
+const tabs = [
+	{ id: 'overview', label: 'Overview' },
+	{ id: 'users', label: 'Users' },
+	{ id: 'billing', label: 'Billing' },
+	{ id: 'activity-log', label: 'Activity Log' },
+];
+
+
+export {
+	timeZoneOptions,
+	industryOptions,
+	businessSizeOptions,
+	plusJakartaStyle,
+	NoRecordFound,
+	SVGLoaderFetch,
+	tabs
+};

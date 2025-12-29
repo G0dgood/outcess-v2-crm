@@ -16,6 +16,7 @@ import {
 import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
 import { NoRecordFound } from '../Options';
 import StatusSkeleton from '@/components/skeletons/StatusSkeleton';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 interface RawStatus {
 	id?: string;
@@ -47,6 +48,11 @@ interface StatusProps {
 const Status: React.FC<StatusProps> = ({ className = '' }) => {
 	const [statuses, setStatuses] = useState<StatusItem[]>([]);
 	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { canAccess } = usePrivilege();
+	const canView = canAccess('systemSetting', 'view');
+	const canCreate = canAccess('systemSetting', 'create');
+	const canEdit = canAccess('systemSetting', 'edit');
+	const canDelete = canAccess('systemSetting', 'delete');
 
 	const { data: rolesData } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
 		skip: !selectedLineOfBusinessId
@@ -242,7 +248,11 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 		}
 	};
 
-	if (isLoading) {
+	if (!canView) {
+		return null;
+	}
+
+	if (isLoading || !selectedLineOfBusinessId) {
 		return <StatusSkeleton className={className} />;
 	}
 
@@ -259,14 +269,16 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 					/>
 				</div>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
-					<Button
-						variant="primary"
-						size="md"
-						onClick={handleCreateStatus}
-						className="px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
-					>
-						Create Status
-					</Button>
+					{canCreate && (
+						<Button
+							variant="primary"
+							size="md"
+							onClick={handleCreateStatus}
+							className="px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+						>
+							Create Status
+						</Button>
+					)}
 				</div>
 			</div>
 
@@ -376,38 +388,42 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<div className="flex items-center gap-3">
-												<button
-													onClick={() => handleEdit(status.id)}
-													className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
-													style={{ color: 'var(--text-tertiary)' }}
-													onMouseEnter={(e) => {
-														e.currentTarget.style.color = 'var(--text-secondary)';
-														e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-													}}
-													onMouseLeave={(e) => {
-														e.currentTarget.style.color = 'var(--text-tertiary)';
-														e.currentTarget.style.backgroundColor = 'transparent';
-													}}
-													aria-label="Edit status"
-												>
-													<Pencil1Icon className="w-4 h-4" />
-												</button>
-												<button
-													onClick={() => handleDelete(status.id)}
-													className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-700 transition-colors"
-													style={{ color: 'var(--text-tertiary)' }}
-													onMouseEnter={(e) => {
-														e.currentTarget.style.color = '#DC2626';
-														e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-													}}
-													onMouseLeave={(e) => {
-														e.currentTarget.style.color = 'var(--text-tertiary)';
-														e.currentTarget.style.backgroundColor = 'transparent';
-													}}
-													aria-label="Delete status"
-												>
-													<TrashIcon className="w-4 h-4" />
-												</button>
+												{canEdit && (
+													<button
+														onClick={() => handleEdit(status.id)}
+														className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+														style={{ color: 'var(--text-tertiary)' }}
+														onMouseEnter={(e) => {
+															e.currentTarget.style.color = 'var(--text-secondary)';
+															e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+														}}
+														onMouseLeave={(e) => {
+															e.currentTarget.style.color = 'var(--text-tertiary)';
+															e.currentTarget.style.backgroundColor = 'transparent';
+														}}
+														aria-label="Edit status"
+													>
+														<Pencil1Icon className="w-4 h-4" />
+													</button>
+												)}
+												{canDelete && (
+													<button
+														onClick={() => handleDelete(status.id)}
+														className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-700 transition-colors"
+														style={{ color: 'var(--text-tertiary)' }}
+														onMouseEnter={(e) => {
+															e.currentTarget.style.color = '#DC2626';
+															e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+														}}
+														onMouseLeave={(e) => {
+															e.currentTarget.style.color = 'var(--text-tertiary)';
+															e.currentTarget.style.backgroundColor = 'transparent';
+														}}
+														aria-label="Delete status"
+													>
+														<TrashIcon className="w-4 h-4" />
+													</button>
+												)}
 											</div>
 										</td>
 									</tr>

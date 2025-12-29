@@ -14,6 +14,8 @@ interface SelectedRecordsDrawerContentProps {
   onEdit: (record: RecordType) => void;
   onDelete: (record: RecordType) => void;
   onClose: () => void;
+  canEdit: boolean;
+  canDelete: boolean;
 }
 
 const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> = ({
@@ -23,6 +25,8 @@ const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> 
   onEdit,
   onDelete,
   onClose,
+  canEdit,
+  canDelete,
 }) => {
   return (
     <>
@@ -96,38 +100,42 @@ const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> 
                   </div>
 
                   <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={() => {
-                        onEdit(record);
-                        onClose();
-                      }}
-                      className="flex-1 text-xs py-2 px-3 border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
-                      style={{ borderColor: 'var(--light-gray)', color: 'var(--text-secondary)', backgroundColor: 'transparent' }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        onDelete(record);
-                        onClose();
-                      }}
-                      className="flex-1 text-xs py-2 px-3  border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
-                      style={{ borderColor: 'var(--light-gray)', color: '#DC2626', backgroundColor: 'transparent' }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      Delete
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={() => {
+                          onEdit(record);
+                          onClose();
+                        }}
+                        className="flex-1 text-xs py-2 px-3 border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
+                        style={{ borderColor: 'var(--light-gray)', color: 'var(--text-secondary)', backgroundColor: 'transparent' }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => {
+                          onDelete(record);
+                          onClose();
+                        }}
+                        className="flex-1 text-xs py-2 px-3  border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
+                        style={{ borderColor: 'var(--light-gray)', color: '#DC2626', backgroundColor: 'transparent' }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

@@ -7,13 +7,15 @@ import Search from '@/components/ui/Search';
 import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
 import Checkbox from '@/components/ui/Checkbox';
-import { useGetTeamMembersByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByLineOfBusinessIdQuery, useDeleteTeamMemberMutation } from '@/store/services/teamMembersApi';
 import PageHeading from '@/components/ui/PageHeading';
 import { Pencil1Icon, TrashIcon, ExclamationTriangleIcon, PersonIcon } from '@radix-ui/react-icons';
 import AddUserModal from '@/components/ui/AddUserModal';
 import DeleteUserModal from '@/components/ui/DeleteUserModal';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
+import { toast } from 'sonner';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 interface User {
 	id: string;
@@ -22,6 +24,7 @@ interface User {
 	email: string;
 	phone: string;
 	role: string;
+	userId: string;
 	loginStatus: string;
 }
 
@@ -30,6 +33,13 @@ const UsersPage: React.FC = () => {
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const lineOfBusinessId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
 	const { data: teamMembersResponse, isLoading } = useGetTeamMembersByLineOfBusinessIdQuery(lineOfBusinessId, { skip: !lineOfBusinessId });
+	const [deleteTeamMember] = useDeleteTeamMemberMutation();
+	const { canAccess } = usePrivilege();
+	const canAccessModule = canAccess('userManagement');
+	const canView = canAccess('userManagement', 'view');
+	const canCreate = canAccess('userManagement', 'create');
+	const canEdit = canAccess('userManagement', 'edit');
+	const canDelete = canAccess('userManagement', 'delete');
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
@@ -41,6 +51,8 @@ const UsersPage: React.FC = () => {
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
 	const [showInfoBanner, setShowInfoBanner] = useState(true);
 	const [users, setUsers] = useState<User[]>([]);
+	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Login Status', 'Actions'];
+	const totalColumns = tableHeaders.length + 1;
 
 	useEffect(() => {
 		if (teamMembersResponse) {
@@ -60,19 +72,21 @@ const UsersPage: React.FC = () => {
 					role?: string | { roleName?: string; name?: string };
 					status?: string;
 					loginStatus?: string;
+					userId?: string;
 				};
-				const fullName = m.name || '';
+				const fullName = m?.name || '';
 				const [firstName, ...lastNameParts] = fullName.split(' ');
 				const lastName = lastNameParts.join(' ');
 
 				return {
 					id: m._id || m.id || '',
-					firstName: m.firstName || firstName || '',
-					lastName: m.lastName || lastName || '',
-					email: m.email || '',
-					phone: m.phone || '',
-					role: typeof m.role === 'object' ? (m.role?.roleName || m.role?.name || '') : (m.role || 'Agent'),
-					loginStatus: m.status || m.loginStatus || 'Logged Out',
+					userId: m?.userId || '',
+					firstName: m?.firstName || firstName || '',
+					lastName: m?.lastName || lastName || '',
+					email: m?.email || '',
+					phone: m?.phone || '',
+					role: typeof m.role === 'object' ? (m?.role?.roleName || m.role?.name || '') : (m.role || 'Agent'),
+					loginStatus: m?.status || m?.loginStatus || 'Logged Out',
 				};
 			});
 			setUsers(mappedUsers);
@@ -106,10 +120,16 @@ const UsersPage: React.FC = () => {
 		});
 	};
 
-	const handleConfirmDelete = () => {
+	const handleConfirmDelete = async () => {
 		if (deleteUser) {
-			setUsers(prevUsers => prevUsers.filter(user => user.id !== deleteUser.id));
-			setDeleteUser(null);
+			try {
+				await deleteTeamMember(deleteUser.id).unwrap();
+				toast.success('User deleted successfully');
+				setDeleteUser(null);
+			} catch (error) {
+				console.error('Failed to delete user:', error);
+				toast.error('Failed to delete user');
+			}
 		}
 	};
 
@@ -260,48 +280,15 @@ const UsersPage: React.FC = () => {
 										size="medium"
 									/>
 								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									First Name
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Last Name
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Email
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Phone
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Role
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Login Status
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Actions
-								</th>
+								{tableHeaders.map((label) => (
+									<th
+										key={label}
+										className="dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{label}
+									</th>
+								))}
 							</tr>
 						</thead>
 						<tbody
@@ -312,9 +299,9 @@ const UsersPage: React.FC = () => {
 							}}
 						>
 							{isLoading ? (
-								<SVGLoaderFetch colSpan={8} text={''} />
+								<SVGLoaderFetch colSpan={totalColumns} text={''} />
 							) : currentUsers.length === 0 ? (
-								<NoRecordFound colSpan={8} />
+								<NoRecordFound colSpan={totalColumns} />
 							) : currentUsers?.map((user) => (
 								<tr
 									key={user.id}
@@ -338,7 +325,13 @@ const UsersPage: React.FC = () => {
 										className="dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
-										{user.firstName}
+										{user?.userId}
+									</td>
+									<td
+										className="dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{user?.firstName}
 									</td>
 									<td
 										className="dark:text-gray-100"
@@ -372,38 +365,42 @@ const UsersPage: React.FC = () => {
 									</td>
 									<td>
 										<div className="flex items-center gap-2">
-											<button
-												onClick={() => router.push(`/users/${user.id}/edit`)}
-												className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
-												style={{ color: 'var(--text-secondary)' }}
-												onMouseEnter={(e) => {
-													e.currentTarget.style.color = '#2563EB';
-													e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
-												}}
-												onMouseLeave={(e) => {
-													e.currentTarget.style.color = 'var(--text-secondary)';
-													e.currentTarget.style.backgroundColor = 'transparent';
-												}}
-												title="Edit User"
-											>
-												<Pencil1Icon className="w-5 h-5" />
-											</button>
-											<button
-												onClick={() => handleDeleteClick(user)}
-												className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
-												style={{ color: 'var(--text-secondary)' }}
-												onMouseEnter={(e) => {
-													e.currentTarget.style.color = '#DC2626';
-													e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-												}}
-												onMouseLeave={(e) => {
-													e.currentTarget.style.color = 'var(--text-secondary)';
-													e.currentTarget.style.backgroundColor = 'transparent';
-												}}
-												title="Delete User"
-											>
-												<TrashIcon className="w-5 h-5" />
-											</button>
+											{canEdit && (
+												<button
+													onClick={() => router.push(`/users/${user.id}/edit`)}
+													className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+													style={{ color: 'var(--text-secondary)' }}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.color = '#2563EB';
+														e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.color = 'var(--text-secondary)';
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
+													title="Edit User"
+												>
+													<Pencil1Icon className="w-5 h-5" />
+												</button>
+											)}
+											{canDelete && (
+												<button
+													onClick={() => handleDeleteClick(user)}
+													className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
+													style={{ color: 'var(--text-secondary)' }}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.color = '#DC2626';
+														e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.color = 'var(--text-secondary)';
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
+													title="Delete User"
+												>
+													<TrashIcon className="w-5 h-5" />
+												</button>
+											)}
 										</div>
 									</td>
 								</tr>

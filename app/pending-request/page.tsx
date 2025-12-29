@@ -3,115 +3,99 @@
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Search from '@/components/ui/Search';
-import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
 import PaginationSummary from '@/components/ui/PaginationSummary';
-import { useSetup } from '@/contexts/SetupContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 
-interface Business {
+interface PendingBusiness {
 	id: string;
 	companyName: string;
-	status: 'Active' | 'Inactive';
-	users: number;
-	contactPerson: string;
+	registrationDate: string;
+	industry: string;
+	status: 'Pending';
 }
 
-const BusinessesManagementPage: React.FC = () => {
+const PendingRequestPage: React.FC = () => {
 	const router = useRouter();
-	const { lineOfBusinessData } = useLineOfBusiness(); 
+	const { lineOfBusinessData } = useLineOfBusiness();
+	const { isAdmin } = usePrivilege();
 	const [searchTerm, setSearchTerm] = useState('');
-	const [statusFilter, setStatusFilter] = useState<string>('all');
-	const [currentPage, setCurrentPage] = useState(1);
+	const [currentPage, setCurrentPage] = useState(10);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
+	const [isLoading] = useState(false);
 
-	const businesses: Business[] = [
-		{ id: '1', companyName: 'Airtel NIN', status: 'Active', users: 24, contactPerson: 'Jane Cooper' },
-		{ id: '2', companyName: 'Renmoney', status: 'Inactive', users: 54, contactPerson: 'Esther Howard' },
-		{ id: '3', companyName: 'Fairmoney', status: 'Active', users: 88, contactPerson: 'Savannah Nguyen' },
-		{ id: '4', companyName: 'Chipper Cash', status: 'Active', users: 53, contactPerson: 'Robert Fox' },
-		{ id: '5', companyName: 'Access', status: 'Active', users: 76, contactPerson: 'Dianne Russell' },
-		{ id: '6', companyName: 'Aura', status: 'Active', users: 5, contactPerson: 'Robert Fox' },
-		{ id: '7', companyName: 'Airtel RGE', status: 'Active', users: 67, contactPerson: 'Esther Howard' },
-		{ id: '8', companyName: 'Multichoice', status: 'Active', users: 98, contactPerson: 'Jane Cooper' },
-		{ id: '9', companyName: 'Mobi Health', status: 'Active', users: 44, contactPerson: 'Savannah Nguyen' },
-		{ id: '10', companyName: 'Branch', status: 'Active', users: 120, contactPerson: 'Robert Fox' },
-		{ id: '11', companyName: 'TechCorp', status: 'Active', users: 32, contactPerson: 'John Doe' },
-		{ id: '12', companyName: 'DataSys', status: 'Inactive', users: 15, contactPerson: 'Jane Smith' },
-		{ id: '13', companyName: 'CloudNet', status: 'Active', users: 67, contactPerson: 'Mike Johnson' },
-		{ id: '14', companyName: 'SoftWare Inc', status: 'Active', users: 89, contactPerson: 'Sarah Williams' },
-		{ id: '15', companyName: 'NetSolutions', status: 'Active', users: 45, contactPerson: 'David Brown' },
-		{ id: '16', companyName: 'WebServices', status: 'Inactive', users: 12, contactPerson: 'Emily Davis' },
-		{ id: '17', companyName: 'DigitalPlus', status: 'Active', users: 78, contactPerson: 'Chris Wilson' },
-		{ id: '18', companyName: 'InnovateLab', status: 'Active', users: 56, contactPerson: 'Lisa Anderson' },
-		{ id: '19', companyName: 'FutureTech', status: 'Active', users: 92, contactPerson: 'Tom Martinez' },
-		{ id: '20', companyName: 'SmartSystems', status: 'Inactive', users: 23, contactPerson: 'Amy Garcia' },
-		{ id: '21', companyName: 'NextGen', status: 'Active', users: 34, contactPerson: 'Paul Rodriguez' },
-		{ id: '22', companyName: 'ProActive', status: 'Active', users: 61, contactPerson: 'Karen Lee' },
-		{ id: '23', companyName: 'GlobalNet', status: 'Active', users: 87, contactPerson: 'Mark Thompson' },
-		{ id: '24', companyName: 'EliteGroup', status: 'Inactive', users: 18, contactPerson: 'Nancy White' },
+	const businesses: PendingBusiness[] = [
+		{ id: '1', companyName: 'Airtel NIN', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
+		{ id: '2', companyName: 'Renmoney', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
+		{ id: '3', companyName: 'Fairmoney', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
+		{ id: '4', companyName: 'Chipper Cash', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
+		{ id: '5', companyName: 'Access', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
+		{ id: '6', companyName: 'Aura', registrationDate: 'Dec 15, 2024', industry: 'Education', status: 'Pending' },
+		{ id: '7', companyName: 'Airtel RGE', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
+		{ id: '8', companyName: 'Multichoice', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
+		{ id: '9', companyName: 'Mobi Health', registrationDate: 'Dec 15, 2024', industry: 'Healthcare', status: 'Pending' },
+		{ id: '10', companyName: 'Branch', registrationDate: '120', industry: 'Finance', status: 'Pending' },
+		{ id: '11', companyName: 'TechCorp', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+		{ id: '12', companyName: 'DataSys', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+		{ id: '13', companyName: 'CloudNet', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+		{ id: '14', companyName: 'SoftWare Inc', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+		{ id: '15', companyName: 'NetSolutions', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+		{ id: '16', companyName: 'WebServices', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
+		{ id: '17', companyName: 'DigitalPlus', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
+		{ id: '18', companyName: 'InnovateLab', registrationDate: 'Dec 15, 2024', industry: 'Education', status: 'Pending' },
+		{ id: '19', companyName: 'FutureTech', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+		{ id: '20', companyName: 'SmartSystems', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+		{ id: '21', companyName: 'NextGen', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
+		{ id: '22', companyName: 'ProActive', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
+		{ id: '23', companyName: 'GlobalNet', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
+		{ id: '24', companyName: 'EliteGroup', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
 	];
 
 	const filteredBusinesses = useMemo(() => {
 		return businesses.filter(business => {
 			const matchesSearch = !searchTerm ||
 				business.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				business.contactPerson.toLowerCase().includes(searchTerm.toLowerCase());
-
-			const matchesStatus = statusFilter === 'all' || business.status.toLowerCase() === statusFilter.toLowerCase();
-
-			return matchesSearch && matchesStatus;
+				business.industry.toLowerCase().includes(searchTerm.toLowerCase());
+			return matchesSearch;
 		});
-	}, [searchTerm, statusFilter, businesses]);
+	}, [searchTerm]);
 
 	const totalPages = Math.ceil(filteredBusinesses.length / itemsPerPage);
 	const startIndex = (currentPage - 1) * itemsPerPage;
 	const endIndex = startIndex + itemsPerPage;
 	const paginatedBusinesses = filteredBusinesses.slice(startIndex, endIndex);
 
-	const statusOptions = [
-		{ value: 'all', label: 'All Statuses' },
-		{ value: 'active', label: 'Active' },
-		{ value: 'inactive', label: 'Inactive' },
-	];
-
-
 	const handleViewDetail = (id: string) => {
-		router.push(`/admin/businesses/${id}`);
+		router.push(`/admin/pending-request/${id}`);
 	};
 
+	if (!isAdmin) {
+		return null;
+	}
+
 	return (
-		<div  >
+		<div>
 			{/* Header Section */}
 			<div className="mb-6">
 				<h1
 					className="text-2xl font-semibold dark:text-gray-100 mb-2"
 					style={{ color: 'var(--text-primary)' }}
 				>
-					Businesses Management
+					Pending Request
 				</h1>
 			</div>
 
-			{/* Search and Filter Section */}
-			<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+			{/* Search Section */}
+			<div className="mb-6">
 				<Search
 					placeholder="Search businesses..."
 					value={searchTerm}
 					onChange={setSearchTerm}
-					className="w-full sm:w-auto"
-					maxWidth="w-full"
+					className="flex-1 max-w-md"
 					showClearButton={true}
 				/>
-				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
-					<Dropdown
-						label=""
-						value={statusFilter}
-						onChange={(value) => setStatusFilter(Array.isArray(value) ? value[0] : value)}
-						options={statusOptions}
-						className="w-full sm:w-[180px]"
-						inputClassName="h-8 text-xs sm:h-10 sm:text-sm"
-					/>
-				</div>
 			</div>
 
 			{/* Businesses Table */}
@@ -145,19 +129,19 @@ const BusinessesManagementPage: React.FC = () => {
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
+									Registration Date
+								</th>
+								<th
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Industry
+								</th>
+								<th
+									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
 									Status
-								</th>
-								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Users
-								</th>
-								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Contact Person
 								</th>
 								<th
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
@@ -174,18 +158,12 @@ const BusinessesManagementPage: React.FC = () => {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							{paginatedBusinesses.length === 0 ? (
-								<tr>
-									<td
-										colSpan={5}
-										className="px-6 py-12 text-center dark:text-gray-400"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										No businesses found.
-									</td>
-								</tr>
+							{isLoading ? (
+								<SVGLoaderFetch colSpan={8} text={''} />
+							) : paginatedBusinesses?.length === 0 ? (
+								<NoRecordFound colSpan={8} />
 							) : (
-								paginatedBusinesses.map((business) => (
+								paginatedBusinesses?.map((business) => (
 									<tr
 										key={business.id}
 										className="dark:hover:bg-gray-700 transition-colors"
@@ -207,35 +185,29 @@ const BusinessesManagementPage: React.FC = () => {
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<span
-												className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${business.status === 'Active'
-													? 'dark:bg-green-900/30 dark:text-green-400'
-													: 'dark:bg-red-900/30 dark:text-red-400'
-													}`}
-												style={business.status === 'Active' ? {
-													backgroundColor: 'rgba(34, 197, 94, 0.1)',
-													color: '#16A34A'
-												} : {
-													backgroundColor: 'rgba(220, 38, 38, 0.1)',
-													color: '#DC2626'
+												className="text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{business.registrationDate}
+											</span>
+										</td>
+										<td className="px-6 py-4 whitespace-nowrap">
+											<span
+												className="text-sm dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												{business.industry}
+											</span>
+										</td>
+										<td className="px-6 py-4 whitespace-nowrap">
+											<span
+												className="inline-flex px-2 py-1 text-xs font-semibold rounded-full dark:bg-yellow-900/30 dark:text-yellow-400"
+												style={{
+													backgroundColor: 'rgba(251, 146, 60, 0.1)',
+													color: '#EA580C'
 												}}
 											>
 												{business.status}
-											</span>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap">
-											<span
-												className="text-sm dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{business.users}
-											</span>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap">
-											<span
-												className="text-sm dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{business.contactPerson}
 											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
@@ -288,4 +260,4 @@ const BusinessesManagementPage: React.FC = () => {
 	);
 };
 
-export default BusinessesManagementPage;
+export default PendingRequestPage;

@@ -28,15 +28,6 @@ const chartTypeOptions = [
 	{ value: 'bubble', label: 'Bubble Chart' },
 ];
 
-// Disposition field mappings (same as AddWidgetModal)
-const DISPOSITION_FIELDS = [
-	{ value: 'Call Answered', label: 'Call Answered', fieldKey: 'callAnswered' },
-	{ value: 'Reason For Non Payment', label: 'Reason For Non Payment', fieldKey: 'reasonForNonPayment' },
-	{ value: 'Commitment Date', label: 'Commitment Date', fieldKey: 'commitmentDate' },
-	{ value: 'Amount To Pay', label: 'Amount To Pay', fieldKey: 'amountToPay' },
-	{ value: 'Reason For Not Watching', label: 'Reason For Not Watching', fieldKey: 'reasonForNotWatching' },
-];
-
 const timeRangeOptions = [
 	{ value: 'daily', label: 'Daily' },
 	{ value: 'weekly', label: 'Weekly' },
@@ -103,50 +94,36 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		}
 	}, [chart]);
 
-	// Build data source options (same as AddWidgetModal)
+	// Build data source options
 	const dataSourceOptions = useMemo(() => {
 		const options: Array<{ value: string; label: string }> = [];
+		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
 
-		// Add disposition fields first
-		options.push(...DISPOSITION_FIELDS.map(f => ({ value: f.value, label: f.label })));
-
-		// Add common/default options
-		const commonOptions = [
-			{ value: 'Total Calls', label: 'Total Calls' },
-			{ value: 'Pending Dispositions', label: 'Pending Dispositions' },
-			{ value: 'Total Dispositions', label: 'Total Dispositions' },
-			{ value: 'Completed Calls', label: 'Completed Calls' },
-			{ value: 'Active Agents', label: 'Active Agents' },
-			{ value: 'Average Call Duration', label: 'Average Call Duration' },
-		];
-
-		options.push(...commonOptions);
-
-		// Add call outcomes if available
-		if (lineOfBusinessData?.dashboardSettings?.callOutcomes && lineOfBusinessData?.dashboardSettings?.callOutcomes?.length > 0) {
-			lineOfBusinessData?.dashboardSettings?.callOutcomes.forEach((outcome: { name: string; }) => {
+		// Add disposition categories if available
+		if (dashboardSettings?.dispositions && dashboardSettings.dispositions.length > 0) {
+			dashboardSettings.dispositions.forEach((disposition: { name: string }) => {
 				options.push({
-					value: outcome?.name,
-					label: outcome?.name,
+					value: disposition.name,
+					label: disposition.name,
 				});
 			});
 		}
 
-		// Add disposition categories if available
-		if (lineOfBusinessData?.dashboardSettings?.dispositions && lineOfBusinessData?.dashboardSettings?.dispositions?.length > 0) {
-			lineOfBusinessData?.dashboardSettings?.dispositions.forEach((disposition: { name: string; }) => {
+		// Add call outcomes if available
+		if (dashboardSettings?.callOutcomes && dashboardSettings.callOutcomes.length > 0) {
+			dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
 				options.push({
-					value: disposition?.name,
-					label: disposition?.name,
+					value: outcome.name,
+					label: outcome.name,
 				});
 			});
 		}
 
 		// Add custom data option at the end
-		options.push({ value: 'Custom Data', label: 'Custom Data' });
+		options.push({ value: 'custom', label: 'Custom Data' });
 
 		return options;
-	}, [lineOfBusinessData?.dashboardSettings?.callOutcomes, lineOfBusinessData?.dashboardSettings?.dispositions]);
+	}, [lineOfBusinessData]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
 		// For non-multiple fields, ensure we only use string values

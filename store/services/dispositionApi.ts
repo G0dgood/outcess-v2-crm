@@ -36,11 +36,17 @@ export interface GetDispositionsByAgentIdRequest {
 
 export interface GetDispositionsReportRequest {
     lineOfBusinessId: string;
+    startDate?: string;
+    endDate?: string;
 }
 
 export interface GetDispositionsByAgentReportRequest {
     lineOfBusinessId: string;
     agentId: string;
+    page?: number;
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
 }
 
 export const dispositionApi = createApi({
@@ -81,13 +87,13 @@ export const dispositionApi = createApi({
             providesTags: ['Disposition'],
         }),
         getDispositionsByLineOfBusinessReport: builder.query<any, GetDispositionsReportRequest>({
-            query: ({ lineOfBusinessId }) => 
-                `api/v1/dispositions/${lineOfBusinessId}/report`,
+            query: ({ lineOfBusinessId, startDate, endDate }) => 
+                `api/v1/dispositions/${lineOfBusinessId}/report?startDate=${startDate}&endDate=${endDate}`,
             providesTags: ['Disposition'],
         }),
         getDispositionsByAgentReport: builder.query<any, GetDispositionsByAgentReportRequest>({
-            query: ({ lineOfBusinessId, agentId }) => 
-                `api/v1/dispositions/${lineOfBusinessId}/agent/${agentId}/report`,
+            query: ({ lineOfBusinessId, agentId, page = 1, limit = 20, startDate , endDate  }) => 
+                `api/v1/dispositions/${lineOfBusinessId}/agent/${agentId}/report?page=${page}&limit=${limit}&startDate=${startDate}&endDate=${endDate}`,
             providesTags: ['Disposition'],
         }),
     }),

@@ -40,15 +40,6 @@ const chartTypeOptions = [
 	{ value: 'bubble', label: 'Bubble Chart' },
 ];
 
-// Disposition field mappings (same as AddWidgetModal)
-const DISPOSITION_FIELDS = [
-	{ value: 'Call Answered', label: 'Call Answered', fieldKey: 'callAnswered' },
-	{ value: 'Reason For Non Payment', label: 'Reason For Non Payment', fieldKey: 'reasonForNonPayment' },
-	{ value: 'Commitment Date', label: 'Commitment Date', fieldKey: 'commitmentDate' },
-	{ value: 'Amount To Pay', label: 'Amount To Pay', fieldKey: 'amountToPay' },
-	{ value: 'Reason For Not Watching', label: 'Reason For Not Watching', fieldKey: 'reasonForNotWatching' },
-];
-
 const timeRangeOptions = [
 	{ value: 'daily', label: 'Daily' },
 	{ value: 'weekly', label: 'Weekly' },
@@ -78,28 +69,30 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		}
 	});
 
-	// Build data source options (same as AddWidgetModal)
+	// Build data source options
 	const dataSourceOptions = useMemo(() => {
-		const options: Array<{ value: string; label: string }> = [];
-
-		// Add disposition fields first
-		options.push(...DISPOSITION_FIELDS.map(f => ({ value: f.value, label: f.label })));
-
-		// Add common/default options
-		const commonOptions = [
+		const options: Array<{ value: string; label: string }> = [
 			{ value: 'Total Calls', label: 'Total Calls' },
-			{ value: 'Pending Dispositions', label: 'Pending Dispositions' },
 			{ value: 'Total Dispositions', label: 'Total Dispositions' },
-			{ value: 'Completed Calls', label: 'Completed Calls' },
-			{ value: 'Active Agents', label: 'Active Agents' },
-			{ value: 'Average Call Duration', label: 'Average Call Duration' },
+			{ value: 'Pending Dispositions', label: 'Pending Dispositions' },
+			{ value: 'Completed Calls', label: 'Completed Calls' }
 		];
 
-		options.push(...commonOptions);
+		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
+
+		// Add disposition categories if available
+		if (dashboardSettings?.dispositions && dashboardSettings.dispositions.length > 0) {
+			dashboardSettings.dispositions.forEach((disposition: { name: string }) => {
+				options.push({
+					value: disposition.name,
+					label: disposition.name,
+				});
+			});
+		}
 
 		// Add call outcomes if available
-		if (lineOfBusinessData?.dashboardSettings?.callOutcomes && lineOfBusinessData?.dashboardSettings?.callOutcomes?.length > 0) {
-			lineOfBusinessData?.dashboardSettings?.callOutcomes.forEach((outcome: { name: string }) => {
+		if (dashboardSettings?.callOutcomes && dashboardSettings.callOutcomes.length > 0) {
+			dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
 				options.push({
 					value: outcome.name,
 					label: outcome.name,
@@ -107,21 +100,8 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 			});
 		}
 
-		// Add disposition categories if available
-		if (lineOfBusinessData?.dashboardSettings?.dispositions && lineOfBusinessData?.dashboardSettings?.dispositions?.length > 0) {
-			lineOfBusinessData.dashboardSettings.dispositions.forEach((disposition: { name: string }) => {
-				options.push({
-					value: disposition?.name,
-					label: disposition?.name,
-				});
-			});
-		}
-
-		// Add custom data option at the end
-		options.push({ value: 'custom', label: 'Custom Data' });
-
 		return options;
-	}, [lineOfBusinessData?.dashboardSettings?.callOutcomes, lineOfBusinessData?.dashboardSettings?.dispositions]);
+	}, [lineOfBusinessData]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
 		// For non-multiple fields, ensure we only use string values
@@ -226,7 +206,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 			<div
-				className="dark:bg-gray-800 w-full max-w-md mx-4 shadow-lg"
+				className="dark:bg-gray-800 w-full max-w-md mx-4 shadow-lg flex flex-col max-h-[85vh]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Modal Header */}
@@ -283,7 +263,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 				</div>
 
 				{/* Modal Form */}
-				<div className="space-y-4 p-6">
+				<div className="space-y-4 p-6 overflow-y-auto flex-1 min-h-0">
 					<Input
 						label="Chart Title"
 						placeholder="Enter chart title"

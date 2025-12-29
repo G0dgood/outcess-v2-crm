@@ -6,11 +6,12 @@ import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
 import PaginationSummary from '@/components/ui/PaginationSummary';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetSupervisorsByLineOfBusinessIdQuery, useGetTeamMembersBySupervisorIdQuery, useGetTeamMembersByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
+import { useGetSupervisorsByLineOfBusinessIdQuery, useGetTeamMembersBySupervisorIdQuery } from '@/store/services/teamMembersApi';
 import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
 import { useSocket } from '@/contexts/SocketContext';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { useUserInfo } from '@/contexts/UserInfoContext';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 interface TeamMember {
 	_id: string;
@@ -30,7 +31,7 @@ const TeamMembersPage: React.FC = () => {
 	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
 	const [supervisorFilter, setSupervisorFilter] = useState('');
 
-	const { data: teamMembersResponse, isLoading } = useGetTeamMembersBySupervisorIdQuery(supervisorFilter, {
+	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersBySupervisorIdQuery(supervisorFilter, {
 		skip: !supervisorFilter
 	});
 
@@ -38,6 +39,8 @@ const TeamMembersPage: React.FC = () => {
 		skip: !lobId
 	});
 	const { socket } = useSocket();
+	const { canAccess } = usePrivilege();
+	const canAccessModule = canAccess('teamMembers', 'view');
 
 	const supervisorId = supervisorFilter;
 
@@ -48,7 +51,9 @@ const TeamMembersPage: React.FC = () => {
 
 	useEffect(() => {
 		if (teamMembersResponse) {
-			const rawMembers = teamMembersResponse.data || teamMembersResponse.teamMembers || teamMembersResponse || [];
+			const rawMembers = teamMembersResponse?.data || teamMembersResponse?.teamMembers || 
+			teamMembersResponse || [];
+			
 			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
 
 			const mappedMembers: TeamMember[] = membersList.map((member: unknown) => {
@@ -111,12 +116,20 @@ const TeamMembersPage: React.FC = () => {
 			}));
 		};
 
+		// Listen for refresh requests
+		const handleRefresh = (data: unknown) => {
+			console.log('Refresh Requested:', data);
+			refetch();
+		};
+
 		socket.on('teamMemberStatusUpdate', handleStatusUpdate);
+		socket.on('refreshTeamMembers', handleRefresh);
 
 		return () => {
 			socket.off('teamMemberStatusUpdate', handleStatusUpdate);
+			socket.off('refreshTeamMembers', handleRefresh);
 		};
-	}, [socket, supervisorId]);
+	}, [socket, supervisorId, refetch]);
 
 	const supervisors = useMemo(() => {
 		if (!supervisorsData) return [];
@@ -185,6 +198,10 @@ const TeamMembersPage: React.FC = () => {
 			color: '#B91C1C',
 		};
 	};
+
+	if (!canAccessModule) {
+		return null;
+	}
 
 	return (
 		<div className="space-y-6">

@@ -10,6 +10,7 @@ import PageHeading from '@/components/ui/PageHeading';
 import { ChatBubbleIcon } from '@radix-ui/react-icons';
 import Icon from '@/components/ui/Icon';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 interface SMS {
 	id: string;
@@ -23,6 +24,9 @@ interface SMS {
 
 const SMSPage: React.FC = () => {
 	const { lineOfBusinessData } = useLineOfBusiness();
+	const { canAccess } = usePrivilege();
+	const canAccessModule = canAccess('customerSMS', 'view');
+	const canCreate = canAccess('customerSMS', 'create');
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedSMS, setSelectedSMS] = useState<Set<string>>(new Set());
@@ -156,6 +160,10 @@ const SMSPage: React.FC = () => {
 			: { bg: 'rgba(59, 130, 246, 0.1)', text: '#3B82F6', border: 'rgba(59, 130, 246, 0.2)' };
 	};
 
+	if (!canAccessModule) {
+		return null;
+	}
+
 	return (
 		<div>
 			{/* Title */}
@@ -175,15 +183,17 @@ const SMSPage: React.FC = () => {
 					showClearButton={true}
 				/>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
-					<Button
-						variant="primary"
-						size="md"
-						onClick={() => console.log('Send SMS clicked')}
-						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
-					>
-						<ChatBubbleIcon className="w-4 h-4" />
-						Send SMS
-					</Button>
+					{canCreate && (
+						<Button
+							variant="primary"
+							size="md"
+							onClick={() => console.log('Send SMS clicked')}
+							className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+						>
+							<ChatBubbleIcon className="w-4 h-4" />
+							Send SMS
+						</Button>
+					)}
 				</div>
 			</div>
 

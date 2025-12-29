@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useGetLineOfBusinessQuery } from '@/store/services/lineOfBusinessApi';
 
 interface LineOfBusinessContextType {
@@ -18,13 +18,14 @@ interface LineOfBusinessProviderProps {
 }
 
 export const LineOfBusinessProvider: React.FC<LineOfBusinessProviderProps> = ({ children, initialLineOfBusinessId }) => {
-    const [selectedLineOfBusinessId, setSelectedLineOfBusinessIdState] = useState<string | null>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('selectedLineOfBusinessId');
-            if (saved) return saved;
+    const [selectedLineOfBusinessId, setSelectedLineOfBusinessIdState] = useState<string | null>(initialLineOfBusinessId || null);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('selectedLineOfBusinessId');
+        if (saved) {
+            setSelectedLineOfBusinessIdState(saved);
         }
-        return initialLineOfBusinessId || null;
-    });
+    }, []);
 
     const setSelectedLineOfBusinessId = (id: string | null) => {
         setSelectedLineOfBusinessIdState(id);

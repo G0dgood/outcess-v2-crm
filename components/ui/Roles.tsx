@@ -36,10 +36,10 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 						(Array.isArray((rolesData as unknown as { docs?: unknown[] }).docs) ? (rolesData as unknown as { docs?: unknown[] }).docs :
 							[]))));
 
-			const mappedRoles: Role[] = ((rawRoles as { _id?: string; id?: string; roleName: string; userCount?: number }[]) || []).map((role) => ({
+			const mappedRoles: Role[] = ((rawRoles as { _id?: string; id?: string; roleName: string; userCount?: number; teamMemberCount?: number }[]) || []).map((role) => ({
 				id: role?._id || role.id || '',
 				name: role?.roleName,
-				userCount: role?.userCount || 0
+				userCount: role?.teamMemberCount ?? role?.userCount ?? 0
 			}));
 			setRoles(mappedRoles);
 		}

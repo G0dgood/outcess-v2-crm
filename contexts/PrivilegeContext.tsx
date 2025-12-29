@@ -64,6 +64,7 @@ interface PrivilegeContextType {
 	setUserPrivileges: (privileges: UserPrivileges) => void;
 	clearPrivileges: () => void;
 	isAdmin: boolean;
+	isSuperAdmin: boolean;
 }
 
 const PrivilegeContext = createContext<PrivilegeContextType | undefined>(undefined);
@@ -280,6 +281,12 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		);
 	}, [userPrivileges]);
 
+	const isSuperAdmin = React.useMemo(() => {
+		if (!userPrivileges) return false;
+		const roleName = userPrivileges.role?.roleName || '';
+		return roleName.toLowerCase() === 'super admin';
+	}, [userPrivileges]);
+
 	const contextValue: PrivilegeContextType = {
 		userPrivileges,
 		isLoading,
@@ -290,6 +297,7 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		setUserPrivileges,
 		clearPrivileges,
 		isAdmin,
+		isSuperAdmin,
 	};
 
 	return (

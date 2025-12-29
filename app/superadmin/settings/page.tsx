@@ -1,11 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { useSetup } from "@/contexts/SetupContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUpdateUserMutation, useChangePasswordMutation } from "@/store/services/authApi";
 import {
 	PersonIcon,
 	LockClosedIcon,
@@ -31,6 +32,10 @@ interface CreditCardInfo {
 }
 
 export default function SettingsPage() {
+	const { user, updateUser: updateContextUser } = useAuth();
+	const [updateUserApi] = useUpdateUserMutation();
+	const [changePasswordApi] = useChangePasswordMutation();
+
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const { isDarkMode, toggleTheme } = useTheme();
 	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
@@ -41,7 +46,7 @@ export default function SettingsPage() {
 	// Loading states
 	const [isProfileLoading, setIsProfileLoading] = useState(false);
 	const [isPasswordLoading, setIsPasswordLoading] = useState(false);
-	const [isLoadingUserData] = useState(false);
+	const [isLoadingUserData, setIsLoadingUserData] = useState(true);
 
 	// Profile section
 	const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -53,6 +58,17 @@ export default function SettingsPage() {
 	});
 
 	// Fetch user data on component mount
+	useEffect(() => {
+		if (user) {
+			setProfileData({
+				fullName: user.name || `${(user as any).firstName || ''} ${(user as any).lastName || ''}`.trim(),
+				username: (user as any).username || '',
+				phone: user.phone || '',
+				email: user.email || '',
+			});
+			setIsLoadingUserData(false);
+		}
+	}, [user]);
 
 
 	// Password section
@@ -90,33 +106,50 @@ export default function SettingsPage() {
 	});
 
 	const handleProfileSave = async () => {
+		if (!user?.id) {
+			toast.error("User not found");
+			return;
+		}
+
 		setIsProfileLoading(true);
 		try {
 			console.log('Sending profile update request:', profileData);
 
-			const response = await fetch('/api/user/profile', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(profileData),
-			});
+			// Split full name into first and last name
+			const nameParts = profileData.fullName.trim().split(/\s+/);
+			const firstName = nameParts[0];
+			const lastName = nameParts.slice(1).join(' ');
 
-			console.log('Profile update response status:', response.status);
+			const updateData = {
+				firstName,
+				lastName,
+				username: profileData.username,
+				phone: profileData.phone,
+			};
 
-			const data = await response.json();
-			console.log('Profile update response data:', data);
+			const response = await updateUserApi({
+				id: user.id,
+				data: updateData
+			}).unwrap();
 
-			if (response.ok) {
-				toast.success('Profile updated successfully!');
-				setIsEditingProfile(false);
-			} else {
-				console.error('Profile update failed:', data);
-				toast.error(data.error || 'Failed to update profile');
-			}
-		} catch (error) {
+			console.log('Profile update response data:', response);
+
+			toast.success('Profile updated successfully!');
+			setIsEditingProfile(false);
+
+			// Update local context
+			updateContextUser({
+				...user,
+				name: profileData.fullName,
+				username: profileData.username,
+				phone: profileData.phone,
+				firstName,
+				lastName
+			} as any);
+
+		} catch (error: any) {
 			console.error('Error updating profile:', error);
-			toast.error('Failed to update profile. Please try again.');
+			toast.error(error?.data?.message || 'Failed to update profile. Please try again.');
 		} finally {
 			setIsProfileLoading(false);
 		}
@@ -124,16 +157,23 @@ export default function SettingsPage() {
 
 	const handleProfileCancel = () => {
 		// Reset to original values from auth context
-		setProfileData({
-			fullName: 'kishan kumar',
-			username: 'kishan',
-			phone: '1234567890',
-			email: 'kishan@example.com',
-		});
+		if (user) {
+			setProfileData({
+				fullName: user.name || `${(user as any).firstName || ''} ${(user as any).lastName || ''}`.trim(),
+				username: (user as any).username || '',
+				phone: user.phone || '',
+				email: user.email || '',
+			});
+		}
 		setIsEditingProfile(false);
 	};
 
 	const handlePasswordChange = async () => {
+		if (!user?.id) {
+			toast.error("User not found");
+			return;
+		}
+
 		setIsPasswordLoading(true);
 		try {
 			// Validate passwords match
@@ -142,43 +182,32 @@ export default function SettingsPage() {
 				return;
 			}
 
-			console.log('Sending password change request:', {
-				currentPassword: passwordData.currentPassword ? '[REDACTED]' : 'empty',
-				newPassword: passwordData.newPassword ? '[REDACTED]' : 'empty',
-				confirmPassword: passwordData.confirmPassword ? '[REDACTED]' : 'empty'
-			});
-
-			const response = await fetch('/api/user/password', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(passwordData),
-			});
-
-
-
-			const data = await response.json();
-
-			if (response.ok) {
-				toast.success('Password updated successfully!');
-				setPasswordData({
-					currentPassword: '',
-					newPassword: '',
-					confirmPassword: '',
-				});
-				setShowPasswords({
-					current: false,
-					new: false,
-					confirm: false,
-				});
-			} else {
-				console.error('Password change failed:', data);
-				toast.error(data.error || 'Failed to update password');
+			if (passwordData.newPassword.length < 6) {
+				toast.error('Password must be at least 6 characters long');
+				return;
 			}
-		} catch (error) {
+
+			await changePasswordApi({
+				userId: user.id,
+				oldPassword: passwordData.currentPassword,
+				newPassword: passwordData.newPassword
+			}).unwrap();
+
+			toast.success('Password updated successfully!');
+			setPasswordData({
+				currentPassword: '',
+				newPassword: '',
+				confirmPassword: '',
+			});
+			setShowPasswords({
+				current: false,
+				new: false,
+				confirm: false,
+			});
+
+		} catch (error: any) {
 			console.error('Error updating password:', error);
-			toast.error('Failed to update password. Please try again.');
+			toast.error(error?.data?.message || 'Failed to update password. Please try again.');
 		} finally {
 			setIsPasswordLoading(false);
 		}
@@ -332,7 +361,6 @@ export default function SettingsPage() {
 						{[
 							{ id: 'profile', label: 'Profile', icon: PersonIcon },
 							{ id: 'password', label: 'Password', icon: LockClosedIcon },
-							// { id: 'email', label: 'Email', icon: Mail },
 							{ id: 'payment', label: 'Payment', icon: IdCardIcon },
 							{ id: 'preferences', label: 'Preferences', icon: GearIcon },
 						].map(({ id, label, icon: IconComponent }) => {

@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
-import Search from '@/components/ui/Search';
-import Icon from '@/components/ui/Icon';
+import Search from '@/components/ui/Search'; 
 import Pagination from '@/components/ui/Pagination';
 import Checkbox from '@/components/ui/Checkbox';
 import PageHeading from '@/components/ui/PageHeading';
@@ -18,6 +17,7 @@ import EditRecordModal from '@/components/ui/EditRecordModal';
 import { useGetSetupBookByLineOfBusinessIdQuery, useDeleteSetupBookRecordsMutation, useGetSetupBookBySearchIdQuery } from '@/store/services/setupBookApi';
 import { toast } from 'sonner';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 interface FieldDefinition {
 	id: string;
@@ -39,6 +39,12 @@ interface ApiError {
 }
 
 const SetupBookPage: React.FC = () => {
+	const { canAccess } = usePrivilege();
+	const canAccessModule = canAccess('setupBook');
+	const canCreate = canAccess('setupBook', 'create');
+	const canEdit = canAccess('setupBook', 'edit');
+	const canDelete = canAccess('setupBook', 'delete');
+
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
 	// Assuming searchId is available in lineOfBusinessData.lineOfBusiness.customerBookSettings or similar
@@ -51,7 +57,6 @@ const SetupBookPage: React.FC = () => {
 
 	const setupBookHeaderFields = lineOfBusinessData?.lineOfBusiness?.customerBookSettings?.configuredFields
 
-	console.log('lineOfBusiness-----0', setupBookHeaderFields)
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -105,8 +110,6 @@ const SetupBookPage: React.FC = () => {
 			setRecords(apiRecords.data as unknown as SetupBookRecord[]);
 		}
 	}, [apiRecords]);
-
-	console.log('lineOfBusinessData----', lineOfBusinessData)
 
 	const handleUpload = () => {
 		setIsUploadModalOpen(true);
@@ -230,6 +233,10 @@ const SetupBookPage: React.FC = () => {
 		}
 	}, [isDrawerOpen]);
 
+	if (!canAccessModule) {
+		return null;
+	}
+
 	return (
 		<div>
 			<PageHeading
@@ -252,24 +259,28 @@ const SetupBookPage: React.FC = () => {
 						fields={setupBookHeaderFields || []}
 						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
 					/>
-					<Button
-						size="md"
-						onClick={handleCreateRecord}
-						variant="outline"
-						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
-					>
-						<PlusIcon className="w-4 h-4" />
-						Create Record
-					</Button>
-					<Button
-						size="md"
-						onClick={handleUpload}
-						variant="primary"
-						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
-					>
-						<UploadIcon className="w-4 h-4" />
-						Upload
-					</Button>
+					{canCreate && (
+						<>
+							<Button
+								size="md"
+								onClick={handleCreateRecord}
+								variant="outline"
+								className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+							>
+								<PlusIcon className="w-4 h-4" />
+								Create Record
+							</Button>
+							<Button
+								size="md"
+								onClick={handleUpload}
+								variant="primary"
+								className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+							>
+								<UploadIcon className="w-4 h-4" />
+								Upload
+							</Button>
+						</>
+					)}
 				</div>
 			</div>
 
@@ -361,38 +372,42 @@ const SetupBookPage: React.FC = () => {
 									))}
 									<td>
 										<div className="flex items-center gap-2">
-											<button
-												onClick={() => handleEditRecord(record)}
-												className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
-												style={{ color: 'var(--text-secondary)' }}
-												onMouseEnter={(e) => {
-													e.currentTarget.style.color = '#2563EB';
-													e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
-												}}
-												onMouseLeave={(e) => {
-													e.currentTarget.style.color = 'var(--text-secondary)';
-													e.currentTarget.style.backgroundColor = 'transparent';
-												}}
-												title="Edit Record"
-											>
-												<Pencil1Icon className="w-5 h-5" />
-											</button>
-											<button
-												onClick={() => handleDeleteClick(record)}
-												className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
-												style={{ color: 'var(--text-secondary)' }}
-												onMouseEnter={(e) => {
-													e.currentTarget.style.color = '#DC2626';
-													e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-												}}
-												onMouseLeave={(e) => {
-													e.currentTarget.style.color = 'var(--text-secondary)';
-													e.currentTarget.style.backgroundColor = 'transparent';
-												}}
-												title="Delete Record"
-											>
-												<TrashIcon className="w-5 h-5" />
-											</button>
+											{canEdit && (
+												<button
+													onClick={() => handleEditRecord(record)}
+													className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+													style={{ color: 'var(--text-secondary)' }}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.color = '#2563EB';
+														e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.color = 'var(--text-secondary)';
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
+													title="Edit Record"
+												>
+													<Pencil1Icon className="w-5 h-5" />
+												</button>
+											)}
+											{canDelete && (
+												<button
+													onClick={() => handleDeleteClick(record)}
+													className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
+													style={{ color: 'var(--text-secondary)' }}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.color = '#DC2626';
+														e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.color = 'var(--text-secondary)';
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
+													title="Delete Record"
+												>
+													<TrashIcon className="w-5 h-5" />
+												</button>
+											)}
 										</div>
 									</td>
 								</tr>
@@ -465,6 +480,8 @@ const SetupBookPage: React.FC = () => {
 						onEdit={handleEditRecord}
 						onDelete={handleDeleteClick}
 						onClose={() => setIsDrawerOpen(false)}
+						canEdit={canEdit}
+						canDelete={canDelete}
 					/>
 				</div>
 			)}

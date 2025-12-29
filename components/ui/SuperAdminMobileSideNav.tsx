@@ -2,14 +2,14 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import AdminSideNav from './AdminSideNav';
 
-interface AdminMobileSideNavProps {
+
+interface SuperAdminMobileSideNavProps {
 	isOpen: boolean;
 	onClose: () => void;
 }
 
-const AdminMobileSideNav: React.FC<AdminMobileSideNavProps> = ({
+const SuperAdminMobileSideNav: React.FC<SuperAdminMobileSideNavProps> = ({
 	isOpen,
 	onClose,
 }) => {
@@ -105,10 +105,10 @@ const AdminMobileSideNav: React.FC<AdminMobileSideNavProps> = ({
 					</button>
 				</div>
 				{/* Navigation */}
-				<AdminSideNav isMobileOpen={isOpen} onMobileClose={onClose} isMobile />
+				<SuperAdminMobileSideNav isMobileOpen={isOpen} onMobileClose={onClose} isMobile />
 			</nav>
 		</>
 	);
 };
 
-export default AdminMobileSideNav;
+export default SuperAdminMobileSideNav;

@@ -31,7 +31,7 @@ export default function AdminDashboardPage() {
 			</div>
 
 			{/* Registered Businesses Table */}
-			<div 
+			{/* <div 
 				className="dark:bg-gray-800 border dark:border-gray-700 p-6"
 				style={{
 					backgroundColor: 'var(--accent-white)',
@@ -45,7 +45,7 @@ export default function AdminDashboardPage() {
 					Registered Businesses
 				</h2>
 				<RegisteredBusinessesTable />
-			</div>
+			</div> */}
 		</div>
 	);
 }

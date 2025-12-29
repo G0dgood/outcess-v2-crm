@@ -9,6 +9,7 @@ import { Modal } from './Modal';
 import { getOfflineDispositions, getSyncedDispositions } from '@/utils/offlineDispositions';
 import type { Widget } from '@/contexts/SetupContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useSocket } from '@/contexts/SocketContext';
 
 interface AddWidgetModalProps {
 	isOpen: boolean;
@@ -16,20 +17,15 @@ interface AddWidgetModalProps {
 	onSave: (widget: Omit<Widget, 'id'>) => void;
 }
 
-// Disposition field mappings
-const DISPOSITION_FIELDS = [
-	{ value: 'Call Answered', label: 'Call Answered', fieldKey: 'callAnswered' },
-	{ value: 'Reason For Non Payment', label: 'Reason For Non Payment', fieldKey: 'reasonForNonPayment' },
-	{ value: 'Commitment Date', label: 'Commitment Date', fieldKey: 'commitmentDate' },
-	{ value: 'Amount To Pay', label: 'Amount To Pay', fieldKey: 'amountToPay' },
-	{ value: 'Reason For Not Watching', label: 'Reason For Not Watching', fieldKey: 'reasonForNotWatching' },
-];
+// Disposition field mappings removed
+
 
 export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 	isOpen,
 	onClose,
 	onSave,
 }) => {
+	const { isOffline } = useSocket();
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
 	const [formData, setFormData] = useState<Omit<Widget, 'id'>>({
@@ -40,29 +36,47 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 
 	// Calculate value based on selected disposition field
 	useEffect(() => {
-		const selectedField = DISPOSITION_FIELDS.find(f => f.value === formData.title);
-		if (selectedField) {
+		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
+		const disposition = dashboardSettings?.dispositions?.find((d: { name: string }) => d.name === formData.title);
+		const outcome = dashboardSettings?.callOutcomes?.find((o: { name: string }) => o.name === formData.title);
+
+		if (disposition) {
 			// Get all dispositions (offline + synced)
 			const offlineDispositions = getOfflineDispositions();
 			const syncedDispositions = getSyncedDispositions();
 			const allDispositions = [...offlineDispositions, ...syncedDispositions];
 
-			// Count dispositions that have a value for this field
+			// Count dispositions with this category
 			const count = allDispositions.filter(disp => {
-				const fieldValue = disp[selectedField.fieldKey as keyof typeof disp];
+				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
+					const field = disp.dispositionData.find((f: any) => f.fieldName === disposition.name);
+					if (field) {
+						const value = field.fieldValue;
+						return value && value.toString().trim() !== '' && value !== '-';
+					}
+				}
+				// Fallback for direct property access
+				const fieldValue = disp[disposition.name as keyof typeof disp];
 				return fieldValue && fieldValue.toString().trim() !== '' && fieldValue !== '-';
 			}).length;
 
 			setFormData(prev => ({ ...prev, value: count }));
-		} else if (formData.title === 'Pending Dispositions') {
-			// Special case for pending dispositions
-			const pendingCount = getOfflineDispositions().filter(d => d.status === 'pending').length;
-			setFormData(prev => ({ ...prev, value: pendingCount }));
-		} else if (formData.title === 'Total Dispositions') {
-			// Count all dispositions
+		} else if (outcome) {
+			// Count call outcomes
 			const offlineDispositions = getOfflineDispositions();
 			const syncedDispositions = getSyncedDispositions();
-			setFormData(prev => ({ ...prev, value: offlineDispositions.length + syncedDispositions?.length }));
+			const allDispositions = [...offlineDispositions, ...syncedDispositions];
+
+			const count = allDispositions.filter(disp => {
+				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
+					return disp.dispositionData.some(f =>
+						f.fieldValue && f.fieldValue.toString().toLowerCase() === outcome.name.toLowerCase()
+					);
+				}
+				return false;
+			}).length;
+
+			setFormData(prev => ({ ...prev, value: count }));
 		} else {
 			// For other titles, keep the manual value or set to 0
 			if (formData?.value === 0 && formData?.title) {
@@ -75,24 +89,9 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 	const widgetTitleOptions = useMemo(() => {
 		const options: Array<{ value: string; label: string }> = [];
 
-		// Add disposition fields first
-		options.push(...DISPOSITION_FIELDS.map(f => ({ value: f.value, label: f.label })));
-
-		// Add common/default widget titles
-		const commonTitles = [
-			{ value: 'Total Calls', label: 'Total Calls' },
-			{ value: 'Pending Dispositions', label: 'Pending Dispositions' },
-			{ value: 'Total Dispositions', label: 'Total Dispositions' },
-			{ value: 'Completed Calls', label: 'Completed Calls' },
-			{ value: 'Active Agents', label: 'Active Agents' },
-			{ value: 'Average Call Duration', label: 'Average Call Duration' },
-		];
-
-		options.push(...commonTitles);
-
 		// Add call outcomes if available
-		if (lineOfBusinessData?.dashboardSettings?.callOutcomes && lineOfBusinessData?.dashboardSettings?.callOutcomes.length > 0) {
-			lineOfBusinessData?.dashboardSettings?.callOutcomes.forEach((outcome: { name: string }) => {
+		if (lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes && lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes.length > 0) {
+			lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes.forEach((outcome: { name: string }) => {
 				options.push({
 					value: outcome?.name,
 					label: outcome?.name,
@@ -101,8 +100,8 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		}
 
 		// Add disposition categories if available
-		if (lineOfBusinessData?.dashboardSettings?.dispositions && lineOfBusinessData?.dashboardSettings?.dispositions?.length > 0) {
-			lineOfBusinessData?.dashboardSettings?.dispositions.forEach((disposition: { name: unknown }) => {
+		if (lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions && lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions?.length > 0) {
+			lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions?.forEach((disposition: { name: unknown }) => {
 				const name = disposition?.name as string;
 				options.push({
 					value: name,
@@ -112,17 +111,19 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		}
 
 		return options;
-	}, [lineOfBusinessData?.dashboardSettings?.callOutcomes, lineOfBusinessData?.dashboardSettings?.dispositions]);
+	}, [lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes, lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions]);
 
 	const handleInputChange = (field: string) => (value: string | number) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
 	};
 
 	const isValueAutoCalculated = useMemo(() => {
-		return DISPOSITION_FIELDS.some(f => f.value === formData.title) ||
-			formData?.title === 'Pending Dispositions' ||
-			formData?.title === 'Total Dispositions';
-	}, [formData?.title]);
+		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
+		const isDisposition = dashboardSettings?.dispositions?.some((d: { name: string }) => d.name === formData.title);
+		const isOutcome = dashboardSettings?.callOutcomes?.some((o: { name: string }) => o.name === formData.title);
+
+		return isDisposition || isOutcome;
+	}, [formData?.title, lineOfBusinessData]);
 
 	const handleSave = () => {
 		if (formData?.title.trim()) {
@@ -203,7 +204,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 					onClick={handleSave}
 					disabled={!formData.title.trim()}
 				>
-					Add Widget
+					{isOffline ? 'Save Offline' : 'Add Widget'}
 				</Button>
 			</div>
 		</Modal>
@@ -211,4 +212,3 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 };
 
 export default AddWidgetModal;
-

@@ -51,11 +51,17 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 
 	// State now holds the roles with their permissions
 	const [rolesPermissions, setRolesPermissions] = useState<Role[]>([]);
+	const [originalRolesPermissions, setOriginalRolesPermissions] = useState<Role[]>([]);
 
 	useEffect(() => {
 		if (permissionData && permissionData.roles) {
-			console.log('Permission Data:', permissionData);
 			setRolesPermissions(permissionData.roles);
+			try {
+				const cloned = JSON.parse(JSON.stringify(permissionData.roles)) as Role[];
+				setOriginalRolesPermissions(cloned);
+			} catch {
+				setOriginalRolesPermissions(permissionData.roles);
+			}
 		} else if (permissionData) {
 			console.log('Permission Data (no roles):', permissionData);
 		}
@@ -71,20 +77,67 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 		setUpdatingRoleIds(prev => [...prev, roleId]);
 		try {
 			const roleData = {
-				roleName: role.roleName,
-				description: role.description,
-				companyId: role.companyId,
-				lineOfBusinessId: role.lineOfBusinessId,
-				permissions: role.permissions
+				roleName: role?.roleName,
+				description: role?.description,
+				companyId: role?.companyId,
+				lineOfBusinessId: role?.lineOfBusinessId,
+				permissions: role?.permissions || []
 			};
 			await updateRole({ id: roleId, roleData }).unwrap();
 			toastSuccess('Permissions updated successfully');
+			// Update original snapshot for this role to current values
+			setOriginalRolesPermissions(prev => prev.map(r => {
+				const currentRoleId = r._id || r.id;
+				if (currentRoleId === roleId) {
+					try {
+						return JSON.parse(JSON.stringify(role)) as Role;
+					} catch {
+						return role;
+					}
+				}
+				return r;
+			}));
 		} catch (error) {
 			console.error('Failed to update permissions:', error);
 			toastError('Failed to update permissions');
 		} finally {
 			setUpdatingRoleIds(prev => prev.filter(id => id !== roleId));
 		}
+	};
+
+	// Dirty-check helpers
+	const arePermissionsEqual = (a: RolePermission[] = [], b: RolePermission[] = []) => {
+		if ((a?.length || 0) !== (b?.length || 0)) return false;
+		const toMap = (arr: RolePermission[]) => {
+			const m = new Map<string, RolePermission>();
+			arr.forEach(p => m.set(p.id, p));
+			return m;
+		};
+		const ma = toMap(a);
+		const mb = toMap(b);
+		for (const [id, pa] of ma.entries()) {
+			const pb = mb.get(id);
+			if (!pb) return false;
+			if (pa.access !== pb.access) return false;
+			const ap = pa.permissions ||
+				{ view: false, edit: false, delete: false, create: false };
+			const bp = pb.permissions ||
+				{ view: false, edit: false, delete: false, create: false };
+			if (ap.view !== bp.view ||
+				ap.edit !== bp.edit || 
+				ap.delete !== bp.delete ||
+				ap.create !== bp.create) {
+				return false;
+			}
+		}
+		return true;
+	};
+
+	const isRoleDirty = (role: Role): boolean => {
+		const roleId = role._id || role.id;
+		const original = originalRolesPermissions.find(r => (r._id || r.id) === roleId);
+		if (!original) return false;
+		return !arePermissionsEqual(original.permissions || [], role.permissions || []);
 	};
 
 	const handleAccessToggle = (roleId: string, permissionId: string, value: boolean) => {
@@ -94,7 +147,15 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 				return {
 					...role,
 					permissions: role.permissions.map(p =>
-						p.id === permissionId ? { ...p, access: value } : p
+						p.id === permissionId
+							? {
+								...p,
+								access: value,
+								permissions: value
+									? p.permissions
+									: { view: false, edit: false, delete: false, create: false }
+							}
+							: p
 					)
 				};
 			}
@@ -163,7 +224,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 						No roles found or permissions data is missing.
 					</div>
 				)}
-				{rolesPermissions.map(role => {
+				{rolesPermissions?.map(role => {
 					const roleId = role._id || role.id || 'unknown';
 					const isOpen = openRoleIds.includes(roleId);
 					return (
@@ -189,16 +250,18 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 								</div>
 
 								<div className="flex items-center gap-4">
-									<Button
-										onClick={() => {
-											handleSaveRole(role);
-										}}
-										loading={updatingRoleIds.includes(roleId)}
-										size="sm"
-										variant="primary"
-									>
-										Update
-									</Button>
+									{isRoleDirty(role) && (
+										<Button
+											onClick={() => {
+												handleSaveRole(role);
+											}}
+											loading={updatingRoleIds.includes(roleId)}
+											size="sm"
+											variant="primary"
+										>
+											Update
+										</Button>
+									)}
 									<button
 										onClick={() => toggleAccordion(roleId)}
 										className="focus:outline-none"

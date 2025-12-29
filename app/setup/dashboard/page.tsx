@@ -7,14 +7,9 @@ import KPIMetric from '@/components/KPIMetric';
 import { useSetup } from '@/contexts/SetupContext';
 
 
-
-
-
 export default function DashboardPage(): React.JSX.Element {
 	const { setupData, updateDashboardSettings } = useSetup();
 	const { dashboardSettings } = setupData;
-
-
 
 	return (
 		<div className="w-full h-full">

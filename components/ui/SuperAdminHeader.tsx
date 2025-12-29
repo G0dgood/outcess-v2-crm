@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { BellIcon } from '@radix-ui/react-icons';
-import UserDropdown from './UserDropdown';
+import SuperAdminUserDropdown from './SuperAdminUserDropdown';
 import { HamburgerMenuIcon } from '@radix-ui/react-icons';
 import ThemeDropdown from './ThemeDropdown';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,10 +10,10 @@ import { useSocket } from '@/contexts/SocketContext';
 import { useRouter } from 'next/navigation';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { useDispatch } from 'react-redux';
-import { useLogoutMutation } from '@/store/services/authApi';
+import { useLogoutMutation, useTeamMemberLogoutMutation } from '@/store/services/authApi';
 import { logout as logoutAction } from '@/store/slices/authSlice';
 
-interface AdminHeaderProps {
+interface SuperAdminHeaderProps {
 	userName?: string;
 	userEmail?: string;
 	userAvatar?: string;
@@ -24,9 +24,9 @@ interface AdminHeaderProps {
 	onMobileMenuToggle?: () => void;
 }
 
-const AdminHeader: React.FC<AdminHeaderProps> = ({
-	userName = 'Admin User',
-	userEmail = 'admin@example.com',
+const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
+	userName,
+	userEmail,
 	userAvatar,
 	isOnline = true,
 	onNotificationsClick,
@@ -35,22 +35,31 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 	onMobileMenuToggle,
 }) => {
 	const router = useRouter();
-    const dispatch = useDispatch();
+	const dispatch = useDispatch();
 	const { user: authUser } = useAuth();
 	const { disconnect: disconnectSocket } = useSocket();
-    const [logoutApi] = useLogoutMutation();
+	const [logoutApi] = useLogoutMutation();
+	const [teamMemberLogoutApi] = useTeamMemberLogoutMutation();
 
 	// Handle logout
 	const handleLogout = async () => {
 		try {
-            // Call API to invalidate session on server
-            await logoutApi().unwrap();
+			// Call API to invalidate session on server
+			if (authUser?.id) {
+				if (authUser.isTeamMember) {
+					await teamMemberLogoutApi({ userId: authUser.id }).unwrap();
+				} else {
+					await logoutApi({ userId: authUser.id }).unwrap();
+				}
+			} else {
+				console.warn('No user ID found for logout API call');
+			}
 
 			// Disconnect socket connection
 			disconnectSocket();
 
 			// Logout from Redux
-            dispatch(logoutAction());
+			dispatch(logoutAction());
 
 			// Show success message
 			toastSuccess('Logged out successfully');
@@ -60,12 +69,10 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 				router.push('/login');
 			}, 500);
 		} catch (error) {
-			console.warn('Logout API failed, proceeding with local logout:', error);
-            
-            // Still perform client-side cleanup
-            disconnectSocket();
-            dispatch(logoutAction());
-            
+			// Still perform client-side cleanup
+			disconnectSocket();
+			dispatch(logoutAction());
+
 			// Even if there's an error, redirect to login
 			router.push('/login');
 		}
@@ -98,12 +105,11 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 					</button>
 
 					{/* User Dropdown */}
-					<UserDropdown
+					<SuperAdminUserDropdown
 						userName={authUser?.name || userName}
 						userEmail={authUser?.email || userEmail}
 						userAvatar={authUser?.avatar || userAvatar}
 						isOnline={isOnline}
-						onStatusClick={() => { }}
 						onEditProfileClick={onEditProfileClick}
 						onLogoutClick={onLogoutClick || handleLogout}
 					/>
@@ -113,5 +119,5 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 	);
 };
 
-export default AdminHeader;
+export default SuperAdminHeader;
 

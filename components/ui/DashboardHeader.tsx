@@ -17,7 +17,7 @@ import { setNavigating } from '@/utils/navigationState';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useGetLineOfBusinessByCompanyIdForheaderQuery } from '@/store/services/lineOfBusinessApi';
-import { useLogoutMutation } from '@/store/services/authApi';
+import { useLogoutMutation, useTeamMemberLogoutMutation } from '@/store/services/authApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout as logoutAction, User } from '@/store/slices/authSlice';
 import { statusApi } from '@/store/services/statusApi';
@@ -62,6 +62,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
 	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket, socket } = useSocket();
 	const [logoutApi] = useLogoutMutation();
+    const [teamMemberLogoutApi] = useTeamMemberLogoutMutation();
 	const { isAdmin } = usePrivilege();
 
 	// Get user from Redux store
@@ -211,7 +212,20 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const handleLogout = async () => {
 		try {
 			// Call API to invalidate session on server
-			await logoutApi().unwrap();
+			if (reduxUser?.id) {
+                if (reduxUser.isTeamMember) {
+                    await teamMemberLogoutApi({ userId: reduxUser.id }).unwrap();
+                } else {
+				    await logoutApi({ userId: reduxUser.id }).unwrap();
+                }
+			} else {
+				// If no user ID, just call without or skip API call? 
+				// The API now requires userId. If we don't have it, we probably can't call the API effectively.
+				// But let's try to call it with empty string if really needed, or just skip.
+				// Given the requirement, I should probably only call it if I have an ID.
+				// But to be safe and clear state, maybe I should just proceed to local logout if ID is missing.
+				console.warn('No user ID found for logout API call');
+			}
 
 			// Disconnect socket connection
 			disconnectSocket();

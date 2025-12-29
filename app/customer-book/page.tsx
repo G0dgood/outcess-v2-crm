@@ -11,6 +11,7 @@ import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetSetupBookBySearchIdQuery } from '@/store/services/setupBookApi';
 import { toast } from 'sonner';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 interface Customer {
 	id: string;
@@ -25,6 +26,12 @@ const CustomerBookPage: React.FC = () => {
 	// const [currentPage, setCurrentPage] = useState(1);
 	const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
 	const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+	const { canAccess } = usePrivilege();
+	const canAccessModule = canAccess('customerBook');
+	const canView = canAccess('customerBook', 'view');
+	const canCreate = canAccess('customerBook', 'create');
+	const canEdit = canAccess('customerBook', 'edit');
+	const canDelete = canAccess('customerBook', 'delete');
 
 
 	console.log('lineOfBusinessData----->', lineOfBusinessData)
@@ -106,148 +113,154 @@ const CustomerBookPage: React.FC = () => {
 
 	return (
 		<div>
-			{/* Title */}
-			<PageHeading
-				text="Customer Book"
-			/>
-
-			{/* Search & Actions */}
-			<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-				<SearchWithSend
-					placeholder="Search"
-					value={searchTerm}
-					onChange={(value) => setSearchTerm(value)}
-					onSearch={handleSearch}
-					className="w-full sm:w-auto min-w-[300px]"
-					buttonColor={lineOfBusinessData?.primaryColor}
-				/>
-				<div className="flex   items-center justify-end sm:justify-start gap-2 sm:gap-3 whitespace-nowrap">
-					<Button
-						variant="muted-sage-green-outline"
-						size="md"
-						onClick={handleAddCustomer}
-						className="px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
-					>
-						Add Customer
-					</Button>
-
+			{!canAccessModule && (
+				<div
+					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-8"
+					style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
+				>
+					<h2 className="font-inter text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+						Access Restricted
+					</h2>
+					<p className="font-lato text-sm" style={{ color: 'var(--text-tertiary)' }}>
+						You do not have access permission to view Customer Book.
+					</p>
 				</div>
-			</div>
-
-			{/* Customer Table */}
-			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
-				style={{
-					backgroundColor: 'var(--accent-white)',
-					borderColor: 'var(--light-gray)'
-				}}
-			>
-				<div className="overflow-x-auto">
-					<table
-						className="min-w-full divide-y dark:divide-gray-700"
-						style={{ borderColor: 'var(--light-gray)' }}
+			)}
+			{canAccessModule && (
+				<>
+					<PageHeading text="Customer Book" />
+					<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+						{canView && (
+							<SearchWithSend
+								placeholder="Search"
+								value={searchTerm}
+								onChange={(value) => setSearchTerm(value)}
+								onSearch={handleSearch}
+								className="w-full sm:w-auto min-w-[300px]"
+								buttonColor={lineOfBusinessData?.primaryColor}
+							/>
+						)}
+						<div className="flex   items-center justify-end sm:justify-start gap-2 sm:gap-3 whitespace-nowrap">
+							<Button
+								variant="muted-sage-green-outline"
+								size="md"
+								onClick={handleAddCustomer}
+								className="px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+								disabled={!canCreate}
+							>
+								Add Customer
+							</Button>
+						</div>
+					</div>
+					<div
+						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
 					>
-						<thead
-							className="dark:bg-gray-700 border-b dark:border-gray-700"
-							style={{
-								backgroundColor: 'var(--bg-primary)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
-							<tr>
-								{tableHeaders.map((header) => (
-									<th
-										key={header}
-										className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{header}
-									</th>
-								))}
-								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Actions
-								</th>
-							</tr>
-						</thead>
-						<tbody
-							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
-							style={{
-								backgroundColor: 'var(--accent-white)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
-							{isLoading ? (
-								<SVGLoaderFetch colSpan={tableHeaders.length + 1} text="Searching customer..." />
-							) : filteredCustomers?.length === 0 ? (
-								<NoRecordFound colSpan={tableHeaders.length + 1} />
-							) : filteredCustomers?.map((customer) => (
-								<tr
-									key={customer.id}
-									className="dark:hover:bg-gray-700"
-									style={{ borderColor: 'var(--light-gray)' }}
-									onMouseEnter={(e) => {
-										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-									}}
-									onMouseLeave={(e) => {
-										e.currentTarget.style.backgroundColor = 'var(--accent-white)';
+						<div className="overflow-x-auto">
+							<table
+								className="min-w-full divide-y dark:divide-gray-700"
+								style={{ borderColor: 'var(--light-gray)' }}
+							>
+								<thead
+									className="dark:bg-gray-700 border-b dark:border-gray-700"
+									style={{
+										backgroundColor: 'var(--bg-primary)',
+										borderColor: 'var(--light-gray)'
 									}}
 								>
-									{tableHeaders?.map((header) => (
-										<td
-											key={`${customer.id}-${header}`}
-											className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+									<tr>
+										{tableHeaders.map((header) => (
+											<th
+												key={header}
+												className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+												style={{ color: 'var(--text-primary)' }}
+											>
+												{header}
+											</th>
+										))}
+										<th
+											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
 											style={{ color: 'var(--text-primary)' }}
 										>
-											{customer[header]}
-										</td>
-									))}
-									<td className="px-6 py-4 whitespace-nowrap">
-										<button
-											onClick={() => handleViewCustomer(customer)}
-											className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-											style={{ color: 'var(--text-secondary)' }}
+											Actions
+										</th>
+									</tr>
+								</thead>
+								<tbody
+									className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+									style={{
+										backgroundColor: 'var(--accent-white)',
+										borderColor: 'var(--light-gray)'
+									}}
+								>
+									{isLoading ? (
+										<SVGLoaderFetch colSpan={tableHeaders.length + 1} text="Searching customer..." />
+									) : filteredCustomers?.length === 0 ? (
+										<NoRecordFound colSpan={tableHeaders.length + 1} />
+									) : filteredCustomers?.map((customer) => (
+										<tr
+											key={customer.id}
+											className="dark:hover:bg-gray-700"
+											style={{ borderColor: 'var(--light-gray)' }}
 											onMouseEnter={(e) => {
-												e.currentTarget.style.color = 'var(--muted-sage-green)';
-												e.currentTarget.style.backgroundColor = 'rgba(108, 139, 125, 0.1)';
+												e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
 											}}
 											onMouseLeave={(e) => {
-												e.currentTarget.style.color = 'var(--text-secondary)';
-												e.currentTarget.style.backgroundColor = 'transparent';
+												e.currentTarget.style.backgroundColor = 'var(--accent-white)';
 											}}
-											title="View Customer"
 										>
-											<ArrowRightIcon className="w-5 h-5" />
-										</button>
-									</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
-				</div>
-			</div>
-
-
-
-
-			{/* Add Customer Modal */}
-			<AddCustomerModal
-				isOpen={isAddCustomerModalOpen}
-				onClose={() => setIsAddCustomerModalOpen(false)}
-				onSave={handleSaveCustomer}
-				onAddFields={handleAddFields}
-			/>
-
-			{/* Customer Details Modal */}
-			<CustomerDetailsModal
-				isOpen={!!selectedCustomer}
-				onClose={() => setSelectedCustomer(null)}
-				customer={selectedCustomer}
-			/>
+											{tableHeaders?.map((header) => (
+												<td
+													key={`${customer.id}-${header}`}
+													className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													{customer[header]}
+												</td>
+											))}
+											<td className="px-6 py-4 whitespace-nowrap">
+												<button
+													onClick={() => canView ? handleViewCustomer(customer) : undefined}
+													className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+													style={{ color: 'var(--text-secondary)' }}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.color = 'var(--muted-sage-green)';
+														e.currentTarget.style.backgroundColor = 'rgba(108, 139, 125, 0.1)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.color = 'var(--text-secondary)';
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
+													title="View Customer"
+													disabled={!canView}
+												>
+													<ArrowRightIcon className="w-5 h-5" />
+												</button>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<AddCustomerModal
+						isOpen={isAddCustomerModalOpen}
+						onClose={() => setIsAddCustomerModalOpen(false)}
+						onSave={handleSaveCustomer}
+						onAddFields={handleAddFields}
+					/>
+					<CustomerDetailsModal
+						isOpen={!!selectedCustomer}
+						onClose={() => setSelectedCustomer(null)}
+						customer={selectedCustomer}
+					/>
+				</>
+			)}
 		</div>
 	);
-};
+}
 
 export default CustomerBookPage;

@@ -8,6 +8,7 @@ import MobileSideNav from '@/components/ui/MobileSideNav';
 import GlobalStickyNotes from '@/components/ui/GlobalStickyNotes';
 import OfflineBanner from '@/components/ui/OfflineBanner';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { TooltipProvider } from '@/components/ui/Tooltip';
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
 	const { lineOfBusinessData } = useLineOfBusiness();
@@ -60,7 +61,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 function Layout({ children }: { children: React.ReactNode }) {
 	return (
 		<SetupProvider>
-			<LayoutContent>{children}</LayoutContent>
+			<TooltipProvider>
+				<LayoutContent>{children}</LayoutContent>
+			</TooltipProvider>
 		</SetupProvider>
 	);
 }

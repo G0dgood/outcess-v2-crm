@@ -15,11 +15,13 @@ import {
 	ChevronDownIcon,
 	ChatBubbleIcon,
 	Link2Icon,
-	MixerHorizontalIcon
+	MixerHorizontalIcon,
+	ClockIcon
 } from '@radix-ui/react-icons';
 import Group from '@/components/setupIcon/Group';
 import Icon from '@/components/ui/Icon';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 interface MobileSideNavProps {
 	activeItem?: string;
@@ -45,6 +47,7 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 	const { lineOfBusinessData } = useLineOfBusiness();
+	const { isAdmin } = usePrivilege();
 	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
 	const navRef = useRef<HTMLDivElement>(null);
 	const [shouldRender, setShouldRender] = useState(false);
@@ -74,6 +77,12 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 			label: 'Dashboard',
 			icon: 'grid',
 			path: '/dashboard',
+		},
+		{
+			id: 'pending-request',
+			label: 'Pending Request',
+			icon: 'clock',
+			path: '/superadmin/pending-request',
 		},
 		{
 			id: 'customer-book',
@@ -131,6 +140,11 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 		},
 	];
 
+	const visibleNavItems = navItems.filter(item => {
+		if (item.id === 'pending-request' && !isAdmin) return false;
+		return true;
+	});
+
 	const handleItemClick = (item: NavItem, e?: React.MouseEvent) => {
 		if (item.id === 'settings') {
 			e?.stopPropagation();
@@ -187,6 +201,8 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 				return <Link2Icon {...iconProps} />;
 			case 'configuration':
 				return <MixerHorizontalIcon {...iconProps} />;
+			case 'clock':
+				return <ClockIcon {...iconProps} />;
 			default:
 				return null;
 		}
@@ -315,7 +331,7 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 
 					{/* Navigation Items */}
 					<div className="space-y-2">
-						{navItems.map((item) => {
+						{visibleNavItems.map((item) => {
 							const isActive = activeItem === item.id;
 							const isSettings = item.id === 'settings';
 

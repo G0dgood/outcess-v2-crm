@@ -21,6 +21,7 @@ export interface Role {
     lineOfBusinessId?: string;
     permissions: RolePermission[];
     userCount?: number;
+    teamMemberCount?: number;
     createdAt?: string;
     updatedAt?: string;
 }

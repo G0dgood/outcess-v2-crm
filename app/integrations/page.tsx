@@ -6,6 +6,7 @@ import Input from '@/components/ui/Input';
 import PageHeading from '@/components/ui/PageHeading';
 import { Modal } from '@/components/ui/Modal';
 import { Link2Icon, Cross2Icon } from '@radix-ui/react-icons';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 interface Integration {
 	id: string;
@@ -24,6 +25,10 @@ interface Integration {
 }
 
 const IntegrationsPage: React.FC = () => {
+    const { canAccess } = usePrivilege();
+    const canAccessModule = canAccess('systemSetting');
+    const canEdit = canAccess('systemSetting', 'edit');
+
     const [integrations, setIntegrations] = useState<Integration[]>([
 		{
 			id: 'slack',
@@ -150,6 +155,10 @@ const IntegrationsPage: React.FC = () => {
 		}
 	};
 
+	if (!canAccessModule) {
+		return null;
+	}
+
 	return (
 		<div>
 			{/* Title */}
@@ -213,7 +222,7 @@ const IntegrationsPage: React.FC = () => {
 									)}
 								</div>
 							</div>
-							{integration.status === 'connected' && (
+							{integration.status === 'connected' && canEdit && (
 								<button
 									onClick={() => handleDisconnect(integration.id)}
 									className="p-1 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
@@ -241,23 +250,27 @@ const IntegrationsPage: React.FC = () => {
 
 						{/* Connect/Disconnect Button */}
 						{integration.status === 'disconnected' ? (
-							<Button
-								variant="primary"
-								size="md"
-								onClick={() => handleConnectClick(integration)}
-								className="w-full"
-							>
-								Connect
-							</Button>
+							canEdit && (
+								<Button
+									variant="primary"
+									size="md"
+									onClick={() => handleConnectClick(integration)}
+									className="w-full"
+								>
+									Connect
+								</Button>
+							)
 						) : (
-							<Button
-								variant="outline"
-								size="md"
-								onClick={() => handleDisconnect(integration.id)}
-								className="w-full"
-							>
-								Disconnect
-							</Button>
+							canEdit && (
+								<Button
+									variant="outline"
+									size="md"
+									onClick={() => handleDisconnect(integration.id)}
+									className="w-full"
+								>
+									Disconnect
+								</Button>
+							)
 						)}
 					</div>
 				))}

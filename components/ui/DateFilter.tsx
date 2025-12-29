@@ -7,10 +7,15 @@ import { CalendarIcon } from '@radix-ui/react-icons';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface DateFilterProps {
+	initialFilter?: 'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange';
+	initialFromDate?: string;
+	initialToDate?: string;
 	onApply?: (filter: {
-		type: 'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange';
-		from?: string;
-		to?: string;
+		startDate: string;
+		endDate: string;
+		filterType: 'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange';
+		fromDate?: string;
+		toDate?: string;
 	}) => void;
 	onClose?: () => void;
 }
@@ -18,20 +23,83 @@ interface DateFilterProps {
 export const DateFilter: React.FC<DateFilterProps> = ({
 	onApply,
 	onClose,
+	initialFilter = 'today',
+	initialFromDate = '',
+	initialToDate = ''
 }) => {
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
-	const [selectedFilter, setSelectedFilter] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange'>('all');
-	const [fromDate, setFromDate] = useState('');
-	const [toDate, setToDate] = useState('');
+	const [selectedFilter, setSelectedFilter] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange'>(initialFilter);
+	const [fromDate, setFromDate] = useState(initialFromDate);
+	const [toDate, setToDate] = useState(initialToDate);
 	const fromDateInputRef = useRef<HTMLInputElement>(null);
 	const toDateInputRef = useRef<HTMLInputElement>(null);
 
+	const formatDate = (date: Date) => {
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const day = String(date.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	};
+
+	const toStartOfDayISO = (dateStr: string) => {
+		if (!dateStr) return '';
+		return `${dateStr}T00:00:00.000Z`;
+	};
+
+	const toEndOfDayISO = (dateStr: string) => {
+		if (!dateStr) return '';
+		return `${dateStr}T23:59:59.999Z`;
+	};
+
 	const handleApply = () => {
+		const today = new Date();
+		let start = '';
+		let end = '';
+
+		switch (selectedFilter) {
+			case 'today':
+				const todayStr = formatDate(today);
+				start = toStartOfDayISO(todayStr);
+				end = toEndOfDayISO(todayStr);
+				break;
+			case 'yesterday':
+				const yesterday = new Date(today);
+				yesterday.setDate(today.getDate() - 1);
+				const yesterdayStr = formatDate(yesterday);
+				start = toStartOfDayISO(yesterdayStr);
+				end = toEndOfDayISO(yesterdayStr);
+				break;
+			case 'last7days':
+				const last7 = new Date(today);
+				last7.setDate(today.getDate() - 7);
+				start = toStartOfDayISO(formatDate(last7));
+				end = toEndOfDayISO(formatDate(today));
+				break;
+			case 'last30days':
+				const last30 = new Date(today);
+				last30.setDate(today.getDate() - 30);
+				start = toStartOfDayISO(formatDate(last30));
+				end = toEndOfDayISO(formatDate(today));
+				break;
+			case 'dateRange':
+				if (fromDate && toDate) {
+					start = toStartOfDayISO(fromDate);
+					end = toEndOfDayISO(toDate);
+				}
+				break;
+			case 'all':
+				start = '';
+				end = '';
+				break;
+		}
+
 		onApply?.({
-			type: selectedFilter,
-			from: selectedFilter === 'dateRange' ? fromDate : undefined,
-			to: selectedFilter === 'dateRange' ? toDate : undefined,
+			startDate: start,
+			endDate: end,
+			filterType: selectedFilter,
+			fromDate: selectedFilter === 'dateRange' ? fromDate : undefined,
+			toDate: selectedFilter === 'dateRange' ? toDate : undefined
 		});
 		onClose?.();
 	};
