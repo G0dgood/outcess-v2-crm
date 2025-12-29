@@ -18,6 +18,10 @@ export interface DispositionCategory {
 	id: string;
 	name: string;
 	color: string;
+	fieldType: string;
+	dropdownOptions?: string[];
+	sortOrder?: string;
+	isRequired?: boolean;
 }
 
 export interface Widget {
