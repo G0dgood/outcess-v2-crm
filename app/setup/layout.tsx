@@ -30,7 +30,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const validateCurrentStep = () => {
     if (currentStep === 1) {
       // Validate Basic Setup
-      if (!setupData.companyName.trim() || !setupData.timeZone || !setupData.industry || !setupData.businessSize) {
+      if (
+        !setupData?.companyName.trim() ||
+        !setupData?.timeZone ||
+        !setupData?.industry ||
+        !setupData?.businessSize
+      ) {
         return false;
       }
     }
@@ -84,13 +89,13 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             await updateLineOfBusiness({
               id: setupData.lineOfBusinessId,
               data: {
-                name: setupData.lineOfBusinessName,
-                timeZone: setupData.timeZone,
-                industry: setupData.industry,
-                businessSize: setupData.businessSize,
-                companyName: setupData.companyName,
-                companyId: user?.company?.id || setupData.companyId,
-                lineOfBusinessName: setupData.lineOfBusinessName,
+                name: setupData?.lineOfBusinessName || '',
+                timeZone: setupData?.timeZone || '',
+                industry: setupData?.industry || '',
+                businessSize: setupData?.businessSize || '',
+                companyName: setupData?.companyName || '',
+                companyId: user?.company?.id || setupData?.companyId || '',
+                lineOfBusinessName: setupData?.lineOfBusinessName || '',
               },
             }).unwrap();
 

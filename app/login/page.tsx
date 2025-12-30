@@ -15,13 +15,22 @@ import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useLoginMutation, useTeamMemberLoginMutation } from '@/store/services/authApi';
 import { login as loginAction } from '@/store/slices/authSlice';
 
+interface ApiError {
+	data?: {
+		message?: string;
+	};
+	message?: string;
+	error?: string;
+	status?: number | string;
+}
+
 export default function LoginPage() {
 	const router = useRouter();
 	const dispatch = useDispatch();
 	const [login] = useLoginMutation();
 	const [teamMemberLogin] = useTeamMemberLoginMutation();
 	const { isDarkMode } = useTheme();
-	const { setUserPrivileges, isSuperAdmin } = usePrivilege();
+	const { setUserPrivileges } = usePrivilege();
 	const primaryColor = '#050711';
 	// loginMethod is determined dynamically based on input value (email vs userId)
 	// const [loginMethod, setLoginMethod] = useState<'email' | 'userId'>('email');
@@ -137,28 +146,30 @@ export default function LoginPage() {
 			} catch (err: unknown) {
 				// Enhanced error logging
 				if (typeof err === 'object' && err !== null) {
+					const apiError = err as ApiError;
 					console.log('Login error details:', {
-						status: (err as any).status,
-						data: (err as any).data,
-						message: (err as any).message,
-						error: (err as any).error,
+						status: apiError.status,
+						data: apiError.data,
+						message: apiError.message,
+						error: apiError.error,
 					});
 				}
 
 				let errorMessage = 'Invalid email or password';
 
 				if (err && typeof err === 'object') {
+					const apiError = err as ApiError;
 					// Handle RTK Query FetchBaseQueryError with data.message
-					if ('data' in err && (err as any).data?.message) {
-						errorMessage = (err as any).data.message;
+					if ('data' in apiError && apiError.data?.message) {
+						errorMessage = apiError.data.message;
 					}
 					// Handle RTK Query SerializedError or standard Error
-					else if ('message' in err) {
-						errorMessage = (err as any).message;
+					else if ('message' in apiError && apiError.message) {
+						errorMessage = apiError.message;
 					}
 					// Handle RTK Query FetchBaseQueryError string error
-					else if ('error' in err && typeof (err as any).error === 'string') {
-						errorMessage = (err as any).error;
+					else if ('error' in apiError && typeof apiError.error === 'string') {
+						errorMessage = apiError.error;
 					}
 				}
 
