@@ -17,6 +17,33 @@ interface PendingBusiness {
 	status: 'Pending';
 }
 
+const businesses: PendingBusiness[] = [
+	{ id: '1', companyName: 'Airtel NIN', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
+	{ id: '2', companyName: 'Renmoney', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
+	{ id: '3', companyName: 'Fairmoney', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
+	{ id: '4', companyName: 'Chipper Cash', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
+	{ id: '5', companyName: 'Access', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
+	{ id: '6', companyName: 'Aura', registrationDate: 'Dec 15, 2024', industry: 'Education', status: 'Pending' },
+	{ id: '7', companyName: 'Airtel RGE', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
+	{ id: '8', companyName: 'Multichoice', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
+	{ id: '9', companyName: 'Mobi Health', registrationDate: 'Dec 15, 2024', industry: 'Healthcare', status: 'Pending' },
+	{ id: '10', companyName: 'Branch', registrationDate: '120', industry: 'Finance', status: 'Pending' },
+	{ id: '11', companyName: 'TechCorp', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+	{ id: '12', companyName: 'DataSys', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+	{ id: '13', companyName: 'CloudNet', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+	{ id: '14', companyName: 'SoftWare Inc', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+	{ id: '15', companyName: 'NetSolutions', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+	{ id: '16', companyName: 'WebServices', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
+	{ id: '17', companyName: 'DigitalPlus', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
+	{ id: '18', companyName: 'InnovateLab', registrationDate: 'Dec 15, 2024', industry: 'Education', status: 'Pending' },
+	{ id: '19', companyName: 'FutureTech', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+	{ id: '20', companyName: 'SmartSystems', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
+	{ id: '21', companyName: 'NextGen', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
+	{ id: '22', companyName: 'ProActive', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
+	{ id: '23', companyName: 'GlobalNet', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
+	{ id: '24', companyName: 'EliteGroup', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
+];
+
 const PendingRequestPage: React.FC = () => {
 	const router = useRouter();
 	const { lineOfBusinessData } = useLineOfBusiness();
@@ -25,33 +52,6 @@ const PendingRequestPage: React.FC = () => {
 	const [currentPage, setCurrentPage] = useState(10);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [isLoading] = useState(false);
-
-	const businesses: PendingBusiness[] = [
-		{ id: '1', companyName: 'Airtel NIN', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
-		{ id: '2', companyName: 'Renmoney', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
-		{ id: '3', companyName: 'Fairmoney', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
-		{ id: '4', companyName: 'Chipper Cash', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
-		{ id: '5', companyName: 'Access', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
-		{ id: '6', companyName: 'Aura', registrationDate: 'Dec 15, 2024', industry: 'Education', status: 'Pending' },
-		{ id: '7', companyName: 'Airtel RGE', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
-		{ id: '8', companyName: 'Multichoice', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
-		{ id: '9', companyName: 'Mobi Health', registrationDate: 'Dec 15, 2024', industry: 'Healthcare', status: 'Pending' },
-		{ id: '10', companyName: 'Branch', registrationDate: '120', industry: 'Finance', status: 'Pending' },
-		{ id: '11', companyName: 'TechCorp', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
-		{ id: '12', companyName: 'DataSys', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
-		{ id: '13', companyName: 'CloudNet', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
-		{ id: '14', companyName: 'SoftWare Inc', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
-		{ id: '15', companyName: 'NetSolutions', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
-		{ id: '16', companyName: 'WebServices', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
-		{ id: '17', companyName: 'DigitalPlus', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
-		{ id: '18', companyName: 'InnovateLab', registrationDate: 'Dec 15, 2024', industry: 'Education', status: 'Pending' },
-		{ id: '19', companyName: 'FutureTech', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
-		{ id: '20', companyName: 'SmartSystems', registrationDate: 'Dec 15, 2024', industry: 'Technology', status: 'Pending' },
-		{ id: '21', companyName: 'NextGen', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
-		{ id: '22', companyName: 'ProActive', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
-		{ id: '23', companyName: 'GlobalNet', registrationDate: 'Dec 15, 2024', industry: 'Communication', status: 'Pending' },
-		{ id: '24', companyName: 'EliteGroup', registrationDate: 'Dec 15, 2024', industry: 'Finance', status: 'Pending' },
-	];
 
 	const filteredBusinesses = useMemo(() => {
 		return businesses.filter(business => {

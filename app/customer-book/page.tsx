@@ -30,8 +30,6 @@ const CustomerBookPage: React.FC = () => {
 	const canAccessModule = canAccess('customerBook');
 	const canView = canAccess('customerBook', 'view');
 	const canCreate = canAccess('customerBook', 'create');
-	const canEdit = canAccess('customerBook', 'edit');
-	const canDelete = canAccess('customerBook', 'delete');
 
 
 	console.log('lineOfBusinessData----->', lineOfBusinessData)

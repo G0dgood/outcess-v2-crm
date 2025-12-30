@@ -29,7 +29,6 @@ export default function RolePermissionManagementPage() {
 	const canView = canAccess('userManagement', 'view');
 	const canCreate = canAccess('userManagement', 'create');
 	const canDelete = canAccess('userManagement', 'delete');
-	const canEdit = canAccess('userManagement', 'edit');
 
 	const [isCreateRoleModalOpen, setIsCreateRoleModalOpen] = useState(false);
 

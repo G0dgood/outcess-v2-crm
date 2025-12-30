@@ -538,6 +538,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 					</button>
 				</div>
 			</nav>
+			<FloatingSettingsMenu />
 		</TooltipProvider>
 	);
 };

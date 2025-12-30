@@ -49,7 +49,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 	});
 
 	// Fetch company details
-	const { data: companyData, isLoading, error } = useGetCompanyByIdQuery(lineOfBusinessData?.lineOfBusiness?.companyId);
+	const { data: companyData, isLoading } = useGetCompanyByIdQuery(lineOfBusinessData?.lineOfBusiness?.companyId);
 
 	useEffect(() => {
 		if (companyData?.company) {

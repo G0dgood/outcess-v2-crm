@@ -6,7 +6,6 @@ import DashboardHeader from '@/components/ui/DashboardHeader';
 import DashboardSideNav from '@/components/ui/DashboardSideNav';
 import MobileSideNav from '@/components/ui/MobileSideNav';
 import GlobalStickyNotes from '@/components/ui/GlobalStickyNotes';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 function LayoutContent({ children }: { children: React.ReactNode }) { 
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

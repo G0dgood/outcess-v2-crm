@@ -6,7 +6,6 @@ import { GearIcon } from '@radix-ui/react-icons';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetLineOfBusinessByCompanyIdForheaderQuery } from '@/store/services/lineOfBusinessApi';
-import { Skeleton } from '@/components/ui/skeleton';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';

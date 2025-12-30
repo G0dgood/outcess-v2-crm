@@ -74,7 +74,7 @@ const SetupBookPage: React.FC = () => {
 	// Otherwise, fallback to useGetSetupBookByLineOfBusinessIdQuery (or keep existing logic)
 	// Assuming if searchId exists, we should prioritize it as per user instruction "add getSetupBookBySearchId"
 
-	const { data: recordsBySearchId, isLoading: _isFetchingBySearchId } = useGetSetupBookBySearchIdQuery(
+	const { data: recordsBySearchId, isLoading: isFetchingBySearchId } = useGetSetupBookBySearchIdQuery(
 		{
 			lineOfBusinessId: lobId || '',
 			searchId: searchId || '',
@@ -85,7 +85,7 @@ const SetupBookPage: React.FC = () => {
 		{ skip: !searchId || !lobId }
 	);
 
-	const { data: recordsByLobId, isLoading } = useGetSetupBookByLineOfBusinessIdQuery(
+	const { data: recordsByLobId, isLoading: isFetchingByLobId } = useGetSetupBookByLineOfBusinessIdQuery(
 		{
 			id: lobId,
 			search: searchTerm,
@@ -96,6 +96,7 @@ const SetupBookPage: React.FC = () => {
 	);
 
 	const apiRecords = searchId ? recordsBySearchId : recordsByLobId;
+	const isLoading = searchId ? isFetchingBySearchId : isFetchingByLobId;
 
 	useEffect(() => {
 		if (setupBookHeaderFields) {

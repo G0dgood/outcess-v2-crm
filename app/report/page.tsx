@@ -135,7 +135,7 @@ const ReportPage: React.FC = () => {
 
 			return row;
 		});
-	}, [apiData, isAgent]);
+	}, [apiData]);
 
 	const dynamicHeaders = useMemo(() => {
 		if (reportData.length === 0) return [];

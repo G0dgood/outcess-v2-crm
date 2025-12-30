@@ -18,7 +18,7 @@ export default function SetupPage() {
 		if (user?.company?.companyName && !setupData?.companyName) {
 			updateSetupData({ companyName: user?.company?.companyName });
 		}
-	}, [user?.company?.companyName, setupData.companyName]);
+	}, [user?.company?.companyName, setupData.companyName, updateSetupData]);
 
 	useEffect(() => {
 		// Simulate initial loading for smooth transition or data fetching

@@ -3,7 +3,6 @@
 import React from 'react';
 import SummaryCards from '@/components/ui/SummaryCards';
 import PlatformGrowthChart from '@/components/ui/PlatformGrowthChart';
-import RegisteredBusinessesTable from '@/components/ui/RegisteredBusinessesTable';
 
 export default function AdminDashboardPage() {
 	return (

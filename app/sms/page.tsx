@@ -5,7 +5,6 @@ import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import Pagination from '@/components/ui/Pagination';
 import Checkbox from '@/components/ui/Checkbox';
-import { useSetup } from '@/contexts/SetupContext';
 import PageHeading from '@/components/ui/PageHeading';
 import { ChatBubbleIcon } from '@radix-ui/react-icons';
 import Icon from '@/components/ui/Icon';

@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import Button from './Button';
 import Modal from './Modal';
-import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 

@@ -140,7 +140,7 @@ export default function SettingsPage() {
 				phone: profileData.phone,
 			};
 
-			const response = await updateUserApi({
+			await updateUserApi({
 				id: user.id,
 				data: updateData
 			}).unwrap();

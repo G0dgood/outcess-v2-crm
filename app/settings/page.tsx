@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import Roles from '@/components/ui/Roles';
 import GeneralSettings from '@/components/ui/GeneralSettings';
 import CompanyDetails from '@/components/ui/CompanyDetails';
-import Fields from '@/components/ui/Fields';
 import Status from '@/components/ui/Status';
 import Permission from '@/components/ui/Permission';
 import { usePrivilege, ModuleId } from '@/contexts/PrivilegeContext';
