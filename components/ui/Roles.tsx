@@ -2,13 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetRolesByLineOfBusinessIdQuery } from '@/store/services/roleApi';
+import { useGetRolesByLineOfBusinessIdQuery, useDeleteRoleMutation } from '@/store/services/roleApi';
 import RolesSkeleton from '@/components/skeletons/RolesSkeleton';
 import Button from './Button';
 import CreateCustomRoleModal from './CreateCustomRoleModal';
+import DeleteRoleModal from './DeleteRoleModal';
 import SubPageHeading from './SubPageHeading';
 import PageHeading from './PageHeading';
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { ExclamationTriangleIcon, TrashIcon } from '@radix-ui/react-icons';
+import { toast } from 'sonner';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 interface Role {
 	id: string;
@@ -24,9 +27,14 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 	// const { user } = useUserInfo(); // user is unused
 	const { selectedLineOfBusinessId } = useLineOfBusiness();
 	const { data: rolesData, isLoading } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', { skip: !selectedLineOfBusinessId });
+	const { canAccess } = usePrivilege();
+	const canDelete = canAccess('userManagement', 'delete');
+	const [deleteRole] = useDeleteRoleMutation();
 
 	const [roles, setRoles] = useState<Role[]>([]);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+	const [roleToDelete, setRoleToDelete] = useState<{ id: string; name: string } | null>(null);
 
 	useEffect(() => {
 		if (rolesData) {
@@ -47,6 +55,25 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 
 	const handleCreateCustomRole = () => {
 		setIsCreateModalOpen(true);
+	};
+
+	const handleDeleteRoleClick = (roleId: string, roleName: string) => {
+		setRoleToDelete({ id: roleId, name: roleName });
+		setDeleteModalOpen(true);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (!roleToDelete) return;
+
+		try {
+			await deleteRole(roleToDelete.id).unwrap();
+			toast.success('Role deleted successfully');
+			setDeleteModalOpen(false);
+			setRoleToDelete(null);
+		} catch (error) {
+			console.error('Failed to delete role:', error);
+			toast.error('Failed to delete role');
+		}
 	};
 
 	if (isLoading) {
@@ -95,12 +122,26 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 								e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
 							}}
 						>
-							<h3
-								className="text-lg font-semibold dark:text-gray-100 mb-2"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								{role?.name}
-							</h3>
+							<div className="flex justify-between items-start mb-2">
+								<h3
+									className="text-lg font-semibold dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{role?.name}
+								</h3>
+								{canDelete && (
+									<button
+										onClick={(e) => {
+											e.stopPropagation();
+											handleDeleteRoleClick(role.id, role.name);
+										}}
+										className="p-1.5 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700 -mr-2 -mt-2"
+										title="Delete Role"
+									>
+										<TrashIcon className="w-4 h-4 text-red-500" />
+									</button>
+								)}
+							</div>
 							<p
 								className="text-sm dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
@@ -126,6 +167,17 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 			<CreateCustomRoleModal
 				isOpen={isCreateModalOpen}
 				onClose={() => setIsCreateModalOpen(false)}
+			/>
+
+			{/* Delete Role Modal */}
+			<DeleteRoleModal
+				isOpen={deleteModalOpen}
+				roleName={roleToDelete?.name || ''}
+				onClose={() => {
+					setDeleteModalOpen(false);
+					setRoleToDelete(null);
+				}}
+				onConfirm={handleConfirmDelete}
 			/>
 		</div>
 	);

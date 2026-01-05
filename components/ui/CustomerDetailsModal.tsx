@@ -298,7 +298,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 								<div className="p-6">
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 										{Object.entries(customer)
-											.filter(([key]) => !['id', '_id', 'companyId', 'lineOfBusinessId', 'createdAt', 'updatedAt', '__v'].includes(key))
+											.filter(([key]) => !['id', '_id', 'companyId', 'lineOfBusinessId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid')
 											.map(([key, value]) => {
 												let IconComponent = PersonIcon;
 												const lowerKey = key.toLowerCase();
@@ -354,13 +354,15 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 								>
 									Disposition History
 								</h3>
-								<Button
-									variant="outline"
-									size="md"
-									onClick={() => setIsDispositionHistoryModalOpen(true)}
-								>
-									View All
-								</Button>
+								{combinedDispositions.length > 0 && (
+									<Button
+										variant="outline"
+										size="md"
+										onClick={() => setIsDispositionHistoryModalOpen(true)}
+									>
+										View All
+									</Button>
+								)}
 							</div>
 
 							<div className="overflow-x-auto">
@@ -443,7 +445,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 												<td className="px-6 py-4 whitespace-nowrap">
 													{item.isOffline ? (
 														<span
-															className="inline-flex items-center px-2 py-1 text-xs font-medium rounded"
+															className="inline-flex items-center px-2 py-1 text-xs font-medium "
 															style={{
 																backgroundColor: item.offlineStatus === 'pending' ? '#FEF3C7' :
 																	item.offlineStatus === 'synced' ? '#D1FAE5' : '#FEE2E2',
@@ -457,7 +459,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 														</span>
 													) : (
 														<span
-															className="inline-flex items-center px-2 py-1 text-xs font-medium rounded"
+															className="inline-flex items-center px-2 py-1 text-xs font-medium "
 															style={{
 																backgroundColor: '#E0E7FF',
 																color: '#3730A3'
@@ -541,6 +543,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 					initialData={selectedDispositionData}
 					customerId={customer?.id}
 					customerName={customer ? `${String(customer?.firstName || '')} ${String(customer?.lastName || '')}`.trim() : undefined}
+					customer={customer}
 				/>
 
 				{/* SMS Modal */}

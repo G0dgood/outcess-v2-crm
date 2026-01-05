@@ -667,8 +667,10 @@ const DashboardContent: React.FC = () => {
 							{dashboardSettings?.dashboardName || ' Dashboard'}
 						</h1>
 						<div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-							<div className="w-40">
-								<Dropdown
+							{/* <div className="w-40 h-10">
+								
+							</div> */}
+							<Dropdown
 									label=""
 									placeholder="Time Range"
 									options={[
@@ -684,10 +686,8 @@ const DashboardContent: React.FC = () => {
 											...dashboardSettings.dispositionSettings,
 											timeRangeView: value as unknown as 'daily' | 'weekly' | 'monthly',
 										}
-									})}
-									className="!mb-0"
+									})} 
 								/>
-							</div>
 							<Button
 								variant="primary"
 								size="md"

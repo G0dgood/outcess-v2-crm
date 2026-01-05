@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FileTextIcon } from '@radix-ui/react-icons';
+import { FileTextIcon, TrashIcon } from '@radix-ui/react-icons';
 import Icon from '@/components/ui/Icon';
 
 type FieldDef = { id: string; name: string };
@@ -11,21 +11,17 @@ interface SelectedRecordsDrawerContentProps {
   selectedRecords: Set<string>;
   fieldDefinitions: FieldDef[];
   records: RecordType[];
-  onEdit: (record: RecordType) => void;
-  onDelete: (record: RecordType) => void;
   onClose: () => void;
-  canEdit: boolean;
-  canDelete: boolean;
+  onDeleteSelected?: () => void;
+  canDelete?: boolean;
 }
 
 const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> = ({
   selectedRecords,
   fieldDefinitions,
   records,
-  onEdit,
-  onDelete,
   onClose,
-  canEdit,
+  onDeleteSelected,
   canDelete,
 }) => {
   return (
@@ -40,19 +36,31 @@ const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> 
             Selected Records ({selectedRecords.size})
           </h2>
         </div>
-        <button
-          onClick={onClose}
-          className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors cursor-pointer"
-          style={{ color: 'var(--text-tertiary)' }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = 'var(--text-secondary)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = 'var(--text-tertiary)';
-          }}
-        >
-          <Icon name="Close_round_light" size="lg" />
-        </button>
+        <div className="flex items-center gap-3">
+          {canDelete && onDeleteSelected && selectedRecords.size > 0 && (
+            <button
+              onClick={onDeleteSelected}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-red-500 border border-red-500 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              title="Delete Selected"
+            >
+              <TrashIcon className="w-3.5 h-3.5" />
+              Delete
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors cursor-pointer"
+            style={{ color: 'var(--text-tertiary)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--text-tertiary)';
+            }}
+          >
+            <Icon name="Close_round_light" size="lg" />
+          </button>
+        </div>
       </div>
 
       <div className="overflow-y-auto h-[calc(100vh-80px)] p-6  border-l border-gray-700"
@@ -74,14 +82,7 @@ const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> 
                   key={record.id}
                   className="p-4 dark:bg-gray-700 border dark:border-gray-600 "
                   style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--light-gray)' }}
-                >
-                  <div className="mb-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-medium dark:text-gray-300" style={{ color: 'var(--text-secondary)' }}>
-                        ID: {record.id}
-                      </span>
-                    </div>
-                  </div>
+                > 
 
                   <div className="space-y-2">
                     {fieldDefinitions.map((field) => (
@@ -97,45 +98,6 @@ const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> 
                         </span>
                       </div>
                     ))}
-                  </div>
-
-                  <div className="flex gap-2 mt-3">
-                    {canEdit && (
-                      <button
-                        onClick={() => {
-                          onEdit(record);
-                          onClose();
-                        }}
-                        className="flex-1 text-xs py-2 px-3 border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
-                        style={{ borderColor: 'var(--light-gray)', color: 'var(--text-secondary)', backgroundColor: 'transparent' }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
-                      >
-                        Edit
-                      </button>
-                    )}
-                    {canDelete && (
-                      <button
-                        onClick={() => {
-                          onDelete(record);
-                          onClose();
-                        }}
-                        className="flex-1 text-xs py-2 px-3  border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
-                        style={{ borderColor: 'var(--light-gray)', color: '#DC2626', backgroundColor: 'transparent' }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
-                      >
-                        Delete
-                      </button>
-                    )}
                   </div>
                 </div>
               ))}

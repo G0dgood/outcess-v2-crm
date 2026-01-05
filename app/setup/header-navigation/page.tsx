@@ -19,7 +19,7 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 	const [primaryColor, setPrimaryColor] = useState<string>(setupData.primaryColor);
 	const [secondaryColor, setSecondaryColor] = useState<string>(setupData.secondaryColor);
 	const [logoFile, setLogoFile] = useState<File | null>(null);
-	console.log('logoFile', logoFile)
+
 	const handleMenuStyleChange = (style: MenuStyle): void => {
 		setSelectedLayout(style);
 		updateNavigationSettings({ menuStyle: style });
@@ -39,6 +39,7 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 		if (!file) return;
 
 		setLogoFile(file);
+		updateSetupData({ logoFile: file });
 		const logoUrl: string = URL.createObjectURL(file);
 		updateNavigationSettings({
 			logo: {
@@ -233,6 +234,7 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 							{/* Logo Upload */}
 							<LogoUpload
 								label="Logo"
+								value={logoFile || setupData.navigationSettings.logo.url}
 								onFileSelect={handleLogoSelect}
 								acceptedTypes={['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg']}
 								maxSize={5}

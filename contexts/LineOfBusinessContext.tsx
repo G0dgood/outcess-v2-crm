@@ -40,7 +40,7 @@ export const LineOfBusinessProvider: React.FC<LineOfBusinessProviderProps> = ({ 
 
     const { data: lineOfBusinessData, isLoading, isFetching } = useGetLineOfBusinessQuery(
         selectedLineOfBusinessId || '',
-        { skip: !selectedLineOfBusinessId }
+        { skip: !selectedLineOfBusinessId || selectedLineOfBusinessId === 'new' }
     );
 
     return (

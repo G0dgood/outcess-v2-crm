@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
-import Search from '@/components/ui/Search'; 
+import Search from '@/components/ui/Search';
 import Pagination from '@/components/ui/Pagination';
 import Checkbox from '@/components/ui/Checkbox';
 import PageHeading from '@/components/ui/PageHeading';
@@ -14,7 +14,7 @@ import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import SampleCsvDownloader from '@/components/ui/SampleCsvDownloader';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
 import EditRecordModal from '@/components/ui/EditRecordModal';
-import { useGetSetupBookByLineOfBusinessIdQuery, useDeleteSetupBookRecordsMutation, useGetSetupBookBySearchIdQuery } from '@/store/services/setupBookApi';
+import { useGetSetupBookByLineOfBusinessIdQuery, useDeleteSetupBookRecordsMutation, useGetSetupBookBySearchIdQuery, useDeleteManySetupBookRecordsMutation } from '@/store/services/setupBookApi';
 import { toast } from 'sonner';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -152,8 +152,37 @@ const SetupBookPage: React.FC = () => {
 	};
 
 	const [deleteSetupBookRecords] = useDeleteSetupBookRecordsMutation();
+	const [deleteManySetupBookRecords] = useDeleteManySetupBookRecordsMutation();
+
+	const handleDeleteSelected = () => {
+		setDeleteRecord({
+			id: 'BULK_DELETE',
+			name: `${selectedRecords.size} records`
+		});
+	};
 
 	const handleConfirmDelete = async () => {
+		if (deleteRecord?.id === 'BULK_DELETE' && lobId) {
+			try {
+				await deleteManySetupBookRecords({
+					lineOfBusinessId: lobId,
+					ids: Array.from(selectedRecords)
+				}).unwrap();
+
+				toast.success("Records deleted successfully");
+
+				setSelectedRecords(new Set());
+				setIsDrawerOpen(false);
+				setDeleteRecord(null);
+			} catch (error: unknown) {
+				const apiError = error as ApiError;
+				toast.error("Failed to delete records", {
+					description: apiError?.data?.message || "An error occurred while deleting records"
+				});
+			}
+			return;
+		}
+
 		if (deleteRecord && lobId) {
 			try {
 				await deleteSetupBookRecords({
@@ -259,6 +288,7 @@ const SetupBookPage: React.FC = () => {
 					<SampleCsvDownloader
 						fields={setupBookHeaderFields || []}
 						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+						extraHeaders={['searchId']}
 					/>
 					{canCreate && (
 						<>
@@ -478,10 +508,8 @@ const SetupBookPage: React.FC = () => {
 						selectedRecords={selectedRecords}
 						fieldDefinitions={fieldDefinitions}
 						records={records}
-						onEdit={handleEditRecord}
-						onDelete={handleDeleteClick}
 						onClose={() => setIsDrawerOpen(false)}
-						canEdit={canEdit}
+						onDeleteSelected={handleDeleteSelected}
 						canDelete={canDelete}
 					/>
 				</div>

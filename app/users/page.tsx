@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
+import PaginationSummary from '@/components/ui/PaginationSummary';
 import Checkbox from '@/components/ui/Checkbox';
 import { useGetTeamMembersByLineOfBusinessIdQuery, useDeleteTeamMemberMutation } from '@/store/services/teamMembersApi';
 import PageHeading from '@/components/ui/PageHeading';
@@ -16,6 +17,7 @@ import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { toast } from 'sonner';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import SelectedUsersDrawerContent from './SelectedUsersDrawerContent';
 
 interface User {
 	id: string;
@@ -41,8 +43,11 @@ const UsersPage: React.FC = () => {
 	const canEdit = canAccess('teamMembers', 'edit');
 	const canDelete = canAccess('teamMembers', 'delete');
 
+	console.log('lineOfBusinessData---->', lineOfBusinessData);
+
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
 	const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
 	const [deleteUser, setDeleteUser] = useState<{ id: string; name: string } | null>(null);
@@ -101,11 +106,10 @@ const UsersPage: React.FC = () => {
 		user.role.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
-	const usersPerPage = 10;
-	const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+	const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 	const currentUsers = filteredUsers.slice(
-		(currentPage - 1) * usersPerPage,
-		currentPage * usersPerPage
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage
 	);
 
 	const handleAddUser = () => {
@@ -262,6 +266,25 @@ const UsersPage: React.FC = () => {
 					borderColor: 'var(--light-gray)'
 				}}
 			>
+				{filteredUsers.length > 0 && (
+					<div className="p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+						<PaginationSummary
+							totalItems={filteredUsers.length}
+							itemsPerPage={itemsPerPage}
+							onItemsPerPageChange={(value) => {
+								setItemsPerPage(value);
+								setCurrentPage(1);
+							}}
+							className="text-gray-600"
+						/>
+						<span
+							className="text-sm dark:text-gray-400"
+							style={{ color: 'var(--text-tertiary)' }}
+						>
+							Total of {filteredUsers.length} Users
+						</span>
+					</div>
+				)}
 				<div className="overflow-x-auto">
 					<table
 						className="min-w-full divide-y dark:divide-gray-700"
@@ -413,15 +436,17 @@ const UsersPage: React.FC = () => {
 			</div>
 
 			{/* Pagination */}
-			<Pagination
-				currentPage={currentPage}
-				totalPages={totalPages}
-				onPageChange={setCurrentPage}
-				showEllipsis={true}
-				maxVisiblePages={5}
-				primaryColor={lineOfBusinessData?.primaryColor || '#000000'}
-				secondaryColor={lineOfBusinessData?.secondaryColor || '#000000'}
-			/>
+			{filteredUsers.length > 0 && (
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onPageChange={setCurrentPage}
+					showEllipsis={true}
+					maxVisiblePages={5}
+					primaryColor={lineOfBusinessData?.primaryColor || '#000000'}
+					secondaryColor={lineOfBusinessData?.secondaryColor || '#000000'}
+				/>
+			)}
 
 			{/* Add User Modal */}
 			<AddUserModal
@@ -443,187 +468,20 @@ const UsersPage: React.FC = () => {
 					className={`fixed top-0 right-0 h-full w-full max-w-md dark:bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${isDrawerAnimating ? 'translate-x-0' : 'translate-x-full'}`}
 					style={{ backgroundColor: 'var(--accent-white)' }}
 				>
-					{/* Drawer Header */}
-					<div
-						className="flex justify-between items-center border-b dark:border-gray-700 p-6"
-						style={{ borderColor: 'var(--light-gray)' }}
-					>
-						<div className="flex items-center gap-3">
-							<PersonIcon
-								className="w-5 h-5 dark:text-gray-300"
-								style={{ color: 'var(--text-primary)' }}
-							/>
-							<h2
-								className="font-inter text-lg font-semibold dark:text-gray-100"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								Selected Users ({selectedUsers.size})
-							</h2>
-						</div>
-						<button
-							onClick={() => setIsDrawerOpen(false)}
-							className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-							style={{ color: 'var(--text-tertiary)' }}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.color = 'var(--text-secondary)';
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.color = 'var(--text-tertiary)';
-							}}
-						>
-							<Icon name="Close_round_light" size="lg" />
-						</button>
-					</div>
-
-					{/* Drawer Content */}
-					<div className="overflow-y-auto h-[calc(100vh-80px)] p-6">
-						{selectedUsers.size === 0 ? (
-							<div className="flex flex-col items-center justify-center h-full text-center">
-								<PersonIcon
-									className="w-12 h-12 mb-4 dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								/>
-								<p
-									className="text-sm dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								>
-									No users selected
-								</p>
-							</div>
-						) : (
-							<div className="space-y-4">
-								{users
-									.filter(user => selectedUsers.has(user.id))
-									.map((user) => {
-										const getLoginStatusColor = (status: string) => {
-											return status === 'Logged In'
-												? { bg: 'rgba(34, 197, 94, 0.1)', text: '#22C55E', border: 'rgba(34, 197, 94, 0.2)' }
-												: { bg: 'rgba(156, 163, 175, 0.1)', text: '#9CA3AF', border: 'rgba(156, 163, 175, 0.2)' };
-										};
-										const loginStatusColors = getLoginStatusColor(user.loginStatus);
-										return (
-											<div
-												key={user.id}
-												className="p-4 dark:bg-gray-700 border dark:border-gray-600 rounded-lg"
-												style={{
-													backgroundColor: 'var(--bg-primary)',
-													borderColor: 'var(--light-gray)'
-												}}
-											>
-												{/* User Header */}
-												<div className="flex justify-between items-start mb-3">
-													<div className="flex-1">
-														<div className="flex items-center gap-2 mb-2">
-															<span
-																className="text-xs font-medium dark:text-gray-300"
-																style={{ color: 'var(--text-secondary)' }}
-															>
-																{user.id}
-															</span>
-															<span
-																className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-																style={{
-																	backgroundColor: loginStatusColors.bg,
-																	color: loginStatusColors.text,
-																	border: `1px solid ${loginStatusColors.border}`
-																}}
-															>
-																{user.loginStatus}
-															</span>
-														</div>
-														<p
-															className="text-sm font-medium dark:text-gray-100 mb-1"
-															style={{ color: 'var(--text-primary)' }}
-														>
-															{user.firstName} {user.lastName}
-														</p>
-														<p
-															className="text-xs dark:text-gray-400"
-															style={{ color: 'var(--text-tertiary)' }}
-														>
-															{user.email}
-														</p>
-													</div>
-												</div>
-
-												{/* User Details */}
-												<div className="mt-3 space-y-2">
-													<div className="flex items-center justify-between text-xs">
-														<span
-															className="dark:text-gray-400"
-															style={{ color: 'var(--text-tertiary)' }}
-														>
-															Phone:
-														</span>
-														<span
-															className="dark:text-gray-100"
-															style={{ color: 'var(--text-primary)' }}
-														>
-															{user.phone}
-														</span>
-													</div>
-													<div className="flex items-center justify-between text-xs">
-														<span
-															className="dark:text-gray-400"
-															style={{ color: 'var(--text-tertiary)' }}
-														>
-															Role:
-														</span>
-														<span
-															className="dark:text-gray-100"
-															style={{ color: 'var(--text-primary)' }}
-														>
-															{user.role}
-														</span>
-													</div>
-												</div>
-
-												{/* Actions */}
-												<div className="flex gap-2 mt-3">
-													<button
-														onClick={() => router.push(`/users/${user.id}/edit`)}
-														className="flex-1 text-xs py-2 px-3 rounded border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
-														style={{
-															borderColor: 'var(--light-gray)',
-															color: 'var(--text-secondary)',
-															backgroundColor: 'transparent'
-														}}
-														onMouseEnter={(e) => {
-															e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-														}}
-														onMouseLeave={(e) => {
-															e.currentTarget.style.backgroundColor = 'transparent';
-														}}
-													>
-														Edit
-													</button>
-													<button
-														onClick={() => {
-															handleDeleteClick(user);
-															setIsDrawerOpen(false);
-														}}
-														className="flex-1 text-xs py-2 px-3 rounded border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
-														style={{
-															borderColor: 'var(--light-gray)',
-															color: '#DC2626',
-															backgroundColor: 'transparent'
-														}}
-														onMouseEnter={(e) => {
-															e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-														}}
-														onMouseLeave={(e) => {
-															e.currentTarget.style.backgroundColor = 'transparent';
-														}}
-													>
-														Delete
-													</button>
-												</div>
-											</div>
-										);
-									})}
-							</div>
-						)}
-					</div>
+					<SelectedUsersDrawerContent
+						selectedUsers={selectedUsers}
+						users={users}
+						onClose={() => setIsDrawerOpen(false)}
+						onEdit={(user) => router.push(`/users/${user.id}/edit`)}
+						onDelete={(user) => {
+							handleDeleteClick(user);
+							setIsDrawerOpen(false);
+						}}
+						onBulkDeleteSuccess={() => {
+							setSelectedUsers(new Set());
+							setIsDrawerOpen(false);
+						}}
+					/>
 				</div>
 			)}
 		</div>

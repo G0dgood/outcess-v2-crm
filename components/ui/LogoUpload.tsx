@@ -23,11 +23,23 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 	minDimensions = { width: 174, height: 28 },
 	className = '',
 	disabled = false,
-	error
+	error,
+	value
 }) => {
 	const [isDragOver, setIsDragOver] = useState(false);
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	// Update preview when value changes
+	React.useEffect(() => {
+		if (typeof value === 'string') {
+			setPreviewUrl(value);
+		} else if (value instanceof File) {
+			setPreviewUrl(URL.createObjectURL(value));
+		} else if (value === null) {
+			setPreviewUrl(null);
+		}
+	}, [value]);
 
 	// Handle file validation
 	const validateFile = (file: File): string | null => {
@@ -96,15 +108,22 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 	};
 
 	// Handle click to open file dialog
-	const handleClick = () => {
-		if (!disabled) {
-			fileInputRef.current?.click();
+	const handleClick = (e: React.MouseEvent) => {
+		if (disabled) {
+			e.preventDefault();
+			return;
+		}
+		// If clicking on the remove button or its container, don't trigger file input
+		if ((e.target as HTMLElement).closest('button')) {
+			e.preventDefault();
+			return;
 		}
 	};
 
 	// Handle remove file
 	const handleRemove = (e: React.MouseEvent) => {
-		e.stopPropagation();
+		e.preventDefault(); // Prevent default label behavior
+		e.stopPropagation(); // Stop propagation
 		setPreviewUrl(null);
 		onFileSelect?.(null);
 		if (fileInputRef.current) {
@@ -122,8 +141,8 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 				</label>
 			)}
 
-			<div
-				className={`border-2 border-dashed transition-colors cursor-pointer ${isDragOver
+			<label
+				className={`border-2 border-dashed transition-colors cursor-pointer block ${isDragOver
 					? 'border-blue-400 bg-blue-50'
 					: error
 						? 'border-red-300 bg-red-50'
@@ -146,7 +165,7 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 								<button
 									type="button"
 									onClick={handleRemove}
-									className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+									className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors z-10"
 								>
 									×
 								</button>
@@ -169,16 +188,16 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 						</div>
 					</div>
 				)}
-			</div>
 
-			<input
-				ref={fileInputRef}
-				type="file"
-				accept={acceptedTypes.join(',')}
-				onChange={handleInputChange}
-				className="hidden"
-				disabled={disabled}
-			/>
+				<input
+					ref={fileInputRef}
+					type="file"
+					accept={acceptedTypes.join(',')}
+					onChange={handleInputChange}
+					className="hidden"
+					disabled={disabled}
+				/>
+			</label>
 
 			{error && (
 				<p className="font-lato text-sm text-red-600 mt-2">{error}</p>

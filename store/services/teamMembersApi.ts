@@ -27,6 +27,10 @@ export interface CreateTeamMemberRequest {
     userId?: string;
 }
 
+export interface DeleteManyTeamMembersRequest {
+    ids: string[];
+}
+
 export const teamMembersApi = createApi({
     reducerPath: 'teamMembersApi',
     baseQuery: fetchBaseQuery({ 
@@ -126,6 +130,20 @@ export const teamMembersApi = createApi({
                 } catch {}
             },
         }),
+        deleteManyTeamMembers: builder.mutation<any, DeleteManyTeamMembersRequest>({
+            query: (body) => ({
+                url: 'api/v1/team-members/many',
+                method: 'DELETE',
+                body,
+            }),
+            invalidatesTags: ['TeamMembers'],
+            async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+                try {
+                    await queryFulfilled;
+                    dispatch(roleApi.util.invalidateTags(['Roles']));
+                } catch {}
+            },
+        }),
     }),
 });
 
@@ -142,4 +160,5 @@ export const {
     useUpdateTeamMemberPasswordMutation,
     useAdminResetTeamMemberPasswordByIdMutation,
     useDeleteTeamMemberMutation,
+    useDeleteManyTeamMembersMutation,
 } = teamMembersApi;

@@ -16,12 +16,13 @@ import {
 	ChatBubbleIcon,
 	Link2Icon,
 	MixerHorizontalIcon,
-	ClockIcon
+	ClockIcon,
+	LockClosedIcon
 } from '@radix-ui/react-icons';
 import Group from '@/components/setupIcon/Group';
 import Icon from '@/components/ui/Icon';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { usePrivilege, ModuleId } from '@/contexts/PrivilegeContext';
 
 interface MobileSideNavProps {
 	activeItem?: string;
@@ -35,6 +36,7 @@ interface NavItem {
 	label: string;
 	icon: string;
 	path: string;
+	isRestricted?: boolean;
 }
 
 const MobileSideNav: React.FC<MobileSideNavProps> = ({
@@ -47,7 +49,7 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 	const { lineOfBusinessData } = useLineOfBusiness();
-	const { isAdmin } = usePrivilege();
+	const { isAdmin, canAccess } = usePrivilege();
 	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
 	const navRef = useRef<HTMLDivElement>(null);
 	const [shouldRender, setShouldRender] = useState(false);
@@ -140,10 +142,53 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 		},
 	];
 
-	const visibleNavItems = navItems.filter(item => {
-		if (item.id === 'pending-request' && !isAdmin) return false;
-		return true;
+	const moduleMapping: Record<string, ModuleId> = {
+		'dashboard': 'dashboard',
+		'customer-book': 'customerBook',
+		'users': 'userManagement',
+		'team-members': 'teamMembers',
+		'sms': 'customerSMS',
+		'integrations': 'systemSetting',
+		'setup-book': 'setupBook',
+		'report': 'report',
+		'configuration': 'systemSetting',
+		'settings': 'systemSetting',
+	};
+
+	const subModuleMapping: Record<string, ModuleId> = {
+		'fields-tab': 'systemSetting',
+		'status-tab': 'systemSetting',
+		'permission-tab': 'userManagement',
+		'company-details-tab': 'systemSetting',
+		'roles-tab': 'userManagement',
+	};
+
+	const visibleNavItems: NavItem[] = [];
+	let hasRestrictedNav = false;
+
+	navItems.forEach(item => {
+		if (item.id === 'pending-request' && !isAdmin) return;
+
+		let isRestricted = false;
+		const moduleId = moduleMapping[item.id];
+		if (moduleId && !canAccess(moduleId, 'view')) isRestricted = true;
+
+		if (!isRestricted) {
+			visibleNavItems.push(item);
+		} else {
+			hasRestrictedNav = true;
+		}
 	});
+
+	if (visibleNavItems.length === 0 && hasRestrictedNav) {
+		visibleNavItems.push({
+			id: 'access-restricted',
+			label: 'Access Restricted',
+			icon: 'lock',
+			path: '#',
+			isRestricted: true
+		});
+	}
 
 	const handleItemClick = (item: NavItem, e?: React.MouseEvent) => {
 		if (item.id === 'settings') {
@@ -203,6 +248,8 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 				return <MixerHorizontalIcon {...iconProps} />;
 			case 'clock':
 				return <ClockIcon {...iconProps} />;
+			case 'lock':
+				return <LockClosedIcon {...iconProps} />;
 			default:
 				return null;
 		}
@@ -288,6 +335,29 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 
 	if (!shouldRender) return null;
 
+	const visibleSettingsSubItems: any[] = [];
+	let hasRestrictedSettings = false;
+
+	settingsSubItems.forEach(subItem => {
+		const moduleId = subModuleMapping[subItem.id];
+		const hasAccess = moduleId ? canAccess(moduleId, 'view') : true;
+		if (hasAccess) {
+			visibleSettingsSubItems.push(subItem);
+		} else {
+			hasRestrictedSettings = true;
+		}
+	});
+
+	if (visibleSettingsSubItems.length === 0 && hasRestrictedSettings) {
+		visibleSettingsSubItems.push({
+			id: 'access-restricted-settings',
+			label: 'Access Restricted',
+			icon: 'lock',
+			path: '#',
+			isRestricted: true
+		});
+	}
+
 	return (
 		<>
 			{/* Backdrop Overlay */}
@@ -334,6 +404,23 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 						{visibleNavItems.map((item) => {
 							const isActive = activeItem === item.id;
 							const isSettings = item.id === 'settings';
+
+							if (item.isRestricted) {
+								return (
+									<div key={item.id}>
+										<div
+											className="w-full flex items-center gap-3 px-4 py-3 cursor-not-allowed transition-all duration-200"
+										>
+											<div className="shrink-0 text-gray-400 dark:text-gray-600">
+												<LockClosedIcon className="w-5 h-5" />
+											</div>
+											<span className="font-inter font-medium text-[14px] leading-[20px] tracking-[-0.5px] text-gray-400 dark:text-gray-600 flex-1 text-left">
+												Access Restricted
+											</span>
+										</div>
+									</div>
+								);
+							}
 
 							return (
 								<div key={item.id}>
@@ -401,7 +488,23 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 											className="ml-4 mt-1 space-y-1 border-l-2 dark:border-gray-600 pl-2"
 											style={{ borderColor: 'var(--light-gray)' }}
 										>
-											{settingsSubItems.map((subItem) => {
+											{visibleSettingsSubItems.map((subItem) => {
+												if (subItem.isRestricted) {
+													return (
+														<div
+															key={subItem.id}
+															className="w-full flex items-center gap-3 px-4 py-2 cursor-not-allowed"
+														>
+															<div className="shrink-0 text-gray-400 dark:text-gray-600">
+																<LockClosedIcon className="w-4 h-4" />
+															</div>
+															<span className="font-inter font-medium text-[13px] leading-[20px] tracking-[-0.5px] text-gray-400 dark:text-gray-600">
+																Access Restricted
+															</span>
+														</div>
+													);
+												}
+
 												// Get the tab value from the URL query parameter
 												const currentTab = searchParams?.get('tab');
 												// Extract tab name from subItem.path (e.g., '/settings?tab=fields' -> 'fields')

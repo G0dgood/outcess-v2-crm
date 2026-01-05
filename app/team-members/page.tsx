@@ -266,23 +266,25 @@ const TeamMembersPage: React.FC = () => {
 					borderColor: 'var(--light-gray)',
 				}}
 			>
-				<div className="p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<PaginationSummary
-						totalItems={filteredMembers.length}
-						itemsPerPage={itemsPerPage}
-						onItemsPerPageChange={(value) => {
-							setItemsPerPage(value);
-							setCurrentPage(1);
-						}}
-						className="text-gray-600"
-					/>
-					<span
-						className="text-sm dark:text-gray-400"
-						style={{ color: 'var(--text-tertiary)' }}
-					>
-						Total of {filteredMembers.length} Team Members
-					</span>
-				</div>
+				{filteredMembers.length > 0 && (
+					<div className="p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+						<PaginationSummary
+							totalItems={filteredMembers.length}
+							itemsPerPage={itemsPerPage}
+							onItemsPerPageChange={(value) => {
+								setItemsPerPage(value);
+								setCurrentPage(1);
+							}}
+							className="text-gray-600"
+						/>
+						<span
+							className="text-sm dark:text-gray-400"
+							style={{ color: 'var(--text-tertiary)' }}
+						>
+							Total of {filteredMembers.length} Team Members
+						</span>
+					</div>
+				)}
 
 				<div className="overflow-x-auto">
 					<table
@@ -382,14 +384,15 @@ const TeamMembersPage: React.FC = () => {
 					</table>
 				</div>
 				<div className="p-4 px-6">
-
-					<Pagination
-						currentPage={currentPage}
-						totalPages={totalPages}
-						onPageChange={setCurrentPage}
-						primaryColor={lineOfBusinessData?.primaryColor}
-						secondaryColor={lineOfBusinessData?.secondaryColor}
-					/>
+					{filteredMembers.length > 0 && (
+						<Pagination
+							currentPage={currentPage}
+							totalPages={totalPages}
+							onPageChange={setCurrentPage}
+							primaryColor={lineOfBusinessData?.primaryColor}
+							secondaryColor={lineOfBusinessData?.secondaryColor}
+						/>
+					)}
 				</div>
 			</div>
 		</div>

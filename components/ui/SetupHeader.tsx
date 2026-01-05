@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from './Icon';
 import { plusJakartaStyle } from '../Options';
 import ThemeToggle from './ThemeToggle';
@@ -29,6 +29,11 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 }) => {
 	// If no user is provided, we don't display user info
 	const userData = user;
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	return (
 		<header
@@ -51,7 +56,6 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 					<div className="flex items-center gap-3">
 						<div className="flex-1 md:flex-none">
 							<div className="hidden md:flex items-center gap-2">
-								<Icon name="peoplelyHalf" size="xl" color="black" className="dark:hidden" />
 								<Icon name="peoplelyHalf" size="xl" className="hidden dark:inline-block" />
 								<span className="font-semibold text-[25px] leading-[28px] flex items-center text-[#050711]"
 									style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>Peoplely</span>
@@ -78,7 +82,7 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 				)}
 			</div>
 
-			{userData && (
+			{mounted && userData && (
 				<div className="flex items-center gap-3">
 					<ThemeToggle />
 					<div

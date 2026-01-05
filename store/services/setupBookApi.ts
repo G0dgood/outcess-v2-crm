@@ -40,6 +40,11 @@ export interface DeleteSetupBookRecordsRequest {
     id: string;
 }
 
+export interface DeleteManySetupBookRecordsRequest {
+    lineOfBusinessId: string;
+    ids: string[];
+}
+
 export const setupBookApi = createApi({
     reducerPath: 'setupBookApi',
     tagTypes: ['SetupBook'],
@@ -128,6 +133,14 @@ export const setupBookApi = createApi({
             }),
             invalidatesTags: ['SetupBook'],
         }),
+        deleteManySetupBookRecords: builder.mutation<any, DeleteManySetupBookRecordsRequest>({
+            query: ({ lineOfBusinessId, ids }) => ({
+                url: `api/v1/setup-books/${lineOfBusinessId}/records/many`,
+                method: 'DELETE',
+                body: { ids },
+            }),
+            invalidatesTags: ['SetupBook'],
+        }),
         deleteSetupBook: builder.mutation<{ success: boolean; id: string }, string>({
             query: (id) => ({
                 url: `api/v1/setup-books/${id}`,
@@ -147,5 +160,6 @@ export const {
     useUpdateSetupBookMutation,
     useUpdateSetupBookRecordsMutation,
     useDeleteSetupBookRecordsMutation,
+    useDeleteManySetupBookRecordsMutation,
     useDeleteSetupBookMutation,
 } = setupBookApi;

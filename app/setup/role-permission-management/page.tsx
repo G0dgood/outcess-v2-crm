@@ -8,7 +8,7 @@ import CreateRoleModal from '@/components/ui/CreateRoleModal';
 import Icon from '@/components/ui/Icon';
 import Permission from '@/components/ui/Permission';
 import { useSetup } from '@/contexts/SetupContext';
-import { useGetRolesByCompanyIdQuery, useCreateRoleMutation, useDeleteRoleMutation, Role, RolePermission } from '@/store/services/roleApi';
+import { useCreateRoleMutation, useDeleteRoleMutation, Role, RolePermission, useGetRolesByLineOfBusinessIdQuery } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -31,12 +31,11 @@ export default function RolePermissionManagementPage() {
 	const canDelete = canAccess('userManagement', 'delete');
 
 	const [isCreateRoleModalOpen, setIsCreateRoleModalOpen] = useState(false);
-
 	const companyId = user?.company?._id || user?.companyId || '';
 
-	const { data: rolesData, isLoading, refetch } = useGetRolesByCompanyIdQuery(companyId, {
-		skip: !companyId,
-	});
+	const { data: rolesData, isLoading, refetch } = useGetRolesByLineOfBusinessIdQuery(setupData?.lineOfBusinessId || '', { skip: !setupData?.lineOfBusinessId });
+
+	console.log('setupData?.lineOfBusinessId----->',setupData?.lineOfBusinessId)
 
 	const [createRole] = useCreateRoleMutation();
 	const [deleteRole] = useDeleteRoleMutation();

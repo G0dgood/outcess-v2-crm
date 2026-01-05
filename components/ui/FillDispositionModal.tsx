@@ -9,7 +9,7 @@ import DateInput from './DateInput';
 import RadioSelect from './RadioSelect';
 import Checkbox from './Checkbox';
 import CheckboxSelect from './CheckboxSelect';
-import { Cross2Icon, CalendarIcon, ClockIcon } from '@radix-ui/react-icons';
+import { Cross2Icon, CalendarIcon, ClockIcon, PersonIcon, MobileIcon, EnvelopeClosedIcon, HomeIcon } from '@radix-ui/react-icons';
 import { useSocket } from '@/contexts/SocketContext';
 import { saveOfflineDisposition, saveSyncedDisposition, DispositionFieldEntry } from '@/utils/offlineDispositions';
 import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
@@ -24,6 +24,10 @@ interface FillDispositionModalProps {
 	initialData?: Partial<DispositionFormState>;
 	customerId?: string;
 	customerName?: string;
+	customer?: {
+		id: string;
+		[key: string]: any;
+	} | null;
 }
 
 interface ApiError {
@@ -59,6 +63,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	initialData,
 	customerId,
 	customerName,
+	customer, 
 }) => {
 	const { isConnected, isOffline, send } = useSocket();
 	const { user: authUser } = useAuth();
@@ -66,6 +71,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	const [createDisposition] = useCreateDispositionMutation();
 	const [isSaving, setIsSaving] = useState(false);
 	const [formData, setFormData] = useState<DispositionFormState>({});
+	const [showPersonalInfo, setShowPersonalInfo] = useState(false);
 
 	// Get dispositions from context
 	const dispositions = useMemo(() => {
@@ -129,8 +135,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	};
 
 	const handleView = () => {
-		console.log('View disposition:', formData);
-		// Implement view logic
+		setShowPersonalInfo(!showPersonalInfo);
 	};
 
 	const handleSaveAndPost = async () => {
@@ -496,7 +501,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 						</h2>
 						{isOffline && (
 							<span
-								className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+								className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium"
 								style={{
 									backgroundColor: 'rgba(220, 53, 69, 0.1)',
 									color: '#DC3545',
@@ -540,6 +545,55 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 				{/* Form Content */}
 				<div className="flex-1 overflow-y-auto p-6">
+					{showPersonalInfo && customer && (
+						<div
+							className="mb-6 dark:bg-gray-700 border dark:border-gray-600 p-6 "
+							style={{
+								backgroundColor: 'var(--bg-primary)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
+							<h3
+								className="text-lg font-semibold dark:text-gray-100 mb-4 flex items-center gap-2"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								<PersonIcon className="w-5 h-5 text-[#6C8B7D]" />
+								Personal Information
+							</h3>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+								{Object.entries(customer)
+									.filter(([key]) => !['id', '_id', 'companyId', 'lineOfBusinessId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid')
+									.map(([key, value]) => {
+										let IconComponent = PersonIcon;
+										const lowerKey = key.toLowerCase();
+										if (lowerKey.includes('phone')) IconComponent = MobileIcon;
+										else if (lowerKey.includes('email')) IconComponent = EnvelopeClosedIcon;
+										else if (lowerKey.includes('address')) IconComponent = HomeIcon;
+										else IconComponent = PersonIcon;
+
+										return (
+											<div key={key} className="flex items-start gap-4">
+												<IconComponent className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+												<div>
+													<label
+														className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-1"
+														style={{ color: 'var(--text-tertiary)' }}
+													>
+														{key}
+													</label>
+													<p
+														className="text-base dark:text-gray-100 font-semibold break-all"
+														style={{ color: 'var(--text-primary)' }}
+													>
+														{value ? String(value) : '-'}
+													</p>
+												</div>
+											</div>
+										);
+									})}
+							</div>
+						</div>
+					)}
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 						{dispositions?.length > 0 ? (
 							dispositions?.map((field) => renderField(field))

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import Pagination from '@/components/ui/Pagination';
+import PaginationSummary from '@/components/ui/PaginationSummary';
 import Checkbox from '@/components/ui/Checkbox';
 import PageHeading from '@/components/ui/PageHeading';
 import { ChatBubbleIcon } from '@radix-ui/react-icons';
@@ -28,6 +29,7 @@ const SMSPage: React.FC = () => {
 	const canCreate = canAccess('customerSMS', 'create');
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [selectedSMS, setSelectedSMS] = useState<Set<string>>(new Set());
 	const [viewingSMS, setViewingSMS] = useState<SMS | null>(null);
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -86,11 +88,10 @@ const SMSPage: React.FC = () => {
 		(sms.contactName && sms.contactName.toLowerCase().includes(searchTerm.toLowerCase()))
 	);
 
-	const smsPerPage = 10;
-	const totalPages = Math.ceil(filteredSMS.length / smsPerPage);
+	const totalPages = Math.ceil(filteredSMS.length / itemsPerPage);
 	const currentSMS = filteredSMS.slice(
-		(currentPage - 1) * smsPerPage,
-		currentPage * smsPerPage
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage
 	);
 
 	const handleSelectAll = (checked: boolean) => {
@@ -204,6 +205,25 @@ const SMSPage: React.FC = () => {
 					borderColor: 'var(--light-gray)'
 				}}
 			>
+				{filteredSMS.length > 0 && (
+					<div className="p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+						<PaginationSummary
+							totalItems={filteredSMS.length}
+							itemsPerPage={itemsPerPage}
+							onItemsPerPageChange={(value) => {
+								setItemsPerPage(value);
+								setCurrentPage(1);
+							}}
+							className="text-gray-600"
+						/>
+						<span
+							className="text-sm dark:text-gray-400"
+							style={{ color: 'var(--text-tertiary)' }}
+						>
+							Total of {filteredSMS.length} SMS
+						</span>
+					</div>
+				)}
 				<div className="overflow-x-auto">
 					<table
 						className="min-w-full divide-y dark:divide-gray-700"
@@ -368,15 +388,17 @@ const SMSPage: React.FC = () => {
 			</div>
 
 			{/* Pagination */}
-			<Pagination
-				currentPage={currentPage}
-				totalPages={totalPages}
-				onPageChange={setCurrentPage}
-				showEllipsis={true}
-				maxVisiblePages={5}
-				primaryColor={lineOfBusinessData?.primaryColor || '#050711'}
-				secondaryColor={lineOfBusinessData?.secondaryColor || '#6C8B7D'}
-			/>
+			{filteredSMS.length > 0 && (
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onPageChange={setCurrentPage}
+					showEllipsis={true}
+					maxVisiblePages={5}
+					primaryColor={lineOfBusinessData?.primaryColor || '#050711'}
+					secondaryColor={lineOfBusinessData?.secondaryColor || '#6C8B7D'}
+				/>
+			)}
 
 			{/* Selected SMS Drawer */}
 			{shouldRenderDrawer && (

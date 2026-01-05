@@ -57,6 +57,13 @@ export const lineOfBusinessApi = createApi({
             }),
             invalidatesTags: ['LineOfBusiness'],
         }),
+        deleteLineOfBusiness: builder.mutation<any, string>({
+            query: (id) => ({
+                url: `api/v1/line-of-business/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['LineOfBusiness'],
+        }),
     }),
 });
 
@@ -64,6 +71,7 @@ export const {
     useCreateLineOfBusinessMutation,
     useGetLineOfBusinessQuery,
     useUpdateLineOfBusinessMutation, 
+    useDeleteLineOfBusinessMutation,
     useGetLineOfBusinessByCompanyIdQuery, 
     useLazyGetLineOfBusinessByCompanyIdQuery,
     useGetLineOfBusinessByCompanyIdForheaderQuery

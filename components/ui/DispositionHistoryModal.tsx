@@ -194,7 +194,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 							{syncedDispositions.map((synced: SyncedDispositionViewModel) => (
 								<div
 									key={synced.id}
-									className="border dark:border-gray-600 p-4 rounded-lg"
+									className="border dark:border-gray-600 p-4"
 									style={{
 										backgroundColor: 'var(--bg-primary)',
 										borderColor: 'var(--light-gray)'
@@ -202,7 +202,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 								>
 									<div className="flex items-center justify-between mb-3">
 										<span
-											className="text-xs font-medium px-2 py-1 rounded"
+											className="text-xs font-medium px-2 py-1 "
 											style={{
 												backgroundColor: '#D1FAE5',
 												color: '#065F46'
@@ -246,7 +246,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 							{offlineDispositions.map((offline) => (
 								<div
 									key={offline.id}
-									className="border dark:border-gray-600 p-4 rounded-lg"
+									className="border dark:border-gray-600 p-4 "
 									style={{
 										backgroundColor: 'var(--bg-primary)',
 										borderColor: 'var(--light-gray)'
@@ -254,7 +254,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 								>
 									<div className="flex items-center justify-between mb-3">
 										<span
-											className="text-xs font-medium px-2 py-1 rounded"
+											className="text-xs font-medium px-2 py-1 "
 											style={{
 												backgroundColor: offline.status === 'pending' ? '#FEF3C7' : '#D1FAE5',
 												color: offline.status === 'pending' ? '#92400E' : '#065F46'

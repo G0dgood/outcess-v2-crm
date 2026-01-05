@@ -168,6 +168,7 @@ export interface SetupData {
 		rolePermissions: RolePermissions;
 		permissionCategories: PermissionCategory[];
 	};
+	logoFile?: File | null;
 }
 
 interface SetupContextType {
@@ -402,6 +403,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				},
 			],
 		},
+		logoFile: null,
 	});
 
 	// Use either user's company ID or the one from setupData (e.g., from localStorage)
@@ -409,7 +411,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 
 	const { data: specificLineOfBusiness, isLoading: isFetchingSpecificLOB } = useGetLineOfBusinessQuery(
 		selectedLineOfBusinessId || '',
-		{ skip: !selectedLineOfBusinessId }
+		{ skip: !selectedLineOfBusinessId || selectedLineOfBusinessId === 'new' }
 	);
 
 	const { data: companyLineOfBusiness, isLoading: isFetchingCompanyLOB } = useGetLineOfBusinessByCompanyIdQuery(
@@ -423,7 +425,28 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	useEffect(() => {
 		if (existingLineOfBusiness) {
 			const dataToUse = existingLineOfBusiness.lineOfBusiness || existingLineOfBusiness;
+
+			const safeParse = (data: any) => {
+				if (!data) return {};
+				if (typeof data === 'string') {
+					try {
+						return JSON.parse(data);
+					} catch (e) {
+						console.error('Error parsing settings JSON:', e);
+						return {};
+					}
+				}
+				return data;
+			};
+
 			if (dataToUse) {
+				const navigationSettings = safeParse(dataToUse.navigationSettings);
+				const dashboardSettings = safeParse(dataToUse.dashboardSettings);
+				const customerBookSettings = safeParse(dataToUse.customerBookSettings);
+				const userManagementSettings = safeParse(dataToUse.userManagementSettings);
+				const roleManagementSettings = safeParse(dataToUse.roleManagementSettings);
+				const permissionAccessSettings = safeParse(dataToUse.permissionAccessSettings);
+
 				setSetupData(prev => ({
 					...prev,
 					lineOfBusinessId: dataToUse._id,
@@ -438,30 +461,30 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 					secondaryColor: dataToUse.secondaryColor || prev.secondaryColor,
 					navigationSettings: {
 						...prev.navigationSettings,
-						...(dataToUse.navigationSettings || {}),
+						...navigationSettings,
 					},
 					dashboardSettings: {
 						...prev.dashboardSettings,
-						...(dataToUse.dashboardSettings || {}),
+						...dashboardSettings,
 					},
 					customerBookSettings: {
 						...prev.customerBookSettings,
-						...(dataToUse.customerBookSettings || {}),
-						configuredFields: Array.isArray(dataToUse.customerBookSettings?.configuredFields)
-							? dataToUse.customerBookSettings.configuredFields
+						...customerBookSettings,
+						configuredFields: Array.isArray(customerBookSettings?.configuredFields)
+							? customerBookSettings.configuredFields
 							: (prev.customerBookSettings.configuredFields || [])
 					},
 					userManagementSettings: {
 						...prev.userManagementSettings,
-						...(dataToUse.userManagementSettings || {}),
+						...userManagementSettings,
 					},
 					roleManagementSettings: {
 						...prev.roleManagementSettings,
-						...(dataToUse.roleManagementSettings || {}),
+						...roleManagementSettings,
 					},
 					permissionAccessSettings: {
 						...prev.permissionAccessSettings,
-						...(dataToUse.permissionAccessSettings || {}),
+						...permissionAccessSettings,
 					},
 				}));
 			}

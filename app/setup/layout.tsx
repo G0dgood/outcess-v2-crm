@@ -6,20 +6,23 @@ import React, { useState, useEffect } from "react";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
 import { useUserInfo } from "@/contexts/UserInfoContext";
-import { useCreateLineOfBusinessMutation, useUpdateLineOfBusinessMutation, useLazyGetLineOfBusinessByCompanyIdQuery } from "@/store/services/lineOfBusinessApi";
+import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
+import { useCreateLineOfBusinessMutation, useUpdateLineOfBusinessMutation } from "@/store/services/lineOfBusinessApi";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const { currentStep, isLoading, setIsLoading, onStepComplete, onStepBack, setupData, updateSetupData, isFetchingLineOfBusiness } = useSetup();
   const { user } = useUserInfo();
+  const { setSelectedLineOfBusinessId } = useLineOfBusiness();
   const [createLineOfBusiness] = useCreateLineOfBusinessMutation();
   const [updateLineOfBusiness] = useUpdateLineOfBusinessMutation();
-  const [getLineOfBusiness] = useLazyGetLineOfBusinessByCompanyIdQuery();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const drawerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setMounted(true);
     const mq = window.matchMedia('(max-width: 768px)');
     const update = () => setIsMobileView(mq.matches);
     update();
@@ -128,37 +131,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                 lineOfBusinessName: setupData.lineOfBusinessName,
               }).unwrap();
 
-              // Use the companyId from the response if we didn't have one, or to be sure
-              if (response.lineOfBusiness?.companyId) {
-                targetCompanyId = response.lineOfBusiness.companyId;
-              }
-
-              let setupDataUpdated = false;
-
-              if (targetCompanyId) {
-                try {
-                  const fetchedData = await getLineOfBusiness(targetCompanyId).unwrap();
-
-                  const fetchedLoB = fetchedData.lineOfBusiness || fetchedData;
-                  if (fetchedLoB && fetchedLoB._id) {
-                    updateSetupData({
-                      lineOfBusinessId: fetchedLoB._id,
-                      companyName: fetchedLoB.companyName || setupData.companyName,
-                      companyId: fetchedLoB.companyId || setupData.companyId,
-                      lineOfBusinessName: fetchedLoB.lineOfBusinessName || fetchedLoB.name || setupData.lineOfBusinessName,
-                      timeZone: fetchedLoB.timeZone || setupData.timeZone,
-                      industry: fetchedLoB.industry || setupData.industry,
-                      businessSize: fetchedLoB.businessSize || setupData.businessSize,
-                    });
-                    setupDataUpdated = true;
-                  }
-                } catch (fetchError) {
-                  console.warn("Failed to fetch Line of Business by Company ID:", fetchError);
-                }
-              }
-
-              // Fallback to response data if fetch failed or returned no ID
-              if (!setupDataUpdated && response.lineOfBusiness?._id) {
+              if (response.lineOfBusiness?._id) {
+                setSelectedLineOfBusinessId(response.lineOfBusiness._id);
                 updateSetupData({
                   lineOfBusinessId: response.lineOfBusiness._id,
                   companyName: response.lineOfBusiness.companyName || setupData.companyName,
@@ -194,32 +168,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
 
 
-          let setupDataUpdated = false;
-
           if (response.lineOfBusiness?._id) {
-            try {
-              const fetchedData = await getLineOfBusiness(targetCompanyId).unwrap();
-              const fetchedLoB = fetchedData.lineOfBusiness || fetchedData;
-              if (fetchedLoB && fetchedLoB._id) {
-                updateSetupData({
-                  lineOfBusinessId: fetchedLoB._id,
-                  companyName: fetchedLoB.companyName || setupData.companyName,
-                  companyId: fetchedLoB.companyId || setupData.companyId,
-                  lineOfBusinessName: fetchedLoB.lineOfBusinessName || fetchedLoB.name || setupData.lineOfBusinessName,
-                  timeZone: fetchedLoB.timeZone || setupData.timeZone,
-                  industry: fetchedLoB.industry || setupData.industry,
-                  businessSize: fetchedLoB.businessSize || setupData.businessSize,
-                });
-                setupDataUpdated = true;
-              }
-            } catch (fetchError) {
-              console.warn("Failed to fetch Line of Business by Company ID:", fetchError);
-            }
-          }
-
-          // Fallback to response data if fetch failed or returned no ID
-          if (!setupDataUpdated && response.lineOfBusiness?._id) {
-            console.log("Using creation response as fallback for Setup Data");
+            setSelectedLineOfBusinessId(response.lineOfBusiness._id);
             updateSetupData({
               lineOfBusinessId: response.lineOfBusiness._id,
               companyName: response.lineOfBusiness.companyName || setupData.companyName,
@@ -241,15 +191,19 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           throw new Error("Line of Business ID is missing. Please restart the setup.");
         }
 
-        let updateData = {};
+        let updateData: any = {};
         switch (currentStep) {
           case 2:
-            updateData = {
-              selectedLayout: setupData.selectedLayout,
-              primaryColor: setupData.primaryColor,
-              secondaryColor: setupData.secondaryColor,
-              navigationSettings: setupData.navigationSettings,
-            };
+            const formData = new FormData();
+            if (setupData.logoFile) {
+              formData.append('logo', setupData.logoFile);
+            }
+            formData.append('selectedLayout', setupData.selectedLayout);
+            formData.append('primaryColor', setupData.primaryColor);
+            formData.append('secondaryColor', setupData.secondaryColor);
+            formData.append('navigationSettings', JSON.stringify(setupData.navigationSettings));
+
+            updateData = formData;
             break;
           case 3:
             updateData = {
@@ -408,11 +362,11 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       <BottomNav
         onSave={handleSave}
         onBack={handleBack}
-        isLoading={isLoading || isFetchingLineOfBusiness}
-        disabled={isLoading || isFetchingLineOfBusiness}
+        isLoading={mounted && (isLoading || isFetchingLineOfBusiness)}
+        disabled={mounted && (isLoading || isFetchingLineOfBusiness)}
         buttonText={
-          isLoading ? (currentStep === 6 ? 'Submitting...' : 'Saving...') :
-            isFetchingLineOfBusiness ? 'Checking...' :
+          (mounted && isLoading) ? (currentStep === 6 ? 'Submitting...' : 'Saving...') :
+            (mounted && isFetchingLineOfBusiness) ? 'Checking...' :
               (currentStep === 6 ? 'Submit for Approval' : 'Save & Continue')
         }
         backText={getBackButtonText()}

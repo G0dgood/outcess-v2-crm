@@ -62,7 +62,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
 	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket, socket } = useSocket();
 	const [logoutApi] = useLogoutMutation();
-    const [teamMemberLogoutApi] = useTeamMemberLogoutMutation();
+	const [teamMemberLogoutApi] = useTeamMemberLogoutMutation();
 	const { isAdmin } = usePrivilege();
 
 	// Get user from Redux store
@@ -75,7 +75,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				name:
 					String(
 						reduxUser.name ||
-						`${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim() ||
+						`${reduxUser.firstName || ''} 
+						${reduxUser.lastName ||
+							''}`.trim() ||
 						'User'
 					),
 				email: reduxUser.email,
@@ -105,6 +107,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 	const [lobOptions, setLobOptions] = useState<{ value: string; label: string; }[]>([]);
 	const safeUserName = String(displayUser?.name ?? '');
+
+	const currentLOB = selectedLOBData?.lineOfBusiness;
+	const headerLogo = currentLOB?.logo;
+	const headerName = currentLOB?.companyName || 'Peoplely';
 
 	useEffect(() => {
 		if (lineOfBusinessData && lineOfBusinessData.lineOfBusinesses) {
@@ -213,11 +219,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		try {
 			// Call API to invalidate session on server
 			if (reduxUser?.id) {
-                if (reduxUser.isTeamMember) {
-                    await teamMemberLogoutApi({ userId: reduxUser.id }).unwrap();
-                } else {
-				    await logoutApi({ userId: reduxUser.id }).unwrap();
-                }
+				if (reduxUser.isTeamMember) {
+					await teamMemberLogoutApi({ userId: reduxUser.id }).unwrap();
+				} else {
+					await logoutApi({ userId: reduxUser.id }).unwrap();
+				}
 			} else {
 				// If no user ID, just call without or skip API call? 
 				// The API now requires userId. If we don't have it, we probably can't call the API effectively.
@@ -320,10 +326,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 				<div className="flex-1 md:flex-none">
 					<div className="hidden md:flex items-center gap-2">
-						<Icon name="peoplelyHalf" size="xl" color="black" className="dark:hidden" />
-						<Icon name="peoplelyHalf" size="xl" className="hidden dark:inline-block" />
-						<span className="font-semibold text-[25px] leading-[28px] flex items-center text-[#050711]"
-							style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>Peoplely</span>
+						{headerLogo ? (
+							<img src={headerLogo} alt="Logo" className="h-8 w-auto object-contain" />
+						) : (
+							<Icon name="peoplelyHalf" size="xl" className="hidden dark:inline-block" />
+						)}
+						<span className="font-semibold text-[25px] leading-7 flex items-center text-[#050711]"
+							style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>{headerName}</span>
 					</div>
 				</div>
 

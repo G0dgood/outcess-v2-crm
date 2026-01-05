@@ -2,13 +2,15 @@
 
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GearIcon } from '@radix-ui/react-icons';
+import { GearIcon, TrashIcon } from '@radix-ui/react-icons';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetLineOfBusinessByCompanyIdForheaderQuery } from '@/store/services/lineOfBusinessApi';
+import { useGetLineOfBusinessByCompanyIdForheaderQuery, useDeleteLineOfBusinessMutation } from '@/store/services/lineOfBusinessApi';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
+import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
+import { toast } from 'sonner';
 
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 
@@ -23,13 +25,37 @@ export default function ConfigurationPage() {
 	const { setSelectedLineOfBusinessId } = useLineOfBusiness();
 	const companyId = user?.companyId || user?.company?._id || '';
 	const [searchTerm, setSearchTerm] = useState('');
+	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+	const [recordToDelete, setRecordToDelete] = useState<{ id: string; name: string } | null>(null);
+
 	const { data: lineOfBusinessData, isLoading } = useGetLineOfBusinessByCompanyIdForheaderQuery(companyId, {
 		skip: !companyId
 	});
 
+	const [deleteLineOfBusiness] = useDeleteLineOfBusinessMutation();
+
 	const lineOfBusinesses = useMemo(() => {
 		return lineOfBusinessData?.lineOfBusinesses || [];
 	}, [lineOfBusinessData]);
+
+	const handleDeleteClick = (id: string, name: string) => {
+		setRecordToDelete({ id, name });
+		setDeleteModalOpen(true);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (!recordToDelete) return;
+
+		try {
+			await deleteLineOfBusiness(recordToDelete.id).unwrap();
+			toast.success('Line of Business deleted successfully');
+			setDeleteModalOpen(false);
+			setRecordToDelete(null);
+		} catch (error) {
+			console.error('Failed to delete line of business:', error);
+			toast.error('Failed to delete Line of Business');
+		}
+	};
 
 	if (!canAccessModule) {
 		return null;
@@ -70,7 +96,7 @@ export default function ConfigurationPage() {
 							variant="primary"
 							size="md"
 							onClick={() => {
-								setSelectedLineOfBusinessId(null);
+								setSelectedLineOfBusinessId('new');
 								localStorage.removeItem('peoplely-setup-data');
 								router.push('/setup');
 							}}
@@ -123,13 +149,6 @@ export default function ConfigurationPage() {
 									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
-									ID
-								</th>
-								<th
-									scope="col"
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
 									Created At
 								</th>
 								<th
@@ -153,38 +172,33 @@ export default function ConfigurationPage() {
 							) : lineOfBusinesses.length === 0 ? (
 								<NoRecordFound colSpan={8} />
 							) : lineOfBusinesses.map((lob: { _id: string; lineOfBusinessName: string; createdAt?: string }) => (
-									<tr
-										key={lob._id}
-										className="dark:hover:bg-gray-700 transition-colors"
-										style={{ borderColor: 'var(--light-gray)' }}
-										onMouseEnter={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-										}}
-										onMouseLeave={(e) => {
-											e.currentTarget.style.backgroundColor = 'transparent';
-										}}
+								<tr
+									key={lob._id}
+									className="dark:hover:bg-gray-700 transition-colors"
+									style={{ borderColor: 'var(--light-gray)' }}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.backgroundColor = 'transparent';
+									}}
+								>
+									<td
+										className="px-6 py-4 whitespace-nowrap text-sm font-medium dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
 									>
-										<td
-											className="px-6 py-4 whitespace-nowrap text-sm font-medium dark:text-gray-100"
-											style={{ color: 'var(--text-primary)' }}
-										>
-											{lob.lineOfBusinessName}
-										</td>
-										<td
-											className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-400"
-											style={{ color: 'var(--text-tertiary)' }}
-										>
-											{lob._id}
-										</td>
-										<td
-											className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-400"
-											style={{ color: 'var(--text-tertiary)' }}
-										>
-											{lob.createdAt ? new Date(lob.createdAt).toLocaleDateString() : 'N/A'}
-										</td>
-										<td
-											className="px-6 py-4 whitespace-nowrap text-sm font-medium"
-										>
+										{lob.lineOfBusinessName}
+									</td>
+									<td
+										className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-400"
+										style={{ color: 'var(--text-tertiary)' }}
+									>
+										{lob.createdAt ? new Date(lob.createdAt).toLocaleDateString() : 'N/A'}
+									</td>
+									<td
+										className="px-6 py-4 whitespace-nowrap text-sm font-medium"
+									>
+										<div className="flex items-center gap-2">
 											{canEdit && (
 												<button
 													onClick={() => {
@@ -197,13 +211,37 @@ export default function ConfigurationPage() {
 													<GearIcon width={18} height={18} style={{ color: 'var(--text-primary)' }} />
 												</button>
 											)}
-										</td>
-									</tr>
-								)) }
+											{canEdit && (
+												<button
+													onClick={() => handleDeleteClick(lob._id, lob.lineOfBusinessName)}
+													className="p-2 hover:bg-red-50 rounded-full transition-colors dark:hover:bg-red-900/20 group"
+													title="Delete"
+												>
+													<TrashIcon 
+														width={18} 
+														height={18} 
+														className="text-red-500 group-hover:text-red-600"
+													/>
+												</button>
+											)}
+										</div>
+									</td>
+								</tr>
+							))}
 						</tbody>
 					</table>
 				</div>
 			</div>
+			
+			<DeleteRecordModal
+				isOpen={deleteModalOpen}
+				recordName={recordToDelete?.name || ''}
+				onClose={() => {
+					setDeleteModalOpen(false);
+					setRecordToDelete(null);
+				}}
+				onConfirm={handleConfirmDelete}
+			/>
 		</div>
 	);
 }

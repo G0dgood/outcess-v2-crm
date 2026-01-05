@@ -110,6 +110,13 @@ export const roleApi = createApi({
             }),
             invalidatesTags: ['Roles'],
         }),
+        deleteRolesByLineOfBusiness: builder.mutation<any, string>({
+            query: (id) => ({
+                url: `api/v1/roles/line-of-business/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['Roles'],
+        }),
     }),
 });
 
@@ -119,5 +126,6 @@ export const {
     useGetRolesByLineOfBusinessIdQuery, 
     useGetPermissionWithPrivilegeQuery,
     useUpdateRoleMutation, 
-    useDeleteRoleMutation 
+    useDeleteRoleMutation,
+    useDeleteRolesByLineOfBusinessMutation
 } = roleApi;

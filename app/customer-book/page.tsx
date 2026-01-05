@@ -31,14 +31,13 @@ const CustomerBookPage: React.FC = () => {
 	const canView = canAccess('customerBook', 'view');
 	const canCreate = canAccess('customerBook', 'create');
 
-
-	console.log('lineOfBusinessData----->', lineOfBusinessData)
-
 	// Fetch customer by SearchId
 	const { data: searchResult, isLoading, isError, error } = useGetSetupBookBySearchIdQuery(
 		{ lineOfBusinessId: lobId || '', searchId: searchQuery },
 		{ skip: !searchQuery || !lobId }
 	);
+
+	console.log('searchResult----->', searchResult)
 
 	const [customers, setCustomers] = useState<Customer[]>([]);
 	const [tableHeaders, setTableHeaders] = useState<string[]>([]);
@@ -50,7 +49,7 @@ const CustomerBookPage: React.FC = () => {
 			if (Array.isArray(data) && data.length > 0) {
 				// Dynamically extract headers from the first item, excluding internal fields like _id, id, __v
 				const firstItem = data[0] as Record<string, unknown>;
-				const headers = Object.keys(firstItem).filter(key => !['_id', 'id', '__v', 'companyId', 'lineOfBusinessId'].includes(key));
+				const headers = Object.keys(firstItem).filter(key => !['_id', 'id', '__v', 'companyId', 'lineOfBusinessId'].includes(key) && key.toLowerCase() !== 'searchid');
 				setTableHeaders(headers);
 
 				const mappedCustomers: Customer[] = data.map((item) => {

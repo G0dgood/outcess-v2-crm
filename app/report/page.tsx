@@ -325,7 +325,7 @@ const ReportPage: React.FC = () => {
 										className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-100 whitespace-nowrap"
 										style={{ color: 'var(--text-primary)' }}
 									>
-										No Data
+										{isLoading ? 'Loading...' : 'No Data'}
 									</th>
 								)}
 							</tr>
@@ -338,9 +338,9 @@ const ReportPage: React.FC = () => {
 							}}
 						>
 							{isLoading ? (
-								<SVGLoaderFetch colSpan={8} text={''} />
+								<SVGLoaderFetch colSpan={dynamicHeaders.length > 0 ? dynamicHeaders.length : 1} text={'Loading report data...'} />
 							) : paginatedReports.length === 0 ? (
-								<NoRecordFound colSpan={8} />
+								<NoRecordFound colSpan={dynamicHeaders.length > 0 ? dynamicHeaders.length : 1} />
 							) :
 								(paginatedReports?.map((report) => (
 									<tr

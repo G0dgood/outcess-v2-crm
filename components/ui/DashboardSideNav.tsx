@@ -18,7 +18,8 @@ import {
 	MixerHorizontalIcon,
 	DoubleArrowLeftIcon,
 	DoubleArrowRightIcon,
-	ClockIcon
+	ClockIcon,
+	LockClosedIcon
 } from '@radix-ui/react-icons';
 import {
 	Tooltip,
@@ -42,6 +43,7 @@ interface NavItem {
 	label: string;
 	icon: string;
 	path: string;
+	isRestricted?: boolean;
 }
 
 const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
@@ -237,12 +239,55 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		'roles-tab': 'userManagement',
 	};
 
-	const visibleNavItems = navItems.filter(item => {
-		if (item.id === 'pending-request' && !isAdmin) return false;
+	const visibleNavItems: NavItem[] = [];
+	let hasRestrictedNav = false;
+
+	navItems.forEach(item => {
+		if (item.id === 'pending-request' && !isAdmin) return;
+
+		let isRestricted = false;
 		const moduleId = moduleMapping[item.id];
-		if (!moduleId) return true;
-		return canAccess(moduleId, 'view');
+		if (moduleId && !canAccess(moduleId, 'view')) isRestricted = true;
+
+		if (!isRestricted) {
+			visibleNavItems.push(item);
+		} else {
+			hasRestrictedNav = true;
+		}
 	});
+
+	if (visibleNavItems.length === 0 && hasRestrictedNav) {
+		visibleNavItems.push({
+			id: 'access-restricted',
+			label: 'Access Restricted',
+			icon: 'lock',
+			path: '#',
+			isRestricted: true
+		});
+	}
+
+	const visibleSettingsSubItems: any[] = [];
+	let hasRestrictedSettings = false;
+
+	settingsSubItems.forEach(subItem => {
+		const moduleId = subModuleMapping[subItem.id];
+		const hasAccess = moduleId ? canAccess(moduleId, 'view') : true;
+		if (hasAccess) {
+			visibleSettingsSubItems.push(subItem);
+		} else {
+			hasRestrictedSettings = true;
+		}
+	});
+
+	if (visibleSettingsSubItems.length === 0 && hasRestrictedSettings) {
+		visibleSettingsSubItems.push({
+			id: 'access-restricted-settings',
+			label: 'Access Restricted',
+			icon: 'lock',
+			path: '#',
+			isRestricted: true
+		});
+	}
 
 	const handleItemClick = (item: NavItem, e?: React.MouseEvent) => {
 		if (item.id === 'settings') {
@@ -305,6 +350,8 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 				return <MixerHorizontalIcon {...iconProps} />;
 			case 'clock':
 				return <ClockIcon {...iconProps} />;
+			case 'lock':
+				return <LockClosedIcon {...iconProps} />;
 			default:
 				return null;
 		}
@@ -313,6 +360,29 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 	// Render floating settings menu using Portal if available, otherwise fixed positioning at the end of component
 	const FloatingSettingsMenu = () => {
 		if (!isSettingsExpanded || !isCollapsed || !settingsMenuPos) return null;
+
+		const visibleSettingsSubItems: any[] = [];
+		let hasRestrictedSettings = false;
+
+		settingsSubItems.forEach(subItem => {
+			const moduleId = subModuleMapping[subItem.id];
+			const hasAccess = moduleId ? canAccess(moduleId, 'view') : true;
+			if (hasAccess) {
+				visibleSettingsSubItems.push(subItem);
+			} else {
+				hasRestrictedSettings = true;
+			}
+		});
+
+		if (visibleSettingsSubItems.length === 0 && hasRestrictedSettings) {
+			visibleSettingsSubItems.push({
+				id: 'access-restricted-settings',
+				label: 'Access Restricted',
+				icon: 'lock',
+				path: '#',
+				isRestricted: true
+			});
+		}
 
 		return (
 			<div
@@ -324,10 +394,23 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 					borderColor: 'var(--light-gray)'
 				}}
 			>
-				{settingsSubItems.filter(subItem => {
-					const moduleId = subModuleMapping[subItem.id];
-					return moduleId ? canAccess(moduleId, 'view') : true;
-				}).map((subItem) => {
+				{visibleSettingsSubItems.map((subItem) => {
+					if (subItem.isRestricted) {
+						return (
+							<div
+								key={subItem.id}
+								className="w-full flex items-center gap-3 px-4 py-2 cursor-not-allowed"
+							>
+								<div className="shrink-0 text-gray-400 dark:text-gray-600">
+									<LockClosedIcon className="w-4 h-4" />
+								</div>
+								<span className="font-inter font-medium text-[13px] text-gray-400 dark:text-gray-600">
+									Access Restricted
+								</span>
+							</div>
+						);
+					}
+
 					const currentTab = searchParams?.get('tab');
 					const subItemTab = subItem.path.split('tab=')[1];
 					const isSubActive = currentTab === subItemTab || (!currentTab && subItemTab === 'settings');
@@ -382,6 +465,36 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 						{visibleNavItems.map((item) => {
 							const isActive = activeItem === item.id;
 							const isSettings = item.id === 'settings';
+
+							if (item.isRestricted) {
+								const restrictedContent = (
+									<div
+										className={`w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 cursor-not-allowed transition-all duration-200`}
+									>
+										<div className="shrink-0 text-gray-400 dark:text-gray-600">
+											<LockClosedIcon className="w-5 h-5" />
+										</div>
+										{!isCollapsed && (
+											<span className="font-inter font-medium text-[14px] leading-5 tracking-[-0.5px] text-gray-400 dark:text-gray-600 flex-1 text-left">
+												Access Restricted
+											</span>
+										)}
+									</div>
+								);
+
+								return (
+									<div key={item.id}>
+										{isCollapsed ? (
+											<Tooltip delayDuration={0}>
+												<TooltipTrigger asChild>{restrictedContent}</TooltipTrigger>
+												<TooltipContent side="right">Access Restricted</TooltipContent>
+											</Tooltip>
+										) : (
+											restrictedContent
+										)}
+									</div>
+								);
+							}
 
 							const itemContent = (
 								<button
@@ -460,10 +573,23 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 											className="ml-4 mt-1 space-y-1 border-l-2 dark:border-gray-600 pl-2"
 											style={{ borderColor: 'var(--light-gray)' }}
 										>
-											{settingsSubItems.filter(subItem => {
-												const moduleId = subModuleMapping[subItem.id];
-												return moduleId ? canAccess(moduleId, 'view') : true;
-											}).map((subItem) => {
+											{visibleSettingsSubItems.map((subItem) => {
+												if (subItem.isRestricted) {
+													return (
+														<div
+															key={subItem.id}
+															className="w-full flex items-center gap-3 px-4 py-2 cursor-not-allowed"
+														>
+															<div className="shrink-0 text-gray-400 dark:text-gray-600">
+																<LockClosedIcon className="w-4 h-4" />
+															</div>
+															<span className="font-inter font-medium text-[13px] text-gray-400 dark:text-gray-600">
+																Access Restricted
+															</span>
+														</div>
+													);
+												}
+
 												const currentTab = searchParams?.get('tab');
 												const subItemTab = subItem.path.split('tab=')[1];
 												const isSubActive = currentTab === subItemTab || (!currentTab && subItemTab === 'settings');

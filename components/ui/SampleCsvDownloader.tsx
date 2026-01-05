@@ -10,20 +10,23 @@ interface Field {
 interface SampleCsvDownloaderProps {
 	fields: Field[];
 	className?: string;
+	extraHeaders?: string[];
 }
 
-const SampleCsvDownloader: React.FC<SampleCsvDownloaderProps> = ({ fields, className }) => {
+const SampleCsvDownloader: React.FC<SampleCsvDownloaderProps> = ({ fields, className, extraHeaders = [] }) => {
 	const downloadSampleCsv = () => {
-		if (!fields || fields.length === 0) {
+		const fieldHeaders = fields ? fields.map((field) => field.name) : [];
+		
+		// Combine field headers with extra headers, ensuring no duplicates
+		const allHeaders = Array.from(new Set([...fieldHeaders, ...extraHeaders]));
+
+		if (allHeaders.length === 0) {
 			console.warn('No header fields defined for sample CSV.');
 			return;
 		}
 
-		// Extract field names for the header
-		const headers = fields.map((field) => field.name);
-
 		// Create CSV content (just headers)
-		const csvContent = headers.join(',');
+		const csvContent = allHeaders.join(',');
 
 		// Create a Blob
 		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

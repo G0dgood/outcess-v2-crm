@@ -5,9 +5,10 @@ import Button from './Button';
 import Input from './Input';
 import Textarea from './Textarea';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { useCreateRoleMutation } from '@/store/services/roleApi';
+import { useCreateRoleMutation, RolePermission } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useSetup } from '@/contexts/SetupContext';
 import { toast } from 'sonner';
 
 interface CreateCustomRoleModalProps {
@@ -26,6 +27,7 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 	const [createRole] = useCreateRoleMutation();
 	const { user } = useUserInfo();
 	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { setupData } = useSetup();
 
 	useEffect(() => {
 		if (isOpen) {
@@ -63,20 +65,33 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 			}
 
 			try {
+				const modules = setupData.roleManagementSettings?.modules || [];
+				const defaultPermissions: RolePermission[] = modules.map((module: { name: string }) => ({
+					id: '',
+					moduleName: module.name,
+					access: false,
+					permissions: {
+						view: false,
+						edit: false,
+						delete: false,
+						create: false,
+					},
+				}));
+
 				await createRole({
-					roleName: roleName,
+					roleName: roleName.toLowerCase(),
 					description: roleDescription,
 					companyId: companyId,
 					lineOfBusinessId: selectedLineOfBusinessId || undefined,
-					permissions: []
+					permissions: defaultPermissions
 				}).unwrap();
 
 				toast.success('Custom role created successfully');
 				onSuccess?.();
 				onClose();
 			} catch (error: unknown) {
-				console.error('Failed to create custom role:', error);
-				const errorMessage = (error as { data?: { message?: string } })?.data?.message || 'Failed to create custom role';
+				console.error('Failed to create custom role:', JSON.stringify(error, null, 2));
+				const errorMessage = (error as any)?.data?.message || (error as any)?.message || 'Failed to create custom role';
 				toast.error(errorMessage);
 			}
 		}

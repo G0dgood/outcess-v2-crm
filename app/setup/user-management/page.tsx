@@ -9,9 +9,8 @@ import EditUserModal from '@/components/ui/EditUserModal';
 import { useSetup } from '@/contexts/SetupContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
-import { useGetTeamMembersByCompanyIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
 import Icon from '@/components/ui/Icon';
-import { toast } from 'sonner';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 interface User {
@@ -60,9 +59,11 @@ export default function UserManagementPage() {
 		skip: !lineOfBusinessId
 	});
 
-	const { data: teamMembersResponse, isLoading: isTeamMembersLoading } = useGetTeamMembersByCompanyIdQuery(companyId, {
-		skip: !companyId
-	});
+	// const { data: teamMembersResponse, isLoading: isTeamMembersLoading } = useGetTeamMembersByCompanyIdQuery(companyId, {
+	// 	skip: !companyId
+	// });
+
+	const { data: teamMembersResponse, isLoading } = useGetTeamMembersByLineOfBusinessIdQuery(lineOfBusinessId, { skip: !lineOfBusinessId });
 
 	const [isAddingUser, setIsAddingUser] = useState(false);
 	const [editingUser, setEditingUser] = useState<string | null>(null);
@@ -251,7 +252,7 @@ export default function UserManagementPage() {
 								className="font-inter text-xl font-semibold dark:text-gray-100 mb-2"
 								style={{ color: 'var(--text-primary)' }}
 							>
-								Team Members
+								Users
 							</h2>
 						</div>
 						{canCreate && (

@@ -88,7 +88,7 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
 				}));
 
 				await createRole({
-					roleName: formData.name,
+					roleName: formData.name.toLowerCase(),
 					description: formData.description,
 					companyId: user.company?._id,
 					permissions: defaultPermissions
