@@ -57,7 +57,6 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 	const searchParams = useSearchParams();
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const { isAdmin, canAccess } = usePrivilege();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
 	const navRef = useRef<HTMLDivElement>(null);
 	const [shouldRender, setShouldRender] = useState(false);
 	const [isAnimating, setIsAnimating] = useState(false);
@@ -505,7 +504,7 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 															<div className="shrink-0 text-gray-400 dark:text-gray-600">
 																<LockClosedIcon className="w-4 h-4" />
 															</div>
-															<span className="font-inter font-medium text-[13px] leading-[20px] tracking-[-0.5px] text-gray-400 dark:text-gray-600">
+															<span className="font-inter font-medium text-[13px] leading-5 tracking-[-0.5px] text-gray-400 dark:text-gray-600">
 																Access Restricted
 															</span>
 														</div>
@@ -552,7 +551,7 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 															{getIconComponent(subItem.icon)}
 														</div>
 														<span
-															className="sub-text font-inter font-medium text-[13px] leading-[20px] tracking-[-0.5px] transition-colors duration-200"
+															className="sub-text font-inter font-medium text-[13px] leading-5 tracking-[-0.5px] transition-colors duration-200"
 															style={isSubActive ? { color: 'white' } : { color: 'var(--text-tertiary)' }}
 														>
 															{subItem.label}

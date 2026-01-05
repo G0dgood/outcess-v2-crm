@@ -119,7 +119,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
               console.warn("Line of Business not found (caught via error check), creating new one...");
 
               // Create new Line of Business
-              let targetCompanyId = user?.company?.id || setupData.companyId;
+              const targetCompanyId = user?.company?.id || setupData.companyId;
               const response = await createLineOfBusiness({
                 name: setupData.lineOfBusinessName,
                 timeZone: setupData.timeZone,
