@@ -341,7 +341,7 @@ const MobileSideNav: React.FC<MobileSideNavProps> = ({
 
 	if (!shouldRender) return null;
 
-	const visibleSettingsSubItems: any[] = [];
+	const visibleSettingsSubItems: SettingsSubItem[] = [];
 	let hasRestrictedSettings = false;
 
 	settingsSubItems.forEach(subItem => {
