@@ -191,7 +191,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           throw new Error("Line of Business ID is missing. Please restart the setup.");
         }
 
-        let updateData: any = {};
+        let updateData: FormData | Record<string, unknown> = {};
         switch (currentStep) {
           case 2:
             const formData = new FormData();

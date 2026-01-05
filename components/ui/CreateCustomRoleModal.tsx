@@ -17,7 +17,14 @@ interface CreateCustomRoleModalProps {
 	onSuccess?: () => void;
 }
 
-export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
+export interface ApiError {
+	data?: {
+		message?: string;
+	};
+	message?: string;
+}
+
+const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 	isOpen,
 	onClose,
 	onSuccess,
@@ -91,7 +98,8 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 				onClose();
 			} catch (error: unknown) {
 				console.error('Failed to create custom role:', JSON.stringify(error, null, 2));
-				const errorMessage = (error as any)?.data?.message || (error as any)?.message || 'Failed to create custom role';
+				const apiError = error as ApiError;
+				const errorMessage = apiError?.data?.message || apiError?.message || 'Failed to create custom role';
 				toast.error(errorMessage);
 			}
 		}

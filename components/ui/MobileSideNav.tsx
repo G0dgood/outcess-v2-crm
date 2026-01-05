@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useSetup } from '@/contexts/SetupContext';
 import {
 	DashboardIcon,
 	FileTextIcon,
@@ -32,6 +31,14 @@ interface MobileSideNavProps {
 }
 
 interface NavItem {
+	id: string;
+	label: string;
+	icon: string;
+	path: string;
+	isRestricted?: boolean;
+}
+
+interface SettingsSubItem {
 	id: string;
 	label: string;
 	icon: string;

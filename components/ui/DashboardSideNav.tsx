@@ -46,6 +46,14 @@ interface NavItem {
 	isRestricted?: boolean;
 }
 
+interface SettingsSubItem {
+	id: string;
+	label: string;
+	icon: string;
+	path: string;
+	isRestricted?: boolean;
+}
+
 const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 	activeItem = 'dashboard',
 	onItemClick,
@@ -266,7 +274,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		});
 	}
 
-	const visibleSettingsSubItems: any[] = [];
+	const visibleSettingsSubItems: SettingsSubItem[] = [];
 	let hasRestrictedSettings = false;
 
 	settingsSubItems.forEach(subItem => {
@@ -361,7 +369,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 	const FloatingSettingsMenu = () => {
 		if (!isSettingsExpanded || !isCollapsed || !settingsMenuPos) return null;
 
-		const visibleSettingsSubItems: any[] = [];
+		const visibleSettingsSubItems: SettingsSubItem[] = [];
 		let hasRestrictedSettings = false;
 
 		settingsSubItems.forEach(subItem => {

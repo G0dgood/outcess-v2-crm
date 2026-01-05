@@ -26,7 +26,7 @@ interface FillDispositionModalProps {
 	customerName?: string;
 	customer?: {
 		id: string;
-		[key: string]: any;
+		[key: string]: unknown;
 	} | null;
 }
 

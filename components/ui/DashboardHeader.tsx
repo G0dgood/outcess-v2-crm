@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import Icon from './Icon';
 import Dropdown from './Dropdown';
@@ -327,7 +328,17 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				<div className="flex-1 md:flex-none">
 					<div className="hidden md:flex items-center gap-2">
 						{headerLogo ? (
-							<img src={headerLogo} alt="Logo" className="h-8 w-auto object-contain" />
+							<div className="relative h-8 w-auto min-w-[32px]">
+								<Image
+									src={headerLogo}
+									alt="Logo"
+									height={32}
+									width={100}
+									className="h-8 w-auto object-contain"
+									unoptimized
+									priority
+								/>
+							</div>
 						) : (
 							<Icon name="peoplelyHalf" size="xl" className="hidden dark:inline-block" />
 						)}
