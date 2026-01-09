@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, use as usePromise } from 'react';
+import NextImage from 'next/image';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Textarea from '@/components/ui/Textarea';
@@ -376,10 +377,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 							{businessData.brandingSettings.logo ? (
 								<div className="flex items-center gap-3 mt-2">
 									{businessData.brandingSettings.logo.url ? (
-										<img
+										<NextImage
 											src={businessData.brandingSettings.logo.url}
 											alt={businessData.brandingSettings.logo.alt || 'Company Logo'}
-											className="h-10 object-contain"
+											width={0}
+											height={0}
+											sizes="100vw"
+											className="h-10 w-auto object-contain"
 										/>
 									) : (
 										<div className="flex items-center gap-2">

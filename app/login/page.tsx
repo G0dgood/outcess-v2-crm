@@ -281,7 +281,7 @@ export default function LoginPage() {
 			<PricingModal
 				isOpen={isPricingModalOpen}
 				onClose={() => setIsPricingModalOpen(false)}
-				onSelectPlan={(_planId) => {
+				onSelectPlan={() => {
 					// Handle plan selection
 				}}
 			/>
