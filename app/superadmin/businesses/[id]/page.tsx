@@ -138,6 +138,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 	};
 
 	const handleConfirmDeactivate = (reason: string) => {
+		console.log('Deactivate reason:', reason);
 		// TODO: Implement deactivate business logic with reason
 	};
 

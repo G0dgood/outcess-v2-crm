@@ -18,7 +18,7 @@ function PaymentPageContent() {
 	const planName = searchParams.get('plan') || 'Pro';
 	const planPrice = searchParams.get('price') || '$12/month';
 	const billingCycle = (searchParams.get('billing') as 'monthly' | 'annual') || 'monthly';
-	const planId = searchParams.get('planId') || 'pro';
+	const _planId = searchParams.get('planId') || 'pro';
 
 	const [formData, setFormData] = useState({
 		cardNumber: '',

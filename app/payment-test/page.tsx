@@ -27,7 +27,7 @@ function PaymentTestContent() {
 			<PricingModal
 				isOpen={isPricingModalOpen}
 				onClose={() => setIsPricingModalOpen(false)}
-				onSelectPlan={(planId) => {
+				onSelectPlan={(_planId) => {
 				}}
 			/>
 		</div>

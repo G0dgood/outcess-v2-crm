@@ -12,6 +12,7 @@ import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetSetupBookBySearchIdQuery } from '@/store/services/setupBookApi';
 import { toast } from 'sonner';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { SetupData } from '@/contexts/SetupContext';
 
 interface Customer {
 	id: string;
@@ -42,7 +43,7 @@ const CustomerBookPage: React.FC = () => {
 		return 'text';
 	};
 
-	const fieldDefinitions = configuredFields.map((field: any) => ({
+	const fieldDefinitions = configuredFields.map((field: SetupData['customerBookSettings']['configuredFields'][number]) => ({
 		id: field.id,
 		name: field.name,
 		type: mapFieldType(field.type),
@@ -101,21 +102,7 @@ const CustomerBookPage: React.FC = () => {
 		setIsAddCustomerModalOpen(true);
 	};
 
-	const handleSaveCustomer = (customerData: {
-		firstName: string;
-		lastName: string;
-		email: string;
-		phone: string;
-	}) => {
-		const newCustomer: Customer = {
-			id: Date.now().toString(),
-			...customerData,
-		};
-		setCustomers(prevCustomers => [...prevCustomers, newCustomer]);
-		setIsAddCustomerModalOpen(false);
-	};
 
-	 
 
 	const handleViewCustomer = (customer: Customer) => {
 		setSelectedCustomer(customer);

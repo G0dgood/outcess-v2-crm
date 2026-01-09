@@ -145,7 +145,7 @@ export default function LoginPage() {
 			} catch (err: unknown) {
 				// Enhanced error logging
 				if (typeof err === 'object' && err !== null) {
-					const apiError = err as ApiError;
+					// const apiError = err as ApiError;
 				}
 
 				let errorMessage = 'Invalid email or password';
@@ -281,7 +281,7 @@ export default function LoginPage() {
 			<PricingModal
 				isOpen={isPricingModalOpen}
 				onClose={() => setIsPricingModalOpen(false)}
-				onSelectPlan={(planId) => {
+				onSelectPlan={(_planId) => {
 					// Handle plan selection
 				}}
 			/>
