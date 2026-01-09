@@ -28,7 +28,6 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 	widget,
 }) => {
 	const { lineOfBusinessData } = useLineOfBusiness();
-	const { isOffline } = useSocket();
 	const { user } = useUserInfo();
 	const { isAdmin } = usePrivilege();
 

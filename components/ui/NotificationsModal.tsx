@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
+import Image from 'next/image';
 import { PersonIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { Notification } from '@/store/services/notificationApi';
 import Pagination from './Pagination';
@@ -93,7 +94,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 		}
 
 		return filtered;
-	}, [filter, searchTerm]);
+	}, [filter, searchTerm, notifications]);
 
 	// Paginate notifications
 	const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
@@ -300,10 +301,12 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 											{/* User Avatar or Icon */}
 											<div className="shrink-0">
 												{notification.user.avatar ? (
-													<img
+													<Image
 														src={notification.user.avatar}
 														alt={notification.user.name}
-														className="w-10 h-10 rounded-full border-2"
+														width={40}
+														height={40}
+														className="rounded-full border-2 object-cover"
 														style={{ borderColor: primaryColor }}
 													/>
 												) : (

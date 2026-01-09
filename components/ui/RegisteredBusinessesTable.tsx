@@ -49,7 +49,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 		},
 	];
 
-	const handleView = (id: string) => {
+	const handleView = (_id: string) => {
 		// TODO: Navigate to business details page
 	};
 

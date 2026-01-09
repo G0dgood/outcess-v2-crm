@@ -137,7 +137,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
  
 
 		// Listen for status list updates
-		const handleStatusListUpdate = (data: unknown) => { 
+		const handleStatusListUpdate = (_data: unknown) => { 
 			// Invalidate RTK Query cache for statuses
 			dispatch(statusApi.util.invalidateTags(['Statuses']));
 		};

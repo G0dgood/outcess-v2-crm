@@ -125,7 +125,7 @@ const DraggableChart: React.FC<DraggableChartProps> = ({
 					<Dropdown
 						label=""
 						value={chart.timeRange}
-						onChange={(value) => {
+						onChange={(_value) => {
 
 						}}
 						options={[

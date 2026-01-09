@@ -62,11 +62,11 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 			} catch {
 				setOriginalRolesPermissions(permissionData.roles);
 			}
-		} else if (permissionData) { 
+		} else if (permissionData) {
 		}
 	}, [permissionData]);
 
-	const [updateRole, { isLoading: isUpdating }] = useUpdateRoleMutation();
+	const [updateRole] = useUpdateRoleMutation();
 	const [updatingRoleIds, setUpdatingRoleIds] = useState<string[]>([]);
 
 	const handleSaveRole = async (role: Role) => {
@@ -123,7 +123,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 			const bp = pb.permissions ||
 				{ view: false, edit: false, delete: false, create: false };
 			if (ap.view !== bp.view ||
-				ap.edit !== bp.edit || 
+				ap.edit !== bp.edit ||
 				ap.delete !== bp.delete ||
 				ap.create !== bp.create) {
 				return false;
