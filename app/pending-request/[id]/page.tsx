@@ -9,7 +9,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
-	const { id } = usePromise(params);
+	const { id: _id } = usePromise(params);
 	const router = useRouter();
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const { isDarkMode } = useTheme();

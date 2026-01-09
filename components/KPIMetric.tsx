@@ -6,6 +6,7 @@ import Dropdown from '@/components/ui/Dropdown';
 import Input from '@/components/ui/Input';
 import Icon from '@/components/ui/Icon';
 import ColorPicker from '@/components/ui/ColorPicker';
+import NextImage from 'next/image';
 
 interface Widget {
 	id: string;
@@ -230,10 +231,12 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 					{/* Empty State */}
 					{callOutcomes.length === 0 ? (
 						<div className="flex flex-col items-center justify-center py-8 text-center">
-							<img
+							<NextImage
 								src="/illustrations/Call-Block--Streamline-Ux.png"
 								alt="No call outcomes"
-								className="w-32 h-32 mb-4 opacity-60"
+								width={128}
+								height={128}
+								className="mb-4 opacity-60"
 							/>
 							<h3
 								className="font-inter text-base font-medium dark:text-gray-100 mb-2"

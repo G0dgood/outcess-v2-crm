@@ -29,7 +29,6 @@ export default function SettingsPage() {
 	const { isDarkMode, toggleTheme } = useTheme();
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
-	const secondaryColor = lineOfBusinessData?.secondaryColor || '#6C8B7D';
 
 	const { user } = useAuth();
 	const { data: userData, isLoading: isUserLoading } = useGetUserByIdQuery(user?.id || '', {

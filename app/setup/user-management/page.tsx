@@ -35,16 +35,9 @@ interface TeamMember {
 	userId: string;
 }
 
-interface ApiError {
-	data?: {
-		error?: string;
-		message?: string;
-	};
-}
-
 export default function UserManagementPage() {
 	const { setupData, updateUserManagementSettings } = useSetup();
-	const { user } = useUserInfo();
+	const { user: _user } = useUserInfo();
 	const { userManagementSettings } = setupData;
 	const router = useRouter();
 	const { canAccess } = usePrivilege();
@@ -347,10 +340,12 @@ export default function UserManagementPage() {
 									<tr>
 										<td colSpan={7} className="py-12 px-6">
 											<div className="flex flex-col items-center justify-center text-center">
-												<img
+												<NextImage
 													src="/illustrations/Avatar-Neutral-Add-2--Streamline-Ux.png"
 													alt="No users added"
-													className="w-32 h-32 mb-4 opacity-60"
+													width={128}
+													height={128}
+													className="mb-4 opacity-60"
 												/>
 												<h3
 													className="font-inter text-base font-medium dark:text-gray-100 mb-2"

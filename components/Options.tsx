@@ -1,4 +1,4 @@
-import { ExclamationTriangleIcon, FaceIcon } from '@radix-ui/react-icons';
+import { FaceIcon } from '@radix-ui/react-icons';
 import { SVGLoader } from './SVGLoader';
 
 
