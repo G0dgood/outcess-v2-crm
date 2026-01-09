@@ -128,7 +128,7 @@ const TeamMembersPage: React.FC = () => {
 		};
 
 		// Listen for refresh requests
-		const handleRefresh = (_data: unknown) => {
+		const handleRefresh = () => {
 			refetch();
 		};
 

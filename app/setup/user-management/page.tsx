@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import NextImage from 'next/image';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import AddUserModal from '@/components/ui/AddUserModal';
@@ -52,7 +53,6 @@ export default function UserManagementPage() {
 	const canEdit = canAccess('teamMembers', 'edit');
 	const canDelete = canAccess('teamMembers', 'delete');
 
-	const companyId = setupData?.companyId || user?.companyId || user?.company?._id || '';
 	const lineOfBusinessId = setupData?.lineOfBusinessId || '';
 
 	const { data: rolesDataResponse } = useGetRolesByLineOfBusinessIdQuery(lineOfBusinessId, {
@@ -63,7 +63,7 @@ export default function UserManagementPage() {
 	// 	skip: !companyId
 	// });
 
-	const { data: teamMembersResponse, isLoading } = useGetTeamMembersByLineOfBusinessIdQuery(lineOfBusinessId, { skip: !lineOfBusinessId });
+	const { data: teamMembersResponse } = useGetTeamMembersByLineOfBusinessIdQuery(lineOfBusinessId, { skip: !lineOfBusinessId });
 
 	const [isAddingUser, setIsAddingUser] = useState(false);
 	const [editingUser, setEditingUser] = useState<string | null>(null);

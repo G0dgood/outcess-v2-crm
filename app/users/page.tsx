@@ -37,8 +37,6 @@ const UsersPage: React.FC = () => {
 	const { data: teamMembersResponse, isLoading } = useGetTeamMembersByLineOfBusinessIdQuery(lineOfBusinessId, { skip: !lineOfBusinessId });
 	const [deleteTeamMember] = useDeleteTeamMemberMutation();
 	const { canAccess } = usePrivilege();
-	const _canAccessModule = canAccess('teamMembers');
-	const _canView = canAccess('teamMembers', 'view');
 	const canCreate = canAccess('teamMembers', 'create');
 	const canEdit = canAccess('teamMembers', 'edit');
 	const canDelete = canAccess('teamMembers', 'delete');

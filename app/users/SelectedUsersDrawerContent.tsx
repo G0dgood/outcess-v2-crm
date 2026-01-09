@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PersonIcon } from '@radix-ui/react-icons';
+import { PersonIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import Icon from '@/components/ui/Icon';
 import { toast } from 'sonner';
 import { useDeleteManyTeamMembersMutation } from '@/store/services/teamMembersApi';
@@ -19,18 +19,18 @@ interface SelectedUsersDrawerContentProps {
   selectedUsers: Set<string>;
   users: User[];
   onClose: () => void;
-  onEdit: (user: User) => void;
-  onDelete: (user: User) => void;
   onBulkDeleteSuccess?: () => void;
+  onEdit?: (user: User) => void;
+  onDelete?: (user: User) => void;
 }
 
 const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
   selectedUsers,
   users,
   onClose,
-  onEdit: _onEdit,
-  onDelete: _onDelete,
   onBulkDeleteSuccess,
+  onEdit,
+  onDelete,
 }) => {
   const [deleteManyTeamMembers, { isLoading: isDeletingMany }] = useDeleteManyTeamMembersMutation();
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
@@ -47,7 +47,7 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
         // Fallback if no callback provided: close drawer
         onClose();
       }
-    } catch (_error) {
+    } catch {
       toast.error('Failed to delete selected users');
     }
   }; return (
@@ -170,6 +170,26 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
                         >
                           {user.email}
                         </p>
+                      </div>
+                      <div className="flex items-center gap-1 ml-2">
+                        {onEdit && (
+                          <button
+                            onClick={() => onEdit(user)}
+                            className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-gray-700 rounded-md transition-colors"
+                            title="Edit User"
+                          >
+                            <Pencil1Icon className="w-4 h-4" />
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            onClick={() => onDelete(user)}
+                            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-700 rounded-md transition-colors"
+                            title="Delete User"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
 
