@@ -4,7 +4,7 @@ import React from 'react';
 import type { ChartProps } from './types';
 
 export const BarChart: React.FC<ChartProps> = ({ data }) => {
-	const maxValue = Math.max(...data.map(item => item.value));
+	const maxValue = Math.max(...data.map(item => item.value)) || 1;
 	const barWidth = 60;
 	const barSpacing = 20;
 	const chartHeight = 200;

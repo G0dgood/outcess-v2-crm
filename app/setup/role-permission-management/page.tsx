@@ -35,7 +35,7 @@ export default function RolePermissionManagementPage() {
 
 	const { data: rolesData, isLoading, refetch } = useGetRolesByLineOfBusinessIdQuery(setupData?.lineOfBusinessId || '', { skip: !setupData?.lineOfBusinessId });
 
-	console.log('setupData?.lineOfBusinessId----->',setupData?.lineOfBusinessId)
+
 
 	const [createRole] = useCreateRoleMutation();
 	const [deleteRole] = useDeleteRoleMutation();
@@ -199,11 +199,6 @@ export default function RolePermissionManagementPage() {
 			<CreateRoleModal
 				isOpen={isCreateRoleModalOpen}
 				onClose={() => setIsCreateRoleModalOpen(false)}
-				onSuccess={() => {
-					// Optionally refresh roles list or show success message
-					console.log('Role created successfully');
-					refetch();
-				}}
 			/>
 		</div>
 	);

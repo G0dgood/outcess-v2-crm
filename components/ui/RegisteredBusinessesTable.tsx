@@ -50,49 +50,48 @@ const RegisteredBusinessesTable: React.FC = () => {
 	];
 
 	const handleView = (id: string) => {
-		console.log('View business:', id);
 		// TODO: Navigate to business details page
 	};
 
 	return (
 		<div className="overflow-x-auto">
-			<table 
+			<table
 				className="min-w-full divide-y dark:divide-gray-700"
 				style={{ borderColor: 'var(--light-gray)' }}
 			>
-				<thead 
+				<thead
 					className="dark:bg-gray-700 border-b dark:border-gray-700"
-					style={{ 
+					style={{
 						backgroundColor: 'var(--bg-primary)',
 						borderBottomColor: 'var(--light-gray)'
 					}}
 				>
 					<tr>
-						<th 
+						<th
 							className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Company Name
 						</th>
-						<th 
+						<th
 							className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Status
 						</th>
-						<th 
+						<th
 							className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Users
 						</th>
-						<th 
+						<th
 							className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Last Active
 						</th>
-						<th 
+						<th
 							className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
 							style={{ color: 'var(--text-primary)' }}
 						>
@@ -100,7 +99,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 						</th>
 					</tr>
 				</thead>
-				<tbody 
+				<tbody
 					className="dark:bg-gray-800 divide-y dark:divide-gray-700"
 					style={{
 						backgroundColor: 'var(--accent-white)',
@@ -108,8 +107,8 @@ const RegisteredBusinessesTable: React.FC = () => {
 					}}
 				>
 					{businesses.map((business) => (
-						<tr 
-							key={business.id} 
+						<tr
+							key={business.id}
 							className="dark:hover:bg-gray-700 transition-colors"
 							style={{ borderColor: 'var(--light-gray)' }}
 							onMouseEnter={(e) => {
@@ -120,7 +119,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 							}}
 						>
 							<td className="px-6 py-4 whitespace-nowrap">
-								<span 
+								<span
 									className="text-sm font-medium dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
@@ -129,11 +128,10 @@ const RegisteredBusinessesTable: React.FC = () => {
 							</td>
 							<td className="px-6 py-4 whitespace-nowrap">
 								<span
-									className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-										business.status === 'Active'
+									className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${business.status === 'Active'
 											? 'dark:bg-green-900/30 dark:text-green-400'
 											: 'dark:bg-red-900/30 dark:text-red-400'
-									}`}
+										}`}
 									style={business.status === 'Active' ? {
 										backgroundColor: 'rgba(34, 197, 94, 0.1)',
 										color: '#16A34A'
@@ -146,7 +144,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 								</span>
 							</td>
 							<td className="px-6 py-4 whitespace-nowrap">
-								<span 
+								<span
 									className="text-sm dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
@@ -154,7 +152,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 								</span>
 							</td>
 							<td className="px-6 py-4 whitespace-nowrap">
-								<span 
+								<span
 									className="text-sm dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>

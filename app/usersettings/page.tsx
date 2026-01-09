@@ -88,7 +88,6 @@ export default function SettingsPage() {
 	const handleProfileSave = async () => {
 		setIsProfileLoading(true);
 		try {
-			console.log('Sending profile update request:', profileData);
 
 			const response = await fetch('/api/user/profile', {
 				method: 'POST',
@@ -98,10 +97,9 @@ export default function SettingsPage() {
 				body: JSON.stringify(profileData),
 			});
 
-			console.log('Profile update response status:', response.status);
+
 
 			const data = await response.json();
-			console.log('Profile update response data:', data);
 
 			if (response.ok) {
 				toast.success('Profile updated successfully!');
@@ -142,11 +140,7 @@ export default function SettingsPage() {
 				return;
 			}
 
-			console.log('Sending password change request:', {
-				currentPassword: passwordData.currentPassword ? '[REDACTED]' : 'empty',
-				newPassword: passwordData.newPassword ? '[REDACTED]' : 'empty',
-				confirmPassword: passwordData.confirmPassword ? '[REDACTED]' : 'empty'
-			});
+
 
 			const response = await fetch('/api/user/password', {
 				method: 'POST',

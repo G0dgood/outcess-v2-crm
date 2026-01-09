@@ -10,9 +10,16 @@ import EditWidgetModal from '@/components/ui/EditWidgetModal';
 import DeleteWidgetModal from '@/components/ui/DeleteWidgetModal';
 import StickyNote, { StickyNoteData } from '@/components/ui/StickyNote';
 import StickyNoteModal from '@/components/ui/StickyNoteModal';
-import { PlusIcon, Pencil1Icon } from '@radix-ui/react-icons';
+import { PlusIcon, Pencil1Icon, ReloadIcon } from '@radix-ui/react-icons';
 import { useUpdateLineOfBusinessMutation } from '@/store/services/lineOfBusinessApi';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import {
+	useGetDashboardDispositionsByLineOfBusinessAndAgentIdReportQuery,
+	useGetAllDashboardDispositionsByLineOfBusinessReportQuery,
+	useGetDispositionsByLineOfBusinessReportQuery,
+	useGetDispositionsByAgentReportQuery
+} from '@/store/services/dispositionApi';
 import { filterDispositionsByTimeRange, getDateRangeFromTimeRange } from '@/utils/filterUtils';
 import {
 	DndContext,
@@ -61,13 +68,16 @@ const DashboardContent: React.FC = () => {
 	const [updateLineOfBusiness] = useUpdateLineOfBusinessMutation();
 	const isLoading = isLobLoading;
 	const { isOnline, isConnected, isOffline, send } = useSocket();
-	const { canAccess, isAdmin } = usePrivilege();
+	const { canAccess, isAdmin, userPrivileges } = usePrivilege();
 	const { user } = useUserInfo();
 	const canAccessDashboard = canAccess('dashboard');
 	const canView = canAccess('dashboard', 'view');
 	const canCreate = canAccess('dashboard', 'create');
 	const canEdit = canAccess('dashboard', 'edit');
 	const canDelete = canAccess('dashboard', 'delete');
+
+	const isAgent = userPrivileges?.role?.roleName?.toLowerCase() === 'agent';
+	const showAddButtons = canCreate && !isAgent;
 
 	const dashboardSettings: DashboardSettings = useMemo(() => {
 		const source = setupData?.dashboardSettings || lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
@@ -93,7 +103,28 @@ const DashboardContent: React.FC = () => {
 	const timeRange = dashboardSettings.dispositionSettings?.timeRangeView || 'daily';
 	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange]);
 
-	const { data: lobReportData } = useGetDispositionsByLineOfBusinessReportQuery(
+	const { data: reportDataAgent, refetch: refetchAgentReport, isFetching: isFetchingAgentReport } = useGetDashboardDispositionsByLineOfBusinessAndAgentIdReportQuery(
+		{
+			lineOfBusinessId: lobId || '',
+			agentId: user?.id || user?._id || '',
+			startDate: dateRange.startDate || '',
+			endDate: dateRange.endDate || ''
+		},
+		{ skip: !lobId || !user || !dateRange.startDate || isAdmin }
+	);
+
+	const { data: reportDataAdmin, refetch: refetchAdminReport, isFetching: isFetchingAdminReport } = useGetAllDashboardDispositionsByLineOfBusinessReportQuery(
+		{
+			lineOfBusinessId: lobId || '',
+			startDate: dateRange.startDate || '',
+			endDate: dateRange.endDate || ''
+		},
+		{ skip: !lobId || !dateRange.startDate || !isAdmin }
+	);
+
+	const reportData = isAdmin ? reportDataAdmin : reportDataAgent;
+
+	const { data: lobReportData, refetch: refetchLobReport, isFetching: isFetchingLobReport } = useGetDispositionsByLineOfBusinessReportQuery(
 		{
 			lineOfBusinessId: lobId || '',
 			startDate: dateRange.startDate || '',
@@ -102,7 +133,7 @@ const DashboardContent: React.FC = () => {
 		{ skip: !lobId || !isAdmin || !dateRange.startDate }
 	);
 
-	const { data: agentReportData } = useGetDispositionsByAgentReportQuery(
+	const { data: agentReportData, refetch: refetchAgentDispositions, isFetching: isFetchingAgentDispositions } = useGetDispositionsByAgentReportQuery(
 		{
 			lineOfBusinessId: lobId || '',
 			agentId: user?._id || '',
@@ -121,6 +152,18 @@ const DashboardContent: React.FC = () => {
 			return agentReportData?.data || (Array.isArray(agentReportData) ? agentReportData : []);
 		}
 	}, [isAdmin, lobReportData, agentReportData]);
+
+	const isRefreshing = isFetchingAgentReport || isFetchingAdminReport || isFetchingLobReport || isFetchingAgentDispositions;
+
+	const handleRefresh = () => {
+		if (isAdmin) {
+			refetchAdminReport();
+			refetchLobReport();
+		} else {
+			refetchAgentReport();
+			refetchAgentDispositions();
+		}
+	};
 
 	const updateDashboardSettings = async (newSettings: Partial<typeof dashboardSettings>) => {
 		// Always update local SetupContext for immediate UI feedback
@@ -359,7 +402,6 @@ const DashboardContent: React.FC = () => {
 		if (isOnline && isConnected && send) {
 			syncPendingDispositions(send).then((result) => {
 				if (result.success > 0) {
-					console.log(`Synced ${result.success} dispositions`);
 					setPendingDispositionsCount(getPendingDispositionsCount());
 				}
 			});
@@ -402,6 +444,70 @@ const DashboardContent: React.FC = () => {
 		};
 
 		return dashboardSettings?.widgets?.map((widget: Widget) => {
+			// Check report data first
+			if (reportData?.data?.breakdown) {
+				const breakdown = reportData.data.breakdown;
+
+				// 0. Check for Composite SubKey (Category:::Key)
+				// This allows Title to be anything (e.g. "mem") while preserving the data source (e.g. "Call Answered")
+				if (widget.subKey && widget.subKey.includes(':::')) {
+					const [category, key] = widget.subKey.split(':::');
+					if (breakdown[category] !== undefined) {
+						const reportValue = breakdown[category];
+						if (typeof reportValue === 'object' && reportValue !== null && reportValue[key] !== undefined) {
+							return { ...widget, value: reportValue[key] };
+						}
+					}
+					// If composite key lookup fails, preserve saved value
+					return widget;
+				}
+
+				// 1. Direct Lookup (Title = Category)
+				if (breakdown[widget.title] !== undefined) {
+					const reportValue = breakdown[widget.title];
+					if (typeof reportValue === 'object' && reportValue !== null) {
+						if (widget.subKey && reportValue[widget.subKey] !== undefined) {
+							return { ...widget, value: reportValue[widget.subKey] };
+						}
+						// If subKey is present but value not found, preserve saved value
+						if (widget.subKey) {
+							return widget;
+						}
+						// If no subKey, sum all values in the object
+						const total = Object.values(reportValue).reduce((acc: number, val) => acc + (Number(val) || 0), 0);
+						return { ...widget, value: total };
+					} else {
+						return { ...widget, value: reportValue };
+					}
+				}
+
+				// 2. Deep Lookup (Search for Title in all nested objects)
+				// This handles cases where Title = Specific Option (e.g. "Connected") 
+				// and the parent category is not explicitly stored in subKey or is lost.
+				let deepMatchValue: number | undefined;
+				Object.values(breakdown).some((categoryValue) => {
+					if (typeof categoryValue === 'object' && categoryValue !== null) {
+						// Use type assertion or check for property existence safely
+						const val = (categoryValue as Record<string, unknown>)[widget.title];
+						if (val !== undefined) {
+							deepMatchValue = Number(val);
+							return true; // Stop searching
+						}
+					}
+					return false;
+				});
+
+				if (deepMatchValue !== undefined) {
+					return { ...widget, value: deepMatchValue };
+				}
+			}
+
+			// If widget has a subKey, it depends on report data breakdown.
+			// If report data is missing or doesn't have the key, we should not fall back to total counts.
+			if (widget.subKey) {
+				return widget;
+			}
+
 			// Update pending dispositions widget value
 			if (widget.title === 'Pending Dispositions') {
 				return { ...widget, value: pendingDispositionsCount };
@@ -441,11 +547,11 @@ const DashboardContent: React.FC = () => {
 
 			return widget;
 		});
-	}, [dashboardSettings, combinedDispositions, pendingDispositionsCount]);
+	}, [dashboardSettings, combinedDispositions, pendingDispositionsCount, reportData]);
 
 	// Wrapper function to generate chart data using the utility function
 	const generateChartDataWrapper = (dataSource: string | string[], chartColor?: string, colors?: Record<string, string>): ChartDataItem[] => {
-		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, combinedDispositions);
+		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, combinedDispositions, reportData);
 	};
 
 	const handleEditWidget = (widgetId: string) => {
@@ -668,39 +774,55 @@ const DashboardContent: React.FC = () => {
 						</h1>
 						<div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
 							<div className="w-40">
-								<Dropdown
-									label=""
-									placeholder="Time Range"
-									options={[
-										{ value: 'daily', label: 'Daily' },
-										{ value: 'weekly', label: 'Weekly' },
-										{ value: 'monthly', label: 'Monthly' },
-										{ value: 'yearly', label: 'Yearly' },
-										{ value: 'all', label: 'All Time' },
-									]}
-									value={dashboardSettings.dispositionSettings?.timeRangeView || 'daily'}
-									onChange={(value) => updateDashboardSettings({
-										dispositionSettings: {
-											...dashboardSettings.dispositionSettings,
-											timeRangeView: value as unknown as 'daily' | 'weekly' | 'monthly',
-										}
-									})}
-								/>
+							<Dropdown
+								label=""
+								placeholder="Time Range"
+								inputClassName="!py-[7px] !leading-5 !text-xs sm:!text-sm  flex-none "
+								options={[
+									{ value: 'daily', label: 'Daily' },
+									{ value: 'weekly', label: 'Weekly' },
+									{ value: 'monthly', label: 'Monthly' },
+									{ value: 'yearly', label: 'Yearly' },
+									{ value: 'all', label: 'All Time' },
+								]}
+								value={dashboardSettings.dispositionSettings?.timeRangeView || 'daily'}
+								onChange={(value) => updateDashboardSettings({
+									dispositionSettings: {
+										...dashboardSettings.dispositionSettings,
+										timeRangeView: value as unknown as 'daily' | 'weekly' | 'monthly',
+									}
+								})}
+							/>
 							</div>
-
 							<Button
 								variant="primary"
 								size="md"
-								onClick={handleAddWidget}
-								disabled={!canCreate}
-								// style={primaryButtonStyle}
-								className="transition-all duration-200 px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm"
+								onClick={handleRefresh}
+								disabled={isRefreshing}
+								className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
 								onMouseEnter={(event) => handlePrimaryHover(event, true)}
 								onMouseLeave={(event) => handlePrimaryHover(event, false)}
 							>
-								<PlusIcon className="w-4 h-4" />
-								<span className="ml-2 hidden sm:inline">Add Widget</span>
+								<ReloadIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+								<span className="hidden sm:inline">Refresh</span>
 							</Button>
+
+
+							{showAddButtons && (
+								<Button
+									variant="primary"
+									size="md"
+									onClick={handleAddWidget}
+									disabled={!canCreate}
+									// style={primaryButtonStyle}
+									className="transition-all duration-200 px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm"
+									onMouseEnter={(event) => handlePrimaryHover(event, true)}
+									onMouseLeave={(event) => handlePrimaryHover(event, false)}
+								>
+									<PlusIcon className="w-4 h-4" />
+									<span className="ml-2 hidden sm:inline">Add Widget</span>
+								</Button>
+							)}
 							<Button
 								variant="primary"
 								size="md"
@@ -713,26 +835,28 @@ const DashboardContent: React.FC = () => {
 								<Pencil1Icon className="w-4 h-4" />
 								<span className="hidden sm:inline">Note</span>
 							</Button>
-							<Button
-								variant="primary"
-								size="md"
-								onClick={() => setIsAddChartModalOpen(true)}
-								disabled={!canCreate}
-								className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
-								// style={outlineButtonStyle}
-								onMouseEnter={(event) => handlePrimaryHover(event, true)}
-								onMouseLeave={(event) => handlePrimaryHover(event, false)}
-							>
-								<PlusIcon className="w-4 h-4" />
-								<span className="hidden sm:inline">Add Chart</span>
-								{isOffline && (
-									<span
-										className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
-										style={{ backgroundColor: '#DC350' }}
-										title="Offline mode"
-									/>
-								)}
-							</Button>
+							{showAddButtons && (
+								<Button
+									variant="primary"
+									size="md"
+									onClick={() => setIsAddChartModalOpen(true)}
+									disabled={!canCreate}
+									className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+									// style={outlineButtonStyle}
+									onMouseEnter={(event) => handlePrimaryHover(event, true)}
+									onMouseLeave={(event) => handlePrimaryHover(event, false)}
+								>
+									<PlusIcon className="w-4 h-4" />
+									<span className="hidden sm:inline">Add Chart</span>
+									{isOffline && (
+										<span
+											className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
+											style={{ backgroundColor: '#DC350' }}
+											title="Offline mode"
+										/>
+									)}
+								</Button>
+							)}
 							{/* <Button
 						variant="primary"
 						size="md"
@@ -851,7 +975,7 @@ const DashboardContent: React.FC = () => {
 									>
 										Add your first chart to visualize your disposition data and track important metrics.
 									</p>
-									{canCreate && (
+									{showAddButtons && (
 										<Button
 											variant="primary"
 											size="md"
@@ -939,12 +1063,6 @@ const DashboardContent: React.FC = () => {
 		</div>
 	);
 };
-
-import {
-	useGetDispositionsByLineOfBusinessReportQuery,
-	useGetDispositionsByAgentReportQuery,
-} from '@/store/services/dispositionApi';
-import { useUserInfo } from '@/contexts/UserInfoContext';
 
 export default function DashboardPage() {
 	return <DashboardContent />;

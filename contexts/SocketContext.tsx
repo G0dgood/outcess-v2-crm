@@ -219,8 +219,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 				reconnection: true,
 			});
 
-			newSocket.on('connect', () => {
-				console.log('Socket connected:', newSocket.id);
+			newSocket.on('connect', () => { 
 				setStatus('connected');
 				setLastError(null);
 				setReconnectAttempts(0);
@@ -229,8 +228,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 				flushMessageQueue();
 			});
 
-			newSocket.on('disconnect', (reason) => {
-				console.log('Socket disconnected:', reason);
+			newSocket.on('disconnect', (reason) => { 
 				setStatus('disconnected');
 				if (reason === 'io server disconnect') {
 					newSocket.connect();

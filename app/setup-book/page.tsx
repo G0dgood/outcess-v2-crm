@@ -51,7 +51,7 @@ const SetupBookPage: React.FC = () => {
 	// Based on user request, we need to make sure searchId is included. 
 	// I'll check where searchId might come from. If not in context, I'll assume it needs to be passed or is part of settings.
 	// For now, let's assume it's part of the lineOfBusinessData or we need to extract it.
-	// Let's look at the console log from line 39: console.log('lineOfBusiness-----0', setupBookHeaderFields)
+	// Let's look at the console log from line 39: 
 	// The user mentioned "searchId". Let's check if it's in lineOfBusinessData.
 	const searchId = lineOfBusinessData?.lineOfBusiness?.customerBookSettings?.searchId;
 
@@ -280,8 +280,7 @@ const SetupBookPage: React.FC = () => {
 					onChange={setSearchTerm}
 					className="w-full sm:w-auto"
 					maxWidth="w-full"
-					onSearch={(value) => console.log('Search triggered:', value)}
-					onClear={() => console.log('Search cleared')}
+					onSearch={(value) => console.log('Search triggered:', value)} 
 					showClearButton={true}
 				/>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">

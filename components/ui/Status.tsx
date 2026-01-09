@@ -125,7 +125,6 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 		if (!socket || !isConnected) return;
 
 		const handleStatusCreated = (newStatus: RawStatus) => {
-			console.log("New Status Created:", newStatus);
 			const statusId = newStatus.id || newStatus._id;
 
 			setStatuses((prev) => {
@@ -157,7 +156,6 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 		};
 
 		const handleStatusUpdated = (updatedStatus: RawStatus) => {
-			console.log("Status Updated:", updatedStatus);
 			const statusId = updatedStatus.id || updatedStatus._id;
 
 			setStatuses((prev) => prev.map((status) => {
@@ -186,7 +184,6 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 		};
 
 		const handleStatusDeleted = (statusId: string) => {
-			console.log("Status Deleted:", statusId);
 			setStatuses((prev) => prev.filter((status) => status.id !== statusId));
 		};
 

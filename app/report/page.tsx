@@ -181,7 +181,6 @@ const ReportPage: React.FC = () => {
 	}, [isFilterOpen]);
 
 	const handleDownload = () => {
-		console.log('Download clicked');
 		// Implement download functionality
 		// This could export data as CSV, PDF, or Excel
 	};
@@ -239,8 +238,7 @@ const ReportPage: React.FC = () => {
 					onChange={setSearchTerm}
 					className="w-full sm:w-auto"
 					maxWidth="w-full"
-					onSearch={(value) => console.log('Search triggered:', value)}
-					onClear={() => console.log('Search cleared')}
+					// onSearch={(value) =>  }
 					showClearButton={true}
 				/>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">

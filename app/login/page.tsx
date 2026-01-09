@@ -139,7 +139,6 @@ export default function LoginPage() {
 						router.push('/dashboard');
 					}
 				} else {
-					console.error('Login failed: Missing user or token in response', response);
 					toast.error('Login failed: Invalid response from server');
 					setIsLoading(false);
 				}
@@ -147,12 +146,6 @@ export default function LoginPage() {
 				// Enhanced error logging
 				if (typeof err === 'object' && err !== null) {
 					const apiError = err as ApiError;
-					console.log('Login error details:', {
-						status: apiError.status,
-						data: apiError.data,
-						message: apiError.message,
-						error: apiError.error,
-					});
 				}
 
 				let errorMessage = 'Invalid email or password';
@@ -289,7 +282,6 @@ export default function LoginPage() {
 				isOpen={isPricingModalOpen}
 				onClose={() => setIsPricingModalOpen(false)}
 				onSelectPlan={(planId) => {
-					console.log('Selected plan:', planId);
 					// Handle plan selection
 				}}
 			/>

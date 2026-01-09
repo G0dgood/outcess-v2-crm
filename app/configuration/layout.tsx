@@ -26,11 +26,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 			<OfflineBanner />
 			<DashboardHeader
 				companyName={lineOfBusinessData?.companyName || ''}
-				userIsOnline={true}
-				onCompanyChange={(company) => console.log('Company changed:', company)}
-				onSettingsClick={() => console.log('Settings clicked')}
-				onStatusClick={() => console.log('Status clicked')}
-				onEditProfileClick={() => console.log('Edit profile clicked')}
 				onMobileMenuToggle={toggleMobileMenu}
 			/>
 

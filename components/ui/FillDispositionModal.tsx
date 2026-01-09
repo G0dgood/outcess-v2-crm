@@ -63,7 +63,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	initialData,
 	customerId,
 	customerName,
-	customer, 
+	customer,
 }) => {
 	const { isConnected, isOffline, send } = useSocket();
 	const { user: authUser } = useAuth();

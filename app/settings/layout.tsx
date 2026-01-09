@@ -21,10 +21,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 	return (
 		<div id="page-wrapper">
 			<DashboardHeader
-				userIsOnline={true} 
-				onSettingsClick={() => console.log('Settings clicked')}
-				onStatusClick={() => console.log('Status clicked')}
-				onEditProfileClick={() => console.log('Edit profile clicked')}
 				onMobileMenuToggle={toggleMobileMenu}
 			/>
 			<Suspense fallback={null}>

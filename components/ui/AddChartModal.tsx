@@ -9,6 +9,9 @@ import { ColorPicker } from './ColorPicker';
 import { useSocket } from '@/contexts/SocketContext';
 import { useSetup } from '@/contexts/SetupContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useGetDashboardDispositionsByLineOfBusinessAndAgentIdReportQuery, useGetAllDashboardDispositionsByLineOfBusinessReportQuery } from '@/store/services/dispositionApi';
 
 interface AddChartModalProps {
 	isOpen: boolean;
@@ -53,6 +56,26 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 }) => {
 	const { isOffline } = useSocket();
 	const { lineOfBusinessData } = useLineOfBusiness();
+	const { user } = useUserInfo();
+
+	const agentId = user?.id || user?._id || '';
+	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
+	const startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+	const endDate = new Date().toISOString().split('T')[0];
+
+	const { isAdmin } = usePrivilege();
+
+	const { data: reportDataAgent } = useGetDashboardDispositionsByLineOfBusinessAndAgentIdReportQuery(
+		{ lineOfBusinessId: lobId, agentId, startDate, endDate },
+		{ skip: !lobId || !agentId || !isOpen || isAdmin }
+	);
+
+	const { data: reportDataAdmin } = useGetAllDashboardDispositionsByLineOfBusinessReportQuery(
+		{ lineOfBusinessId: lobId, startDate, endDate },
+		{ skip: !lobId || !isOpen || !isAdmin }
+	);
+
+	const reportData = isAdmin ? reportDataAdmin : reportDataAgent;
 
 	const [formData, setFormData] = useState({
 		title: '',
@@ -71,37 +94,38 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 
 	// Build data source options
 	const dataSourceOptions = useMemo(() => {
-		const options: Array<{ value: string; label: string }> = [
-			{ value: 'Total Calls', label: 'Total Calls' },
-			{ value: 'Total Dispositions', label: 'Total Dispositions' },
-			{ value: 'Pending Dispositions', label: 'Pending Dispositions' },
-			{ value: 'Completed Calls', label: 'Completed Calls' }
-		];
+		const optionsMap = new Map<string, { value: string; label: string }>();
+		optionsMap.set('Total Calls', { value: 'Total Calls', label: 'Total Calls' });
+
+		// Add API report keys
+		if (reportData?.data?.breakdown) {
+			Object.keys(reportData.data.breakdown).forEach(key => {
+				optionsMap.set(key, { value: key, label: key });
+			});
+		}
 
 		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
 
 		// Add disposition categories if available
 		if (dashboardSettings?.dispositions && dashboardSettings.dispositions.length > 0) {
 			dashboardSettings.dispositions.forEach((disposition: { name: string }) => {
-				options.push({
-					value: disposition.name,
-					label: disposition.name,
-				});
+				if (disposition?.name) {
+					optionsMap.set(disposition.name, { value: disposition.name, label: disposition.name });
+				}
 			});
 		}
 
 		// Add call outcomes if available
 		if (dashboardSettings?.callOutcomes && dashboardSettings.callOutcomes.length > 0) {
 			dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
-				options.push({
-					value: outcome.name,
-					label: outcome.name,
-				});
+				if (outcome?.name) {
+					optionsMap.set(outcome.name, { value: outcome.name, label: outcome.name });
+				}
 			});
 		}
 
-		return options;
-	}, [lineOfBusinessData]);
+		return Array.from(optionsMap.values());
+	}, [lineOfBusinessData, reportData]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
 		// For non-multiple fields, ensure we only use string values

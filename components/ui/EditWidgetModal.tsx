@@ -8,6 +8,10 @@ import { ColorPicker } from './ColorPicker';
 import { Modal } from './Modal';
 import type { Widget } from '@/contexts/SetupContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useSocket } from '@/contexts/SocketContext';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useGetDashboardDispositionsByLineOfBusinessAndAgentIdReportQuery, useGetAllDashboardDispositionsByLineOfBusinessReportQuery } from '@/store/services/dispositionApi';
 import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from '@/utils/offlineDispositions';
 
 interface EditWidgetModalProps {
@@ -24,11 +28,36 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 	widget,
 }) => {
 	const { lineOfBusinessData } = useLineOfBusiness();
+	const { isOffline } = useSocket();
+	const { user } = useUserInfo();
+	const { isAdmin } = usePrivilege();
+
 	const [formData, setFormData] = useState<Omit<Widget, 'id'>>({
 		title: '',
 		value: 0,
 		color: '#050711',
+		subKey: '',
 	});
+	const [selectedSubKey, setSelectedSubKey] = useState<string>('');
+	const [selectedCategory, setSelectedCategory] = useState<string>('');
+
+	// API Data Fetching
+	const agentId = user?.id || user?._id || '';
+	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
+	const startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+	const endDate = new Date().toISOString().split('T')[0];
+
+	const { data: reportDataAgent } = useGetDashboardDispositionsByLineOfBusinessAndAgentIdReportQuery(
+		{ lineOfBusinessId: lobId, agentId, startDate, endDate },
+		{ skip: !lobId || !agentId || !isOpen || isAdmin }
+	);
+
+	const { data: reportDataAdmin } = useGetAllDashboardDispositionsByLineOfBusinessReportQuery(
+		{ lineOfBusinessId: lobId, startDate, endDate },
+		{ skip: !lobId || !isOpen || !isAdmin }
+	);
+
+	const reportData = isAdmin ? reportDataAdmin : reportDataAgent;
 
 	// Update form data when widget changes
 	useEffect(() => {
@@ -38,40 +67,158 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 				value: widget.value || 0,
 				color: widget.color || '#050711',
 				callOutcome: widget.callOutcome,
+				subKey: widget.subKey || '',
 			});
+			if (widget.subKey) {
+				// Check for composite subKey (Category:::Key)
+				if (widget.subKey.includes(':::')) {
+					const [category, key] = widget.subKey.split(':::');
+					setSelectedCategory(category);
+					setSelectedSubKey(key);
+				} else {
+					setSelectedSubKey(widget.subKey);
+					// If simple subKey, we don't set selectedCategory yet, it will be inferred from title
+					// But if title is already renamed? We assume simple subKey means Title = Category.
+				}
+			} else {
+				setSelectedSubKey('');
+				setSelectedCategory('');
+			}
 		}
 	}, [widget]);
 
+	// Attempt to infer category for legacy widgets with simple subKeys
+	useEffect(() => {
+		if (
+			isOpen &&
+			widget?.subKey &&
+			!widget.subKey.includes(':::') &&
+			!selectedCategory &&
+			reportData?.data?.breakdown
+		) {
+			const breakdown = reportData.data.breakdown;
+			const foundCategory = Object.keys(breakdown).find(category => {
+				const categoryData = breakdown[category];
+				if (typeof categoryData === 'object' && categoryData !== null) {
+					return Object.prototype.hasOwnProperty.call(categoryData, widget.subKey!);
+				}
+				return false;
+			});
+
+			if (foundCategory) {
+				setSelectedCategory(foundCategory);
+			}
+		}
+	}, [isOpen, widget?.subKey, selectedCategory, reportData]);
+
+	const subKeyOptions = useMemo(() => {
+		const lookupKey = selectedCategory || formData.title;
+		if (!reportData?.data?.breakdown || !lookupKey) return [];
+		const reportValue = reportData.data.breakdown[lookupKey];
+		if (typeof reportValue === 'object' && reportValue !== null) {
+			return Object.keys(reportValue).map(key => ({
+				value: key,
+				label: key,
+			}));
+		}
+		return [];
+	}, [reportData, formData.title, selectedCategory]);
+
 	const handleInputChange = (field: string) => (value: string | number) => {
+		if (field === 'title') {
+			setSelectedCategory(value as string);
+			setSelectedSubKey('');
+		}
 		setFormData(prev => ({ ...prev, [field]: value }));
 	};
 
 	const widgetTitleOptions = useMemo(() => {
-		const options: Array<{ value: string; label: string }> = [];
-		if (lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes && lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes.length > 0) {
-			lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes.forEach((outcome: { name: string }) => {
-				options.push({
-					value: outcome?.name,
-					label: outcome?.name,
-				});
+		const optionsMap = new Map<string, { value: string; label: string }>();
+
+		// Add API report keys
+		if (reportData?.data?.breakdown) {
+			Object.keys(reportData.data.breakdown).forEach(key => {
+				optionsMap.set(key, { value: key, label: key });
 			});
 		}
+
+		if (lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes && lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes.length > 0) {
+			lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes.forEach((outcome: { name: string }) => {
+				if (outcome?.name) {
+					optionsMap.set(outcome.name, { value: outcome.name, label: outcome.name });
+				}
+			});
+		}
+
 		if (lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions && lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions?.length > 0) {
 			lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions.forEach((disposition: { name: unknown }) => {
 				const name = disposition?.name as string;
-				options.push({
-					value: name,
-					label: name,
-				});
+				if (name) {
+					optionsMap.set(name, { value: name, label: name });
+				}
 			});
 		}
-		return options;
-	}, [lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes, lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions]);
+
+		return Array.from(optionsMap.values());
+	}, [lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes, lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions, reportData]);
 
 	useEffect(() => {
 		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
 		const disposition = dashboardSettings?.dispositions?.find((d: { name: string }) => d.name === formData.title);
 		const outcome = dashboardSettings?.callOutcomes?.find((o: { name: string }) => o.name === formData.title);
+
+		// Check if it's from API report
+		if (reportData?.data?.breakdown) {
+			const breakdown = reportData.data.breakdown;
+
+			// Use selectedCategory for lookup if available, otherwise fallback to title
+			const lookupKey = selectedCategory || formData.title;
+
+			// 1. Direct Lookup
+			if (breakdown[lookupKey] !== undefined) {
+				const reportValue = breakdown[lookupKey];
+				if (typeof reportValue === 'object' && reportValue !== null) {
+					// It's a nested object, check if subKey is selected
+					if (selectedSubKey && reportValue[selectedSubKey] !== undefined) {
+						// Construct composite key: Category:::Key
+						const compositeSubKey = `${lookupKey}:::${selectedSubKey}`;
+						setFormData(prev => ({
+							...prev,
+							title: selectedSubKey, // Rename title to sub-option for better UX
+							value: Number(reportValue[selectedSubKey]),
+							subKey: compositeSubKey,
+						}));
+					} else {
+						// If no subKey selected, sum all values
+						const total = Object.values(reportValue).reduce((acc: number, val) => acc + (Number(val) || 0), 0);
+						setFormData(prev => ({ ...prev, value: total, subKey: '' }));
+					}
+				} else {
+					setFormData(prev => ({ ...prev, value: Number(reportValue), subKey: '' }));
+				}
+				return;
+			}
+
+			// 2. Deep Lookup (Search for Title in all nested objects)
+			let deepMatchValue: number | undefined;
+			Object.values(breakdown).some((categoryValue) => {
+				if (typeof categoryValue === 'object' && categoryValue !== null) {
+					const val = (categoryValue as Record<string, unknown>)[formData.title];
+					if (val !== undefined) {
+						deepMatchValue = Number(val);
+						return true;
+					}
+				}
+				return false;
+			});
+
+			if (deepMatchValue !== undefined) {
+				const finalValue = Number(deepMatchValue);
+				setFormData(prev => ({ ...prev, value: finalValue, subKey: '' }));
+				return;
+			}
+		}
+
 		if (disposition) {
 			const offlineDispositions = getOfflineDispositions();
 			const syncedDispositions = getSyncedDispositions();
@@ -102,7 +249,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			}).length;
 			setFormData(prev => ({ ...prev, value: count }));
 		}
-	}, [formData?.title, lineOfBusinessData?.lineOfBusiness?.dashboardSettings]);
+	}, [formData?.title, lineOfBusinessData?.lineOfBusiness?.dashboardSettings, reportData, selectedSubKey, selectedCategory]);
 
 	const isValueAutoCalculated = useMemo(() => {
 		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
@@ -128,6 +275,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 				value: widget.value || 0,
 				color: widget.color || '#050711',
 				callOutcome: widget.callOutcome,
+				subKey: widget.subKey || '',
 			});
 		}
 		onClose();
@@ -143,11 +291,21 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			<div className="p-6 space-y-4">
 				<Dropdown
 					label="Widget Title"
-					value={formData.title}
+					value={selectedCategory || formData.title}
 					onChange={(value) => handleInputChange('title')(Array.isArray(value) ? value[0] : value)}
 					options={widgetTitleOptions}
 					placeholder="Select widget title"
 				/>
+
+				{subKeyOptions.length > 0 && (
+					<Dropdown
+						label="Select Option"
+						value={selectedSubKey}
+						onChange={(value) => setSelectedSubKey(Array.isArray(value) ? value[0] : value)}
+						options={subKeyOptions}
+						placeholder="Select specific option"
+					/>
+				)}
 
 				<Input
 					label="Widget Value"

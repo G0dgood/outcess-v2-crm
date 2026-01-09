@@ -123,11 +123,10 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		if (!socket || !selectedLineOfBusinessId) return;
 
 		// Join the Line of Business room
-		console.log('PrivilegeContext: Joining LineOfBusiness room:', selectedLineOfBusinessId);
+	 
 		socket.emit("joinLineOfBusiness", selectedLineOfBusinessId);
 
-		const handleUpdateRole = (data: any) => {
-			console.log("PrivilegeContext: Role updated event received:", data);
+		const handleUpdateRole = (data: any) => { 
 
 			if (!userPrivileges || !userPrivileges.role) return;
 

@@ -24,8 +24,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 				userName={user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || ""}
 				userEmail={user?.email || ""}
 				userAvatar={user?.avatar}
-				isOnline={true}
-				onEditProfileClick={() => console.log('Edit profile clicked')}
 				onMobileMenuToggle={toggleMobileMenu}
 			/>
 

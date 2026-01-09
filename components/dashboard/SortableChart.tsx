@@ -111,8 +111,7 @@ export const SortableChart: React.FC<SortableChartProps> = ({
 							label=""
 							value={chart.timeRange}
 							onChange={(value) => {
-								// Update chart time range
-								console.log('Update chart time range:', chart.id, value);
+								// Update chart time range 
 							}}
 							options={[
 								{ value: 'daily', label: 'Daily' },

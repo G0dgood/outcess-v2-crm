@@ -4,13 +4,16 @@ import React from 'react';
 import type { ChartProps } from './types';
 
 export const LineChart: React.FC<ChartProps> = ({ data }) => {
-	const maxValue = Math.max(...data.map(item => item.value));
+	const rawMax = Math.max(...data.map(item => item.value));
+	const maxValue = rawMax > 0 ? rawMax : 1;
 	const chartHeight = 200;
 	const chartWidth = 300;
-	const pointSpacing = chartWidth / (data.length - 1);
+	const pointSpacing = data.length > 1 ? chartWidth / (data.length - 1) : 0;
+
+	const getX = (index: number) => data.length > 1 ? index * pointSpacing : chartWidth / 2;
 
 	const points = data.map((item, index) => {
-		const x = index * pointSpacing;
+		const x = getX(index);
 		const y = chartHeight - (item.value / maxValue) * chartHeight;
 		return `${x},${y}`;
 	}).join(' ');
@@ -43,7 +46,7 @@ export const LineChart: React.FC<ChartProps> = ({ data }) => {
 
 				{/* Points */}
 				{data.map((item, index) => {
-					const x = index * pointSpacing;
+					const x = getX(index);
 					const y = chartHeight - (item.value / maxValue) * chartHeight;
 
 					return (

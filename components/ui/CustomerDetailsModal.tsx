@@ -37,7 +37,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 	customer,
 }) => {
 
-	console.log('CustomerDetailsModalProps----->', customer);
+
 
 	const [pageSize] = useState(3);
 	const [isFillDispositionModalOpen, setIsFillDispositionModalOpen] = useState(false);
@@ -551,7 +551,6 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 					isOpen={isSMSModalOpen}
 					onClose={() => setIsSMSModalOpen(false)}
 					onSend={(data) => {
-						console.log('Send SMS:', data);
 						// Implement send SMS logic here
 					}}
 					initialPhone={customer?.phone ? String(customer.phone) : undefined}

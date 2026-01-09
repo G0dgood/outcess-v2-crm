@@ -297,7 +297,7 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 		color: '#050711'
 	});
 
-	console.log('setupData-->', setupData)
+
 
 	const timeRangeOptions = [
 		{ value: 'daily', label: 'Daily' },

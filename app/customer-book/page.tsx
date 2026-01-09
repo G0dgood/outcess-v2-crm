@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 import PageHeading from '@/components/ui/PageHeading';
 import SearchWithSend from '@/components/ui/SearchWithSend';
-import AddCustomerModal from '@/components/ui/AddCustomerModal';
+import CreateRecordModal from '@/components/ui/CreateRecordModal';
 import CustomerDetailsModal from '@/components/ui/CustomerDetailsModal';
 import { ArrowRightIcon } from '@radix-ui/react-icons';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
@@ -31,13 +31,30 @@ const CustomerBookPage: React.FC = () => {
 	const canView = canAccess('customerBook', 'view');
 	const canCreate = canAccess('customerBook', 'create');
 
+	const searchId = lineOfBusinessData?.lineOfBusiness?.customerBookSettings?.searchId;
+	const configuredFields = lineOfBusinessData?.lineOfBusiness?.customerBookSettings?.configuredFields || [];
+
+	const mapFieldType = (type: string): 'text' | 'phone' | 'email' | 'number' | 'date' => {
+		if (type === 'phone') return 'phone';
+		if (type === 'email') return 'email';
+		if (type === 'number') return 'number';
+		if (type === 'date') return 'date';
+		return 'text';
+	};
+
+	const fieldDefinitions = configuredFields.map((field: any) => ({
+		id: field.id,
+		name: field.name,
+		type: mapFieldType(field.type),
+		required: field.required
+	}));
+
 	// Fetch customer by SearchId
 	const { data: searchResult, isLoading, isError, error } = useGetSetupBookBySearchIdQuery(
 		{ lineOfBusinessId: lobId || '', searchId: searchQuery },
 		{ skip: !searchQuery || !lobId }
 	);
 
-	console.log('searchResult----->', searchResult)
 
 	const [customers, setCustomers] = useState<Customer[]>([]);
 	const [tableHeaders, setTableHeaders] = useState<string[]>([]);
@@ -98,10 +115,7 @@ const CustomerBookPage: React.FC = () => {
 		setIsAddCustomerModalOpen(false);
 	};
 
-	const handleAddFields = () => {
-		console.log('Add Fields clicked');
-		// Implement add fields logic here
-	};
+	 
 
 	const handleViewCustomer = (customer: Customer) => {
 		setSelectedCustomer(customer);
@@ -243,11 +257,11 @@ const CustomerBookPage: React.FC = () => {
 							</table>
 						</div>
 					</div>
-					<AddCustomerModal
+					<CreateRecordModal
 						isOpen={isAddCustomerModalOpen}
 						onClose={() => setIsAddCustomerModalOpen(false)}
-						onSave={handleSaveCustomer}
-						onAddFields={handleAddFields}
+						fieldDefinitions={fieldDefinitions}
+						searchId={searchId}
 					/>
 					<CustomerDetailsModal
 						isOpen={!!selectedCustomer}

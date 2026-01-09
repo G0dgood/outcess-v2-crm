@@ -60,7 +60,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 
 	const { data: companyDetailsData, isLoading: isLoadingCompanyDetails } = useSuperAdminGetCompanyDetailsQuery(id);
 
-	console.log('companyDetailsData------>', companyDetailsData)
+
 
 
 	const businessData = useMemo(() => {
@@ -138,7 +138,6 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 	};
 
 	const handleConfirmDeactivate = (reason: string) => {
-		console.log('Deactivate business:', id, 'Reason:', reason);
 		// TODO: Implement deactivate business logic with reason
 	};
 

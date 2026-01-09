@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
-import Checkbox from '@/components/ui/Checkbox'; 
+import Checkbox from '@/components/ui/Checkbox';
 import { SetupProvider } from '@/contexts/SetupContext';
 import { ChevronDownIcon } from '@radix-ui/react-icons';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
@@ -126,7 +126,6 @@ function PaymentPageContent() {
 			// Simulate payment processing
 			setTimeout(() => {
 				setIsProcessing(false);
-				console.log('Payment successful for plan:', planId);
 				router.push('/login?payment=success');
 			}, 2000);
 		} else {

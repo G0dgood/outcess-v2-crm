@@ -184,7 +184,6 @@ const ActivityLogTabContent: React.FC<ActivityLogTabContentProps> = ({ activityL
       variant="primary"
       size="md"
       onClick={() => {
-       console.log('Export Logs clicked');
        // Implement export functionality
       }}
      >

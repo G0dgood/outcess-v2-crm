@@ -81,7 +81,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
   const companyId = lineOfBusinessData?.lineOfBusiness
     ?.companyId;
 
-  console.log('companyId--->', companyId)
+ 
 
   const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
   const [progress, setProgress] = useState(0);
@@ -94,7 +94,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  console.log('lineOfBusinessData--->', lineOfBusinessData)
+  
   // Use external control if provided, otherwise use internal state
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : show;
   const handleClose = () => {

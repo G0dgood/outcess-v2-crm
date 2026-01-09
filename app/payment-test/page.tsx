@@ -28,7 +28,6 @@ function PaymentTestContent() {
 				isOpen={isPricingModalOpen}
 				onClose={() => setIsPricingModalOpen(false)}
 				onSelectPlan={(planId) => {
-					console.log('Selected plan:', planId);
 				}}
 			/>
 		</div>

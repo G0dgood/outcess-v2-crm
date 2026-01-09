@@ -4,7 +4,7 @@ import React from 'react';
 import type { ChartProps } from './types';
 
 export const BubbleChart: React.FC<ChartProps> = ({ data }) => {
-	const maxValue = Math.max(...data.map(item => item.value));
+	const maxValue = Math.max(...data.map(item => item.value)) || 1;
 	const chartHeight = 200;
 	const chartWidth = 300;
 
@@ -37,7 +37,7 @@ export const BubbleChart: React.FC<ChartProps> = ({ data }) => {
 
 				{/* Bubble points */}
 				{data.map((item, index) => {
-					const x = (index / (data.length - 1)) * chartWidth;
+					const x = data.length > 1 ? (index / (data.length - 1)) * chartWidth : chartWidth / 2;
 					const y = chartHeight - (item.value / maxValue) * chartHeight;
 					const bubbleSize = Math.max(15, (item.value / maxValue) * 40);
 

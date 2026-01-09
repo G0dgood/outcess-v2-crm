@@ -4,7 +4,7 @@ import React from 'react';
 import type { ChartProps } from './types';
 
 export const RadarChart: React.FC<ChartProps> = ({ data }) => {
-	const maxValue = Math.max(...data.map(item => item.value));
+	const maxValue = Math.max(...data.map(item => item.value)) || 1;
 	const centerX = 50;
 	const centerY = 50;
 	const maxRadius = 40;

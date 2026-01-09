@@ -140,7 +140,6 @@ const BusinessHours = () => {
 									variant="primary"
 									size="md"
 									onClick={() => {
-										console.log('Saving business hour:', businessHourData);
 										setIsBusinessHourEditMode(false);
 									}}
 								>
@@ -175,7 +174,6 @@ const BusinessHours = () => {
 				isOpen={isAddBusinessHourModalOpen}
 				onClose={() => setIsAddBusinessHourModalOpen(false)}
 				onSave={(data) => {
-					console.log('Saving business hour:', data);
 					// Format business hour data for display
 					let displayDays = '';
 					let displayHours = '';

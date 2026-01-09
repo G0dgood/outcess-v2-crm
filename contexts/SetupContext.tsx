@@ -30,6 +30,7 @@ export interface Widget {
 	value: number;
 	color: string;
 	callOutcome?: string;
+	subKey?: string;
 }
 
 export interface CallOutcome {

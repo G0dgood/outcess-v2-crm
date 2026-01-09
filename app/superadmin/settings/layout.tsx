@@ -19,10 +19,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 	return (
 		<div id="page-wrapper">
 			<SuperAdminHeader
-				userName="Admin User"
-				userEmail="admin@example.com"
-				isOnline={true}
-				onEditProfileClick={() => console.log('Edit profile clicked')}
 				onMobileMenuToggle={toggleMobileMenu}
 			/>
 

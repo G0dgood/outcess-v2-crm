@@ -96,33 +96,31 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 
 	// Build data source options
 	const dataSourceOptions = useMemo(() => {
-		const options: Array<{ value: string; label: string }> = [];
+		const optionsMap = new Map<string, { value: string; label: string }>();
 		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
 
 		// Add disposition categories if available
 		if (dashboardSettings?.dispositions && dashboardSettings.dispositions.length > 0) {
 			dashboardSettings.dispositions.forEach((disposition: { name: string }) => {
-				options.push({
-					value: disposition.name,
-					label: disposition.name,
-				});
+				if (disposition?.name) {
+					optionsMap.set(disposition.name, { value: disposition.name, label: disposition.name });
+				}
 			});
 		}
 
 		// Add call outcomes if available
 		if (dashboardSettings?.callOutcomes && dashboardSettings.callOutcomes.length > 0) {
 			dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
-				options.push({
-					value: outcome.name,
-					label: outcome.name,
-				});
+				if (outcome?.name) {
+					optionsMap.set(outcome.name, { value: outcome.name, label: outcome.name });
+				}
 			});
 		}
 
 		// Add custom data option at the end
-		options.push({ value: 'custom', label: 'Custom Data' });
+		optionsMap.set('custom', { value: 'custom', label: 'Custom Data' });
 
-		return options;
+		return Array.from(optionsMap.values());
 	}, [lineOfBusinessData]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {

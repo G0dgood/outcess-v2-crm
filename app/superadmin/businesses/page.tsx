@@ -39,7 +39,7 @@ const BusinessesManagementPage: React.FC = () => {
 
 	const { data: companiesData, isLoading } = useGetAllCompaniesQuery();
 
-	console.log('companiesData---->', companiesData)
+ 
 
 	const businesses: Business[] = useMemo(() => {
 		if (!companiesData) return [];

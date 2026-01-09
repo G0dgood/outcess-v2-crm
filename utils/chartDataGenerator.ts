@@ -109,7 +109,8 @@ export const generateChartData = (
 	setupData: SetupData,
 	pendingDispositionsCount: number,
 	colors?: Record<string, string>, // Map of data source to color
-	providedDispositions?: DispositionItem[]
+	providedDispositions?: DispositionItem[],
+	reportData?: any
 ): ChartDataItem[] => {
 	// Handle multiple data sources
 	if (Array.isArray(dataSource) && dataSource.length > 1) {
@@ -120,7 +121,7 @@ export const generateChartData = (
 			// Get color for this specific data source
 			const sourceColor = colors?.[source] || chartColor;
 			// Call the internal function to generate data for a single source
-			const sourceData = generateSingleSourceData(source, sourceColor, setupData, pendingDispositionsCount, providedDispositions);
+			const sourceData = generateSingleSourceData(source, sourceColor, setupData, pendingDispositionsCount, providedDispositions, reportData);
 			
 			// Combine data by label, summing values
 			sourceData.forEach(item => {
@@ -169,7 +170,7 @@ export const generateChartData = (
 	// Handle single data source (backward compatibility)
 	const singleSource = Array.isArray(dataSource) ? dataSource[0] : dataSource;
 	const sourceColor = colors?.[singleSource] || chartColor;
-	return generateSingleSourceData(singleSource, sourceColor, setupData, pendingDispositionsCount, providedDispositions);
+	return generateSingleSourceData(singleSource, sourceColor, setupData, pendingDispositionsCount, providedDispositions, reportData);
 };
 
 /**
@@ -181,8 +182,29 @@ const generateSingleSourceData = (
 	chartColor: string | undefined,
 	setupData: SetupData,
 	pendingDispositionsCount: number,
-	providedDispositions?: DispositionItem[]
+	providedDispositions?: DispositionItem[],
+	reportData?: any
 ): ChartDataItem[] => {
+	// Check reportData first
+	if (reportData?.data?.breakdown) {
+		const val = reportData.data.breakdown[dataSource];
+		if (val && typeof val === 'object') {
+			const variations = generateColorVariations(chartColor || '', Object.keys(val).length);
+			return Object.entries(val).map(([label, value], i) => ({
+				label,
+				value: value as number,
+				color: variations[i]
+			}));
+		}
+		if (typeof val === 'number') {
+			return [{
+				label: dataSource,
+				value: val,
+				color: chartColor || '#FF6B6B'
+			}];
+		}
+	}
+
 	let allDispositions: DispositionItem[];
 	if (providedDispositions) {
 		allDispositions = providedDispositions;

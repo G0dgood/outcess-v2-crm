@@ -67,13 +67,11 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 	];
 
 	const handleReject = () => {
-		console.log('Reject request:', id, { reviewNotes });
 		// TODO: Implement reject request logic
 		router.push('/admin/pending-request');
 	};
 
 	const handleApprove = () => {
-		console.log('Approve business:', id, { reviewNotes });
 		// TODO: Implement approve business logic
 		router.push('/admin/pending-request');
 	};

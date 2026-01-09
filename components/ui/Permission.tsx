@@ -62,8 +62,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 			} catch {
 				setOriginalRolesPermissions(permissionData.roles);
 			}
-		} else if (permissionData) {
-			console.log('Permission Data (no roles):', permissionData);
+		} else if (permissionData) { 
 		}
 	}, [permissionData]);
 

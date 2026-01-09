@@ -48,7 +48,6 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 	);
 	const [createTeamMember, { isLoading }] = useCreateTeamMemberMutation();
 
-	// console.log('supervisorsResponse---', supervisorsResponse)
 
 
 	// Reset form when modal opens/closes
@@ -130,7 +129,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 				status: formData.status || 'inactive',
 			};
 
-			console.log('Creating user with payload:', payload);
+
 
 			await createTeamMember(payload).unwrap();
 

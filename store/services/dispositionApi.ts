@@ -96,6 +96,16 @@ export const dispositionApi = createApi({
                 `api/v1/dispositions/${lineOfBusinessId}/agent/${agentId}/report?page=${page}&limit=${limit}&startDate=${startDate}&endDate=${endDate}`,
             providesTags: ['Disposition'],
         }),
+        getDashboardDispositionsByLineOfBusinessAndAgentIdReport: builder.query<any, GetDispositionsByAgentReportRequest>({
+            query: ({ lineOfBusinessId, agentId, startDate, endDate }) => 
+                `api/v1/dispositions/${lineOfBusinessId}/agent/${agentId}/dashboard-report?startDate=${startDate}&endDate=${endDate}`,
+            providesTags: ['Disposition'],
+        }),
+        getAllDashboardDispositionsByLineOfBusinessReport: builder.query<any, { lineOfBusinessId: string, startDate: string, endDate: string }>({
+            query: ({ lineOfBusinessId, startDate, endDate }) => 
+                `api/v1/dispositions/${lineOfBusinessId}/dashboard-report?startDate=${startDate}&endDate=${endDate}`,
+            providesTags: ['Disposition'],
+        }),
     }),
 });
 
@@ -106,4 +116,6 @@ export const {
     useGetDispositionsByAgentIdQuery,
     useGetDispositionsByLineOfBusinessReportQuery,
     useGetDispositionsByAgentReportQuery,
+    useGetDashboardDispositionsByLineOfBusinessAndAgentIdReportQuery,
+    useGetAllDashboardDispositionsByLineOfBusinessReportQuery,
 } = dispositionApi;

@@ -111,7 +111,6 @@ const TeamMembersPage: React.FC = () => {
 
 		// Listen for status updates
 		const handleStatusUpdate = (data: unknown) => {
-			console.log('Team Member Updated:', data);
 			// data: { teamMemberId, name, status, timestamp }
 			const updateData = data as { teamMemberId: string; status: TeamMember['status'] };
 
@@ -130,7 +129,6 @@ const TeamMembersPage: React.FC = () => {
 
 		// Listen for refresh requests
 		const handleRefresh = (data: unknown) => {
-			console.log('Refresh Requested:', data);
 			refetch();
 		};
 
