@@ -133,6 +133,7 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 			setHasMoreArtworks(!!data.pagination?.next_url);
 			setCurrentPage(pageToFetch);
 		} catch (err) {
+			setImageErrors(prev => new Set(prev));
 			console.error('Error fetching artworks:', err);
 			setError('Failed to load artwork images');
 		} finally {

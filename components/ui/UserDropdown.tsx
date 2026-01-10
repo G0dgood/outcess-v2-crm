@@ -93,6 +93,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 
 
 	const handleStatusSelect = (status: string) => {
+		console.log(status);
 		setIsStatusOpen(false);
 		setIsOpen(false);
 	};
