@@ -194,13 +194,6 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 		return `https://www.artic.edu/iiif/2/${imageId}/full/1200,/0/default.jpg`;
 	};
 
-	// Handle image load error - fallback to LQIP thumbnail
-	const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, imageId: string) => {
-		if (!imageErrors.has(imageId)) {
-			setImageErrors((prev) => new Set(prev).add(imageId));
-		}
-	};
-
 	// Navigate to previous image
 	const goToPrevious = () => {
 		setCurrentIndex((prevIndex) =>
@@ -331,7 +324,7 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 							alt={currentArtwork.thumbnail?.alt_text || currentArtwork.title}
 							className="carousel-image carousel-image-clickable"
 							onLoad={() => setIsImageLoaded(true)}
-							onError={(e) => {
+							onError={() => {
 								console.error('Image load failed for:', currentArtwork.image_id);
 								// handleImageError(e, currentArtwork.image_id);
 								setIsImageLoaded(true); // Remove loading state on error

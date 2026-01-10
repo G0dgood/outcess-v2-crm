@@ -118,15 +118,17 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 			>
 				<div className="relative">
 					{userAvatar ? (
-						<img
+						<Image
 							src={userAvatar}
 							alt={mounted ? userName : ''}
-							className="w-8 h-8 rounded-full border-2"
+							width={32}
+							height={32}
+							className="rounded-full border-2 object-cover"
 							style={{ borderColor: 'var(--light-gray)' }}
 						/>
 					) : (
 						<div
-							className="box-border w-[40px] h-[40px] rounded-full flex items-center justify-center"
+							className="box-border w-10 h-10 rounded-full flex items-center justify-center"
 							style={{
 								backgroundColor: 'var(--bg-primary)',
 								border: '1px solid var(--light-gray)'

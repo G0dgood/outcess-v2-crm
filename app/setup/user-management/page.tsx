@@ -8,7 +8,6 @@ import Dropdown from '@/components/ui/Dropdown';
 import AddUserModal from '@/components/ui/AddUserModal';
 import EditUserModal from '@/components/ui/EditUserModal';
 import { useSetup } from '@/contexts/SetupContext';
-import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
 import { useGetTeamMembersByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
 import Icon from '@/components/ui/Icon';
@@ -37,7 +36,6 @@ interface TeamMember {
 
 export default function UserManagementPage() {
 	const { setupData, updateUserManagementSettings } = useSetup();
-	const { user: _user } = useUserInfo();
 	const { userManagementSettings } = setupData;
 	const router = useRouter();
 	const { canAccess } = usePrivilege();
@@ -140,14 +138,14 @@ export default function UserManagementPage() {
 	}) => {
 		if (editingUser) {
 			updateUserManagementSettings({
-				users: userManagementSettings.users.map(user =>
-					user.id === editingUser
+				users: userManagementSettings?.users?.map(user =>
+					user?.id === editingUser
 						? {
 							...user,
-							name: `${userData.firstName} ${userData.lastName}`,
-							email: userData.email,
-							phone: userData.phone,
-							role: userData.role
+							name: `${userData?.firstName} ${userData?.lastName}`,
+							email: userData?.email,
+							phone: userData?.phone,
+							role: userData?.role
 						}
 						: user
 				)

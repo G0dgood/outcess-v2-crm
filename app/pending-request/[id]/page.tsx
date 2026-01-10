@@ -10,6 +10,7 @@ import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
 	const { id: _id } = usePromise(params);
+	console.log(_id);
 	const router = useRouter();
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const { isDarkMode } = useTheme();
