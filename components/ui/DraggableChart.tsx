@@ -126,7 +126,7 @@ const DraggableChart: React.FC<DraggableChartProps> = ({
 						label=""
 						value={chart.timeRange}
 						onChange={(_value) => {
-
+							console.log("Time range changed:", _value);
 						}}
 						options={[
 							{ value: 'daily', label: 'Daily' },

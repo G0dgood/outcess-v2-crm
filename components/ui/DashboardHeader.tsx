@@ -134,16 +134,17 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 		// Join the Line of Business room
 		socket.emit("joinLineOfBusiness", selectedLineOfBusinessId);
- 
+
 
 		// Listen for status list updates
-		const handleStatusListUpdate = (_data: unknown) => { 
+		const handleStatusListUpdate = (_data: unknown) => {
+			console.log("Status list updated:", _data);
 			// Invalidate RTK Query cache for statuses
 			dispatch(statusApi.util.invalidateTags(['Statuses']));
 		};
 
 		// Listen for notification updates
-		const handleNotificationUpdate = () => { 
+		const handleNotificationUpdate = () => {
 			refetchNotifications();
 		};
 

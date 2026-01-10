@@ -69,6 +69,7 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 				router.push('/login');
 			}, 500);
 		} catch (error) {
+			console.error('Logout failed:', error);
 			// Still perform client-side cleanup
 			disconnectSocket();
 			dispatch(logoutAction());

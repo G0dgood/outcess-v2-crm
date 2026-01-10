@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useRef } from "react";
 import { Cross2Icon, UploadIcon } from "@radix-ui/react-icons";
-import { useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
 import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
 
@@ -149,6 +148,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
           duration: 3000,
         });
       } catch (error) {
+        console.error("CSV parse error:", error);
         toast.error("Failed to parse CSV", {
           description: "Please check the file format",
           duration: 3000,

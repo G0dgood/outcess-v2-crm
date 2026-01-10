@@ -43,7 +43,7 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 	const router = useRouter();
 	const pathname = usePathname();
 	const { lineOfBusinessData } = useLineOfBusiness();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	// const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
 	const navRef = useRef<HTMLElement>(null);
 	const [isCollapsed, setIsCollapsed] = useState(false);
 

@@ -9,7 +9,7 @@ import SubPageHeading from './SubPageHeading';
 import Button from './Button';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetPermissionWithPrivilegeQuery, useUpdateRoleMutation, RolePermission, Role } from '@/store/services/roleApi';
-import { toastError, toastSuccess, toastInfo } from '@/utils/toastWithSound';
+import { toastError, toastSuccess } from '@/utils/toastWithSound';
 import PermissionSkeleton from '@/components/skeletons/PermissionSkeleton';
 
 interface PermissionItem {

@@ -7,7 +7,7 @@ import Dropdown from './Dropdown';
 import Icon from './Icon';
 import { ColorPicker } from './ColorPicker';
 import { useSocket } from '@/contexts/SocketContext';
-import { useSetup } from '@/contexts/SetupContext';
+// import { useSetup } from '@/contexts/SetupContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';

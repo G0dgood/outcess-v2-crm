@@ -50,6 +50,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 	];
 
 	const handleView = (_id: string) => {
+		console.log('View business:', _id);
 		// TODO: Navigate to business details page
 	};
 
@@ -129,8 +130,8 @@ const RegisteredBusinessesTable: React.FC = () => {
 							<td className="px-6 py-4 whitespace-nowrap">
 								<span
 									className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${business.status === 'Active'
-											? 'dark:bg-green-900/30 dark:text-green-400'
-											: 'dark:bg-red-900/30 dark:text-red-400'
+										? 'dark:bg-green-900/30 dark:text-green-400'
+										: 'dark:bg-red-900/30 dark:text-red-400'
 										}`}
 									style={business.status === 'Active' ? {
 										backgroundColor: 'rgba(34, 197, 94, 0.1)',

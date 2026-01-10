@@ -4,6 +4,7 @@ import Icon from './Icon';
 import { plusJakartaStyle } from '../Options';
 import ThemeToggle from './ThemeToggle';
 import { HamburgerMenuIcon } from '@radix-ui/react-icons';
+import NextImage from 'next/image';
 
 interface User {
 	name: string;
@@ -93,9 +94,11 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 						}}
 					>
 						{userData.avatar ? (
-							<img
+							<NextImage
 								src={userData.avatar}
 								alt={userData.name}
+								width={40}
+								height={40}
 								className="w-10 h-10 rounded-full object-cover"
 							/>
 						) : (

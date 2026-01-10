@@ -6,6 +6,7 @@ import Icon from './Icon';
 import { ArrowLeftIcon } from '@radix-ui/react-icons';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetStatusesByLineOfBusinessIdQuery } from '@/store/services/statusApi';
+import Image from 'next/image';
 
 interface UserDropdownProps {
 	userName?: string;
@@ -167,10 +168,12 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 					>
 						<div className="flex items-center gap-3">
 							{userAvatar ? (
-								<img
+								<Image
 									src={userAvatar}
 									alt={userName}
-									className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-600"
+									width={48}
+									height={48}
+									className="rounded-full border-2 border-gray-200 dark:border-gray-600"
 								/>
 							) : (
 								<div className="w-12 h-12 bg-[#F2F4F7] dark:bg-gray-700 border border-[#E5E7EB] dark:border-gray-600 rounded-full flex items-center justify-center">

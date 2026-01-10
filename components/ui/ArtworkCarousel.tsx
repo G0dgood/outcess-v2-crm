@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
+import NextImage from 'next/image';
+
 interface Artwork {
 	id: number;
 	title: string;
@@ -298,16 +300,13 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 				>
 					{/* Thumbnail / Placeholder - visible until main image loads */}
 					{currentArtwork.thumbnail?.lqip && !isImageLoaded && (
-						<img
+						<NextImage
 							src={currentArtwork.thumbnail.lqip}
 							alt={currentArtwork.thumbnail?.alt_text || currentArtwork.title}
 							className="carousel-image"
+							fill
+							sizes="100vw"
 							style={{
-								position: 'absolute',
-								top: 0,
-								left: 0,
-								width: '100%',
-								height: '100%',
 								objectFit: 'cover',
 								filter: 'blur(10px)',
 								transform: 'scale(1.1)', // Prevent white edges from blur
@@ -317,14 +316,16 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 					)}
 
 					{imageErrors.has(currentArtwork.image_id) && currentArtwork.thumbnail?.lqip ? (
-						<img
+						<NextImage
 							src={currentArtwork.thumbnail.lqip}
 							alt={currentArtwork.thumbnail?.alt_text || currentArtwork.title}
 							className="carousel-image carousel-image-clickable"
-							style={{ zIndex: 2, position: 'relative' }}
+							fill
+							sizes="100vw"
+							style={{ zIndex: 2, objectFit: 'cover' }}
 						/>
 					) : (
-						<img
+						<NextImage
 							key={currentArtwork.image_id}
 							src={`/api/image?url=${encodeURIComponent(getImageUrl(currentArtwork.image_id))}`}
 							alt={currentArtwork.thumbnail?.alt_text || currentArtwork.title}
@@ -332,15 +333,17 @@ const ArtworkCarousel: React.FC<ArtworkCarouselProps> = ({
 							onLoad={() => setIsImageLoaded(true)}
 							onError={(e) => {
 								console.error('Image load failed for:', currentArtwork.image_id);
-								handleImageError(e, currentArtwork.image_id);
+								// handleImageError(e, currentArtwork.image_id);
 								setIsImageLoaded(true); // Remove loading state on error
 							}}
 							loading="eager"
+							fill
+							sizes="100vw"
 							style={{
 								opacity: isImageLoaded ? 1 : 0,
 								transition: 'opacity 0.5s ease-in-out',
 								zIndex: 2,
-								position: 'relative'
+								objectFit: 'cover'
 							}}
 						/>
 					)}

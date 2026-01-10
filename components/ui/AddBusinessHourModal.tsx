@@ -364,7 +364,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 									<div key={day.key} className="flex items-center gap-3 cursor-pointer">
 										<Checkbox
 											checked={businessDays.includes(day.key)}
-											onChange={(checked) => handleDayToggle(day.key)}
+											onChange={(_checked) => handleDayToggle(day.key)}
 											size="medium"
 											label={day.label}
 										/>

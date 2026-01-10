@@ -38,7 +38,8 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 		{ value: 'AUD', label: 'Australian Dollar - AUD' },
 	];
 
-	const currencyFormats: { [key: string]: string } = {
+	// Moved outside of component or useMemo could work, but since it's constant data:
+	const currencyFormats = React.useMemo<Record<string, string>>(() => ({
 		NGN: '₦ 1,224,067.34',
 		USD: '$ 1,224,067.34',
 		GBP: '£ 1,224,067.34',
@@ -46,7 +47,7 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 		JPY: '¥ 1,224,067',
 		CAD: 'C$ 1,224,067.34',
 		AUD: 'A$ 1,224,067.34',
-	};
+	}), []);
 
 	useEffect(() => {
 		if (isOpen && initialCurrency) {
@@ -56,7 +57,7 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 			setSelectedCurrency('');
 			setFormatPreview('');
 		}
-	}, [isOpen, initialCurrency]);
+	}, [isOpen, initialCurrency, currencyFormats]);
 
 	useEffect(() => {
 		if (selectedCurrency && currencyFormats[selectedCurrency]) {
@@ -64,7 +65,7 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 		} else {
 			setFormatPreview('');
 		}
-	}, [selectedCurrency]);
+	}, [selectedCurrency, currencyFormats]);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -132,7 +133,7 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
 			<div
 				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col"
 				style={{ backgroundColor: 'var(--accent-white)' }}
