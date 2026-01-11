@@ -17,6 +17,11 @@ export interface User {
         [key: string]: any;
     };
     phone?: string;
+    status?: {
+        status: string;
+        reason?: string;
+        color?: string;
+    };
     createdAt?: string;
     updatedAt?: string;
     [key: string]: unknown;

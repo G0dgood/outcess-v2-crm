@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Modal from './Modal';
 import Button from './Button';
 import { CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 interface PricingModalProps {
 	isOpen: boolean;
@@ -29,10 +30,11 @@ const PricingModal: React.FC<PricingModalProps> = ({
 	onSelectPlan,
 }) => {
 	const router = useRouter();
+	const { lineOfBusinessData } = useLineOfBusiness();
 	const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
-	const primaryColor = '#050711';
-	const secondaryColor = '#6C8B7D';
+	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const secondaryColor = lineOfBusinessData?.secondaryColor || '#6C8B7D';
 
 	const plans: PricingPlan[] = [
 		{
@@ -130,29 +132,37 @@ const PricingModal: React.FC<PricingModalProps> = ({
 			position="right"
 			className="max-w-4xl"
 		>
-			<div className="p-8 h-full overflow-y-auto">
+			<div className="p-8 h-full overflow-y-auto" style={{ backgroundColor: 'var(--bg-primary)' }}>
 				{/* Header */}
 				<div className="mb-8">
-					<h2 className="text-3xl font-bold text-gray-900 mb-2">Choose Your Plan</h2>
-					<p className="text-base text-gray-600 mb-6">Select the perfect plan for your needs</p>
+					<h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Choose Your Plan</h2>
+					<p className="text-base mb-6" style={{ color: 'var(--text-secondary)' }}>Select the perfect plan for your needs</p>
 
 					{/* Billing Toggle */}
-					<div className="inline-flex items-center bg-gray-100 p-1">
+					<div className="inline-flex items-center p-1" style={{ backgroundColor: 'var(--light-gray)' }}>
 						<button
 							onClick={() => setBillingCycle('monthly')}
 							className={`px-6 py-2   text-sm font-medium transition-all ${billingCycle === 'monthly'
-								? 'bg-white text-gray-900 shadow-sm'
-								: 'text-gray-600 hover:text-gray-900'
+								? 'shadow-sm'
+								: 'hover:opacity-80'
 								}`}
+							style={{
+								backgroundColor: billingCycle === 'monthly' ? 'var(--accent-white)' : 'transparent',
+								color: billingCycle === 'monthly' ? 'var(--text-primary)' : 'var(--text-tertiary)'
+							}}
 						>
 							Monthly
 						</button>
 						<button
 							onClick={() => setBillingCycle('annual')}
 							className={`px-6 py-2   text-sm font-medium transition-all relative ${billingCycle === 'annual'
-								? 'bg-white text-gray-900 shadow-sm'
-								: 'text-gray-600 hover:text-gray-900'
+								? 'shadow-sm'
+								: 'hover:opacity-80'
 								}`}
+							style={{
+								backgroundColor: billingCycle === 'annual' ? 'var(--accent-white)' : 'transparent',
+								color: billingCycle === 'annual' ? 'var(--text-primary)' : 'var(--text-tertiary)'
+							}}
 						>
 							Annual
 							<span
@@ -172,9 +182,12 @@ const PricingModal: React.FC<PricingModalProps> = ({
 						return (
 							<div
 								key={plan.id}
-								className={`relative bg-white border-2 p-6 transition-all duration-300 flex-1 flex flex-col cursor-pointer ${plan.popular ? 'shadow-md' : 'border-gray-200'
+								className={`relative border-2 p-6 transition-all duration-300 flex-1 flex flex-col cursor-pointer ${plan.popular ? 'shadow-md' : ''
 									} hover:shadow-lg hover:scale-105 hover:-translate-y-1`}
-								style={plan.popular ? { borderColor: primaryColor } : undefined}
+								style={{
+									backgroundColor: 'var(--accent-white)',
+									borderColor: plan.popular ? primaryColor : 'var(--light-gray)'
+								}}
 								onMouseEnter={(e) => {
 									if (!plan.popular) {
 										e.currentTarget.style.borderColor = secondaryColor;
@@ -182,7 +195,7 @@ const PricingModal: React.FC<PricingModalProps> = ({
 								}}
 								onMouseLeave={(e) => {
 									if (!plan.popular) {
-										e.currentTarget.style.borderColor = '';
+										e.currentTarget.style.borderColor = 'var(--light-gray)';
 									}
 								}}
 							>
@@ -190,7 +203,7 @@ const PricingModal: React.FC<PricingModalProps> = ({
 								{/* Plan Header */}
 								<div className="mb-5">
 									<div className="flex items-center justify-between mb-3">
-										<h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
+										<h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{plan.name}</h3>
 										{plan.popular && (
 											<span
 												className="text-xs font-semibold px-3 py-1 rounded-full text-white"
@@ -200,9 +213,9 @@ const PricingModal: React.FC<PricingModalProps> = ({
 											</span>
 										)}
 									</div>
-									<p className="text-gray-600 text-sm mb-4">{plan.description}</p>
+									<p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>{plan.description}</p>
 									<div className="flex items-baseline gap-2 mb-3">
-										<span className="text-3xl font-bold text-gray-900">
+										<span className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
 											{getDisplayPrice(plan)}
 										</span>
 										{billingCycle === 'annual' && savings && (
@@ -218,13 +231,13 @@ const PricingModal: React.FC<PricingModalProps> = ({
 									{plan.features.map((feature, index) => (
 										<li key={index} className="flex items-start gap-3">
 											<CheckIcon className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-											<span className="text-sm text-gray-700">{feature}</span>
+											<span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{feature}</span>
 										</li>
 									))}
 									{plan.limitations?.map((limitation, index) => (
 										<li key={index} className="flex items-start gap-3">
-											<Cross2Icon className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-											<span className="text-sm text-gray-400 line-through">{limitation}</span>
+											<Cross2Icon className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--text-tertiary)' }} />
+											<span className="text-sm line-through" style={{ color: 'var(--text-tertiary)' }}>{limitation}</span>
 										</li>
 									))}
 								</ul>
@@ -247,7 +260,7 @@ const PricingModal: React.FC<PricingModalProps> = ({
 				</div>
 
 				{/* Footer Note */}
-				<div className="text-sm text-gray-500 space-y-1">
+				<div className="text-sm space-y-1" style={{ color: 'var(--text-tertiary)' }}>
 					<p>All plans include a 14-day free trial. Cancel anytime.</p>
 					<p>
 						Need help choosing? <a href="#" className="hover:underline" style={{ color: primaryColor }}>Contact sales</a>

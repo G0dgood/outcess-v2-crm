@@ -12,6 +12,8 @@ import { useSocket } from '@/contexts/SocketContext';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
+import { Modal } from '@/components/ui/Modal';
+import Button from '@/components/ui/Button';
 
 interface TeamMember {
 	_id: string;
@@ -21,7 +23,9 @@ interface TeamMember {
 	phone: string;
 	role: 'agent' | 'supervisor' | 'qa' | 'admin';
 	supervisor: string;
-	status: 'Logged In' | 'Logged Out';
+	status: string;
+	statusColor?: string;
+	reason?: string;
 	team: string;
 }
 
@@ -60,6 +64,40 @@ const TeamMembersPage: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [currentPage, setCurrentPage] = useState(1);
+	const [statusModalMember, setStatusModalMember] = useState<TeamMember | null>(null);
+
+	useEffect(() => {
+		if (socket) {
+			const handleStatusUpdate = (payload: any) => {
+				console.log("Status Update:", payload);
+				setTeamMembersData((prevMembers) =>
+					prevMembers.map((member) =>
+						member._id === payload.teamMemberId
+							? {
+								...member,
+								status: payload.status.status,
+								statusColor: payload.status.color,
+								reason: payload.status.reason,
+							}
+							: member
+					)
+				);
+			};
+
+			const handleRefresh = (payload: any) => {
+				console.log("Refresh Request:", payload?.message);
+				refetch();
+			};
+
+			socket.on('teamMemberStatusUpdate', handleStatusUpdate);
+			socket.on('refreshTeamMembers', handleRefresh);
+
+			return () => {
+				socket.off('teamMemberStatusUpdate', handleStatusUpdate);
+				socket.off('refreshTeamMembers', handleRefresh);
+			};
+		}
+	}, [socket, refetch]);
 
 	useEffect(() => {
 		if (teamMembersResponse) {
@@ -69,22 +107,24 @@ const TeamMembersPage: React.FC = () => {
 			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
 
 			const mappedMembers: TeamMember[] = membersList.map((member: unknown) => {
-				const m = member as {
-					_id?: string;
-					id?: string;
-					agentId?: string;
-					userId?: string;
-					name?: string;
-					firstName?: string;
-					lastName?: string;
-					email?: string;
-					phone?: string;
-					role?: string | { roleName?: string; name?: string };
-					supervisor?: string | { name?: string };
-					status?: string;
-					loginStatus?: string;
-					team?: string | { name?: string };
-				};
+				const m = member as any;
+
+				let status = 'Logged Out';
+				let statusColor = undefined;
+				let reason = undefined;
+
+				if (m.status) {
+					if (typeof m.status === 'object') {
+						status = m.status.status || m.loginStatus || 'Logged Out';
+						statusColor = m.status.color;
+						reason = m.status.reason;
+					} else if (typeof m.status === 'string') {
+						status = m.status;
+					}
+				} else {
+					status = m.loginStatus || 'Logged Out';
+				}
+
 				return {
 					_id: m._id || m.id || '',
 					agentId: m.userId || 'N/A', // Prioritize userId from API response
@@ -93,8 +133,9 @@ const TeamMembersPage: React.FC = () => {
 					phone: m.phone || '',
 					role: (typeof m.role === 'object' ? (m.role?.roleName || m.role?.name) : (m.role || 'agent'))?.toLowerCase() as TeamMember['role'],
 					supervisor: (typeof m.supervisor === 'object' ? m.supervisor?.name : m.supervisor) || 'Unassigned',
-					status: (m.status === 'Logged In' ||
-						m.loginStatus === 'Logged In') ? 'Logged In' : 'Logged Out',
+					status,
+					statusColor,
+					reason,
 					team: (typeof m.team === 'object' ? m.team?.name : m.team) || 'Unassigned'
 				};
 			});
@@ -112,15 +153,21 @@ const TeamMembersPage: React.FC = () => {
 		// Listen for status updates
 		const handleStatusUpdate = (data: unknown) => {
 			// data: { teamMemberId, name, status, timestamp }
-			const updateData = data as { teamMemberId: string; status: TeamMember['status'] };
+			const updateData = data as { teamMemberId: string; status: any };
+
+			const newStatus = typeof updateData.status === 'object' ? updateData.status.status : updateData.status;
+			const newColor = typeof updateData.status === 'object' ? updateData.status.color : undefined;
+			const newReason = typeof updateData.status === 'object' ? updateData.status.reason : undefined;
 
 			setTeamMembersData(prevMembers => prevMembers.map(member => {
 				if (member._id === updateData.teamMemberId || member.agentId === updateData.teamMemberId) {
 					// Show toast notification
-					toastSuccess(`${member.fullName} is now ${updateData.status}`);
+					toastSuccess(`${member.fullName} is now ${newStatus}`);
 					return {
 						...member,
-						status: updateData.status,
+						status: newStatus,
+						statusColor: newColor,
+						reason: newReason,
 					};
 				}
 				return member;
@@ -182,32 +229,6 @@ const TeamMembersPage: React.FC = () => {
 			setCurrentPage(1);
 		}
 	}, [currentPage, totalPages]);
-
-	const statusStyles = (status: TeamMember['status']) => {
-		if (status === 'Logged In') {
-			return {
-				color: '#15803D',
-			};
-		}
-
-		return {
-			color: '#B91C1C',
-		};
-	};
-
-	const statusStylesTable = (status: TeamMember['status']) => {
-		if (status === 'Logged In') {
-			return {
-				backgroundColor: 'rgba(34, 197, 94, 0.12)',
-				color: '#15803D',
-			};
-		}
-
-		return {
-			backgroundColor: 'rgba(248, 113, 113, 0.15)',
-			color: '#B91C1C',
-		};
-	};
 
 	if (!canAccessModule) {
 		return null;
@@ -368,12 +389,20 @@ const TeamMembersPage: React.FC = () => {
 										>
 											{member.supervisor}
 										</td>
-										<td className="px-6 py-4" style={statusStylesTable(member.status)}>
-											<span
-												style={statusStyles(member.status)}
-											>
+										<td
+											className="px-6 py-4 text-sm dark:text-gray-100 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
+											style={{ color: 'var(--text-primary)' }}
+											onClick={() => setStatusModalMember(member)}
+										>
+											<div className="flex items-center">
+												{(member.statusColor || member.status === 'Logged In') && (
+													<span
+														className="w-2.5 h-2.5 rounded-full inline-block mr-2"
+														style={{ backgroundColor: member.statusColor || '#15803D' }}
+													/>
+												)}
 												{member.status}
-											</span>
+											</div>
 										</td>
 									</tr>
 								))
@@ -393,6 +422,79 @@ const TeamMembersPage: React.FC = () => {
 					)}
 				</div>
 			</div>
+
+			<Modal
+				isOpen={!!statusModalMember}
+				onClose={() => setStatusModalMember(null)}
+				title="Status Details"
+				size="sm"
+			>
+				{statusModalMember && (
+					<div className="space-y-6 pt-2">
+						<div
+							className="flex items-center justify-between p-4 rounded-xl border dark:border-gray-700"
+							style={{
+								backgroundColor: 'var(--bg-primary)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
+							<span
+								className="text-sm font-medium dark:text-gray-400"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
+								Current Status
+							</span>
+							<div className="flex items-center gap-3">
+								{(statusModalMember.statusColor || statusModalMember.status === 'Logged In') && (
+									<span
+										className="w-3 h-3 rounded-full shadow-sm ring-2 ring-offset-2 dark:ring-offset-gray-900 ring-transparent"
+										style={{ backgroundColor: statusModalMember.statusColor || '#15803D' }}
+									/>
+								)}
+								<span
+									className="font-semibold text-base dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{statusModalMember.status}
+								</span>
+							</div>
+						</div>
+
+						<div className="space-y-2">
+							<span
+								className="text-sm font-medium dark:text-gray-400"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
+								Reason
+							</span>
+							<div
+								className="p-4 rounded-xl border min-h-[5rem] text-sm leading-relaxed dark:border-gray-700"
+								style={{
+									backgroundColor: 'var(--bg-primary)',
+									borderColor: 'var(--light-gray)',
+									color: 'var(--text-primary)'
+								}}
+							>
+								{statusModalMember.reason ? (
+									statusModalMember.reason
+								) : (
+									<span className="italic opacity-60">No reason provided</span>
+								)}
+							</div>
+						</div>
+
+						<div className="flex justify-end pt-2">
+							<Button
+								variant="secondary"
+								onClick={() => setStatusModalMember(null)}
+								className="w-full sm:w-auto"
+							>
+								Close
+							</Button>
+						</div>
+					</div>
+				)}
+			</Modal>
 		</div>
 	);
 };

@@ -13,7 +13,7 @@ import ThemeToggle from './ThemeToggle';
 import { plusJakartaStyle } from '../Options';
 import { useSocket } from '@/contexts/SocketContext';
 import { playNotificationSound } from '@/utils/soundEffects';
-import { toastSuccess } from '@/utils/toastWithSound';
+import { toastSuccess, toastInfo } from '@/utils/toastWithSound';
 import { setNavigating } from '@/utils/navigationState';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -457,10 +457,15 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 					{/* User Dropdown */}
 					<UserDropdown
+						userId={reduxUser?.id}
 						userName={safeUserName}
 						userEmail={displayUser?.email || ""}
 						userAvatar={displayUser?.avatar || ""}
 						isOnline={userIsOnline && isOnline && !isOffline && socketStatus !== 'offline'}
+						currentStatus={reduxUser?.status ? {
+							status: reduxUser.status.status,
+							color: reduxUser.status.color
+						} : undefined}
 						onStatusClick={onStatusClick}
 						onEditProfileClick={onEditProfileClick}
 						onLogoutClick={onLogoutClick || handleLogout}

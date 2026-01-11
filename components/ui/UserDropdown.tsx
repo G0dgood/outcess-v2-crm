@@ -4,39 +4,62 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from './Icon';
 import { ArrowLeftIcon } from '@radix-ui/react-icons';
+import { Modal } from './Modal';
+import { Button } from './Button';
+import { Textarea } from './Textarea';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetStatusesByLineOfBusinessIdQuery } from '@/store/services/statusApi';
+import { useUpdateTeamMemberStatusMutation } from '@/store/services/teamMembersApi';
+import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import Image from 'next/image';
 
-interface UserDropdownProps {
+export interface UserDropdownProps {
+	userId?: string;
 	userName?: string;
 	userEmail?: string;
 	userAvatar?: string;
 	isOnline?: boolean;
+	currentStatus?: {
+		status: string;
+		color?: string;
+	};
 	onStatusClick?: () => void;
 	onEditProfileClick?: () => void;
 	onLogoutClick?: () => void;
 }
 
+interface StatusOption {
+	value: string;
+	label: string;
+	color?: string;
+}
+
 const UserDropdown: React.FC<UserDropdownProps> = ({
+	userId,
 	userName = '',
 	userEmail = '',
 	userAvatar,
 	isOnline = true,
+	currentStatus,
 	onLogoutClick,
 }) => {
 	const router = useRouter();
 	const [isOpen, setIsOpen] = useState(false);
 	const [isStatusOpen, setIsStatusOpen] = useState(false);
+	const [isStatusConfirmOpen, setIsStatusConfirmOpen] = useState(false);
+	const [pendingStatus, setPendingStatus] = useState<StatusOption | null>(null);
+	const [statusReason, setStatusReason] = useState('');
 	const [mounted, setMounted] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const { selectedLineOfBusinessId } = useLineOfBusiness();
+
+	const [updateStatus, { isLoading: isUpdatingStatus }] = useUpdateTeamMemberStatusMutation();
 
 	const { data: fetchedStatuses, isLoading } = useGetStatusesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
 		skip: !selectedLineOfBusinessId
 	});
 
-	const [statusOptions, setStatusOptions] = useState<{ value: string; label: string; color?: string }[]>([]);
+	const [statusOptions, setStatusOptions] = useState<StatusOption[]>([]);
 
 	useEffect(() => {
 		if (fetchedStatuses) {
@@ -92,8 +115,34 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 
 
 
-	const handleStatusSelect = (status: string) => {
-		console.log(status);
+	const handleStatusSelect = (status: StatusOption) => {
+		setPendingStatus(status);
+		setStatusReason('');
+		setIsStatusConfirmOpen(true);
+	};
+
+	const confirmStatusChange = async () => {
+		if (pendingStatus && userId) {
+			try {
+				await updateStatus({
+					id: userId,
+					status: pendingStatus.label,
+					reason: statusReason
+				}).unwrap();
+
+				toastSuccess('Status updated successfully');
+			} catch (error) {
+				console.error('Failed to update status:', error);
+				toastError('Failed to update status');
+			}
+		} else if (!userId) {
+			console.error('Cannot update status: User ID is missing');
+			toastError('User ID is missing');
+		}
+
+		setIsStatusConfirmOpen(false);
+		setPendingStatus(null);
+		setStatusReason('');
 		setIsStatusOpen(false);
 		setIsOpen(false);
 	};
@@ -103,7 +152,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 			<button
 				onClick={() => setIsOpen(!isOpen)}
 				className="p-1 rounded-full transition-colors cursor-pointer"
-				title={mounted ? userName : ''}
+				title={mounted ? `${userName}${currentStatus ? ` - ${currentStatus.status}` : ''}` : ''}
 				style={{
 					color: 'var(--text-tertiary)',
 					backgroundColor: 'transparent'
@@ -143,8 +192,17 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 							</span>
 						</div>
 					)}
-					{/* Online Status Indicator */}
-					{isOnline && (
+					{/* Status Indicator */}
+					{mounted && currentStatus ? (
+						<div
+							className="absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 rounded-full"
+							style={{
+								backgroundColor: currentStatus.color || '#22C55E', // Default to green if no color
+								borderColor: 'var(--accent-white)'
+							}}
+							title={currentStatus.status}
+						></div>
+					) : isOnline && (
 						<div
 							className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 rounded-full"
 							style={{ borderColor: 'var(--accent-white)' }}
@@ -286,7 +344,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 			{/* Status Submenu */}
 			{isStatusOpen && (
 				<div
-					className="absolute right-0 top-full mt-2 w-48 dark:bg-gray-800 border dark:border-gray-700 shadow-lg z-50 overflow-hidden"
+					className="absolute right-0 top-full mt-2 w-48 dark:bg-gray-800 border dark:border-gray-700 shadow-lg z-50 overflow-hidden min-w-[250px] "
 					style={{
 						backgroundColor: 'var(--accent-white)',
 						borderColor: 'var(--light-gray)'
@@ -319,11 +377,11 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 						</button>
 					</div>
 					<div style={{ backgroundColor: 'var(--accent-white)' }} className="dark:bg-gray-800">
-						{statusOptions.map((option) => (
+						{statusOptions?.map((option) => (
 							<button
 								key={option.value}
-								onClick={() => handleStatusSelect(option.value)}
-								className="w-full px-4 py-2 text-left cursor-pointer font-lato font-medium text-[16px] leading-[150%] transition-colors flex items-center gap-2"
+								onClick={() => handleStatusSelect(option)}
+								className="w-full px-4 py-2 text-left cursor-pointer font-lato font-medium text-[16px] leading-[150%] transition-colors flex items-center gap-2 whitespace-nowrap"
 								style={{
 									color: 'var(--text-primary)',
 									backgroundColor: 'transparent'
@@ -341,12 +399,62 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 										style={{ backgroundColor: option.color }}
 									/>
 								)}
-								{option.label}
+								{option.label.length > 25 ? `${option.label.substring(0, 25)}...` : option.label}
 							</button>
 						))}
 					</div>
 				</div>
 			)}
+
+			{/* Status Confirmation Modal */}
+			<Modal
+				isOpen={isStatusConfirmOpen}
+				onClose={() => setIsStatusConfirmOpen(false)}
+				title="Change Status"
+				size="sm"
+			>
+				<div className="p-6">
+					<p className="mb-4 text-gray-600 dark:text-gray-300" style={{ color: 'var(--text-secondary)' }}>
+						Are you sure you want to change your status to{' '}
+						<span className="font-semibold inline-flex items-center gap-1.5 align-middle text-gray-900 dark:text-gray-100">
+							{pendingStatus?.color && (
+								<span
+									className="w-2.5 h-2.5 rounded-full inline-block"
+									style={{ backgroundColor: pendingStatus.color }}
+								/>
+							)}
+							{pendingStatus?.label}
+						</span>
+						?
+					</p>
+
+					<div className="mb-6">
+						<Textarea
+							label="Reason (Optional)"
+							value={statusReason}
+							onChange={setStatusReason}
+							placeholder="Enter reason for status change..."
+							rows={3}
+						/>
+					</div>
+
+					<div className="flex justify-end gap-3">
+						<Button
+							variant="outline"
+							onClick={() => setIsStatusConfirmOpen(false)}
+						>
+							No
+						</Button>
+						<Button
+							variant="primary"
+							onClick={confirmStatusChange}
+							loading={isUpdatingStatus}
+						>
+							Yes
+						</Button>
+					</div>
+				</div>
+			</Modal>
 		</div>
 	);
 };

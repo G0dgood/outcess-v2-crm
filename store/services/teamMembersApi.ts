@@ -87,6 +87,14 @@ export const teamMembersApi = createApi({
             query: (id) => `api/v1/team-members/${id}`,
             providesTags: ['TeamMembers'],
        }),
+        updateTeamMemberStatus: builder.mutation<any, { id: string; status: string; reason?: string }>({
+            query: ({ id, status, reason }) => ({
+                url: `api/v1/team-members/${id}/status`,
+                method: 'PATCH',
+                body: { status, reason },
+            }),
+            invalidatesTags: ['TeamMembers'],
+        }),
         updateTeamMember: builder.mutation<any, { id: string; data: Partial<TeamMember> }>({
             query: ({ id, data }) => ({
                 url: `api/v1/team-members/${id}`,
@@ -147,16 +155,17 @@ export const teamMembersApi = createApi({
     }),
 });
 
-export const { 
-    useCreateTeamMemberMutation, 
-    useGetTeamMembersQuery, 
-    useGetTeamMembersByCompanyIdQuery, 
+export const {
+    useCreateTeamMemberMutation,
+    useGetTeamMembersQuery,
+    useGetTeamMembersByCompanyIdQuery,
     useGetTeamMembersByLineOfBusinessIdQuery,
     useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery,
     useGetTeamMembersBySupervisorIdQuery,
     useGetSupervisorsByLineOfBusinessIdQuery,
     useGetTeamMemberByIdQuery,
     useUpdateTeamMemberMutation,
+    useUpdateTeamMemberStatusMutation,
     useUpdateTeamMemberPasswordMutation,
     useAdminResetTeamMemberPasswordByIdMutation,
     useDeleteTeamMemberMutation,

@@ -44,7 +44,7 @@ function PaymentPageContent() {
 	// Calculate price based on order billing cycle
 	const orderPrice = orderBillingCycle === 'annual' ? Math.round(baseMonthlyPrice * 12 * 0.83) : baseMonthlyPrice;
 
-	const primaryColor = lineOfBusinessData.primaryColor || '#9333EA';
+	const primaryColor = lineOfBusinessData?.primaryColor || '#6C8B7D';
 
 	const countries = [
 		{ value: 'US', label: 'United States' },
@@ -134,22 +134,25 @@ function PaymentPageContent() {
 
 
 	return (
-		<div className="min-h-screen bg-white overflow-y-auto">
+		<div className="min-h-screen overflow-y-auto" style={{ backgroundColor: 'var(--bg-primary)' }}>
 			{/* Main Container */}
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 				{/* Two Column Layout */}
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
 					{/* Left Column - Payment Form */}
 					<div className="lg:col-span-2">
-						<h2 className="text-3xl font-bold text-gray-900 mb-8">Choose how to pay</h2>
+						<h2 className="text-3xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Choose how to pay</h2>
 
 						<form onSubmit={handleSubmit} className="space-y-6">
 							{/* Payment Methods */}
 							<div className="space-y-4">
 								{/* Card Payment Option */}
 								<div
-									className={`border-2  p-6 transition-all cursor-pointer relative ${formData.paymentMethod === 'card' ? '' : 'border-gray-200 hover:border-gray-300'}`}
-									style={formData.paymentMethod === 'card' ? { borderColor: primaryColor } : {}}
+									className={`border-2  p-6 transition-all cursor-pointer relative ${formData.paymentMethod === 'card' ? '' : 'hover:opacity-80'}`}
+									style={{
+										backgroundColor: 'var(--accent-white)',
+										borderColor: formData.paymentMethod === 'card' ? primaryColor : 'var(--light-gray)'
+									}}
 								>
 									<button
 										type="button"
@@ -159,15 +162,15 @@ function PaymentPageContent() {
 									/>
 									<div className="flex items-center justify-between mb-4 relative z-0 pointer-events-none">
 										<div className="flex items-center gap-3">
-											<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+											<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--text-primary)' }}>
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
 											</svg>
-											<span className="text-lg font-semibold text-gray-900">Card</span>
+											<span className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Card</span>
 										</div>
 										<div className="flex items-center gap-2">
-											<span className="text-xs text-gray-400 font-medium">VISA</span>
-											<span className="text-xs text-gray-400 font-medium">MC</span>
-											<span className="text-xs text-gray-400 font-medium">AMEX</span>
+											<span className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>VISA</span>
+											<span className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>MC</span>
+											<span className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>AMEX</span>
 										</div>
 									</div>
 
@@ -211,7 +214,10 @@ function PaymentPageContent() {
 															/>
 														</div>
 														<div className="pt-8">
-															<div className="w-10 h-6 border border-gray-300 text-xs flex items-center justify-center text-gray-500">
+															<div
+																className="w-10 h-6 border text-xs flex items-center justify-center"
+																style={{ borderColor: 'var(--light-gray)', color: 'var(--text-tertiary)' }}
+															>
 																123
 															</div>
 														</div>
@@ -224,8 +230,11 @@ function PaymentPageContent() {
 
 								{/* PayPal Payment Option */}
 								<div
-									className={`border-2 p-6 transition-all cursor-pointer relative ${formData.paymentMethod === 'paypal' ? '' : 'border-gray-200 hover:border-gray-300'}`}
-									style={formData.paymentMethod === 'paypal' ? { borderColor: primaryColor } : {}}
+									className={`border-2 p-6 transition-all cursor-pointer relative ${formData.paymentMethod === 'paypal' ? '' : 'hover:opacity-80'}`}
+									style={{
+										backgroundColor: 'var(--accent-white)',
+										borderColor: formData.paymentMethod === 'paypal' ? primaryColor : 'var(--light-gray)'
+									}}
 								>
 									<button
 										type="button"
@@ -235,10 +244,10 @@ function PaymentPageContent() {
 									/>
 									<div className="flex items-center justify-between relative z-0 pointer-events-none">
 										<div className="flex items-center gap-3">
-											<svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+											<svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" style={{ color: 'var(--text-primary)' }}>
 												<path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 7.291-10.125 7.291H9.95c-.315 0-.588.19-.692.477l-1.533 4.569a1.035 1.035 0 01-.98.714l-3.38-.02a.813.813 0 01-.73-.456l-1.125-2.639a.723.723 0 00-.677-.45H.49a.49.49 0 01-.49-.49c0-.258.21-.49.49-.49h2.586c.315 0 .588-.19.692-.477l.423-1.266c.287-.86.978-1.465 1.844-1.465h6.16c3.528 0 6.226-1.456 7.11-4.18.538-1.682.441-3.177-.28-4.39-.72-1.213-2.11-1.82-4.165-1.82H7.998c-.524 0-.972.382-1.054.901L5.47 20.597h1.606z" />
 											</svg>
-											<span className="text-lg font-semibold text-gray-900">PayPal</span>
+											<span className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>PayPal</span>
 										</div>
 									</div>
 								</div>
@@ -272,7 +281,7 @@ function PaymentPageContent() {
 							/>
 
 							{/* Legal Text */}
-							<div className="space-y-3 text-sm text-gray-600">
+							<div className="space-y-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
 								<p>
 									By purchasing a plan you agree that you have read, understand and agree to be bound by the{' '}
 									<a href="#" className="underline hover:opacity-80" style={{ color: primaryColor }}>Terms of Service</a> and{' '}
@@ -302,42 +311,43 @@ function PaymentPageContent() {
 					{/* Right Column - Order Summary */}
 					<div className="lg:col-span-1">
 						<div className="lg:sticky lg:top-8">
-							<h3 className="text-sm font-medium text-gray-700 mb-4">Your plan</h3>
+							<h3 className="text-sm font-medium mb-4" style={{ color: 'var(--text-secondary)' }}>Your plan</h3>
 
-							<div className="bg-white border border-gray-200 p-6 space-y-4">
+							<div className="p-6 space-y-4" style={{ backgroundColor: 'var(--accent-white)', border: '1px solid var(--light-gray)' }}>
 								{/* Plan Name */}
 								<div>
 									<div className="flex items-center justify-between mb-2">
-										<h4 className="text-2xl font-bold text-gray-900">{planName}</h4>
-										<ChevronDownIcon className="w-5 h-5 text-gray-400" />
+										<h4 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{planName}</h4>
+										<ChevronDownIcon className="w-5 h-5" style={{ color: 'var(--text-tertiary)' }} />
 									</div>
-									<p className="text-sm text-gray-600">{lineOfBusinessData.companyName || ''} workspace</p>
+									<p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>{lineOfBusinessData?.companyName || ''} workspace</p>
 								</div>
 
 								{/* Billing Cycle */}
 								<button
 									type="button"
 									onClick={() => setOrderBillingCycle(prev => prev === 'monthly' ? 'annual' : 'monthly')}
-									className="flex items-center justify-between w-full py-3 border-t border-gray-200 hover:bg-gray-50 transition-colors"
+									className="flex items-center justify-between w-full py-3 border-t transition-colors hover:opacity-80"
+									style={{ borderColor: 'var(--light-gray)' }}
 								>
-									<span className="text-sm text-gray-600">Billing cycle</span>
+									<span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Billing cycle</span>
 									<div className="flex items-center gap-2">
-										<span className="text-sm font-medium text-gray-900 capitalize">{orderBillingCycle}</span>
-										<ChevronDownIcon className="w-4 h-4 text-gray-400" />
+										<span className="text-sm font-medium capitalize" style={{ color: 'var(--text-primary)' }}>{orderBillingCycle}</span>
+										<ChevronDownIcon className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
 									</div>
 								</button>
 
 								{/* Price Breakdown */}
-								<div className="flex items-center justify-between py-3 border-t border-gray-200">
-									<span className="text-sm text-gray-600">
+								<div className="flex items-center justify-between py-3 border-t" style={{ borderColor: 'var(--light-gray)' }}>
+									<span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
 										US${orderPrice} x {orderBillingCycle === 'annual' ? '1 year' : '1 month'}
 									</span>
-									<span className="text-sm font-medium text-gray-900">US${orderPrice}</span>
+									<span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>US${orderPrice}</span>
 								</div>
 
 								{/* Promo Code */}
-								<div className="flex items-center justify-between py-3 border-t border-gray-200">
-									<span className="text-sm text-gray-600">Promo code</span>
+								<div className="flex items-center justify-between py-3 border-t" style={{ borderColor: 'var(--light-gray)' }}>
+									<span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Promo code</span>
 									{!showPromoCode ? (
 										<button
 											type="button"
@@ -354,7 +364,8 @@ function PaymentPageContent() {
 												value={promoCode}
 												onChange={(e) => setPromoCode(e.target.value)}
 												placeholder="Enter code"
-												className="text-sm border border-gray-300 px-2 py-1 w-24"
+												className="text-sm border px-2 py-1 w-24"
+												style={{ borderColor: 'var(--light-gray)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
 											/>
 											<button
 												type="button"
@@ -362,7 +373,8 @@ function PaymentPageContent() {
 													setShowPromoCode(false);
 													setPromoCode('');
 												}}
-												className="text-sm text-gray-600 hover:text-gray-900"
+												className="text-sm hover:opacity-80"
+												style={{ color: 'var(--text-secondary)' }}
 											>
 												Cancel
 											</button>
@@ -375,7 +387,7 @@ function PaymentPageContent() {
 									className="flex items-center justify-between pt-3 border-t-2"
 									style={{ borderColor: primaryColor }}
 								>
-									<span className="text-sm font-medium text-gray-900">Today&apos;s total</span>
+									<span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Today&apos;s total</span>
 									<span
 										className="text-2xl font-bold"
 										style={{ color: primaryColor }}
@@ -386,7 +398,7 @@ function PaymentPageContent() {
 
 								{/* Savings Offer */}
 								{orderBillingCycle === 'monthly' && (
-									<div className="pt-4 border-t border-gray-200">
+									<div className="pt-4 border-t" style={{ borderColor: 'var(--light-gray)' }}>
 										<div
 											className="flex items-start gap-2 p-3"
 											style={{ backgroundColor: `${primaryColor}15` }}
@@ -400,12 +412,12 @@ function PaymentPageContent() {
 											>
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
 											</svg>
-											<p className="text-xs text-gray-700">
+											<p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
 												Save 17% by{' '}
 												<button
 													type="button"
 													onClick={() => setOrderBillingCycle('annual')}
-													className="underline hover:text-gray-900"
+													className="underline hover:opacity-80"
 													style={{ color: primaryColor }}
 												>
 													switching to yearly billing
@@ -427,8 +439,8 @@ export default function PaymentPage() {
 	return (
 		<SetupProvider>
 			<Suspense fallback={
-				<div className="min-h-screen bg-white flex items-center justify-center">
-					<div className="text-gray-600">Loading...</div>
+				<div className="min-h-screen flex items-center justify-center transition-colors duration-200 bg-(--bg-primary) dark:bg-background">
+					<div style={{ color: 'var(--text-secondary)' }}>Loading...</div>
 				</div>
 			}>
 				<PaymentPageContent />
