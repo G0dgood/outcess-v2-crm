@@ -37,6 +37,37 @@ interface User {
 	};
 }
 
+interface StatusPayload {
+	status: string;
+	color?: string;
+	reason?: string;
+}
+
+interface TeamMemberStatusUpdatePayload {
+	teamMemberId: string;
+	status: StatusPayload | string;
+	name?: string;
+	timestamp?: string;
+}
+
+interface RefreshPayload {
+	message?: string;
+}
+
+interface ApiTeamMember {
+	_id?: string;
+	id?: string;
+	userId?: string;
+	name?: string;
+	firstName?: string;
+	lastName?: string;
+	email?: string;
+	phone?: string;
+	role?: string | { roleName?: string; name?: string };
+	status?: string | StatusPayload;
+	loginStatus?: string;
+}
+
 const UsersPage: React.FC = () => {
 	const router = useRouter();
 	const { lineOfBusinessData } = useLineOfBusiness();
@@ -68,17 +99,22 @@ const UsersPage: React.FC = () => {
 
 	useEffect(() => {
 		if (socket) {
-			const handleStatusUpdate = (payload: any) => {
+			const handleStatusUpdate = (payload: TeamMemberStatusUpdatePayload) => {
 				console.log("Status Update (Users Page):", payload);
+				const newStatus = typeof payload.status === 'object' ? payload.status.status : payload.status;
+				const newColor = typeof payload.status === 'object' ? payload.status.color : undefined;
+				const newReason = typeof payload.status === 'object' ? payload.status.reason : undefined;
+
 				setUsers((prevUsers) =>
 					prevUsers.map((user) =>
 						user.id === payload.teamMemberId
 							? {
 								...user,
-								loginStatus: payload.status.status,
+								loginStatus: newStatus,
 								status: {
-									status: payload.status.status,
-									color: payload.status.color,
+									status: newStatus,
+									color: newColor,
+									reason: newReason,
 								},
 							}
 							: user
@@ -86,7 +122,7 @@ const UsersPage: React.FC = () => {
 				);
 			};
 
-			const handleRefresh = (payload: any) => {
+			const handleRefresh = (payload: RefreshPayload) => {
 				console.log("Refresh Request (Users Page):", payload?.message);
 				refetch();
 			};
@@ -108,7 +144,7 @@ const UsersPage: React.FC = () => {
 			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
 
 			const mappedUsers = membersList.map((member: unknown) => {
-				const m = member as any;
+				const m = member as ApiTeamMember;
 				const fullName = m?.name || '';
 				const [firstName, ...lastNameParts] = fullName.split(' ');
 				const lastName = lastNameParts.join(' ');

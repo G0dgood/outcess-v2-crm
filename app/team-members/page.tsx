@@ -29,6 +29,39 @@ interface TeamMember {
 	team: string;
 }
 
+interface StatusPayload {
+	status: string;
+	color?: string;
+	reason?: string;
+}
+
+interface TeamMemberStatusUpdatePayload {
+	teamMemberId: string;
+	status: StatusPayload | string;
+	name?: string;
+	timestamp?: string;
+}
+
+interface RefreshPayload {
+	message?: string;
+}
+
+interface ApiTeamMember {
+	_id?: string;
+	id?: string;
+	userId?: string;
+	name?: string;
+	firstName?: string;
+	lastName?: string;
+	email?: string;
+	phone?: string;
+	role?: string | { roleName?: string; name?: string };
+	supervisor?: string | { name?: string };
+	status?: string | StatusPayload;
+	loginStatus?: string;
+	team?: string | { name?: string };
+}
+
 interface SupervisorRaw {
 	_id?: string;
 	id?: string;
@@ -68,23 +101,27 @@ const TeamMembersPage: React.FC = () => {
 
 	useEffect(() => {
 		if (socket) {
-			const handleStatusUpdate = (payload: any) => {
+			const handleStatusUpdate = (payload: TeamMemberStatusUpdatePayload) => {
 				console.log("Status Update:", payload);
+				const newStatus = typeof payload.status === 'object' ? payload.status.status : payload.status;
+				const newColor = typeof payload.status === 'object' ? payload.status.color : undefined;
+				const newReason = typeof payload.status === 'object' ? payload.status.reason : undefined;
+
 				setTeamMembersData((prevMembers) =>
 					prevMembers.map((member) =>
 						member._id === payload.teamMemberId
 							? {
 								...member,
-								status: payload.status.status,
-								statusColor: payload.status.color,
-								reason: payload.status.reason,
+								status: newStatus,
+								statusColor: newColor,
+								reason: newReason,
 							}
 							: member
 					)
 				);
 			};
 
-			const handleRefresh = (payload: any) => {
+			const handleRefresh = (payload: RefreshPayload) => {
 				console.log("Refresh Request:", payload?.message);
 				refetch();
 			};
@@ -107,7 +144,7 @@ const TeamMembersPage: React.FC = () => {
 			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
 
 			const mappedMembers: TeamMember[] = membersList.map((member: unknown) => {
-				const m = member as any;
+				const m = member as ApiTeamMember;
 
 				let status = 'Logged Out';
 				let statusColor = undefined;
@@ -153,7 +190,7 @@ const TeamMembersPage: React.FC = () => {
 		// Listen for status updates
 		const handleStatusUpdate = (data: unknown) => {
 			// data: { teamMemberId, name, status, timestamp }
-			const updateData = data as { teamMemberId: string; status: any };
+			const updateData = data as TeamMemberStatusUpdatePayload;
 
 			const newStatus = typeof updateData.status === 'object' ? updateData.status.status : updateData.status;
 			const newColor = typeof updateData.status === 'object' ? updateData.status.color : undefined;
