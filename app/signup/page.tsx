@@ -13,8 +13,10 @@ import { useCreateCompanyMutation } from '@/store/services/companyApi';
 
 import { useDispatch } from 'react-redux';
 import { setUser, register as registerAction } from '@/store/slices/authSlice';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 export default function SignUpPage() {
+	const { setSelectedLineOfBusinessId } = useLineOfBusiness();
 	const router = useRouter();
 	const dispatch = useDispatch();
 	const { isDarkMode } = useTheme();
@@ -179,6 +181,8 @@ export default function SignUpPage() {
 
 			await createCompany(payload).unwrap();
 			toast.success('Company profile created successfully!');
+			setSelectedLineOfBusinessId('new');
+			localStorage.removeItem('peoplely-setup-data');
 			router.push('/setup');
 		} catch (err: unknown) {
 			toast.error((err as { data?: { message?: string } })?.data?.message || 'Failed to create company profile');
