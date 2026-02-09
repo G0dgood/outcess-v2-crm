@@ -50,7 +50,7 @@ const SearchWithSend: React.FC<SearchWithSendProps> = ({
 					onChange={(e) => onChange?.(e.target.value)}
 					onKeyPress={handleKeyPress}
 					disabled={disabled}
-					className="flex-1 bg-transparent border-none outline-none text-sm font-normal leading-[150%] dark:text-gray-300 ml-2"
+					className="flex-1 bg-transparent border-none outline-none text-[10px] md:text-[12px] font-normal leading-[150%] dark:text-gray-300 ml-2"
 					style={{ color: 'var(--text-secondary)' }}
 				/>
 				<button

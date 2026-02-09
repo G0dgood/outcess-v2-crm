@@ -32,7 +32,7 @@ export const BarChart: React.FC<ChartProps> = ({ data }) => {
 								x={x + barWidth / 2}
 								y={chartHeight + 15}
 								textAnchor="middle"
-								className="text-xs fill-gray-600"
+								className="text-[8px] md:text-[10px] fill-gray-600"
 							>
 								{item.label}
 							</text>
@@ -40,7 +40,7 @@ export const BarChart: React.FC<ChartProps> = ({ data }) => {
 								x={x + barWidth / 2}
 								y={y - 5}
 								textAnchor="middle"
-								className="text-xs fill-gray-800 font-medium"
+								className="text-[8px] md:text-[10px] fill-gray-800 font-medium"
 							>
 								{item.value}
 							</text>

@@ -119,13 +119,13 @@ const SupportPage: React.FC = () => {
 			<section className="pt-32 pb-16 px-6 md:px-[180px]">
 				<div className="max-w-4xl mx-auto text-center">
 					<h1
-						className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-[#050711] leading-tight"
+						className="text-[30px] md:text-[36px] lg:text-[48px] font-bold mb-6 text-[#050711] leading-tight"
 						style={plusJakartaStyle}
 					>
 						How Can We Help?
 					</h1>
 					<p
-						className="text-lg md:text-xl text-[#4A5565] leading-relaxed mb-8"
+						className="text-[14px] md:text-[16px] text-[#4A5565] leading-relaxed mb-8"
 						style={plusJakartaStyle}
 					>
 						Find answers, get help, and learn how to make the most of Peoplely CRM.
@@ -140,7 +140,7 @@ const SupportPage: React.FC = () => {
 								placeholder="Search for help articles, guides, or FAQs..."
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
-								className="w-full pl-12 pr-4 py-4 rounded-lg border text-sm"
+								className="w-full pl-12 pr-4 py-4 rounded-lg border text-[10px] md:text-[12px]"
 								style={{
 									borderColor: 'var(--light-gray)',
 									backgroundColor: 'white',
@@ -156,7 +156,7 @@ const SupportPage: React.FC = () => {
 			<section className="py-16 px-6 md:px-[180px] bg-white">
 				<div className="max-w-6xl mx-auto">
 					<h2
-						className="text-3xl md:text-4xl font-bold mb-12 text-[#050711] text-center"
+						className="text-[24px] md:text-[30px] font-bold mb-12 text-[#050711] text-center"
 						style={plusJakartaStyle}
 					>
 						Get in Touch
@@ -181,26 +181,26 @@ const SupportPage: React.FC = () => {
 										<IconComponent className="w-6 h-6" style={{ color: '#6C8B7D' }} />
 									</div>
 									<h3
-										className="text-xl font-semibold mb-2 text-[#050711]"
+										className="text-[14px] md:text-[16px] font-semibold mb-2 text-[#050711]"
 										style={plusJakartaStyle}
 									>
 										{method.title}
 									</h3>
 									<p
-										className="text-sm text-[#4A5565] leading-relaxed mb-4 flex-1"
+										className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed mb-4 flex-1"
 										style={plusJakartaStyle}
 									>
 										{method.description}
 									</p>
 									<p
-										className="text-xs text-[#4A5565] mb-4"
+										className="text-[8px] md:text-[10px] text-[#4A5565] mb-4"
 										style={plusJakartaStyle}
 									>
 										{method.availability}
 									</p>
 									<Link
 										href={method.link}
-										className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
+										className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold text-[10px] md:text-[12px] transition-colors"
 										style={{
 											backgroundColor: '#050711',
 											color: 'white'
@@ -225,7 +225,7 @@ const SupportPage: React.FC = () => {
 			<section className="py-16 px-6 md:px-[180px] bg-white">
 				<div className="max-w-6xl mx-auto">
 					<h2
-						className="text-3xl md:text-4xl font-bold mb-12 text-[#050711] text-center"
+						className="text-[24px] md:text-[30px] font-bold mb-12 text-[#050711] text-center"
 						style={plusJakartaStyle}
 					>
 						Browse by Category
@@ -252,13 +252,13 @@ const SupportPage: React.FC = () => {
 										</div>
 										<div className="flex-1">
 											<h3
-												className="text-xl font-semibold mb-2 text-[#050711]"
+												className="text-[14px] md:text-[16px] font-semibold mb-2 text-[#050711]"
 												style={plusJakartaStyle}
 											>
 												{category.title}
 											</h3>
 											<p
-												className="text-sm text-[#4A5565] leading-relaxed mb-4"
+												className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed mb-4"
 												style={plusJakartaStyle}
 											>
 												{category.description}
@@ -268,7 +268,7 @@ const SupportPage: React.FC = () => {
 													<li key={articleIndex}>
 														<Link
 															href={`/support/article/${encodeURIComponent(article.toLowerCase().replace(/\s+/g, '-'))}`}
-															className="text-sm text-[#6C8B7D] hover:underline flex items-center gap-2"
+															className="text-[10px] md:text-[12px] text-[#6C8B7D] hover:underline flex items-center gap-2"
 															style={plusJakartaStyle}
 														>
 															<ArrowRightIcon className="w-3 h-3" />
@@ -290,7 +290,7 @@ const SupportPage: React.FC = () => {
 			<section className="py-16 px-6 md:px-[180px] bg-white">
 				<div className="max-w-4xl mx-auto">
 					<h2
-						className="text-3xl md:text-4xl font-bold mb-12 text-[#050711] text-center"
+						className="text-[24px] md:text-[30px] font-bold mb-12 text-[#050711] text-center"
 						style={plusJakartaStyle}
 					>
 						Frequently Asked Questions
@@ -307,13 +307,13 @@ const SupportPage: React.FC = () => {
 								}}
 							>
 								<h3
-									className="text-lg font-semibold mb-3 text-[#050711]"
+									className="text-[12px] md:text-[14px] font-semibold mb-3 text-[#050711]"
 									style={plusJakartaStyle}
 								>
 									{faq.question}
 								</h3>
 								<p
-									className="text-sm text-[#4A5565] leading-relaxed"
+									className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed"
 									style={plusJakartaStyle}
 								>
 									{faq.answer}
@@ -331,7 +331,7 @@ const SupportPage: React.FC = () => {
 						</p>
 						<Link
 							href="mailto:support@peoplely.com"
-							className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border font-semibold text-sm transition-colors"
+							className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border font-semibold text-[10px] md:text-[12px] transition-colors"
 							style={{
 								borderColor: 'var(--light-gray)',
 								color: 'var(--text-primary)'
@@ -354,7 +354,7 @@ const SupportPage: React.FC = () => {
 			<section className="py-16 px-6 md:px-[180px] bg-white">
 				<div className="max-w-6xl mx-auto">
 					<h2
-						className="text-3xl md:text-4xl font-bold mb-12 text-[#050711] text-center"
+						className="text-[24px] md:text-[30px] font-bold mb-12 text-[#050711] text-center"
 						style={plusJakartaStyle}
 					>
 						Additional Resources
@@ -371,13 +371,13 @@ const SupportPage: React.FC = () => {
 						>
 							<FileTextIcon className="w-8 h-8 mb-4 text-[#6C8B7D]" />
 							<h3
-								className="text-lg font-semibold mb-2 text-[#050711] group-hover:text-[#6C8B7D] transition-colors"
+								className="text-[12px] md:text-[14px] font-semibold mb-2 text-[#050711] group-hover:text-[#6C8B7D] transition-colors"
 								style={plusJakartaStyle}
 							>
 								Blog & Guides
 							</h3>
 							<p
-								className="text-sm text-[#4A5565] leading-relaxed"
+								className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed"
 								style={plusJakartaStyle}
 							>
 								Read articles, tutorials, and best practices from our team.
@@ -394,13 +394,13 @@ const SupportPage: React.FC = () => {
 						>
 							<PlayIcon className="w-8 h-8 mb-4 text-[#6C8B7D]" />
 							<h3
-								className="text-lg font-semibold mb-2 text-[#050711] group-hover:text-[#6C8B7D] transition-colors"
+								className="text-[12px] md:text-[14px] font-semibold mb-2 text-[#050711] group-hover:text-[#6C8B7D] transition-colors"
 								style={plusJakartaStyle}
 							>
 								Video Tutorials
 							</h3>
 							<p
-								className="text-sm text-[#4A5565] leading-relaxed"
+								className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed"
 								style={plusJakartaStyle}
 							>
 								Watch step-by-step video guides to master the platform.
@@ -417,13 +417,13 @@ const SupportPage: React.FC = () => {
 						>
 							<ArrowRightIcon className="w-8 h-8 mb-4 text-[#6C8B7D]" />
 							<h3
-								className="text-lg font-semibold mb-2 text-[#050711] group-hover:text-[#6C8B7D] transition-colors"
+								className="text-[12px] md:text-[14px] font-semibold mb-2 text-[#050711] group-hover:text-[#6C8B7D] transition-colors"
 								style={plusJakartaStyle}
 							>
 								API Documentation
 							</h3>
 							<p
-								className="text-sm text-[#4A5565] leading-relaxed"
+								className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed"
 								style={plusJakartaStyle}
 							>
 								Integrate Peoplely with your existing systems using our API.
@@ -440,13 +440,13 @@ const SupportPage: React.FC = () => {
 			>
 				<div className="max-w-3xl mx-auto">
 					<h2
-						className="text-3xl md:text-4xl font-bold mb-4 text-white"
+						className="text-[24px] md:text-[30px] font-bold mb-4 text-white"
 						style={plusJakartaStyle}
 					>
 						Need More Help?
 					</h2>
 					<p
-						className="text-base md:text-lg text-white/90 mb-8"
+						className="text-[12px] md:text-[14px] text-white/90 mb-8"
 						style={plusJakartaStyle}
 					>
 						Our support team is here to help you succeed. Reach out anytime.

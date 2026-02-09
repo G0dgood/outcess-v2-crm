@@ -233,7 +233,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
       {showButton && (
         <button
           onClick={handleShow}
-          className="cursor-pointer flex flex-col md:flex-row justify-center items-center px-2 py-[8px] gap-2 md:w-[150px] h-[40px] font-normal text-[14px] leading-[150%] text-[#FFFFFF]"
+          className="cursor-pointer flex flex-col md:flex-row justify-center items-center px-2 py-[8px] gap-2 md:w-[150px] h-[40px] font-normal text-[10px] md:text-[12px] leading-[150%] text-[#FFFFFF]"
           style={{ backgroundColor: primaryColor }}
         >
           Upload
@@ -251,14 +251,14 @@ const UploadBase: React.FC<UploadBaseProps> = ({
               style={{ borderColor: 'var(--light-gray)' }}
             >
               <h2
-                className="text-xl font-semibold dark:text-gray-100"
+                className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
                 style={{ color: 'var(--text-primary)' }}
               >
                 Upload CSV File
               </h2>
               <button
                 onClick={handleClose}
-                className="dark:text-gray-400 dark:hover:text-red-400 text-lg"
+                className="dark:text-gray-400 dark:hover:text-red-400 text-[12px] md:text-[14px]"
                 style={{ color: 'var(--text-tertiary)' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.color = '#DC2626';
@@ -317,7 +317,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                   </p>
                   <button
                     onClick={onClickReset}
-                    className="dark:text-gray-400 dark:hover:text-red-400 text-lg"
+                    className="dark:text-gray-400 dark:hover:text-red-400 text-[12px] md:text-[14px]"
                     style={{ color: 'var(--text-tertiary)' }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.color = '#DC2626';
@@ -373,7 +373,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                   style={isDragOver ? { color: primaryColor } : { color: 'var(--text-tertiary)' }}
                 />
                 <p
-                  className="text-lg font-medium dark:text-gray-300 mb-2"
+                  className="text-[12px] md:text-[14px] font-medium dark:text-gray-300 mb-2"
                   style={{ color: 'var(--text-secondary)' }}
                 >
                   {progress === 0
@@ -381,7 +381,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                     : "Uploading..."}
                 </p>
                 <p
-                  className="text-sm dark:text-gray-400 text-center"
+                  className="text-[10px] md:text-[12px] dark:text-gray-400 text-center"
                   style={{ color: 'var(--text-tertiary)' }}
                 >
                   {progress === 0
@@ -390,7 +390,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                 </p>
                 {jsonData.length > 0 && progress === 0 && (
                   <p
-                    className="text-sm dark:text-green-400 mt-2"
+                    className="text-[10px] md:text-[12px] dark:text-green-400 mt-2"
                     style={{ color: '#22C55E' }}
                   >
                     ✓ File loaded successfully ({jsonData.length} records)

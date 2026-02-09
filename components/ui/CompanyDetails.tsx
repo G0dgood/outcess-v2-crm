@@ -21,7 +21,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 
 	const [activeTab, setActiveTab] = useState<'company-detail' | 'business-hour' | 'currencies'>('company-detail');
 	const [isEditMode, setIsEditMode] = useState(false);
-	
+
 	const [formData, setFormData] = useState({
 		companyName: '',
 		phoneNumber: '',
@@ -125,7 +125,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 					<div className="flex gap-8">
 						<button
 							onClick={() => setActiveTab('company-detail')}
-							className={`pb-2 px-1 font-inter text-sm font-medium transition-colors border-b-2 ${activeTab === 'company-detail'
+							className={`pb-2 px-1 font-inter text-[10px] md:text-[12px] font-medium transition-colors border-b-2 ${activeTab === 'company-detail'
 								? 'dark:text-gray-100 dark:border-gray-100'
 								: 'dark:text-gray-400 border-transparent dark:hover:text-gray-200'
 								}`}
@@ -151,7 +151,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 						</button>
 						<button
 							onClick={() => setActiveTab('business-hour')}
-							className={`pb-2 px-1 font-inter text-sm font-medium transition-colors border-b-2 ${activeTab === 'business-hour'
+							className={`pb-2 px-1 font-inter text-[10px] md:text-[12px] font-medium transition-colors border-b-2 ${activeTab === 'business-hour'
 								? 'dark:text-gray-100 dark:border-gray-100'
 								: 'dark:text-gray-400 border-transparent dark:hover:text-gray-200'
 								}`}
@@ -177,7 +177,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 						</button>
 						<button
 							onClick={() => setActiveTab('currencies')}
-							className={`pb-2 px-1 font-inter text-sm font-medium transition-colors border-b-2 ${activeTab === 'currencies'
+							className={`pb-2 px-1 font-inter text-[10px] md:text-[12px] font-medium transition-colors border-b-2 ${activeTab === 'currencies'
 								? 'dark:text-gray-100 dark:border-gray-100'
 								: 'dark:text-gray-400 border-transparent dark:hover:text-gray-200'
 								}`}

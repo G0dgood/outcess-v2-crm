@@ -2,11 +2,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Icon from './Icon';
-import { ArrowLeftIcon } from '@radix-ui/react-icons';
-import { Modal } from './Modal';
-import { Button } from './Button';
-import { Textarea } from './Textarea';
+import { StatusConfirmationModal } from './StatusConfirmationModal';
+import { StatusSubmenu, StatusOption } from './StatusSubmenu';
+import { UserMenu } from './UserMenu';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetStatusesByLineOfBusinessIdQuery } from '@/store/services/statusApi';
 import { useUpdateTeamMemberStatusMutation } from '@/store/services/teamMembersApi';
@@ -26,12 +24,6 @@ export interface UserDropdownProps {
 	onStatusClick?: () => void;
 	onEditProfileClick?: () => void;
 	onLogoutClick?: () => void;
-}
-
-interface StatusOption {
-	value: string;
-	label: string;
-	color?: string;
 }
 
 const UserDropdown: React.FC<UserDropdownProps> = ({
@@ -131,12 +123,10 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 				}).unwrap();
 
 				toastSuccess('Status updated successfully');
-			} catch (error) {
-				console.error('Failed to update status:', error);
+			} catch (error) { 
 				toastError('Failed to update status');
 			}
-		} else if (!userId) {
-			console.error('Cannot update status: User ID is missing');
+		} else if (!userId) { 
 			toastError('User ID is missing');
 		}
 
@@ -171,8 +161,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 						<Image
 							src={userAvatar}
 							alt={mounted ? userName : ''}
-							width={32}
-							height={32}
+							width={30}
+							height={30}
 							className="rounded-full border-2 object-cover"
 							style={{ borderColor: 'var(--light-gray)' }}
 						/>
@@ -185,7 +175,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 							}}
 						>
 							<span
-								className="font-semibold text-sm"
+								className="font-semibold text-[10px] md:text-[12px]"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{mounted ? userName.charAt(0).toUpperCase() : ''}
@@ -212,249 +202,37 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 			</button>
 
 			{/* User Dropdown */}
-			{isOpen && !isStatusOpen && (
-				<div
-					className="absolute right-0 top-full mt-2 w-80 dark:bg-gray-800 border dark:border-gray-700 shadow-lg z-50 overflow-hidden"
-					style={{
-						backgroundColor: 'var(--accent-white)',
-						borderColor: 'var(--light-gray)'
-					}}
-				>
-					{/* User Info Section */}
-					<div
-						className="p-4 border-b dark:border-gray-700"
-						style={{
-							borderColor: 'var(--light-gray)'
-						}}
-					>
-						<div className="flex items-center gap-3">
-							{userAvatar ? (
-								<Image
-									src={userAvatar}
-									alt={userName}
-									width={48}
-									height={48}
-									className="rounded-full border-2 border-gray-200 dark:border-gray-600"
-								/>
-							) : (
-								<div className="w-12 h-12 bg-[#F2F4F7] dark:bg-gray-700 border border-[#E5E7EB] dark:border-gray-600 rounded-full flex items-center justify-center">
-									<span
-										className="font-semibold text-lg dark:text-gray-300"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{userName.charAt(0).toUpperCase()}
-									</span>
-								</div>
-							)}
-							<div className="flex-1">
-								<h3
-									className="font-semibold text-base dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									{userName}
-								</h3>
-								<p
-									className="text-sm dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								>
-									{userEmail}
-								</p>
-							</div>
-						</div>
-					</div>
-
-					{/* Menu Items */}
-					<div style={{ backgroundColor: 'var(--accent-white)' }} className="dark:bg-gray-800">
-						{/* Status */}
-						<div className="relative">
-							<button
-								onClick={(e) => {
-									e.stopPropagation();
-									setIsStatusOpen(!isStatusOpen);
-								}}
-								className="w-full px-4 py-2 text-left flex items-center justify-between transition-colors"
-								style={{
-									color: 'var(--text-secondary)',
-									backgroundColor: 'transparent'
-								}}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.backgroundColor = 'transparent';
-								}}
-							>
-								<span>Status</span>
-								<Icon name="Expand_right_light" size="lg" />
-							</button>
-						</div>
-
-						{/* Settings */}
-						<button
-							onClick={() => {
-								router.push('/usersettings');
-								setIsOpen(false);
-							}}
-							className="w-full px-4 py-2 text-left cursor-pointer transition-colors"
-							style={{
-								color: 'var(--text-secondary)',
-								backgroundColor: 'transparent'
-							}}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.backgroundColor = 'transparent';
-							}}
-						>
-							Settings
-						</button>
-
-						{/* Separator */}
-						<div
-							className="border-t my-2 dark:border-gray-700"
-							style={{ borderColor: 'var(--light-gray)' }}
-						></div>
-
-						{/* Logout */}
-						<button
-							onClick={() => {
-								onLogoutClick?.();
-								setIsOpen(false);
-							}}
-							className="w-full px-4 py-2 text-left flex items-center gap-2 cursor-pointer transition-colors"
-							style={{
-								color: 'var(--status-error)',
-								backgroundColor: 'transparent'
-							}}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.backgroundColor = 'transparent';
-							}}
-						>
-							<Icon name="Sign_out_squre_light" size="lg" color="red" className="dark:invert-0! dark:opacity-100!" />
-							Log out
-						</button>
-					</div>
-				</div>
-			)}
+			<UserMenu
+				isOpen={isOpen && !isStatusOpen}
+				userAvatar={userAvatar}
+				userName={userName}
+				userEmail={userEmail}
+				onStatusClick={() => setIsStatusOpen(!isStatusOpen)}
+				onClose={() => setIsOpen(false)}
+				onLogoutClick={onLogoutClick}
+			/>
 
 			{/* Status Submenu */}
-			{isStatusOpen && (
-				<div
-					className="absolute right-0 top-full mt-2 w-48 dark:bg-gray-800 border dark:border-gray-700 shadow-lg z-50 overflow-hidden min-w-[250px] "
-					style={{
-						backgroundColor: 'var(--accent-white)',
-						borderColor: 'var(--light-gray)'
-					}}
-				>
-					{/* Back Button Header */}
-					<div
-						className="px-4 py-2 border-b dark:border-gray-700"
-						style={{ borderColor: 'var(--light-gray)' }}
-					>
-						<button
-							onClick={() => {
-								setIsStatusOpen(false);
-								setIsOpen(true);
-							}}
-							className="flex items-center gap-2 transition-colors cursor-pointer"
-							style={{
-								color: 'var(--text-secondary)',
-								backgroundColor: 'transparent'
-							}}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.color = 'var(--text-primary)';
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.color = 'var(--text-secondary)';
-							}}
-						>
-							<ArrowLeftIcon className="w-4 h-4" />
-							<span className="text-sm font-medium">Back</span>
-						</button>
-					</div>
-					<div style={{ backgroundColor: 'var(--accent-white)' }} className="dark:bg-gray-800">
-						{statusOptions?.map((option) => (
-							<button
-								key={option.value}
-								onClick={() => handleStatusSelect(option)}
-								className="w-full px-4 py-2 text-left cursor-pointer font-lato font-medium text-[16px] leading-[150%] transition-colors flex items-center gap-2 whitespace-nowrap"
-								style={{
-									color: 'var(--text-primary)',
-									backgroundColor: 'transparent'
-								}}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.backgroundColor = 'transparent';
-								}}
-							>
-								{option.color && (
-									<span
-										className="w-3 h-3 rounded-full"
-										style={{ backgroundColor: option.color }}
-									/>
-								)}
-								{option.label.length > 25 ? `${option.label.substring(0, 25)}...` : option.label}
-							</button>
-						))}
-					</div>
-				</div>
-			)}
+			<StatusSubmenu
+				isOpen={isStatusOpen}
+				onBack={() => {
+					setIsStatusOpen(false);
+					setIsOpen(true);
+				}}
+				statusOptions={statusOptions}
+				onSelect={handleStatusSelect}
+			/>
 
 			{/* Status Confirmation Modal */}
-			<Modal
+			<StatusConfirmationModal
 				isOpen={isStatusConfirmOpen}
 				onClose={() => setIsStatusConfirmOpen(false)}
-				title="Change Status"
-				size="sm"
-			>
-				<div className="p-6">
-					<p className="mb-4 text-gray-600 dark:text-gray-300" style={{ color: 'var(--text-secondary)' }}>
-						Are you sure you want to change your status to{' '}
-						<span className="font-semibold inline-flex items-center gap-1.5 align-middle text-gray-900 dark:text-gray-100">
-							{pendingStatus?.color && (
-								<span
-									className="w-2.5 h-2.5 rounded-full inline-block"
-									style={{ backgroundColor: pendingStatus.color }}
-								/>
-							)}
-							{pendingStatus?.label}
-						</span>
-						?
-					</p>
-
-					<div className="mb-6">
-						<Textarea
-							label="Reason (Optional)"
-							value={statusReason}
-							onChange={setStatusReason}
-							placeholder="Enter reason for status change..."
-							rows={3}
-						/>
-					</div>
-
-					<div className="flex justify-end gap-3">
-						<Button
-							variant="outline"
-							onClick={() => setIsStatusConfirmOpen(false)}
-						>
-							No
-						</Button>
-						<Button
-							variant="primary"
-							onClick={confirmStatusChange}
-							loading={isUpdatingStatus}
-						>
-							Yes
-						</Button>
-					</div>
-				</div>
-			</Modal>
+				pendingStatus={pendingStatus}
+				statusReason={statusReason}
+				onStatusReasonChange={setStatusReason}
+				onConfirm={confirmStatusChange}
+				isUpdating={isUpdatingStatus}
+			/>
 		</div>
 	);
 };

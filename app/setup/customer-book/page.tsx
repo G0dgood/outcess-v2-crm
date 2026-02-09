@@ -136,7 +136,7 @@ export default function CustomerBookPage() {
 						placeholder={placeholder}
 						rows={2}
 						resize="none"
-						className="text-xs"
+						className="text-[8px] md:text-[10px]"
 						inputClassName="h-20"
 					/>
 				);
@@ -152,7 +152,7 @@ export default function CustomerBookPage() {
 							{ value: 'inactive', label: 'Inactive' },
 							{ value: 'pending', label: 'Pending' }
 						]}
-						className="text-xs"
+						className="text-[8px] md:text-[10px]"
 						inputClassName="h-10"
 					/>
 				);
@@ -163,7 +163,7 @@ export default function CustomerBookPage() {
 						value=""
 						onChange={() => { }}
 						placeholder={placeholder}
-						className="text-xs"
+						className="text-[8px] md:text-[10px]"
 						inputClassName="h-10"
 
 					/>
@@ -175,7 +175,7 @@ export default function CustomerBookPage() {
 						value=""
 						onChange={() => { }}
 						placeholder={placeholder}
-						className="text-xs"
+						className="text-[8px] md:text-[10px]"
 						inputClassName="h-10"
 					/>
 				);
@@ -191,7 +191,7 @@ export default function CustomerBookPage() {
 							{ value: 'medium', label: 'Medium' },
 							{ value: 'low', label: 'Low' }
 						]}
-						className="text-xs"
+						className="text-[8px] md:text-[10px]"
 					/>
 				);
 			case 'checkbox':
@@ -205,7 +205,7 @@ export default function CustomerBookPage() {
 							{ value: 'sales', label: 'Sales' },
 							{ value: 'support', label: 'Support' }
 						]}
-						className="text-xs"
+						className="text-[8px] md:text-[10px]"
 					/>
 				);
 			default:
@@ -216,7 +216,7 @@ export default function CustomerBookPage() {
 						onChange={() => { }}
 						placeholder={placeholder}
 						type={fieldType.id === 'email' ? 'email' : fieldType.id === 'number' ? 'number' : 'text'}
-						className="text-xs"
+						className="text-[8px] md:text-[10px]"
 						inputClassName="h-10"
 					/>
 				);
@@ -235,7 +235,7 @@ export default function CustomerBookPage() {
 							Customer Book
 						</h1>
 						<p
-							className="font-lato not-italic font-normal text-[14px] sm:text-[16px] leading-[150%] dark:text-gray-400"
+							className="font-lato not-italic font-normal text-[10px] md:text-[12px] sm:text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							Configure the fields that you&apos;ll use to store customer information. Add custom fields to match your business needs.
@@ -278,25 +278,25 @@ export default function CustomerBookPage() {
 								}}
 							>
 								<th
-									className="text-left py-4 px-6 font-inter text-sm font-medium dark:text-gray-100"
+									className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Field Name
 								</th>
 								<th
-									className="text-left py-4 px-6 font-inter text-sm font-medium dark:text-gray-100"
+									className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Type
 								</th>
 								<th
-									className="text-left py-4 px-6 font-inter text-sm font-medium dark:text-gray-100"
+									className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Required
 								</th>
 								<th
-									className="text-left py-4 px-6 font-inter text-sm font-medium dark:text-gray-100"
+									className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Action
@@ -311,13 +311,13 @@ export default function CustomerBookPage() {
 									style={index !== customerBookSettings.configuredFields.length - 1 ? { borderBottom: '1px solid', borderBottomColor: 'var(--light-gray)' } : {}}
 								>
 									<td
-										className="py-4 px-6 font-inter text-sm dark:text-gray-100"
+										className="py-4 px-6 font-inter text-[10px] md:text-[12px] dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{field.name}
 									</td>
 									<td
-										className="py-4 px-6 font-inter text-sm dark:text-gray-400"
+										className="py-4 px-6 font-inter text-[10px] md:text-[12px] dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										{field.type}
@@ -325,7 +325,7 @@ export default function CustomerBookPage() {
 									<td className="py-4 px-6">
 										{field.required ? (
 											<span
-												className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium dark:bg-green-900/30 dark:text-green-400"
+												className="inline-flex items-center px-2 py-1 rounded-full text-[8px] md:text-[10px] font-medium dark:bg-green-900/30 dark:text-green-400"
 												style={{
 													backgroundColor: 'rgba(34, 197, 94, 0.1)',
 													color: '#16A34A'
@@ -335,7 +335,7 @@ export default function CustomerBookPage() {
 											</span>
 										) : (
 											<span
-												className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium dark:bg-gray-700 dark:text-gray-300"
+												className="inline-flex items-center px-2 py-1 rounded-full text-[8px] md:text-[10px] font-medium dark:bg-gray-700 dark:text-gray-300"
 												style={{
 													backgroundColor: 'var(--bg-primary)',
 													color: 'var(--text-tertiary)'
@@ -399,13 +399,13 @@ export default function CustomerBookPage() {
 							onClick={() => handleAddField(fieldType)}
 						>
 							<h4
-								className="font-inter text-sm font-medium dark:text-gray-100 mb-2"
+								className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 mb-2"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{fieldType.name}
 							</h4>
 							<p
-								className="font-lato text-xs dark:text-gray-400 mb-3"
+								className="font-lato text-[8px] md:text-[10px] dark:text-gray-400 mb-3"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								{fieldType.description}

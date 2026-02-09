@@ -32,9 +32,9 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 		const g = parseInt(hex.slice(3, 5), 16) / 255;
 		const b = parseInt(hex.slice(5, 7), 16) / 255;
 
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h = 0, s = 0; const l = (max + min) / 2;
+		const max = Math.max(r, g, b);
+		const min = Math.min(r, g, b);
+		let h = 0, s = 0; const l = (max + min) / 2;
 
 		if (max !== min) {
 			const d = max - min;
@@ -185,7 +185,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 	return (
 		<div className={`relative ${className}`} ref={pickerRef}>
 			{label && (
-				<label className="font-inter text-sm font-medium text-[#050711] mb-2 block">
+				<label className="font-inter text-[10px] md:text-[12px] font-medium text-[#050711] mb-2 block">
 					{label}
 				</label>
 			)}
@@ -243,7 +243,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 							<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
 								<path d="M8 1L10.5 5.5L15.5 6L12 9.5L13 14.5L8 12L3 14.5L4 9.5L0.5 6L5.5 5.5L8 1Z" fill="#6B7280" />
 							</svg>
-							<span className="text-sm font-medium text-gray-700">Hue</span>
+							<span className="text-[10px] md:text-[12px] font-medium text-gray-700">Hue</span>
 						</div>
 						<div
 							ref={hueRef}
@@ -267,7 +267,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 					{/* Alpha Slider */}
 					<div className="mb-4">
 						<div className="flex items-center gap-2 mb-2">
-							<span className="text-sm font-medium text-gray-700">Opacity</span>
+							<span className="text-[10px] md:text-[12px] font-medium text-gray-700">Opacity</span>
 						</div>
 						<div
 							ref={alphaRef}
@@ -299,7 +299,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 					{/* Color Values */}
 					<div className="mb-4">
 						<div className="flex items-center gap-2 mb-2">
-							<select className="text-sm font-medium text-gray-700 bg-transparent border-none outline-none">
+							<select className="text-[10px] md:text-[12px] font-medium text-gray-700 bg-transparent border-none outline-none">
 								<option>HSL</option>
 							</select>
 						</div>
@@ -355,7 +355,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 					<div className="flex justify-end">
 						<button
 							onClick={() => setIsOpen(false)}
-							className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+							className="px-3 py-1 text-[10px] md:text-[12px] text-gray-600 hover:text-gray-800"
 						>
 							Done
 						</button>

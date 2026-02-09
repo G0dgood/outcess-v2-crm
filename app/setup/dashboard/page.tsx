@@ -21,7 +21,7 @@ export default function DashboardPage(): React.JSX.Element {
 					Dashboard
 				</h1>
 				<p
-					className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
+					className="font-lato not-italic font-normal text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
 					Set up your dashboard widgets and reports
@@ -46,7 +46,7 @@ export default function DashboardPage(): React.JSX.Element {
 						/>
 					</div>
 					{/* <div>
-						<label className="font-inter text-sm font-medium text-[#050711] mb-2 block">Who can see this dashboard</label>
+						<label className="font-inter text-[10px] md:text-[12px] font-medium text-[#050711] mb-2 block">Who can see this dashboard</label>
 						<div className="space-y-2">
 							{visibilityOptions.map((option) => (
 								<IndividualRadio
@@ -71,7 +71,7 @@ export default function DashboardPage(): React.JSX.Element {
 				>
 					<button
 						onClick={() => updateDashboardSettings({ activeTab: 'kpi' })}
-						className={`px-4 py-2 font-inter text-sm font-medium transition-colors ${dashboardSettings.activeTab === 'kpi'
+						className={`px-4 py-2 font-inter text-[10px] md:text-[12px] font-medium transition-colors ${dashboardSettings.activeTab === 'kpi'
 							? 'dark:text-gray-100 dark:border-gray-100'
 							: 'dark:text-gray-400 dark:hover:text-gray-300'
 							}`}
@@ -97,7 +97,7 @@ export default function DashboardPage(): React.JSX.Element {
 					</button>
 					<button
 						onClick={() => updateDashboardSettings({ activeTab: 'disposition' })}
-						className={`px-4 py-2 font-inter text-sm font-medium transition-colors ${dashboardSettings.activeTab === 'disposition'
+						className={`px-4 py-2 font-inter text-[10px] md:text-[12px] font-medium transition-colors ${dashboardSettings.activeTab === 'disposition'
 							? 'dark:text-gray-100 dark:border-gray-100'
 							: 'dark:text-gray-400 dark:hover:text-gray-300'
 							}`}

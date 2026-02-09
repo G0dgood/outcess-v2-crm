@@ -37,11 +37,11 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ items }) => {
 								<Image src={testimonial.iconSrc} alt={testimonial.name} width={25} height={25} className="mb-4" />
 								<Image src={testimonial.iconSrc} alt={testimonial.name} width={25} height={25} className="mb-4" />
 							</div>
-							<p className="font-[Plus-Jakarta-Sans] italic font-normal text-[16px] leading-[26px] flex items-center text-[#364153]" style={plusJakartaStyle}>“{testimonial.quote.replace(/“|”/g, '')}”</p>
+							<p className="font-[Plus-Jakarta-Sans] italic font-normal text-[12px] md:text-[14px] leading-[26px] flex items-center text-[#364153]" style={plusJakartaStyle}>“{testimonial.quote.replace(/“|”/g, '')}”</p>
 						</div>
 						<div>
-							<p className="font-semibold text-[16px] leading-[24px] flex items-center text-[#050711]" style={plusJakartaStyle}>{testimonial.name}</p>
-							<p className="font-normal text-[14px] leading-[20px] flex items-center text-[#6A7282]" style={plusJakartaStyle}>{testimonial.title}</p>
+							<p className="font-semibold text-[12px] md:text-[14px] leading-[24px] flex items-center text-[#050711]" style={plusJakartaStyle}>{testimonial.name}</p>
+							<p className="font-normal text-[10px] md:text-[12px] leading-[20px] flex items-center text-[#6A7282]" style={plusJakartaStyle}>{testimonial.title}</p>
 						</div>
 					</div>
 				))}

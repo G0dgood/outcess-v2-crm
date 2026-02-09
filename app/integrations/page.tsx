@@ -170,7 +170,7 @@ const IntegrationsPage: React.FC = () => {
 			{/* Description */}
 			<div className="mb-6">
 				<p
-					className="text-sm dark:text-gray-400"
+					className="text-[10px] md:text-[12px] dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
 					Connect Peoplely with your favorite tools and services to streamline your workflow.
@@ -179,7 +179,7 @@ const IntegrationsPage: React.FC = () => {
 
 			{/* Integrations Grid */}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-				{integrations.map((integration) => (
+				{integrations?.map((integration) => (
 					<div
 						key={integration.id}
 						className="p-6 dark:bg-gray-800 border dark:border-gray-700"
@@ -214,7 +214,7 @@ const IntegrationsPage: React.FC = () => {
 												style={{ backgroundColor: '#22C55E' }}
 											/>
 											<span
-												className="text-xs dark:text-gray-400"
+												className="text-[8px] md:text-[10px] dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
 												Connected
@@ -243,7 +243,7 @@ const IntegrationsPage: React.FC = () => {
 
 						{/* Integration Description */}
 						<p
-							className="text-sm dark:text-gray-400 mb-4"
+							className="text-[10px] md:text-[12px] dark:text-gray-400 mb-4"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							{integration.description}
@@ -291,7 +291,7 @@ const IntegrationsPage: React.FC = () => {
 					{connectingIntegration && (
 						<>
 							<p
-								className="text-sm dark:text-gray-400 mb-6"
+								className="text-[10px] md:text-[12px] dark:text-gray-400 mb-6"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								{connectingIntegration.description}
@@ -319,7 +319,7 @@ const IntegrationsPage: React.FC = () => {
 							{connectingIntegration.id === 'slack' && (
 								<div className="mt-4 p-3 dark:bg-gray-700 rounded-lg" style={{ backgroundColor: 'var(--bg-primary)' }}>
 									<p
-										className="text-xs dark:text-gray-400"
+										className="text-[8px] md:text-[10px] dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										<strong>How to get your Slack API Token:</strong>

@@ -27,7 +27,7 @@ const renderDetails = (details: string) => {
  const parts = details.split(/(\*\*[^*]+\*\*)/g);
  return (
   <span
-   className="text-sm dark:text-gray-100"
+   className="text-[10px] md:text-[12px] dark:text-gray-100"
    style={{ color: 'var(--text-primary)' }}
   >
    {parts.map((part, index) => {
@@ -72,7 +72,7 @@ const formatValue = (key: string, value: unknown): React.ReactNode => {
  if (key === 'user') {
   return (
    <span
-    className="text-sm font-medium dark:text-gray-100"
+    className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
     style={{ color: 'var(--text-primary)' }}
    >
     {getUserName(value as ActivityLogItem['user'])}
@@ -83,7 +83,7 @@ const formatValue = (key: string, value: unknown): React.ReactNode => {
  if (key === 'role') {
   return (
    <span
-    className="text-sm dark:text-gray-400"
+    className="text-[10px] md:text-[12px] dark:text-gray-400"
     style={{ color: 'var(--text-tertiary)' }}
    >
     {value as string}
@@ -97,7 +97,7 @@ const formatValue = (key: string, value: unknown): React.ReactNode => {
 
  return (
   <span
-   className="text-sm dark:text-gray-100"
+   className="text-[10px] md:text-[12px] dark:text-gray-100"
    style={{ color: 'var(--text-primary)' }}
   >
    {String(value)}
@@ -138,7 +138,7 @@ const ActivityLogTabContent: React.FC<ActivityLogTabContentProps> = ({ activityL
    {/* Header with Filters and Export */}
    <div className="flex items-center justify-between mb-6">
     <h2
-     className="text-lg font-semibold dark:text-gray-100"
+     className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
      style={{ color: 'var(--text-primary)' }}
     >
      Recent Activity
@@ -217,7 +217,7 @@ const ActivityLogTabContent: React.FC<ActivityLogTabContentProps> = ({ activityL
         {columns.map((column) => (
          <th
           key={column.key}
-          className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+          className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
           style={{ color: 'var(--text-primary)' }}
          >
           {column.header}

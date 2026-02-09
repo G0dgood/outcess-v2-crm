@@ -69,7 +69,7 @@ const ThemeDropdown: React.FC<{ inputClassName?: string }> = ({ inputClassName }
 			>
 				<span className="flex items-center gap-2 dropdown-text">
 					{isDarkMode ? <MoonIcon className="w-4 h-4" /> : <SunIcon className="w-4 h-4" />}
-					<span className="hidden md:inline text-sm font-medium whitespace-nowrap">
+					<span className="hidden md:inline text-[10px] md:text-[12px] font-medium whitespace-nowrap">
 						{isDarkMode ? 'Dark Mode' : 'Light Mode'}
 					</span>
 				</span>

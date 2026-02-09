@@ -148,7 +148,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 
 	if (!businessData) {
 		return (
-			<div className="flex h-[50vh] items-center justify-center text-lg" style={{ color: 'var(--text-primary)' }}>
+			<div className="flex h-[50vh] items-center justify-center text-[12px] md:text-[14px]" style={{ color: 'var(--text-primary)' }}>
 				Business not found
 			</div>
 		);
@@ -162,7 +162,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 					<BackButton />
 				</div>
 				<h1
-					className="text-2xl font-semibold dark:text-gray-100 mb-2"
+					className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100 mb-2"
 					style={{ color: 'var(--text-primary)' }}
 				>
 					Business Details
@@ -182,7 +182,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 							<button
 								key={tab.id}
 								onClick={() => setActiveTab(tab.id)}
-								className={`pb-4 px-1 font-medium text-sm transition-colors ${isActive
+								className={`pb-4 px-1 font-medium text-[10px] md:text-[12px] transition-colors ${isActive
 									? 'dark:text-blue-400 border-b-2 dark:border-blue-400'
 									: 'dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
 									}`}

@@ -96,7 +96,7 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 						variant="primary"
 						size="md"
 						onClick={handleCreateCustomRole}
-						className="px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+						className="px-2 py-2  sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
 					>
 						Create Custom Role
 					</Button>
@@ -124,7 +124,7 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 						>
 							<div className="flex justify-between items-start mb-2">
 								<h3
-									className="text-lg font-semibold dark:text-gray-100"
+									className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									{role?.name}
@@ -143,7 +143,7 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 								)}
 							</div>
 							<p
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Users: {role?.userCount}
@@ -154,10 +154,10 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 			) : (
 				<div className="flex flex-col items-center justify-center h-64 border  dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
 					<ExclamationTriangleIcon className="w-16 h-16 mb-4" style={{ color: 'var(--text-tertiary)' }} />
-					<p className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>
+					<p className="text-[12px] md:text-[14px] font-medium" style={{ color: 'var(--text-primary)' }}>
 						No roles found
 					</p>
-					<p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
+					<p className="text-[10px] md:text-[12px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
 						Create a new role to get started
 					</p>
 				</div>

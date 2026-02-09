@@ -188,7 +188,7 @@ const SMSPage: React.FC = () => {
 							variant="primary"
 							size="md"
 							onClick={() => console.log('Send SMS clicked')}
-							className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+							className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
 						>
 							<ChatBubbleIcon className="w-4 h-4" />
 							Send SMS
@@ -217,7 +217,7 @@ const SMSPage: React.FC = () => {
 							className="text-gray-600"
 						/>
 						<span
-							className="text-sm dark:text-gray-400"
+							className="text-[10px] md:text-[12px] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							Total of {filteredSMS.length} SMS
@@ -245,43 +245,43 @@ const SMSPage: React.FC = () => {
 									/>
 								</th>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-100"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									ID
 								</th>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-100"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Contact
 								</th>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-100"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Phone Number
 								</th>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-100"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Message
 								</th>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-100"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Direction
 								</th>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-100"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Status
 								</th>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-100"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Timestamp
@@ -351,7 +351,7 @@ const SMSPage: React.FC = () => {
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<span
-												className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+												className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-medium"
 												style={{
 													backgroundColor: directionColors.bg,
 													color: directionColors.text,
@@ -363,7 +363,7 @@ const SMSPage: React.FC = () => {
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<span
-												className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+												className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-medium"
 												style={{
 													backgroundColor: statusColors.bg,
 													color: statusColors.text,
@@ -417,7 +417,7 @@ const SMSPage: React.FC = () => {
 								style={{ color: 'var(--text-primary)' }}
 							/>
 							<h2
-								className="font-inter text-lg font-semibold dark:text-gray-100"
+								className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								Selected SMS ({selectedSMS.size})
@@ -447,7 +447,7 @@ const SMSPage: React.FC = () => {
 									style={{ color: 'var(--text-tertiary)' }}
 								/>
 								<p
-									className="text-sm dark:text-gray-400"
+									className="text-[10px] md:text-[12px] dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									No SMS selected
@@ -474,13 +474,13 @@ const SMSPage: React.FC = () => {
 													<div className="flex-1">
 														<div className="flex items-center gap-2 mb-2">
 															<span
-																className="text-xs font-medium dark:text-gray-300"
+																className="text-[8px] md:text-[10px] font-medium dark:text-gray-300"
 																style={{ color: 'var(--text-secondary)' }}
 															>
 																{sms.id}
 															</span>
 															<span
-																className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+																className="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] md:text-[10px] font-medium"
 																style={{
 																	backgroundColor: directionColors.bg,
 																	color: directionColors.text,
@@ -490,7 +490,7 @@ const SMSPage: React.FC = () => {
 																{sms.direction === 'inbound' ? 'Inbound' : 'Outbound'}
 															</span>
 															<span
-																className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+																className="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] md:text-[10px] font-medium"
 																style={{
 																	backgroundColor: statusColors.bg,
 																	color: statusColors.text,
@@ -502,14 +502,14 @@ const SMSPage: React.FC = () => {
 														</div>
 														{sms.contactName && (
 															<p
-																className="text-sm font-medium dark:text-gray-100 mb-1"
+																className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mb-1"
 																style={{ color: 'var(--text-primary)' }}
 															>
 																{sms.contactName}
 															</p>
 														)}
 														<p
-															className="text-xs dark:text-gray-400"
+															className="text-[8px] md:text-[10px] dark:text-gray-400"
 															style={{ color: 'var(--text-tertiary)' }}
 														>
 															{sms.phoneNumber}
@@ -519,7 +519,7 @@ const SMSPage: React.FC = () => {
 
 												{/* Message Preview */}
 												<div
-													className="mt-3 p-3 dark:bg-gray-800 border dark:border-gray-600 rounded text-sm dark:text-gray-200 line-clamp-3"
+													className="mt-3 p-3 dark:bg-gray-800 border dark:border-gray-600 rounded text-[10px] md:text-[12px] dark:text-gray-200 line-clamp-3"
 													style={{
 														backgroundColor: 'var(--accent-white)',
 														borderColor: 'var(--light-gray)',
@@ -531,7 +531,7 @@ const SMSPage: React.FC = () => {
 
 												{/* Timestamp */}
 												<p
-													className="text-xs mt-2 dark:text-gray-400"
+													className="text-[8px] md:text-[10px] mt-2 dark:text-gray-400"
 													style={{ color: 'var(--text-tertiary)' }}
 												>
 													{sms.timestamp}
@@ -543,7 +543,7 @@ const SMSPage: React.FC = () => {
 														setViewingSMS(sms);
 														setIsDrawerOpen(false);
 													}}
-													className="mt-3 w-full text-xs py-2 px-3 rounded border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
+													className="mt-3 w-full text-[8px] md:text-[10px] py-2 px-3 rounded border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
 													style={{
 														borderColor: 'var(--light-gray)',
 														color: 'var(--text-secondary)',
@@ -589,7 +589,7 @@ const SMSPage: React.FC = () => {
 									style={{ color: 'var(--text-primary)' }}
 								/>
 								<h2
-									className="font-inter text-xl font-semibold dark:text-gray-100"
+									className="font-inter text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									SMS Message Details
@@ -615,7 +615,7 @@ const SMSPage: React.FC = () => {
 							{/* Message Content */}
 							<div>
 								<label
-									className="block text-sm font-medium mb-2 dark:text-gray-300"
+									className="block text-[10px] md:text-[12px] font-medium mb-2 dark:text-gray-300"
 									style={{ color: 'var(--text-secondary)' }}
 								>
 									Message
@@ -636,13 +636,13 @@ const SMSPage: React.FC = () => {
 							<div className="grid grid-cols-2 gap-4">
 								<div>
 									<label
-										className="block text-sm font-medium mb-2 dark:text-gray-300"
+										className="block text-[10px] md:text-[12px] font-medium mb-2 dark:text-gray-300"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										SMS ID
 									</label>
 									<p
-										className="text-sm dark:text-gray-100"
+										className="text-[10px] md:text-[12px] dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{viewingSMS.id}
@@ -650,13 +650,13 @@ const SMSPage: React.FC = () => {
 								</div>
 								<div>
 									<label
-										className="block text-sm font-medium mb-2 dark:text-gray-300"
+										className="block text-[10px] md:text-[12px] font-medium mb-2 dark:text-gray-300"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Contact Name
 									</label>
 									<p
-										className="text-sm dark:text-gray-100"
+										className="text-[10px] md:text-[12px] dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{viewingSMS.contactName || '-'}
@@ -664,13 +664,13 @@ const SMSPage: React.FC = () => {
 								</div>
 								<div>
 									<label
-										className="block text-sm font-medium mb-2 dark:text-gray-300"
+										className="block text-[10px] md:text-[12px] font-medium mb-2 dark:text-gray-300"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Phone Number
 									</label>
 									<p
-										className="text-sm dark:text-gray-100"
+										className="text-[10px] md:text-[12px] dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{viewingSMS.phoneNumber}
@@ -678,13 +678,13 @@ const SMSPage: React.FC = () => {
 								</div>
 								<div>
 									<label
-										className="block text-sm font-medium mb-2 dark:text-gray-300"
+										className="block text-[10px] md:text-[12px] font-medium mb-2 dark:text-gray-300"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Timestamp
 									</label>
 									<p
-										className="text-sm dark:text-gray-100"
+										className="text-[10px] md:text-[12px] dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{viewingSMS.timestamp}
@@ -692,13 +692,13 @@ const SMSPage: React.FC = () => {
 								</div>
 								<div>
 									<label
-										className="block text-sm font-medium mb-2 dark:text-gray-300"
+										className="block text-[10px] md:text-[12px] font-medium mb-2 dark:text-gray-300"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Direction
 									</label>
 									<span
-										className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+										className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-medium"
 										style={getDirectionColor(viewingSMS.direction)}
 									>
 										{viewingSMS.direction === 'inbound' ? 'Inbound' : 'Outbound'}
@@ -706,13 +706,13 @@ const SMSPage: React.FC = () => {
 								</div>
 								<div>
 									<label
-										className="block text-sm font-medium mb-2 dark:text-gray-300"
+										className="block text-[10px] md:text-[12px] font-medium mb-2 dark:text-gray-300"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Status
 									</label>
 									<span
-										className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+										className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-medium"
 										style={getStatusColor(viewingSMS.status)}
 									>
 										{viewingSMS.status.charAt(0).toUpperCase() + viewingSMS.status.slice(1)}

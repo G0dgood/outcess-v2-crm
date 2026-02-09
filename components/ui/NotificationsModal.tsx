@@ -134,13 +134,13 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 					<div className="flex justify-between items-center">
 						<div>
 							<h2
-								className="text-2xl font-semibold dark:text-gray-100"
+								className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								Notifications
 							</h2>
 							<p
-								className="text-sm dark:text-gray-400 mt-1"
+								className="text-[10px] md:text-[12px] dark:text-gray-400 mt-1"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								{filteredNotifications.length} {filteredNotifications.length === 1 ? 'notification' : 'notifications'}
@@ -187,7 +187,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 						<div className="flex items-center gap-2">
 							<button
 								onClick={() => setFilter('all')}
-								className={`px-4 py-2 text-sm font-medium transition-colors ${filter === 'all'
+								className={`px-4 py-2 text-[10px] md:text-[12px] font-medium transition-colors ${filter === 'all'
 									? 'dark:bg-gray-700 dark:text-gray-100'
 									: 'dark:text-gray-400 dark:hover:text-gray-200'
 									}`}
@@ -212,7 +212,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 							</button>
 							<button
 								onClick={() => setFilter('unread')}
-								className={`px-4 py-2 text-sm font-medium transition-colors ${filter === 'unread'
+								className={`px-4 py-2 text-[10px] md:text-[12px] font-medium transition-colors ${filter === 'unread'
 									? 'dark:bg-gray-700 dark:text-gray-100'
 									: 'dark:text-gray-400 dark:hover:text-gray-200'
 									}`}
@@ -237,7 +237,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 							</button>
 							<button
 								onClick={() => setFilter('read')}
-								className={`px-4 py-2 text-sm font-medium transition-colors ${filter === 'read'
+								className={`px-4 py-2 text-[10px] md:text-[12px] font-medium transition-colors ${filter === 'read'
 									? 'dark:bg-gray-700 dark:text-gray-100'
 									: 'dark:text-gray-400 dark:hover:text-gray-200'
 									}`}
@@ -322,18 +322,18 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 												<div className="flex items-start justify-between">
 													<div className="flex-1">
 														<p
-															className="text-sm dark:text-gray-300 leading-relaxed"
+															className="text-[10px] md:text-[12px] dark:text-gray-300 leading-relaxed"
 															style={{ color: 'var(--text-tertiary)' }}
 														>
 															<span
-																className="font-inter not-italic font-medium text-sm leading-[145%] dark:text-gray-100 font-features"
+																className="font-inter not-italic font-medium text-[10px] md:text-[12px] leading-[145%] dark:text-gray-100 font-features"
 																style={{ color: 'var(--text-primary)' }}
 															>
 																{notification.user.name}
 															</span>{' '}
 															{notification.message}
 															<span
-																className="text-xs dark:text-gray-400 mt-1 block"
+																className="text-[8px] md:text-[10px] dark:text-gray-400 mt-1 block"
 																style={{ color: 'var(--text-tertiary)' }}
 															>
 																{notification.timestamp}
@@ -357,7 +357,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 						) : (
 							<div className="p-12 text-center">
 								<p
-									className="text-sm dark:text-gray-400"
+									className="text-[10px] md:text-[12px] dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									No notifications found

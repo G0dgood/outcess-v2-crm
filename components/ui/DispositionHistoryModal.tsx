@@ -155,7 +155,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="text-xl font-semibold dark:text-gray-100"
+						className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Disposition History
@@ -184,7 +184,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 					{showDispositionsList && (
 						<div className="space-y-4">
 							<h3
-								className="text-lg font-semibold dark:text-gray-100 mb-4"
+								className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-4"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								Disposition History ({offlineDispositions.length + syncedDispositions.length})
@@ -202,7 +202,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 								>
 									<div className="flex items-center justify-between mb-3">
 										<span
-											className="text-xs font-medium px-2 py-1 "
+											className="text-[8px] md:text-[10px] font-medium px-2 py-1 "
 											style={{
 												backgroundColor: '#D1FAE5',
 												color: '#065F46'
@@ -211,12 +211,12 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 											✓ Synced
 										</span>
 										{synced.customerName && (
-											<span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+											<span className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-secondary)' }}>
 												{synced.customerName}
 											</span>
 										)}
 									</div>
-									<div className="grid grid-cols-2 gap-4 text-sm">
+									<div className="grid grid-cols-2 gap-4 text-[10px] md:text-[12px]">
 										{synced.dispositionData?.map((field: DispositionFieldEntry) => (
 											<div key={field.fieldId}>
 												<span style={{ color: 'var(--text-tertiary)' }}>{field.fieldName}: </span>
@@ -236,7 +236,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 											<span style={{ color: 'var(--text-primary)' }}>{String(synced.agent || '-')}</span>
 										</div>
 									</div>
-									<div className="mt-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+									<div className="mt-2 text-[8px] md:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
 										Synced: {new Date(synced.syncedAt!).toLocaleString()}
 									</div>
 								</div>
@@ -254,7 +254,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 								>
 									<div className="flex items-center justify-between mb-3">
 										<span
-											className="text-xs font-medium px-2 py-1 "
+											className="text-[8px] md:text-[10px] font-medium px-2 py-1 "
 											style={{
 												backgroundColor: offline.status === 'pending' ? '#FEF3C7' : '#D1FAE5',
 												color: offline.status === 'pending' ? '#92400E' : '#065F46'
@@ -263,12 +263,12 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 											{offline.status === 'pending' ? 'Pending Sync' : 'Synced'}
 										</span>
 										{offline.customerName && (
-											<span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+											<span className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-secondary)' }}>
 												{offline.customerName}
 											</span>
 										)}
 									</div>
-									<div className="grid grid-cols-2 gap-4 text-sm">
+									<div className="grid grid-cols-2 gap-4 text-[10px] md:text-[12px]">
 										{offline.dispositionData?.map((field) => (
 											<div key={field.fieldId}>
 												<span style={{ color: 'var(--text-tertiary)' }}>{field.fieldName}: </span>
@@ -284,7 +284,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 											<span style={{ color: 'var(--text-primary)' }}>{new Date(offline.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
 										</div>
 									</div>
-									<div className="mt-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+									<div className="mt-2 text-[8px] md:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
 										Created: {new Date(offline.createdAt).toLocaleString()}
 									</div>
 								</div>
@@ -306,7 +306,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 								<div className="space-y-3">
 									<div>
 										<label
-											className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-1"
+											className="block text-[8px] md:text-[10px] font-medium dark:text-gray-400 uppercase tracking-wider mb-1"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											Agent Name
@@ -320,7 +320,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 									</div>
 									<div>
 										<label
-											className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-1"
+											className="block text-[8px] md:text-[10px] font-medium dark:text-gray-400 uppercase tracking-wider mb-1"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											Agent ID
@@ -334,7 +334,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 									</div>
 									<div>
 										<label
-											className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-1"
+											className="block text-[8px] md:text-[10px] font-medium dark:text-gray-400 uppercase tracking-wider mb-1"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											Date Contacted
@@ -354,7 +354,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 								{dispositionItem.dispositionData?.map((field) => (
 									<div key={field.fieldId}>
 										<label
-											className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
+											className="block text-[8px] md:text-[10px] font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											{field.fieldName}
@@ -376,7 +376,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 							{dispositionItem?.comment && (
 								<div>
 									<label
-										className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
+										className="block text-[8px] md:text-[10px] font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Comment

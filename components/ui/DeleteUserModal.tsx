@@ -33,7 +33,7 @@ export const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
 				<div className="p-6">
 					{/* Title */}
 					<h2
-						className="font-lato font-medium text-[16px] leading-[150%] dark:text-gray-100 mb-5"
+						className="font-lato font-medium text-[12px] md:text-[14px] leading-[150%] dark:text-gray-100 mb-5"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Are you sure you want to delete {userName} from the CRM?

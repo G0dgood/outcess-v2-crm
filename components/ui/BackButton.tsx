@@ -35,7 +35,7 @@ const BackButton: React.FC<BackButtonProps> = ({
 	return (
 		<button
 			onClick={handleClick}
-			className={`curson-pointer inline-flex items-center gap-2 text-sm font-medium transition-all duration-200 ${useCustomColor
+			className={`curson-pointer inline-flex items-center gap-2 text-[10px] md:text-[12px] font-medium transition-all duration-200 ${useCustomColor
 				? 'dark:text-gray-100' // Override dark mode to ensure visibility
 				: 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
 				} ${className}`}

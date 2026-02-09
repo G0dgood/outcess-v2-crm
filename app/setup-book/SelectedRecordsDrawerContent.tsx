@@ -32,7 +32,7 @@ const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> 
       >
         <div className="flex items-center gap-3">
           <FileTextIcon className="w-5 h-5 dark:text-gray-300" style={{ color: 'var(--text-primary)' }} />
-          <h2 className="font-inter text-lg font-semibold dark:text-gray-100" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100" style={{ color: 'var(--text-primary)' }}>
             Selected Records ({selectedRecords.size})
           </h2>
         </div>
@@ -40,7 +40,7 @@ const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> 
           {canDelete && onDeleteSelected && selectedRecords.size > 0 && (
             <button
               onClick={onDeleteSelected}
-              className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-red-500 border border-red-500 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 text-[8px] md:text-[10px] font-medium text-red-500 border border-red-500 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               title="Delete Selected"
             >
               <TrashIcon className="w-3.5 h-3.5" />
@@ -69,7 +69,7 @@ const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> 
         {selectedRecords.size === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <FileTextIcon className="w-12 h-12 mb-4 dark:text-gray-400" style={{ color: 'var(--text-tertiary)' }} />
-            <p className="text-sm dark:text-gray-400" style={{ color: 'var(--text-tertiary)' }}>
+            <p className="text-[10px] md:text-[12px] dark:text-gray-400" style={{ color: 'var(--text-tertiary)' }}>
               No records selected
             </p>
           </div>
@@ -82,11 +82,22 @@ const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> 
                   key={record.id}
                   className="p-4 dark:bg-gray-700 border dark:border-gray-600 "
                   style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--light-gray)' }}
-                > 
+                >
 
                   <div className="space-y-2">
+                    <div className="flex items-start justify-between text-[8px] md:text-[10px]">
+                      <span className="font-medium dark:text-gray-400 mr-2" style={{ color: 'var(--text-tertiary)' }}>
+                        Search ID:
+                      </span>
+                      <span
+                        className="text-right flex-1 dark:text-gray-100"
+                        style={{ color: 'var(--text-primary)', wordBreak: 'break-word' }}
+                      >
+                        {record['searchId'] ? String(record['searchId']) : '-'}
+                      </span>
+                    </div>
                     {fieldDefinitions.map((field) => (
-                      <div key={field.id} className="flex items-start justify-between text-xs">
+                      <div key={field.id} className="flex items-start justify-between text-[8px] md:text-[10px]">
                         <span className="font-medium dark:text-gray-400 mr-2" style={{ color: 'var(--text-tertiary)' }}>
                           {field.name}:
                         </span>

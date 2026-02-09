@@ -118,7 +118,7 @@ const DraggableChart: React.FC<DraggableChartProps> = ({
 		>
 			{/* Chart Header */}
 			<div className="chart-header flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 cursor-grab">
-				<h3 className="font-inter text-lg font-semibold text-gray-900">
+				<h3 className="font-inter text-[12px] md:text-[14px] font-semibold text-gray-900">
 					{chart.title}
 				</h3>
 				<div className="flex items-center gap-2">

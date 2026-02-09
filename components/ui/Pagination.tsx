@@ -86,7 +86,7 @@ const Pagination: React.FC<PaginationProps> = ({
 				<button
 					onClick={handlePrevious}
 					disabled={currentPage === 1}
-					className="py-2 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+					className="py-2 text-[10px] md:text-[12px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
 				>
 					Previous
 				</button>
@@ -110,7 +110,7 @@ const Pagination: React.FC<PaginationProps> = ({
 						<button
 							key={pageNumber}
 							onClick={() => onPageChange(pageNumber)}
-							className={`cursor-pointer font-inter font-medium text-[16px] leading-[150%] px-3 py-1 text-sm transition-colors ${isCurrentPage
+							className={`cursor-pointer font-inter font-medium text-[12px] md:text-[14px] leading-[150%] px-3 py-1 text-[10px] md:text-[12px] transition-colors ${isCurrentPage
 								? 'text-white'
 								: 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
 								}`}
@@ -127,7 +127,7 @@ const Pagination: React.FC<PaginationProps> = ({
 				<button
 					onClick={handleNext}
 					disabled={currentPage === totalPages}
-					className="py-2 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+					className="py-2 text-[10px] md:text-[12px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
 				>
 					Next
 				</button>

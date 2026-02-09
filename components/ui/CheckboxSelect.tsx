@@ -65,7 +65,7 @@ export const CheckboxSelect: React.FC<CheckboxSelectProps> = ({
 							disabled={disabled || option.disabled}
 							className="mr-2 text-blue-600 focus:ring-blue-500 focus:ring-2 rounded"
 						/>
-						<span className="text-sm text-gray-700">{option.label}</span>
+						<span className="text-[10px] md:text-[12px] text-gray-700">{option.label}</span>
 					</label>
 				))}
 			</div>

@@ -3,7 +3,6 @@ import React, { useState, useEffect, Suspense } from "react";
 import { SetupProvider } from "@/contexts/SetupContext";
 import DashboardHeader from "@/components/ui/DashboardHeader";
 import DashboardSideNav from "@/components/ui/DashboardSideNav";
-import MobileSideNav from "@/components/ui/MobileSideNav";
 import OfflineBanner from "@/components/ui/OfflineBanner";
 import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
 
@@ -31,32 +30,22 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
 
   return (
-    <div id="page-wrapper">
+    <div id="page-wrapper" className={isMobileMenuOpen ? 'mobile-nav-open' : ''}>
       <OfflineBanner />
       <DashboardHeader
-        companyName={lineOfBusinessData?.companyName || ''}
-        onMobileMenuToggle={toggleMobileMenu}
-      />
+				companyName={lineOfBusinessData?.companyName || ''}
+				onMobileMenuToggle={toggleMobileMenu}
+				isMobileMenuOpen={isMobileMenuOpen}
+			/>
 
       {/* Desktop SideNav */}
       <Suspense fallback={null}>
         <DashboardSideNav
           activeItem="dashboard"
-          isMobileOpen={false}
-          onMobileClose={() => { }}
+          isMobileOpen={isMobileMenuOpen}
+          onMobileClose={() => setIsMobileMenuOpen(false)}
         />
       </Suspense>
-
-      {/* Mobile SideNav - only render on mobile viewports */}
-      {isMobileView && (
-        <Suspense fallback={null}>
-          <MobileSideNav
-            activeItem="dashboard"
-            isOpen={isMobileMenuOpen}
-            onClose={closeMobileMenu}
-          />
-        </Suspense>
-      )}
 
       <main>{children}</main>
     </div>

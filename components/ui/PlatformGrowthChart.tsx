@@ -81,7 +81,7 @@ const PlatformGrowthChart: React.FC = () => {
 								x={startX}
 								y={y + 4}
 								textAnchor="end"
-								className="text-xs fill-gray-600"
+								className="text-[8px] md:text-[10px] fill-gray-600"
 								fontSize="12"
 							>
 								{value}
@@ -123,7 +123,7 @@ const PlatformGrowthChart: React.FC = () => {
 								x={groupX + groupWidth / 2}
 								y={chartHeight - 20}
 								textAnchor="middle"
-								className="text-xs fill-gray-600"
+								className="text-[8px] md:text-[10px] fill-gray-600"
 								fontSize="12"
 							>
 								{item.month}
@@ -137,11 +137,11 @@ const PlatformGrowthChart: React.FC = () => {
 			<div className="flex items-center justify-center gap-6 mt-6">
 				<div className="flex items-center gap-2">
 					<div className="w-4 h-4 rounded bg-[#EC4899]"></div>
-					<span className="text-sm text-gray-700">Businesses</span>
+					<span className="text-[10px] md:text-[12px] text-gray-700">Businesses</span>
 				</div>
 				<div className="flex items-center gap-2">
 					<div className="w-4 h-4 rounded bg-[#60A5FA]"></div>
-					<span className="text-sm text-gray-700">Users</span>
+					<span className="text-[10px] md:text-[12px] text-gray-700">Users</span>
 				</div>
 			</div>
 		</div>

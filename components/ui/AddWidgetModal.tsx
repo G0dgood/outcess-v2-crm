@@ -291,7 +291,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 					className={isValueAutoCalculated ? 'opacity-60 cursor-not-allowed' : ''}
 				/>
 				{isValueAutoCalculated && (
-					<p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+					<p className="text-[8px] md:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
 						Value is automatically calculated from disposition data
 					</p>
 				)}

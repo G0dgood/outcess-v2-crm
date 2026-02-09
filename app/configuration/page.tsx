@@ -66,13 +66,13 @@ export default function ConfigurationPage() {
 			{/* Header Section */}
 			<div className="mb-6">
 				<h1
-					className="text-2xl font-semibold dark:text-gray-100 mb-2"
+					className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100 mb-2"
 					style={{ color: 'var(--text-primary)' }}
 				>
 					Configuration
 				</h1>
 				<p
-					className="text-sm dark:text-gray-400"
+					className="text-[10px] md:text-[12px] dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
 					Manage your line of businesses and other settings.
@@ -86,7 +86,7 @@ export default function ConfigurationPage() {
 					onChange={setSearchTerm}
 					className="w-full sm:w-auto"
 					maxWidth="w-full"
-					onSearch={(value) => console.log('Search triggered:', value)} 
+					onSearch={(value) => console.log('Search triggered:', value)}
 					showClearButton={true}
 				/>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
@@ -99,7 +99,7 @@ export default function ConfigurationPage() {
 								localStorage.removeItem('peoplely-setup-data');
 								router.push('/setup');
 							}}
-							className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+							className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2 sm:text-[10px] md:text-[12px]"
 						>
 							Line of Businesses
 						</Button>
@@ -116,7 +116,7 @@ export default function ConfigurationPage() {
 			>
 				<div className="p-6 border-b dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
 					<h2
-						className="text-lg font-semibold dark:text-gray-100"
+						className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Line of Businesses
@@ -138,21 +138,21 @@ export default function ConfigurationPage() {
 							<tr>
 								<th
 									scope="col"
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Name
 								</th>
 								<th
 									scope="col"
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Created At
 								</th>
 								<th
 									scope="col"
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Action
@@ -183,19 +183,19 @@ export default function ConfigurationPage() {
 									}}
 								>
 									<td
-										className="px-6 py-4 whitespace-nowrap text-sm font-medium dark:text-gray-100"
+										className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{lob.lineOfBusinessName}
 									</td>
 									<td
-										className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-400"
+										className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										{lob.createdAt ? new Date(lob.createdAt).toLocaleDateString() : 'N/A'}
 									</td>
 									<td
-										className="px-6 py-4 whitespace-nowrap text-sm font-medium"
+										className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] font-medium"
 									>
 										<div className="flex items-center gap-2">
 											{canEdit && (
@@ -216,9 +216,9 @@ export default function ConfigurationPage() {
 													className="p-2 hover:bg-red-50 rounded-full transition-colors dark:hover:bg-red-900/20 group"
 													title="Delete"
 												>
-													<TrashIcon 
-														width={18} 
-														height={18} 
+													<TrashIcon
+														width={18}
+														height={18}
 														className="text-red-500 group-hover:text-red-600"
 													/>
 												</button>
@@ -231,7 +231,7 @@ export default function ConfigurationPage() {
 					</table>
 				</div>
 			</div>
-			
+
 			<DeleteRecordModal
 				isOpen={deleteModalOpen}
 				recordName={recordToDelete?.name || ''}

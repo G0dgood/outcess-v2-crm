@@ -60,13 +60,13 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
 				>
 					<div className="flex items-center justify-between">
 						<div>
-							<p 
-								className="text-sm font-medium dark:text-gray-400 mb-1"
+							<p
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-400 mb-1"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								{card.title}
 							</p>
-							<p 
+							<p
 								className="text-3xl font-bold dark:text-gray-100"
 								style={{ color: 'var(--text-primary)' }}
 							>
@@ -74,9 +74,8 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
 							</p>
 						</div>
 						<div
-							className={`p-3 rounded-lg ${
-								card.iconBgColor || 'dark:bg-blue-900/30'
-							} ${card.iconBgColor === 'bg-blue-50' ? 'dark:bg-blue-900/30' : ''} ${card.iconBgColor === 'bg-green-50' ? 'dark:bg-green-900/30' : ''} ${card.iconBgColor === 'bg-purple-50' ? 'dark:bg-purple-900/30' : ''}`}
+							className={`p-3 rounded-lg ${card.iconBgColor || 'dark:bg-blue-900/30'
+								} ${card.iconBgColor === 'bg-blue-50' ? 'dark:bg-blue-900/30' : ''} ${card.iconBgColor === 'bg-green-50' ? 'dark:bg-green-900/30' : ''} ${card.iconBgColor === 'bg-purple-50' ? 'dark:bg-purple-900/30' : ''}`}
 							style={card.iconBgColor === 'bg-blue-50' ? {
 								backgroundColor: 'rgba(59, 130, 246, 0.1)'
 							} : card.iconBgColor === 'bg-green-50' ? {
@@ -87,7 +86,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
 								backgroundColor: 'rgba(59, 130, 246, 0.1)'
 							}}
 						>
-							<div 
+							<div
 								className={`${card.iconColor || ''} ${card.iconColor === 'text-blue-600' ? 'dark:text-blue-400' : ''} ${card.iconColor === 'text-green-600' ? 'dark:text-green-400' : ''} ${card.iconColor === 'text-purple-600' ? 'dark:text-purple-400' : ''}`}
 								style={card.iconColor === 'text-blue-600' ? {
 									color: '#2563EB'

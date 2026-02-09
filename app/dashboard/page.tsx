@@ -754,10 +754,10 @@ const DashboardContent: React.FC = () => {
 					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-8"
 					style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
 				>
-					<h2 className="font-inter text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+					<h2 className="font-inter text-[12px] md:text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>
 						Access Restricted
 					</h2>
-					<p className="font-lato text-sm" style={{ color: 'var(--text-tertiary)' }}>
+					<p className="font-lato text-[10px] md:text-[12px]" style={{ color: 'var(--text-tertiary)' }}>
 						You do not have access permission to view the dashboard.
 					</p>
 				</div>
@@ -774,32 +774,32 @@ const DashboardContent: React.FC = () => {
 						</h1>
 						<div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
 							<div className="w-40">
-							<Dropdown
-								label=""
-								placeholder="Time Range"
-								inputClassName="!py-[7px] !leading-5 !text-xs sm:!text-sm  flex-none "
-								options={[
-									{ value: 'daily', label: 'Daily' },
-									{ value: 'weekly', label: 'Weekly' },
-									{ value: 'monthly', label: 'Monthly' },
-									{ value: 'yearly', label: 'Yearly' },
-									{ value: 'all', label: 'All Time' },
-								]}
-								value={dashboardSettings.dispositionSettings?.timeRangeView || 'daily'}
-								onChange={(value) => updateDashboardSettings({
-									dispositionSettings: {
-										...dashboardSettings.dispositionSettings,
-										timeRangeView: value as unknown as 'daily' | 'weekly' | 'monthly',
-									}
-								})}
-							/>
+								<Dropdown
+									label=""
+									placeholder="Time Range"
+									inputClassName="!py-[7px] !leading-5 !text-[8px] md:text-[10px] sm:!text-[10px] md:text-[12px]  flex-none "
+									options={[
+										{ value: 'daily', label: 'Daily' },
+										{ value: 'weekly', label: 'Weekly' },
+										{ value: 'monthly', label: 'Monthly' },
+										{ value: 'yearly', label: 'Yearly' },
+										{ value: 'all', label: 'All Time' },
+									]}
+									value={dashboardSettings.dispositionSettings?.timeRangeView || 'daily'}
+									onChange={(value) => updateDashboardSettings({
+										dispositionSettings: {
+											...dashboardSettings.dispositionSettings,
+											timeRangeView: value as unknown as 'daily' | 'weekly' | 'monthly',
+										}
+									})}
+								/>
 							</div>
 							<Button
 								variant="primary"
 								size="md"
 								onClick={handleRefresh}
 								disabled={isRefreshing}
-								className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+								className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2 sm:text-[10px] md:text-[12px]"
 								onMouseEnter={(event) => handlePrimaryHover(event, true)}
 								onMouseLeave={(event) => handlePrimaryHover(event, false)}
 							>
@@ -815,7 +815,7 @@ const DashboardContent: React.FC = () => {
 									onClick={handleAddWidget}
 									disabled={!canCreate}
 									// style={primaryButtonStyle}
-									className="transition-all duration-200 px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm"
+									className="transition-all duration-200 px-2 py-1 text-[8px] md:text-[10px] sm:px-4 sm:py-2 sm:text-[10px] md:text-[12px]"
 									onMouseEnter={(event) => handlePrimaryHover(event, true)}
 									onMouseLeave={(event) => handlePrimaryHover(event, false)}
 								>
@@ -827,7 +827,7 @@ const DashboardContent: React.FC = () => {
 								variant="primary"
 								size="md"
 								onClick={handleCreateStickyNoteDirectly}
-								className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+								className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2 sm:text-[10px] md:text-[12px]"
 								// style={outlineButtonStyle}
 								onMouseEnter={(event) => handlePrimaryHover(event, true)}
 								onMouseLeave={(event) => handlePrimaryHover(event, false)}
@@ -841,7 +841,7 @@ const DashboardContent: React.FC = () => {
 									size="md"
 									onClick={() => setIsAddChartModalOpen(true)}
 									disabled={!canCreate}
-									className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+									className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2 sm:text-[10px] md:text-[12px]"
 									// style={outlineButtonStyle}
 									onMouseEnter={(event) => handlePrimaryHover(event, true)}
 									onMouseLeave={(event) => handlePrimaryHover(event, false)}
@@ -861,7 +861,7 @@ const DashboardContent: React.FC = () => {
 						variant="primary"
 						size="md"
 						onClick={handleImport}
-						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+						className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2 sm:text-[10px] md:text-[12px]"
 					>
 						Import
 						<Icon name="share" size="sm" />
@@ -893,7 +893,7 @@ const DashboardContent: React.FC = () => {
 							<h3 className="font-inter text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
 								View Restricted
 							</h3>
-							<p className="font-lato text-sm" style={{ color: 'var(--text-tertiary)' }}>
+							<p className="font-lato text-[10px] md:text-[12px]" style={{ color: 'var(--text-tertiary)' }}>
 								You do not have permission to view widgets and charts.
 							</p>
 						</div>
@@ -964,13 +964,13 @@ const DashboardContent: React.FC = () => {
 										<circle cx="21" cy="10" r="1.5" fill="currentColor" />
 									</svg>
 									<h3
-										className="font-inter text-lg font-semibold mb-2"
+										className="font-inter text-[12px] md:text-[14px] font-semibold mb-2"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										No Charts Configured
 									</h3>
 									<p
-										className="font-inter text-sm text-center mb-6 max-w-md"
+										className="font-inter text-[10px] md:text-[12px] text-center mb-6 max-w-md"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Add your first chart to visualize your disposition data and track important metrics.
@@ -980,7 +980,7 @@ const DashboardContent: React.FC = () => {
 											variant="primary"
 											size="md"
 											onClick={() => setIsAddChartModalOpen(true)}
-											className="flex items-center gap-2 px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm"
+											className="flex items-center gap-2 px-2 py-1 text-[8px] md:text-[10px] sm:px-4 sm:py-2 sm:text-[10px] md:text-[12px]"
 										>
 											<PlusIcon className="w-4 h-4" />
 											<span className="hidden sm:inline">Add Chart</span>

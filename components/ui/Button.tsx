@@ -36,8 +36,8 @@ export const Button: React.FC<ButtonProps> = ({
 	const baseClasses = 'inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:-translate-y-0.5 active:translate-y-0 hover:shadow-lg active:shadow-md';
 
 	const sizeClasses = {
-		sm: 'px-3 py-2 text-sm',
-		md: 'px-4 py-2 text-sm',
+		sm: 'px-3 py-2 text-[10px] md:text-[12px]',
+		md: 'px-4 py-2 text-[10px] md:text-[12px]',
 		lg: 'px-6 py-3 text-base',
 	};
 
@@ -103,7 +103,7 @@ export const Button: React.FC<ButtonProps> = ({
 
 	const getButtonStyles = (): React.CSSProperties => {
 		const baseStyle = style || {};
-		
+
 		if (variant === 'primary') {
 			return {
 				...baseStyle,
@@ -111,7 +111,7 @@ export const Button: React.FC<ButtonProps> = ({
 				color: baseStyle.color ?? 'var(--accent-white)',
 			};
 		}
-		
+
 		if (variant === 'outline') {
 			return {
 				...baseStyle,
@@ -120,7 +120,7 @@ export const Button: React.FC<ButtonProps> = ({
 				backgroundColor: baseStyle.backgroundColor ?? 'transparent',
 			};
 		}
-		
+
 		if (variant === 'ghost') {
 			return {
 				...baseStyle,
@@ -128,7 +128,7 @@ export const Button: React.FC<ButtonProps> = ({
 				backgroundColor: baseStyle.backgroundColor ?? 'transparent',
 			};
 		}
-		
+
 		return baseStyle;
 	};
 

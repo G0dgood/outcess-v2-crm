@@ -204,7 +204,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="text-xl font-semibold dark:text-gray-100"
+						className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						{isEditMode ? 'Edit Status' : 'Create Status'}
@@ -254,7 +254,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 					{/* Role Selection */}
 					<div>
 						<label
-							className="block text-sm font-medium dark:text-gray-300 mb-3"
+							className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-3"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							Role
@@ -318,7 +318,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 																			onChange={() => handleRoleToggle(role.id)}
 																			size="medium"
 																		/>
-																		<span className="text-sm dark:text-gray-300" style={{ color: 'var(--text-primary)' }}>
+																		<span className="text-[10px] md:text-[12px] dark:text-gray-300" style={{ color: 'var(--text-primary)' }}>
 																			{role.label}
 																		</span>
 																	</div>

@@ -165,12 +165,12 @@ function PaymentPageContent() {
 											<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--text-primary)' }}>
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
 											</svg>
-											<span className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Card</span>
+											<span className="text-[12px] md:text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>Card</span>
 										</div>
 										<div className="flex items-center gap-2">
-											<span className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>VISA</span>
-											<span className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>MC</span>
-											<span className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>AMEX</span>
+											<span className="text-[8px] md:text-[10px] font-medium" style={{ color: 'var(--text-tertiary)' }}>VISA</span>
+											<span className="text-[8px] md:text-[10px] font-medium" style={{ color: 'var(--text-tertiary)' }}>MC</span>
+											<span className="text-[8px] md:text-[10px] font-medium" style={{ color: 'var(--text-tertiary)' }}>AMEX</span>
 										</div>
 									</div>
 
@@ -215,7 +215,7 @@ function PaymentPageContent() {
 														</div>
 														<div className="pt-8">
 															<div
-																className="w-10 h-6 border text-xs flex items-center justify-center"
+																className="w-10 h-6 border text-[8px] md:text-[10px] flex items-center justify-center"
 																style={{ borderColor: 'var(--light-gray)', color: 'var(--text-tertiary)' }}
 															>
 																123
@@ -247,7 +247,7 @@ function PaymentPageContent() {
 											<svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" style={{ color: 'var(--text-primary)' }}>
 												<path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 7.291-10.125 7.291H9.95c-.315 0-.588.19-.692.477l-1.533 4.569a1.035 1.035 0 01-.98.714l-3.38-.02a.813.813 0 01-.73-.456l-1.125-2.639a.723.723 0 00-.677-.45H.49a.49.49 0 01-.49-.49c0-.258.21-.49.49-.49h2.586c.315 0 .588-.19.692-.477l.423-1.266c.287-.86.978-1.465 1.844-1.465h6.16c3.528 0 6.226-1.456 7.11-4.18.538-1.682.441-3.177-.28-4.39-.72-1.213-2.11-1.82-4.165-1.82H7.998c-.524 0-.972.382-1.054.901L5.47 20.597h1.606z" />
 											</svg>
-											<span className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>PayPal</span>
+											<span className="text-[12px] md:text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>PayPal</span>
 										</div>
 									</div>
 								</div>
@@ -281,7 +281,7 @@ function PaymentPageContent() {
 							/>
 
 							{/* Legal Text */}
-							<div className="space-y-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
+							<div className="space-y-3 text-[10px] md:text-[12px]" style={{ color: 'var(--text-secondary)' }}>
 								<p>
 									By purchasing a plan you agree that you have read, understand and agree to be bound by the{' '}
 									<a href="#" className="underline hover:opacity-80" style={{ color: primaryColor }}>Terms of Service</a> and{' '}
@@ -311,16 +311,16 @@ function PaymentPageContent() {
 					{/* Right Column - Order Summary */}
 					<div className="lg:col-span-1">
 						<div className="lg:sticky lg:top-8">
-							<h3 className="text-sm font-medium mb-4" style={{ color: 'var(--text-secondary)' }}>Your plan</h3>
+							<h3 className="text-[10px] md:text-[12px] font-medium mb-4" style={{ color: 'var(--text-secondary)' }}>Your plan</h3>
 
 							<div className="p-6 space-y-4" style={{ backgroundColor: 'var(--accent-white)', border: '1px solid var(--light-gray)' }}>
 								{/* Plan Name */}
 								<div>
 									<div className="flex items-center justify-between mb-2">
-										<h4 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{planName}</h4>
+										<h4 className="text-[18px] md:text-[20px] font-bold" style={{ color: 'var(--text-primary)' }}>{planName}</h4>
 										<ChevronDownIcon className="w-5 h-5" style={{ color: 'var(--text-tertiary)' }} />
 									</div>
-									<p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>{lineOfBusinessData?.companyName || ''} workspace</p>
+									<p className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-tertiary)' }}>{lineOfBusinessData?.companyName || ''} workspace</p>
 								</div>
 
 								{/* Billing Cycle */}
@@ -330,29 +330,29 @@ function PaymentPageContent() {
 									className="flex items-center justify-between w-full py-3 border-t transition-colors hover:opacity-80"
 									style={{ borderColor: 'var(--light-gray)' }}
 								>
-									<span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Billing cycle</span>
+									<span className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-secondary)' }}>Billing cycle</span>
 									<div className="flex items-center gap-2">
-										<span className="text-sm font-medium capitalize" style={{ color: 'var(--text-primary)' }}>{orderBillingCycle}</span>
+										<span className="text-[10px] md:text-[12px] font-medium capitalize" style={{ color: 'var(--text-primary)' }}>{orderBillingCycle}</span>
 										<ChevronDownIcon className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
 									</div>
 								</button>
 
 								{/* Price Breakdown */}
 								<div className="flex items-center justify-between py-3 border-t" style={{ borderColor: 'var(--light-gray)' }}>
-									<span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+									<span className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-secondary)' }}>
 										US${orderPrice} x {orderBillingCycle === 'annual' ? '1 year' : '1 month'}
 									</span>
-									<span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>US${orderPrice}</span>
+									<span className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-primary)' }}>US${orderPrice}</span>
 								</div>
 
 								{/* Promo Code */}
 								<div className="flex items-center justify-between py-3 border-t" style={{ borderColor: 'var(--light-gray)' }}>
-									<span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Promo code</span>
+									<span className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-secondary)' }}>Promo code</span>
 									{!showPromoCode ? (
 										<button
 											type="button"
 											onClick={() => setShowPromoCode(true)}
-											className="text-sm font-medium hover:underline"
+											className="text-[10px] md:text-[12px] font-medium hover:underline"
 											style={{ color: primaryColor }}
 										>
 											Add
@@ -364,7 +364,7 @@ function PaymentPageContent() {
 												value={promoCode}
 												onChange={(e) => setPromoCode(e.target.value)}
 												placeholder="Enter code"
-												className="text-sm border px-2 py-1 w-24"
+												className="text-[10px] md:text-[12px] border px-2 py-1 w-24"
 												style={{ borderColor: 'var(--light-gray)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
 											/>
 											<button
@@ -373,7 +373,7 @@ function PaymentPageContent() {
 													setShowPromoCode(false);
 													setPromoCode('');
 												}}
-												className="text-sm hover:opacity-80"
+												className="text-[10px] md:text-[12px] hover:opacity-80"
 												style={{ color: 'var(--text-secondary)' }}
 											>
 												Cancel
@@ -387,9 +387,9 @@ function PaymentPageContent() {
 									className="flex items-center justify-between pt-3 border-t-2"
 									style={{ borderColor: primaryColor }}
 								>
-									<span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Today&apos;s total</span>
+									<span className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-primary)' }}>Today&apos;s total</span>
 									<span
-										className="text-2xl font-bold"
+										className="text-[18px] md:text-[20px] font-bold"
 										style={{ color: primaryColor }}
 									>
 										US${orderPrice}
@@ -412,7 +412,7 @@ function PaymentPageContent() {
 											>
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
 											</svg>
-											<p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+											<p className="text-[8px] md:text-[10px]" style={{ color: 'var(--text-secondary)' }}>
 												Save 17% by{' '}
 												<button
 													type="button"

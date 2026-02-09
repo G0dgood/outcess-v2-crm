@@ -82,7 +82,7 @@ const AdminUserDropdown: React.FC<AdminUserDropdownProps> = ({
 							}}
 						>
 							<span
-								className="font-semibold text-sm"
+								className="font-semibold text-[10px] md:text-[12px]"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{mounted ? userName.charAt(0).toUpperCase() : ''}
@@ -127,7 +127,7 @@ const AdminUserDropdown: React.FC<AdminUserDropdownProps> = ({
 							) : (
 								<div className="w-12 h-12 bg-[#F2F4F7] dark:bg-gray-700 border border-[#E5E7EB] dark:border-gray-600 rounded-full flex items-center justify-center">
 									<span
-										className="font-semibold text-lg dark:text-gray-300"
+										className="font-semibold text-[12px] md:text-[14px] dark:text-gray-300"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{userName.charAt(0).toUpperCase()}
@@ -142,7 +142,7 @@ const AdminUserDropdown: React.FC<AdminUserDropdownProps> = ({
 									{userName}
 								</h3>
 								<p
-									className="text-sm dark:text-gray-400"
+									className="text-[10px] md:text-[12px] dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									{userEmail}

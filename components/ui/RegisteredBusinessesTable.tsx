@@ -69,31 +69,31 @@ const RegisteredBusinessesTable: React.FC = () => {
 				>
 					<tr>
 						<th
-							className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+							className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Company Name
 						</th>
 						<th
-							className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+							className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Status
 						</th>
 						<th
-							className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+							className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Users
 						</th>
 						<th
-							className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+							className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Last Active
 						</th>
 						<th
-							className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+							className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Action
@@ -121,7 +121,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 						>
 							<td className="px-6 py-4 whitespace-nowrap">
 								<span
-									className="text-sm font-medium dark:text-gray-100"
+									className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									{business.companyName}
@@ -129,7 +129,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 							</td>
 							<td className="px-6 py-4 whitespace-nowrap">
 								<span
-									className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${business.status === 'Active'
+									className={`inline-flex px-2 py-1 text-[8px] md:text-[10px] font-semibold rounded-full ${business.status === 'Active'
 										? 'dark:bg-green-900/30 dark:text-green-400'
 										: 'dark:bg-red-900/30 dark:text-red-400'
 										}`}
@@ -146,7 +146,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 							</td>
 							<td className="px-6 py-4 whitespace-nowrap">
 								<span
-									className="text-sm dark:text-gray-400"
+									className="text-[10px] md:text-[12px] dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									{business.users}
@@ -154,7 +154,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 							</td>
 							<td className="px-6 py-4 whitespace-nowrap">
 								<span
-									className="text-sm dark:text-gray-400"
+									className="text-[10px] md:text-[12px] dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									{business.lastActive}
@@ -163,7 +163,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 							<td className="px-6 py-4 whitespace-nowrap">
 								<button
 									onClick={() => handleView(business.id)}
-									className="dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors"
+									className="dark:text-blue-400 dark:hover:text-blue-300 text-[10px] md:text-[12px] font-medium transition-colors"
 									style={{ color: '#2563EB' }}
 									onMouseEnter={(e) => {
 										e.currentTarget.style.color = '#1D4ED8';

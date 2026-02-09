@@ -241,7 +241,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 									onClick={() => toggleAccordion(roleId)}
 								>
 									<span
-										className="font-medium text-lg dark:text-gray-100"
+										className="font-medium text-[12px] md:text-[14px] dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{role.roleName}
@@ -289,19 +289,19 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 											>
 												<tr>
 													<th
-														className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+														className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 														style={{ color: 'var(--text-primary)' }}
 													>
 														Module Name
 													</th>
 													<th
-														className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+														className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 														style={{ color: 'var(--text-primary)' }}
 													>
 														Access
 													</th>
 													<th
-														className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+														className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 														style={{ color: 'var(--text-primary)' }}
 													>
 														Permission

@@ -116,10 +116,10 @@ const CustomerBookPage: React.FC = () => {
 					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-8"
 					style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
 				>
-					<h2 className="font-inter text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+					<h2 className="font-inter text-[12px] md:text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>
 						Access Restricted
 					</h2>
-					<p className="font-lato text-sm" style={{ color: 'var(--text-tertiary)' }}>
+					<p className="font-lato text-[10px] md:text-[12px]" style={{ color: 'var(--text-tertiary)' }}>
 						You do not have access permission to view Customer Book.
 					</p>
 				</div>
@@ -143,7 +143,7 @@ const CustomerBookPage: React.FC = () => {
 								variant="muted-sage-green-outline"
 								size="md"
 								onClick={handleAddCustomer}
-								className="px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+								className="px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
 								disabled={!canCreate}
 							>
 								Add Customer
@@ -173,14 +173,14 @@ const CustomerBookPage: React.FC = () => {
 										{tableHeaders.map((header) => (
 											<th
 												key={header}
-												className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+												className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												{header}
 											</th>
 										))}
 										<th
-											className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											Actions
@@ -213,7 +213,7 @@ const CustomerBookPage: React.FC = () => {
 											{tableHeaders?.map((header) => (
 												<td
 													key={`${customer.id}-${header}`}
-													className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+													className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
 													style={{ color: 'var(--text-primary)' }}
 												>
 													{customer[header]}

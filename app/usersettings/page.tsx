@@ -193,7 +193,7 @@ export default function SettingsPage() {
 				{/* Header skeleton */}
 				<div className="flex justify-between items-center">
 					<h3
-						className="text-lg font-medium"
+						className="text-[12px] md:text-[14px] font-medium"
 						style={{ color: 'var(--text-secondary)' }}
 					>
 						Profile Details
@@ -207,7 +207,7 @@ export default function SettingsPage() {
 					style={{ backgroundColor: 'var(--bg-primary)' }}
 				>
 					<h4
-						className="text-sm font-medium mb-3"
+						className="text-[10px] md:text-[12px] font-medium mb-3"
 						style={{ color: 'var(--text-secondary)' }}
 					>
 						Current Information
@@ -291,7 +291,7 @@ export default function SettingsPage() {
 							<button
 								key={id}
 								onClick={() => setActiveSection(id as 'profile' | 'password' | 'email' | 'preferences' | 'sound')}
-								className={`relative flex items-center space-x-2 py-3 px-4 font-medium text-sm transition-all duration-200 ${activeSection === id
+								className={`relative flex items-center space-x-2 py-3 px-4 font-medium text-[10px] md:text-[12px] transition-all duration-200 ${activeSection === id
 									? 'dark:text-gray-100'
 									: 'dark:text-gray-400 dark:hover:text-gray-300'
 									}`}
@@ -337,14 +337,14 @@ export default function SettingsPage() {
 										style={{ color: 'var(--text-secondary)' }}
 									/>
 									<h2
-										className="text-xl font-semibold"
+										className="text-[14px] md:text-[16px] font-semibold"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Personal Information
 									</h2>
 								</div>
 								<p
-									className="text-sm dark:text-gray-400 ml-8"
+									className="text-[10px] md:text-[12px] dark:text-gray-400 ml-8"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Update your personal details and contact information.
@@ -353,7 +353,7 @@ export default function SettingsPage() {
 							<div className="space-y-6">
 								<div className="flex justify-between items-center">
 									<h3
-										className="text-lg font-medium"
+										className="text-[12px] md:text-[14px] font-medium"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Profile Details
@@ -392,12 +392,12 @@ export default function SettingsPage() {
 									style={{ backgroundColor: 'var(--bg-primary)' }}
 								>
 									<h4
-										className="text-sm font-medium dark:text-gray-300 mb-3"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-3"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Current Information
 									</h4>
-									<div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+									<div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[10px] md:text-[12px]">
 										<div>
 											<span
 												className="font-medium dark:text-gray-400"
@@ -461,7 +461,7 @@ export default function SettingsPage() {
 									<div className="space-y-2">
 										<label
 											htmlFor="fullName"
-											className="text-sm font-medium dark:text-gray-300"
+											className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 											style={{ color: 'var(--text-secondary)' }}
 										>
 											Full Name
@@ -479,7 +479,7 @@ export default function SettingsPage() {
 									<div className="space-y-2">
 										<label
 											htmlFor="username"
-											className="text-sm font-medium dark:text-gray-300"
+											className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 											style={{ color: 'var(--text-secondary)' }}
 										>
 											Username
@@ -497,7 +497,7 @@ export default function SettingsPage() {
 									<div className="space-y-2">
 										<label
 											htmlFor="email"
-											className="text-sm font-medium dark:text-gray-300"
+											className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 											style={{ color: 'var(--text-secondary)' }}
 										>
 											Email Address
@@ -510,7 +510,7 @@ export default function SettingsPage() {
 											className="disabled:bg-gray-50 dark:disabled:bg-gray-800"
 										/>
 										<p
-											className="text-sm dark:text-gray-400 mt-1"
+											className="text-[10px] md:text-[12px] dark:text-gray-400 mt-1"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											Email changes require verification. Use the Email tab to update.
@@ -520,7 +520,7 @@ export default function SettingsPage() {
 									<div className="space-y-2">
 										<label
 											htmlFor="phone"
-											className="text-sm font-medium dark:text-gray-300"
+											className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 											style={{ color: 'var(--text-secondary)' }}
 										>
 											Phone Number
@@ -550,14 +550,14 @@ export default function SettingsPage() {
 									style={{ color: 'var(--text-secondary)' }}
 								/>
 								<h2
-									className="text-xl font-semibold"
+									className="text-[14px] md:text-[16px] font-semibold"
 									style={{ color: 'var(--text-secondary)' }}
 								>
 									Change Password
 								</h2>
 							</div>
 							<p
-								className="text-sm dark:text-gray-400 ml-8"
+								className="text-[10px] md:text-[12px] dark:text-gray-400 ml-8"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Update your password to keep your account secure.
@@ -568,7 +568,7 @@ export default function SettingsPage() {
 								<div className="space-y-2">
 									<label
 										htmlFor="currentPassword"
-										className="text-sm font-medium dark:text-gray-300"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Current Password
@@ -600,7 +600,7 @@ export default function SettingsPage() {
 								<div className="space-y-2">
 									<label
 										htmlFor="newPassword"
-										className="text-sm font-medium dark:text-gray-300"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										New Password
@@ -632,7 +632,7 @@ export default function SettingsPage() {
 								<div className="space-y-2">
 									<label
 										htmlFor="confirmPassword"
-										className="text-sm font-medium dark:text-gray-300"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Confirm New Password
@@ -683,14 +683,14 @@ export default function SettingsPage() {
 									style={{ color: 'var(--text-secondary)' }}
 								/>
 								<h2
-									className="text-xl font-semibold"
+									className="text-[14px] md:text-[16px] font-semibold"
 									style={{ color: 'var(--text-secondary)' }}
 								>
 									Appearance
 								</h2>
 							</div>
 							<p
-								className="text-sm dark:text-gray-400 ml-8"
+								className="text-[10px] md:text-[12px] dark:text-gray-400 ml-8"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Customize the appearance of your application.
@@ -722,7 +722,7 @@ export default function SettingsPage() {
 											Dark Mode
 										</h3>
 										<p
-											className="text-sm dark:text-gray-400"
+											className="text-[10px] md:text-[12px] dark:text-gray-400"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											{isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -757,14 +757,14 @@ export default function SettingsPage() {
 									style={{ color: 'var(--text-secondary)' }}
 								/>
 								<h2
-									className="text-xl font-semibold"
+									className="text-[14px] md:text-[16px] font-semibold"
 									style={{ color: 'var(--text-secondary)' }}
 								>
 									Sound Settings
 								</h2>
 							</div>
 							<p
-								className="text-sm dark:text-gray-400 ml-8"
+								className="text-[10px] md:text-[12px] dark:text-gray-400 ml-8"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Control sound notifications for different components. You can enable or disable sounds globally or for specific components.

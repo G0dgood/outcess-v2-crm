@@ -63,7 +63,7 @@ export const LineChart: React.FC<ChartProps> = ({ data }) => {
 								x={x}
 								y={chartHeight + 15}
 								textAnchor="middle"
-								className="text-xs fill-gray-600"
+								className="text-[8px] md:text-[10px] fill-gray-600"
 							>
 								{item.label}
 							</text>
@@ -71,7 +71,7 @@ export const LineChart: React.FC<ChartProps> = ({ data }) => {
 								x={x}
 								y={y - 10}
 								textAnchor="middle"
-								className="text-xs fill-gray-800 font-medium"
+								className="text-[8px] md:text-[10px] fill-gray-800 font-medium"
 							>
 								{item.value}
 							</text>

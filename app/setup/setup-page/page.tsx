@@ -59,7 +59,7 @@ export default function SetupPage() {
 					Basic Setup
 				</h1>
 				<p
-					className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
+					className="font-lato not-italic font-normal text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
 					Configure your organization details and preferences
@@ -78,13 +78,13 @@ export default function SetupPage() {
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="font-inter text-xl font-semibold dark:text-gray-100 mb-1"
+						className="font-inter text-[14px] md:text-[16px] font-semibold dark:text-gray-100 mb-1"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Company Information
 					</h2>
 					<p
-						className="font-lato text-sm dark:text-gray-400"
+						className="font-lato text-[10px] md:text-[12px] dark:text-gray-400"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
 						Configure your company details

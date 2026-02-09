@@ -21,8 +21,8 @@ const UploadAlert: React.FC<UploadAlertProps> = ({ type, message, onClose }) => 
   return (
     <div
       className={`px-4 py-2 relative flex justify-between items-center ${isSuccess
-          ? "dark:bg-green-900/30 dark:text-green-400"
-          : "dark:bg-red-900/30 dark:text-red-400"
+        ? "dark:bg-green-900/30 dark:text-green-400"
+        : "dark:bg-red-900/30 dark:text-red-400"
         }`}
       style={{
         backgroundColor: isSuccess ? 'rgba(34, 197, 94, 0.1)' : 'rgba(220, 38, 38, 0.1)',
@@ -35,9 +35,9 @@ const UploadAlert: React.FC<UploadAlertProps> = ({ type, message, onClose }) => 
       </p>
       <button
         onClick={onClose}
-        className={`text-lg ${isSuccess
-            ? "dark:text-gray-400 dark:hover:text-red-400"
-            : "dark:text-red-400 dark:hover:text-red-300"
+        className={`text-[12px] md:text-[14px] ${isSuccess
+          ? "dark:text-gray-400 dark:hover:text-red-400"
+          : "dark:text-red-400 dark:hover:text-red-300"
           }`}
         style={{ color: isSuccess ? 'var(--text-tertiary)' : '#DC2626' }}
         onMouseEnter={(e) => {

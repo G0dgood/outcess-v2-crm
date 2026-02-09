@@ -119,7 +119,7 @@ export default function RolePermissionManagementPage() {
 								Role & Permission Management
 							</h1>
 							<p
-								className="font-lato not-italic font-normal text-[14px] sm:text-[16px] leading-[150%] dark:text-gray-400"
+								className="font-lato not-italic font-normal text-[10px] md:text-[12px] sm:text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Manage user roles and their associated permissions

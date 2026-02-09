@@ -158,7 +158,7 @@ export const Modal: React.FC<ModalProps> = ({
 						>
 							{title && (
 								<h2
-									className="font-inter text-lg font-semibold dark:text-gray-100"
+									className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									{title}

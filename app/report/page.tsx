@@ -246,7 +246,7 @@ const ReportPage: React.FC = () => {
 						<button
 							type="button"
 							onClick={handleFilter}
-							className="inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm dark:bg-gray-800 border dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 dark:focus:ring-gray-400 cursor-pointer gap-2 whitespace-nowrap"
+							className="inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 px-2 py-2  sm:px-4 sm:py-2 text-[10px] md:text-[12px] dark:bg-gray-800 border dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 dark:focus:ring-gray-400 cursor-pointer gap-2 whitespace-nowrap"
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)',
@@ -280,7 +280,7 @@ const ReportPage: React.FC = () => {
 						variant="primary"
 						size="md"
 						onClick={handleDownload}
-						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+						className="flex items-center gap-2 px-2 py-2  sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
 					>
 						Download
 					</Button>
@@ -312,7 +312,7 @@ const ReportPage: React.FC = () => {
 									dynamicHeaders.map(header => (
 										<th
 											key={header}
-											className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-100 whitespace-nowrap"
+											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-100 whitespace-nowrap"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											{header}
@@ -320,7 +320,7 @@ const ReportPage: React.FC = () => {
 									))
 								) : (
 									<th
-										className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-100 whitespace-nowrap"
+										className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-100 whitespace-nowrap"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{isLoading ? 'Loading...' : 'No Data'}
@@ -355,7 +355,7 @@ const ReportPage: React.FC = () => {
 										{dynamicHeaders.map(header => (
 											<td
 												key={`${report.id}-${header}`}
-												className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+												className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												{String(report[header] || '-').length > tooltipLength ? (

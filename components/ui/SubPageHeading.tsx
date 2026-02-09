@@ -12,7 +12,7 @@ export const SubPageHeading: React.FC<SubPageHeadingProps> = ({
     style,
 }) => {
     return (
-        <p className={`font-lato font-normal text-[14px] leading-[150%] text-[#6D7280] dark:text-gray-400 ${className}`} style={style}>
+        <p className={`font-lato font-normal text-[10px] md:text-[12px] leading-[150%] text-[#6D7280] dark:text-gray-400 ${className}`} style={style}>
             {text}
         </p>
     );

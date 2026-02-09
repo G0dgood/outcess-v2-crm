@@ -1,9 +1,12 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { usePrivilege, ModuleId } from '@/contexts/PrivilegeContext';
+import Icon from './Icon';
+import { plusJakartaStyle } from '../Options';
 import {
 	DashboardIcon,
 	FileTextIcon,
@@ -58,12 +61,19 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 	activeItem = 'dashboard',
 	onItemClick,
 	className = '',
+	isMobileOpen,
+	onMobileClose,
 }) => {
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 	const { lineOfBusinessData, isLoading: isLobLoading } = useLineOfBusiness();
 	const { canAccess, isLoading: isPrivilegeLoading, isAdmin } = usePrivilege();
+
+	const currentLOB = lineOfBusinessData?.lineOfBusiness;
+	const headerLogo = currentLOB?.logo;
+	const headerName = currentLOB?.companyName || 'Peoplely';
+
 	const navRef = useRef<HTMLElement>(null);
 	const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
 	const [isCollapsed, setIsCollapsed] = useState(false);
@@ -315,6 +325,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		} else {
 			// Collapse settings menu when clicking other items
 			setIsSettingsExpanded(false);
+			if (onMobileClose) onMobileClose();
 			if (onItemClick) {
 				onItemClick(item.id);
 			} else {
@@ -325,6 +336,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 
 	const handleSubItemClick = (subItem: typeof settingsSubItems[0]) => {
 		router.push(subItem.path);
+		if (onMobileClose) onMobileClose();
 		if (onItemClick) {
 			onItemClick('settings');
 		}
@@ -459,7 +471,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 				id="side-nav"
 				className={`
 					dark:bg-gray-900 ${isCollapsed ? 'w-[70px]' : 'w-64'} border-r dark:border-gray-700
-					hidden md:flex flex-col relative h-full transition-all duration-300
+					${isMobileOpen ? 'flex' : 'hidden'} md:flex flex-col relative h-full transition-all duration-300
 					${className}
 				`}
 				style={{
@@ -468,6 +480,29 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 				}}
 			>
 				<div className="flex-1 py-4 px-2 overflow-y-auto overflow-x-hidden">
+					{/* Logo Section */}
+					<div className={`mb-6 flex items-center ${isCollapsed ? 'justify-center' : 'px-4 gap-2'}`}>
+						{headerLogo ? (
+							<div className="relative h-8 w-auto min-w-[32px]">
+								<Image
+									src={headerLogo}
+									alt="Logo"
+									height={32}
+									width={100}
+									className="h-8 w-auto object-contain"
+									unoptimized
+									priority
+								/>
+							</div>
+						) : (
+							<Icon name="peoplelyHalf" size="lg" className="dark:inline-block" />
+						)}
+						{!isCollapsed && (
+							<span className="font-semibold text-[18px] md:text-[20px] leading-7 flex items-center text-[#050711]"
+								style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>{headerName}</span>
+						)}
+					</div>
+
 					{/* Navigation Items */}
 					<div className="space-y-2">
 						{visibleNavItems.map((item) => {
@@ -483,7 +518,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 											<LockClosedIcon className="w-5 h-5" />
 										</div>
 										{!isCollapsed && (
-											<span className="font-inter font-medium text-[14px] leading-5 tracking-[-0.5px] text-gray-400 dark:text-gray-600 flex-1 text-left">
+											<span className="font-inter font-medium text-[10px] md:text-[12px] leading-5 tracking-[-0.5px] text-gray-400 dark:text-gray-600 flex-1 text-left">
 												Access Restricted
 											</span>
 										)}
@@ -543,7 +578,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 									</div>
 									{!isCollapsed && (
 										<span
-											className={`font-inter font-medium text-[14px] leading-5 tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive || (isSettings && isSettingsExpanded) ? 'text-white' : 'dark:text-gray-300'}`}
+											className={`font-inter font-medium text-[10px] md:text-[12px] leading-5 tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive || (isSettings && isSettingsExpanded) ? 'text-white' : 'dark:text-gray-300'}`}
 											style={!(isActive || (isSettings && isSettingsExpanded)) ? { color: 'var(--text-secondary)' } : {}}
 										>
 											{item.label}

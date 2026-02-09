@@ -271,7 +271,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 							variant="primary"
 							size="md"
 							onClick={handleCreateStatus}
-							className="px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+							className="px-2 py-2 text-[10px] sm:px-4 sm:py-2 md:text-[12px]"
 						>
 							Create Status
 						</Button>
@@ -301,25 +301,25 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 						>
 							<tr>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Statuses
 								</th>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Description
 								</th>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Role
 								</th>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Action
@@ -369,7 +369,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 										</td>
 										<td className="px-6 py-4">
 											<span
-												className="text-sm dark:text-gray-400"
+												className="text-[10px] md:text-[12px] dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
 												{status.description}
@@ -377,7 +377,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<span
-												className="text-sm dark:text-gray-400"
+												className="text-[10px] md:text-[12px] dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
 												{formatRoleDisplay(status)}

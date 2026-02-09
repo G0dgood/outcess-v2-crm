@@ -178,7 +178,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="text-xl font-semibold dark:text-gray-100"
+						className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Add Business Hour
@@ -206,7 +206,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 					{/* Business Hours Section */}
 					<div>
 						<label
-							className="block text-sm font-medium dark:text-gray-200 mb-3"
+							className="block text-[10px] md:text-[12px] font-medium dark:text-gray-200 mb-3"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							Business Hours
@@ -240,7 +240,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 					{businessHourType === 'custom' && (
 						<div>
 							<label
-								className="block text-sm font-medium dark:text-gray-200 mb-3"
+								className="block text-[10px] md:text-[12px] font-medium dark:text-gray-200 mb-3"
 								style={{ color: 'var(--text-secondary)' }}
 							>
 								Business Timing
@@ -267,7 +267,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 											}}
 										/>
 										<span
-											className="text-sm dark:text-gray-400"
+											className="text-[10px] md:text-[12px] dark:text-gray-400"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											to
@@ -325,7 +325,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 													}}
 												/>
 												<span
-													className="text-sm dark:text-gray-400"
+													className="text-[10px] md:text-[12px] dark:text-gray-400"
 													style={{ color: 'var(--text-tertiary)' }}
 												>
 													to
@@ -354,7 +354,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 					{businessHourType === 'custom' && businessTiming === 'same' && (
 						<div>
 							<label
-								className="block text-sm font-medium dark:text-gray-200 mb-3"
+								className="block text-[10px] md:text-[12px] font-medium dark:text-gray-200 mb-3"
 								style={{ color: 'var(--text-secondary)' }}
 							>
 								Business Days

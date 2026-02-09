@@ -128,7 +128,7 @@ const SoundSettings: React.FC = () => {
 								Global Sound
 							</h3>
 							<p
-								className="font-inter text-sm dark:text-gray-400 mt-1"
+								className="font-inter text-[10px] md:text-[12px] dark:text-gray-400 mt-1"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Enable or disable all sounds across the application
@@ -175,7 +175,7 @@ const SoundSettings: React.FC = () => {
 								<div className="flex-1">
 									<div className="flex items-center justify-between mb-3">
 										<h4
-											className="font-inter text-sm font-medium dark:text-gray-100"
+											className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											{componentLabels[component]}

@@ -7,6 +7,7 @@ import {
 	BackpackIcon,
 	DoubleArrowLeftIcon,
 	DoubleArrowRightIcon,
+	GearIcon,
 } from '@radix-ui/react-icons';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import {
@@ -72,6 +73,12 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 			label: 'Businesses Management',
 			icon: <BackpackIcon className="w-5 h-5" />,
 			path: '/superadmin/businesses',
+		},
+		{
+			id: 'settings',
+			label: 'Settings',
+			icon: <GearIcon className="w-5 h-5" />,
+			path: '/superadmin/settings',
 		}
 	];
 
@@ -103,8 +110,7 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 			<nav
 				ref={navRef}
 				id={isMobile ? 'side-nav-mobile' : 'side-nav'}
-				className={`
-                    dark:bg-gray-900 ${isCollapsed ? 'w-[70px]' : 'w-64'} border-r dark:border-gray-700
+				className={` dark:bg-gray-900 ${isCollapsed ? 'w-[70px]' : 'w-64'} border-r dark:border-gray-700
                     ${isMobile ? 'block' : 'hidden md:flex flex-col'} relative h-full transition-all duration-300
                     ${className}
                 `}
@@ -159,7 +165,7 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 									</div>
 									{!isCollapsed && (
 										<span
-											className={`font-inter whitespace-nowrap font-medium text-[14px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive ? 'text-white' : 'dark:text-gray-300'}`}
+											className={`font-inter whitespace-nowrap font-medium text-[10px] md:text-[12px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive ? 'text-white' : 'dark:text-gray-300'}`}
 											style={!isActive ? { color: 'var(--text-secondary)' } : {}}
 										>
 											{item.label}

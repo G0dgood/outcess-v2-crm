@@ -240,14 +240,14 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 				>
 					<div className="flex items-center gap-3">
 						<h2
-							className="font-inter text-xl font-semibold dark:text-gray-100"
+							className="font-inter text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Add New Chart
 						</h2>
 						{isOffline && (
 							<span
-								className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+								className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[8px] md:text-[10px] font-medium"
 								style={{
 									backgroundColor: 'rgba(220, 53, 69, 0.1)',
 									color: '#DC3545',
@@ -319,7 +319,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 					{formData.dataSource.length > 0 && (
 						<div className="space-y-3">
 							<label
-								className="block text-sm font-medium dark:text-gray-300"
+								className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 								style={{ color: 'var(--text-secondary)' }}
 							>
 								Data Source Colors
@@ -329,7 +329,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 								return (
 									<div key={source} className="flex items-center gap-3">
 										<span
-											className="text-sm flex-1 dark:text-gray-400"
+											className="text-[10px] md:text-[12px] flex-1 dark:text-gray-400"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											{sourceLabel}
@@ -363,7 +363,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					{isOffline && (
-						<span className="text-xs flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
+						<span className="text-[8px] md:text-[10px] flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
 							<svg
 								className="w-4 h-4"
 								fill="none"

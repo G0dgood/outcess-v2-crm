@@ -56,7 +56,7 @@ export const ScatterChart: React.FC<ChartProps> = ({ data }) => {
 								x={x}
 								y={chartHeight + 15}
 								textAnchor="middle"
-								className="text-xs fill-gray-600"
+								className="text-[8px] md:text-[10px] fill-gray-600"
 							>
 								{item.label}
 							</text>

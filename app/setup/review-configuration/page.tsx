@@ -102,7 +102,7 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 					Review Your CRM Configuration
 				</h1>
 				<p
-					className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
+					className="font-lato not-italic font-normal text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
 					Please review all your selections before submitting for approval
@@ -133,7 +133,7 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 										<Icon name={card.icon} size="md" />
 									</div>
 									<h2
-										className="font-inter text-lg font-semibold dark:text-gray-100"
+										className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{card.title}
@@ -160,13 +160,13 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 							{card.details.map((detail, index) => (
 								<div key={index} className="flex justify-between items-start">
 									<span
-										className="font-lato text-sm dark:text-gray-400 flex-1"
+										className="font-lato text-[10px] md:text-[12px] dark:text-gray-400 flex-1"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										{detail.label}:
 									</span>
 									<span
-										className="font-lato text-sm font-medium dark:text-gray-100 text-right ml-4"
+										className="font-lato text-[10px] md:text-[12px] font-medium dark:text-gray-100 text-right ml-4"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{detail.value}

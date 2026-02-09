@@ -87,13 +87,13 @@ const CareersPage: React.FC = () => {
 			<section className="pt-32 pb-16 px-6 md:px-[180px]">
 				<div className="max-w-4xl mx-auto text-center">
 					<h1
-						className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-[#050711] leading-tight"
+						className="text-[30px] md:text-[36px] lg:text-[48px] font-bold mb-6 text-[#050711] leading-tight"
 						style={plusJakartaStyle}
 					>
 						Join the Peoplely Team
 					</h1>
 					<p
-						className="text-lg md:text-xl text-[#4A5565] leading-relaxed"
+						className="text-[14px] md:text-[16px] text-[#4A5565] leading-relaxed"
 						style={plusJakartaStyle}
 					>
 						Help us build the future of call center operations. We&apos;re looking for talented individuals who are passionate about creating exceptional software.
@@ -105,7 +105,7 @@ const CareersPage: React.FC = () => {
 			<section className="py-16 px-6 md:px-[180px] bg-white">
 				<div className="max-w-6xl mx-auto">
 					<h2
-						className="text-3xl md:text-4xl font-bold mb-12 text-[#050711] text-center"
+						className="text-[24px] md:text-[30px] font-bold mb-12 text-[#050711] text-center"
 						style={plusJakartaStyle}
 					>
 						Why Work at Peoplely?
@@ -126,13 +126,13 @@ const CareersPage: React.FC = () => {
 								<LightningBoltIcon className="w-6 h-6" style={{ color: '#6C8B7D' }} />
 							</div>
 							<h3
-								className="text-xl font-semibold mb-3 text-[#050711]"
+								className="text-[14px] md:text-[16px] font-semibold mb-3 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								Impact-Driven Work
 							</h3>
 							<p
-								className="text-sm text-[#4A5565] leading-relaxed"
+								className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed"
 								style={plusJakartaStyle}
 							>
 								Every feature you build directly improves the productivity of thousands of call center agents. See your work make a real difference.
@@ -153,13 +153,13 @@ const CareersPage: React.FC = () => {
 								<PersonIcon className="w-6 h-6" style={{ color: '#6C8B7D' }} />
 							</div>
 							<h3
-								className="text-xl font-semibold mb-3 text-[#050711]"
+								className="text-[14px] md:text-[16px] font-semibold mb-3 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								Collaborative Culture
 							</h3>
 							<p
-								className="text-sm text-[#4A5565] leading-relaxed"
+								className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed"
 								style={plusJakartaStyle}
 							>
 								Work with a team of passionate, talented individuals who value collaboration, transparency, and continuous learning.
@@ -173,7 +173,7 @@ const CareersPage: React.FC = () => {
 			<section className="py-16 px-6 md:px-[180px] bg-white">
 				<div className="max-w-6xl mx-auto">
 					<h2
-						className="text-3xl md:text-4xl font-bold mb-12 text-[#050711] text-center"
+						className="text-[24px] md:text-[30px] font-bold mb-12 text-[#050711] text-center"
 						style={plusJakartaStyle}
 					>
 						Benefits & Perks
@@ -190,13 +190,13 @@ const CareersPage: React.FC = () => {
 								}}
 							>
 								<h3
-									className="text-lg font-semibold mb-2 text-[#050711]"
+									className="text-[12px] md:text-[14px] font-semibold mb-2 text-[#050711]"
 									style={plusJakartaStyle}
 								>
 									{benefit.title}
 								</h3>
 								<p
-									className="text-sm text-[#4A5565] leading-relaxed"
+									className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed"
 									style={plusJakartaStyle}
 								>
 									{benefit.description}
@@ -211,7 +211,7 @@ const CareersPage: React.FC = () => {
 			<section className="py-16 px-6 md:px-[180px] bg-white">
 				<div className="max-w-6xl mx-auto">
 					<h2
-						className="text-3xl md:text-4xl font-bold mb-12 text-[#050711] text-center"
+						className="text-[24px] md:text-[30px] font-bold mb-12 text-[#050711] text-center"
 						style={plusJakartaStyle}
 					>
 						Open Positions
@@ -230,14 +230,14 @@ const CareersPage: React.FC = () => {
 								<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
 									<div className="flex-1">
 										<h3
-											className="text-xl font-semibold mb-2 text-[#050711]"
+											className="text-[14px] md:text-[16px] font-semibold mb-2 text-[#050711]"
 											style={plusJakartaStyle}
 										>
 											{position.title}
 										</h3>
 										<div className="flex flex-wrap gap-3 mb-3">
 											<span
-												className="text-sm px-3 py-1 rounded-full"
+												className="text-[10px] md:text-[12px] px-3 py-1 rounded-full"
 												style={{
 													backgroundColor: 'var(--light-gray)',
 													color: 'var(--text-secondary)'
@@ -246,7 +246,7 @@ const CareersPage: React.FC = () => {
 												{position.department}
 											</span>
 											<span
-												className="text-sm px-3 py-1 rounded-full"
+												className="text-[10px] md:text-[12px] px-3 py-1 rounded-full"
 												style={{
 													backgroundColor: 'var(--light-gray)',
 													color: 'var(--text-secondary)'
@@ -255,7 +255,7 @@ const CareersPage: React.FC = () => {
 												{position.location}
 											</span>
 											<span
-												className="text-sm px-3 py-1 rounded-full"
+												className="text-[10px] md:text-[12px] px-3 py-1 rounded-full"
 												style={{
 													backgroundColor: 'var(--light-gray)',
 													color: 'var(--text-secondary)'
@@ -265,7 +265,7 @@ const CareersPage: React.FC = () => {
 											</span>
 										</div>
 										<p
-											className="text-sm text-[#4A5565] leading-relaxed"
+											className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed"
 											style={plusJakartaStyle}
 										>
 											{position.description}
@@ -273,7 +273,7 @@ const CareersPage: React.FC = () => {
 									</div>
 									<Link
 										href={`/careers/apply?position=${encodeURIComponent(position.title)}`}
-										className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-colors"
+										className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-[10px] md:text-[12px] transition-colors"
 										style={{
 											backgroundColor: '#050711',
 											color: 'white'
@@ -302,7 +302,7 @@ const CareersPage: React.FC = () => {
 						</p>
 						<Link
 							href="mailto:careers@peoplely.com"
-							className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border font-semibold text-sm transition-colors"
+							className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border font-semibold text-[10px] md:text-[12px] transition-colors"
 							style={{
 								borderColor: 'var(--light-gray)',
 								color: 'var(--text-primary)'
@@ -327,13 +327,13 @@ const CareersPage: React.FC = () => {
 			>
 				<div className="max-w-3xl mx-auto">
 					<h2
-						className="text-3xl md:text-4xl font-bold mb-4 text-white"
+						className="text-[24px] md:text-[30px] font-bold mb-4 text-white"
 						style={plusJakartaStyle}
 					>
 						Ready to Build the Future of Call Centers?
 					</h2>
 					<p
-						className="text-base md:text-lg text-white/90 mb-8"
+						className="text-[12px] md:text-[14px] text-white/90 mb-8"
 						style={plusJakartaStyle}
 					>
 						Join us in transforming how call centers operate. We&apos;re building something special.

@@ -100,7 +100,7 @@ export const SortableChart: React.FC<SortableChartProps> = ({
 				}}
 			>
 				<h3
-					className="font-inter font-medium text-[14px] leading-5 tracking-[-0.5px]"
+					className="font-inter font-medium text-[10px] md:text-[12px] leading-5 tracking-[-0.5px]"
 					style={{ color: 'var(--text-primary)' }}
 				>
 					{chart.title}
@@ -167,7 +167,7 @@ export const SortableChart: React.FC<SortableChartProps> = ({
 										style={{ backgroundColor: item.color }}
 									></div>
 									<span
-										className="font-inter text-sm whitespace-nowrap"
+										className="font-inter text-[10px] md:text-[12px] whitespace-nowrap"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										{item?.label}

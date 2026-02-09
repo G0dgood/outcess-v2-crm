@@ -62,7 +62,7 @@ const NoRecordFound = ({ colSpan }: { colSpan: number }) => {
 		<tr>
 			<td colSpan={colSpan} className="h-[300px] p-0 m-auto border-b-0">
 				<div className="center-content flex flex-col justify-center items-center h-full">
-					<FaceIcon className="w-16 h-16" color={'var(--text-primary)'} />
+					<FaceIcon className="w-14 h-14" color={'var(--text-primary)'} />
 					<p
 						id="mt-3 !underline-none"
 						style={{ color: 'var(--text-primary)' }}>

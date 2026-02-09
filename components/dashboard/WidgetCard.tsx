@@ -54,7 +54,7 @@ export const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, widgetId, 
 		>
 			<div className="flex justify-between items-start mb-4">
 				<h3
-					className="font-lato font-normal text-[18px] leading-[150%] dark:text-gray-300"
+					className="font-lato font-normal text-[14px] md:text-[16px] leading-[150%] dark:text-gray-300"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
 					{title}
@@ -90,7 +90,7 @@ export const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, widgetId, 
 							{canEdit && (
 								<button
 									onClick={handleEdit}
-									className="w-full px-4 py-2 text-left text-sm dark:text-gray-300 dark:hover:bg-gray-700 transition-colors first:rounded-t-lg cursor-pointer"
+									className="w-full px-4 py-2 text-left text-[10px] md:text-[12px] dark:text-gray-300 dark:hover:bg-gray-700 transition-colors first:rounded-t-lg cursor-pointer"
 									style={{
 										color: 'var(--text-secondary)',
 										backgroundColor: 'transparent'
@@ -108,7 +108,7 @@ export const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, widgetId, 
 							{canDelete && (
 								<button
 									onClick={handleDelete}
-									className="w-full px-4 py-2 text-left text-sm dark:text-gray-300 dark:hover:bg-gray-700 transition-colors last:rounded-b-lg cursor-pointer"
+									className="w-full px-4 py-2 text-left text-[10px] md:text-[12px] dark:text-gray-300 dark:hover:bg-gray-700 transition-colors last:rounded-b-lg cursor-pointer"
 									style={{
 										color: 'var(--text-secondary)',
 										backgroundColor: 'transparent'

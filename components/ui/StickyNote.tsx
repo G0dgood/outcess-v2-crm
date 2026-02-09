@@ -318,7 +318,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 						<textarea
 							value={content}
 							onChange={(e) => setContent(e.target.value)}
-							className="w-full px-2 py-1 text-sm bg-transparent border-0 focus:outline-none resize-none cursor-text placeholder-opacity-60"
+							className="w-full px-2 py-1 text-[10px] md:text-[12px] bg-transparent border-0 focus:outline-none resize-none cursor-text placeholder-opacity-60"
 							rows={5}
 							onMouseDown={(e) => e.stopPropagation()}
 							placeholder="Write your note here..."
@@ -329,7 +329,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 						/>
 					) : (
 						<p
-							className="text-sm whitespace-pre-wrap font-sans leading-relaxed"
+							className="text-[10px] md:text-[12px] whitespace-pre-wrap font-sans leading-relaxed"
 							style={{ color: textColor }}
 						>
 							{note.content || 'No content'}
@@ -339,9 +339,9 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 					{/* Todos */}
 					{note.todos.length > 0 && (
 						<div className="mt-3 space-y-2">
-							<div className="text-xs font-semibold" style={{ color: textColor, opacity: 0.8 }}>To-dos:</div>
+							<div className="text-[8px] md:text-[10px] font-semibold" style={{ color: textColor, opacity: 0.8 }}>To-dos:</div>
 							{note.todos.map((todo) => (
-								<div key={todo.id} className="flex items-center gap-2 text-xs">
+								<div key={todo.id} className="flex items-center gap-2 text-[8px] md:text-[10px]">
 									<input
 										type="checkbox"
 										checked={todo.completed}
@@ -360,7 +360,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 												onUpdate({ ...note, todos: updatedTodos, updatedAt: new Date() });
 											}}
 											onMouseDown={(e) => e.stopPropagation()}
-											className="flex-1 px-1 py-0.5 text-xs bg-transparent rounded border-0 focus:outline-none cursor-text"
+											className="flex-1 px-1 py-0.5 text-[8px] md:text-[10px] bg-transparent rounded border-0 focus:outline-none cursor-text"
 											style={{ color: textColor, caretColor: textColor }}
 										/>
 									) : (
@@ -395,7 +395,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 										e.stopPropagation();
 										addTodo();
 									}}
-									className="text-xs mt-1 hover:opacity-80 transition-opacity"
+									className="text-[8px] md:text-[10px] mt-1 hover:opacity-80 transition-opacity"
 									style={{ color: textColor, opacity: 0.7 }}
 								>
 									+ Add todo
@@ -411,7 +411,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 								e.stopPropagation();
 								addTodo();
 							}}
-							className="text-xs mt-2 hover:opacity-80 transition-opacity"
+							className="text-[8px] md:text-[10px] mt-2 hover:opacity-80 transition-opacity"
 							style={{ color: textColor, opacity: 0.7 }}
 						>
 							+ Add todo

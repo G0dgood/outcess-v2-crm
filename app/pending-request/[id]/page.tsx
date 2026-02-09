@@ -84,13 +84,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 			<div className="mb-6">
 				<div className="flex items-center gap-4 mb-4">
 					<h1
-						className="text-2xl font-semibold dark:text-gray-100"
+						className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						{businessData.companyName}
 					</h1>
 					<span
-						className="inline-flex px-2 py-1 text-xs font-semibold rounded-full dark:bg-yellow-900/30 dark:text-yellow-400"
+						className="inline-flex px-2 py-1 text-[8px] md:text-[10px] font-semibold rounded-full dark:bg-yellow-900/30 dark:text-yellow-400"
 						style={{
 							backgroundColor: 'rgba(251, 146, 60, 0.1)',
 							color: '#EA580C'
@@ -100,7 +100,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 					</span>
 				</div>
 				<p
-					className="text-sm dark:text-gray-400"
+					className="text-[10px] md:text-[12px] dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
 					Submitted: {businessData.submittedDate}
@@ -121,7 +121,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 							<button
 								key={tab.id}
 								onClick={() => setActiveTab(tab.id)}
-								className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${isActive
+								className={`py-4 px-1 border-b-2 font-medium text-[10px] md:text-[12px] transition-colors ${isActive
 									? ''
 									: 'border-transparent dark:text-gray-400'
 									}`}
@@ -161,7 +161,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 							}}
 						>
 							<h2
-								className="text-lg font-semibold dark:text-gray-100 mb-4"
+								className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-4"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								Company Information
@@ -169,13 +169,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 							<div className="space-y-4">
 								<div>
 									<span
-										className="text-sm dark:text-gray-400"
+										className="text-[10px] md:text-[12px] dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Company Name
 									</span>
 									<p
-										className="text-sm font-medium dark:text-gray-100 mt-1"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{businessData.companyInfo.companyName}
@@ -183,13 +183,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 								</div>
 								<div>
 									<span
-										className="text-sm dark:text-gray-400"
+										className="text-[10px] md:text-[12px] dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Industry
 									</span>
 									<p
-										className="text-sm font-medium dark:text-gray-100 mt-1"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{businessData.companyInfo.industry}
@@ -197,13 +197,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 								</div>
 								<div>
 									<span
-										className="text-sm dark:text-gray-400"
+										className="text-[10px] md:text-[12px] dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Time Zone
 									</span>
 									<p
-										className="text-sm font-medium dark:text-gray-100 mt-1"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{businessData.companyInfo.timeZone}
@@ -211,13 +211,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 								</div>
 								<div>
 									<span
-										className="text-sm dark:text-gray-400"
+										className="text-[10px] md:text-[12px] dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Size
 									</span>
 									<p
-										className="text-sm font-medium dark:text-gray-100 mt-1"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{businessData.companyInfo.size}
@@ -235,7 +235,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 							}}
 						>
 							<h2
-								className="text-lg font-semibold dark:text-gray-100 mb-4"
+								className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-4"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								Contact Information
@@ -243,13 +243,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 							<div className="space-y-4">
 								<div>
 									<span
-										className="text-sm dark:text-gray-400"
+										className="text-[10px] md:text-[12px] dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Contact Person
 									</span>
 									<p
-										className="text-sm font-medium dark:text-gray-100 mt-1"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{businessData.contactInfo.contactPerson}
@@ -257,13 +257,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 								</div>
 								<div>
 									<span
-										className="text-sm dark:text-gray-400"
+										className="text-[10px] md:text-[12px] dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Email
 									</span>
 									<p
-										className="text-sm font-medium dark:text-gray-100 mt-1"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{businessData.contactInfo.email}
@@ -284,7 +284,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 					}}
 				>
 					<h2
-						className="text-lg font-semibold dark:text-gray-100 mb-6"
+						className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-6"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Branding Setting
@@ -293,13 +293,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Menu Layout */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Menu Layout
 							</span>
 							<p
-								className="text-sm font-medium dark:text-gray-100 mt-1"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{businessData.brandingSettings.menuLayout}
@@ -309,13 +309,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Layout Style */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Layout Style
 							</span>
 							<p
-								className="text-sm font-medium dark:text-gray-100 mt-1"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{businessData.brandingSettings.layoutStyle}
@@ -325,7 +325,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Theme Colors */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400 mb-2 block"
+								className="text-[10px] md:text-[12px] dark:text-gray-400 mb-2 block"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Theme color
@@ -341,7 +341,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 										}}
 									/>
 									<span
-										className="text-sm font-medium dark:text-gray-100"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{businessData.brandingSettings.primaryColor}
@@ -358,7 +358,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 										}}
 									/>
 									<span
-										className="text-sm font-medium dark:text-gray-100"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{businessData.brandingSettings.secondaryColor}
@@ -370,7 +370,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Logo */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400 mb-2 block"
+								className="text-[10px] md:text-[12px] dark:text-gray-400 mb-2 block"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Logo
@@ -389,10 +389,10 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 									) : (
 										<div className="flex items-center gap-2">
 											<div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-orange-500 to-white rounded-full flex items-center justify-center">
-												<span className="text-xs font-bold text-white">O</span>
+												<span className="text-[8px] md:text-[10px] font-bold text-white">O</span>
 											</div>
 											<span
-												className="text-sm font-medium dark:text-gray-100"
+												className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												OUTCESS™
@@ -402,7 +402,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 								</div>
 							) : (
 								<p
-									className="text-sm dark:text-gray-400 mt-1"
+									className="text-[10px] md:text-[12px] dark:text-gray-400 mt-1"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									No logo uploaded
@@ -422,7 +422,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 					}}
 				>
 					<h2
-						className="text-lg font-semibold dark:text-gray-100 mb-6"
+						className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-6"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Dashboard Setup
@@ -431,13 +431,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Widgets */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Widgets
 							</span>
 							<p
-								className="text-sm font-medium dark:text-gray-100 mt-1"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{businessData.dashboardSettings.widgets}
@@ -447,13 +447,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Disposition */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Disposition
 							</span>
 							<p
-								className="text-sm font-medium dark:text-gray-100 mt-1"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{businessData.dashboardSettings.disposition}
@@ -463,13 +463,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Disposition Time Range View */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Disposition Time Range View
 							</span>
 							<p
-								className="text-sm font-medium dark:text-gray-100 mt-1"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{businessData.dashboardSettings.dispositionTimeRangeView}
@@ -479,13 +479,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Disposition Chart Type */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Disposition Chart Type
 							</span>
 							<p
-								className="text-sm font-medium dark:text-gray-100 mt-1"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{businessData.dashboardSettings.dispositionChartType}
@@ -504,7 +504,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 					}}
 				>
 					<h2
-						className="text-lg font-semibold dark:text-gray-100 mb-6"
+						className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-6"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Customer Book
@@ -513,13 +513,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Custom Fields */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Custom Fields
 							</span>
 							<p
-								className="text-sm font-medium dark:text-gray-100 mt-1"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{businessData.customerBookSettings.customFields}
@@ -529,13 +529,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Required Fields */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Required Fields
 							</span>
 							<p
-								className="text-sm font-medium dark:text-gray-100 mt-1"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{businessData.customerBookSettings.requiredFields}
@@ -554,7 +554,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 					}}
 				>
 					<h2
-						className="text-lg font-semibold dark:text-gray-100 mb-6"
+						className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-6"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						User Management
@@ -563,13 +563,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Created Roles */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Created Roles
 							</span>
 							<p
-								className="text-sm font-medium dark:text-gray-100 mt-1"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{businessData.userManagementSettings.createdRoles}
@@ -579,13 +579,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Users Added */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Users Added
 							</span>
 							<p
-								className="text-sm font-medium dark:text-gray-100 mt-1"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{businessData.userManagementSettings.usersAdded}
@@ -595,13 +595,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Permission Access Levels */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Permission Access Levels
 							</span>
 							<p
-								className="text-sm font-medium dark:text-gray-100 mt-1"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{businessData.userManagementSettings.permissionAccessLevels}
@@ -611,13 +611,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Module Permission Overview */}
 						<div>
 							<span
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Module Permission Overview
 							</span>
 							<p
-								className="text-sm font-medium dark:text-gray-100 mt-1"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{businessData.userManagementSettings.modulePermissionOverview}

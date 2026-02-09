@@ -25,7 +25,7 @@ const PaginationSummary: React.FC<PaginationSummaryProps> = ({
 }) => {
 	return (
 		<div className={`flex items-center gap-2 ${className}`}>
-			<span className="text-sm text-gray-600">Showing</span>
+			<span className="text-[10px] md:text-[12px] text-gray-600">Showing</span>
 			<Dropdown
 				label=""
 				value={itemsPerPage.toString()}
@@ -36,7 +36,7 @@ const PaginationSummary: React.FC<PaginationSummaryProps> = ({
 				className="min-w-[80px]"
 				inputClassName="h-8"
 			/>
-			<span className="text-sm text-gray-600 whitespace-nowrap">
+			<span className="text-[10px] md:text-[12px] text-gray-600 whitespace-nowrap">
 				of {totalItems}
 			</span>
 		</div>

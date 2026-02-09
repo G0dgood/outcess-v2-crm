@@ -270,7 +270,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 				{Array.isArray(formData?.dataSource) && formData?.dataSource?.length > 0 && (
 					<div className="space-y-3">
 						<label
-							className="block text-sm font-medium dark:text-gray-300"
+							className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							Data Source Colors
@@ -280,7 +280,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 							return (
 								<div key={source} className="flex items-center gap-3">
 									<span
-										className="text-sm flex-1 dark:text-gray-400"
+										className="text-[10px] md:text-[12px] flex-1 dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										{sourceLabel}
@@ -314,7 +314,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 				style={{ borderColor: 'var(--light-gray)' }}
 			>
 				{isOffline && (
-					<span className="text-xs flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
+					<span className="text-[8px] md:text-[10px] flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
 						<svg
 							className="w-4 h-4"
 							fill="none"

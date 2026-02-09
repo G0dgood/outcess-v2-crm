@@ -36,7 +36,7 @@ const Search: React.FC<SearchProps> = ({
 	};
 
 	return (
-		<div 
+		<div
 			className={`box-border flex flex-row items-center px-[14px] py-[10px] gap-2 w-full sm:w-[320px] md:w-[300px] lg:w-[400px] h-[40px] dark:bg-gray-800 border dark:border-gray-700 relative ${maxWidth} ${className} transition-colors duration-200`}
 			style={{
 				backgroundColor: 'var(--accent-white)',
@@ -51,7 +51,7 @@ const Search: React.FC<SearchProps> = ({
 				onChange={(e) => onChange?.(e.target.value)}
 				onKeyPress={handleKeyPress}
 				disabled={disabled}
-				className={`search-input flex-1 text-sm font-normal leading-[150%] dark:text-gray-300 bg-transparent dark:placeholder:text-gray-500 focus:outline-none ${showClearButton && value ? 'pr-10' : ''}`}
+				className={`search-input flex-1 text-[10px] md:text-[12px] font-normal leading-[150%] dark:text-gray-300 bg-transparent dark:placeholder:text-gray-500 focus:outline-none ${showClearButton && value ? 'pr-10' : ''}`}
 				style={{
 					color: 'var(--text-secondary)',
 				}}

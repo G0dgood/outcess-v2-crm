@@ -87,7 +87,7 @@ const WidgetModal: React.FC<WidgetModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="font-inter text-lg font-semibold dark:text-gray-100"
+						className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						{title}
@@ -190,7 +190,7 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="font-inter text-lg font-semibold dark:text-gray-100"
+						className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Call Outcomes
@@ -245,7 +245,7 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 								No Call Outcomes Yet
 							</h3>
 							<p
-								className="font-lato text-sm dark:text-gray-400 mb-4"
+								className="font-lato text-[10px] md:text-[12px] dark:text-gray-400 mb-4"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Add your first call outcome above to get started
@@ -256,7 +256,7 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 							{callOutcomes.map((outcome) => (
 								<div key={outcome.id} className="flex items-center justify-between">
 									<span
-										className="font-lato text-sm dark:text-gray-100"
+										className="font-lato text-[10px] md:text-[12px] dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{outcome.name}
@@ -417,7 +417,7 @@ export default function KPIMetric({
 					>
 						<div className="flex items-center justify-between mb-4">
 							<h3
-								className="font-inter text-sm font-medium dark:text-gray-100"
+								className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{widget.title}

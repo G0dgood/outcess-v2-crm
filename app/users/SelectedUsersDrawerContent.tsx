@@ -63,7 +63,7 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
             style={{ color: 'var(--text-primary)' }}
           />
           <h2
-            className="font-inter text-lg font-semibold dark:text-gray-100"
+            className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
             style={{ color: 'var(--text-primary)' }}
           >
             Selected Users ({selectedUsers.size})
@@ -74,7 +74,7 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
             <button
               onClick={() => setShowBulkDeleteConfirm(true)}
               disabled={isDeletingMany}
-              className="text-xs py-1 px-3  border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600 flex items-center gap-1"
+              className="text-[8px] md:text-[10px] py-1 px-3  border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600 flex items-center gap-1"
               style={{
                 borderColor: 'var(--light-gray)',
                 color: '#DC2626',
@@ -116,7 +116,7 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
               style={{ color: 'var(--text-tertiary)' }}
             />
             <p
-              className="text-sm dark:text-gray-400"
+              className="text-[10px] md:text-[12px] dark:text-gray-400"
               style={{ color: 'var(--text-tertiary)' }}
             >
               No users selected
@@ -148,7 +148,7 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
                         <div className="flex items-center gap-2 mb-2">
 
                           <span
-                            className="inline-flex items-center px-2 py-0.5  text-xs font-medium"
+                            className="inline-flex items-center px-2 py-0.5  text-[8px] md:text-[10px] font-medium"
                             style={{
                               backgroundColor: loginStatusColors.bg,
                               color: loginStatusColors.text,
@@ -159,13 +159,13 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
                           </span>
                         </div>
                         <p
-                          className="text-sm font-medium dark:text-gray-100 mb-1"
+                          className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mb-1"
                           style={{ color: 'var(--text-primary)' }}
                         >
                           {user.firstName} {user.lastName}
                         </p>
                         <p
-                          className="text-xs dark:text-gray-400"
+                          className="text-[8px] md:text-[10px] dark:text-gray-400"
                           style={{ color: 'var(--text-tertiary)' }}
                         >
                           {user.email}
@@ -195,7 +195,7 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
 
                     {/* User Details */}
                     <div className="mt-3 space-y-2">
-                      <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center justify-between text-[8px] md:text-[10px]">
                         <span
                           className="dark:text-gray-400"
                           style={{ color: 'var(--text-tertiary)' }}
@@ -209,7 +209,7 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
                           {user.phone}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center justify-between text-[8px] md:text-[10px]">
                         <span
                           className="dark:text-gray-400"
                           style={{ color: 'var(--text-tertiary)' }}
@@ -236,21 +236,21 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
       {showBulkDeleteConfirm && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50">
           <div className="bg-white dark:bg-gray-800 p-6  shadow-xl max-w-sm w-full mx-4">
-            <h3 className="text-lg font-semibold mb-2 dark:text-gray-100">Confirm Deletion</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <h3 className="text-[12px] md:text-[14px] font-semibold mb-2 dark:text-gray-100">Confirm Deletion</h3>
+            <p className="text-[10px] md:text-[12px] text-gray-500 dark:text-gray-400 mb-6">
               Are you sure you want to delete {selectedUsers.size} selected users? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowBulkDeleteConfirm(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 text-[10px] md:text-[12px] font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleBulkDelete}
                 disabled={isDeletingMany}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600   hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-[10px] md:text-[12px] font-medium text-white bg-red-600   hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isDeletingMany ? 'Deleting...' : 'Delete'}
               </button>

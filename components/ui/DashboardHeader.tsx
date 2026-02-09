@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Icon from './Icon';
 import Dropdown from './Dropdown';
 import UserDropdown from './UserDropdown';
-import { HamburgerMenuIcon } from '@radix-ui/react-icons';
+import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
 import NotificationDropdown from './NotificationDropdown';
 import NotificationsModal from './NotificationsModal';
 import ThemeToggle from './ThemeToggle';
@@ -39,6 +39,7 @@ interface DashboardHeaderProps {
 	onLogoutClick?: () => void;
 	companyOptions?: Array<{ value: string; label: string; }>;
 	onMobileMenuToggle?: () => void;
+	isMobileMenuOpen?: boolean;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -48,6 +49,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	onEditProfileClick,
 	onLogoutClick,
 	onMobileMenuToggle,
+	isMobileMenuOpen = false,
 }) => {
 	const router = useRouter();
 	const dispatch = useDispatch();
@@ -321,33 +323,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					className="md:hidden p-2 text-black dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
 					title="Menu"
 				>
-					<HamburgerMenuIcon className="w-6 h-6 " />
+					<div className={`transition-all duration-300 ease-in-out transform ${isMobileMenuOpen ? 'rotate-90 scale-110' : 'rotate-0 scale-100'}`}>
+						{isMobileMenuOpen ? (
+							<Cross1Icon className="w-6 h-6" />
+						) : (
+							<HamburgerMenuIcon className="w-6 h-6 " />
+						)}
+					</div>
 				</button>
 
-				<div className="flex-1 md:flex-none">
-					<div className="hidden md:flex items-center gap-2">
-						{headerLogo ? (
-							<div className="relative h-8 w-auto min-w-[32px]">
-								<Image
-									src={headerLogo}
-									alt="Logo"
-									height={32}
-									width={100}
-									className="h-8 w-auto object-contain"
-									unoptimized
-									priority
-								/>
-							</div>
-						) : (
-							<Icon name="peoplelyHalf" size="xl" className="hidden dark:inline-block" />
-						)}
-						<span className="font-semibold text-[25px] leading-7 flex items-center text-[#050711]"
-							style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>{headerName}</span>
-					</div>
-				</div>
-
-
-
+				<div />
 				{/* Right side - Icons */}
 				<div className="flex items-center justify-center gap-4">
 					{/* Offline Indicator */}
@@ -360,21 +345,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 							}}
 							title="Offline - Messages will be queued"
 						>
-							<svg
-								className="w-4 h-4"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-								xmlns="http://www.w3.org/2000/svg"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
-								/>
-							</svg>
-							<span className="text-xs font-medium hidden sm:inline">Offline</span>
+							<Icon name="cloud-off" size="sm" color="white" />
+							<span className="text-[8px] md:text-[10px] font-medium hidden sm:inline">Offline</span>
 						</div>
 					)}
 

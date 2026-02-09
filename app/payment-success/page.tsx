@@ -6,8 +6,8 @@ import { CheckIcon } from '@radix-ui/react-icons';
 import Button from '@/components/ui/Button';
 
 export default function PaymentSuccessPage() {
-    const router = useRouter();
-    const primaryColor = '#9333EA';
+	const router = useRouter();
+	const primaryColor = '#9333EA';
 
 	return (
 		<div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -18,7 +18,7 @@ export default function PaymentSuccessPage() {
 				</div>
 
 				{/* Success Message */}
-				<h1 className="text-2xl font-bold text-gray-900 mb-3">Payment Successful!</h1>
+				<h1 className="text-[18px] md:text-[20px] font-bold text-gray-900 mb-3">Payment Successful!</h1>
 				<p className="text-gray-600 mb-8">
 					Your payment has been processed successfully. You will receive a confirmation email shortly.
 				</p>

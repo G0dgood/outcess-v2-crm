@@ -335,12 +335,12 @@ export default function SignUpPage() {
 										onChange={(checked) => setFormData(prev => ({ ...prev, agreetoterms: checked }))}
 										size="small"
 									/>
-									<span className="text-sm text-gray-600 dark:text-gray-400">
+									<span className="text-[10px] md:text-[12px] text-gray-600 dark:text-gray-400">
 										I agree to the Terms of Service and Privacy Policy
 									</span>
 								</div>
 								{errors.agreetoterms && (
-									<span className="terms-error text-red-500 text-sm mt-1 block">{errors.agreetoterms}</span>
+									<span className="terms-error text-red-500 text-[10px] md:text-[12px] mt-1 block">{errors.agreetoterms}</span>
 								)}
 							</div>
 						)}

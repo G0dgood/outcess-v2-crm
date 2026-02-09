@@ -81,7 +81,7 @@ const StickyNoteModal: React.FC<StickyNoteModalProps> = ({ isOpen, onClose, onSa
 				/>
 
 				<div>
-					<label className="block text-sm font-medium text-gray-700 mb-2">
+					<label className="block text-[10px] md:text-[12px] font-medium text-gray-700 mb-2">
 						Color
 					</label>
 					<div className="flex gap-2 flex-wrap">

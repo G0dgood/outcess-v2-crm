@@ -302,7 +302,7 @@ const UsersPage: React.FC = () => {
 							variant="primary"
 							size="md"
 							onClick={handleAddUser}
-							className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+							className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
 						>
 							Add User
 						</Button>
@@ -326,7 +326,7 @@ const UsersPage: React.FC = () => {
 						/>
 					</div>
 					<p
-						className="text-sm dark:text-gray-300 flex-1"
+						className="text-[10px] md:text-[12px] dark:text-gray-300 flex-1"
 						style={{ color: 'var(--text-secondary)' }}
 					>
 						This is for tracking agents who are logged in or logged out
@@ -368,7 +368,7 @@ const UsersPage: React.FC = () => {
 							className="text-gray-600"
 						/>
 						<span
-							className="text-sm dark:text-gray-400"
+							className="text-[10px] md:text-[12px] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							Total of {filteredUsers.length} Users
@@ -601,7 +601,7 @@ const UsersPage: React.FC = () => {
 							}}
 						>
 							<span
-								className="text-sm font-medium dark:text-gray-400"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Current Status
@@ -624,13 +624,13 @@ const UsersPage: React.FC = () => {
 
 						<div className="space-y-2">
 							<span
-								className="text-sm font-medium dark:text-gray-400"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Reason
 							</span>
 							<div
-								className="p-4 rounded-xl border min-h-20 text-sm leading-relaxed dark:border-gray-700"
+								className="p-4 rounded-xl border min-h-20 text-[10px] md:text-[12px] leading-relaxed dark:border-gray-700"
 								style={{
 									backgroundColor: 'var(--bg-primary)',
 									borderColor: 'var(--light-gray)',

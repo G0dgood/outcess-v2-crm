@@ -142,7 +142,7 @@ const PricingModal: React.FC<PricingModalProps> = ({
 					<div className="inline-flex items-center p-1" style={{ backgroundColor: 'var(--light-gray)' }}>
 						<button
 							onClick={() => setBillingCycle('monthly')}
-							className={`px-6 py-2   text-sm font-medium transition-all ${billingCycle === 'monthly'
+							className={`px-6 py-2   text-[10px] md:text-[12px] font-medium transition-all ${billingCycle === 'monthly'
 								? 'shadow-sm'
 								: 'hover:opacity-80'
 								}`}
@@ -155,7 +155,7 @@ const PricingModal: React.FC<PricingModalProps> = ({
 						</button>
 						<button
 							onClick={() => setBillingCycle('annual')}
-							className={`px-6 py-2   text-sm font-medium transition-all relative ${billingCycle === 'annual'
+							className={`px-6 py-2   text-[10px] md:text-[12px] font-medium transition-all relative ${billingCycle === 'annual'
 								? 'shadow-sm'
 								: 'hover:opacity-80'
 								}`}
@@ -166,7 +166,7 @@ const PricingModal: React.FC<PricingModalProps> = ({
 						>
 							Annual
 							<span
-								className="ml-2 text-xs text-white px-2 py-0.5 rounded-full"
+								className="ml-2 text-[8px] md:text-[10px] text-white px-2 py-0.5 rounded-full"
 								style={{ backgroundColor: primaryColor }}
 							>
 								Save 17%
@@ -203,23 +203,23 @@ const PricingModal: React.FC<PricingModalProps> = ({
 								{/* Plan Header */}
 								<div className="mb-5">
 									<div className="flex items-center justify-between mb-3">
-										<h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{plan.name}</h3>
+										<h3 className="text-[14px] md:text-[16px] font-bold" style={{ color: 'var(--text-primary)' }}>{plan.name}</h3>
 										{plan.popular && (
 											<span
-												className="text-xs font-semibold px-3 py-1 rounded-full text-white"
+												className="text-[8px] md:text-[10px] font-semibold px-3 py-1 rounded-full text-white"
 												style={{ backgroundColor: primaryColor }}
 											>
 												Most Popular
 											</span>
 										)}
 									</div>
-									<p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>{plan.description}</p>
+									<p className="text-[10px] md:text-[12px] mb-4" style={{ color: 'var(--text-secondary)' }}>{plan.description}</p>
 									<div className="flex items-baseline gap-2 mb-3">
 										<span className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
 											{getDisplayPrice(plan)}
 										</span>
 										{billingCycle === 'annual' && savings && (
-											<span className="text-sm font-medium" style={{ color: secondaryColor }}>
+											<span className="text-[10px] md:text-[12px] font-medium" style={{ color: secondaryColor }}>
 												{savings}
 											</span>
 										)}
@@ -231,13 +231,13 @@ const PricingModal: React.FC<PricingModalProps> = ({
 									{plan.features.map((feature, index) => (
 										<li key={index} className="flex items-start gap-3">
 											<CheckIcon className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-											<span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{feature}</span>
+											<span className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-secondary)' }}>{feature}</span>
 										</li>
 									))}
 									{plan.limitations?.map((limitation, index) => (
 										<li key={index} className="flex items-start gap-3">
 											<Cross2Icon className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--text-tertiary)' }} />
-											<span className="text-sm line-through" style={{ color: 'var(--text-tertiary)' }}>{limitation}</span>
+											<span className="text-[10px] md:text-[12px] line-through" style={{ color: 'var(--text-tertiary)' }}>{limitation}</span>
 										</li>
 									))}
 								</ul>
@@ -260,7 +260,7 @@ const PricingModal: React.FC<PricingModalProps> = ({
 				</div>
 
 				{/* Footer Note */}
-				<div className="text-sm space-y-1" style={{ color: 'var(--text-tertiary)' }}>
+				<div className="text-[10px] md:text-[12px] space-y-1" style={{ color: 'var(--text-tertiary)' }}>
 					<p>All plans include a 14-day free trial. Cancel anytime.</p>
 					<p>
 						Need help choosing? <a href="#" className="hover:underline" style={{ color: primaryColor }}>Contact sales</a>

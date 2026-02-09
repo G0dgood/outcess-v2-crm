@@ -1,22 +1,23 @@
-.table-container{
- overflow: auto !important;  
+.table-container {
+  overflow: auto !important;
 }
- 
+
 .table {
-  width: 100%; 
+  width: 100%;
   margin-bottom: 2rem;
   background-color: var(--accent-white);
   transition: background-color 0.3s ease;
 }
- 
-.table > thead > tr > th,
-.table > tbody > tr > th,
-.table > tfoot > tr > th,
-.table > thead > tr > td,
-.table > tbody > tr > td,
-.table > tfoot > tr > td {
+
+.table>thead>tr>th,
+.table>tbody>tr>th,
+.table>tfoot>tr>th,
+.table>thead>tr>td,
+.table>tbody>tr>td,
+.table>tfoot>tr>td {
   text-align: left;
-  padding: 1rem 1.5rem; /* py-4 px-6 equivalent */
+  padding: 1rem 1.5rem;
+  /* py-4 px-6 equivalent */
   vertical-align: top;
   border-top: 0;
   -webkit-transition: all 0.3s ease;
@@ -27,14 +28,16 @@
 /* Specific table styles for NewApplicants component */
 .new-applicants-table th,
 .new-applicants-table td {
-  padding: 1rem 1.5rem; /* py-4 px-6 equivalent */
+  padding: 1rem 1.5rem;
+  /* py-4 px-6 equivalent */
   text-align: left;
   border-bottom: 1px solid var(--card-border);
 }
 
 .new-applicants-table th {
   font-weight: 600;
-  font-size: 0.875rem; /* text-sm */
+  font-size: 0.75rem;
+  /* 12px */
   color: var(--text-primary);
 }
 
@@ -50,13 +53,14 @@
   opacity: 0.8;
   transition: opacity 0.2s ease;
 }
- 
- 
-#table-loader { 
-  color: var(--gray-light); 
-  padding-top: 5rem  ;
-  padding-bottom: 5rem ;   
+
+
+#table-loader {
+  color: var(--gray-light);
+  padding-top: 5rem;
+  padding-bottom: 5rem;
 }
+
 #table-loader p {
   color: var(--gray-light);
 }
@@ -68,31 +72,51 @@
   }
 }
 
-#table-loader{
+#table-loader {
   display: flex;
   justify-content: center;
-  align-items: center; 
-  width: 100%  
+  align-items: center;
+  width: 100%
 }
 
 /* Table header styles */
 .table th,
 table th {
-  padding: 0.75rem 1.5rem;  
+  padding: 0.75rem 1.5rem;
   text-align: left;
-  font-size: 0.75rem; /* text-xs */
-  font-weight: 500; /* font-medium */
-  color: var(--text-tertiary); /* text-gray-500 equivalent */
+  font-size: 0.75rem;
+  /* text-[8px] md:text-[10px] */
+  font-weight: 500;
+  /* font-medium */
+  color: var(--text-tertiary);
+  /* text-gray-500 equivalent */
   text-transform: uppercase;
-  letter-spacing: 0.05em; /* tracking-wider */
+  letter-spacing: 0.05em;
+  /* tracking-wider */
   white-space: nowrap !important;
 }
 
 /* Table cell styles */
 .table td,
 table td {
-  padding: 1rem 1.5rem; /* py-4 px-6 */
-  white-space: nowrap ; /* whitespace-nowrap */
-  font-size: 0.875rem; /* text-sm */
-  color: var(--text-tertiary); /* text-gray-500 equivalent */ 
+  padding: 1rem 1.5rem;
+  /* py-4 px-6 */
+  white-space: nowrap;
+  /* whitespace-nowrap */
+  font-size: 0.75rem;
+  /* 12px */
+  color: var(--text-tertiary);
+  /* text-gray-500 equivalent */
+}
+
+@media (max-width: 768px) {
+
+  .new-applicants-table th,
+  .table td,
+  table td,
+  .table th,
+  table th {
+    font-size: 0.625rem;
+    /* 10px */
+  }
 }

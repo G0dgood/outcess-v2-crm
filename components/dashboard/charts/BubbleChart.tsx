@@ -57,7 +57,7 @@ export const BubbleChart: React.FC<ChartProps> = ({ data }) => {
 								y={y}
 								textAnchor="middle"
 								dominantBaseline="middle"
-								className="text-xs fill-white font-medium"
+								className="text-[8px] md:text-[10px] fill-white font-medium"
 							>
 								{item.value}
 							</text>
@@ -65,7 +65,7 @@ export const BubbleChart: React.FC<ChartProps> = ({ data }) => {
 								x={x}
 								y={chartHeight + 15}
 								textAnchor="middle"
-								className="text-xs fill-gray-600"
+								className="text-[8px] md:text-[10px] fill-gray-600"
 							>
 								{item.label}
 							</text>

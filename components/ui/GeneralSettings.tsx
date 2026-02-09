@@ -57,7 +57,7 @@ const GeneralSettings: React.FC = () => {
 								Table Text Abbreviation Length
 							</h3>
 							<p
-								className="text-sm dark:text-gray-400"
+								className="text-[10px] md:text-[12px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Set the number of characters to show before abbreviating text in tables.

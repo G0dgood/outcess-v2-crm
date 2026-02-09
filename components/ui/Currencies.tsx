@@ -24,7 +24,7 @@ const Currencies = () => {
 			<div className="flex items-start justify-between">
 				<div className="flex-1">
 					<h2
-						className="text-2xl font-semibold dark:text-gray-100 mb-2"
+						className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100 mb-2"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Currencies
@@ -82,7 +82,7 @@ const Currencies = () => {
 									{currency.name}
 								</p>
 								<p
-									className="text-sm dark:text-gray-400"
+									className="text-[10px] md:text-[12px] dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Format: {currencyFormats[currency.code] || currency.symbol + ' 1,224,067.34'}

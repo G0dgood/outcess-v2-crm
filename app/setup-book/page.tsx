@@ -280,13 +280,13 @@ const SetupBookPage: React.FC = () => {
 					onChange={setSearchTerm}
 					className="w-full sm:w-auto"
 					maxWidth="w-full"
-					onSearch={(value) => console.log('Search triggered:', value)} 
+					onSearch={(value) => console.log('Search triggered:', value)}
 					showClearButton={true}
 				/>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
 					<SampleCsvDownloader
 						fields={setupBookHeaderFields || []}
-						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+						className="flex items-center gap-2 px-2 py-2  sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
 						extraHeaders={['searchId']}
 					/>
 					{canCreate && (
@@ -295,7 +295,7 @@ const SetupBookPage: React.FC = () => {
 								size="md"
 								onClick={handleCreateRecord}
 								variant="outline"
-								className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+								className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
 							>
 								<PlusIcon className="w-4 h-4" />
 								Create Record
@@ -304,7 +304,7 @@ const SetupBookPage: React.FC = () => {
 								size="md"
 								onClick={handleUpload}
 								variant="primary"
-								className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+								className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
 							>
 								<UploadIcon className="w-4 h-4" />
 								Upload
@@ -342,17 +342,23 @@ const SetupBookPage: React.FC = () => {
 										size="medium"
 									/>
 								</th>
+								<th
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Search ID
+								</th>
 								{fieldDefinitions?.map((field) => (
 									<th
 										key={field?.id}
-										className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+										className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{field?.name}
 									</th>
 								))}
 								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Actions
@@ -391,10 +397,16 @@ const SetupBookPage: React.FC = () => {
 											size="medium"
 										/>
 									</td>
+									<td
+										className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{record['searchId'] || '-'}
+									</td>
 									{fieldDefinitions?.map((field) => (
 										<td
 											key={field.id}
-											className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+											className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											{record[field.name] || '-'}

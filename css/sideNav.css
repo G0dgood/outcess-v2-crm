@@ -1,13 +1,13 @@
-#side-nav { 
+#side-nav {
   position: relative;
-  grid-area: sidenav  ;  
+  grid-area: sidenav;
   background-color: var(--accent-white);
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-#sidenav-setup { 
+#sidenav-setup {
   position: relative;
-  grid-area: sidenav-setup  ;  
+  grid-area: sidenav-setup;
   background-color: var(--accent-white);
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
@@ -15,21 +15,23 @@
 .dark #side-nav {
   background-color: var(--accent-white);
 }
- 
+
 .dark #sidenav-setup {
   background-color: var(--accent-white);
 }
- 
+
 
 /* Media query for small screens */
 @media screen and (max-width: 768px) {
-  
+
   #side-nav {
-    display: none !important;
+    /* display: none; */
+    overflow: hidden;
+    min-width: 16rem;
   }
 
-	}
+}
 
-  #sidenav-setup {
-    display: none !important;
-  }
+#sidenav-setup {
+  display: none;
+}

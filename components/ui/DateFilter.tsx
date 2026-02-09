@@ -138,7 +138,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							}}
 						/>
 						<span
-							className="text-sm font-medium dark:text-gray-100"
+							className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Today
@@ -159,7 +159,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							}}
 						/>
 						<span
-							className="text-sm font-medium dark:text-gray-100"
+							className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Yesterday
@@ -180,7 +180,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							}}
 						/>
 						<span
-							className="text-sm font-medium dark:text-gray-100"
+							className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Last 7 days
@@ -201,7 +201,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							}}
 						/>
 						<span
-							className="text-sm font-medium dark:text-gray-100"
+							className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Last 30 days
@@ -222,7 +222,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							}}
 						/>
 						<span
-							className="text-sm font-medium dark:text-gray-100"
+							className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							All time record
@@ -243,7 +243,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							}}
 						/>
 						<span
-							className="text-sm font-medium dark:text-gray-100"
+							className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Date Range

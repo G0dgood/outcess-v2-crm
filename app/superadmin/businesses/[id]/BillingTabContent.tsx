@@ -15,10 +15,10 @@ interface BillingTabContentProps {
 
 const BillingTabContent: React.FC<BillingTabContentProps> = ({ billingHistory }) => {
     const { lineOfBusinessData } = useLineOfBusiness();
-	const [currentPage, setCurrentPage] = useState(1);
-	const [itemsPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
 
-	const totalPages = Math.ceil(billingHistory.length / itemsPerPage);
+    const totalPages = Math.ceil(billingHistory.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedBilling = useMemo(() => {
@@ -30,7 +30,7 @@ const BillingTabContent: React.FC<BillingTabContentProps> = ({ billingHistory })
             {/* Header */}
             <div className="mb-6">
                 <h2
-                    className="text-lg font-semibold dark:text-gray-100"
+                    className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
                     style={{ color: 'var(--text-primary)' }}
                 >
                     Billing History
@@ -59,19 +59,19 @@ const BillingTabContent: React.FC<BillingTabContentProps> = ({ billingHistory })
                         >
                             <tr>
                                 <th
-                                    className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+                                    className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
                                     style={{ color: 'var(--text-primary)' }}
                                 >
                                     Date
                                 </th>
                                 <th
-                                    className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+                                    className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
                                     style={{ color: 'var(--text-primary)' }}
                                 >
                                     Amount
                                 </th>
                                 <th
-                                    className="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 uppercase tracking-wider"
+                                    className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
                                     style={{ color: 'var(--text-primary)' }}
                                 >
                                     Status
@@ -99,7 +99,7 @@ const BillingTabContent: React.FC<BillingTabContentProps> = ({ billingHistory })
                                 >
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span
-                                            className="text-sm dark:text-gray-100"
+                                            className="text-[10px] md:text-[12px] dark:text-gray-100"
                                             style={{ color: 'var(--text-primary)' }}
                                         >
                                             {billing.date}
@@ -107,7 +107,7 @@ const BillingTabContent: React.FC<BillingTabContentProps> = ({ billingHistory })
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span
-                                            className="text-sm font-medium dark:text-gray-100"
+                                            className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
                                             style={{ color: 'var(--text-primary)' }}
                                         >
                                             {billing.amount}
@@ -115,7 +115,7 @@ const BillingTabContent: React.FC<BillingTabContentProps> = ({ billingHistory })
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span
-                                            className="inline-flex px-2 py-1 text-xs font-semibold rounded-full dark:bg-green-900/30 dark:text-green-400"
+                                            className="inline-flex px-2 py-1 text-[8px] md:text-[10px] font-semibold rounded-full dark:bg-green-900/30 dark:text-green-400"
                                             style={{
                                                 backgroundColor: 'rgba(34, 197, 94, 0.1)',
                                                 color: '#16A34A'

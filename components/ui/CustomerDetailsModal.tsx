@@ -205,7 +205,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 					>
 						<div className="flex justify-between items-center">
 							<h2
-								className="text-2xl font-semibold dark:text-gray-100"
+								className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								Customer Details
@@ -288,7 +288,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 									style={{ borderColor: 'var(--light-gray)' }}
 								>
 									<h3
-										className="text-lg font-semibold dark:text-gray-100 flex items-center gap-2"
+										className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 flex items-center gap-2"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										<PersonIcon className="w-5 h-5 text-[#6C8B7D]" />
@@ -316,7 +316,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 														<IconComponent className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
 														<div className="flex-1">
 															<label
-																className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
+																className="block text-[8px] md:text-[10px] font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
 																style={{ color: 'var(--text-tertiary)' }}
 															>
 																{key}
@@ -349,7 +349,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 								style={{ borderColor: 'var(--light-gray)' }}
 							>
 								<h3
-									className="text-lg font-semibold dark:text-gray-100"
+									className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Disposition History
@@ -379,25 +379,25 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 									>
 										<tr>
 											<th
-												className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+												className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												Status
 											</th>
 											<th
-												className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+												className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												Date
 											</th>
 											<th
-												className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+												className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												Time
 											</th>
 											<th
-												className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+												className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												Agent
@@ -405,14 +405,14 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 											{dynamicHeaders.map((header) => (
 												<th
 													key={header}
-													className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+													className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 													style={{ color: 'var(--text-primary)' }}
 												>
 													{header}
 												</th>
 											))}
 											<th
-												className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+												className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												Action
@@ -445,7 +445,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 												<td className="px-6 py-4 whitespace-nowrap">
 													{item.isOffline ? (
 														<span
-															className="inline-flex items-center px-2 py-1 text-xs font-medium "
+															className="inline-flex items-center px-2 py-1 text-[8px] md:text-[10px] font-medium "
 															style={{
 																backgroundColor: item.offlineStatus === 'pending' ? '#FEF3C7' :
 																	item.offlineStatus === 'synced' ? '#D1FAE5' : '#FEE2E2',
@@ -459,7 +459,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 														</span>
 													) : (
 														<span
-															className="inline-flex items-center px-2 py-1 text-xs font-medium "
+															className="inline-flex items-center px-2 py-1 text-[8px] md:text-[10px] font-medium "
 															style={{
 																backgroundColor: '#E0E7FF',
 																color: '#3730A3'
@@ -476,13 +476,13 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 													{item.date}
 												</td>
 												<td
-													className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+													className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
 													style={{ color: 'var(--text-primary)' }}
 												>
 													{item.time}
 												</td>
 												<td
-													className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+													className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
 													style={{ color: 'var(--text-primary)' }}
 												>
 													{item.agent}
@@ -492,7 +492,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 													return (
 														<td
 															key={header}
-															className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+															className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
 															style={{ color: 'var(--text-primary)' }}
 														>
 															{field ? String(field.fieldValue) : '-'}

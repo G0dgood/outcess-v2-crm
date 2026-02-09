@@ -76,7 +76,7 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 					Header & Navigation
 				</h1>
 				<p
-					className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
+					className="font-lato not-italic font-normal text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
 					Customize how your CRM navigation and layout will appear to users.
@@ -95,13 +95,13 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="font-inter text-xl font-semibold dark:text-gray-100 mb-2"
+						className="font-inter text-[14px] md:text-[16px] font-semibold dark:text-gray-100 mb-2"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Navigation Settings
 					</h2>
 					<p
-						className="font-lato text-sm dark:text-gray-400 mb-6"
+						className="font-lato text-[10px] md:text-[12px] dark:text-gray-400 mb-6"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
 						Configure your CRM&apos;s main navigation structure
@@ -149,13 +149,13 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 										<div className="flex flex-col">
 											<Menu width={24} height={24} strokeColor={selectedLayout === 'layout' ? '#6C8B7D' : colors.dark.primary} className="mb-3" />
 											<h4
-												className="font-inter text-sm font-medium dark:text-gray-100 mb-1"
+												className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 mb-1"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												Layout Style
 											</h4>
 											<p
-												className="font-lato text-xs dark:text-gray-400"
+												className="font-lato text-[8px] md:text-[10px] dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
 												Vertical menu on the left
@@ -190,13 +190,13 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 										<div className="flex flex-col ">
 											<Dashboard width={24} height={24} strokeColor={selectedLayout === 'compact' ? '#6C8B7D' : colors.dark.primary} className="mb-3" />
 											<h4
-												className="font-inter text-sm font-medium dark:text-gray-100 mb-1"
+												className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 mb-1"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												Compact
 											</h4>
 											<p
-												className="font-lato text-xs dark:text-gray-400"
+												className="font-lato text-[8px] md:text-[10px] dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
 												Collapsed side menu with icons
@@ -265,7 +265,7 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 								</h3>
 							</div>
 							<p
-								className="font-lato text-sm dark:text-gray-400 mb-4"
+								className="font-lato text-[10px] md:text-[12px] dark:text-gray-400 mb-4"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Your selected colors will be applied to buttons, links, and UI elements throughout the CRM.
@@ -314,7 +314,7 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 								variant="ghost"
 								size="sm"
 								onClick={handleResetToDefault}
-								className="text-sm dark:text-gray-400 dark:hover:text-gray-300 underline p-0 h-auto"
+								className="text-[10px] md:text-[12px] dark:text-gray-400 dark:hover:text-gray-300 underline p-0 h-auto"
 								style={{ color: 'var(--text-tertiary)' }}
 								onMouseEnter={(e) => {
 									e.currentTarget.style.color = 'var(--text-secondary)';

@@ -401,7 +401,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 				return (
 					<div key={field.id}>
 						<label
-							className="block text-sm font-medium dark:text-gray-300 mb-2"
+							className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-2"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							{field.name}
@@ -494,14 +494,14 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 				>
 					<div className="flex items-center gap-3">
 						<h2
-							className="text-xl font-semibold dark:text-gray-100"
+							className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Disposition
 						</h2>
 						{isOffline && (
 							<span
-								className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium"
+								className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[8px] md:text-[10px] font-medium"
 								style={{
 									backgroundColor: 'rgba(220, 53, 69, 0.1)',
 									color: '#DC3545',
@@ -554,7 +554,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 							}}
 						>
 							<h3
-								className="text-lg font-semibold dark:text-gray-100 mb-4 flex items-center gap-2"
+								className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-4 flex items-center gap-2"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								<PersonIcon className="w-5 h-5 text-[#6C8B7D]" />
@@ -576,7 +576,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 												<IconComponent className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
 												<div>
 													<label
-														className="block text-xs font-medium dark:text-gray-400 uppercase tracking-wider mb-1"
+														className="block text-[8px] md:text-[10px] font-medium dark:text-gray-400 uppercase tracking-wider mb-1"
 														style={{ color: 'var(--text-tertiary)' }}
 													>
 														{key}
@@ -611,7 +611,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					{isOffline && (
-						<span className="text-xs flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
+						<span className="text-[8px] md:text-[10px] flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
 							<svg
 								className="w-4 h-4"
 								fill="none"

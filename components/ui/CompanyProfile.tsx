@@ -117,7 +117,7 @@ const CompanyProfile: React.FC<CompanyProfileProps> = ({
 			{/* Logo Upload Section */}
 			<div>
 				<label
-					className="block text-sm font-medium dark:text-gray-300 mb-2"
+					className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-2"
 					style={{ color: 'var(--text-secondary)' }}
 				>
 					LOGO

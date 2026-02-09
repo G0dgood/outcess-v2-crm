@@ -104,13 +104,13 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 						/>
 						<div>
 							<h2
-								className="text-lg font-bold dark:text-orange-400 mb-1"
+								className="text-[12px] md:text-[14px] font-bold dark:text-orange-400 mb-1"
 								style={{ color: '#EA580C' }}
 							>
 								Confirm Business Deactivation
 							</h2>
 							<p
-								className="text-sm dark:text-orange-400"
+								className="text-[10px] md:text-[12px] dark:text-orange-400"
 								style={{ color: '#EA580C' }}
 							>
 								You are about to deactivate: <span className="font-semibold">{businessName}</span>
@@ -125,7 +125,7 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 					>
 						<button
 							onClick={handleBack}
-							className="px-4 py-2 text-sm font-medium dark:text-orange-400 dark:hover:text-orange-300 transition-colors cursor-pointer"
+							className="px-4 py-2 text-[10px] md:text-[12px] font-medium dark:text-orange-400 dark:hover:text-orange-300 transition-colors cursor-pointer"
 							style={{ color: '#EA580C' }}
 							onMouseEnter={(e) => {
 								e.currentTarget.style.color = '#C2410C';
@@ -159,7 +159,7 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 		>
 			<div className="p-6">
 				<p
-					className="text-sm font-medium dark:text-gray-300 mb-4"
+					className="text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-4"
 					style={{ color: 'var(--text-secondary)' }}
 				>
 					Why are you deactivating this business?
@@ -222,13 +222,13 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 									</div>
 									<div className="flex-1">
 										<h3
-											className="text-sm font-semibold dark:text-gray-100 mb-1"
+											className="text-[10px] md:text-[12px] font-semibold dark:text-gray-100 mb-1"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											{reason.title}
 										</h3>
 										<p
-											className="text-sm dark:text-gray-400"
+											className="text-[10px] md:text-[12px] dark:text-gray-400"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											{reason.description}

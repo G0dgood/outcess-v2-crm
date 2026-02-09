@@ -31,7 +31,7 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
     }}
    >
     <h2
-     className="text-lg font-semibold dark:text-gray-100 mb-4"
+     className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-4"
      style={{ color: 'var(--text-primary)' }}
     >
      Basic Information
@@ -39,13 +39,13 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
     <div className="space-y-4">
      <div>
       <span
-       className="text-sm font-medium dark:text-gray-400"
+       className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
        style={{ color: 'var(--text-tertiary)' }}
       >
        Business ID:
       </span>
       <span
-       className="ml-2 text-sm dark:text-gray-100"
+       className="ml-2 text-[10px] md:text-[12px] dark:text-gray-100"
        style={{ color: 'var(--text-primary)' }}
       >
        {businessData.businessId}
@@ -53,14 +53,14 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
      </div>
      <div>
       <span
-       className="text-sm font-medium dark:text-gray-400"
+       className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
        style={{ color: 'var(--text-tertiary)' }}
       >
        Status:
       </span>
       <span className="ml-2">
        <span
-        className="inline-flex px-2 py-1 text-xs font-semibold rounded-full dark:bg-green-900/30 dark:text-green-400"
+        className="inline-flex px-2 py-1 text-[8px] md:text-[10px] font-semibold rounded-full dark:bg-green-900/30 dark:text-green-400"
         style={{
          backgroundColor: 'rgba(34, 197, 94, 0.1)',
          color: '#16A34A'
@@ -72,13 +72,13 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
      </div>
      <div>
       <span
-       className="text-sm font-medium dark:text-gray-400"
+       className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
        style={{ color: 'var(--text-tertiary)' }}
       >
        Industry:
       </span>
       <span
-       className="ml-2 text-sm dark:text-gray-100"
+       className="ml-2 text-[10px] md:text-[12px] dark:text-gray-100"
        style={{ color: 'var(--text-primary)' }}
       >
        {businessData.industry}
@@ -86,13 +86,13 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
      </div>
      <div>
       <span
-       className="text-sm font-medium dark:text-gray-400"
+       className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
        style={{ color: 'var(--text-tertiary)' }}
       >
        Registration Date:
       </span>
       <span
-       className="ml-2 text-sm dark:text-gray-100"
+       className="ml-2 text-[10px] md:text-[12px] dark:text-gray-100"
        style={{ color: 'var(--text-primary)' }}
       >
        {businessData.registrationDate}
@@ -110,7 +110,7 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
     }}
    >
     <h2
-     className="text-lg font-semibold dark:text-gray-100 mb-4"
+     className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-4"
      style={{ color: 'var(--text-primary)' }}
     >
      Contact Information
@@ -118,13 +118,13 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
     <div className="space-y-4">
      <div>
       <span
-       className="text-sm font-medium dark:text-gray-400"
+       className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
        style={{ color: 'var(--text-tertiary)' }}
       >
        Primary Contact:
       </span>
       <span
-       className="ml-2 text-sm dark:text-gray-100"
+       className="ml-2 text-[10px] md:text-[12px] dark:text-gray-100"
        style={{ color: 'var(--text-primary)' }}
       >
        {businessData.primaryContact}
@@ -132,13 +132,13 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
      </div>
      <div>
       <span
-       className="text-sm font-medium dark:text-gray-400"
+       className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
        style={{ color: 'var(--text-tertiary)' }}
       >
        Email:
       </span>
       <span
-       className="ml-2 text-sm dark:text-gray-100"
+       className="ml-2 text-[10px] md:text-[12px] dark:text-gray-100"
        style={{ color: 'var(--text-primary)' }}
       >
        {businessData.email}
@@ -146,13 +146,13 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
      </div>
      <div>
       <span
-       className="text-sm font-medium dark:text-gray-400"
+       className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
        style={{ color: 'var(--text-tertiary)' }}
       >
        Phone:
       </span>
       <span
-       className="ml-2 text-sm dark:text-gray-100"
+       className="ml-2 text-[10px] md:text-[12px] dark:text-gray-100"
        style={{ color: 'var(--text-primary)' }}
       >
        {businessData.phone}
@@ -160,13 +160,13 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
      </div>
      <div>
       <span
-       className="text-sm font-medium dark:text-gray-400"
+       className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
        style={{ color: 'var(--text-tertiary)' }}
       >
        Address:
       </span>
       <span
-       className="ml-2 text-sm dark:text-gray-100"
+       className="ml-2 text-[10px] md:text-[12px] dark:text-gray-100"
        style={{ color: 'var(--text-primary)' }}
       >
        {businessData.address}
@@ -184,7 +184,7 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
     }}
    >
     <h2
-     className="text-lg font-semibold dark:text-gray-100 mb-4"
+     className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-4"
      style={{ color: 'var(--text-primary)' }}
     >
      Subscription Details
@@ -192,13 +192,13 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
     <div className="space-y-4">
      <div>
       <span
-       className="text-sm font-medium dark:text-gray-400"
+       className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
        style={{ color: 'var(--text-tertiary)' }}
       >
        User Count:
       </span>
       <span
-       className="ml-2 text-sm dark:text-gray-100"
+       className="ml-2 text-[10px] md:text-[12px] dark:text-gray-100"
        style={{ color: 'var(--text-primary)' }}
       >
        {businessData.userCount} active users
@@ -206,13 +206,13 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
      </div>
      <div>
       <span
-       className="text-sm font-medium dark:text-gray-400"
+       className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
        style={{ color: 'var(--text-tertiary)' }}
       >
        Last Billing:
       </span>
       <span
-       className="ml-2 text-sm dark:text-gray-100"
+       className="ml-2 text-[10px] md:text-[12px] dark:text-gray-100"
        style={{ color: 'var(--text-primary)' }}
       >
        {businessData.lastBilling}
@@ -230,7 +230,7 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
     }}
    >
     <h2
-     className="text-lg font-semibold dark:text-gray-100 mb-4"
+     className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-4"
      style={{ color: 'var(--text-primary)' }}
     >
      Active Module
@@ -239,7 +239,7 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
      {businessData.activeModules.map((module, index) => (
       <button
        key={index}
-       className="px-4 py-2 text-sm font-medium dark:text-gray-300 dark:bg-gray-700 border dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+       className="px-4 py-2 text-[10px] md:text-[12px] font-medium dark:text-gray-300 dark:bg-gray-700 border dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
        style={{
         color: 'var(--text-secondary)',
         backgroundColor: 'var(--bg-primary)',

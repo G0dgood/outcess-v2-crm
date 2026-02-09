@@ -33,7 +33,7 @@ const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="font-inter text-xl font-semibold dark:text-gray-100"
+						className="font-inter text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Delete Role
@@ -56,7 +56,7 @@ const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({
 				{/* Modal Content */}
 				<div className="p-6">
 					<p
-						className="text-sm dark:text-gray-300 mb-6"
+						className="text-[10px] md:text-[12px] dark:text-gray-300 mb-6"
 						style={{ color: 'var(--text-secondary)' }}
 					>
 						Are you sure you want to delete the role <strong>{roleName}</strong>? This action cannot be undone.

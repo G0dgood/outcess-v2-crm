@@ -136,8 +136,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 			<div className="p-6">
 				{/* Header */}
 				<div className="mb-6">
-					<h2 className="text-2xl font-bold text-gray-900 mb-2">Complete Payment</h2>
-					<div className="flex items-center gap-3 text-sm text-gray-600">
+					<h2 className="text-[18px] md:text-[20px] font-bold text-gray-900 mb-2">Complete Payment</h2>
+					<div className="flex items-center gap-3 text-[10px] md:text-[12px] text-gray-600">
 						<span className="font-medium">{planName} Plan</span>
 						<span>•</span>
 						<span>{planPrice}</span>
@@ -218,7 +218,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 								d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
 							/>
 						</svg>
-						<p className="text-xs text-gray-600">
+						<p className="text-[8px] md:text-[10px] text-gray-600">
 							Your payment information is encrypted and secure. We never store your full card details.
 						</p>
 					</div>

@@ -77,7 +77,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
 			<div className="bg-white w-full max-w-md mx-4">
 				{/* Modal Header */}
 				<div className="flex justify-between items-center border-b border-[#E5E7EB] pb-4 p-6">
-					<h2 className="font-inter text-xl font-semibold text-[#050711]">Edit User</h2>
+					<h2 className="font-inter text-[14px] md:text-[16px] font-semibold text-[#050711]">Edit User</h2>
 					<button
 						onClick={onClose}
 						className="text-gray-400 hover:text-gray-600 transition-colors"

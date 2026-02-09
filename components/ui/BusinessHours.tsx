@@ -34,7 +34,7 @@ const BusinessHours = () => {
 				<div className="flex items-center justify-between mb-4">
 					<div className="flex items-center gap-2">
 						<h2
-							className="text-2xl font-semibold dark:text-gray-100"
+							className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Business Hour
@@ -83,7 +83,7 @@ const BusinessHours = () => {
 						<div className="flex items-center justify-between">
 							<div>
 								<label
-									className="block text-sm font-medium dark:text-gray-400 mb-1"
+									className="block text-[10px] md:text-[12px] font-medium dark:text-gray-400 mb-1"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Business days
@@ -106,7 +106,7 @@ const BusinessHours = () => {
 						<div className="flex items-center justify-between">
 							<div>
 								<label
-									className="block text-sm font-medium dark:text-gray-400 mb-1"
+									className="block text-[10px] md:text-[12px] font-medium dark:text-gray-400 mb-1"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Business hours

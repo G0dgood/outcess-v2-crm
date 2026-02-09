@@ -134,7 +134,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 						}}
 					>
 						<h3
-							className="text-lg dark:text-gray-100 font-inter font-medium text-[16px] leading-[120%] flex items-center tracking-[-0.02em]"
+							className="text-[12px] md:text-[14px] dark:text-gray-100 font-inter font-medium text-[12px] md:text-[14px] leading-[120%] flex items-center tracking-[-0.02em]"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Notification ({notifications.length})
@@ -193,17 +193,17 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 										<div className="flex items-start justify-between">
 											<div className="">
 												<p
-													className="text-sm dark:text-gray-300 leading-relaxed"
+													className="text-[10px] md:text-[12px] dark:text-gray-300 leading-relaxed"
 													style={{ color: 'var(--text-tertiary)' }}
 												>
 													<span
-														className="font-inter not-italic font-medium text-sm leading-[145%] dark:text-gray-100 font-features"
+														className="font-inter not-italic font-medium text-[10px] md:text-[12px] leading-[145%] dark:text-gray-100 font-features"
 														style={{ color: 'var(--text-primary)' }}
 													>
 														{notification.user.name}
 													</span> {notification.message}
 													<span
-														className="text-xs dark:text-gray-400 mt-1"
+														className="text-[8px] md:text-[10px] dark:text-gray-400 mt-1"
 														style={{ color: 'var(--text-tertiary)' }}
 													>
 														-{notification.timestamp}
@@ -252,7 +252,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 									onClose();
 								}
 							}}
-							className="text-sm dark:text-gray-300 dark:hover:text-gray-100 font-medium transition-colors font-inter not-italic leading-[145%] font-features cursor-pointer"
+							className="text-[10px] md:text-[12px] dark:text-gray-300 dark:hover:text-gray-100 font-medium transition-colors font-inter not-italic leading-[145%] font-features cursor-pointer"
 							style={{ color: 'var(--text-primary)' }}
 							onMouseEnter={(e) => {
 								e.currentTarget.style.color = 'var(--text-primary)';

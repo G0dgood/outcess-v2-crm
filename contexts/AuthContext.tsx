@@ -9,7 +9,7 @@ export interface User {
 	name: string;
 	avatar?: string;
 	role?: string;
- isTeamMember?: boolean;
+	isTeamMember?: boolean;
 	companyId?: string;
 	companyName?: string;
 	phone?: string;
@@ -92,7 +92,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 			// Try loading from individual keys first (app standard)
 			const storedUser = localStorage.getItem('peoplely-user');
 			const storedToken = localStorage.getItem('token');
-			
+
 			if (storedUser && storedToken) {
 				const parsedUser = JSON.parse(storedUser);
 				setUser(parsedUser);
@@ -212,14 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 				return false;
 			}
 
-			// You can add an API call here to verify token
-			// const response = await fetch(`${apiBaseUrl}/auth/verify`, {
-			//   headers: { Authorization: `Bearer ${token}` }
-			// });
-			// if (!response.ok) {
-			//   clearAuthData();
-			//   return false;
-			// }
+
 
 			return true;
 		} catch (error) {

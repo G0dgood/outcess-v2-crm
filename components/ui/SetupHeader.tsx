@@ -66,7 +66,7 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 							{/* This space can be used for logo or main title */}
 						</div>
 						<span
-							className="font-lato not-italic font-medium text-[14px] leading-[150%] dark:text-gray-100"
+							className="font-lato not-italic font-medium text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							{title}
@@ -75,7 +75,7 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 				)}
 				{!showLogo && (
 					<span
-						className="font-inter font-semibold text-lg dark:text-gray-100"
+						className="font-inter font-semibold text-[12px] md:text-[14px] dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						{title}
@@ -112,13 +112,13 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 					</div>
 					<div className="flex flex-col">
 						<span
-							className="font-lato font-medium text-sm leading-[150%] dark:text-gray-100"
+							className="font-lato font-medium text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							{userData.name}
 						</span>
 						<span
-							className="font-lato font-normal text-xs leading-[150%] dark:text-gray-400"
+							className="font-lato font-normal text-[8px] md:text-[10px] leading-[150%] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							{userData.role}

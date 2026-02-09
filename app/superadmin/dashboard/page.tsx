@@ -13,15 +13,15 @@ export default function AdminDashboardPage() {
 			</div>
 
 			{/* Platform Growth Trend Chart */}
-			<div 
+			<div
 				className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-8"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
 				}}
 			>
-				<h2 
-					className="text-xl font-semibold dark:text-gray-100 mb-6"
+				<h2
+					className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100 mb-6"
 					style={{ color: 'var(--text-primary)' }}
 				>
 					Platform Growth Trend
@@ -38,7 +38,7 @@ export default function AdminDashboardPage() {
 				}}
 			>
 				<h2 
-					className="text-xl font-semibold dark:text-gray-100 mb-6"
+					className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100 mb-6"
 					style={{ color: 'var(--text-primary)' }}
 				>
 					Registered Businesses

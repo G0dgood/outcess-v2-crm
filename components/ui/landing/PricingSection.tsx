@@ -39,24 +39,24 @@ const PricingSection: React.FC<PricingSectionProps> = ({ tiers }) => {
 							<p className="font-['Plus_Jakarta_Sans'] not-italic font-bold text-[24px] leading-[32px] flex items-center text-[#050711]">
 								{tier.title}
 							</p>
-							<p className="not-italic font-normal text-[14px] leading-[24px] flex items-center text-[#4A5565]" style={plusJakartaStyle}>{tier.description}</p>
+							<p className="not-italic font-normal text-[10px] md:text-[12px] leading-[24px] flex items-center text-[#4A5565]" style={plusJakartaStyle}>{tier.description}</p>
 							<h3 className="font-['Plus_Jakarta_Sans'] not-italic font-bold text-[32px] leading-[36px] sm:text-[48px] sm:leading-[48px] flex items-center text-[#050711]">{tier.price}</h3>
 						</div>
 						<Link
 							href="/signup"
-							className={`mt-8 inline-flex items-center justify-center w-full px-6 py-3 text-sm font-semibold transition-transform ${tier.highlight
+							className={`mt-8 inline-flex items-center justify-center w-full px-6 py-3 text-[10px] md:text-[12px] font-semibold transition-transform ${tier.highlight
 								? 'bg-[#050711] text-white hover:-translate-y-0.5'
 								: 'border bg-[#6C8B7D] text-white  border-light hover:border-transparent hover:bg-muted'
 								}`}
 						>
 							{tier.highlight ? 'Start Free Trial' : 'Talk to Sales'}
 						</Link>
-						<ul className="flex flex-1 flex-col gap-2 text-sm text-secondary">
+						<ul className="flex flex-1 flex-col gap-2 text-[10px] md:text-[12px] text-secondary">
 							{tier.features.map((feature) => (
 								<div key={feature} className="flex items-center gap-2">
 									<div className="flex items-center gap-2 mt-2">
 										<Image src="/logo/mark.svg" alt="mark" width={20} height={20} />
-										<span className="not-italic font-normal text-[16px] leading-[24px] flex items-center text-[#364153]" style={plusJakartaStyle}>{feature}</span>
+										<span className="not-italic font-normal text-[12px] md:text-[14px] leading-[24px] flex items-center text-[#364153]" style={plusJakartaStyle}>{feature}</span>
 									</div>
 								</div>
 							))}

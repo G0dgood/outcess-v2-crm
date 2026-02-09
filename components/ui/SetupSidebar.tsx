@@ -86,7 +86,7 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 						Setup Progress
 					</h3>
 					<span
-						className="font-inter text-sm dark:text-gray-400"
+						className="font-inter text-[10px] md:text-[12px] dark:text-gray-400"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
 						{currentStep} of {setupSteps.length}
@@ -142,20 +142,20 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 							</div>
 							<div className="flex-1">
 								<div
-									className="font-lato not-italic font-medium text-[14px] leading-[150%]"
+									className="font-lato not-italic font-medium text-[10px] md:text-[12px] leading-[150%]"
 									style={step.active ? { color: secondaryColor } : isDarkMode ? { color: '#FFFFFF' } : { color: 'var(--text-secondary)' }}
 								>
 									{step.title}
 								</div>
 								<div
-									className="font-lato not-italic font-medium text-[14px] leading-[150%] w-[165px]"
+									className="font-lato not-italic font-medium text-[10px] md:text-[12px] leading-[150%] w-[165px]"
 									style={step.active ? { color: isDarkMode ? '#9CA3AF' : 'var(--text-tertiary)' } : isDarkMode ? { color: '#FFFFFF' } : { color: 'var(--text-tertiary)' }}
 								>
 									{step.description}
 								</div>
 							</div>
 							<div
-								className="text-sm"
+								className="text-[10px] md:text-[12px]"
 								style={{ color: step.active ? (isDarkMode ? '#9CA3AF' : 'var(--text-tertiary)') : (isDarkMode ? '#FFFFFF' : 'var(--text-tertiary)') }}
 							>
 								<ChevronRightIcon

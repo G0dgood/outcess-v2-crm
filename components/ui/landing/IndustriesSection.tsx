@@ -32,7 +32,7 @@ const IndustriesSection: React.FC<IndustriesSectionProps> = ({ items }) => {
 						className="box-border w-full sm:w-[302px] bg-white border border-[#F3F4F6] rounded-[14px] p-6">
 						<Image src={industry.iconSrc} alt={industry.title} width={48} height={48} className="mb-4" />
 						<h3 className="font-[Plus-Jakarta-Sans] font-semibold text-[20px] leading-[28px] flex items-center text-[#050711] mb-4" style={plusJakartaStyle} >{industry.title}</h3>
-						<p className="font-normal text-[16px] leading-[26px] flex items-center text-[#4A5565]"
+						<p className="font-normal text-[12px] md:text-[14px] leading-[26px] flex items-center text-[#4A5565]"
 							style={plusJakartaStyle}>{industry.description}</p>
 					</div>
 				))}

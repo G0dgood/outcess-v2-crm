@@ -291,7 +291,7 @@ const EditUserPage: React.FC = () => {
 						style={{ backgroundColor: 'var(--bg-primary)' }}
 					>
 						<span
-							className="text-xl font-semibold dark:text-gray-300"
+							className="text-[14px] md:text-[16px] font-semibold dark:text-gray-300"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							{formData.firstName[0]}{formData.lastName[0]}
@@ -299,19 +299,19 @@ const EditUserPage: React.FC = () => {
 					</div>
 					<div>
 						<h2
-							className="text-2xl font-semibold dark:text-gray-100"
+							className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							{formData.firstName} {formData.lastName}
 						</h2>
 						<p
-							className="text-sm dark:text-gray-400"
+							className="text-[10px] md:text-[12px] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							{formData.email}
 						</p>
 						<p
-							className="text-sm dark:text-gray-400"
+							className="text-[10px] md:text-[12px] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							{formData.phone}
@@ -438,14 +438,14 @@ const EditUserPage: React.FC = () => {
 
 						<div>
 							<label
-								className="block text-sm font-medium dark:text-gray-300 mb-2"
+								className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-2"
 								style={{ color: 'var(--text-secondary)' }}
 							>
 								Status
 							</label>
 							<div className="flex items-center gap-3">
 								<span
-									className="text-sm dark:text-gray-300"
+									className="text-[10px] md:text-[12px] dark:text-gray-300"
 									style={{ color: 'var(--text-secondary)' }}
 								>
 									{formData?.status ? 'Active' : 'Inactive'}
@@ -515,7 +515,7 @@ const EditUserPage: React.FC = () => {
 								<ExclamationTriangleIcon className="w-5 h-5 dark:text-orange-400" style={{ color: '#F97316' }} />
 							</div>
 							<div
-								className="flex-1 text-sm dark:text-orange-400"
+								className="flex-1 text-[10px] md:text-[12px] dark:text-orange-400"
 								style={{ color: '#EA580C' }}
 							>
 								You&apos;re about to change the password of {formData.firstName} {formData.lastName}. The user will be logged out immediately.

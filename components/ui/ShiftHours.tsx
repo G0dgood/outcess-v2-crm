@@ -33,7 +33,7 @@ const ShiftHours = () => {
 			<div className="flex items-start justify-between mb-4">
 				<div className="flex-1">
 					<h2
-						className="text-2xl font-semibold dark:text-gray-100 mb-2"
+						className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100 mb-2"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Shift Hour
@@ -79,25 +79,25 @@ const ShiftHours = () => {
 						>
 							<tr>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Shift Name
 								</th>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Shift Days
 								</th>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Shift Timing
 								</th>
 								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									No of Users
@@ -141,19 +141,19 @@ const ShiftHours = () => {
 											{shift.shiftName}
 										</td>
 										<td
-											className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+											className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											{shift.shiftDays}
 										</td>
 										<td
-											className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+											className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											{shift.shiftStartTime} - {shift.shiftEndTime}
 										</td>
 										<td
-											className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
+											className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											{shift.noOfUsers}

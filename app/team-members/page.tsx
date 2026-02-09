@@ -276,13 +276,13 @@ const TeamMembersPage: React.FC = () => {
 			{/* Header */}
 			<div>
 				<h1
-					className="text-2xl font-semibold dark:text-gray-100"
+					className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100"
 					style={{ color: 'var(--text-primary)' }}
 				>
 					Team Members
 				</h1>
 				<p
-					className="text-sm mt-1 dark:text-gray-400"
+					className="text-[10px] md:text-[12px] mt-1 dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
 					Monitor agent login activity and supervisor assignments.
@@ -334,7 +334,7 @@ const TeamMembersPage: React.FC = () => {
 							className="text-gray-600"
 						/>
 						<span
-							className="text-sm dark:text-gray-400"
+							className="text-[10px] md:text-[12px] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							Total of {filteredMembers.length} Team Members
@@ -358,7 +358,7 @@ const TeamMembersPage: React.FC = () => {
 								{['User ID', 'Full Name', 'Email', 'Phone No', 'Role', 'Supervisor', 'Logged In Status'].map((heading) => (
 									<th
 										key={heading}
-										className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-300"
+										className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-300"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{heading}
@@ -391,43 +391,43 @@ const TeamMembersPage: React.FC = () => {
 										}}
 									>
 										<td
-											className="px-6 py-4 text-sm dark:text-gray-100"
+											className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-100"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											{member?.agentId}
 										</td>
 										<td
-											className="px-6 py-4 text-sm dark:text-gray-100"
+											className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-100"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											{member?.fullName}
 										</td>
 										<td
-											className="px-6 py-4 text-sm dark:text-gray-400"
+											className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-400"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											{member.email}
 										</td>
 										<td
-											className="px-6 py-4 text-sm dark:text-gray-400"
+											className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-400"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											{member.phone}
 										</td>
 										<td
-											className="px-6 py-4 text-sm capitalize dark:text-gray-400"
+											className="px-6 py-4 text-[10px] md:text-[12px] capitalize dark:text-gray-400"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											{member.role}
 										</td>
 										<td
-											className="px-6 py-4 text-sm dark:text-gray-400"
+											className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-400"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											{member.supervisor}
 										</td>
 										<td
-											className="px-6 py-4 text-sm dark:text-gray-100 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
+											className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-100 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
 											style={{ color: 'var(--text-primary)' }}
 											onClick={() => setStatusModalMember(member)}
 										>
@@ -476,7 +476,7 @@ const TeamMembersPage: React.FC = () => {
 							}}
 						>
 							<span
-								className="text-sm font-medium dark:text-gray-400"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Current Status
@@ -499,13 +499,13 @@ const TeamMembersPage: React.FC = () => {
 
 						<div className="space-y-2">
 							<span
-								className="text-sm font-medium dark:text-gray-400"
+								className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Reason
 							</span>
 							<div
-								className="p-4 rounded-xl border min-h-[5rem] text-sm leading-relaxed dark:border-gray-700"
+								className="p-4 rounded-xl border min-h-[5rem] text-[10px] md:text-[12px] leading-relaxed dark:border-gray-700"
 								style={{
 									backgroundColor: 'var(--bg-primary)',
 									borderColor: 'var(--light-gray)',

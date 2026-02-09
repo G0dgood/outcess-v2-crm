@@ -4,7 +4,6 @@ import React, { useState, Suspense } from 'react';
 import { SetupProvider } from '@/contexts/SetupContext';
 import DashboardHeader from '@/components/ui/DashboardHeader';
 import DashboardSideNav from '@/components/ui/DashboardSideNav';
-import MobileSideNav from '@/components/ui/MobileSideNav';
 import GlobalStickyNotes from '@/components/ui/GlobalStickyNotes';
 
 function LayoutContent({ children }: { children: React.ReactNode }) { 
@@ -19,27 +18,19 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 	};
 
 	return (
-		<div id="page-wrapper">
+		<div id="page-wrapper" className={isMobileMenuOpen ? 'mobile-nav-open' : ''}>
 			<DashboardHeader 
 				userIsOnline={true} 
 				onMobileMenuToggle={toggleMobileMenu}
+				isMobileMenuOpen={isMobileMenuOpen}
 			/>
 
 			{/* Desktop SideNav */}
 			<Suspense fallback={null}>
 				<DashboardSideNav
 					activeItem="setup-book"
-					isMobileOpen={false}
-					onMobileClose={() => { }}
-				/>
-			</Suspense>
-
-			{/* Mobile SideNav */}
-			<Suspense fallback={null}>
-				<MobileSideNav
-					activeItem="setup-book"
-					isOpen={isMobileMenuOpen}
-					onClose={closeMobileMenu}
+					isMobileOpen={isMobileMenuOpen}
+					onMobileClose={() => setIsMobileMenuOpen(false)}
 				/>
 			</Suspense>
 			<main>{children}</main>
