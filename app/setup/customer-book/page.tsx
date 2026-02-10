@@ -1,6 +1,24 @@
 'use client';
 
 import React, { useState } from 'react';
+import {
+	DndContext,
+	closestCenter,
+	KeyboardSensor,
+	PointerSensor,
+	useSensor,
+	useSensors,
+	DragEndEvent
+} from '@dnd-kit/core';
+import {
+	arrayMove,
+	SortableContext,
+	sortableKeyboardCoordinates,
+	verticalListSortingStrategy,
+	useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
@@ -25,6 +43,109 @@ interface FieldType {
 	description: string;
 }
 
+interface SortableRowProps {
+	field: CustomerField;
+	index: number;
+	handleEditField: (field: CustomerField) => void;
+	handleDeleteField: (fieldId: string) => void;
+	isLast: boolean;
+}
+
+const SortableRow = ({ field, index, handleEditField, handleDeleteField, isLast }: SortableRowProps) => {
+	const {
+		attributes,
+		listeners,
+		setNodeRef,
+		transform,
+		transition,
+		isDragging,
+	} = useSortable({ id: field.id });
+
+	const style: React.CSSProperties = {
+		transform: CSS.Transform.toString(transform),
+		transition,
+		zIndex: isDragging ? 1000 : 'auto',
+		position: isDragging ? 'relative' : undefined,
+	};
+
+	return (
+		<tr
+			ref={setNodeRef}
+			style={{
+				...style,
+				...(isLast ? {} : { borderBottom: '1px solid', borderBottomColor: 'var(--light-gray)' }),
+				backgroundColor: isDragging ? 'var(--bg-primary)' : 'transparent',
+			} as React.CSSProperties}
+			className={!isLast ? 'dark:border-gray-700' : ''}
+		>
+			<td className="py-4 px-2 w-10">
+				<button
+					{...attributes}
+					{...listeners}
+					className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+					style={{ color: 'var(--text-tertiary)' }}
+				>
+					<GripVertical size={16} />
+				</button>
+			</td>
+			<td
+				className="py-4 px-6 font-inter text-[10px] md:text-[12px] dark:text-gray-100"
+				style={{ color: 'var(--text-primary)' }}
+			>
+				{field.name}
+			</td>
+			<td
+				className="py-4 px-6 font-inter text-[10px] md:text-[12px] dark:text-gray-400"
+				style={{ color: 'var(--text-tertiary)' }}
+			>
+				{field.type}
+			</td>
+			<td className="py-4 px-6">
+				{field.required ? (
+					<span
+						className="inline-flex items-center px-2 py-1 rounded-full text-[8px] md:text-[10px] font-medium dark:bg-green-900/30 dark:text-green-400"
+						style={{
+							backgroundColor: 'rgba(34, 197, 94, 0.1)',
+							color: '#16A34A'
+						}}
+					>
+						Required
+					</span>
+				) : (
+					<span
+						className="inline-flex items-center px-2 py-1 rounded-full text-[8px] md:text-[10px] font-medium dark:bg-gray-700 dark:text-gray-300"
+						style={{
+							backgroundColor: 'var(--bg-primary)',
+							color: 'var(--text-tertiary)'
+						}}
+					>
+						Optional
+					</span>
+				)}
+			</td>
+			<td className="py-4 px-6 flex items-center gap-2">
+				<button
+					onClick={() => handleEditField(field)}
+					className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+				>
+					<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M11 2L14 5L4.5 14.5H1.5V11.5L11 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+					</svg>
+				</button>
+				<button
+					onClick={() => handleDeleteField(field.id)}
+					className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+				>
+					<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M2 4H14M5 4V2C5 1.44772 5.44772 1 6 1H10C10.5523 1 11 1.44772 11 2V4M13 4V14C13 14.5523 12.5523 15 12 15H4C3.44772 15 3 14.5523 3 14V4H13Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+						<path d="M6 7V11M10 7V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+					</svg>
+				</button>
+			</td>
+		</tr>
+	);
+};
+
 export default function CustomerBookPage() {
 	const { setupData, updateCustomerBookSettings } = useSetup();
 	const { customerBookSettings } = setupData;
@@ -32,17 +153,77 @@ export default function CustomerBookPage() {
 	const [selectedFieldType, setSelectedFieldType] = useState<string>('single-line-text');
 	const [editingField, setEditingField] = useState<CustomerField | null>(null);
 
+	const sensors = useSensors(
+		useSensor(PointerSensor),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		})
+	);
+
+	const handleDragEnd = (event: DragEndEvent) => {
+		const { active, over } = event;
+
+		if (over && active.id !== over.id) {
+			const oldIndex = customerBookSettings.configuredFields.findIndex((field) => field.id === active.id);
+			const newIndex = customerBookSettings.configuredFields.findIndex((field) => field.id === over.id);
+
+			updateCustomerBookSettings({
+				configuredFields: arrayMove(customerBookSettings.configuredFields, oldIndex, newIndex)
+			});
+		}
+	};
+
 	const availableFieldTypes: FieldType[] = [
-		{ id: 'single-line-text', name: 'Single-Line Text', description: 'Add a single line of text' },
-		{ id: 'email', name: 'Email', description: 'Stores email addresses' },
-		{ id: 'multi-line-text', name: 'Multi-Line Text', description: 'Add a few lines of text' },
-		{ id: 'number', name: 'Number', description: 'Enter a string of number' },
-		{ id: 'date', name: 'Date', description: 'Select a date from a calendar' },
-		{ id: 'phone', name: 'Phone', description: 'Stores phone numbers' },
-		{ id: 'date-time', name: 'Date/Time', description: 'Stores a date and time value' },
-		{ id: 'dropdown', name: 'Drop-down', description: 'Choose one option in a menu of choices' },
-		{ id: 'radio-select', name: 'Radio Select', description: 'Select one option from a list of menu' },
-		{ id: 'checkbox', name: 'Checkbox', description: 'Select Multiple Options from a list of options' },
+		{
+			id: 'single-line-text',
+			name: 'Single-Line Text',
+			description: 'Add a single line of text'
+		},
+		{
+			id: 'email',
+			name: 'Email',
+			description: 'Stores email addresses'
+		},
+		{
+			id: 'multi-line-text',
+			name: 'Multi-Line Text',
+			description: 'Add a few lines of text'
+		},
+		{
+			id: 'number',
+			name: 'Number',
+			description: 'Enter a string of number'
+		},
+		{
+			id: 'date',
+			name: 'Date',
+			description: 'Select a date from a calendar'
+		},
+		{
+			id: 'phone',
+			name: 'Phone',
+			description: 'Stores phone numbers'
+		},
+		{
+			id: 'date-time',
+			name: 'Date/Time',
+			description: 'Stores a date and time value'
+		},
+		{
+			id: 'dropdown',
+			name: 'Drop-down',
+			description: 'Choose one option in a menu of choices'
+		},
+		{
+			id: 'radio-select',
+			name: 'Radio Select',
+			description: 'Select one option from a list of menu'
+		},
+		{
+			id: 'checkbox',
+			name: 'Checkbox',
+			description: 'Select Multiple Options from a list of options'
+		},
 	];
 
 	const handleDeleteField = (fieldId: string) => {
@@ -268,106 +449,66 @@ export default function CustomerBookPage() {
 				}}
 			>
 				<div className="overflow-x-auto">
-					<table className="w-full">
-						<thead>
-							<tr
-								className="border-b dark:border-gray-700"
-								style={{
-									borderColor: 'var(--light-gray)',
-									borderBottom: '1px solid'
-								}}
-							>
-								<th
-									className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Field Name
-								</th>
-								<th
-									className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Type
-								</th>
-								<th
-									className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Required
-								</th>
-								<th
-									className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Action
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{customerBookSettings.configuredFields.map((field, index) => (
+					<DndContext
+						sensors={sensors}
+						collisionDetection={closestCenter}
+						onDragEnd={handleDragEnd}
+					>
+						<table className="w-full">
+							<thead>
 								<tr
-									key={field.id}
-									className={index !== customerBookSettings.configuredFields.length - 1 ? 'dark:border-gray-700' : ''}
-									style={index !== customerBookSettings.configuredFields.length - 1 ? { borderBottom: '1px solid', borderBottomColor: 'var(--light-gray)' } : {}}
+									className="border-b dark:border-gray-700"
+									style={{
+										borderColor: 'var(--light-gray)',
+										borderBottom: '1px solid'
+									}}
 								>
-									<td
-										className="py-4 px-6 font-inter text-[10px] md:text-[12px] dark:text-gray-100"
+									<th className="w-10 py-4 px-2"></th>
+									<th
+										className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
-										{field.name}
-									</td>
-									<td
-										className="py-4 px-6 font-inter text-[10px] md:text-[12px] dark:text-gray-400"
-										style={{ color: 'var(--text-tertiary)' }}
+										Field Name
+									</th>
+									<th
+										className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
 									>
-										{field.type}
-									</td>
-									<td className="py-4 px-6">
-										{field.required ? (
-											<span
-												className="inline-flex items-center px-2 py-1 rounded-full text-[8px] md:text-[10px] font-medium dark:bg-green-900/30 dark:text-green-400"
-												style={{
-													backgroundColor: 'rgba(34, 197, 94, 0.1)',
-													color: '#16A34A'
-												}}
-											>
-												Required
-											</span>
-										) : (
-											<span
-												className="inline-flex items-center px-2 py-1 rounded-full text-[8px] md:text-[10px] font-medium dark:bg-gray-700 dark:text-gray-300"
-												style={{
-													backgroundColor: 'var(--bg-primary)',
-													color: 'var(--text-tertiary)'
-												}}
-											>
-												Optional
-											</span>
-										)}
-									</td>
-									<td className="py-4 px-6 flex items-center gap-2">
-										<button
-											onClick={() => handleEditField(field)}
-											className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-										>
-											<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-												<path d="M11 2L14 5L4.5 14.5H1.5V11.5L11 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-											</svg>
-										</button>
-										<button
-											onClick={() => handleDeleteField(field.id)}
-											className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
-										>
-											<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-												<path d="M2 4H14M5 4V2C5 1.44772 5.44772 1 6 1H10C10.5523 1 11 1.44772 11 2V4M13 4V14C13 14.5523 12.5523 15 12 15H4C3.44772 15 3 14.5523 3 14V4H13Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-												<path d="M6 7V11M10 7V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-											</svg>
-										</button>
-									</td>
+										Type
+									</th>
+									<th
+										className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										Required
+									</th>
+									<th
+										className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										Action
+									</th>
 								</tr>
-							))}
-						</tbody>
-					</table>
+							</thead>
+							<SortableContext
+								items={customerBookSettings.configuredFields.map(f => f.id)}
+								strategy={verticalListSortingStrategy}
+							>
+								<tbody>
+									{customerBookSettings.configuredFields.map((field, index) => (
+										<SortableRow
+											key={field.id}
+											field={field}
+											index={index}
+											handleEditField={handleEditField}
+											handleDeleteField={handleDeleteField}
+											isLast={index === customerBookSettings.configuredFields.length - 1}
+										/>
+									))}
+								</tbody>
+							</SortableContext>
+						</table>
+					</DndContext>
 				</div>
 			</div>
 
@@ -411,12 +552,11 @@ export default function CustomerBookPage() {
 								{fieldType.description}
 							</p>
 							<div
-								className="dark:bg-gray-700 border dark:border-gray-600 p-2"
+								className="dark:bg-gray-700 border dark:border-gray-600 p-2 pointer-events-none"
 								style={{
 									backgroundColor: 'var(--bg-primary)',
 									borderColor: 'var(--light-gray)'
 								}}
-								onClick={(e) => e.stopPropagation()}
 							>
 								{renderFieldPreview(fieldType)}
 							</div>

@@ -230,7 +230,7 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 		<Modal
 			isOpen={isOpen}
 			onClose={onClose}
-			title="Field Properties"
+			title={initialData ? 'Edit Field' : `${fieldTypeOptions.find(o => o.value === selectedType)?.label || 'Field'} Properties`}
 			size="sm"
 			position="right"
 		>

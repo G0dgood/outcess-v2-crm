@@ -135,7 +135,7 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 							</div>
 							<div className="flex-1">
 								<div
-									className="font-lato not-italic font-medium text-[10px] md:text-[12px] leading-[150%]"
+									className="font-lato not-italic font-medium text-[12px] md:text-[14px] leading-[150%]"
 									style={step.active ? { color: secondaryColor } : isDarkMode ? { color: '#FFFFFF' } : { color: 'var(--text-secondary)' }}
 								>
 									{step.title}
