@@ -114,6 +114,9 @@ export interface SetupData {
 	customerBookSettings: {
 		configuredFields: CustomerField[];
 	};
+	roleManagementSettings: {
+		modules: { name: string }[];
+	};
 	logoFile?: File | null;
 }
 
@@ -207,6 +210,19 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				{ id: '3', name: 'Phone Number', type: 'Phone', required: true },
 			],
 		},
+		roleManagementSettings: {
+			modules: [
+				{ name: 'dashboard' },
+				{ name: 'customerBook' },
+				{ name: 'userManagement' },
+				{ name: 'setupBook' },
+				{ name: 'customerSMS' },
+				{ name: 'report' },
+				{ name: 'systemSetting' },
+				{ name: 'auditLog' },
+				{ name: 'teamMembers' },
+			]
+		},
 		logoFile: null,
 	});
 
@@ -247,6 +263,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				const navigationSettings = safeParse(dataToUse.navigationSettings);
 				const dashboardSettings = safeParse(dataToUse.dashboardSettings);
 				const customerBookSettings = safeParse(dataToUse.customerBookSettings);
+				const roleManagementSettings = safeParse(dataToUse.roleManagementSettings);
 
 				setSetupData(prev => ({
 					...prev,
@@ -275,6 +292,13 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 							? customerBookSettings.configuredFields
 							: (prev.customerBookSettings.configuredFields || [])
 					},
+					roleManagementSettings: {
+						...prev.roleManagementSettings,
+						...roleManagementSettings,
+						modules: Array.isArray(roleManagementSettings?.modules)
+							? roleManagementSettings.modules
+							: (prev.roleManagementSettings.modules || [])
+					}
 				}));
 			}
 		}
