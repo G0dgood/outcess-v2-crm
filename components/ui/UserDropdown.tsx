@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
 import { StatusConfirmationModal } from './StatusConfirmationModal';
 import { StatusSubmenu, StatusOption } from './StatusSubmenu';
 import { UserMenu } from './UserMenu';

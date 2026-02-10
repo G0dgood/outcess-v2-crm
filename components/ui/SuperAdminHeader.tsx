@@ -3,11 +3,11 @@
 import React from 'react';
 import { BellIcon } from '@radix-ui/react-icons';
 import SuperAdminUserDropdown from './SuperAdminUserDropdown';
-import { HamburgerMenuIcon } from '@radix-ui/react-icons';
+import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
 import ThemeDropdown from './ThemeDropdown';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSocket } from '@/contexts/SocketContext';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { useDispatch } from 'react-redux';
 import { useLogoutMutation, useTeamMemberLogoutMutation } from '@/store/services/authApi';
@@ -22,6 +22,7 @@ interface SuperAdminHeaderProps {
 	onEditProfileClick?: () => void;
 	onLogoutClick?: () => void;
 	onMobileMenuToggle?: () => void;
+	isMobileMenuOpen?: boolean;
 }
 
 const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
@@ -33,6 +34,7 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 	onEditProfileClick,
 	onLogoutClick,
 	onMobileMenuToggle,
+	isMobileMenuOpen = false,
 }) => {
 	const router = useRouter();
 	const dispatch = useDispatch();
@@ -80,7 +82,7 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 	};
 
 	return (
-		<header id="header" className="fixed top-0 left-0 right-0 h-[70px] z-40" style={{ backgroundColor: 'var(--accent-white)', borderBottom: '1px solid var(--light-gray)' }}>
+		<header id="header" style={{ backgroundColor: 'var(--accent-white)', borderBottom: '1px solid var(--light-gray)' }}>
 			<div className="flex items-center justify-end h-full px-6">
 				{/* Hamburger Menu - Mobile Only */}
 				<button
@@ -88,7 +90,13 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 					className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer mr-auto"
 					title="Menu"
 				>
-					<HamburgerMenuIcon className="w-6 h-6" />
+					<div className={`transition-all duration-300 ease-in-out transform ${isMobileMenuOpen ? 'rotate-90 scale-110' : 'rotate-0 scale-100'}`}>
+						{isMobileMenuOpen ? (
+							<Cross1Icon className="w-6 h-6" />
+						) : (
+							<HamburgerMenuIcon className="w-6 h-6" />
+						)}
+					</div>
 				</button>
 
 				{/* Right side - Icons */}

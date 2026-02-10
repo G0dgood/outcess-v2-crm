@@ -17,22 +17,19 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 	};
 
 	return (
-		<div id="page-wrapper">
+		<div id="page-wrapper" className={isMobileMenuOpen ? 'mobile-nav-open' : ''}>
 			<SuperAdminHeader
 				onMobileMenuToggle={toggleMobileMenu}
+				isMobileMenuOpen={isMobileMenuOpen}
 			/>
 
 
 			{/* Desktop Sidebar */}
-			<SuperAdminSideNav activeItem="settings" />
-
-			{/* Mobile Sidebar */}
-			{isMobileMenuOpen && (
-				<div className="lg:hidden fixed inset-0 z-50">
-					<div className="fixed inset-0 bg-black bg-opacity-50" onClick={closeMobileMenu}></div>
-					<SuperAdminMobileSideNav isOpen={isMobileMenuOpen} onClose={closeMobileMenu} />
-				</div>
-			)}
+			<SuperAdminSideNav 
+				activeItem="settings" 
+				isMobileOpen={isMobileMenuOpen}
+				onMobileClose={() => setIsMobileMenuOpen(false)}
+			/>
 
 			{/* Main Content */}
 			<main>{children}</main>

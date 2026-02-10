@@ -2,7 +2,8 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { usePrivilege, ModuleId } from '@/contexts/PrivilegeContext';
 import Icon from './Icon';

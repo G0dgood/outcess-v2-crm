@@ -19,25 +19,22 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 	};
 
 	return (
-		<div id="page-wrapper">
+		<div id="page-wrapper" className={isMobileMenuOpen ? 'mobile-nav-open' : ''}>
 			<SuperAdminHeader
 				userName={user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim()}
 				userEmail={user?.email}
 				userAvatar={user?.avatar}
 				onMobileMenuToggle={toggleMobileMenu}
+				isMobileMenuOpen={isMobileMenuOpen}
 			/>
 
 
 			{/* Desktop Sidebar */}
-			<SuperAdminSideNav activeItem="dashboard" />
-
-			{/* Mobile Sidebar */}
-			{isMobileMenuOpen && (
-				<div className="lg:hidden fixed inset-0 z-50">
-					<div className="fixed inset-0 bg-black/10 bg-opacity-50" onClick={closeMobileMenu}></div>
-					<SuperAdminMobileSideNav isOpen={isMobileMenuOpen} onClose={closeMobileMenu} />
-				</div>
-			)}
+			<SuperAdminSideNav 
+				activeItem="dashboard" 
+				isMobileOpen={isMobileMenuOpen}
+				onMobileClose={() => setIsMobileMenuOpen(false)}
+			/>
 
 			{/* Main Content */}
 			<main>{children}</main>
