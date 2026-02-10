@@ -52,12 +52,6 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 			customFields: '6 Added',
 			requiredFields: '4 Set',
 		},
-		userManagementSettings: {
-			createdRoles: '1 Created',
-			usersAdded: '6 Created',
-			permissionAccessLevels: '20 Granted',
-			modulePermissionOverview: '6 Granted',
-		},
 	};
 
 	const tabs = [
@@ -65,7 +59,6 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 		{ id: 'header-navigation', label: 'Header & Navigation' },
 		{ id: 'dashboard', label: 'Dashboard' },
 		{ id: 'customer-book', label: 'Customer Book' },
-		{ id: 'user-management', label: 'User Management' },
 	];
 
 	const handleReject = () => {
@@ -539,88 +532,6 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{businessData.customerBookSettings.requiredFields}
-							</p>
-						</div>
-					</div>
-				</div>
-			)}
-
-			{activeTab === 'user-management' && (
-				<div
-					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6"
-					style={{
-						backgroundColor: 'var(--accent-white)',
-						borderColor: 'var(--light-gray)'
-					}}
-				>
-					<h2
-						className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-6"
-						style={{ color: 'var(--text-primary)' }}
-					>
-						User Management
-					</h2>
-					<div className="space-y-6">
-						{/* Created Roles */}
-						<div>
-							<span
-								className="text-[10px] md:text-[12px] dark:text-gray-400"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								Created Roles
-							</span>
-							<p
-								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								{businessData.userManagementSettings.createdRoles}
-							</p>
-						</div>
-
-						{/* Users Added */}
-						<div>
-							<span
-								className="text-[10px] md:text-[12px] dark:text-gray-400"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								Users Added
-							</span>
-							<p
-								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								{businessData.userManagementSettings.usersAdded}
-							</p>
-						</div>
-
-						{/* Permission Access Levels */}
-						<div>
-							<span
-								className="text-[10px] md:text-[12px] dark:text-gray-400"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								Permission Access Levels
-							</span>
-							<p
-								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								{businessData.userManagementSettings.permissionAccessLevels}
-							</p>
-						</div>
-
-						{/* Module Permission Overview */}
-						<div>
-							<span
-								className="text-[10px] md:text-[12px] dark:text-gray-400"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								Module Permission Overview
-							</span>
-							<p
-								className="text-[10px] md:text-[12px] font-medium dark:text-gray-100 mt-1"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								{businessData.userManagementSettings.modulePermissionOverview}
 							</p>
 						</div>
 					</div>

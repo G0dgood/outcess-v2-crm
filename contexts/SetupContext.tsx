@@ -62,49 +62,6 @@ interface CustomerField {
 	options?: string[]; // For dropdown, radio, checkbox fields
 }
 
-
-
-interface User {
-	id: string;
-	name: string;
-	email: string;
-	phone: string;
-	role: string;
-	status: 'active' | 'inactive' | 'pending';
-	lastLogin?: string;
-}
-
-interface Role {
-	id: string;
-	name: string;
-	description: string;
-	permissions: Record<string, boolean>;
-}
-
-interface Module {
-	id: string;
-	name: string;
-}
-
-interface Permission {
-	id: string;
-	name: string;
-	description: string;
-}
-
-interface PermissionCategory {
-	id: string;
-	name: string;
-	icon: string;
-	permissions: Permission[];
-}
-
-interface RolePermissions {
-	[roleId: string]: {
-		[permissionId: string]: boolean;
-	};
-}
-
 export interface SetupData {
 	lineOfBusinessId?: string;
 	companyName: string;
@@ -157,18 +114,6 @@ export interface SetupData {
 	customerBookSettings: {
 		configuredFields: CustomerField[];
 	};
-	userManagementSettings: {
-		users: User[];
-	};
-	roleManagementSettings: {
-		roles: Role[];
-		modules: Module[];
-	};
-	permissionAccessSettings: {
-		selectedRole: string;
-		rolePermissions: RolePermissions;
-		permissionCategories: PermissionCategory[];
-	};
 	logoFile?: File | null;
 }
 
@@ -190,9 +135,6 @@ interface SetupContextType {
 	updateChartPosition: (chartId: string, position: { x: number; y: number; width: number; height: number }) => void;
 	updateChartsOrder: (newCharts: Chart[]) => void;
 	updateCustomerBookSettings: (data: Partial<SetupData['customerBookSettings']>) => void;
-	updateUserManagementSettings: (data: Partial<SetupData['userManagementSettings']>) => void;
-	updateRoleManagementSettings: (data: Partial<SetupData['roleManagementSettings']>) => void;
-	updatePermissionAccessSettings: (data: Partial<SetupData['permissionAccessSettings']>) => void;
 	setupSteps: SetupStep[];
 }
 
@@ -265,145 +207,6 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				{ id: '3', name: 'Phone Number', type: 'Phone', required: true },
 			],
 		},
-		userManagementSettings: {
-			users: [],
-		},
-		roleManagementSettings: {
-			roles: [
-				{
-					id: 'administrator',
-					name: 'Administrator',
-					description: 'Full access to the system',
-					permissions: {
-						dashboard: true,
-						customerBook: true,
-						userManagement: true,
-						setupBook: true,
-						customerSMS: true,
-						report: true,
-						systemSetting: true,
-						auditLog: true,
-					}
-				}
-			],
-			modules: [
-				{
-					id: 'dashboard',
-					name: 'Dashboard'
-				},
-				{
-					id: 'customerBook',
-					name: 'Customer Book'
-				},
-				{
-					id: 'userManagement',
-					name: 'User Management'
-				},
-				{
-					id: 'setupBook',
-					name: 'Setup Book'
-				},
-				{
-					id: 'customerSMS',
-					name: 'Customer SMS'
-				},
-				{
-					id: 'report',
-					name: 'Report'
-				},
-				{
-					id: 'systemSetting',
-					name: 'System Setting'
-				},
-				{
-					id: 'auditLog',
-					name: 'Audit Log'
-				},
-			],
-		},
-		permissionAccessSettings: {
-			selectedRole: 'administrator',
-			rolePermissions: {
-				administrator: {},
-			},
-			permissionCategories: [
-				{
-					id: 'userManagementAccess',
-					name: 'User Management',
-					icon: 'User_alt_light',
-					permissions: [
-						{
-							id: 'createUsers',
-							name: 'Create Users',
-							description: 'Ability to create new user accounts'
-						},
-						{
-							id: 'editUsers',
-							name: 'Edit Users',
-							description: 'Ability to modify existing user accounts'
-						},
-						{
-							id: 'deleteUsers',
-							name: 'Delete Users', description: 'Ability to remove user accounts'
-						},
-						{
-							id: 'viewUsers',
-							name: 'View Users',
-							description: 'Ability to view user information'
-						},
-					],
-				},
-				{
-					id: 'customerManagement',
-					name: 'Customer Management',
-					icon: 'Group_light',
-					permissions: [
-						{
-							id: 'createCustomers',
-							name: 'Create Customers',
-							description: 'Ability to add new customers'
-						},
-						{
-							id: 'editCustomers',
-							name: 'Edit Customers',
-							description: 'Ability to modify customer information'
-						},
-						{
-							id: 'deleteCustomers',
-							name: 'Delete Customers',
-							description: 'Ability to remove customers'
-						},
-						{
-							id: 'viewCustomers',
-							name: 'View Customers',
-							description: 'Ability to view customer data'
-						},
-					],
-				},
-				{
-					id: 'dashboardAccess',
-					name: 'Dashboard Access',
-					icon: 'darhboard',
-					permissions: [
-						{
-							id: 'viewDashboard',
-							name: 'View Dashboard',
-							description: 'Access to dashboard overview'
-						},
-						{
-							id: 'exportData',
-							name: 'Export Data',
-							description: 'Ability to export dashboard data'
-						},
-						{
-							id: 'customizeDashboard',
-							name: 'Customize Dashboard',
-							description: 'Ability to modify dashboard layout'
-						},
-					],
-				},
-			],
-		},
 		logoFile: null,
 	});
 
@@ -444,9 +247,6 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				const navigationSettings = safeParse(dataToUse.navigationSettings);
 				const dashboardSettings = safeParse(dataToUse.dashboardSettings);
 				const customerBookSettings = safeParse(dataToUse.customerBookSettings);
-				const userManagementSettings = safeParse(dataToUse.userManagementSettings);
-				const roleManagementSettings = safeParse(dataToUse.roleManagementSettings);
-				const permissionAccessSettings = safeParse(dataToUse.permissionAccessSettings);
 
 				setSetupData(prev => ({
 					...prev,
@@ -474,18 +274,6 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 						configuredFields: Array.isArray(customerBookSettings?.configuredFields)
 							? customerBookSettings.configuredFields
 							: (prev.customerBookSettings.configuredFields || [])
-					},
-					userManagementSettings: {
-						...prev.userManagementSettings,
-						...userManagementSettings,
-					},
-					roleManagementSettings: {
-						...prev.roleManagementSettings,
-						...roleManagementSettings,
-					},
-					permissionAccessSettings: {
-						...prev.permissionAccessSettings,
-						...permissionAccessSettings,
 					},
 				}));
 			}
@@ -688,59 +476,8 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		}));
 	};
 
-	const updateUserManagementSettings = (data: Partial<SetupData['userManagementSettings']>) => {
-		setSetupData(prev => ({
-			...prev,
-			userManagementSettings: {
-				...prev.userManagementSettings,
-				...data
-			}
-		}));
-	};
-
-	const updateRoleManagementSettings = (data: Partial<SetupData['roleManagementSettings']>) => {
-		setSetupData(prev => {
-			const updatedData = {
-				...prev,
-				roleManagementSettings: {
-					...prev.roleManagementSettings,
-					...data
-				}
-			};
-
-			// If roles were updated, sync rolePermissions
-			if (data.roles) {
-				const newRolePermissions: RolePermissions = {};
-				data.roles.forEach(role => {
-					newRolePermissions[role.id] = prev.permissionAccessSettings.rolePermissions[role.id] || {};
-				});
-
-				updatedData.permissionAccessSettings = {
-					...prev.permissionAccessSettings,
-					rolePermissions: newRolePermissions,
-					// If the currently selected role was removed, select the first available role
-					selectedRole: prev.permissionAccessSettings.selectedRole && data.roles.some(role => role.id === prev.permissionAccessSettings.selectedRole)
-						? prev.permissionAccessSettings.selectedRole
-						: data.roles[0]?.id || ''
-				};
-			}
-
-			return updatedData;
-		});
-	};
-
-	const updatePermissionAccessSettings = (data: Partial<SetupData['permissionAccessSettings']>) => {
-		setSetupData(prev => ({
-			...prev,
-			permissionAccessSettings: {
-				...prev.permissionAccessSettings,
-				...data
-			}
-		}));
-	};
-
 	const onStepComplete = () => {
-		if (currentStep < 6) {
+		if (currentStep < 5) {
 			// When moving to step 2 (Header & Navigation), sync colors to navigationSettings
 			if (currentStep === 1) {
 				setSetupData(prev => ({
@@ -799,19 +536,11 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			completed: currentStep > 4,
 		},
 		{
-			id: 'users',
-			title: 'User Management',
-			description: 'Manage user roles and permissions',
-			icon: <div className="text-base w-5 text-center">👤</div>,
-			active: currentStep === 5,
-			completed: currentStep > 5,
-		},
-		{
 			id: 'review',
 			title: 'Review Configuration',
 			description: 'Review and submit your CRM configuration',
 			icon: <div className="text-base w-5 text-center">✓</div>,
-			active: currentStep === 6,
+			active: currentStep === 5,
 			completed: false,
 		},
 	];
@@ -833,9 +562,6 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		updateChartPosition,
 		updateChartsOrder,
 		updateCustomerBookSettings,
-		updateUserManagementSettings,
-		updateRoleManagementSettings,
-		updatePermissionAccessSettings,
 		setupSteps,
 		isFetchingLineOfBusiness,
 	};

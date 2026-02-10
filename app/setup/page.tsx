@@ -5,7 +5,6 @@ import SetupPage from './setup-page/page';
 import HeaderNavigationPage from './header-navigation/page';
 import DashboardPage from './dashboard/page';
 import CustomerBookPage from './customer-book/page';
-import UserManagementPage from './user-management/page';
 import ReviewConfigurationPage from './review-configuration/page';
 import { useSetup } from '@/contexts/SetupContext';
 import { useLazyGetUserByIdQuery } from '@/store/services/authApi';
@@ -46,8 +45,7 @@ export default function Setup() {
 			{currentStep === 2 && <HeaderNavigationPage />}
 			{currentStep === 3 && <DashboardPage />}
 			{currentStep === 4 && <CustomerBookPage />}
-			{currentStep === 5 && <UserManagementPage />}
-			{currentStep === 6 && <ReviewConfigurationPage />}
+			{currentStep === 5 && <ReviewConfigurationPage />}
 		</div>
 	);
 }

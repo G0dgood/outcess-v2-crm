@@ -60,13 +60,6 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 			icon: PersonIcon,
 			active: currentStep === 4,
 		},
-		{
-			id: 'users',
-			title: 'User Management',
-			description: 'Manage user roles and permissions',
-			icon: BackpackIcon,
-			active: currentStep === 5,
-		},
 	];
 	return (
 		<aside

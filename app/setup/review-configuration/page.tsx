@@ -76,19 +76,6 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 				{ label: 'Custom Fields', value: `${setupData.customerBookSettings.configuredFields.length} added` },
 				{ label: 'Required Fields', value: `${setupData.customerBookSettings.configuredFields.filter(field => field.required).length} set` }
 			]
-		},
-		{
-			id: 'user-management',
-			title: 'User Management',
-			icon: 'User_alt_light',
-			step: 5,
-			details: [
-				{ label: 'Roles Defined', value: `${setupData.roleManagementSettings.roles.length} roles` },
-				{ label: 'Users Added', value: `${setupData.userManagementSettings.users.length} users` },
-				{ label: 'Modules', value: `${setupData.roleManagementSettings.modules.length} modules` },
-				{ label: 'Permission Categories', value: `${setupData.permissionAccessSettings.permissionCategories.length} categories` },
-				{ label: 'Selected Role', value: setupData.permissionAccessSettings.selectedRole || 'Not selected' }
-			]
 		}
 	];
 

@@ -62,13 +62,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       case 3: return "Back to Header & Navigation";
       case 4: return "Back to Dashboard";
       case 5: return "Back to Customer Book";
-      case 6: return "Back to User Management";
       default: return "Back";
     }
   };
 
   const handleSave = async () => {
-    if (currentStep === 6) {
+    if (currentStep === 5) {
       // Final step - submit for approval
       handleSubmitForApproval();
       return;
@@ -226,11 +225,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
               },
             };
             break;
-          case 5:
-            updateData = {
-              userManagementSettings: setupData.userManagementSettings,
-            };
-            break;
         }
 
         await updateLineOfBusiness({
@@ -289,8 +283,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       await updateLineOfBusiness({
         id: setupData.lineOfBusinessId,
         data: {
-          roleManagementSettings: setupData.roleManagementSettings,
-          permissionAccessSettings: setupData.permissionAccessSettings,
           status: 'pending_approval', // Assuming there's a status field
         },
       }).unwrap();
@@ -350,7 +342,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         user={headerUser}
         onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
       />
-      {currentStep !== 6 ? <SetupSidebar currentStep={currentStep} className="hidden md:block" /> : <div id="side-nav" />}
+      {currentStep !== 5 ? <SetupSidebar currentStep={currentStep} className="hidden md:block" /> : <div id="side-nav" />}
       {isMobileMenuOpen && isMobileView && (
         <div className="fixed inset-0 z-50">
           <div className="fixed inset-0 bg-black/10" onClick={() => setIsMobileMenuOpen(false)}></div>
@@ -365,9 +357,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         isLoading={mounted && (isLoading || isFetchingLineOfBusiness)}
         disabled={mounted && (isLoading || isFetchingLineOfBusiness)}
         buttonText={
-          (mounted && isLoading) ? (currentStep === 6 ? 'Submitting...' : 'Saving...') :
+          (mounted && isLoading) ? (currentStep === 5 ? 'Submitting...' : 'Saving...') :
             (mounted && isFetchingLineOfBusiness) ? 'Checking...' :
-              (currentStep === 6 ? 'Submit for Approval' : 'Save & Continue')
+              (currentStep === 5 ? 'Submit for Approval' : 'Save & Continue')
         }
         backText={getBackButtonText()}
         showBack={currentStep > 1}
