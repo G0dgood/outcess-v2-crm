@@ -1,29 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Menu } from '@/components/setupIcon/Menu';
-import { Dashboard } from '@/components/setupIcon/Dashboard';
 import Button from '@/components/ui/Button';
 import ColorPicker from '@/components/ui/ColorPicker';
 import LogoUpload from '@/components/ui/LogoUpload';
 import { colors } from '@/lib/colors';
 import { useSetup } from '@/contexts/SetupContext';
 
-type MenuStyle = 'layout' | 'compact';
 type ColorChangeHandler = (color: string) => void;
 type FileSelectHandler = (file: File | null) => void;
 
 export default function HeaderNavigationPage(): React.JSX.Element {
 	const { setupData, updateSetupData, updateNavigationSettings } = useSetup();
-	const [selectedLayout, setSelectedLayout] = useState<MenuStyle>(setupData.navigationSettings.menuStyle);
 	const [primaryColor, setPrimaryColor] = useState<string>(setupData.primaryColor);
 	const [secondaryColor, setSecondaryColor] = useState<string>(setupData.secondaryColor);
 	const [logoFile, setLogoFile] = useState<File | null>(null);
-
-	const handleMenuStyleChange = (style: MenuStyle): void => {
-		setSelectedLayout(style);
-		updateNavigationSettings({ menuStyle: style });
-	};
 
 	const handlePrimaryColorChange: ColorChangeHandler = (color: string): void => {
 		setPrimaryColor(color);
@@ -54,12 +45,10 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 	const handleResetToDefault = (): void => {
 		setPrimaryColor(colors.dark.primary);
 		setSecondaryColor(colors.accent.mutedSageGreen);
-		setSelectedLayout('layout');
 		updateSetupData({
 			primaryColor: colors.dark.primary,
 			secondaryColor: colors.accent.mutedSageGreen,
 		});
-		updateNavigationSettings({ menuStyle: 'layout' });
 	};
 
 
@@ -112,99 +101,6 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 					<div className="space-y-8">
 						{/* Navigation Settings */}
 						<div>
-
-							{/* Menu Style */}
-							<div className="mb-6">
-								<h3
-									className="font-inter text-base font-medium dark:text-gray-100 mb-4"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Menu Style
-								</h3>
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-									{/* Layout Style Card */}
-									<div
-										className={`p-4 border-2 cursor-pointer transition-all ${selectedLayout === 'layout'
-											? 'border-[#6C8B7D] dark:border-[#6C8B7D] dark:bg-[#6C8B7D]/20'
-											: 'dark:border-gray-700 dark:hover:border-gray-600'
-											}`}
-										style={selectedLayout === 'layout' ? {
-											backgroundColor: 'rgba(108, 139, 125, 0.1)',
-											borderColor: '#6C8B7D'
-										} : {
-											borderColor: 'var(--light-gray)'
-										}}
-										onClick={() => handleMenuStyleChange('layout')}
-										onMouseEnter={(e) => {
-											if (selectedLayout !== 'layout') {
-												e.currentTarget.style.borderColor = '#94A3B8';
-											}
-										}}
-										onMouseLeave={(e) => {
-											if (selectedLayout !== 'layout') {
-												e.currentTarget.style.borderColor = 'var(--light-gray)';
-											}
-										}}
-									>
-										<div className="flex flex-col">
-											<Menu width={24} height={24} strokeColor={selectedLayout === 'layout' ? '#6C8B7D' : colors.dark.primary} className="mb-3" />
-											<h4
-												className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 mb-1"
-												style={{ color: 'var(--text-primary)' }}
-											>
-												Layout Style
-											</h4>
-											<p
-												className="font-lato text-[10px] md:text-[12px] dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												Vertical menu on the left
-											</p>
-										</div>
-									</div>
-
-									{/* Compact Card */}
-									<div
-										className={`p-4 border-2 cursor-pointer transition-all ${selectedLayout === 'compact'
-											? 'border-[#6C8B7D] dark:border-[#6C8B7D] dark:bg-[#6C8B7D]/20'
-											: 'dark:border-gray-700 dark:hover:border-gray-600'
-											}`}
-										style={selectedLayout === 'compact' ? {
-											backgroundColor: 'rgba(108, 139, 125, 0.1)',
-											borderColor: '#6C8B7D'
-										} : {
-											borderColor: 'var(--light-gray)'
-										}}
-										onClick={() => handleMenuStyleChange('compact')}
-										onMouseEnter={(e) => {
-											if (selectedLayout !== 'compact') {
-												e.currentTarget.style.borderColor = '#94A3B8';
-											}
-										}}
-										onMouseLeave={(e) => {
-											if (selectedLayout !== 'compact') {
-												e.currentTarget.style.borderColor = 'var(--light-gray)';
-											}
-										}}
-									>
-										<div className="flex flex-col ">
-											<Dashboard width={24} height={24} strokeColor={selectedLayout === 'compact' ? '#6C8B7D' : colors.dark.primary} className="mb-3" />
-											<h4
-												className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 mb-1"
-												style={{ color: 'var(--text-primary)' }}
-											>
-												Compact
-											</h4>
-											<p
-												className="font-lato text-[10px] md:text-[12px] dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												Collapsed side menu with icons
-											</p>
-										</div>
-									</div>
-								</div>
-							</div>
 
 							{/* Theme Colors */}
 							<div className="mb-6">

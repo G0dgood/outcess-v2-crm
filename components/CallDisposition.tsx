@@ -67,12 +67,6 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 
 
 
-	const timeRangeOptions = [
-		{ value: 'daily', label: 'Daily' },
-		{ value: 'weekly', label: 'Weekly' },
-		{ value: 'monthly', label: 'Monthly' }
-	];
-
 	const chartTypeOptions = [
 		{ value: 'bar', label: 'Bar Chart' },
 		{ value: 'line', label: 'Line Chart' },
@@ -88,8 +82,10 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 		{ value: 'number', label: 'Number' },
 		{ value: 'date', label: 'Date' },
 		{ value: 'dropdown', label: 'Dropdown' },
-		{ value: 'radio-select', label: 'Radio Select' },
-		{ value: 'checkbox', label: 'Checkbox' },
+		{ value: 'single-radio', label: 'Single Radio' },
+		{ value: 'radio-group', label: 'Radio Group' },
+		{ value: 'single-checkbox', label: 'Checkbox' },
+		{ value: 'multiple-checkbox', label: 'Multiple Checkbox' },
 		{ value: 'phone', label: 'Phone' },
 		{ value: 'single-line-text', label: 'Single Line Text' },
 		{ value: 'multi-line-text', label: 'Multi Line Text' },
@@ -337,32 +333,6 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 					))}
 				</div>
 
-				<div
-					className="p-6 border-t dark:border-gray-700"
-					style={{ borderColor: 'var(--light-gray)' }}
-				>
-					<h3
-						className="font-inter text-base font-medium dark:text-gray-100 mb-4"
-						style={{ color: 'var(--text-primary)' }}
-					>
-						Disposition display settings in Dashboard
-					</h3>
-					<div className="space-y-4">
-						<div>
-							<Dropdown
-								label="Time Range View"
-								value={dispositionSettings.timeRangeView}
-								onChange={(value) => updateDashboardSettings({
-									dispositionSettings: {
-										...dispositionSettings,
-										timeRangeView: value as 'daily' | 'weekly' | 'monthly'
-									}
-								})}
-								options={timeRangeOptions}
-							/>
-						</div>
-					</div>
-				</div>
 			</div>
 
 			{/* Chart Area */}

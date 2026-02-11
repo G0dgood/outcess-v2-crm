@@ -2,7 +2,8 @@ import React from 'react';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import Input from '@/components/ui/Input';
-import IndividualRadio from '@/components/ui/IndividualRadio';
+import Radio from '@/components/ui/Radio';
+import Checkbox from '@/components/ui/Checkbox';
 import Icon from '@/components/ui/Icon';
 import ColorPicker from '@/components/ui/ColorPicker';
 import { PlusIcon } from '@radix-ui/react-icons';
@@ -45,6 +46,22 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 	onDropdownOptionChange
 }) => {
 	if (!isOpen) return null;
+
+	const defaultFieldTypeOptions = [
+		{ value: 'single-radio', label: 'SingleRadio' },
+		{ value: 'radio-group', label: 'RadioGroup' },
+		{ value: 'single-checkbox', label: 'Checkbox' },
+		{ value: 'multiple-checkbox', label: 'MultipleCheckbox' },
+		{ value: 'dropdown', label: 'Dropdown' },
+		{ value: 'number', label: 'Number' },
+		{ value: 'phone', label: 'Phone' },
+		{ value: 'email', label: 'Email' },
+		{ value: 'single-line-text', label: 'Single Line Text' },
+		{ value: 'multi-line-text', label: 'Multi Line Text' },
+		{ value: 'date', label: 'Date' },
+		{ value: 'date-time', label: 'Date & Time' },
+	];
+	const computedFieldTypeOptions = fieldTypeOptions && fieldTypeOptions.length > 0 ? fieldTypeOptions : defaultFieldTypeOptions;
 
 	return (
 		<div
@@ -97,7 +114,7 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 							const stringValue = Array.isArray(value) ? value[0] : value;
 							setDispositionForm(prev => ({ ...prev, fieldType: stringValue }));
 						}}
-						options={fieldTypeOptions}
+						options={computedFieldTypeOptions}
 					/>
 
 					{/* Field Label */}
@@ -108,14 +125,13 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 						onChange={(value) => setDispositionForm(prev => ({ ...prev, fieldLabel: value }))}
 					/>
 
-					{/* Dropdown Options */}
-					{dispositionForm.fieldType === 'dropdown' && (
+					{['dropdown', 'multiple-checkbox', 'radio-group'].includes(dispositionForm.fieldType) && (
 						<div>
 							<label
 								className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 mb-2 block"
 								style={{ color: 'var(--text-primary)' }}
 							>
-								Dropdown Options
+								Options
 							</label>
 							<div className="space-y-3">
 								{dispositionForm.dropdownOptions.map((option, index) => (
@@ -175,44 +191,29 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 						>
 							Sort order preference
 						</label>
-						<div className="space-y-2">
-							<IndividualRadio
-								name="sortOrder"
-								value="entered"
-								checked={dispositionForm.sortOrder === 'entered'}
-								onChange={(value) => setDispositionForm(prev => ({ ...prev, sortOrder: value }))}
-								label="Entered Order"
-							/>
-							<IndividualRadio
-								name="sortOrder"
-								value="alphabetical"
-								checked={dispositionForm.sortOrder === 'alphabetical'}
-								onChange={(value) => setDispositionForm(prev => ({ ...prev, sortOrder: value }))}
-								label="Alphabetical Order"
-							/>
-						</div>
+						<Radio
+							name="sortOrder"
+							value={dispositionForm.sortOrder}
+							onChange={(value) => setDispositionForm(prev => ({ ...prev, sortOrder: value }))}
+							options={[
+								{ value: 'entered', label: 'Entered Order' },
+								{ value: 'alphabetical', label: 'Alphabetical Order' },
+							]}
+							className="flex gap-6"
+						/>
 					</div>
 
 					{/* Required Field */}
-					<div className="flex items-center gap-2">
-						<input
-							type="checkbox"
+					<div className="ml-2">
+
+						<Checkbox
 							id="required"
 							checked={dispositionForm.isRequired}
-							onChange={(e) => setDispositionForm(prev => ({ ...prev, isRequired: e.target.checked }))}
-							className="w-4 h-4 dark:text-gray-100 dark:border-gray-600 rounded dark:focus:ring-gray-400 dark:bg-gray-700"
-							style={{
-								borderColor: 'var(--light-gray)',
-								accentColor: 'var(--text-primary)'
-							}}
+							onChange={(checked) => setDispositionForm(prev => ({ ...prev, isRequired: checked }))}
+							label="Mark as Required"
+							size="medium"
+							className="flex  gap-0"
 						/>
-						<label
-							htmlFor="required"
-							className="font-inter text-[10px] md:text-[12px] dark:text-gray-100"
-							style={{ color: 'var(--text-primary)' }}
-						>
-							Mark as Required
-						</label>
 					</div>
 
 					{/* Colour Picker */}
@@ -228,8 +229,13 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<Button variant="outline" size="md" onClick={onClose}>Cancel</Button>
-					<Button variant="primary" size="md" onClick={onSave}>Save Disposition</Button>
+					<Button
+						variant="outline"
+						size="md"
+						onClick={onClose}>Cancel</Button>
+					<Button
+						variant="primary"
+						size="md" onClick={onSave}>Save Disposition</Button>
 				</div>
 			</div>
 		</div>

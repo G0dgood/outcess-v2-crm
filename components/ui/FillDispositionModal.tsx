@@ -6,9 +6,10 @@ import Input from './Input';
 import Dropdown from './Dropdown';
 import Textarea from './Textarea';
 import DateInput from './DateInput';
-import RadioSelect from './RadioSelect';
-import Checkbox from './Checkbox';
-import CheckboxSelect from './CheckboxSelect';
+import SingleRadio from './SingleRadio';
+import RadioGroup from './RadioGroup';
+import SingleCheckbox from './SingleCheckbox';
+import MultipleCheckbox from './MultipleCheckbox';
 import { Cross2Icon, CalendarIcon, ClockIcon, PersonIcon, MobileIcon, EnvelopeClosedIcon, HomeIcon } from '@radix-ui/react-icons';
 import { useSocket } from '@/contexts/SocketContext';
 import { saveOfflineDisposition, saveSyncedDisposition, DispositionFieldEntry } from '@/utils/offlineDispositions';
@@ -285,33 +286,74 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 				);
 
 			case 'radio-select':
+			case 'radio-group':
 				return (
-					<RadioSelect
+					(field.dropdownOptions && field.dropdownOptions.length > 0) ? (
+						<RadioGroup
+							key={field.id}
+							label={field.name}
+							name={key}
+							value={String(formData[key] || '')}
+							onChange={(val: string) => handleInputChange(key)(val)}
+							options={(field.dropdownOptions || []).map((opt: string) => ({
+								value: opt,
+								label: opt.charAt(0).toUpperCase() + opt.slice(1),
+							}))}
+						/>
+					) : (
+						<SingleRadio
+							key={field.id}
+							label={field.name}
+							name={key}
+							checked={formData[key] === 'true'}
+							onChange={(checked: boolean) => handleInputChange(key)(checked ? 'true' : 'false')}
+						/>
+					)
+				);
+
+			case 'single-radio':
+				return (
+					<SingleRadio
 						key={field.id}
 						label={field.name}
 						name={key}
-						options={(field.dropdownOptions || []).map((opt: string) => ({ value: opt, label: opt.charAt(0).toUpperCase() + opt.slice(1) }))}
-						value={String(formData[key] || '')}
-						onChange={handleInputChange(key)}
+						checked={formData[key] === 'true'}
+						onChange={(checked: boolean) => handleInputChange(key)(checked ? 'true' : 'false')}
 					/>
 				);
 
 			case 'checkbox':
+			case 'multiple-checkbox':
 				if (field.dropdownOptions && field.dropdownOptions.length > 0) {
 					return (
-						<CheckboxSelect
+						<MultipleCheckbox
 							key={field.id}
 							label={field.name}
-							options={(field.dropdownOptions || []).map((opt: string) => ({ value: opt, label: opt.charAt(0).toUpperCase() + opt.slice(1) }))}
-							value={formData[key] ? String(formData[key]).split(',') : []}
-							onChange={(vals: string[]) => handleInputChange(key)(vals.join(','))}
+							value={String(formData[key] || '').split(',').filter(Boolean)}
+							onChange={(values: string[]) => handleInputChange(key)(values.join(','))}
+							options={(field.dropdownOptions || []).map((opt: string) => ({
+								value: opt,
+								label: opt.charAt(0).toUpperCase() + opt.slice(1),
+							}))}
 						/>
 					);
 				}
 				return (
-					<Checkbox
+					<SingleCheckbox
 						key={field.id}
 						label={field.name}
+						name={key}
+						checked={formData[key] === 'true'}
+						onChange={(checked: boolean) => handleInputChange(key)(checked ? 'true' : 'false')}
+					/>
+				);
+
+			case 'single-checkbox':
+				return (
+					<SingleCheckbox
+						key={field.id}
+						label={field.name}
+						name={key}
 						checked={formData[key] === 'true'}
 						onChange={(checked: boolean) => handleInputChange(key)(checked ? 'true' : 'false')}
 					/>
@@ -484,7 +526,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
 			<div
-				className="dark:bg-gray-800 shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+				className="dark:bg-gray-800 shadow-lg w-full max-w-4xl mx-4 max-h-[80vh] overflow-hidden flex flex-col"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}

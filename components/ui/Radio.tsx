@@ -13,6 +13,8 @@ interface RadioProps {
 	onChange: (value: string) => void;
 	disabled?: boolean;
 	className?: string;
+	selectedColor?: string;
+	unselectedColor?: string;
 }
 
 const Radio: React.FC<RadioProps> = ({
@@ -21,7 +23,9 @@ const Radio: React.FC<RadioProps> = ({
 	value,
 	onChange,
 	disabled = false,
-	className = ''
+	className = '',
+	selectedColor = 'var(--interactive-secondary)',
+	unselectedColor = 'var(--text-secondary)',
 }) => {
 	const handleChange = (optionValue: string) => {
 		if (!disabled && !options.find(opt => opt.value === optionValue)?.disabled) {
@@ -30,13 +34,20 @@ const Radio: React.FC<RadioProps> = ({
 	};
 
 	return (
-		<div className={`radio-container ${className}`}>
+		<div
+			className={`radio-container ${className}`}
+			style={
+				({
+					['--radio-selected-color']: selectedColor,
+				} as React.CSSProperties)
+			}
+		>
 			{options.map((option) => {
 				const optionId = `${name}-${option.value}`;
 				const isOptionDisabled = disabled || option.disabled;
 
 				return (
-					<div key={option.value} className="radio">
+					<div key={option.value} className="radio flex flex-row items-center">
 						<input
 							type="radio"
 							id={optionId}
@@ -45,9 +56,14 @@ const Radio: React.FC<RadioProps> = ({
 							checked={value === option.value}
 							onChange={() => handleChange(option.value)}
 							disabled={isOptionDisabled}
-							className="radio-input"
+							style={{ accentColor: value === option.value ? selectedColor : unselectedColor }}
 						/>
-						<label htmlFor={optionId} className="radio-label">
+						<label
+							htmlFor={optionId}
+							className="radio-label"
+							style={{ color: value === option.value ? selectedColor : unselectedColor }}
+
+						>
 							{option.label}
 						</label>
 					</div>

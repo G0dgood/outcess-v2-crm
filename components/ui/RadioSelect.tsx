@@ -13,7 +13,9 @@ interface RadioSelectProps {
 	name: string;
 	value?: string;
 	onChange?: (value: string) => void;
-	options: RadioOption[];
+	options?: RadioOption[];
+	checked?: boolean;
+	onCheckedChange?: (checked: boolean) => void;
 	required?: boolean;
 	disabled?: boolean;
 	error?: string;
@@ -32,6 +34,8 @@ export const RadioSelect: React.FC<RadioSelectProps> = ({
 	error,
 	className = '',
 	orientation = 'vertical',
+	checked: checkedProp = false,
+	onCheckedChange,
 }) => {
 	const handleChange = (optionValue: string) => {
 		if (!disabled) {
@@ -41,7 +45,7 @@ export const RadioSelect: React.FC<RadioSelectProps> = ({
 
 	const containerClass = orientation === 'horizontal'
 		? 'flex flex-wrap gap-4'
-		: 'space-y-2';
+		: 'flex flex-col gap-2';
 
 	return (
 		<div className={`input-container ${className}`}>
@@ -49,26 +53,57 @@ export const RadioSelect: React.FC<RadioSelectProps> = ({
 				{label}
 				{required && <span className="required-asterisk">*</span>}
 			</label>
-			<div className={containerClass}>
-				{options.map((option) => (
-					<label
-						key={option.value}
-						className={`flex items-center cursor-pointer ${disabled || option.disabled ? 'opacity-50 cursor-not-allowed' : ''
-							}`}
-					>
+			{options && options.length > 0 ? (
+				<div className={containerClass}>
+					{options.map((option) => {
+						const optionId = `${name}-${option.value}`;
+						const isDisabled = disabled || option.disabled;
+						return (
+							<div key={option.value} className={`radio ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+								<input
+									type="radio"
+									id={optionId}
+									name={name}
+									value={option.value}
+									checked={value === option.value}
+									onChange={() => handleChange(option.value)}
+									disabled={isDisabled}
+								/>
+								<label htmlFor={optionId} className="radio-label">
+									{option.label}
+								</label>
+							</div>
+						);
+					})}
+				</div>
+			) : (
+				<div className="flex gap-4">
+					<div className={`radio ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
 						<input
 							type="radio"
+							id={`${name}-yes`}
 							name={name}
-							value={option.value}
-							checked={value === option.value}
-							onChange={() => handleChange(option.value)}
-							disabled={disabled || option.disabled}
-							className="mr-2 text-blue-600 focus:ring-blue-500 focus:ring-2"
+							value="true"
+							checked={!!checkedProp}
+							onChange={() => !disabled && onCheckedChange?.(true)}
+							disabled={disabled}
 						/>
-						<span className="text-[10px] md:text-[12px] text-gray-700">{option.label}</span>
-					</label>
-				))}
-			</div>
+						<label htmlFor={`${name}-yes`} className="radio-label">Yes</label>
+					</div>
+					<div className={`radio ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+						<input
+							type="radio"
+							id={`${name}-no`}
+							name={name}
+							value="false"
+							checked={!checkedProp}
+							onChange={() => !disabled && onCheckedChange?.(false)}
+							disabled={disabled}
+						/>
+						<label htmlFor={`${name}-no`} className="radio-label">No</label>
+					</div>
+				</div>
+			)}
 			{error && <span className="input-error">{error}</span>}
 		</div>
 	);
