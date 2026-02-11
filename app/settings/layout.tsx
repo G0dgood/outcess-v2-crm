@@ -24,14 +24,14 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 				isMobileMenuOpen={isMobileMenuOpen}
 			/>
 			<Suspense fallback={null}>
-				<DashboardSideNav 
-					activeItem="settings" 
+				<DashboardSideNav
+					activeItem="settings"
 					isMobileOpen={isMobileMenuOpen}
 					onMobileClose={() => setIsMobileMenuOpen(false)}
 				/>
 			</Suspense>
 			<GlobalStickyNotes />
-			<main className="flex-1 overflow-y-auto p-6 md:p-8">
+			<main>
 				{children}
 			</main>
 		</div>

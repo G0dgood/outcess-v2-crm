@@ -10,7 +10,7 @@ import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
 import { useCreateLineOfBusinessMutation, useUpdateLineOfBusinessMutation } from "@/store/services/lineOfBusinessApi";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-  const { currentStep, isLoading, setIsLoading, onStepComplete, onStepBack, setupData, updateSetupData, isFetchingLineOfBusiness } = useSetup();
+  const { currentStep, isLoading, setIsLoading, onStepComplete, onStepBack, setupData, updateSetupData, updateDashboardSettings, isFetchingLineOfBusiness } = useSetup();
   const { user } = useUserInfo();
   const { setSelectedLineOfBusinessId } = useLineOfBusiness();
   const [createLineOfBusiness] = useCreateLineOfBusinessMutation();
@@ -30,6 +30,11 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     return () => mq.removeEventListener('change', update);
   }, []);
 
+  useEffect(() => {
+    if (currentStep === 3 && setupData.dashboardSettings.activeTab !== 'kpi') {
+      updateDashboardSettings({ activeTab: 'kpi' });
+    }
+  }, [currentStep]);
   const validateCurrentStep = () => {
     if (currentStep === 1) {
       // Validate Basic Setup
@@ -47,6 +52,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   };
 
   const handleBack = () => {
+    if (currentStep === 3 && setupData.dashboardSettings.activeTab === 'disposition') {
+      updateDashboardSettings({ activeTab: 'kpi' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     if (currentStep > 1) {
       onStepBack();
       toast.info("Returned to previous step", {
@@ -205,8 +216,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             updateData = formData;
             break;
           case 3:
+            const nextDashboardSettings =
+              setupData.dashboardSettings.activeTab === 'kpi'
+                ? { ...setupData.dashboardSettings, activeTab: 'disposition' }
+                : setupData.dashboardSettings;
             updateData = {
-              dashboardSettings: setupData.dashboardSettings,
+              dashboardSettings: nextDashboardSettings,
             };
             break;
           case 4:
@@ -238,7 +253,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         });
       }
 
-      onStepComplete();
+      if (currentStep === 3 && setupData.dashboardSettings.activeTab === 'kpi') {
+        updateDashboardSettings({ activeTab: 'disposition' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        onStepComplete();
+      }
     } catch (err: unknown) {
       const error = err as { data?: { message?: string; error?: string } | string; message?: string };
       console.error("Failed to save changes:", error);
@@ -359,7 +379,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         buttonText={
           (mounted && isLoading) ? (currentStep === 5 ? 'Submitting...' : 'Saving...') :
             (mounted && isFetchingLineOfBusiness) ? 'Checking...' :
-              (currentStep === 5 ? 'Submit for Approval' : 'Save & Continue')
+              (currentStep === 5 ? 'Submit for Approval' :
+                (currentStep === 3 && setupData.dashboardSettings.activeTab === 'kpi' ? 'Call Disposition' : 'Save & Continue'))
         }
         backText={getBackButtonText()}
         showBack={currentStep > 1}

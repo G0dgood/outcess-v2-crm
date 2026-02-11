@@ -17,6 +17,7 @@ const timeZoneOptions = [
 	{ value: 'UTC-1', label: 'UTC-1 (Azores)' },
 	{ value: 'UTC+0', label: 'UTC+0 (Greenwich)' },
 	{ value: 'UTC+1', label: 'UTC+1 (Central European)' },
+	{ value: 'UTC+1-WAT', label: 'UTC+1 (West African Time)' },
 	{ value: 'UTC+2', label: 'UTC+2 (Eastern European)' },
 	{ value: 'UTC+3', label: 'UTC+3 (Moscow)' },
 	{ value: 'UTC+4', label: 'UTC+4 (Gulf)' },

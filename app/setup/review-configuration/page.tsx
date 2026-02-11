@@ -98,7 +98,7 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 
 			{/* Configuration Cards */}
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-				{configurationCards.map((card) => (
+				{configurationCards?.map((card) => (
 					<div
 						key={card.id}
 						className="dark:bg-gray-800 border dark:border-gray-700"

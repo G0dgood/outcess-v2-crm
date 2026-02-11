@@ -55,18 +55,13 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 				</button>
 				{showLogo && (
 					<div className="flex items-center gap-3">
-						<div className="flex-1 md:flex-none">
-							<div className="hidden md:flex items-center gap-2">
-								<Icon name="peoplelyHalf" size="xl" className="hidden dark:inline-block" />
-								<span className="font-semibold text-[25px] leading-[28px] flex items-center text-[#050711]"
-									style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>Peoplely</span>
-
-							</div>
-							{/* <Image src="/logo/peoplelyHalf.svg" alt="Peoplely logo" width={140} height={40} priority /> */}
-							{/* This space can be used for logo or main title */}
+						<div className="flex items-center gap-2">
+							<Icon name="peoplelyHalf" size="xl" className="hidden dark:inline-block" />
+							<span className="font-semibold text-[25px] leading-[28px] flex items-center text-[#050711]"
+								style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>Peoplely</span>
 						</div>
 						<span
-							className="font-lato not-italic font-medium text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100"
+							className="font-lato not-italic font-medium text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100 hidden md:flex mt-2"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							{title}

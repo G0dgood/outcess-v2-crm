@@ -64,7 +64,7 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 	return (
 		<aside
 			id={isMobile ? 'side-nav-mobile' : 'side-nav'}
-			className={`w-80 dark:bg-gray-900 ${isMobile ? ' h-full border-r dark:border-gray-700' : 'border-r dark:border-gray-700'} p-6 ${className}`}
+			className={`w-80 dark:bg-gray-900 ${isMobile ? ' w-[300px]  h-full border-r dark:border-gray-700' : 'border-r dark:border-gray-700'} p-6 ${className}`}
 			style={{
 				backgroundColor: 'var(--accent-white)',
 				borderColor: 'var(--light-gray)'

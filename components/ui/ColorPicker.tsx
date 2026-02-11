@@ -193,7 +193,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 			<div className="flex items-center gap-3">
 				<div
 					ref={triggerRef}
-					className="w-8 h-8 border border-gray-300 cursor-pointer rounded shadow-sm"
+					className="w-8 h-8 border border-gray-300 cursor-pointer  shadow-sm"
 					style={{ backgroundColor: currentColor }}
 					onClick={() => setIsOpen(!isOpen)}
 					title={currentColor}
@@ -212,15 +212,15 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 			</div>
 
 			{isOpen && (
-				<div className={`absolute left-0 bg-white border border-gray-200 shadow-lg p-4 z-50 min-w-[280px] ${positionAbove
+				<div className={`absolute left-0 bg-white border border-gray-200 shadow-lg p-3 z-50 min-w-[220px] ${positionAbove
 					? 'bottom-full mb-2'
 					: 'top-full mt-2'
 					}`}>
 					{/* Color Square */}
-					<div className="mb-4">
+					<div className="mb-3">
 						<div
 							ref={squareRef}
-							className="w-full h-32   border border-gray-300 cursor-crosshair relative"
+							className="w-full h-24   border border-gray-300 cursor-crosshair relative"
 							style={{
 								background: `linear-gradient(to right, hsl(${hsl.h}, 0%, 50%), hsl(${hsl.h}, 100%, 50%)), linear-gradient(to bottom, white, black)`
 							}}
@@ -238,16 +238,16 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 					</div>
 
 					{/* Hue Slider */}
-					<div className="mb-4">
-						<div className="flex items-center gap-2 mb-2">
-							<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+					<div className="mb-3">
+						<div className="flex items-center gap-2 mb-1">
+							<svg width="14" height="14" viewBox="0 0 16 16" fill="none">
 								<path d="M8 1L10.5 5.5L15.5 6L12 9.5L13 14.5L8 12L3 14.5L4 9.5L0.5 6L5.5 5.5L8 1Z" fill="#6B7280" />
 							</svg>
-							<span className="text-[10px] md:text-[12px] font-medium text-gray-700">Hue</span>
+							<span className="text-[10px] font-medium text-gray-700">Hue</span>
 						</div>
 						<div
 							ref={hueRef}
-							className="w-full h-4 rounded border border-gray-300 cursor-pointer relative"
+							className="w-full h-3 rounded border border-gray-300 cursor-pointer relative"
 							style={{
 								background: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)'
 							}}
@@ -265,13 +265,13 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 					</div>
 
 					{/* Alpha Slider */}
-					<div className="mb-4">
-						<div className="flex items-center gap-2 mb-2">
-							<span className="text-[10px] md:text-[12px] font-medium text-gray-700">Opacity</span>
+					<div className="mb-3">
+						<div className="flex items-center gap-2 mb-1">
+							<span className="text-[10px] font-medium text-gray-700">Opacity</span>
 						</div>
 						<div
 							ref={alphaRef}
-							className="w-full h-4 rounded border border-gray-300 cursor-pointer relative"
+							className="w-full h-3 rounded border border-gray-300 cursor-pointer relative"
 							style={{
 								backgroundImage: `
                   linear-gradient(to right, transparent, ${currentColor}),
@@ -297,9 +297,9 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 					</div>
 
 					{/* Color Values */}
-					<div className="mb-4">
-						<div className="flex items-center gap-2 mb-2">
-							<select className="text-[10px] md:text-[12px] font-medium text-gray-700 bg-transparent border-none outline-none">
+					<div className="mb-3">
+						<div className="flex items-center gap-2 mb-1">
+							<select className="text-[10px] font-medium text-gray-700 bg-transparent border-none outline-none">
 								<option>HSL</option>
 							</select>
 						</div>
@@ -314,7 +314,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 								}}
 								placeholder="H"
 								className="text-center"
-								inputClassName="h-10"
+								inputClassName="h-7 text-[10px]"
 							/>
 							<Input
 								label=""
@@ -326,7 +326,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 								}}
 								placeholder="S"
 								className="text-center"
-								inputClassName="h-10"
+								inputClassName="h-7 text-[10px]"
 							/>
 							<Input
 								label=""
@@ -338,7 +338,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 								}}
 								placeholder="L"
 								className="text-center"
-								inputClassName="h-10"
+								inputClassName="h-7 text-[10px]"
 							/>
 							<Input
 								label=""
@@ -346,7 +346,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 								onChange={(value) => setAlpha(parseInt(value) || 100)}
 								placeholder="A"
 								className="text-center"
-								inputClassName="h-10"
+								inputClassName="h-7 text-[10px]"
 							/>
 						</div>
 					</div>

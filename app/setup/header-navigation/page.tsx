@@ -155,7 +155,7 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 												Layout Style
 											</h4>
 											<p
-												className="font-lato text-[8px] md:text-[10px] dark:text-gray-400"
+												className="font-lato text-[10px] md:text-[12px] dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
 												Vertical menu on the left
@@ -196,7 +196,7 @@ export default function HeaderNavigationPage(): React.JSX.Element {
 												Compact
 											</h4>
 											<p
-												className="font-lato text-[8px] md:text-[10px] dark:text-gray-400"
+												className="font-lato text-[10px] md:text-[12px] dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
 												Collapsed side menu with icons
