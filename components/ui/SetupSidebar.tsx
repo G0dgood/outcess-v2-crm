@@ -4,10 +4,11 @@ import {
 	HamburgerMenuIcon,
 	DashboardIcon,
 	PersonIcon,
-	BackpackIcon,
 	ChevronRightIcon
 } from '@radix-ui/react-icons';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useSetup } from '@/contexts/SetupContext';
+import { toast } from 'sonner';
 
 interface SetupStep {
 	id: string;
@@ -29,6 +30,7 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 	isMobile = false,
 }) => {
 	const { isDarkMode } = useTheme();
+	const { setCurrentStep } = useSetup();
 	const secondaryColor = '#6C8B7D';
 
 	const setupSteps: SetupStep[] = [
@@ -91,7 +93,7 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 					style={{ backgroundColor: 'var(--bg-primary)' }}
 				>
 					<div
-						className="absolute h-[8px] left-0 top-0 rounded-[4px] transition-all duration-300"
+						className="absolute h-[8px] left-0 top-0 rounded-lg transition-all duration-300"
 						style={{
 							width: `${((currentStep || 1) / setupSteps.length) * 100}%`,
 							backgroundColor: secondaryColor
@@ -103,6 +105,8 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 			<nav className="flex flex-col gap-2">
 				{setupSteps.map((step: SetupStep) => {
 					const IconComponent = step.icon;
+					const stepIndex = ['basic', 'header', 'dashboard', 'customer'].indexOf(step.id) + 1;
+					const isClickable = (currentStep || 1) >= stepIndex;
 					return (
 						<div
 							key={step.id}
@@ -115,6 +119,17 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 								borderColor: '#6C8B7D'
 							} : {
 								borderColor: 'transparent'
+							}}
+							onClick={() => {
+								if (isClickable) {
+									setCurrentStep(stepIndex);
+									window.scrollTo({ top: 0, behavior: 'smooth' });
+								} else {
+									toast.error('Complete previous steps first', {
+										description: 'Please finish the current step before moving forward.',
+										duration: 3000,
+									});
+								}
 							}}
 							onMouseEnter={(e) => {
 								if (!step.active) {

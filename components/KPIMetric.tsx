@@ -389,7 +389,7 @@ export default function KPIMetric({
 			{/* Action Buttons */}
 			<div className="flex justify-end gap-3">
 				<Button
-					variant="outline"
+					variant="primary"
 					size="md"
 					onClick={() => setIsOutcomesModalOpen(true)}
 				>

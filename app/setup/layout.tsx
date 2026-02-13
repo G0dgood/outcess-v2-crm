@@ -10,7 +10,7 @@ import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
 import { useCreateLineOfBusinessMutation, useUpdateLineOfBusinessMutation } from "@/store/services/lineOfBusinessApi";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-  const { currentStep, isLoading, setIsLoading, onStepComplete, onStepBack, setupData, updateSetupData, updateDashboardSettings, isFetchingLineOfBusiness } = useSetup();
+  const { currentStep, isLoading, setIsLoading, onStepComplete, onStepBack, setupData, updateSetupData, updateDashboardSettings, isFetchingLineOfBusiness, dashboardStep, setDashboardStep } = useSetup();
   const { user } = useUserInfo();
   const { setSelectedLineOfBusinessId } = useLineOfBusiness();
   const [createLineOfBusiness] = useCreateLineOfBusinessMutation();
@@ -30,11 +30,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  useEffect(() => {
-    if (currentStep === 3 && setupData.dashboardSettings.activeTab !== 'kpi') {
-      updateDashboardSettings({ activeTab: 'kpi' });
-    }
-  }, [currentStep]);
+  // useEffect(() => {
+  //   if (currentStep === 3 && setupData.dashboardSettings.activeTab !== 'kpi') {
+  //     updateDashboardSettings({ activeTab: 'kpi' });
+  //   }
+  // }, [currentStep]);
+
   const validateCurrentStep = () => {
     if (currentStep === 1) {
       // Validate Basic Setup
@@ -53,6 +54,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   const handleBack = () => {
     if (currentStep === 3 && setupData.dashboardSettings.activeTab === 'disposition') {
+      setDashboardStep('KPI Metric');
       updateDashboardSettings({ activeTab: 'kpi' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -60,6 +62,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
     if (currentStep > 1) {
       onStepBack();
+      setDashboardStep('KPI Metric');
       toast.info("Returned to previous step", {
         description: "You can modify your previous settings.",
         duration: 2000,
@@ -216,12 +219,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             updateData = formData;
             break;
           case 3:
-            const nextDashboardSettings =
-              setupData.dashboardSettings.activeTab === 'kpi'
-                ? { ...setupData.dashboardSettings, activeTab: 'disposition' }
-                : setupData.dashboardSettings;
             updateData = {
-              dashboardSettings: nextDashboardSettings,
+              dashboardSettings: setupData.dashboardSettings,
             };
             break;
           case 4:
@@ -253,8 +252,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         });
       }
 
-      if (currentStep === 3 && setupData.dashboardSettings.activeTab === 'kpi') {
-        updateDashboardSettings({ activeTab: 'disposition' });
+      if (currentStep === 3) {
+        onStepComplete();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         onStepComplete();
@@ -372,6 +371,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         </div>
       )}
       <BottomNav
+        dashboardStep={dashboardStep}
+        setDashboardStep={setDashboardStep}
+        currentStep={currentStep}
         onSave={handleSave}
         onBack={handleBack}
         isLoading={mounted && (isLoading || isFetchingLineOfBusiness)}
@@ -380,7 +382,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           (mounted && isLoading) ? (currentStep === 5 ? 'Submitting...' : 'Saving...') :
             (mounted && isFetchingLineOfBusiness) ? 'Checking...' :
               (currentStep === 5 ? 'Submit for Approval' :
-                (currentStep === 3 && setupData.dashboardSettings.activeTab === 'kpi' ? 'Call Disposition' : 'Save & Continue'))
+                ('Save & Continue'))
         }
         backText={getBackButtonText()}
         showBack={currentStep > 1}

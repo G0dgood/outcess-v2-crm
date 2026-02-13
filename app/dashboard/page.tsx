@@ -799,7 +799,7 @@ const DashboardContent: React.FC = () => {
 								size="md"
 								onClick={handleRefresh}
 								disabled={isRefreshing}
-								className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2 sm:text-[10px] md:text-[12px]"
+								className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
 								onMouseEnter={(event) => handlePrimaryHover(event, true)}
 								onMouseLeave={(event) => handlePrimaryHover(event, false)}
 							>
@@ -815,7 +815,7 @@ const DashboardContent: React.FC = () => {
 									onClick={handleAddWidget}
 									disabled={!canCreate}
 									// style={primaryButtonStyle}
-									className="transition-all duration-200 px-2 py-1 text-[8px] md:text-[10px] sm:px-4 sm:py-2 sm:text-[10px] md:text-[12px]"
+									className="transition-all duration-200 px-2 py-1 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
 									onMouseEnter={(event) => handlePrimaryHover(event, true)}
 									onMouseLeave={(event) => handlePrimaryHover(event, false)}
 								>
@@ -827,7 +827,7 @@ const DashboardContent: React.FC = () => {
 								variant="primary"
 								size="md"
 								onClick={handleCreateStickyNoteDirectly}
-								className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2 sm:text-[10px] md:text-[12px]"
+								className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
 								// style={outlineButtonStyle}
 								onMouseEnter={(event) => handlePrimaryHover(event, true)}
 								onMouseLeave={(event) => handlePrimaryHover(event, false)}
@@ -841,7 +841,7 @@ const DashboardContent: React.FC = () => {
 									size="md"
 									onClick={() => setIsAddChartModalOpen(true)}
 									disabled={!canCreate}
-									className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2 sm:text-[10px] md:text-[12px]"
+									className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
 									// style={outlineButtonStyle}
 									onMouseEnter={(event) => handlePrimaryHover(event, true)}
 									onMouseLeave={(event) => handlePrimaryHover(event, false)}
@@ -980,7 +980,7 @@ const DashboardContent: React.FC = () => {
 											variant="primary"
 											size="md"
 											onClick={() => setIsAddChartModalOpen(true)}
-											className="flex items-center gap-2 px-2 py-1 text-[8px] md:text-[10px] sm:px-4 sm:py-2 sm:text-[10px] md:text-[12px]"
+											className="flex items-center gap-2 px-2 py-1 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
 										>
 											<PlusIcon className="w-4 h-4" />
 											<span className="hidden sm:inline">Add Chart</span>

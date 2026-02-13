@@ -130,6 +130,8 @@ interface SetupContextType {
 	setIsLoading: (loading: boolean) => void;
 	setupData: SetupData;
 	updateSetupData: (data: Partial<SetupData>) => void;
+	setDashboardStep: React.Dispatch<React.SetStateAction<'KPI Metric' | 'Call Disposition'>>;
+	dashboardStep: 'KPI Metric' | 'Call Disposition';
 	updateNavigationSettings: (data: Partial<SetupData['navigationSettings']>) => void;
 	updateDashboardSettings: (data: Partial<SetupData['dashboardSettings']>) => void;
 	addChart: (chart: Omit<Chart, 'id'>) => void;
@@ -161,6 +163,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 
 	// Initialize state first so we can use setupData in the query logic
 	const [currentStep, setCurrentStep] = useState(1);
+	const [dashboardStep, setDashboardStep] = useState<'KPI Metric' | 'Call Disposition'>('KPI Metric');
 	const [isLoading, setIsLoading] = useState(false);
 	const [isInitialized, setIsInitialized] = useState(false);
 	const [setupData, setSetupData] = useState<SetupData>({
@@ -246,17 +249,17 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		if (existingLineOfBusiness) {
 			const dataToUse = existingLineOfBusiness.lineOfBusiness || existingLineOfBusiness;
 
-			const safeParse = (data: any) => {
+			const safeParse = (data: unknown): Record<string, unknown> => {
 				if (!data) return {};
 				if (typeof data === 'string') {
 					try {
-						return JSON.parse(data);
+						return JSON.parse(data as string) as Record<string, unknown>;
 					} catch (e) {
 						console.error('Error parsing settings JSON:', e);
 						return {};
 					}
 				}
-				return data;
+				return typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {};
 			};
 
 			if (dataToUse) {
@@ -325,7 +328,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 							dispositions: parsedData.dashboardSettings?.dispositions || prev?.dashboardSettings?.dispositions,
 						}
 					}));
-				} catch (error) {
+				} catch {
 				}
 			}
 			setIsInitialized(true);
@@ -588,6 +591,8 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		updateCustomerBookSettings,
 		setupSteps,
 		isFetchingLineOfBusiness,
+		setDashboardStep,
+		dashboardStep,
 	};
 
 	return (

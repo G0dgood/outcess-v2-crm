@@ -75,7 +75,7 @@ export const CheckboxSelect: React.FC<CheckboxSelectProps> = ({
 									/>
 									<label htmlFor={optionId} className="checkbox-label"></label>
 								</div>
-								<label htmlFor={optionId} className="checkbox-text-label">
+								<label htmlFor={optionId} className="checkbox-text-label pl-4">
 									{option.label}
 								</label>
 							</div>
@@ -83,7 +83,7 @@ export const CheckboxSelect: React.FC<CheckboxSelectProps> = ({
 					})}
 				</div>
 			) : (
-				<div className={`checkbox-container ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+				<div className={`checkbox-container flex flex-col gap-3 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
 					<div className="checkbox-round">
 						<input
 							type="checkbox"

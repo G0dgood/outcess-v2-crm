@@ -6,10 +6,12 @@ import CallDisposition from '@/components/CallDisposition';
 import KPIMetric from '@/components/KPIMetric';
 import { useSetup } from '@/contexts/SetupContext';
 
-
 export default function DashboardPage(): React.JSX.Element {
-	const { setupData, updateDashboardSettings } = useSetup();
+	const { setupData, updateDashboardSettings, dashboardStep, setDashboardStep } = useSetup();
 	const { dashboardSettings } = setupData;
+
+	const toActiveTab = (step: 'KPI Metric' | 'Call Disposition'): 'kpi' | 'disposition' =>
+		step === 'KPI Metric' ? 'kpi' : 'disposition';
 
 	return (
 		<div className="w-full h-full">
@@ -28,7 +30,6 @@ export default function DashboardPage(): React.JSX.Element {
 				</p>
 			</div>
 
-			{/* Dashboard Configuration */}
 			<div
 				className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6"
 				style={{
@@ -45,37 +46,24 @@ export default function DashboardPage(): React.JSX.Element {
 							onChange={(value) => updateDashboardSettings({ dashboardName: value })}
 						/>
 					</div>
-					{/* <div>
-						<label className="font-inter text-[10px] md:text-[12px] font-medium text-[#050711] mb-2 block">Who can see this dashboard</label>
-						<div className="space-y-2">
-							{visibilityOptions.map((option) => (
-								<IndividualRadio
-									key={option.value}
-									name="visibility"
-									value={option.value}
-									checked={dashboardSettings.dashboardVisibility === option.value}
-									onChange={(value) => updateDashboardSettings({ dashboardVisibility: value as DashboardVisibility })}
-									label={option.label}
-								/>
-							))}
-						</div>
-					</div> */}
 				</div>
 			</div>
 
-			{/* Navigation Tabs */}
 			<div className="mb-6">
 				<div
 					className="flex border-b dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<button
-						onClick={() => updateDashboardSettings({ activeTab: 'kpi' })}
-						className={`px-4 py-2 font-inter text-[10px] md:text-[12px] font-medium transition-colors ${dashboardSettings.activeTab === 'kpi'
+						onClick={() => {
+							setDashboardStep('KPI Metric');
+							updateDashboardSettings({ activeTab: toActiveTab('KPI Metric') });
+						}}
+						className={`px-4 py-2 font-inter text-[10px] md:text-[12px] font-medium transition-colors ${dashboardStep === 'KPI Metric'
 							? 'dark:text-gray-100 dark:border-gray-100'
 							: 'dark:text-gray-400 dark:hover:text-gray-300'
 							}`}
-						style={dashboardSettings.activeTab === 'kpi' ? {
+						style={dashboardStep === 'KPI Metric' ? {
 							color: 'var(--text-primary)',
 							borderBottom: '2px solid',
 							borderBottomColor: 'var(--text-primary)'
@@ -83,12 +71,12 @@ export default function DashboardPage(): React.JSX.Element {
 							color: 'var(--text-tertiary)'
 						}}
 						onMouseEnter={(e) => {
-							if (dashboardSettings.activeTab !== 'kpi') {
+							if (dashboardStep !== 'KPI Metric') {
 								e.currentTarget.style.color = 'var(--text-secondary)';
 							}
 						}}
 						onMouseLeave={(e) => {
-							if (dashboardSettings.activeTab !== 'kpi') {
+							if (dashboardStep !== 'KPI Metric') {
 								e.currentTarget.style.color = 'var(--text-tertiary)';
 							}
 						}}
@@ -96,12 +84,15 @@ export default function DashboardPage(): React.JSX.Element {
 						KPI Metric
 					</button>
 					<button
-						onClick={() => updateDashboardSettings({ activeTab: 'disposition' })}
-						className={`px-4 py-2 font-inter text-[10px] md:text-[12px] font-medium transition-colors ${dashboardSettings.activeTab === 'disposition'
+						onClick={() => {
+							setDashboardStep('Call Disposition');
+							updateDashboardSettings({ activeTab: toActiveTab('Call Disposition') });
+						}}
+						className={`px-4 py-2 font-inter text-[10px] md:text-[12px] font-medium transition-colors ${dashboardStep === 'Call Disposition'
 							? 'dark:text-gray-100 dark:border-gray-100'
 							: 'dark:text-gray-400 dark:hover:text-gray-300'
 							}`}
-						style={dashboardSettings.activeTab === 'disposition' ? {
+						style={dashboardStep === 'Call Disposition' ? {
 							color: 'var(--text-primary)',
 							borderBottom: '2px solid',
 							borderBottomColor: 'var(--text-primary)'
@@ -109,12 +100,12 @@ export default function DashboardPage(): React.JSX.Element {
 							color: 'var(--text-tertiary)'
 						}}
 						onMouseEnter={(e) => {
-							if (dashboardSettings.activeTab !== 'disposition') {
+							if (dashboardStep !== 'Call Disposition') {
 								e.currentTarget.style.color = 'var(--text-secondary)';
 							}
 						}}
 						onMouseLeave={(e) => {
-							if (dashboardSettings.activeTab !== 'disposition') {
+							if (dashboardStep !== 'Call Disposition') {
 								e.currentTarget.style.color = 'var(--text-tertiary)';
 							}
 						}}
@@ -124,7 +115,7 @@ export default function DashboardPage(): React.JSX.Element {
 				</div>
 			</div>
 
-			{dashboardSettings.activeTab === 'kpi' && (
+			{dashboardStep === 'KPI Metric' && (
 				<KPIMetric
 					widgets={dashboardSettings.widgets}
 					onWidgetsChange={(widgets) => updateDashboardSettings({ widgets })}
@@ -133,7 +124,7 @@ export default function DashboardPage(): React.JSX.Element {
 				/>
 			)}
 
-			{dashboardSettings.activeTab === 'disposition' && (
+			{dashboardStep === 'Call Disposition' && (
 				<CallDisposition
 					dispositions={dashboardSettings.dispositions}
 					onDispositionsChange={(dispositions) => updateDashboardSettings({ dispositions })}
