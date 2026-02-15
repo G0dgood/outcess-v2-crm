@@ -40,7 +40,7 @@ const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> 
           {canDelete && onDeleteSelected && selectedRecords.size > 0 && (
             <button
               onClick={onDeleteSelected}
-              className="flex items-center gap-2 px-3 py-1.5 text-[8px] md:text-[10px] font-medium text-red-500 border border-red-500 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 text-[8px] md:text-[10px] font-medium text-red-500 border border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               title="Delete Selected"
             >
               <TrashIcon className="w-3.5 h-3.5" />
