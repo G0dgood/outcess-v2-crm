@@ -40,6 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="http://localhost:8000" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

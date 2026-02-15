@@ -2,9 +2,18 @@
 
 import React from 'react';
 import Input from '@/components/ui/Input';
-import CallDisposition from '@/components/CallDisposition';
-import KPIMetric from '@/components/KPIMetric';
+import dynamic from 'next/dynamic';
 import { useSetup } from '@/contexts/SetupContext';
+
+const KPIMetric = dynamic(() => import('@/components/KPIMetric'), {
+  ssr: false,
+  loading: () => <div className="p-6 text-sm">Loading KPI Metric...</div>
+});
+
+const CallDisposition = dynamic(() => import('@/components/CallDisposition'), {
+  ssr: false,
+  loading: () => <div className="p-6 text-sm">Loading Call Disposition...</div>
+});
 
 export default function DashboardPage(): React.JSX.Element {
 	const { setupData, updateDashboardSettings, dashboardStep, setDashboardStep } = useSetup();

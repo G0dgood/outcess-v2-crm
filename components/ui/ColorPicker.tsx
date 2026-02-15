@@ -185,7 +185,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 	return (
 		<div className={`relative ${className}`} ref={pickerRef}>
 			{label && (
-				<label className="font-inter text-[10px] md:text-[12px] font-medium text-[#050711] mb-2 block">
+				<label
+					className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-2 block"
+					style={{ color: 'var(--text-secondary)' }}
+				>
 					{label}
 				</label>
 			)}

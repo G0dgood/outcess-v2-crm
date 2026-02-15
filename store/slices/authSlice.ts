@@ -14,7 +14,7 @@ export interface User {
     company?: {
         _id?: string;
         companyName?: string;
-        [key: string]: any;
+        [key: string]: unknown;
     };
     phone?: string;
     status?: {
@@ -109,6 +109,11 @@ const clearAuthFromStorage = () => {
 	try {
 		localStorage.removeItem('peoplely-user');
 		localStorage.removeItem('token');
+		localStorage.removeItem('synced_dispositions');
+		localStorage.removeItem('stickyNotes');
+		localStorage.removeItem('userPrivileges');
+		localStorage.removeItem('selectedLineOfBusinessId');
+		localStorage.removeItem('peoplely-setup-data');
 	} catch (error) {
 		console.error('Error clearing auth data from storage:', error);
 	}

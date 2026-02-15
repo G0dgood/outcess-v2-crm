@@ -10,6 +10,7 @@ import ColorPicker from './ColorPicker';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useCreateStatusMutation, useUpdateStatusMutation } from '@/store/services/statusApi';
 import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
+import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
@@ -159,6 +160,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 						id: statusId,
 						statusData: formData
 					}).unwrap();
+					toastSuccess('Status updated successfully');
 				} else {
 					// Create new status
 					if (companyId) {
@@ -167,14 +169,17 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 							companyId,
 							lineOfBusinessId: selectedLineOfBusinessId || undefined
 						}).unwrap();
+						toastSuccess('Status created successfully');
 					} else {
 						console.error("Company ID missing, cannot create status");
+						toastError('Company ID missing, cannot create status');
 						return;
 					}
 				}
 				onClose();
 			} catch (error) {
 				console.error("Failed to save status:", error);
+				toastError('Failed to save status');
 			}
 		}
 	};
@@ -363,4 +368,3 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 };
 
 export default CreateStatusModal;
-

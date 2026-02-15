@@ -74,22 +74,12 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
             <button
               onClick={() => setShowBulkDeleteConfirm(true)}
               disabled={isDeletingMany}
-              className="text-[8px] md:text-[10px] py-1 px-3  border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600 flex items-center gap-1"
-              style={{
-                borderColor: 'var(--light-gray)',
-                color: '#DC2626',
-                backgroundColor: 'transparent'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
+              className="flex items-center gap-2 px-3 py-1.5 text-[8px] md:text-[10px] font-medium text-red-500 border border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              title="Delete Selected"
             >
-              {/* <Icon name="Trash" size="sm" /> */}
-              {isDeletingMany ? 'Deleting...' : 'Delete All'}
-            </button>
+              <TrashIcon className="w-3.5 h-3.5" />
+              Delete
+            </button> 
           )}
           <button
             onClick={onClose}

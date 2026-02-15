@@ -266,7 +266,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							<button
 								type="button"
 								onClick={handleFromIconClick}
-								className="absolute right-3 bottom-3 cursor-pointer dark:hover:text-gray-300 transition-colors"
+								className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors"
 								style={{ color: 'var(--text-tertiary)' }}
 								onMouseEnter={(e) => {
 									e.currentTarget.style.color = 'var(--text-secondary)';
@@ -294,7 +294,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							<button
 								type="button"
 								onClick={handleToIconClick}
-								className="absolute right-3 bottom-3 cursor-pointer dark:hover:text-gray-300 transition-colors"
+								className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors"
 								style={{ color: 'var(--text-tertiary)' }}
 								onMouseEnter={(e) => {
 									e.currentTarget.style.color = 'var(--text-secondary)';
@@ -329,4 +329,3 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 };
 
 export default DateFilter;
-

@@ -151,7 +151,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 								...p,
 								access: value,
 								permissions: value
-									? p.permissions
+									? { ...p.permissions, view: true }
 									: { view: false, edit: false, delete: false, create: false }
 							}
 							: p

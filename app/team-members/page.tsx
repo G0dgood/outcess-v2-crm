@@ -98,6 +98,7 @@ const TeamMembersPage: React.FC = () => {
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [statusModalMember, setStatusModalMember] = useState<TeamMember | null>(null);
+	const [shiftFilter, setShiftFilter] = useState<string>('');
 
 	useEffect(() => {
 		if (socket) {
@@ -254,9 +255,11 @@ const TeamMembersPage: React.FC = () => {
 				member.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
 				member.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-			return matchesSearch;
+			const matchesShift = !shiftFilter || member.team === shiftFilter;
+
+			return matchesSearch && matchesShift;
 		});
-	}, [searchTerm, teamMembersData]);
+	}, [searchTerm, teamMembersData, shiftFilter]);
 
 	const totalPages = Math.max(1, Math.ceil(filteredMembers.length / itemsPerPage));
 	const currentMembers = filteredMembers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -310,7 +313,17 @@ const TeamMembersPage: React.FC = () => {
 						}}
 						inputClassName="h-10 whitespace-nowrap"
 					/>
-
+					<Dropdown
+						label="Shift"
+						options={Array.from(new Set(teamMembersData.map(m => m.team).filter(Boolean)))
+							.map((t) => ({ label: t, value: t }))}
+						value={shiftFilter}
+						onChange={(val) => {
+							if (Array.isArray(val)) return;
+							setShiftFilter(val);
+						}}
+						inputClassName="h-10 whitespace-nowrap"
+					/>
 				</div>
 			</div>
 

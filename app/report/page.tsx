@@ -75,13 +75,13 @@ const ReportPage: React.FC = () => {
 	const { data: agentApiData, isLoading: isAgentLoading } = useGetDispositionsByAgentReportQuery(
 		{
 			lineOfBusinessId: selectedLineOfBusinessId || '',
-			agentId: user?._id || '',
+			agentId: user?._id || user?.id || '',
 			page: currentPage,
 			limit: 10,
 			startDate: dateRange.startDate,
 			endDate: dateRange.endDate
 		},
-		{ skip: !selectedLineOfBusinessId || !isAgent || !user?._id || isPrivilegeLoading }
+		{ skip: !selectedLineOfBusinessId || !isAgent || !(user?._id || user?.id) || isPrivilegeLoading }
 	);
 
 	const apiData = (isAgent ? agentApiData : lobApiData) as ReportApiResponse | ReportItem[] | undefined;
@@ -118,10 +118,17 @@ const ReportPage: React.FC = () => {
 		}
 
 		return list.map((item: ReportItem) => {
+			const d = item.timestamp ? new Date(item.timestamp) : null;
+			const year = d ? d.getFullYear() : '';
+			const month = d ? String(d.getMonth() + 1).padStart(2, '0') : '';
+			const day = d ? String(d.getDate()).padStart(2, '0') : '';
+			const hour = d ? String(d.getHours()).padStart(2, '0') : '';
+			const minute = d ? String(d.getMinutes()).padStart(2, '0') : '';
+			const formatted = d ? `${year}-${month}-${day} ${hour}:${minute}` : '-';
 			const row: ReportData = {
 				id: item._id || item.id || '',
 				'Agent Name': item.agent?.name || 'Unknown',
-				'Date': item.timestamp ? new Date(item.timestamp).toLocaleDateString() + ' ' + new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
+				'Date': formatted,
 			};
 
 			// Flatten fillDisposition

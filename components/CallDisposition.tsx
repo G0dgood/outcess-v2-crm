@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import Icon from '@/components/ui/Icon';
@@ -20,20 +20,11 @@ import {
 	Tooltip,
 	Legend,
 } from 'chart.js';
-import { Pie, Bar, Line, Doughnut, PolarArea, Radar, Scatter, Bubble } from 'react-chartjs-2';
-
-ChartJS.register(
-	CategoryScale,
-	LinearScale,
-	BarElement,
-	LineElement,
-	PointElement,
-	ArcElement,
-	RadialLinearScale,
-	Title,
-	Tooltip,
-	Legend
-);
+import type { ChartData, ChartOptions, ChartTypeRegistry } from 'chart.js';
+type ChartComponentType = React.ComponentType<{
+	data: ChartData<keyof ChartTypeRegistry>;
+	options: ChartOptions<keyof ChartTypeRegistry>;
+}>;
 
 interface DispositionCategory {
 	id: string;
@@ -64,6 +55,78 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 		isRequired: false,
 		color: '#050711'
 	});
+	const [isChartReady, setIsChartReady] = useState(false);
+	const [ChartComp, setChartComp] = useState<ChartComponentType | null>(null);
+
+	useEffect(() => {
+		const chartType = dispositionSettings.chartType || 'pie';
+		try {
+			switch (chartType) {
+				case 'bar':
+					ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+					break;
+				case 'line':
+					ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend);
+					break;
+				case 'doughnut':
+				case 'pie':
+					ChartJS.register(ArcElement, Title, Tooltip, Legend);
+					break;
+				case 'polarArea':
+					ChartJS.register(RadialLinearScale, ArcElement, Title, Tooltip, Legend);
+					break;
+				case 'radar':
+					ChartJS.register(RadialLinearScale, LineElement, PointElement, Title, Tooltip, Legend);
+					break;
+				case 'scatter':
+					ChartJS.register(LinearScale, PointElement, Title, Tooltip, Legend);
+					break;
+				case 'bubble':
+					ChartJS.register(LinearScale, PointElement, Title, Tooltip, Legend);
+					break;
+				default:
+					ChartJS.register(ArcElement, Title, Tooltip, Legend);
+			}
+			setIsChartReady(true);
+		} catch {
+			setIsChartReady(true);
+		}
+	}, [dispositionSettings.chartType]);
+
+	useEffect(() => {
+		const chartType = dispositionSettings.chartType || 'pie';
+		const loadComponent = async () => {
+			const mod = await import('react-chartjs-2');
+			switch (chartType) {
+				case 'bar':
+					setChartComp(() => mod.Bar as ChartComponentType);
+					return;
+				case 'line':
+					setChartComp(() => mod.Line as ChartComponentType);
+					return;
+				case 'doughnut':
+					setChartComp(() => mod.Doughnut as ChartComponentType);
+					return;
+				case 'polarArea':
+					setChartComp(() => mod.PolarArea as ChartComponentType);
+					return;
+				case 'radar':
+					setChartComp(() => mod.Radar as ChartComponentType);
+					return;
+				case 'scatter':
+					setChartComp(() => mod.Scatter as ChartComponentType);
+					return;
+				case 'bubble':
+					setChartComp(() => mod.Bubble as ChartComponentType);
+					return;
+				case 'pie':
+				default:
+					setChartComp(() => mod.Pie as ChartComponentType);
+					return;
+			}
+		};
+		loadComponent();
+	}, [dispositionSettings.chartType]);
 
 
 
@@ -109,8 +172,10 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 		],
 	};
 
-	// Render chart based on dispositions data
 	const renderChart = () => {
+		if (!isChartReady) {
+			return <div className="h-64 flex items-center justify-center text-sm">Preparing chart...</div>;
+		}
 		if (dispositions.length === 0) {
 			return (
 				<div className="h-64 flex flex-col items-center justify-center text-center">
@@ -151,23 +216,11 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 		};
 
 		switch (dispositionSettings.chartType) {
-			case 'bar':
-				return <Bar data={chartData} options={commonOptions} />;
-			case 'line':
-				return <Line data={chartData} options={commonOptions} />;
-			case 'doughnut':
-				return <Doughnut data={chartData} options={commonOptions} />;
-			case 'polarArea':
-				return <PolarArea data={chartData} options={commonOptions} />;
-			case 'radar':
-				return <Radar data={chartData} options={commonOptions} />;
-			case 'scatter':
-				return <Scatter data={chartData} options={commonOptions} />;
-			case 'bubble':
-				return <Bubble data={chartData} options={commonOptions} />;
-			case 'pie':
 			default:
-				return <Pie data={chartData} options={commonOptions} />;
+				if (!ChartComp) {
+					return <div className="h-full flex items-center justify-center text-sm">Loading chart...</div>;
+				}
+				return <ChartComp data={chartData} options={commonOptions} />;
 		}
 	};
 

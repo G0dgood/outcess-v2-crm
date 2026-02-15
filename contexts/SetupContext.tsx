@@ -224,13 +224,16 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				{ name: 'systemSetting' },
 				{ name: 'auditLog' },
 				{ name: 'teamMembers' },
+				{ name: 'configuration' },
+				{ name: 'pendingrequest' },
 			]
 		},
 		logoFile: null,
 	});
 
 	// Use either user's company ID or the one from setupData (e.g., from localStorage)
-	const companyIdToUse = user?.company?._id || user?.company?.id || setupData.companyId;
+	const companyObj = user?.company as { _id?: string; id?: string } | undefined;
+	const companyIdToUse: string | undefined = companyObj?._id ?? companyObj?.id ?? (setupData.companyId || undefined);
 
 	const { data: specificLineOfBusiness, isLoading: isFetchingSpecificLOB } = useGetLineOfBusinessQuery(
 		selectedLineOfBusinessId || '',
@@ -238,7 +241,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	);
 
 	const { data: companyLineOfBusiness, isLoading: isFetchingCompanyLOB } = useGetLineOfBusinessByCompanyIdQuery(
-		companyIdToUse || '',
+		companyIdToUse ?? '',
 		{ skip: !!selectedLineOfBusinessId || !companyIdToUse }
 	);
 
@@ -249,24 +252,23 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		if (existingLineOfBusiness) {
 			const dataToUse = existingLineOfBusiness.lineOfBusiness || existingLineOfBusiness;
 
-			const safeParse = (data: unknown): Record<string, unknown> => {
+			const safeParse = <T,>(data: unknown): Partial<T> => {
 				if (!data) return {};
 				if (typeof data === 'string') {
 					try {
-						return JSON.parse(data as string) as Record<string, unknown>;
-					} catch (e) {
-						console.error('Error parsing settings JSON:', e);
+						return JSON.parse(data) as Partial<T>;
+					} catch {
 						return {};
 					}
 				}
-				return typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {};
+				return typeof data === 'object' && data !== null ? (data as Partial<T>) : {};
 			};
 
 			if (dataToUse) {
-				const navigationSettings = safeParse(dataToUse.navigationSettings);
-				const dashboardSettings = safeParse(dataToUse.dashboardSettings);
-				const customerBookSettings = safeParse(dataToUse.customerBookSettings);
-				const roleManagementSettings = safeParse(dataToUse.roleManagementSettings);
+				const navigationSettings = safeParse<SetupData['navigationSettings']>(dataToUse.navigationSettings);
+				const dashboardSettings = safeParse<SetupData['dashboardSettings']>(dataToUse.dashboardSettings);
+				const customerBookSettings = safeParse<SetupData['customerBookSettings']>(dataToUse.customerBookSettings);
+				const roleManagementSettings = safeParse<SetupData['roleManagementSettings']>(dataToUse.roleManagementSettings);
 
 				setSetupData(prev => ({
 					...prev,
@@ -335,15 +337,25 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		}
 	}, []);
 
-	// Save to localStorage whenever setupData changes
 	useEffect(() => {
 		if (typeof window !== 'undefined' && isInitialized) {
-			localStorage.setItem('peoplely-setup-data', JSON.stringify(setupData));
+			const save = () => {
+				try {
+					localStorage.setItem('peoplely-setup-data', JSON.stringify(setupData));
+				} catch {
+				}
+			};
+			if ('requestIdleCallback' in window) {
+				(window as unknown as { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(save);
+			} else {
+				setTimeout(save, 0);
+			}
 		}
 	}, [setupData, isInitialized]);
 
 	useEffect(() => {
-		const userCompanyId = user?.company?._id || user?.company?.id;
+		const c = user?.company as { _id?: string; id?: string } | undefined;
+		const userCompanyId: string | undefined = c?._id ?? c?.id;
 		if (userCompanyId && !setupData.companyId) {
 			setSetupData(prev => ({ ...prev, companyId: userCompanyId }));
 		}
