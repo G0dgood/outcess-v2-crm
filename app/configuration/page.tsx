@@ -28,14 +28,27 @@ export default function ConfigurationPage() {
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [recordToDelete, setRecordToDelete] = useState<{ id: string; name: string } | null>(null);
 
-	const { data: lineOfBusinessData, isLoading } = useGetLineOfBusinessByCompanyIdForheaderQuery(companyId, {
-		skip: !companyId
-	});
+	const { data: lineOfBusinessData, isLoading } = useGetLineOfBusinessByCompanyIdForheaderQuery(
+		companyId,
+		{
+			skip: !companyId,
+		}
+	);
 
 	const [deleteLineOfBusiness] = useDeleteLineOfBusinessMutation();
 
 	const lineOfBusinesses = useMemo(() => {
-		return lineOfBusinessData?.lineOfBusinesses || [];
+		const data = lineOfBusinessData as
+			| {
+				lineOfBusinesses?: {
+					_id: string;
+					lineOfBusinessName: string;
+					createdAt?: string;
+				}[];
+			}
+			| undefined;
+
+		return data?.lineOfBusinesses || [];
 	}, [lineOfBusinessData]);
 
 	const handleDeleteClick = (id: string, name: string) => {

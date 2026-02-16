@@ -250,7 +250,8 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 
 	useEffect(() => {
 		if (existingLineOfBusiness) {
-			const dataToUse = existingLineOfBusiness.lineOfBusiness || existingLineOfBusiness;
+			const source = existingLineOfBusiness as { lineOfBusiness?: unknown } | undefined;
+			const dataToUse = (source?.lineOfBusiness as any) || (existingLineOfBusiness as any);
 
 			const safeParse = <T,>(data: unknown): Partial<T> => {
 				if (!data) return {};
