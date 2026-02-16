@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import Input from './Input';
 import Dropdown from './Dropdown';
+import TimeInput from './TimeInput';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { Cross2Icon } from '@radix-ui/react-icons';
 
 export interface ShiftHour {
@@ -18,7 +20,7 @@ export interface ShiftHour {
 interface AddShiftHourModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onSave?: (data: ShiftHour) => void;
+	onSave?: (data: ShiftHour) => void | Promise<void>;
 	initialData?: ShiftHour | null;
 }
 
@@ -28,6 +30,8 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 	onSave,
 	initialData,
 }) => {
+	const { lineOfBusinessData } = useLineOfBusiness();
+
 	const [formData, setFormData] = useState<ShiftHour>({
 		shiftName: '',
 		shiftDays: '',
@@ -38,7 +42,22 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 
 	useEffect(() => {
 		if (isOpen && initialData) {
-			setFormData(initialData);
+			const dayOptions = [
+				{ value: 'monday-friday', label: 'Monday - Friday' },
+				{ value: 'monday-saturday', label: 'Monday - Saturday' },
+				{ value: 'monday-sunday', label: 'Monday - Sunday' },
+				{ value: 'tuesday-saturday', label: 'Tuesday - Saturday' },
+				{ value: 'custom', label: 'Custom' },
+			];
+
+			const matchedOption = dayOptions.find(
+				(option) => option.label === initialData.shiftDays || option.value === initialData.shiftDays
+			);
+
+			setFormData({
+				...initialData,
+				shiftDays: matchedOption ? matchedOption.value : initialData.shiftDays,
+			});
 		} else if (isOpen && !initialData) {
 			setFormData({
 				shiftName: '',
@@ -102,13 +121,25 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 		onClose();
 	};
 
-	const dayOptions = [
-		{ value: 'monday-friday', label: 'Monday - Friday' },
-		{ value: 'monday-saturday', label: 'Monday - Saturday' },
-		{ value: 'monday-sunday', label: 'Monday - Sunday' },
-		{ value: 'tuesday-saturday', label: 'Tuesday - Saturday' },
-		{ value: 'custom', label: 'Custom' },
-	];
+	const dayOptions = (() => {
+		const businessHours = lineOfBusinessData?.lineOfBusiness?.businessHours as
+			| { name?: string; businessDays?: string[] }[]
+			| { name?: string; businessDays?: string[] }
+			| undefined;
+
+		if (!businessHours) {
+			return [];
+		}
+
+		const list = Array.isArray(businessHours) ? businessHours : [businessHours];
+
+		return list
+			.filter((item) => item.businessDays && item.businessDays.length > 0)
+			.map((item, index) => ({
+				value: item.businessDays!.join(','),
+				label: item.name || `Business Hour ${index + 1}`,
+			}));
+	})();
 
 	if (!isOpen) return null;
 
@@ -167,21 +198,19 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 					/>
 
 					<div className="grid grid-cols-2 gap-4">
-						<Input
+						<TimeInput
 							label="Start Time"
 							placeholder="HH:MM"
 							value={formData.shiftStartTime}
 							onChange={(value) => handleInputChange('shiftStartTime')(value)}
-							type="text"
 							inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
 							required
 						/>
-						<Input
+						<TimeInput
 							label="End Time"
 							placeholder="HH:MM"
 							value={formData.shiftEndTime}
 							onChange={(value) => handleInputChange('shiftEndTime')(value)}
-							type="text"
 							inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
 							required
 						/>

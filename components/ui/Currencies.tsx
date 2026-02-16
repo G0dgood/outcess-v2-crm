@@ -30,7 +30,7 @@ const Currencies = () => {
 						Currencies
 					</h2>
 					<p
-						className="dark:text-gray-400"
+						className="dark:text-gray-400 text-[10px] md:text-[12px]"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
 						Configure your organization&apos;s currency settings on this page.
@@ -69,7 +69,7 @@ const Currencies = () => {
 						{currencies.map((currency, index) => (
 							<div
 								key={index}
-								className="border dark:border-gray-700 p-4 rounded-lg"
+								className="border dark:border-gray-700 p-4"
 								style={{
 									borderColor: 'var(--light-gray)',
 									backgroundColor: 'var(--accent-white)'

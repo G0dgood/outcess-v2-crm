@@ -4,15 +4,26 @@ import React from 'react';
 import Input from '@/components/ui/Input';
 import dynamic from 'next/dynamic';
 import { useSetup } from '@/contexts/SetupContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const KPIMetric = dynamic(() => import('@/components/KPIMetric'), {
-  ssr: false,
-  loading: () => <div className="p-6 text-sm">Loading KPI Metric...</div>
+	ssr: false,
+	loading: () => (
+		<div className="p-6 space-y-4">
+			<Skeleton className="h-4 w-32" />
+			<Skeleton className="h-8 w-full" />
+		</div>
+	)
 });
 
 const CallDisposition = dynamic(() => import('@/components/CallDisposition'), {
-  ssr: false,
-  loading: () => <div className="p-6 text-sm">Loading Call Disposition...</div>
+	ssr: false,
+	loading: () => (
+		<div className="p-6 space-y-4">
+			<Skeleton className="h-4 w-40" />
+			<Skeleton className="h-10 w-full" />
+		</div>
+	)
 });
 
 export default function DashboardPage(): React.JSX.Element {

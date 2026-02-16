@@ -31,6 +31,11 @@ export interface DeleteManyTeamMembersRequest {
     ids: string[];
 }
 
+export interface AssignShiftHourRequest {
+    shiftHourId: string;
+    teamMemberIds: string[];
+}
+
 export const teamMembersApi = createApi({
     reducerPath: 'teamMembersApi',
     baseQuery: fetchBaseQuery({ 
@@ -152,6 +157,17 @@ export const teamMembersApi = createApi({
                 } catch {}
             },
         }),
+        assignShiftHour: builder.mutation<
+            { message: string; modifiedCount: number },
+            AssignShiftHourRequest
+        >({
+            query: (body) => ({
+                url: 'api/v1/team-members/assign-shift-hour',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['TeamMembers'],
+        }),
     }),
 });
 
@@ -170,4 +186,5 @@ export const {
     useAdminResetTeamMemberPasswordByIdMutation,
     useDeleteTeamMemberMutation,
     useDeleteManyTeamMembersMutation,
+    useAssignShiftHourMutation,
 } = teamMembersApi;

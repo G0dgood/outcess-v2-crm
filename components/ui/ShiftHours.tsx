@@ -1,22 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import AddShiftHourModal, { ShiftHour } from './AddShiftHourModal';
+import AssignShiftHourModal from './AssignShiftHourModal';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useUpsertShiftHourMutation } from '@/store/services/lineOfBusinessApi';
+import { toastError, toastSuccess } from '@/utils/toastWithSound';
 
 const ShiftHours = () => {
-	const [shiftHours, setShiftHours] = useState<ShiftHour[]>([
-		{
-			id: '1',
-			shiftName: 'Morning Shift',
-			shiftDays: 'Monday - Friday',
-			shiftStartTime: '11:00 AM',
-			shiftEndTime: '05:00 PM',
-			noOfUsers: 3,
-		},
-	]);
+	const { selectedLineOfBusinessId, lineOfBusinessData } = useLineOfBusiness();
+
+	const [shiftHours, setShiftHours] = useState<ShiftHour[]>([]);
 	const [isAddShiftHourModalOpen, setIsAddShiftHourModalOpen] = useState(false);
 	const [selectedShiftHour, setSelectedShiftHour] = useState<ShiftHour | null>(null);
+	const [assignModalOpen, setAssignModalOpen] = useState(false);
+	const [assignShift, setAssignShift] = useState<ShiftHour | null>(null);
 
 	const formatTime = (time: string): string => {
 		if (!time) return '';
@@ -27,6 +26,66 @@ const ShiftHours = () => {
 		const displayHour = hour % 12 || 12;
 		return `${displayHour}:${minutes} ${ampm}`;
 	};
+
+	const [shiftDayLabels, setShiftDayLabels] = useState<{ [key: string]: string }>({});
+
+	const [upsertShiftHour] = useUpsertShiftHourMutation();
+
+	useEffect(() => {
+		const businessHours = lineOfBusinessData?.lineOfBusiness?.businessHours as
+			| { name?: string; businessDays?: string[] }[]
+			| { name?: string; businessDays?: string[] }
+			| undefined;
+
+		if (!businessHours) {
+			return;
+		}
+
+		const list = Array.isArray(businessHours) ? businessHours : [businessHours];
+
+		const labels: { [key: string]: string } = {};
+
+		list.forEach((item, index) => {
+			if (item.businessDays && item.businessDays.length > 0) {
+				const daysKey = item.businessDays.join(',');
+				const label = item.name || `Business Hour ${index + 1}`;
+				labels[daysKey] = label;
+			}
+		});
+
+		setShiftDayLabels(labels);
+	}, [lineOfBusinessData]);
+
+	useEffect(() => {
+		const existing = lineOfBusinessData?.lineOfBusiness?.shiftHours as
+			| {
+				id?: string;
+				shiftName: string;
+				shiftDaysKey: string;
+				shiftStartTime: string;
+				shiftEndTime: string;
+				noOfUsers: number;
+			}[]
+			| undefined;
+
+		if (!existing) {
+			setShiftHours([]);
+			return;
+		}
+
+		const list = Array.isArray(existing) ? existing : [existing];
+
+		const mapped: ShiftHour[] = list.map((item) => ({
+			id: item.id,
+			shiftName: item.shiftName,
+			shiftDays: item.shiftDaysKey,
+			shiftStartTime: item.shiftStartTime,
+			shiftEndTime: item.shiftEndTime,
+			noOfUsers: item.noOfUsers,
+		}));
+
+		setShiftHours(mapped);
+	}, [lineOfBusinessData]);
 
 	return (
 		<div>
@@ -39,7 +98,7 @@ const ShiftHours = () => {
 						Shift Hour
 					</h2>
 					<p
-						className="dark:text-gray-400"
+						className="dark:text-gray-400 text-[10px] md:text-[12px]"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
 						Manage employee schedules with ease using shift hours.
@@ -102,6 +161,12 @@ const ShiftHours = () => {
 								>
 									No of Users
 								</th>
+								<th
+									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Actions
+								</th>
 							</tr>
 						</thead>
 						<tbody
@@ -144,19 +209,31 @@ const ShiftHours = () => {
 											className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
 											style={{ color: 'var(--text-primary)' }}
 										>
-											{shift.shiftDays}
+											{shiftDayLabels[shift.shiftDays] || shift.shiftDays}
 										</td>
 										<td
 											className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
 											style={{ color: 'var(--text-primary)' }}
 										>
-											{shift.shiftStartTime} - {shift.shiftEndTime}
+											{formatTime(shift.shiftStartTime)} - {formatTime(shift.shiftEndTime)}
 										</td>
 										<td
 											className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											{shift.noOfUsers}
+										</td>
+										<td className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px]">
+											<Button
+												variant="secondary"
+												size="sm"
+												onClick={() => {
+													setAssignShift(shift);
+													setAssignModalOpen(true);
+												}}
+											>
+												Add Team Members
+											</Button>
 										</td>
 									</tr>
 								))
@@ -166,31 +243,75 @@ const ShiftHours = () => {
 				</div>
 			</div>
 
-			{/* Add/Edit Shift Hour Modal */}
 			<AddShiftHourModal
 				isOpen={isAddShiftHourModalOpen}
 				onClose={() => {
 					setIsAddShiftHourModalOpen(false);
 					setSelectedShiftHour(null);
 				}}
-				onSave={(data) => {
-					if (selectedShiftHour) {
-						// Update existing shift hour
-						setShiftHours(prev => prev.map(s => s.id === selectedShiftHour.id ? { ...data, id: selectedShiftHour.id } : s));
-					} else {
-						// Add new shift hour
-						const newShift = {
-							...data,
-							id: Date.now().toString(),
-							shiftStartTime: formatTime(data.shiftStartTime),
-							shiftEndTime: formatTime(data.shiftEndTime),
-						};
-						setShiftHours(prev => [...prev, newShift]);
+				onSave={async (data) => {
+					if (!selectedLineOfBusinessId) {
+						toastError('No line of business selected');
+						setIsAddShiftHourModalOpen(false);
+						setSelectedShiftHour(null);
+						return;
 					}
+
+					const payload = {
+						id: selectedShiftHour?.id,
+						shiftName: data.shiftName,
+						shiftDaysKey: data.shiftDays,
+						shiftStartTime: data.shiftStartTime,
+						shiftEndTime: data.shiftEndTime,
+						noOfUsers: data.noOfUsers,
+					};
+
+					try {
+						const result = await upsertShiftHour({
+							id: selectedLineOfBusinessId,
+							data: payload,
+						}).unwrap();
+
+						const mapped = result.shiftHours.map((item) => ({
+							id: item.id,
+							shiftName: item.shiftName,
+							shiftDays: item.shiftDaysKey,
+							shiftStartTime: item.shiftStartTime,
+							shiftEndTime: item.shiftEndTime,
+							noOfUsers: item.noOfUsers,
+						}));
+
+						setShiftHours(mapped);
+
+						toastSuccess(selectedShiftHour ? 'Shift hour updated successfully' : 'Shift hour created successfully');
+					} catch (error) {
+						const err = error as {
+							data?: { message?: string; error?: string };
+							error?: string;
+							message?: string;
+						};
+						const message =
+							err?.data?.error ||
+							err?.data?.message ||
+							err?.error ||
+							err?.message ||
+							'Error saving shift hour';
+						toastError(message);
+					}
+
 					setIsAddShiftHourModalOpen(false);
 					setSelectedShiftHour(null);
 				}}
 				initialData={selectedShiftHour}
+			/>
+			<AssignShiftHourModal
+				isOpen={assignModalOpen}
+				onClose={() => {
+					setAssignModalOpen(false);
+					setAssignShift(null);
+				}}
+				shiftHourId={assignShift?.id || null}
+				shiftName={assignShift?.shiftName || ''}
 			/>
 		</div>
 	);
