@@ -13,13 +13,13 @@ import PageHeading from '@/components/ui/PageHeading';
 import { Pencil1Icon, TrashIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import AddUserModal from '@/components/ui/AddUserModal';
 import DeleteUserModal from '@/components/ui/DeleteUserModal';
-import { Modal } from '@/components/ui/Modal';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { toast } from 'sonner';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useSocket } from '@/contexts/SocketContext';
 import SelectedUsersDrawerContent from './SelectedUsersDrawerContent';
+import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
 
 interface User {
 	id: string;
@@ -35,12 +35,17 @@ interface User {
 		color?: string;
 		reason?: string;
 	};
+	shiftHour?: {
+		shiftHourId?: string;
+		title?: string;
+	};
 }
 
 interface StatusPayload {
 	status: string;
 	color?: string;
 	reason?: string;
+	statusReason?: string;
 }
 
 interface TeamMemberStatusUpdatePayload {
@@ -65,6 +70,11 @@ interface ApiTeamMember {
 	phone?: string;
 	role?: string | { roleName?: string; name?: string };
 	status?: string | StatusPayload;
+	statusReason?: string;
+	shiftHour?: {
+		shiftHourId?: string;
+		title?: string;
+	};
 	loginStatus?: string;
 }
 
@@ -80,7 +90,7 @@ const UsersPage: React.FC = () => {
 	const canEdit = canAccess('teamMembers', 'edit');
 	const canDelete = canAccess('teamMembers', 'delete');
 
-	console.log('lineOfBusinessData---->', lineOfBusinessData);
+	console.log('teamMembersResponse---->', teamMembersResponse);
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
@@ -94,7 +104,7 @@ const UsersPage: React.FC = () => {
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
 	const [showInfoBanner, setShowInfoBanner] = useState(true);
 	const [users, setUsers] = useState<User[]>([]);
-	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Login Status', 'Actions'];
+	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Shift Hour', 'Login Status', 'Actions'];
 	const totalColumns = tableHeaders.length + 1;
 
 	useEffect(() => {
@@ -103,7 +113,10 @@ const UsersPage: React.FC = () => {
 				console.log("Status Update (Users Page):", payload);
 				const newStatus = typeof payload.status === 'object' ? payload.status.status : payload.status;
 				const newColor = typeof payload.status === 'object' ? payload.status.color : undefined;
-				const newReason = typeof payload.status === 'object' ? payload.status.reason : undefined;
+				const newReason =
+					typeof payload.status === 'object'
+						? payload.status.statusReason || payload.status.reason
+						: undefined;
 
 				setUsers((prevUsers) =>
 					prevUsers.map((user) =>
@@ -139,8 +152,7 @@ const UsersPage: React.FC = () => {
 
 	useEffect(() => {
 		if (teamMembersResponse) {
-			// Handle different response structures
-			const rawMembers = teamMembersResponse.data || teamMembersResponse.teamMembers || teamMembersResponse || [];
+			const rawMembers = teamMembersResponse.teamMembers || teamMembersResponse.data || teamMembersResponse || [];
 			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
 
 			const mappedUsers = membersList.map((member: unknown) => {
@@ -150,22 +162,24 @@ const UsersPage: React.FC = () => {
 				const lastName = lastNameParts.join(' ');
 
 				let loginStatus = 'Logged Out';
-				let statusObj = undefined;
+				let statusObj: { status: string; color?: string; reason?: string } | undefined;
 
 				if (m.status) {
 					if (typeof m.status === 'object') {
-						loginStatus = m.status.status || m.loginStatus || 'Logged Out';
+						const statusText = m.status.status || m.loginStatus || 'Logged Out';
+						const reasonText = m.status.statusReason || m.status.reason || m.statusReason;
+						loginStatus = statusText;
 						statusObj = {
-							status: m.status.status,
+							status: statusText,
 							color: m.status.color,
-							reason: m.status.reason
+							reason: reasonText,
 						};
 					} else if (typeof m.status === 'string') {
 						loginStatus = m.status;
 						statusObj = {
 							status: m.status,
 							color: undefined,
-							reason: undefined
+							reason: m.statusReason,
 						};
 					}
 				} else {
@@ -179,9 +193,18 @@ const UsersPage: React.FC = () => {
 					lastName: m?.lastName || lastName || '',
 					email: m?.email || '',
 					phone: m?.phone || '',
-					role: typeof m.role === 'object' ? (m?.role?.roleName || m.role?.name || '') : (m.role || 'Agent'),
-					loginStatus: loginStatus,
+					role:
+						typeof m.role === 'object'
+							? (m?.role?.roleName || m.role?.name || '')
+							: (m.role || 'Agent'),
+					loginStatus,
 					status: statusObj,
+					shiftHour: m.shiftHour
+						? {
+							shiftHourId: m.shiftHour.shiftHourId,
+							title: m.shiftHour.title,
+						}
+						: undefined,
 				};
 			});
 			setUsers(mappedUsers);
@@ -473,6 +496,12 @@ const UsersPage: React.FC = () => {
 										{user.role}
 									</td>
 									<td
+										className="dark:text-gray-100 text-xs md:text-[12px]"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{user.shiftHour?.title ? user.shiftHour.title : 'No shift assigned'}
+									</td>
+									<td
 										className="dark:text-gray-100 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
 										style={{ color: 'var(--text-primary)' }}
 										onClick={() => setStatusModalUser(user)}
@@ -585,78 +614,12 @@ const UsersPage: React.FC = () => {
 				</div>
 			)}
 
-			<Modal
+			<StatusDetailsModal
 				isOpen={!!statusModalUser}
 				onClose={() => setStatusModalUser(null)}
-				title="Status Details"
-				size="sm"
-			>
-				{statusModalUser && (
-					<div className="space-y-6 pt-2">
-						<div
-							className="flex items-center justify-between p-4 rounded-xl border dark:border-gray-700"
-							style={{
-								backgroundColor: 'var(--bg-primary)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
-							<span
-								className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								Current Status
-							</span>
-							<div className="flex items-center gap-3">
-								{(statusModalUser.status?.color || statusModalUser.loginStatus === 'Logged In') && (
-									<span
-										className="w-3 h-3 rounded-full shadow-sm ring-2 ring-offset-2 dark:ring-offset-gray-900 ring-transparent"
-										style={{ backgroundColor: statusModalUser.status?.color || '#22C55E' }}
-									/>
-								)}
-								<span
-									className="font-semibold text-base dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									{statusModalUser.loginStatus}
-								</span>
-							</div>
-						</div>
-
-						<div className="space-y-2">
-							<span
-								className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								Reason
-							</span>
-							<div
-								className="p-4 rounded-xl border min-h-20 text-[10px] md:text-[12px] leading-relaxed dark:border-gray-700"
-								style={{
-									backgroundColor: 'var(--bg-primary)',
-									borderColor: 'var(--light-gray)',
-									color: 'var(--text-primary)'
-								}}
-							>
-								{statusModalUser.status?.reason ? (
-									statusModalUser.status.reason
-								) : (
-									<span className="italic opacity-60">No reason provided</span>
-								)}
-							</div>
-						</div>
-
-						<div className="flex justify-end pt-2">
-							<Button
-								variant="secondary"
-								onClick={() => setStatusModalUser(null)}
-								className="w-full sm:w-auto"
-							>
-								Close
-							</Button>
-						</div>
-					</div>
-				)}
-			</Modal>
+				loginStatus={statusModalUser?.loginStatus || ''}
+				status={statusModalUser?.status}
+			/>
 		</div>
 	);
 };

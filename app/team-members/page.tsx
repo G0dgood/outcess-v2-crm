@@ -12,8 +12,7 @@ import { useSocket } from '@/contexts/SocketContext';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
-import { Modal } from '@/components/ui/Modal';
-import Button from '@/components/ui/Button';
+import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
 
 interface TeamMember {
 	_id: string;
@@ -27,12 +26,14 @@ interface TeamMember {
 	statusColor?: string;
 	reason?: string;
 	team: string;
+	shiftHourTitle?: string;
 }
 
 interface StatusPayload {
 	status: string;
 	color?: string;
 	reason?: string;
+	statusReason?: string;
 }
 
 interface TeamMemberStatusUpdatePayload {
@@ -60,6 +61,11 @@ interface ApiTeamMember {
 	status?: string | StatusPayload;
 	loginStatus?: string;
 	team?: string | { name?: string };
+	statusReason?: string;
+	shiftHour?: {
+		shiftHourId?: string;
+		title?: string;
+	};
 }
 
 interface SupervisorRaw {
@@ -106,7 +112,10 @@ const TeamMembersPage: React.FC = () => {
 				console.log("Status Update:", payload);
 				const newStatus = typeof payload.status === 'object' ? payload.status.status : payload.status;
 				const newColor = typeof payload.status === 'object' ? payload.status.color : undefined;
-				const newReason = typeof payload.status === 'object' ? payload.status.reason : undefined;
+				const newReason =
+					typeof payload.status === 'object'
+						? payload.status.statusReason || payload.status.reason
+						: undefined;
 
 				setTeamMembersData((prevMembers) =>
 					prevMembers.map((member) =>
@@ -155,12 +164,14 @@ const TeamMembersPage: React.FC = () => {
 					if (typeof m.status === 'object') {
 						status = m.status.status || m.loginStatus || 'Logged Out';
 						statusColor = m.status.color;
-						reason = m.status.reason;
+						reason = m.status.statusReason || m.status.reason || m.statusReason;
 					} else if (typeof m.status === 'string') {
 						status = m.status;
+						reason = m.statusReason;
 					}
 				} else {
 					status = m.loginStatus || 'Logged Out';
+					reason = m.statusReason;
 				}
 
 				return {
@@ -174,7 +185,8 @@ const TeamMembersPage: React.FC = () => {
 					status,
 					statusColor,
 					reason,
-					team: (typeof m.team === 'object' ? m.team?.name : m.team) || 'Unassigned'
+					team: (typeof m.team === 'object' ? m.team?.name : m.team) || 'Unassigned',
+					shiftHourTitle: m.shiftHour?.title || ''
 				};
 			});
 			setTeamMembersData(mappedMembers);
@@ -195,7 +207,10 @@ const TeamMembersPage: React.FC = () => {
 
 			const newStatus = typeof updateData.status === 'object' ? updateData.status.status : updateData.status;
 			const newColor = typeof updateData.status === 'object' ? updateData.status.color : undefined;
-			const newReason = typeof updateData.status === 'object' ? updateData.status.reason : undefined;
+			const newReason =
+				typeof updateData.status === 'object'
+					? updateData.status.statusReason || updateData.status.reason
+					: undefined;
 
 			setTeamMembersData(prevMembers => prevMembers.map(member => {
 				if (member._id === updateData.teamMemberId || member.agentId === updateData.teamMemberId) {
@@ -247,6 +262,29 @@ const TeamMembersPage: React.FC = () => {
 		}
 	}, [supervisors, supervisorFilter]);
 
+	const shiftHourOptions = useMemo(() => {
+		const lobShiftHours = lineOfBusinessData?.lineOfBusiness?.shiftHours as
+			| { title?: string; shiftName?: string }[]
+			| { title?: string; shiftName?: string }
+			| undefined;
+
+		const fromLob: string[] = (() => {
+			if (!lobShiftHours) return [];
+			const list = Array.isArray(lobShiftHours) ? lobShiftHours : [lobShiftHours];
+			return list
+				.map((s) => s.title || s.shiftName || '')
+				.filter((name): name is string => Boolean(name));
+		})();
+
+		const fromMembers = Array.from(
+			new Set(teamMembersData.map((m) => m.shiftHourTitle).filter(Boolean))
+		) as string[];
+
+		const allTitles = Array.from(new Set([...fromLob, ...fromMembers]));
+
+		return allTitles.map((t) => ({ label: t, value: t }));
+	}, [lineOfBusinessData, teamMembersData]);
+
 	const filteredMembers = useMemo(() => {
 		return teamMembersData.filter(member => {
 			const matchesSearch =
@@ -255,7 +293,7 @@ const TeamMembersPage: React.FC = () => {
 				member.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
 				member.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-			const matchesShift = !shiftFilter || member.team === shiftFilter;
+			const matchesShift = !shiftFilter || member.shiftHourTitle === shiftFilter;
 
 			return matchesSearch && matchesShift;
 		});
@@ -314,9 +352,8 @@ const TeamMembersPage: React.FC = () => {
 						inputClassName="h-10 whitespace-nowrap"
 					/>
 					<Dropdown
-						label="Shift"
-						options={Array.from(new Set(teamMembersData.map(m => m.team).filter(Boolean)))
-							.map((t) => ({ label: t, value: t }))}
+						label="Shift Hour"
+						options={shiftHourOptions}
 						value={shiftFilter}
 						onChange={(val) => {
 							if (Array.isArray(val)) return;
@@ -368,7 +405,7 @@ const TeamMembersPage: React.FC = () => {
 							}}
 						>
 							<tr>
-								{['User ID', 'Full Name', 'Email', 'Phone No', 'Role', 'Supervisor', 'Logged In Status'].map((heading) => (
+								{['User ID', 'Full Name', 'Email', 'Phone No', 'Role', 'Supervisor', 'Shift Hour', 'Logged In Status'].map((heading) => (
 									<th
 										key={heading}
 										className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-300"
@@ -387,9 +424,9 @@ const TeamMembersPage: React.FC = () => {
 							}}
 						>
 							{isLoading ? (
-								<SVGLoaderFetch colSpan={7} text={''} />
+								<SVGLoaderFetch colSpan={8} text={''} />
 							) : currentMembers?.length === 0 ? (
-								<NoRecordFound colSpan={7} />
+								<NoRecordFound colSpan={8} />
 							) : (
 								currentMembers?.map((member, index) => (
 									<tr
@@ -440,6 +477,12 @@ const TeamMembersPage: React.FC = () => {
 											{member.supervisor}
 										</td>
 										<td
+											className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-400"
+											style={{ color: 'var(--text-tertiary)' }}
+										>
+											{member.shiftHourTitle || 'No shift assigned'}
+										</td>
+										<td
 											className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-100 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
 											style={{ color: 'var(--text-primary)' }}
 											onClick={() => setStatusModalMember(member)}
@@ -473,78 +516,20 @@ const TeamMembersPage: React.FC = () => {
 				</div>
 			</div>
 
-			<Modal
+			<StatusDetailsModal
 				isOpen={!!statusModalMember}
 				onClose={() => setStatusModalMember(null)}
-				title="Status Details"
-				size="sm"
-			>
-				{statusModalMember && (
-					<div className="space-y-6 pt-2">
-						<div
-							className="flex items-center justify-between p-4 rounded-xl border dark:border-gray-700"
-							style={{
-								backgroundColor: 'var(--bg-primary)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
-							<span
-								className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								Current Status
-							</span>
-							<div className="flex items-center gap-3">
-								{(statusModalMember.statusColor || statusModalMember.status === 'Logged In') && (
-									<span
-										className="w-3 h-3 rounded-full shadow-sm ring-2 ring-offset-2 dark:ring-offset-gray-900 ring-transparent"
-										style={{ backgroundColor: statusModalMember.statusColor || '#15803D' }}
-									/>
-								)}
-								<span
-									className="font-semibold text-base dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									{statusModalMember.status}
-								</span>
-							</div>
-						</div>
-
-						<div className="space-y-2">
-							<span
-								className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								Reason
-							</span>
-							<div
-								className="p-4 rounded-xl border min-h-[5rem] text-[10px] md:text-[12px] leading-relaxed dark:border-gray-700"
-								style={{
-									backgroundColor: 'var(--bg-primary)',
-									borderColor: 'var(--light-gray)',
-									color: 'var(--text-primary)'
-								}}
-							>
-								{statusModalMember.reason ? (
-									statusModalMember.reason
-								) : (
-									<span className="italic opacity-60">No reason provided</span>
-								)}
-							</div>
-						</div>
-
-						<div className="flex justify-end pt-2">
-							<Button
-								variant="secondary"
-								onClick={() => setStatusModalMember(null)}
-								className="w-full sm:w-auto"
-							>
-								Close
-							</Button>
-						</div>
-					</div>
-				)}
-			</Modal>
+				loginStatus={statusModalMember?.status || ''}
+				status={
+					statusModalMember
+						? {
+							status: statusModalMember.status,
+							color: statusModalMember.statusColor,
+							reason: statusModalMember.reason,
+						}
+						: undefined
+				}
+			/>
 		</div>
 	);
 };

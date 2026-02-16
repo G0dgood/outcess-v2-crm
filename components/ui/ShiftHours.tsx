@@ -224,16 +224,28 @@ const ShiftHours = () => {
 											{shift.noOfUsers}
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px]">
-											<Button
-												variant="secondary"
-												size="sm"
-												onClick={() => {
-													setAssignShift(shift);
-													setAssignModalOpen(true);
-												}}
-											>
-												Add Team Members
-											</Button>
+											<div className="flex items-center gap-2">
+												<Button
+													variant="secondary"
+													size="sm"
+													onClick={() => {
+														setSelectedShiftHour(shift);
+														setIsAddShiftHourModalOpen(true);
+													}}
+												>
+													Edit
+												</Button>
+												<Button
+													variant="secondary"
+													size="sm"
+													onClick={() => {
+														setAssignShift(shift);
+														setAssignModalOpen(true);
+													}}
+												>
+													Add Team Members
+												</Button>
+											</div>
 										</td>
 									</tr>
 								))

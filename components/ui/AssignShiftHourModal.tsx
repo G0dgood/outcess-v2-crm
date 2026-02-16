@@ -7,6 +7,7 @@ import Checkbox from './Checkbox';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetTeamMembersByLineOfBusinessIdQuery, useAssignShiftHourMutation } from '@/store/services/teamMembersApi';
 import { toastError, toastSuccess } from '@/utils/toastWithSound';
+import { Skeleton } from './skeleton';
 
 interface AssignShiftHourModalProps {
 	isOpen: boolean;
@@ -23,6 +24,10 @@ interface ApiTeamMember {
 	lastName?: string;
 	email?: string;
 	role?: string | { roleName?: string; name?: string };
+	shiftHour?: {
+		shiftHourId?: string;
+		title?: string;
+	};
 }
 
 const AssignShiftHourModal: React.FC<AssignShiftHourModalProps> = ({
@@ -43,20 +48,38 @@ const AssignShiftHourModal: React.FC<AssignShiftHourModalProps> = ({
 	const [assignShiftHour, { isLoading: isAssigning }] = useAssignShiftHourMutation();
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [teamMembers, setTeamMembers] = useState<ApiTeamMember[]>([]);
+	const [initializedSelection, setInitializedSelection] = useState(false);
 
 	useEffect(() => {
 		if (!isOpen) {
 			setSelectedIds(new Set());
+			setInitializedSelection(false);
 		}
 	}, [isOpen]);
 
 	useEffect(() => {
 		if (teamMembersResponse) {
-			const raw = teamMembersResponse.data || teamMembersResponse.teamMembers || teamMembersResponse || [];
+			const raw = teamMembersResponse.teamMembers || teamMembersResponse.data || teamMembersResponse || [];
 			const list = Array.isArray(raw) ? raw : raw.docs || [];
 			setTeamMembers(list as ApiTeamMember[]);
 		}
 	}, [teamMembersResponse]);
+
+	useEffect(() => {
+		if (!isOpen || !shiftHourId || initializedSelection || teamMembers.length === 0) {
+			return;
+		}
+
+		const preselectedIds = teamMembers
+			.filter((member) => member.shiftHour?.shiftHourId === shiftHourId)
+			.map((member) => member._id || member.id)
+			.filter((id): id is string => Boolean(id));
+
+		if (preselectedIds.length > 0) {
+			setSelectedIds(new Set(preselectedIds));
+		}
+		setInitializedSelection(true);
+	}, [isOpen, shiftHourId, teamMembers, initializedSelection]);
 
 	const toggleSelect = (id: string) => {
 		setSelectedIds((prev) => {
@@ -120,23 +143,49 @@ const AssignShiftHourModal: React.FC<AssignShiftHourModalProps> = ({
 					Select team members to assign to this shift hour.
 				</p>
 
-				<div className="border dark:border-gray-700 rounded-md max-h-[320px] overflow-y-auto">
-					{isLoading ? (
-						<div className="p-4 text-sm dark:text-gray-400">Loading team members...</div>
-					) : teamMembers.length === 0 ? (
-						<div className="p-4 text-sm dark:text-gray-400">No team members found for this line of business.</div>
-					) : (
-						<table className="min-w-full text-[12px]">
-							<thead className="bg-gray-50 dark:bg-gray-800">
+				<div className="border dark:border-gray-700 max-h-[320px] overflow-y-auto">
+					<table className="min-w-full text-[12px]">
+						<thead className="bg-gray-50 dark:bg-gray-800">
+							<tr>
+								<th className="px-4 py-2 text-left">Select</th>
+								<th className="px-4 py-2 text-left">Name</th>
+								<th className="px-4 py-2 text-left">Email</th>
+								<th className="px-4 py-2 text-left">Role</th>
+								<th className="px-4 py-2 text-left">Current Shift</th>
+							</tr>
+						</thead>
+						<tbody>
+							{isLoading ? (
+								Array.from({ length: 5 }).map((_, index) => (
+									<tr key={index} className="border-t dark:border-gray-700">
+										<td className="px-4 py-2">
+											<Skeleton className="h-4 w-4" />
+										</td>
+										<td className="px-4 py-2">
+											<Skeleton className="h-4 w-32" />
+										</td>
+										<td className="px-4 py-2">
+											<Skeleton className="h-4 w-40" />
+										</td>
+										<td className="px-4 py-2">
+											<Skeleton className="h-4 w-24" />
+										</td>
+										<td className="px-4 py-2">
+											<Skeleton className="h-4 w-32" />
+										</td>
+									</tr>
+								))
+							) : teamMembers.length === 0 ? (
 								<tr>
-									<th className="px-4 py-2 text-left">Select</th>
-									<th className="px-4 py-2 text-left">Name</th>
-									<th className="px-4 py-2 text-left">Email</th>
-									<th className="px-4 py-2 text-left">Role</th>
+									<td
+										colSpan={5}
+										className="px-4 py-6 text-center text-sm dark:text-gray-400"
+									>
+										No team members found for this line of business.
+									</td>
 								</tr>
-							</thead>
-							<tbody>
-								{teamMembers.map((member) => {
+							) : (
+								teamMembers.map((member) => {
 									const id = member._id || member.id || '';
 									const fullName =
 										member.name ||
@@ -155,18 +204,23 @@ const AssignShiftHourModal: React.FC<AssignShiftHourModalProps> = ({
 											<td className="px-4 py-2">
 												<Checkbox
 													checked={selectedIds.has(id)}
-													onChange={(checked) => toggleSelect(id)}
+													onChange={() => toggleSelect(id)}
 												/>
 											</td>
 											<td className="px-4 py-2">{fullName || 'Unnamed user'}</td>
 											<td className="px-4 py-2">{member.email || '-'}</td>
 											<td className="px-4 py-2">{role || '-'}</td>
+											<td className="px-4 py-2 text-xs">
+												{member.shiftHour?.title
+													? `Assigned: ${member.shiftHour.title}`
+													: 'No shift assigned'}
+											</td>
 										</tr>
 									);
-								})}
-							</tbody>
-						</table>
-					)}
+								})
+							)}
+						</tbody>
+					</table>
 				</div>
 
 				<div className="flex justify-end gap-3 pt-4">
@@ -193,4 +247,3 @@ const AssignShiftHourModal: React.FC<AssignShiftHourModalProps> = ({
 };
 
 export default AssignShiftHourModal;
-
