@@ -16,7 +16,9 @@ export interface Role {
     _id: string;
     id?: string;
     roleName: string;
+    supervisorTitle?: string;
     description: string;
+    isSupervisor?: boolean;
     companyId: string;
     lineOfBusinessId?: string;
     permissions: RolePermission[];
@@ -42,6 +44,15 @@ export interface CreateRoleResponse {
 export interface GetRolesResponse {
     message?: string;
     roles: Role[];
+}
+
+export interface CreateSupervisorRoleRequest {
+    roleName: string;
+    supervisorTitle: string;
+    description: string;
+    isSupervisor: boolean;
+    companyId: string;
+    lineOfBusinessId?: string;
 }
 
 export interface PermissionTemplate {
@@ -117,6 +128,14 @@ export const roleApi = createApi({
             }),
             invalidatesTags: ['Roles'],
         }),
+        createSupervisorRole: builder.mutation<CreateRoleResponse, CreateSupervisorRoleRequest>({
+            query: (data) => ({
+                url: 'api/v1/roles/supervisors',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['Roles'],
+        }),
     }),
 });
 
@@ -127,5 +146,6 @@ export const {
     useGetPermissionWithPrivilegeQuery,
     useUpdateRoleMutation, 
     useDeleteRoleMutation,
-    useDeleteRolesByLineOfBusinessMutation
+    useDeleteRolesByLineOfBusinessMutation,
+    useCreateSupervisorRoleMutation
 } = roleApi;

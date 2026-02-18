@@ -6,12 +6,12 @@ import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
 import PaginationSummary from '@/components/ui/PaginationSummary';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetTeamMembersBySupervisorIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
 import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
 import { useSocket } from '@/contexts/SocketContext';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
 import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
 
 interface TeamMember {
@@ -68,14 +68,6 @@ interface ApiTeamMember {
 	};
 }
 
-interface SupervisorRaw {
-	_id?: string;
-	id?: string;
-	name?: string;
-	firstName?: string;
-	lastName?: string;
-}
-
 interface SupervisorOption {
 	label: string;
 	value: string;
@@ -83,6 +75,7 @@ interface SupervisorOption {
 
 const TeamMembersPage: React.FC = () => {
 	const { lineOfBusinessData } = useLineOfBusiness();
+	const { user } = useUserInfo();
 	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
 	const [supervisorFilter, setSupervisorFilter] = useState('');
 
@@ -90,9 +83,18 @@ const TeamMembersPage: React.FC = () => {
 		skip: !supervisorFilter
 	});
 
-	const { data: supervisorsData } = useGetSupervisorsByLineOfBusinessIdQuery(lobId || '', {
-		skip: !lobId
-	});
+	const companyId =
+		(user?.company as { _id?: string; id?: string } | undefined)?._id ||
+		(user?.company as { _id?: string; id?: string } | undefined)?.id ||
+		user?.companyId ||
+		'';
+
+	const { data: supervisorsData } = useGetSupervisorsByLineOfBusinessIdQuery(
+		{ companyId, lineOfBusinessId: lobId || '' },
+		{
+			skip: !companyId || !lobId
+		}
+	);
 	const { socket } = useSocket();
 	const { canAccess } = usePrivilege();
 	const canAccessModule = canAccess('teamMembers', 'view');
@@ -242,18 +244,26 @@ const TeamMembersPage: React.FC = () => {
 	}, [socket, supervisorId, refetch]);
 
 	const supervisors = useMemo(() => {
-		if (!supervisorsData) return [];
-		const rawSupervisors = supervisorsData.teamMembers || supervisorsData.data || (Array.isArray(supervisorsData) ? supervisorsData : []);
+		if (!supervisorsData || !Array.isArray(supervisorsData.roles)) return [];
 
-		const uniqueSupervisors = rawSupervisors.map((s: SupervisorRaw) => ({
-			label: s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim(),
-			value: s._id || s.id || ''
-		})).filter((s: SupervisorOption) => s.label && s.value);
+		const rawRoles = supervisorsData.roles as {
+			_id?: string;
+			id?: string;
+			roleName?: string;
+			supervisorTitle?: string;
+		}[];
 
-		const uniqueMap = new Map();
-		uniqueSupervisors.forEach((s: SupervisorOption) => uniqueMap.set(s.value, s));
+		const options: SupervisorOption[] = rawRoles
+			.map((role) => ({
+				label: (role.supervisorTitle || role.roleName || '').trim(),
+				value: role._id || role.id || ''
+			}))
+			.filter((s) => s.label && s.value);
 
-		return Array.from(uniqueMap.values()) as SupervisorOption[];
+		const uniqueMap = new Map<string, SupervisorOption>();
+		options.forEach((s) => uniqueMap.set(s.value, s));
+
+		return Array.from(uniqueMap.values());
 	}, [supervisorsData]);
 
 	useEffect(() => {

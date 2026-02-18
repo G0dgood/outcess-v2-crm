@@ -16,7 +16,8 @@ export type ModuleId =
 	| 'report'
 	| 'systemSetting'
 	| 'auditLog'
-	| 'teamMembers';
+	| 'teamMembers'
+	| 'lobPlan';
 
 export type PermissionAction =
 	| 'view'

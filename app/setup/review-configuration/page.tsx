@@ -86,13 +86,13 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 					className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
 					style={{ color: 'var(--text-secondary)' }}
 				>
-					Review Your CRM Configuration
+					Review Your LOB Plan
 				</h1>
 				<p
 					className="font-lato not-italic font-normal text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
-					Please review all your selections before submitting for approval
+					Please review all your selections before submitting your LOB plan for approval
 				</p>
 			</div>
 

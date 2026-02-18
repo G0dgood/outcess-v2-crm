@@ -43,12 +43,12 @@ const StatusDetailsModal: React.FC<StatusDetailsModalProps> = ({
 					<div className="flex items-center gap-3">
 						{(status?.color || loginStatus === 'Logged In') && (
 							<span
-								className="w-3 h-3 rounded-full shadow-sm ring-2 ring-offset-2 dark:ring-offset-gray-900 ring-transparent"
+								className="w-2 h-2 rounded-full shadow-sm ring-2 ring-offset-2 dark:ring-offset-gray-900 ring-transparent"
 								style={{ backgroundColor: status?.color || '#22C55E' }}
 							/>
 						)}
 						<span
-							className="font-semibold text-base dark:text-gray-100"
+							className="font-semibold text-[10px] md:text-[12px] dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							{loginStatus}

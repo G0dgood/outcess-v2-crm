@@ -9,6 +9,7 @@ import ReviewConfigurationPage from './review-configuration/page';
 import { useSetup } from '@/contexts/SetupContext';
 import { useLazyGetUserByIdQuery } from '@/store/services/authApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
+import { extractErrorMessage, ApiError } from '@/utils/apiError';
 
 export default function Setup() {
 	const { currentStep } = useSetup();
@@ -31,7 +32,13 @@ export default function Setup() {
 						localStorage.setItem('peoplely-user', JSON.stringify(normalizedUser));
 					}
 				} catch (error) {
-					console.error('Failed to fetch user data:', error);
+					const apiError = error as ApiError;
+					const message = extractErrorMessage(apiError, 'Failed to fetch user data');
+					console.error('Failed to fetch user data:', {
+						status: apiError.status,
+						data: apiError.data,
+						message,
+					});
 				}
 			}
 		};

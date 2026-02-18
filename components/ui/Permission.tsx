@@ -8,9 +8,14 @@ import PageHeading from './PageHeading';
 import SubPageHeading from './SubPageHeading';
 import Button from './Button';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetPermissionWithPrivilegeQuery, useUpdateRoleMutation, RolePermission, Role } from '@/store/services/roleApi';
+import { useGetPermissionWithPrivilegeQuery, useUpdateRoleMutation, RolePermission, Role as ApiRole, Role } from '@/store/services/roleApi';
 import { toastError, toastSuccess } from '@/utils/toastWithSound';
 import PermissionSkeleton from '@/components/skeletons/PermissionSkeleton';
+
+type PermissionRole = ApiRole & {
+	supervisorTitle?: string;
+	isSupervisor?: boolean;
+};
 
 interface PermissionItem {
 	id: string;
@@ -50,17 +55,17 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 	});
 
 	// State now holds the roles with their permissions
-	const [rolesPermissions, setRolesPermissions] = useState<Role[]>([]);
-	const [originalRolesPermissions, setOriginalRolesPermissions] = useState<Role[]>([]);
+	const [rolesPermissions, setRolesPermissions] = useState<PermissionRole[]>([]);
+	const [originalRolesPermissions, setOriginalRolesPermissions] = useState<PermissionRole[]>([]);
 
 	useEffect(() => {
 		if (permissionData && permissionData.roles) {
-			setRolesPermissions(permissionData.roles);
+			setRolesPermissions(permissionData.roles as PermissionRole[]);
 			try {
-				const cloned = JSON.parse(JSON.stringify(permissionData.roles)) as Role[];
+				const cloned = JSON.parse(JSON.stringify(permissionData.roles)) as PermissionRole[];
 				setOriginalRolesPermissions(cloned);
 			} catch {
-				setOriginalRolesPermissions(permissionData.roles);
+				setOriginalRolesPermissions(permissionData.roles as PermissionRole[]);
 			}
 		} else if (permissionData) {
 		}
@@ -69,7 +74,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 	const [updateRole] = useUpdateRoleMutation();
 	const [updatingRoleIds, setUpdatingRoleIds] = useState<string[]>([]);
 
-	const handleSaveRole = async (role: Role) => {
+	const handleSaveRole = async (role: PermissionRole) => {
 		const roleId = role._id || role.id!;
 		if (updatingRoleIds.includes(roleId)) return;
 
@@ -164,7 +169,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 
 	const handlePermissionChange = (roleId: string, permissionId: string, type: 'view' | 'edit' | 'delete' | 'create', value: boolean) => {
 		// Check access first
-		const role = rolesPermissions.find(r => (r._id || r.id) === roleId);
+		const role = rolesPermissions?.find(r => (r._id || r.id) === roleId);
 		if (role) {
 			const permission = role.permissions.find(p => p.id === permissionId);
 			if (permission && !permission.access) {
@@ -244,7 +249,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 										className="font-medium text-[12px] md:text-[14px] dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
-										{role.roleName}
+										{role.supervisorTitle ? role.supervisorTitle : role.roleName}
 									</span>
 								</div>
 

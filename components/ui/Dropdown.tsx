@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 interface DropdownOption {
 	value: string;
 	label: string;
+	status?: string;
 }
 
 interface DropdownProps {
@@ -17,6 +18,8 @@ interface DropdownProps {
 	className?: string;
 	inputClassName?: string;
 	multiple?: boolean;
+	rightElement?: React.ReactNode;
+	renderOptionRight?: (option: DropdownOption) => React.ReactNode;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -31,6 +34,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
 	className = '',
 	inputClassName = '',
 	multiple = false,
+	rightElement,
+	renderOptionRight,
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [mounted, setMounted] = useState(false);
@@ -137,24 +142,31 @@ export const Dropdown: React.FC<DropdownProps> = ({
 					aria-haspopup="listbox"
 					aria-expanded={isOpen}
 				>
-					<span className={`dropdown-text ${(isMultiple ? selectedValues.length === 0 : !selectedOption) ? 'placeholder' : ''}`}>
-						{getDisplayText()}
+					<span className="flex items-center justify-between w-full gap-2">
+						<span className={`dropdown-text ${(isMultiple ? selectedValues.length === 0 : !selectedOption) ? 'placeholder' : ''}`}>
+							{getDisplayText()}
+						</span>
+						{rightElement && (
+							<span className="flex items-center">
+								{rightElement}
+							</span>
+						)}
+						<svg
+							className={`dropdown-chevron ${isOpen ? 'open' : ''}`}
+							width="12"
+							height="12"
+							viewBox="0 0 12 12"
+							fill="none"
+						>
+							<path
+								d="M3 4.5L6 7.5L9 4.5"
+								stroke="currentColor"
+								strokeWidth="1.5"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							/>
+						</svg>
 					</span>
-					<svg
-						className={`dropdown-chevron ${isOpen ? 'open' : ''}`}
-						width="12"
-						height="12"
-						viewBox="0 0 12 12"
-						fill="none"
-					>
-						<path
-							d="M3 4.5L6 7.5L9 4.5"
-							stroke="currentColor"
-							strokeWidth="1.5"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-						/>
-					</svg>
 				</button>
 
 				{isOpen && (
@@ -185,7 +197,12 @@ export const Dropdown: React.FC<DropdownProps> = ({
 										type="button"
 										className={`dropdown-option ${isSelected(option.value) ? 'selected' : ''} ${isMultiple ? 'dropdown-option-multiple' : ''}`}
 										onClick={() => handleSelect(option.value)}
-										style={isMultiple ? { display: 'flex', alignItems: 'center', gap: '8px' } : undefined}
+										style={{
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'space-between',
+											gap: '8px',
+										}}
 									>
 										{isMultiple && (
 											<span className="dropdown-checkbox" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
@@ -202,6 +219,11 @@ export const Dropdown: React.FC<DropdownProps> = ({
 											</span>
 										)}
 										<span style={{ flex: 1, textAlign: 'left' }}>{option.label}</span>
+										{renderOptionRight && !isMultiple && (
+											<span style={{ marginLeft: '8px', display: 'flex', alignItems: 'center' }}>
+												{renderOptionRight(option)}
+											</span>
+										)}
 									</button>
 								))
 							)}

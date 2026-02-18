@@ -7,6 +7,7 @@ import { useRouter } from '@bprogress/next/app';
 import Icon from './Icon';
 import Dropdown from './Dropdown';
 import UserDropdown from './UserDropdown';
+import StatusBadge from './StatusBadge';
 import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
 import NotificationDropdown from './NotificationDropdown';
 import NotificationsModal from './NotificationsModal';
@@ -67,7 +68,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket, socket } = useSocket();
 	const [logoutApi] = useLogoutMutation();
 	const [teamMemberLogoutApi] = useTeamMemberLogoutMutation();
-	const { isAdmin } = usePrivilege();
+	const { isAdmin, canAccess } = usePrivilege();
 
 	// Get user from Redux store
 	const reduxUser = useSelector((state: { auth: { user: User | null } }) => state.auth.user);
@@ -109,18 +110,20 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const [markAsRead] = useMarkNotificationAsReadMutation();
 	const notifications = React.useMemo(() => notificationsData?.notifications || [], [notificationsData]);
 
-	const [lobOptions, setLobOptions] = useState<{ value: string; label: string; }[]>([]);
+	const [lobOptions, setLobOptions] = useState<{ value: string; label: string; status?: string }[]>([]);
 	const safeUserName = String(displayUser?.name ?? '');
 
-	const currentLOB = selectedLOBData?.lineOfBusiness;
+	const currentLOB = selectedLOBData?.lineOfBusiness || selectedLOBData;
 	const headerLogo = currentLOB?.logo;
 	const headerName = currentLOB?.companyName || 'Peoplely';
 
 	useEffect(() => {
-		if (lineOfBusinessData && lineOfBusinessData.lineOfBusinesses) {
-			const options = lineOfBusinessData.lineOfBusinesses.map((lob: { _id: string; lineOfBusinessName: string }) => ({
+		const data = lineOfBusinessData as { lineOfBusinesses?: { _id: string; lineOfBusinessName: string; status?: string }[] } | undefined;
+		if (data && Array.isArray(data.lineOfBusinesses)) {
+			const options = data.lineOfBusinesses.map((lob) => ({
 				value: lob?._id,
-				label: lob?.lineOfBusinessName
+				label: lob?.lineOfBusinessName,
+				status: lob?.status,
 			}));
 			setLobOptions(options);
 
@@ -130,6 +133,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 			}
 		}
 	}, [lineOfBusinessData, selectedLineOfBusinessId, setSelectedLineOfBusinessId]);
+
+	const currentStatus = (currentLOB as { status?: string } | undefined)?.status || '';
+	const isInReview = currentStatus.toLowerCase() === 'in review';
 
 	// Socket integration for Line of Business updates
 	useEffect(() => {
@@ -354,20 +360,27 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					{/* Dark/Light Mode Toggle */}
 					<ThemeToggle />
 
-					{/* LOB Dropdown - Only for Administrator */}
-					{isAdmin && (
+					{/* LOB Dropdown - Only for Administrator or users with Dashboard Edit permission */}
+					{(isAdmin || canAccess('dashboard', 'edit')) && (
 						<Dropdown
 							label=""
 							value={selectedLOBData?.lineOfBusiness?._id || selectedLOBData?._id || ''}
 							onChange={(value) => {
 								const stringValue = Array.isArray(value) ? value[0] : value;
-								if (stringValue) {
-									setSelectedLineOfBusinessId(stringValue);
+								if (!stringValue) return;
+								const target = lobOptions.find(o => o.value === stringValue);
+								const targetStatus = target?.status?.toLowerCase() || '';
+								if (targetStatus === 'in review') {
+									return;
 								}
+								setSelectedLineOfBusinessId(stringValue);
 							}}
 							options={lobOptions}
 							placeholder={isLobLoading ? "Loading..." : "Select Business"}
-							className="min-w-[150px]"
+							className="min-w-[200px]"
+							renderOptionRight={(option) => (
+								<StatusBadge status={option.status || 'In Review'} />
+							)}
 						/>
 					)}
 

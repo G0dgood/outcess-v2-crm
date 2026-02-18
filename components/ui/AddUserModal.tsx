@@ -5,7 +5,7 @@ import Input from './Input';
 import Dropdown from './Dropdown';
 import Button from './Button';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { useCreateTeamMemberMutation, useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery } from '@/store/services/teamMembersApi';
+import { useCreateTeamMemberMutation, useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
 import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
@@ -38,13 +38,11 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 		supervisorId: '',
 	});
 
-	const [fetchRoleId, setFetchRoleId] = useState<string>('');
-
 	// API Hooks
 	const { data: rolesResponse } = useGetRolesByLineOfBusinessIdQuery(lineOfBusinessId, { skip: !lineOfBusinessId });
-	const { data: supervisorsResponse } = useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery(
-		{ lineOfBusinessId, roleId: fetchRoleId || '' },
-		{ skip: !lineOfBusinessId || !fetchRoleId }
+	const { data: supervisorsResponse } = useGetSupervisorsByLineOfBusinessIdQuery(
+		{ companyId, lineOfBusinessId },
+		{ skip: !companyId || !lineOfBusinessId }
 	);
 	const [createTeamMember, { isLoading }] = useCreateTeamMemberMutation();
 
@@ -64,45 +62,63 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 				password: '123456',
 				supervisorId: '',
 			});
-			setFetchRoleId('');
 		}
 	}, [isOpen]);
 
-	// Prepare Options
 	const roleOptions = useMemo(() => {
-		if (!rolesResponse) return [];
-		const rawRoles = rolesResponse.roles || [];
-		return rawRoles.map((role: Role) => ({
+		const baseRoles = rolesResponse?.roles || [];
+		const baseOptions = baseRoles.map((role: Role) => ({
 			value: (role._id || role.id || '') as string,
-			label: (role.roleName || '') as string
+			label: (role.roleName || '') as string,
 		}));
-	}, [rolesResponse]);
+
+		if (!supervisorsResponse || !Array.isArray(supervisorsResponse.roles)) {
+			return baseOptions;
+		}
+
+		const supervisorRoles = supervisorsResponse.roles as {
+			_id?: string;
+			id?: string;
+			roleName?: string;
+			supervisorTitle?: string;
+		}[];
+
+		const supervisorOptions = supervisorRoles
+			.map((role) => ({
+				value: (role._id || role.id || '') as string,
+				label: (role.supervisorTitle || role.roleName || '') as string,
+			}))
+			.filter((opt) => opt.value && opt.label);
+
+		const existingValues = new Set(baseOptions.map((opt) => opt.value));
+		const merged = [
+			...baseOptions,
+			...supervisorOptions.filter((opt) => !existingValues.has(opt.value)),
+		];
+
+		return merged;
+	}, [rolesResponse, supervisorsResponse]);
 
 	const supervisorOptions = useMemo(() => {
-		if (!supervisorsResponse) return [];
-		const rawSupervisors = supervisorsResponse.teamMembers || supervisorsResponse.data || supervisorsResponse || [];
-		const supervisorsList = Array.isArray(rawSupervisors) ? rawSupervisors : (rawSupervisors.docs || []);
-		return supervisorsList.map((supervisor: unknown) => {
-			const s = supervisor as { _id?: string; id?: string; name?: string; firstName?: string; lastName?: string };
-			return {
-				value: (s._id || s.id || '') as string,
-				label: s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim()
-			};
-		});
+		if (!supervisorsResponse || !Array.isArray(supervisorsResponse.roles)) return [];
+		const rawRoles = supervisorsResponse.roles as {
+			_id?: string;
+			id?: string;
+			roleName?: string;
+			supervisorTitle?: string;
+		}[];
+		return rawRoles
+			.map((role) => ({
+				value: (role._id || role.id || '') as string,
+				label: (role.supervisorTitle || role.roleName || '') as string
+			}))
+			.filter((opt) => opt.value && opt.label);
 	}, [supervisorsResponse]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
 		const stringValue = Array.isArray(value) ? value[0] : value;
 		setFormData(prev => ({ ...prev, [field]: stringValue }));
 
-		if (field === 'role') {
-			const selectedRole = rolesResponse?.roles?.find((r: Role) => (r._id === stringValue || r.id === stringValue));
-			if (selectedRole?.roleName?.toLowerCase() === 'supervisor') {
-				setFetchRoleId(stringValue);
-			} else {
-				setFetchRoleId('');
-			}
-		}
 	};
 
 	const handleSave = async () => {
@@ -145,7 +161,10 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 	if (!isOpen) return null;
 
 	const selectedRoleLabel = roleOptions.find(opt => opt.value === formData.role)?.label.toLowerCase();
-	const shouldShowSupervisor = selectedRoleLabel === 'agent' || selectedRoleLabel === 'supervisor';
+	const shouldShowSupervisor =
+		selectedRoleLabel === 'agent' ||
+		selectedRoleLabel === 'supervisor' ||
+		(selectedRoleLabel || '').includes('supervisor');
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -285,4 +304,3 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 };
 
 export default AddUserModal;
-

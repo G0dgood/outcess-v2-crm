@@ -3,13 +3,14 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Roles from '@/components/ui/Roles';
+import Supervisors from '@/components/ui/Supervisors';
 import GeneralSettings from '@/components/ui/GeneralSettings';
 import CompanyDetails from '@/components/ui/CompanyDetails';
 import Status from '@/components/ui/Status';
 import Permission from '@/components/ui/Permission';
 import { usePrivilege, ModuleId } from '@/contexts/PrivilegeContext';
 
-type SettingsTab = 'settings' | 'fields' | 'status' | 'permission' | 'company-details' | 'roles';
+type SettingsTab = 'settings' | 'fields' | 'status' | 'permission' | 'company-details' | 'roles' | 'supervisors';
 
 const subModuleMapping: Record<string, ModuleId> = {
 	'settings': 'systemSetting',
@@ -17,6 +18,7 @@ const subModuleMapping: Record<string, ModuleId> = {
 	'permission': 'userManagement',
 	'company-details': 'systemSetting',
 	'roles': 'userManagement',
+	'supervisors': 'userManagement',
 };
 
 const SettingsPage: React.FC = () => {
@@ -26,7 +28,7 @@ const SettingsPage: React.FC = () => {
 
 	useEffect(() => {
 		const tab = searchParams.get('tab') as SettingsTab;
-		if (tab && ['settings', 'fields', 'status', 'permission', 'company-details', 'roles'].includes(tab)) {
+		if (tab && ['settings', 'fields', 'status', 'permission', 'company-details', 'roles', 'supervisors'].includes(tab)) {
 			setActiveTab(tab);
 		} else {
 			// Default to 'fields' if no tab is specified
@@ -47,6 +49,8 @@ const SettingsPage: React.FC = () => {
 				return <GeneralSettings />;
 			case 'roles':
 				return <Roles />;
+			case 'supervisors':
+				return <Supervisors />;
 			// case 'fields':
 			// 	return <Fields />;
 			case 'status':

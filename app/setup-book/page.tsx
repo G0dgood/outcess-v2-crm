@@ -323,17 +323,8 @@ const SetupBookPage: React.FC = () => {
 				}}
 			>
 				<div className="overflow-x-auto">
-					<table
-						className="min-w-full divide-y dark:divide-gray-700"
-						style={{ borderColor: 'var(--light-gray)' }}
-					>
-						<thead
-							className="dark:bg-gray-700 border-b dark:border-gray-700"
-							style={{
-								backgroundColor: 'var(--bg-primary)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
+					<table>
+						<thead>
 							<tr>
 								<th>
 									<Checkbox
@@ -342,36 +333,20 @@ const SetupBookPage: React.FC = () => {
 										size="medium"
 									/>
 								</th>
-								<th
-									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
+								<th>
 									Search ID
 								</th>
 								{fieldDefinitions?.map((field) => (
-									<th
-										key={field?.id}
-										className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
-										style={{ color: 'var(--text-primary)' }}
-									>
+									<th key={field?.id}>
 										{field?.name}
 									</th>
 								))}
-								<th
-									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
+								<th>
 									Actions
 								</th>
 							</tr>
 						</thead>
-						<tbody
-							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
-							style={{
-								backgroundColor: 'var(--accent-white)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
+						<tbody>
 
 
 							{isLoading ? (
@@ -397,17 +372,12 @@ const SetupBookPage: React.FC = () => {
 											size="medium"
 										/>
 									</td>
-									<td
-										className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
+									<td>
 										{record['searchId'] || '-'}
 									</td>
 									{fieldDefinitions?.map((field) => (
 										<td
 											key={field.id}
-											className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
-											style={{ color: 'var(--text-primary)' }}
 										>
 											{record[field.name] || '-'}
 										</td>

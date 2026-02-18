@@ -10,7 +10,8 @@ import BackButton from '@/components/ui/BackButton';
 import { ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery } from '@/store/services/teamMembersApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
 import { useGetRolesByLineOfBusinessIdQuery } from '@/store/services/roleApi';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,6 +21,7 @@ const EditUserPage: React.FC = () => {
 	const params = useParams();
 	const userId = params.id as string;
 	const { lineOfBusinessData, selectedLineOfBusinessId } = useLineOfBusiness();
+	const { user } = useUserInfo();
 	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
 
 	const { data: userResponse, isLoading: isUserLoading } = useGetTeamMemberByIdQuery(userId);
@@ -47,11 +49,15 @@ const EditUserPage: React.FC = () => {
 		supervisorId: '',
 	});
 
-	const [fetchRoleId, setFetchRoleId] = useState<string>('');
+	const companyId =
+		(user?.company as { _id?: string; id?: string } | undefined)?._id ||
+		(user?.company as { _id?: string; id?: string } | undefined)?.id ||
+		user?.companyId ||
+		'';
 
-	const { data: supervisorsResponse } = useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery(
-		{ lineOfBusinessId: selectedLineOfBusinessId || '', roleId: fetchRoleId || '' },
-		{ skip: !selectedLineOfBusinessId || !fetchRoleId }
+	const { data: supervisorsResponse } = useGetSupervisorsByLineOfBusinessIdQuery(
+		{ companyId, lineOfBusinessId: selectedLineOfBusinessId || '' },
+		{ skip: !companyId || !selectedLineOfBusinessId }
 	);
 
 	useEffect(() => {
@@ -85,71 +91,77 @@ const EditUserPage: React.FC = () => {
 	}, [userResponse]);
 
 	const roleOptions = useMemo(() => {
-		if (!rolesData) return [];
+		const rawRoles = rolesData
+			? (Array.isArray(rolesData) ? rolesData :
+				(Array.isArray((rolesData as unknown as { data: unknown[] })?.data) ? (rolesData as unknown as { data: unknown[] }).data :
+					(Array.isArray((rolesData as unknown as { roles: unknown[] })?.roles) ? (rolesData as unknown as { roles: unknown[] }).roles :
+						(Array.isArray((rolesData as unknown as { docs: unknown[] })?.docs) ? (rolesData as unknown as { docs: unknown[] }).docs :
+							[]))))
+			: [];
 
-		const rawRoles = (Array.isArray(rolesData) ? rolesData :
-			(Array.isArray((rolesData as unknown as { data: unknown[] })?.data) ? (rolesData as unknown as { data: unknown[] }).data :
-				(Array.isArray((rolesData as unknown as { roles: unknown[] })?.roles) ? (rolesData as unknown as { roles: unknown[] }).roles :
-					(Array.isArray((rolesData as unknown as { docs: unknown[] })?.docs) ? (rolesData as unknown as { docs: unknown[] }).docs :
-						[]))));
-
-		return rawRoles
+		const baseOptions = rawRoles
 			.filter((role: unknown) => {
 				const r = role as { _id?: string; id?: string };
 				return r._id || r.id;
 			})
 			.map((role: unknown) => {
-				const r = role as { roleName: string; _id?: string; id?: string };
+				const r = role as { roleName: string; _id?: string; id?: string; supervisorTitle?: string };
 				return {
 					value: r._id || r.id || '',
-					label: r.roleName
+					label: r.supervisorTitle || r.roleName
 				};
 			});
-	}, [rolesData]);
+
+		if (!supervisorsResponse || !Array.isArray(supervisorsResponse.roles)) {
+			return baseOptions;
+		}
+
+		const supervisorRoles = supervisorsResponse.roles as {
+			_id?: string;
+			id?: string;
+			roleName?: string;
+			supervisorTitle?: string;
+		}[];
+
+		const supervisorOptions = supervisorRoles
+			.map((role) => ({
+				value: (role._id || role.id || '') as string,
+				label: (role.supervisorTitle || role.roleName || '') as string
+			}))
+			.filter((opt) => opt.value && opt.label);
+
+		const existingValues = new Set(baseOptions.map((opt) => opt.value));
+
+		return [
+			...baseOptions,
+			...supervisorOptions.filter((opt) => !existingValues.has(opt.value)),
+		];
+	}, [rolesData, supervisorsResponse]);
 
 	const supervisorOptions = useMemo(() => {
-		if (!supervisorsResponse) return [];
-		const rawSupervisors = supervisorsResponse?.teamMembers || supervisorsResponse?.data || supervisorsResponse || [];
-		const supervisorsList = Array.isArray(rawSupervisors) ? rawSupervisors : (rawSupervisors.docs || []);
-		return supervisorsList.map((supervisor: unknown) => {
-			const s = supervisor as { _id?: string; id?: string; name?: string; firstName?: string; lastName?: string };
-			return {
-				value: (s?._id || s?.id || '') as string,
-				label: s?.name || `${s?.firstName || ''} ${s?.lastName || ''}`.trim()
-			};
-		});
+		if (!supervisorsResponse || !Array.isArray(supervisorsResponse.roles)) return [];
+		const rawRoles = supervisorsResponse.roles as {
+			_id?: string;
+			id?: string;
+			roleName?: string;
+			supervisorTitle?: string;
+		}[];
+		return rawRoles
+			.map((role) => ({
+				value: (role._id || role.id || '') as string,
+				label: (role.supervisorTitle || role.roleName || '') as string
+			}))
+			.filter((opt) => opt.value && opt.label);
 	}, [supervisorsResponse]);
 
-	// Update fetchRoleId when role changes or rolesData loads
-	useEffect(() => {
-		if (formData.role && rolesData) {
-			const rawRoles = (Array.isArray(rolesData) ? rolesData :
-				(Array.isArray((rolesData as unknown as { data: unknown[] })?.data) ? (rolesData as unknown as { data: unknown[] }).data :
-					(Array.isArray((rolesData as unknown as { roles: unknown[] })?.roles) ? (rolesData as unknown as { roles: unknown[] }).roles :
-						(Array.isArray((rolesData as unknown as { docs: unknown[] })?.docs) ? (rolesData as unknown as { docs: unknown[] }).docs :
-							[]))));
-
-			// Always fetch supervisors if we have the Supervisor role available
-			const supervisorRole = rawRoles.find((r: { roleName?: string; _id?: string; id?: string }) => r.roleName?.toLowerCase() === 'supervisor');
-			if (supervisorRole) {
-				setFetchRoleId(supervisorRole._id || supervisorRole.id || '');
-			}
-		}
-	}, [formData?.role, rolesData]);
-
 	const shouldShowSupervisor = useMemo(() => {
-		if (!rolesData || !formData?.role) return false;
+		if (!formData?.role) return false;
 
-		const rawRoles = (Array.isArray(rolesData) ? rolesData :
-			(Array.isArray((rolesData as unknown as { data: unknown[] })?.data) ? (rolesData as unknown as { data: unknown[] }).data :
-				(Array.isArray((rolesData as unknown as { roles: unknown[] })?.roles) ? (rolesData as unknown as { roles: unknown[] }).roles :
-					(Array.isArray((rolesData as unknown as { docs: unknown[] })?.docs) ? (rolesData as unknown as { docs: unknown[] }).docs :
-						[]))));
+		const selected = roleOptions.find((opt) => opt.value === formData.role);
+		const label = selected?.label.toLowerCase() || '';
 
-		const selectedRole = rawRoles.find((r: { _id?: string; id?: string }) => (r._id || r.id) === formData.role);
-		const r = selectedRole?.roleName?.toLowerCase();
-		return r === 'agent' || r === 'supervisor';
-	}, [formData?.role, rolesData]);
+		return label === 'agent' || label === 'supervisor' || label.includes('supervisor');
+	}, [formData?.role, roleOptions]);
 
 	const handleInputChange = (field: string) => (value: string | boolean) => {
 		setFormData(prev => ({ ...prev, [field]: value }));

@@ -11,16 +11,17 @@ import Search from '@/components/ui/Search';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
 import { toast } from 'sonner';
-
+import ProgressBar from '@/components/ui/ProgressBar';
+import StatusBadge from '@/components/ui/StatusBadge';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 export default function ConfigurationPage() {
 	const router = useRouter();
 	const { user } = useUserInfo();
 	const { canAccess } = usePrivilege();
-	const canAccessModule = canAccess('systemSetting');
-	const canCreate = canAccess('systemSetting', 'create');
-	const canEdit = canAccess('systemSetting', 'edit');
+	const canAccessModule = canAccess('lobPlan');
+	const canCreate = canAccess('lobPlan', 'create');
+	const canEdit = canAccess('lobPlan', 'edit');
 
 	const { setSelectedLineOfBusinessId } = useLineOfBusiness();
 	const companyId = user?.companyId || user?.company?._id || '';
@@ -44,6 +45,8 @@ export default function ConfigurationPage() {
 					_id: string;
 					lineOfBusinessName: string;
 					createdAt?: string;
+					progress?: number;
+					status?: string;
 				}[];
 			}
 			| undefined;
@@ -82,7 +85,7 @@ export default function ConfigurationPage() {
 					className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100 mb-2"
 					style={{ color: 'var(--text-primary)' }}
 				>
-					Configuration
+					LOB Plan
 				</h1>
 				<p
 					className="text-[10px] md:text-[12px] dark:text-gray-400"
@@ -112,7 +115,7 @@ export default function ConfigurationPage() {
 								localStorage.removeItem('peoplely-setup-data');
 								router.push('/setup');
 							}}
-							className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2 sm:text-[10px] md:text-[12px]"
+							className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
 						>
 							Line of Businesses
 						</Button>
@@ -127,67 +130,36 @@ export default function ConfigurationPage() {
 					borderColor: 'var(--light-gray)'
 				}}
 			>
-				<div className="p-6 border-b dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
-					<h2
-						className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
-						style={{ color: 'var(--text-primary)' }}
-					>
-						Line of Businesses
-					</h2>
-				</div>
+
 
 				<div className="overflow-x-auto">
 					<table
-						className="min-w-full divide-y dark:divide-gray-700"
-						style={{ borderColor: 'var(--light-gray)' }}
 					>
-						<thead
-							className="dark:bg-gray-700 border-b dark:border-gray-700"
-							style={{
-								backgroundColor: 'var(--bg-primary)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
+						<thead >
 							<tr>
-								<th
-									scope="col"
-									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Name
-								</th>
-								<th
-									scope="col"
-									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Created At
-								</th>
-								<th
-									scope="col"
-									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Action
-								</th>
+								<th>Name</th>
+								<th>Progress</th>
+								<th>Status</th>
+								<th>Created At</th>
+								<th>Action</th>
 							</tr>
 						</thead>
 						<tbody
-							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
-							style={{
-								backgroundColor: 'var(--accent-white)',
-								borderColor: 'var(--light-gray)'
-							}}
+
 						>
 							{isLoading ? (
 								<SVGLoaderFetch colSpan={8} text={''} />
 							) : lineOfBusinesses.length === 0 ? (
 								<NoRecordFound colSpan={8} />
-							) : lineOfBusinesses.map((lob: { _id: string; lineOfBusinessName: string; createdAt?: string }) => (
+							) : lineOfBusinesses.map((lob: {
+								_id: string;
+								lineOfBusinessName: string;
+								createdAt?: string;
+								progress?: number;
+								status?: string;
+							}) => (
 								<tr
 									key={lob._id}
-									className="dark:hover:bg-gray-700 transition-colors"
-									style={{ borderColor: 'var(--light-gray)' }}
 									onMouseEnter={(e) => {
 										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
 									}}
@@ -195,20 +167,19 @@ export default function ConfigurationPage() {
 										e.currentTarget.style.backgroundColor = 'transparent';
 									}}
 								>
-									<td
-										className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] font-medium dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
+									<td>
 										{lob.lineOfBusinessName}
 									</td>
-									<td
-										className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-400"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
+									<td>
+										<ProgressBar progress={typeof lob.progress === 'number' ? lob.progress : 0} />
+									</td>
+									<td>
+										<StatusBadge status={lob.status || 'In Review'} />
+									</td>
+									<td>
 										{lob.createdAt ? new Date(lob.createdAt).toLocaleDateString() : 'N/A'}
 									</td>
 									<td
-										className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] font-medium"
 									>
 										<div className="flex items-center gap-2">
 											{canEdit && (

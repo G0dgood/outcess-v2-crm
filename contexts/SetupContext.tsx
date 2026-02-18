@@ -224,7 +224,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				{ name: 'systemSetting' },
 				{ name: 'auditLog' },
 				{ name: 'teamMembers' },
-				{ name: 'configuration' },
+				{ name: 'lobPlan' },
 				{ name: 'pendingrequest' },
 			]
 		},
@@ -577,8 +577,8 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		},
 		{
 			id: 'review',
-			title: 'Review Configuration',
-			description: 'Review and submit your CRM configuration',
+			title: 'Review LOB Plan',
+			description: 'Review and submit your LOB plan configuration',
 			icon: <div className="text-base w-5 text-center">✓</div>,
 			active: currentStep === 5,
 			completed: false,

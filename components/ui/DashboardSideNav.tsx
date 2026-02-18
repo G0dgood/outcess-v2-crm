@@ -79,12 +79,17 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 	const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
 	const [isCollapsed, setIsCollapsed] = useState(false);
 	const [settingsMenuPos, setSettingsMenuPos] = useState<{ top: number; left: number } | null>(null);
+	const [hasHydrated, setHasHydrated] = useState(false);
 
 	useEffect(() => {
 		const stored = localStorage.getItem('dashboard-sidenav-collapsed');
 		if (stored) {
 			setIsCollapsed(stored === 'true');
 		}
+	}, []);
+
+	useEffect(() => {
+		setHasHydrated(true);
 	}, []);
 
 	// Handle click outside to close settings menu when collapsed
@@ -124,7 +129,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		}
 	}, [pathname, isCollapsed]);
 
-	if (isLobLoading || isPrivilegeLoading) {
+	if (!hasHydrated) {
 		return <DashboardSideNavSkeleton />;
 	}
 
@@ -164,6 +169,12 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 			label: 'Roles',
 			icon: 'book',
 			path: '/settings?tab=roles'
+		},
+		{
+			id: 'supervisors-tab',
+			label: 'Supervisors',
+			icon: 'users',
+			path: '/settings?tab=supervisors'
 		},
 	];
 
@@ -219,15 +230,9 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		},
 		{
 			id: 'configuration',
-			label: 'Configuration',
+			label: 'LOB Plan',
 			icon: 'configuration',
 			path: '/configuration',
-		},
-		{
-			id: 'pending-request',
-			label: 'Pending Request',
-			icon: 'clock',
-			path: '/pending-request',
 		},
 		{
 			id: 'settings',
@@ -246,7 +251,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		'integrations': 'systemSetting',
 		'setup-book': 'setupBook',
 		'report': 'report',
-		'configuration': 'systemSetting',
+		'configuration': 'lobPlan',
 		'settings': 'systemSetting',
 	};
 
@@ -256,6 +261,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		'permission-tab': 'userManagement',
 		'company-details-tab': 'systemSetting',
 		'roles-tab': 'userManagement',
+		'supervisors-tab': 'userManagement',
 	};
 
 	const visibleNavItems: NavItem[] = [];

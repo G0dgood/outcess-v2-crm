@@ -4,13 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
-import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
 import PaginationSummary from '@/components/ui/PaginationSummary';
 import Checkbox from '@/components/ui/Checkbox';
 import { useGetTeamMembersByLineOfBusinessIdQuery, useDeleteTeamMemberMutation } from '@/store/services/teamMembersApi';
 import PageHeading from '@/components/ui/PageHeading';
-import { Pencil1Icon, TrashIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import AddUserModal from '@/components/ui/AddUserModal';
 import DeleteUserModal from '@/components/ui/DeleteUserModal';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
@@ -20,6 +19,7 @@ import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useSocket } from '@/contexts/SocketContext';
 import SelectedUsersDrawerContent from './SelectedUsersDrawerContent';
 import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
+import LoginStatusInfoBanner from '@/components/ui/LoginStatusInfoBanner';
 
 interface User {
 	id: string;
@@ -333,42 +333,8 @@ const UsersPage: React.FC = () => {
 				</div>
 			</div>
 
-			{/* Login Status Info Banner */}
 			{showInfoBanner && (
-				<div
-					className="mb-4 p-3 dark:bg-gray-800 border dark:border-gray-700 flex items-center gap-3"
-					style={{
-						backgroundColor: 'var(--bg-primary)',
-						borderColor: 'var(--light-gray)'
-					}}
-				>
-					<div className="shrink-0 w-6 h-6 flex items-center justify-center">
-						<ExclamationTriangleIcon
-							className="w-4 h-4 dark:text-gray-300"
-							style={{ color: 'var(--text-secondary)' }}
-						/>
-					</div>
-					<p
-						className="text-[10px] md:text-[12px] dark:text-gray-300 flex-1"
-						style={{ color: 'var(--text-secondary)' }}
-					>
-						This is for tracking agents who are logged in or logged out
-					</p>
-					<button
-						onClick={() => setShowInfoBanner(false)}
-						className="shrink-0 p-1 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-						style={{ color: 'var(--text-tertiary)' }}
-						onMouseEnter={(e) => {
-							e.currentTarget.style.color = 'var(--text-secondary)';
-						}}
-						onMouseLeave={(e) => {
-							e.currentTarget.style.color = 'var(--text-tertiary)';
-						}}
-						title="Close"
-					>
-						<Icon name="Close_round_light" size="sm" />
-					</button>
-				</div>
+				<LoginStatusInfoBanner onClose={() => setShowInfoBanner(false)} />
 			)}
 
 			{/* Users Table */}
@@ -399,17 +365,8 @@ const UsersPage: React.FC = () => {
 					</div>
 				)}
 				<div className="overflow-x-auto">
-					<table
-						className="min-w-full divide-y dark:divide-gray-700"
-						style={{ borderColor: 'var(--light-gray)' }}
-					>
-						<thead
-							className="dark:bg-gray-700 border-b dark:border-gray-700"
-							style={{
-								backgroundColor: 'var(--bg-primary)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
+					<table>
+						<thead>
 							<tr>
 								<th>
 									<Checkbox
@@ -459,45 +416,13 @@ const UsersPage: React.FC = () => {
 											size="medium"
 										/>
 									</td>
-									<td
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{user?.userId}
-									</td>
-									<td
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{user?.firstName}
-									</td>
-									<td
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{user.lastName}
-									</td>
-									<td
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{user.email}
-									</td>
-									<td
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{user.phone}
-									</td>
-									<td
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{user.role}
-									</td>
-									<td
-										className="dark:text-gray-100 text-xs md:text-[12px]"
-										style={{ color: 'var(--text-primary)' }}
+									<td>{user?.userId}</td>
+									<td>{user?.firstName}</td>
+									<td>{user.lastName}</td>
+									<td>{user.email}</td>
+									<td>{user.phone}</td>
+									<td>{user.role}</td>
+									<td 
 									>
 										{user.shiftHour?.title ? user.shiftHour.title : 'No shift assigned'}
 									</td>

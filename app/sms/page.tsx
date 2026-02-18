@@ -9,6 +9,7 @@ import Checkbox from '@/components/ui/Checkbox';
 import PageHeading from '@/components/ui/PageHeading';
 import { ChatBubbleIcon } from '@radix-ui/react-icons';
 import Icon from '@/components/ui/Icon';
+import StatusBadge from '@/components/ui/StatusBadge';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 
@@ -296,7 +297,6 @@ const SMSPage: React.FC = () => {
 							}}
 						>
 							{currentSMS.map((sms) => {
-								const statusColors = getStatusColor(sms.status);
 								const directionColors = getDirectionColor(sms.direction);
 								return (
 									<tr
@@ -362,16 +362,7 @@ const SMSPage: React.FC = () => {
 											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span
-												className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-medium"
-												style={{
-													backgroundColor: statusColors.bg,
-													color: statusColors.text,
-													border: `1px solid ${statusColors.border}`
-												}}
-											>
-												{sms.status.charAt(0).toUpperCase() + sms.status.slice(1)}
-											</span>
+											<StatusBadge status={sms.status} />
 										</td>
 										<td
 											className="px-6 py-4 whitespace-nowrap dark:text-gray-100"
@@ -458,7 +449,6 @@ const SMSPage: React.FC = () => {
 								{smsList
 									.filter(sms => selectedSMS.has(sms.id))
 									.map((sms) => {
-										const statusColors = getStatusColor(sms.status);
 										const directionColors = getDirectionColor(sms.direction);
 										return (
 											<div
@@ -489,16 +479,7 @@ const SMSPage: React.FC = () => {
 															>
 																{sms.direction === 'inbound' ? 'Inbound' : 'Outbound'}
 															</span>
-															<span
-																className="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] md:text-[10px] font-medium"
-																style={{
-																	backgroundColor: statusColors.bg,
-																	color: statusColors.text,
-																	border: `1px solid ${statusColors.border}`
-																}}
-															>
-																{sms.status.charAt(0).toUpperCase() + sms.status.slice(1)}
-															</span>
+															<StatusBadge status={sms.status} />
 														</div>
 														{sms.contactName && (
 															<p

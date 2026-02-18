@@ -8,6 +8,35 @@ import { toast } from "sonner";
 import { useUserInfo } from "@/contexts/UserInfoContext";
 import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
 import { useCreateLineOfBusinessMutation, useUpdateLineOfBusinessMutation } from "@/store/services/lineOfBusinessApi";
+import { ApiError, extractErrorMessage } from "@/utils/apiError";
+
+type LineOfBusinessLike = {
+  _id?: string;
+  companyName?: string;
+  companyId?: string;
+  lineOfBusinessName?: string;
+  name?: string;
+  timeZone?: string;
+  industry?: string;
+  businessSize?: string;
+};
+
+type RoleValue = string | { roleName?: string };
+
+const getProgressForStep = (step: number): number => {
+  switch (step) {
+    case 1:
+      return 20;
+    case 2:
+      return 40;
+    case 3:
+      return 60;
+    case 4:
+      return 80;
+    default:
+      return 0;
+  }
+};
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const { currentStep, isLoading, setIsLoading, onStepComplete, onStepBack, setupData, updateSetupData, updateDashboardSettings, isFetchingLineOfBusiness, dashboardStep, setDashboardStep } = useSetup();
@@ -15,6 +44,11 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const { setSelectedLineOfBusinessId } = useLineOfBusiness();
   const [createLineOfBusiness] = useCreateLineOfBusinessMutation();
   const [updateLineOfBusiness] = useUpdateLineOfBusinessMutation();
+
+  const rawRole = (user as { role?: RoleValue } | null | undefined)?.role;
+  const creatorRoleName =
+    typeof rawRole === "string" ? rawRole : rawRole?.roleName;
+  const isSupervisorCreator = creatorRoleName === "Supervisor";
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
@@ -30,11 +64,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  // useEffect(() => {
-  //   if (currentStep === 3 && setupData.dashboardSettings.activeTab !== 'kpi') {
-  //     updateDashboardSettings({ activeTab: 'kpi' });
-  //   }
-  // }, [currentStep]);
+
 
   const validateCurrentStep = () => {
     if (currentStep === 1) {
@@ -97,6 +127,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
     setIsLoading(true);
 
+    const progress = getProgressForStep(currentStep);
+
     try {
       if (currentStep === 1) {
         if (setupData.lineOfBusinessId) {
@@ -112,6 +144,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                 companyName: setupData?.companyName || '',
                 companyId: user?.company?.id || setupData?.companyId || '',
                 lineOfBusinessName: setupData?.lineOfBusinessName || '',
+                progress,
               },
             }).unwrap();
 
@@ -120,12 +153,11 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
               duration: 2000,
             });
           } catch (err: unknown) {
-            const updateError = err as { status?: number; data?: { message?: string }; message?: string };
+            const updateError = err as ApiError;
             // Check for various forms of "Not Found" error
             const isNotFoundError =
               updateError?.status === 404 ||
-              updateError?.data?.message ||
-              updateError?.message;
+              !!extractErrorMessage(updateError, "");
 
             // If update fails because it's not found, fall back to create
             if (isNotFoundError) {
@@ -142,18 +174,21 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                 companyName: setupData.companyName,
                 companyId: targetCompanyId,
                 lineOfBusinessName: setupData.lineOfBusinessName,
+                progress,
               }).unwrap();
 
-              if (response.lineOfBusiness?._id) {
-                setSelectedLineOfBusinessId(response.lineOfBusiness._id);
+              const createdLineOfBusiness = (response as { lineOfBusiness?: LineOfBusinessLike }).lineOfBusiness;
+
+              if (createdLineOfBusiness?._id) {
+                setSelectedLineOfBusinessId(createdLineOfBusiness._id);
                 updateSetupData({
-                  lineOfBusinessId: response.lineOfBusiness._id,
-                  companyName: response.lineOfBusiness.companyName || setupData.companyName,
-                  companyId: response.lineOfBusiness.companyId || setupData.companyId,
-                  lineOfBusinessName: response.lineOfBusiness.lineOfBusinessName || response.lineOfBusiness.name || setupData.lineOfBusinessName,
-                  timeZone: response.lineOfBusiness.timeZone || setupData.timeZone,
-                  industry: response.lineOfBusiness.industry || setupData.industry,
-                  businessSize: response.lineOfBusiness.businessSize || setupData.businessSize,
+                  lineOfBusinessId: createdLineOfBusiness._id,
+                  companyName: createdLineOfBusiness.companyName || setupData.companyName,
+                  companyId: createdLineOfBusiness.companyId || setupData.companyId,
+                  lineOfBusinessName: createdLineOfBusiness.lineOfBusinessName || createdLineOfBusiness.name || setupData.lineOfBusinessName,
+                  timeZone: createdLineOfBusiness.timeZone || setupData.timeZone,
+                  industry: createdLineOfBusiness.industry || setupData.industry,
+                  businessSize: createdLineOfBusiness.businessSize || setupData.businessSize,
                 });
               }
 
@@ -177,20 +212,21 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             companyName: setupData.companyName,
             companyId: targetCompanyId,
             lineOfBusinessName: setupData.lineOfBusinessName,
+            progress,
           }).unwrap();
 
+          const createdLineOfBusiness = (response as { lineOfBusiness?: LineOfBusinessLike }).lineOfBusiness;
 
-
-          if (response.lineOfBusiness?._id) {
-            setSelectedLineOfBusinessId(response.lineOfBusiness._id);
+          if (createdLineOfBusiness?._id) {
+            setSelectedLineOfBusinessId(createdLineOfBusiness._id);
             updateSetupData({
-              lineOfBusinessId: response.lineOfBusiness._id,
-              companyName: response.lineOfBusiness.companyName || setupData.companyName,
-              companyId: response.lineOfBusiness.companyId || setupData.companyId,
-              lineOfBusinessName: response.lineOfBusiness.lineOfBusinessName || response.lineOfBusiness.name || setupData.lineOfBusinessName,
-              timeZone: response.lineOfBusiness.timeZone || setupData.timeZone,
-              industry: response.lineOfBusiness.industry || setupData.industry,
-              businessSize: response.lineOfBusiness.businessSize || setupData.businessSize,
+              lineOfBusinessId: createdLineOfBusiness._id,
+              companyName: createdLineOfBusiness.companyName || setupData.companyName,
+              companyId: createdLineOfBusiness.companyId || setupData.companyId,
+              lineOfBusinessName: createdLineOfBusiness.lineOfBusinessName || createdLineOfBusiness.name || setupData.lineOfBusinessName,
+              timeZone: createdLineOfBusiness.timeZone || setupData.timeZone,
+              industry: createdLineOfBusiness.industry || setupData.industry,
+              businessSize: createdLineOfBusiness.businessSize || setupData.businessSize,
             });
           }
 
@@ -215,12 +251,14 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             formData.append('primaryColor', setupData.primaryColor);
             formData.append('secondaryColor', setupData.secondaryColor);
             formData.append('navigationSettings', JSON.stringify(setupData.navigationSettings));
+            formData.append('progress', String(progress));
 
             updateData = formData;
             break;
           case 3:
             updateData = {
               dashboardSettings: setupData.dashboardSettings,
+              progress,
             };
             break;
           case 4:
@@ -237,6 +275,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                 ...setupData.customerBookSettings,
                 configuredFields: cleanConfiguredFields
               },
+              progress,
             };
             break;
         }
@@ -259,21 +298,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         onStepComplete();
       }
     } catch (err: unknown) {
-      const error = err as { data?: { message?: string; error?: string } | string; message?: string };
+      const error = err as ApiError;
       console.error("Failed to save changes:", error);
 
-      // Extract error message from various possible locations in the error object
-      let errorMessage = "An unexpected error occurred. Please try again.";
-
-      if (typeof error?.data === 'object' && error.data && 'message' in error.data && typeof error.data.message === 'string') {
-        errorMessage = error.data.message;
-      } else if (typeof error?.data === 'object' && error.data && 'error' in error.data && typeof error.data.error === 'string') {
-        errorMessage = error.data.error;
-      } else if (typeof error?.data === 'string') {
-        errorMessage = error.data;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
+      const errorMessage = extractErrorMessage(error, "An unexpected error occurred. Please try again.");
 
       toast.error("Failed to save changes", {
         description: errorMessage,
@@ -293,23 +321,31 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     }
 
     setIsLoading(true);
-    toast.loading("Submitting for approval...", {
+
+    const status = isSupervisorCreator ? "In Review" : "Approved";
+    const loadingMessage = isSupervisorCreator ? "Submitting for approval..." : "Approving LOB plan...";
+    const successTitle = isSupervisorCreator ? "LOB Plan submitted successfully!" : "LOB Plan approved successfully!";
+    const successDescription = isSupervisorCreator
+      ? "Your CRM setup is now under review."
+      : "Your CRM setup has been approved.";
+
+    toast.loading(loadingMessage, {
       id: "submit-progress",
     });
 
     try {
-      // Update the final step data
       await updateLineOfBusiness({
         id: setupData.lineOfBusinessId,
         data: {
-          status: 'pending_approval', // Assuming there's a status field
+          status,
+          progress: 100,
         },
       }).unwrap();
 
       setIsLoading(false);
-      toast.success("Configuration submitted successfully!", {
+      toast.success(successTitle, {
         id: "submit-progress",
-        description: "Your CRM setup is now under review.",
+        description: successDescription,
         duration: 3000,
       });
 
@@ -318,22 +354,11 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         window.location.href = '/dashboard';
       }, 2000);
     } catch (err: unknown) {
-      const error = err as { data?: { message?: string; error?: string } | string; message?: string };
+      const error = err as ApiError;
       console.error("Failed to submit:", error);
       setIsLoading(false);
 
-      // Extract error message from various possible locations in the error object
-      let errorMessage = "Could not submit configuration. Please try again.";
-
-      if (typeof error?.data === 'object' && error.data && 'message' in error.data && typeof error.data.message === 'string') {
-        errorMessage = error.data.message;
-      } else if (typeof error?.data === 'object' && error.data && 'error' in error.data && typeof error.data.error === 'string') {
-        errorMessage = error.data.error;
-      } else if (typeof error?.data === 'string') {
-        errorMessage = error.data;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
+      const errorMessage = extractErrorMessage(error, "Could not submit LOB plan. Please try again.");
 
       toast.error("Submission Failed", {
         id: "submit-progress",
@@ -342,17 +367,38 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const headerUser = user ? {
-    name: user.name || `${(user['firstName'] as string) || ''} ${(user['lastName'] as string) || ''}`.trim() || (user['username'] as string) || 'User',
-    role: (() => {
-      type RoleLike = string | { roleName?: string };
-      const roleValue = user.role as RoleLike | undefined;
-      return typeof roleValue === 'string' ? roleValue : roleValue?.roleName || 'Administrator';
-    })(),
-    avatar: user.avatar,
-    initials: (user.name || `${(user['firstName'] as string) || ''} ${(user['lastName'] as string) || ''}`.trim() || (user['username'] as string) || 'U')
-      .split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
-  } : undefined;
+  const headerUser = user
+    ? (() => {
+      const hasName = typeof user.name === "string" && user.name.trim().length > 0;
+      const rawFirstName = user["firstName"];
+      const rawLastName = user["lastName"];
+      const rawUsername = user["username"];
+      const firstName = typeof rawFirstName === "string" ? rawFirstName : "";
+      const lastName = typeof rawLastName === "string" ? rawLastName : "";
+      const username = typeof rawUsername === "string" ? rawUsername : "";
+      const fallbackName = `${firstName} ${lastName}`.trim() || username || "User";
+      const name = hasName ? user.name : fallbackName;
+
+      const roleValue = user.role as RoleValue | undefined;
+      const role = typeof roleValue === "string" ? roleValue : roleValue?.roleName || "Administrator";
+
+      const initialsSource = name || "U";
+      const initials = initialsSource
+        .split(" ")
+        .filter(Boolean)
+        .map(part => part[0])
+        .join("")
+        .substring(0, 2)
+        .toUpperCase();
+
+      return {
+        name,
+        role,
+        avatar: user.avatar,
+        initials,
+      };
+    })()
+    : undefined;
 
   return (
     <div id="page-wrapper">
@@ -379,10 +425,15 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         isLoading={mounted && (isLoading || isFetchingLineOfBusiness)}
         disabled={mounted && (isLoading || isFetchingLineOfBusiness)}
         buttonText={
-          (mounted && isLoading) ? (currentStep === 5 ? 'Submitting...' : 'Saving...') :
-            (mounted && isFetchingLineOfBusiness) ? 'Checking...' :
-              (currentStep === 5 ? 'Submit for Approval' :
-                ('Save & Continue'))
+          (mounted && isLoading)
+            ? (currentStep === 5
+              ? (isSupervisorCreator ? 'Submitting...' : 'Approving...')
+              : 'Saving...')
+            : (mounted && isFetchingLineOfBusiness)
+              ? 'Checking...'
+              : (currentStep === 5
+                ? (isSupervisorCreator ? 'Send for Approval' : 'Approve')
+                : 'Save & Continue')
         }
         backText={getBackButtonText()}
         showBack={currentStep > 1}
