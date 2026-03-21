@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import Input from './Input';
-import Dropdown from './Dropdown';
-import Button from './Button';
+import Input from '@/components/ui/Input';
+import Dropdown from '@/components/ui/Dropdown';
+import Button from '@/components/ui/Button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useCreateTeamMemberMutation, useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
 import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';

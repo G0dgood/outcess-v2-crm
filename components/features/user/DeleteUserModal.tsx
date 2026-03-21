@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Button from './Button';
+import Button from '@/components/ui/Button';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 
 interface DeleteUserModalProps {

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import SummaryCards from '@/components/ui/SummaryCards';
-import PlatformGrowthChart from '@/components/ui/PlatformGrowthChart';
+import PlatformGrowthChart from '@/components/features/dashboard/PlatformGrowthChart';
 
 export default function AdminDashboardPage() {
 	return (

@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import Input from './Input';
-import Textarea from './Textarea';
-import Button from './Button';
-import Icon from './Icon';
+import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
+import Button from '@/components/ui/Button';
+import Icon from '@/components/ui/Icon';
 import { useCreateRoleMutation, RolePermission } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';

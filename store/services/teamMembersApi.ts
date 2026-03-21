@@ -1,5 +1,6 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from './baseApi';
 import { roleApi } from './roleApi';
+import { updateUser } from '../slices/authSlice';
 
 export interface TeamMember {
     id: string;
@@ -36,19 +37,7 @@ export interface AssignShiftHourRequest {
     teamMemberIds: string[];
 }
 
-export const teamMembersApi = createApi({
-    reducerPath: 'teamMembersApi',
-    baseQuery: fetchBaseQuery({ 
-        baseUrl: process.env.base_url,
-        prepareHeaders: (headers, { getState }) => {
-            const token = (getState() as any).auth?.tokens?.accessToken || localStorage.getItem('token');
-            if (token) {
-                headers.set('authorization', `Bearer ${token}`);
-            }
-            return headers;
-        },
-    }),
-    tagTypes: ['TeamMembers'],
+export const teamMembersApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         createTeamMember: builder.mutation<any, CreateTeamMemberRequest>({
             query: (data) => ({
@@ -100,6 +89,21 @@ export const teamMembersApi = createApi({
                 body: { status, reason },
             }),
             invalidatesTags: ['TeamMembers'],
+            async onQueryStarted({ status, reason }, { dispatch, queryFulfilled }) {
+                try {
+                    const { data } = await queryFulfilled;
+                    // Sync with auth slice if this is the current user
+                    // We can't easily check ID here without selecting from state, 
+                    // but updating the user in auth slice is generally safe if the ID matches.
+                    // The API response usually contains the updated user object.
+                    if (data && data.status) {
+                        dispatch(updateUser({ status: data.status }));
+                    } else {
+                        // Fallback if data doesn't have status object
+                        dispatch(updateUser({ status: { status } }));
+                    }
+                } catch {}
+            },
         }),
         updateTeamMember: builder.mutation<any, { id: string; data: Partial<TeamMember> }>({
             query: ({ id, data }) => ({

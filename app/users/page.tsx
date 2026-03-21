@@ -10,8 +10,8 @@ import Checkbox from '@/components/ui/Checkbox';
 import { useGetTeamMembersByLineOfBusinessIdQuery, useDeleteTeamMemberMutation } from '@/store/services/teamMembersApi';
 import PageHeading from '@/components/ui/PageHeading';
 import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
-import AddUserModal from '@/components/ui/AddUserModal';
-import DeleteUserModal from '@/components/ui/DeleteUserModal';
+import AddUserModal from '@/components/features/user/AddUserModal';
+import DeleteUserModal from '@/components/features/user/DeleteUserModal';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { toast } from 'sonner';
@@ -497,8 +497,8 @@ const UsersPage: React.FC = () => {
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={lineOfBusinessData?.primaryColor || '#000000'}
-					secondaryColor={lineOfBusinessData?.secondaryColor || '#000000'}
+					primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
+					secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
 

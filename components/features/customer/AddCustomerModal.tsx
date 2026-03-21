@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import Input from './Input';
-import Button from './Button';
+import Input from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 
 interface AddCustomerModalProps {

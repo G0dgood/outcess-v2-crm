@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import Modal from './Modal';
-import Input from './Input';
-import Textarea from './Textarea';
-import Button from './Button';
+import Modal from '@/components/ui/Modal';
+import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
+import Button from '@/components/ui/Button';
 import { useCreateSupervisorRoleMutation } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';

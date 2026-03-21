@@ -215,7 +215,7 @@ const SMSPage: React.FC = () => {
 								setItemsPerPage(value);
 								setCurrentPage(1);
 							}}
-							className="text-gray-600"
+							className="text-gray-600 dark:text-gray-400"
 						/>
 						<span
 							className="text-[10px] md:text-[12px] dark:text-gray-400"
@@ -386,8 +386,8 @@ const SMSPage: React.FC = () => {
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={lineOfBusinessData?.primaryColor || '#050711'}
-					secondaryColor={lineOfBusinessData?.secondaryColor || '#6C8B7D'}
+					primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
+					secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
 

@@ -25,13 +25,16 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	onShowMore,
 	onMarkAsRead
 }) => {
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { lineOfBusinessData, isLoading: isLobLoading } = useLineOfBusiness();
 	const pathname = usePathname();
 	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
 	const hasPlayedOpenSound = useRef(false);
 	const playedNotificationIds = useRef<Set<string>>(new Set());
 	const previousPathname = useRef(pathname);
 	const isNavigating = useRef(false);
+	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const previousLobId = useRef(selectedLineOfBusinessId);
+	const isInitialOpen = useRef(true);
 
 	// Track navigation to prevent sounds during page switches
 	useEffect(() => {
@@ -79,10 +82,36 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 		}
 	}, [isOpen, pathname]);
 
-	// Play sounds for new unread notifications (but not during navigation)
+	// Play sounds for new unread notifications (but not during navigation or LOB switch)
 	useEffect(() => {
-		// Don't play sounds if we're navigating between pages
-		if (isNavigating.current || !isOpen) return;
+		if (!isOpen || isNavigating.current || isLobLoading) {
+			if (!isOpen) isInitialOpen.current = true;
+			return;
+		}
+
+		// If this is the first time the effect runs after opening,
+		// mark all current unread notifications as "played" to silence the backlog
+		if (isInitialOpen.current) {
+			notifications.forEach(n => {
+				if (!n.isRead) playedNotificationIds.current.add(n.id);
+			});
+			isInitialOpen.current = false;
+			return;
+		}
+
+		// If LOB has changed, mark all current unread notifications as "played" to skip sounds
+		if (previousLobId.current !== selectedLineOfBusinessId) {
+			previousLobId.current = selectedLineOfBusinessId;
+			notifications.forEach(n => {
+				if (!n.isRead) playedNotificationIds.current.add(n.id);
+			});
+			// Also reset the navigation flag to be safe
+			isNavigating.current = true;
+			setTimeout(() => {
+				isNavigating.current = false;
+			}, 2000);
+			return;
+		}
 
 		notifications.forEach((notification) => {
 			// Only play sound for unread notifications that haven't been played yet
@@ -98,7 +127,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 				}, 100 * playedNotificationIds.current.size);
 			}
 		});
-	}, [notifications, isOpen, pathname]);
+	}, [notifications, isOpen, pathname, selectedLineOfBusinessId]);
 
 	// Clean up played notification IDs when panel closes
 	useEffect(() => {
@@ -137,7 +166,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 							className="text-[12px] md:text-[14px] dark:text-gray-100 font-inter font-medium text-[12px] md:text-[14px] leading-[120%] flex items-center tracking-[-0.02em]"
 							style={{ color: 'var(--text-primary)' }}
 						>
-							Notification ({notifications.length})
+							Notification ({notifications.filter(n => !n.isRead).length})
 						</h3>
 						<button
 							onClick={onClose}

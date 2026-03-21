@@ -25,6 +25,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { logout as logoutAction, User } from '@/store/slices/authSlice';
 import { statusApi } from '@/store/services/statusApi';
 import { useGetNotificationsByLineOfBusinessIdQuery, useMarkNotificationAsReadMutation } from '@/store/services/notificationApi';
+import { useGetStickyNotesQuery } from '@/store/services/stickyNoteApi';
 
 interface DashboardHeaderProps {
 	name?: string;
@@ -57,13 +58,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const dispatch = useDispatch();
 	const pathname = usePathname();
 	const [mounted, setMounted] = useState(false);
-	const [hasStickyNotes, setHasStickyNotes] = useState(false);
 
 	useEffect(() => {
 		setMounted(true);
 	}, []);
 
 	const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+	const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 	const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
 	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket, socket } = useSocket();
 	const [logoutApi] = useLogoutMutation();
@@ -95,6 +96,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const previousPathname = useRef(pathname);
 	const isNavigating = useRef(false);
 	const { setSelectedLineOfBusinessId, isLoading: isLobLoading, lineOfBusinessData: selectedLOBData, selectedLineOfBusinessId } = useLineOfBusiness();
+	const previousLobId = useRef(selectedLineOfBusinessId);
 	const companyId = selectedLOBData?.companyId || displayUser?.companyId || (reduxUser?.company as { _id?: string })?._id || '';
 
 	const { data: lineOfBusinessData } = useGetLineOfBusinessByCompanyIdForheaderQuery(companyId, {
@@ -109,6 +111,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 	const [markAsRead] = useMarkNotificationAsReadMutation();
 	const notifications = React.useMemo(() => notificationsData?.notifications || [], [notificationsData]);
+	const unreadCount = React.useMemo(() => notifications.filter(n => !n.isRead).length, [notifications]);
 
 	const [lobOptions, setLobOptions] = useState<{ value: string; label: string; status?: string }[]>([]);
 	const safeUserName = String(displayUser?.name ?? '');
@@ -181,13 +184,27 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	}, [pathname]);
 
 	// Detect new unread notifications and play sound (works even when panel is closed)
-	// But don't play sounds during navigation
+	// But don't play sounds during navigation or LOB switch
 	useEffect(() => {
 		// Don't play sounds if we're navigating between pages
-		if (isNavigating.current) {
+		// or if the data is still loading
+		if (isNavigating.current || isLobLoading) {
 			// Update the count but don't play sounds
 			const unreadNotifications = notifications.filter(n => !n.isRead);
 			previousUnreadCount.current = unreadNotifications.length;
+			return;
+		}
+
+		// Don't play sounds if the LOB has just changed
+		if (previousLobId.current !== selectedLineOfBusinessId) {
+			previousLobId.current = selectedLineOfBusinessId;
+			const unreadNotifications = notifications.filter(n => !n.isRead);
+			previousUnreadCount.current = unreadNotifications.length;
+			// Also reset the navigation flag to be safe
+			isNavigating.current = true;
+			setTimeout(() => {
+				isNavigating.current = false;
+			}, 2000);
 			return;
 		}
 
@@ -195,28 +212,35 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		const unreadCount = unreadNotifications.length;
 
 		// Play sound when new unread notifications arrive (count increases)
-		if (unreadCount > previousUnreadCount.current) {
+		// Only if we already had a count (avoid sound on first load/hydration)
+		if (unreadCount > previousUnreadCount.current && previousUnreadCount.current > 0) {
 			// Play sound for each new notification
 			const newNotifications = unreadNotifications.slice(previousUnreadCount.current);
 			newNotifications.forEach((notification, index) => {
 				setTimeout(() => {
-					playNotificationSound('new_notification', 'notifications');
+					// Final check before playing
+					if (!isNavigating.current) {
+						playNotificationSound('new_notification', 'notifications');
+					}
 				}, index * 150); // Stagger sounds if multiple notifications arrive
 			});
 		}
 
 		previousUnreadCount.current = unreadCount;
-	}, [pathname, notifications]);
+	}, [pathname, notifications, selectedLineOfBusinessId]);
 
 	const handleNotificationClick = () => {
 		// Don't play sound if we're navigating - NotificationDropdown will handle it
 		if (isNavigating.current) {
 			setIsNotificationPanelOpen(!isNotificationPanelOpen);
+			if (!isNotificationPanelOpen) setIsUserDropdownOpen(false);
 			onNotificationsClick?.();
 			return;
 		}
 
-		setIsNotificationPanelOpen(!isNotificationPanelOpen);
+		const newState = !isNotificationPanelOpen;
+		setIsNotificationPanelOpen(newState);
+		if (newState) setIsUserDropdownOpen(false);
 		onNotificationsClick?.();
 		// Note: Sound is now handled by NotificationDropdown component to avoid duplicate sounds
 		// Close profile dropdown if open
@@ -266,46 +290,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		}
 	};
 
-	// Check if sticky notes exist in localStorage
-	useEffect(() => {
-		const checkStickyNotes = () => {
-			try {
-				const savedNotes = localStorage.getItem('stickyNotes');
-				if (savedNotes) {
-					const parsed = JSON.parse(savedNotes);
-					setHasStickyNotes(Array.isArray(parsed) && parsed.length > 0);
-				} else {
-					setHasStickyNotes(false);
-				}
-			} catch {
-				setHasStickyNotes(false);
-			}
-		};
-
-		checkStickyNotes();
-
-		// Check periodically for changes (in case notes are added/removed in another tab)
-		const interval = setInterval(checkStickyNotes, 1000);
-
-		// Listen for storage events from other tabs
-		const handleStorageChange = () => {
-			checkStickyNotes();
-		};
-
-		// Check when window gains focus (user returns to page)
-		const handleFocus = () => {
-			checkStickyNotes();
-		};
-
-		window.addEventListener('storage', handleStorageChange);
-		window.addEventListener('focus', handleFocus);
-
-		return () => {
-			clearInterval(interval);
-			window.removeEventListener('storage', handleStorageChange);
-			window.removeEventListener('focus', handleFocus);
-		};
-	}, []);
+	// Check if sticky notes exist via API
+	const { data: stickyNotesData } = useGetStickyNotesQuery(reduxUser?.id || '', {
+		skip: !reduxUser?.id
+	});
+	const hasStickyNotes = (stickyNotesData?.stickyNotes?.length || 0) > 0;
 
 	const handleNoteIconClick = () => {
 		// Store that user wants to see notes on current page
@@ -373,7 +362,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 								if (targetStatus === 'in review') {
 									return;
 								}
+								// Set navigating state to suppress sounds during LOB switch
+								isNavigating.current = true;
+								setNavigating(true);
 								setSelectedLineOfBusinessId(stringValue);
+								// Reset navigation flag after a delay
+								setTimeout(() => {
+									isNavigating.current = false;
+								}, 2000);
 							}}
 							options={lobOptions}
 							placeholder={isLobLoading ? "Loading..." : "Select Business"}
@@ -413,10 +409,15 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					<div className="relative">
 						<button
 							onClick={handleNotificationClick}
-							className="p-1 w-7 h-7 flex justify-center items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+							className="p-1 w-7 h-7 flex justify-center items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer relative"
 							title="Notifications"
 						>
 							<Icon name="Bell_light" size="3xl" />
+							{unreadCount > 0 && (
+								<span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-gray-800">
+									{unreadCount > 99 ? '99+' : unreadCount}
+								</span>
+							)}
 						</button>
 
 						<NotificationDropdown
@@ -443,18 +444,28 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 					{/* User Dropdown */}
 					<UserDropdown
+						user={reduxUser}
 						userId={reduxUser?.id}
 						userName={safeUserName}
 						userEmail={displayUser?.email || ""}
 						userAvatar={displayUser?.avatar || ""}
 						isOnline={userIsOnline && isOnline && !isOffline && socketStatus !== 'offline'}
-						currentStatus={reduxUser?.status ? {
-							status: reduxUser.status.status,
-							color: reduxUser.status.color
-						} : undefined}
+						currentStatus={reduxUser?.status ? (
+							typeof reduxUser.status === 'string'
+								? { status: reduxUser.status }
+								: {
+									status: reduxUser.status.status || (reduxUser.status as any).name || (reduxUser.status as any).label || 'Active',
+									color: reduxUser.status.color
+								}
+						) : undefined}
 						onStatusClick={onStatusClick}
 						onEditProfileClick={onEditProfileClick}
 						onLogoutClick={onLogoutClick || handleLogout}
+						isOpen={isUserDropdownOpen}
+						onToggle={(open) => {
+							setIsUserDropdownOpen(open);
+							if (open) setIsNotificationPanelOpen(false);
+						}}
 					/>
 				</div>
 			</div>

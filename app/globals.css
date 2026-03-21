@@ -40,6 +40,7 @@
   --bg-primary: var(--off-white);
   --bg-secondary: var(--light-gray);
   --bg-tertiary: var(--medium-gray);
+  --bg-main: var(--off-white);
 
   --text-primary: var(--primary);
   --text-secondary: var(--dark-slate-gray);
@@ -211,6 +212,7 @@
   --bg-primary: var(--off-white);
   --bg-secondary: var(--light-gray);
   --bg-tertiary: var(--medium-gray);
+  --bg-main: oklch(0.145 0 0);
 
   --text-primary: var(--primary);
   --text-secondary: var(--dark-slate-gray);
@@ -1753,7 +1755,7 @@ main {
   overflow-y: auto;
   width: 100%;
   padding: 32px;
-  background-color: var(--background);
+  background-color: var(--bg-main);
 }
 
 #header {

@@ -391,7 +391,7 @@ const TeamMembersPage: React.FC = () => {
 								setItemsPerPage(value);
 								setCurrentPage(1);
 							}}
-							className="text-gray-600"
+							className="text-gray-600 dark:text-gray-400"
 						/>
 						<span
 							className="text-[10px] md:text-[12px] dark:text-gray-400"
@@ -519,8 +519,8 @@ const TeamMembersPage: React.FC = () => {
 							currentPage={currentPage}
 							totalPages={totalPages}
 							onPageChange={setCurrentPage}
-							primaryColor={lineOfBusinessData?.primaryColor}
-							secondaryColor={lineOfBusinessData?.secondaryColor}
+							primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
+							secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
 						/>
 					)}
 				</div>

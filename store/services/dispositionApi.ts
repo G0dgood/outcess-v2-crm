@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from './baseApi';
 
 export interface CreateDispositionRequest {
     fillDisposition: any[];
@@ -49,19 +49,7 @@ export interface GetDispositionsByAgentReportRequest {
     endDate?: string;
 }
 
-export const dispositionApi = createApi({
-    reducerPath: 'dispositionApi',
-    tagTypes: ['Disposition'],
-    baseQuery: fetchBaseQuery({ 
-        baseUrl: process.env.base_url,
-        prepareHeaders: (headers, { getState }) => {
-            const token = (getState() as any).auth?.tokens?.accessToken || localStorage.getItem('token');
-            if (token) {
-                headers.set('authorization', `Bearer ${token}`);
-            }
-            return headers;
-        },
-    }),
+export const dispositionApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         createDisposition: builder.mutation<CreateDispositionResponse, CreateDispositionRequest>({
             query: (data) => ({

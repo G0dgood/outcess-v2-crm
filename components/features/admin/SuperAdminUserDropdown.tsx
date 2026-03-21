@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Icon from './Icon';
+import Icon from '@/components/ui/Icon';
 import Image from 'next/image';
 
 interface AdminUserDropdownProps {

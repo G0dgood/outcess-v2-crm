@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { baseApi } from "./baseApi";
 
 export interface CreateLineOfBusinessRequest {
   name: string;
@@ -51,27 +51,7 @@ export interface ShiftHourResponse {
   }[];
 }
 
-export const lineOfBusinessApi = createApi({
-  reducerPath: "lineOfBusinessApi",
-  tagTypes: ["LineOfBusiness"],
-  baseQuery: fetchBaseQuery({
-    baseUrl: process.env.base_url,
-    prepareHeaders: (headers, { getState }) => {
-      const state = getState() as {
-        auth?: {
-          tokens?: {
-            accessToken?: string;
-          };
-        };
-      };
-      const token =
-        state.auth?.tokens?.accessToken || localStorage.getItem("token");
-      if (token) {
-        headers.set("authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+export const lineOfBusinessApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createLineOfBusiness: builder.mutation<
       CreateLineOfBusinessResponse,

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
-import Dropdown from './Dropdown';
-import Icon from './Icon';
+import { Dropdown } from '@/components/ui/Dropdown';
+import Icon from '@/components/ui/Icon';
 
 interface DraggableChartProps {
 	chart: {
@@ -24,7 +24,7 @@ interface DraggableChartProps {
 	children: React.ReactNode;
 }
 
-const DraggableChart: React.FC<DraggableChartProps> = ({
+const DraggableChart: React.FC<DraggableChartProps> = React.memo(({
 	chart,
 	onRemove,
 	onUpdatePosition,
@@ -51,7 +51,6 @@ const DraggableChart: React.FC<DraggableChartProps> = ({
 			const newX = e.clientX - dragStart.x;
 			const newY = e.clientY - dragStart.y;
 
-			// Keep chart within bounds
 			const maxX = window.innerWidth - chart.position.width;
 			const maxY = window.innerHeight - chart.position.height;
 
@@ -100,7 +99,7 @@ const DraggableChart: React.FC<DraggableChartProps> = ({
 				document.removeEventListener('mouseup', handleMouseUp);
 			};
 		}
-	}, [isDragging, isResizing, dragStart, resizeStart, handleMouseMove, handleMouseUp]);
+	}, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
 
 	return (
 		<div
@@ -116,7 +115,6 @@ const DraggableChart: React.FC<DraggableChartProps> = ({
 			}}
 			onMouseDown={handleMouseDown}
 		>
-			{/* Chart Header */}
 			<div className="chart-header flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 cursor-grab">
 				<h3 className="font-inter text-[12px] md:text-[14px] font-semibold text-gray-900">
 					{chart.title}
@@ -145,12 +143,10 @@ const DraggableChart: React.FC<DraggableChartProps> = ({
 				</div>
 			</div>
 
-			{/* Chart Content */}
 			<div className="  h-full w-full">
 				{children}
 			</div>
 
-			{/* Resize Handle */}
 			<div
 				className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-gray-300 hover:bg-gray-400 transition-colors"
 				onMouseDown={handleResizeMouseDown}
@@ -160,6 +156,8 @@ const DraggableChart: React.FC<DraggableChartProps> = ({
 			/>
 		</div>
 	);
-};
+});
 
-export default DraggableChart;
+DraggableChart.displayName = 'DraggableChart';
+ 
+ export default DraggableChart;

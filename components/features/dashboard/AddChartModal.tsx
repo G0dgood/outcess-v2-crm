@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import Button from './Button';
-import Input from './Input';
-import Dropdown from './Dropdown';
-import Icon from './Icon';
-import { ColorPicker } from './ColorPicker';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Dropdown from '@/components/ui/Dropdown';
+import Icon from '@/components/ui/Icon';
+import { ColorPicker } from '@/components/ui/ColorPicker';
 import { useSocket } from '@/contexts/SocketContext';
 // import { useSetup } from '@/contexts/SetupContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';

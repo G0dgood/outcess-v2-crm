@@ -2,9 +2,9 @@
 import React, { useState } from "react";
 import { SetupProvider } from "@/contexts/SetupContext";
 import { useAuth } from "@/contexts/AuthContext";
-import SuperAdminMobileSideNav from "@/components/ui/SuperAdminMobileSideNav";
-import SuperAdminSideNav from "@/components/ui/SuperAdminSideNav";
-import SuperAdminHeader from "@/components/ui/SuperAdminHeader";
+import SuperAdminMobileSideNav from "@/components/features/admin/SuperAdminMobileSideNav";
+import SuperAdminSideNav from "@/components/features/admin/SuperAdminSideNav";
+import SuperAdminHeader from "@/components/features/admin/SuperAdminHeader";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

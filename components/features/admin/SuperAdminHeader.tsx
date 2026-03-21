@@ -4,7 +4,7 @@ import React from 'react';
 import { BellIcon } from '@radix-ui/react-icons';
 import SuperAdminUserDropdown from './SuperAdminUserDropdown';
 import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
-import ThemeDropdown from './ThemeDropdown';
+import ThemeDropdown from '@/components/ui/ThemeDropdown';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { useRouter } from '@bprogress/next/app';

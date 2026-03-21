@@ -5,13 +5,14 @@ import Button from '@/components/ui/Button';
 import PageHeading from '@/components/ui/PageHeading';
 import SearchWithSend from '@/components/ui/SearchWithSend';
 import CreateRecordModal from '@/components/ui/CreateRecordModal';
-import CustomerDetailsModal from '@/components/ui/CustomerDetailsModal';
+import CustomerDetailsModal from '@/components/features/customer/CustomerDetailsModal';
 import { ArrowRightIcon } from '@radix-ui/react-icons';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetSetupBookBySearchIdQuery } from '@/store/services/setupBookApi';
 import { toast } from 'sonner';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import AccessRestricted from '@/components/ui/AccessRestricted';
 import { SetupData } from '@/contexts/SetupContext';
 
 interface Customer {
@@ -112,17 +113,10 @@ const CustomerBookPage: React.FC = () => {
 	return (
 		<div>
 			{!canAccessModule && (
-				<div
-					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-8"
-					style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
-				>
-					<h2 className="font-inter text-[12px] md:text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>
-						Access Restricted
-					</h2>
-					<p className="font-lato text-[10px] md:text-[12px]" style={{ color: 'var(--text-tertiary)' }}>
-						You do not have access permission to view Customer Book.
-					</p>
-				</div>
+				<AccessRestricted
+					title="Access Restricted"
+					message="You do not have access permission to view Customer Book."
+				/>
 			)}
 			{canAccessModule && (
 				<>

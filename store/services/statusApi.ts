@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from './baseApi';
 
 export interface Status {
     id: string;
@@ -26,19 +26,7 @@ export interface CreateStatusResponse {
     status?: Status;
 }
 
-export const statusApi = createApi({
-    reducerPath: 'statusApi',
-    baseQuery: fetchBaseQuery({ 
-        baseUrl: process.env.base_url,
-        prepareHeaders: (headers, { getState }) => {
-            const token = (getState() as any).auth?.tokens?.accessToken || localStorage.getItem('token');
-            if (token) {
-                headers.set('authorization', `Bearer ${token}`);
-            }
-            return headers;
-        },
-    }),
-    tagTypes: ['Statuses'],
+export const statusApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         createStatus: builder.mutation<CreateStatusResponse, CreateStatusRequest>({
             query: (statusData) => ({

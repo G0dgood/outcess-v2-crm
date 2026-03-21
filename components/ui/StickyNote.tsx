@@ -156,6 +156,19 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 		});
 	};
 
+	const addTodoWithValue = (text: string) => {
+		const newTodo = {
+			id: Date.now().toString(),
+			text,
+			completed: false,
+		};
+		onUpdate({
+			...note,
+			todos: [...note.todos, newTodo],
+			updatedAt: new Date(),
+		});
+	};
+
 	const deleteTodo = (todoId: string) => {
 		const updatedTodos = note.todos.filter(todo => todo.id !== todoId);
 		onUpdate({ ...note, todos: updatedTodos, updatedAt: new Date() });
@@ -182,6 +195,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 	};
 
 	const textColor = getTextColor(note.color || '#FFFACD');
+	const buttonHoverClass = note.color === '#606060' ? 'hover:bg-white/20' : 'hover:bg-black/10';
 
 	// Auto-edit new empty notes
 	useEffect(() => {
@@ -199,7 +213,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 		<div
 			ref={noteRef}
 			data-note-id={note.id}
-			className={`fixed border border-gray-300 rounded-sm shadow-lg w-[280px] select-none hover:shadow-xl transition-all ${isHidden ? '' : isDragging ? 'cursor-grabbing opacity-90 scale-105' : 'cursor-grab'
+			className={`fixed border border-gray-300  shadow-lg w-[280px] select-none hover:shadow-xl transition-all ${isHidden ? '' : isDragging ? 'cursor-grabbing opacity-90 scale-105' : 'cursor-grab'
 				}`}
 			style={{
 				left: `${position.x}px`,
@@ -225,7 +239,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 								e.stopPropagation();
 								handleRestore();
 							}}
-							className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+							className={`p-1 ${buttonHoverClass} transition-colors`}
 							title="Restore"
 						>
 							<EnterIcon className="w-4 h-4 text-black" />
@@ -238,7 +252,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 								e.stopPropagation();
 								addTodo();
 							}}
-							className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+							className={`p-1 ${buttonHoverClass} transition-colors`}
 							title="Add"
 						>
 							<svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,7 +265,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 									e.stopPropagation();
 									handleSave();
 								}}
-								className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+								className={`p-1 ${buttonHoverClass} transition-colors`}
 								title="Done"
 							>
 								<svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,7 +282,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 								e.stopPropagation();
 								handleClose();
 							}}
-							className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+							className={`p-1 ${buttonHoverClass} transition-colors`}
 							title="Close"
 						>
 							<Cross2Icon className="w-4 h-4 text-black" />
@@ -278,7 +292,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 								e.stopPropagation();
 								onDelete(note.id);
 							}}
-							className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+							className={`p-1 ${buttonHoverClass} transition-colors`}
 							title="Delete"
 						>
 							<Icon name="Trash_light" size="sm" className="text-black" />
@@ -288,7 +302,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 								e.stopPropagation();
 								handleSave();
 							}}
-							className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+							className={`p-1 ${buttonHoverClass} transition-colors`}
 							title="Save"
 						>
 							<svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -300,7 +314,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 								e.stopPropagation();
 								setIsEditing(!isEditing);
 							}}
-							className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+							className={`p-1 ${buttonHoverClass} transition-colors`}
 							title="Edit"
 						>
 							<svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -329,93 +343,142 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 						/>
 					) : (
 						<p
-							className="text-[10px] md:text-[12px] whitespace-pre-wrap font-sans leading-relaxed"
+							className="text-[10px] md:text-[12px] whitespace-pre-wrap font-sans leading-relaxed cursor-text"
 							style={{ color: textColor }}
+							onClick={() => setIsEditing(true)}
 						>
-							{note.content || 'No content'}
+							{note.content || 'Click to add content...'}
 						</p>
 					)}
 
 					{/* Todos */}
 					{note.todos.length > 0 && (
 						<div className="mt-3 space-y-2">
-							<div className="text-[8px] md:text-[10px] font-semibold" style={{ color: textColor, opacity: 0.8 }}>To-dos:</div>
+							<div className="text-[8px] md:text-[10px] font-semibold" style={{ color: textColor, opacity: 0.8 }}>List:</div>
 							{note.todos.map((todo) => (
-								<div key={todo.id} className="flex items-center gap-2 text-[8px] md:text-[10px]">
-									<input
-										type="checkbox"
-										checked={todo.completed}
-										onChange={() => toggleTodo(todo.id)}
+								<div key={todo.id} className="flex items-center gap-1 text-[8px] md:text-[10px] group">
+									<button
 										onMouseDown={(e) => e.stopPropagation()}
-										className="cursor-pointer"
-									/>
-									{isEditing ? (
-										<input
-											type="text"
-											value={todo.text}
-											onChange={(e) => {
-												const updatedTodos = note.todos.map(t =>
-													t.id === todo.id ? { ...t, text: e.target.value } : t
-												);
-												onUpdate({ ...note, todos: updatedTodos, updatedAt: new Date() });
-											}}
-											onMouseDown={(e) => e.stopPropagation()}
-											className="flex-1 px-1 py-0.5 text-[8px] md:text-[10px] bg-transparent rounded border-0 focus:outline-none cursor-text"
-											style={{ color: textColor, caretColor: textColor }}
-										/>
-									) : (
-										<span
-											className={todo.completed ? 'line-through' : ''}
-											style={{
-												color: textColor,
-												opacity: todo.completed ? 0.6 : 1
-											}}
-										>
-											{todo.text}
+										onClick={(e) => {
+											e.stopPropagation();
+											toggleTodo(todo.id);
+										}}
+										className="w-4 h-4 flex items-center justify-center hover:bg-black/5 rounded-sm transition-colors"
+										title={todo.completed ? 'Mark as incomplete' : 'Mark as complete'}
+									>
+										<span style={{ color: textColor, opacity: todo.completed ? 1 : 0.5 }}>
+											{todo.completed ? '✓' : '•'}
 										</span>
-									)}
-									{isEditing && (
-										<button
-											onMouseDown={(e) => e.stopPropagation()}
-											onClick={(e) => {
-												e.stopPropagation();
-												deleteTodo(todo.id);
-											}}
-											className="text-red-500 hover:text-red-700"
-										>
-											<Icon name="Close_round_light" size="xs" />
-										</button>
-									)}
+									</button>
+									<input
+										type="text"
+										value={todo.text}
+										onChange={(e) => {
+											const updatedTodos = note.todos.map(t =>
+												t.id === todo.id ? { ...t, text: e.target.value } : t
+											);
+											onUpdate({ ...note, todos: updatedTodos, updatedAt: new Date() });
+										}}
+										onMouseDown={(e) => e.stopPropagation()}
+										onBlur={() => handleSave()}
+										className={`flex-1 px-1 py-0.5 text-[8px] md:text-[10px] bg-transparent border-0 focus:outline-none cursor-text transition-all ${todo.completed ? 'line-through opacity-50' : ''
+											}`}
+										style={{ color: textColor, caretColor: textColor }}
+										placeholder="Item text..."
+									/>
+									<button
+										onMouseDown={(e) => e.stopPropagation()}
+										onClick={(e) => {
+											e.stopPropagation();
+											handleSave();
+										}}
+										className="p-1 hover:bg-black/5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+										title="Save item"
+									>
+										<EnterIcon className="w-3 h-3" style={{ color: textColor }} />
+									</button>
+									<button
+										onMouseDown={(e) => e.stopPropagation()}
+										onClick={(e) => {
+											e.stopPropagation();
+											deleteTodo(todo.id);
+										}}
+										className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+										title="Delete item"
+									>
+										<Cross2Icon className="w-3 h-3" />
+									</button>
 								</div>
 							))}
-							{isEditing && (
+
+							{/* Quick add input */}
+							<div className="flex items-center gap-1 text-[8px] md:text-[10px] opacity-60 hover:opacity-100 transition-opacity group">
+								<span style={{ color: textColor }}>+</span>
+								<input
+									type="text"
+									placeholder="Add item..."
+									onFocus={(e) => {
+										// e.target.value = '';
+									}}
+									onKeyDown={(e) => {
+										if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+											addTodoWithValue(e.currentTarget.value.trim());
+											e.currentTarget.value = '';
+										}
+									}}
+									onMouseDown={(e) => e.stopPropagation()}
+									className="flex-1 px-1 py-0.5 text-[8px] md:text-[10px] bg-transparent border-0 focus:outline-none cursor-text"
+									style={{ color: textColor, caretColor: textColor }}
+								/>
 								<button
 									onMouseDown={(e) => e.stopPropagation()}
 									onClick={(e) => {
-										e.stopPropagation();
-										addTodo();
+										const input = (e.currentTarget.previousSibling as HTMLInputElement);
+										if (input.value.trim()) {
+											addTodoWithValue(input.value.trim());
+											input.value = '';
+										}
 									}}
-									className="text-[8px] md:text-[10px] mt-1 hover:opacity-80 transition-opacity"
-									style={{ color: textColor, opacity: 0.7 }}
+									className="p-1 hover:bg-black/5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+									title="Add item"
 								>
-									+ Add todo
+									<EnterIcon className="w-3 h-3" style={{ color: textColor }} />
 								</button>
-							)}
+							</div>
 						</div>
 					)}
 
-					{!isEditing && note.todos.length === 0 && (
-						<button
-							onMouseDown={(e) => e.stopPropagation()}
-							onClick={(e) => {
-								e.stopPropagation();
-								addTodo();
-							}}
-							className="text-[8px] md:text-[10px] mt-2 hover:opacity-80 transition-opacity"
-							style={{ color: textColor, opacity: 0.7 }}
-						>
-							+ Add todo
-						</button>
+					{note.todos.length === 0 && (
+						<div className="mt-2 flex items-center gap-1 text-[8px] md:text-[10px] opacity-60 hover:opacity-100 transition-opacity group">
+							<span style={{ color: textColor }}>+</span>
+							<input
+								type="text"
+								placeholder="Add first item..."
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+										addTodoWithValue(e.currentTarget.value.trim());
+										e.currentTarget.value = '';
+									}
+								}}
+								onMouseDown={(e) => e.stopPropagation()}
+								className="flex-1 px-1 py-0.5 text-[8px] md:text-[10px] bg-transparent border-0 focus:outline-none cursor-text"
+								style={{ color: textColor, caretColor: textColor }}
+							/>
+							<button
+								onMouseDown={(e) => e.stopPropagation()}
+								onClick={(e) => {
+									const input = (e.currentTarget.previousSibling as HTMLInputElement);
+									if (input.value.trim()) {
+										addTodoWithValue(input.value.trim());
+										input.value = '';
+									}
+								}}
+								className="p-1 hover:bg-black/5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+								title="Add item"
+							>
+								<EnterIcon className="w-3 h-3" style={{ color: textColor }} />
+							</button>
+						</div>
 					)}
 				</div>
 			)}
@@ -430,7 +493,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 								e.stopPropagation();
 								onUpdate({ ...note, color: colorOption, updatedAt: new Date() });
 							}}
-							className={`w-6 h-6 rounded-sm border transition-all ${note.color === colorOption || (!note.color && colorOption === '#FFFACD')
+							className={`w-6 h-6  border transition-all ${note.color === colorOption || (!note.color && colorOption === '#FFFACD')
 								? 'border-gray-800 scale-110 ring-2 ring-gray-400'
 								: 'border-gray-300 hover:scale-110'
 								}`}

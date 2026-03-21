@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Button from './Button';
-import FillDispositionModal, { DispositionFormState } from './FillDispositionModal';
-import SMSModal from './SMSModal';
-import DispositionHistoryModal from './DispositionHistoryModal';
+import Button from '@/components/ui/Button';
+import FillDispositionModal, { DispositionFormState } from '@/components/ui/FillDispositionModal';
+import SMSModal from '@/components/ui/SMSModal';
+import DispositionHistoryModal from '@/components/ui/DispositionHistoryModal';
 import { Cross2Icon, ChatBubbleIcon, ClipboardIcon, PersonIcon, EnvelopeClosedIcon, HomeIcon, MobileIcon } from '@radix-ui/react-icons';
 import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, DispositionHistoryItem } from '@/utils/offlineDispositions';
-import { NoRecordFound, SVGLoaderFetch } from '../Options';
+import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetDispositionsByCustomerQuery } from '@/store/services/dispositionApi';
 

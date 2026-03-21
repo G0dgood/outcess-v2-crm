@@ -13,7 +13,7 @@ interface WidgetCardProps {
 	canDelete?: boolean;
 }
 
-export const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, widgetId, onEdit, onDelete, canEdit = true, canDelete = true }) => {
+export const WidgetCard: React.FC<WidgetCardProps> = React.memo(({ title, value, widgetId, onEdit, onDelete, canEdit = true, canDelete = true }) => {
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -135,6 +135,8 @@ export const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, widgetId, 
 			</div>
 		</div>
 	);
-};
+});
 
-export default WidgetCard;
+WidgetCard.displayName = 'WidgetCard';
+ 
+ export default WidgetCard;

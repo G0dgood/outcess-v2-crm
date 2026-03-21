@@ -176,6 +176,12 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 			icon: 'users',
 			path: '/settings?tab=supervisors'
 		},
+		{
+			id: 'audit-logs-tab',
+			label: 'Audit Logs',
+			icon: 'clock',
+			path: '/settings?tab=audit-logs'
+		},
 	];
 
 	const navItems: NavItem[] = [
@@ -262,6 +268,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		'company-details-tab': 'systemSetting',
 		'roles-tab': 'userManagement',
 		'supervisors-tab': 'userManagement',
+		'audit-logs-tab': 'systemSetting',
 	};
 
 	const visibleNavItems: NavItem[] = [];

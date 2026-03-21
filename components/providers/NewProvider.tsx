@@ -28,8 +28,8 @@ const NewProvider: React.FC<NewProviderProps> = ({ children }) => {
         shallowRouting>
         <ThemeProvider>
           <AuthProvider>
-            <UserInfoProvider>
-              <SocketProvider config={{ autoConnect: false }}>
+            <SocketProvider config={{ autoConnect: true }}>
+              <UserInfoProvider>
                 <LineOfBusinessProvider>
                   <SetupProvider>
                     <PrivilegeProvider>
@@ -48,8 +48,8 @@ const NewProvider: React.FC<NewProviderProps> = ({ children }) => {
                     </PrivilegeProvider>
                   </SetupProvider>
                 </LineOfBusinessProvider>
-              </SocketProvider>
-            </UserInfoProvider>
+              </UserInfoProvider>
+            </SocketProvider>
           </AuthProvider>
         </ThemeProvider>
       </ProgressProvider>

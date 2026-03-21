@@ -123,10 +123,10 @@ const SortableRow = ({ field, index, handleEditField, handleDeleteField, isLast 
 					</span>
 				)}
 			</td>
-			<td className="py-4 px-6 flex items-center gap-2">
+			<td className=" gap-5 border-none">
 				<button
 					onClick={() => handleEditField(field)}
-					className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+					className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors pr-5"
 				>
 					<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
 						<path d="M11 2L14 5L4.5 14.5H1.5V11.5L11 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

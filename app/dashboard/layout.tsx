@@ -5,6 +5,7 @@ import { SetupProvider } from '@/contexts/SetupContext';
 import DashboardHeader from '@/components/ui/DashboardHeader';
 import DashboardSideNav from '@/components/ui/DashboardSideNav';
 import OfflineBanner from '@/components/ui/OfflineBanner';
+import GlobalStickyNotes from '@/components/ui/GlobalStickyNotes';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
@@ -34,6 +35,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       </Suspense>
 
       <main>{children}</main>
+      <GlobalStickyNotes />
     </div>
   );
 }

@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Button from './Button';
-import Input from './Input';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 import { Pencil1Icon } from '@radix-ui/react-icons';
-import SupPageHeading from './SubPageHeading';
-import AddBusinessHourModal, { BusinessHourData } from './AddBusinessHourModal';
+import SubPageHeading from '@/components/ui/SubPageHeading';
+import AddBusinessHourModal, { BusinessHourData } from '@/components/ui/AddBusinessHourModal';
 import ShiftHours from './ShiftHours';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
@@ -212,7 +212,7 @@ const BusinessHours = () => {
 						Add Business Hour
 					</Button>
 				</div>
-				<SupPageHeading
+				<SubPageHeading
 					text="Establish your organization's business hours to guide employees in scheduling and completing work activities within those operational times."
 					className="dark:text-gray-400 mb-6"
 					style={{ color: 'var(--text-tertiary)' }}

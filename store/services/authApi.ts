@@ -1,4 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from './baseApi';
+import { updateUser as updateUserAction } from '../slices/authSlice';
 
 export interface RegisterRequest {
     firstName: string;
@@ -9,6 +10,11 @@ export interface RegisterRequest {
     role: string;
     phone: string;
     agreeToTerms: boolean;
+    status?: {
+        status: string;
+        reason?: string;
+        color?: string;
+    };
 }
 
 export interface RegisterResponse {
@@ -39,19 +45,7 @@ export interface LogoutRequest {
     userId: string;
 }
 
-export const authApi = createApi({
-    reducerPath: 'authApi',
-    baseQuery: fetchBaseQuery({ 
-        baseUrl: process.env.base_url,
-        prepareHeaders: (headers, { getState }) => {
-            const token = (getState() as any).auth.tokens?.accessToken || localStorage.getItem('token');
-            if (token) {
-                headers.set('authorization', `Bearer ${token}`);
-            }
-            return headers;
-        },
-    }),
-    tagTypes: ['User'],
+export const authApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         register: builder.mutation<RegisterResponse, RegisterRequest>({
             query: (credentials) => ({
@@ -100,10 +94,20 @@ export const authApi = createApi({
         updateUser: builder.mutation<UserResponse, { id: string; data: Partial<RegisterRequest> }>({
             query: ({ id, data }) => ({
                 url: `api/v1/users/user/${id}`,
-                method: 'PUT',
+                method: 'PATCH',
                 body: data,
             }),
             invalidatesTags: ['User'],
+            async onQueryStarted({ data }, { dispatch, queryFulfilled }) {
+                try {
+                    const { data: responseData } = await queryFulfilled;
+                    if (data.status) {
+                        dispatch(updateUserAction({ status: data.status }));
+                    } else if (responseData?.user?.status) {
+                        dispatch(updateUserAction({ status: responseData.user.status }));
+                    }
+                } catch {}
+            },
         }),
         changePassword: builder.mutation<void, { userId: string; oldPassword?: string; newPassword: string }>({
             query: (body) => ({

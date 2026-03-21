@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Button from './Button';
-import Input from './Input';
-import Textarea from './Textarea';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useCreateRoleMutation, RolePermission } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';

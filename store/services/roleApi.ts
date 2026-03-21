@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from './baseApi';
 
 export interface RolePermission {
     id: string;
@@ -72,19 +72,7 @@ export interface GetPermissionTemplatesResponse {
     roles: Role[];
 }
 
-export const roleApi = createApi({
-    reducerPath: 'roleApi',
-    baseQuery: fetchBaseQuery({ 
-        baseUrl: process.env.base_url,
-        prepareHeaders: (headers, { getState }) => {
-            const token = (getState() as any).auth?.tokens?.accessToken || localStorage.getItem('token');
-            if (token) {
-                headers.set('authorization', `Bearer ${token}`);
-            }
-            return headers;
-        },
-    }),
-    tagTypes: ['Roles', 'PermissionTemplates'],
+export const roleApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         createRole: builder.mutation<CreateRoleResponse, CreateRoleRequest>({
             query: (roleData) => ({

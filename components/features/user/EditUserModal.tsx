@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import Input from './Input';
-import Dropdown from './Dropdown';
-import Button from './Button';
-import Icon from './Icon';
+import Input from '@/components/ui/Input';
+import Dropdown from '@/components/ui/Dropdown';
+import Button from '@/components/ui/Button';
+import Icon from '@/components/ui/Icon';
 
 interface EditUserModalProps {
 	isOpen: boolean;

@@ -27,7 +27,7 @@ interface SortableChartProps {
 	canDelete?: boolean;
 }
 
-export const SortableChart: React.FC<SortableChartProps> = ({
+export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 	chart,
 	onRemoveChart,
 	onEditChart,
@@ -50,8 +50,6 @@ export const SortableChart: React.FC<SortableChartProps> = ({
 		transition,
 		opacity: isDragging ? 0.5 : 1,
 	};
-
-	// Always render chart, even if values are zero
 
 	const renderChart = () => {
 		switch (chart.type) {
@@ -88,7 +86,6 @@ export const SortableChart: React.FC<SortableChartProps> = ({
 				border: `1px solid var(--light-gray)`,
 			}}
 		>
-			{/* Chart Header */}
 			<div
 				className="flex justify-between items-center p-4 cursor-move"
 				{...attributes}
@@ -112,7 +109,6 @@ export const SortableChart: React.FC<SortableChartProps> = ({
 							value={chart.timeRange}
 							onChange={(_value) => {
 								console.log(_value);
-								// Update chart time range 
 							}}
 							options={[
 								{ value: 'daily', label: 'Daily' },
@@ -152,12 +148,10 @@ export const SortableChart: React.FC<SortableChartProps> = ({
 				</div>
 			</div>
 
-			{/* Chart Content */}
 			<div className="p-6 h-80">
 				<div className="flex items-center justify-center h-full">
 					{renderChart()}
 
-					{/* Legend - only show for circular charts */}
 					{showLegend && (
 						<div className="space-y-4 ml-8">
 							{chartData?.map((item, index) => (
@@ -180,6 +174,8 @@ export const SortableChart: React.FC<SortableChartProps> = ({
 			</div>
 		</div>
 	);
-};
+});
 
-export default SortableChart;
+SortableChart.displayName = 'SortableChart';
+ 
+ export default SortableChart;

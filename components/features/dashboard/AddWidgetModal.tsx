@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import Button from './Button';
-import Input from './Input';
-import Dropdown from './Dropdown';
-import { ColorPicker } from './ColorPicker';
-import { Modal } from './Modal';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Dropdown from '@/components/ui/Dropdown';
+import { ColorPicker } from '@/components/ui/ColorPicker';
+import { Modal } from '@/components/ui/Modal';
 import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from '@/utils/offlineDispositions';
 import type { Widget } from '@/contexts/SetupContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';

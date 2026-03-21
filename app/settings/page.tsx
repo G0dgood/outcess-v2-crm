@@ -2,15 +2,16 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Roles from '@/components/ui/Roles';
+import Roles from '@/components/features/role/Roles';
 import Supervisors from '@/components/ui/Supervisors';
-import GeneralSettings from '@/components/ui/GeneralSettings';
+import GeneralSettings from '@/components/features/settings/GeneralSettings';
 import CompanyDetails from '@/components/ui/CompanyDetails';
 import Status from '@/components/ui/Status';
 import Permission from '@/components/ui/Permission';
+import AuditLogs from '@/components/ui/AuditLogs';
 import { usePrivilege, ModuleId } from '@/contexts/PrivilegeContext';
 
-type SettingsTab = 'settings' | 'fields' | 'status' | 'permission' | 'company-details' | 'roles' | 'supervisors';
+type SettingsTab = 'settings' | 'fields' | 'status' | 'permission' | 'company-details' | 'roles' | 'supervisors' | 'audit-logs';
 
 const subModuleMapping: Record<string, ModuleId> = {
 	'settings': 'systemSetting',
@@ -19,6 +20,7 @@ const subModuleMapping: Record<string, ModuleId> = {
 	'company-details': 'systemSetting',
 	'roles': 'userManagement',
 	'supervisors': 'userManagement',
+	'audit-logs': 'systemSetting',
 };
 
 const SettingsPage: React.FC = () => {
@@ -28,20 +30,24 @@ const SettingsPage: React.FC = () => {
 
 	useEffect(() => {
 		const tab = searchParams.get('tab') as SettingsTab;
-		if (tab && ['settings', 'fields', 'status', 'permission', 'company-details', 'roles', 'supervisors'].includes(tab)) {
+		if (tab && ['settings', 'fields', 'status', 'permission', 'company-details', 'roles', 'supervisors', 'audit-logs'].includes(tab)) {
 			setActiveTab(tab);
 		} else {
-			// Default to 'fields' if no tab is specified
-			setActiveTab('fields');
+			// Default to 'settings' if no tab is specified or invalid tab
+			setActiveTab('settings');
 		}
 	}, [searchParams]);
 
 	const renderContent = () => {
 		if (!activeTab) return <Status />;
-		
+
 		const moduleId = subModuleMapping[activeTab];
 		if (moduleId && !canAccess(moduleId, 'view')) {
-			return null;
+			return (
+				<div className="flex items-center justify-center h-full">
+					<p className="text-gray-500">You do not have permission to view this section.</p>
+				</div>
+			);
 		}
 
 		switch (activeTab) {
@@ -51,14 +57,14 @@ const SettingsPage: React.FC = () => {
 				return <Roles />;
 			case 'supervisors':
 				return <Supervisors />;
-			// case 'fields':
-			// 	return <Fields />;
 			case 'status':
 				return <Status />;
 			case 'permission':
 				return <Permission />;
 			case 'company-details':
 				return <CompanyDetails />;
+			case 'audit-logs':
+				return <AuditLogs />;
 			default:
 				return <Status />;
 		}
@@ -73,7 +79,7 @@ const SettingsPage: React.FC = () => {
 
 const SettingsPageWrapper = () => {
 	return (
-		<Suspense fallback={<div>Loading...</div>}>
+		<Suspense fallback={<div className="flex items-center justify-center h-full">Loading settings...</div>}>
 			<SettingsPage />
 		</Suspense>
 	);

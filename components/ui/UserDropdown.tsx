@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useRouter } from '@bprogress/next/app';
 import { StatusConfirmationModal } from './StatusConfirmationModal';
 import { StatusSubmenu, StatusOption } from './StatusSubmenu';
 import { UserMenu } from './UserMenu';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetStatusesByLineOfBusinessIdQuery } from '@/store/services/statusApi';
 import { useUpdateTeamMemberStatusMutation } from '@/store/services/teamMembersApi';
+import { useUpdateUserMutation } from '@/store/services/authApi';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
+import { User } from '@/store/slices/authSlice';
 import Image from 'next/image';
 
 export interface UserDropdownProps {
@@ -16,6 +18,7 @@ export interface UserDropdownProps {
 	userName?: string;
 	userEmail?: string;
 	userAvatar?: string;
+	user?: User | null;
 	isOnline?: boolean;
 	currentStatus?: {
 		status: string;
@@ -24,9 +27,12 @@ export interface UserDropdownProps {
 	onStatusClick?: () => void;
 	onEditProfileClick?: () => void;
 	onLogoutClick?: () => void;
+	isOpen?: boolean;
+	onToggle?: (isOpen: boolean) => void;
 }
 
 const UserDropdown: React.FC<UserDropdownProps> = ({
+	user,
 	userId,
 	userName = '',
 	userEmail = '',
@@ -34,9 +40,20 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 	isOnline = true,
 	currentStatus,
 	onLogoutClick,
+	isOpen: externalIsOpen,
+	onToggle,
 }) => {
-	const router = useRouter();
-	const [isOpen, setIsOpen] = useState(false);
+	const [internalIsOpen, setInternalIsOpen] = useState(false);
+
+	// Use either controlled or internal state
+	const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+	const setIsOpen = (value: boolean) => {
+		if (onToggle) {
+			onToggle(value);
+		} else {
+			setInternalIsOpen(value);
+		}
+	};
 	const [isStatusOpen, setIsStatusOpen] = useState(false);
 	const [isStatusConfirmOpen, setIsStatusConfirmOpen] = useState(false);
 	const [pendingStatus, setPendingStatus] = useState<StatusOption | null>(null);
@@ -44,8 +61,12 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 	const [mounted, setMounted] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { isAdmin } = usePrivilege();
 
-	const [updateStatus, { isLoading: isUpdatingStatus }] = useUpdateTeamMemberStatusMutation();
+	const [updateStatus, { isLoading: isUpdatingTeamMemberStatus }] = useUpdateTeamMemberStatusMutation();
+	const [updateUser, { isLoading: isUpdatingUserStatus }] = useUpdateUserMutation();
+
+	const isUpdatingStatus = isUpdatingTeamMemberStatus || isUpdatingUserStatus;
 
 	const { data: fetchedStatuses, isLoading } = useGetStatusesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
 		skip: !selectedLineOfBusinessId
@@ -115,18 +136,50 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 
 	const confirmStatusChange = async () => {
 		if (pendingStatus && userId) {
+			const statusData = {
+				status: pendingStatus.label,
+				reason: statusReason,
+				color: pendingStatus.color
+			};
+
 			try {
-				await updateStatus({
-					id: userId,
-					status: pendingStatus.label,
-					reason: statusReason
-				}).unwrap();
+				// If user is admin/owner, try updateUser first (they often aren't team members)
+				if (isAdmin) {
+					await updateUser({
+						id: userId,
+						data: { status: statusData }
+					}).unwrap();
+				} else {
+					// Otherwise try team member status update
+					try {
+						await updateStatus({
+							id: userId,
+							status: pendingStatus.label,
+							reason: statusReason
+						}).unwrap();
+					} catch (err: any) {
+						// Fallback to updateUser if team member not found (404)
+						if (err?.status === 404 ||
+							err?.data?.message?.toLowerCase().includes('not found') ||
+							err?.data?.message?.toLowerCase().includes('team member')) {
+
+							await updateUser({
+								id: userId,
+								data: { status: statusData }
+							}).unwrap();
+						} else {
+							throw err;
+						}
+					}
+				}
 
 				toastSuccess('Status updated successfully');
-			} catch (error) { 
-				toastError('Failed to update status');
+			} catch (error: any) {
+				console.error('Failed to update status:', error);
+				const errorMessage = error?.data?.message || error?.message || 'Failed to update status';
+				toastError(errorMessage);
 			}
-		} else if (!userId) { 
+		} else if (!userId) {
 			toastError('User ID is missing');
 		}
 
@@ -141,19 +194,23 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 		<div className="relative" ref={dropdownRef}>
 			<button
 				onClick={() => setIsOpen(!isOpen)}
-				className="p-1 rounded-full transition-colors cursor-pointer"
+				className="flex items-center gap-2.5 p-1.5 px-2.5 rounded-xl transition-all duration-200 cursor-pointer group"
 				title={mounted ? `${userName}${currentStatus ? ` - ${currentStatus.status}` : ''}` : ''}
 				style={{
-					color: 'var(--text-tertiary)',
-					backgroundColor: 'transparent'
+					backgroundColor: isOpen ? 'var(--bg-primary)' : 'transparent',
+					border: isOpen ? '1px solid var(--light-gray)' : '1px solid transparent'
 				}}
 				onMouseEnter={(e) => {
-					e.currentTarget.style.color = 'var(--text-primary)';
-					e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+					if (!isOpen) {
+						e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+						e.currentTarget.style.borderColor = 'var(--light-gray)';
+					}
 				}}
 				onMouseLeave={(e) => {
-					e.currentTarget.style.color = 'var(--text-tertiary)';
-					e.currentTarget.style.backgroundColor = 'transparent';
+					if (!isOpen) {
+						e.currentTarget.style.backgroundColor = 'transparent';
+						e.currentTarget.style.borderColor = 'transparent';
+					}
 				}}
 			>
 				<div className="relative">
@@ -161,21 +218,21 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 						<Image
 							src={userAvatar}
 							alt={mounted ? userName : ''}
-							width={30}
-							height={30}
-							className="rounded-full border-2 object-cover"
+							width={32}
+							height={32}
+							className="rounded-full border-2 object-cover shrink-0"
 							style={{ borderColor: 'var(--light-gray)' }}
 						/>
 					) : (
 						<div
-							className="box-border w-10 h-10 rounded-full flex items-center justify-center"
+							className="box-border w-8 h-8 rounded-full flex items-center justify-center shrink-0"
 							style={{
 								backgroundColor: 'var(--bg-primary)',
 								border: '1px solid var(--light-gray)'
 							}}
 						>
 							<span
-								className="font-semibold text-[10px] md:text-[12px]"
+								className="font-semibold text-[12px]"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{mounted ? userName.charAt(0).toUpperCase() : ''}
@@ -187,7 +244,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 						<div
 							className="absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 rounded-full"
 							style={{
-								backgroundColor: currentStatus.color || '#22C55E', // Default to green if no color
+								backgroundColor: currentStatus.color || "", // Default to green if no color
 								borderColor: 'var(--accent-white)'
 							}}
 							title={currentStatus.status}
@@ -210,6 +267,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 				onStatusClick={() => setIsStatusOpen(!isStatusOpen)}
 				onClose={() => setIsOpen(false)}
 				onLogoutClick={onLogoutClick}
+				currentStatus={currentStatus}
+				showStatus={!!((user as any)?.role?.roleName === "supervisor" || (user as any)?.supervisorId)}
 			/>
 
 			{/* Status Submenu */}
@@ -221,6 +280,10 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 				}}
 				statusOptions={statusOptions}
 				onSelect={handleStatusSelect}
+				userAvatar={userAvatar}
+				userName={userName}
+				currentStatus={currentStatus}
+				userEmail={userEmail}
 			/>
 
 			{/* Status Confirmation Modal */}

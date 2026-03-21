@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Button from './Button';
-import AddShiftHourModal, { ShiftHour } from './AddShiftHourModal';
-import AssignShiftHourModal from './AssignShiftHourModal';
+import Button from '@/components/ui/Button';
+import AddShiftHourModal, { ShiftHour } from '@/components/ui/AddShiftHourModal';
+import AssignShiftHourModal from '@/components/ui/AssignShiftHourModal';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useUpsertShiftHourMutation } from '@/store/services/lineOfBusinessApi';
 import { toastError, toastSuccess } from '@/utils/toastWithSound';

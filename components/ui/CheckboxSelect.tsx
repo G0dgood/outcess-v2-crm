@@ -71,7 +71,7 @@ export const CheckboxSelect: React.FC<CheckboxSelectProps> = ({
 										checked={isChecked}
 										onChange={(e) => handleChange(option.value, e.target.checked)}
 										disabled={isDisabled}
-										className="checkbox-input"
+										className="checkbox-input mb-4"
 									/>
 									<label htmlFor={optionId} className="checkbox-label"></label>
 								</div>

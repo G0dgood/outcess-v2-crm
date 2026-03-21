@@ -41,7 +41,7 @@ const GeneralSettings: React.FC = () => {
 				<div
 					className="flex items-center justify-between p-4 dark:bg-gray-800 border dark:border-gray-700"
 					style={{
-						backgroundColor: 'var(--bg-primary)',
+						backgroundColor: 'var(--accent-white)',
 						borderColor: 'var(--light-gray)'
 					}}
 				>

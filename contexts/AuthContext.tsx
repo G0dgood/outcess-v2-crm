@@ -39,9 +39,12 @@ interface AuthContextType {
 	user: User | null;
 	isAuthenticated: boolean;
 	isLoading: boolean;
+	isMfaVerified: boolean;
 
 	// Authentication methods
 	updateUser: (updates: Partial<User>) => void;
+	logout: () => void;
+	setMfaVerified: (verified: boolean) => void;
 
 	// Token management
 	getAccessToken: () => string | null;
@@ -74,12 +77,34 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({
 	children,
-	apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '/api',
-	storageKey = 'auth_data',
+	apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.base_url || '/api',
+	storageKey = 'peoplely_auth',
 }) => {
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [tokens, setTokensState] = useState<AuthTokens | null>(null);
+	const [isMfaVerified, setIsMfaVerified] = useState(false);
+	const [sessionTimeout, setSessionTimeout] = useState<NodeJS.Timeout | null>(null);
+
+	const clearAuthData = useCallback(() => {
+		setUser(null);
+		setTokensState(null);
+		setIsMfaVerified(false);
+		if (sessionTimeout) clearTimeout(sessionTimeout);
+		if (typeof window !== 'undefined') {
+			localStorage.removeItem(storageKey);
+			localStorage.removeItem('token');
+			localStorage.removeItem('peoplely-user');
+		}
+	}, [storageKey, sessionTimeout]);
+
+	const logout = useCallback(() => {
+		clearAuthData();
+		// Redirect to login if needed, or let components handle it
+		if (typeof window !== 'undefined') {
+			window.location.href = '/login';
+		}
+	}, [clearAuthData]);
 
 	// Load auth data from localStorage on mount
 	useEffect(() => {
@@ -89,25 +114,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 		}
 
 		try {
-			// Try loading from individual keys first (app standard)
-			const storedUser = localStorage.getItem('peoplely-user');
-			const storedToken = localStorage.getItem('token');
-
-			if (storedUser && storedToken) {
-				const parsedUser = JSON.parse(storedUser);
-				setUser(parsedUser);
-				setTokensState({ accessToken: storedToken });
+			const stored = localStorage.getItem(storageKey);
+			if (stored) {
+				const { user: u, tokens: t, mfaVerified } = JSON.parse(stored);
+				setUser(u);
+				setTokensState(t);
+				setIsMfaVerified(mfaVerified || false);
 			} else {
-				// Fallback to legacy/bundled storage key
-				const stored = localStorage.getItem(storageKey);
-				if (stored) {
-					const parsed = JSON.parse(stored);
-					if (parsed.user) {
-						setUser(parsed.user);
-					}
-					if (parsed.tokens) {
-						setTokensState(parsed.tokens);
-					}
+				// Fallback to legacy keys
+				const storedUser = localStorage.getItem('peoplely-user');
+				const storedToken = localStorage.getItem('token');
+				if (storedUser && storedToken) {
+					setUser(JSON.parse(storedUser));
+					setTokensState({ accessToken: storedToken });
 				}
 			}
 		} catch (error) {
@@ -118,126 +137,76 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 		}
 	}, [storageKey]);
 
-	// Save auth data to localStorage
-	const saveAuthData = useCallback((userData: User | null, tokenData: AuthTokens | null) => {
+	// Save auth data to localStorage and handle session timeout
+	useEffect(() => {
 		if (typeof window === 'undefined') return;
 
-		try {
-			if (userData && tokenData) {
-				localStorage.setItem(storageKey, JSON.stringify({
-					user: userData,
-					tokens: tokenData,
-				}));
-			} else {
-				localStorage.removeItem(storageKey);
+		if (user && tokens) {
+			localStorage.setItem(storageKey, JSON.stringify({
+				user,
+				tokens,
+				mfaVerified: isMfaVerified,
+				savedAt: Date.now()
+			}));
+
+			// Set auto-logout timer if expiresIn is provided
+			if (tokens.expiresIn) {
+				if (sessionTimeout) clearTimeout(sessionTimeout);
+				const timeout = setTimeout(() => {
+					console.log('Session expired, logging out...');
+					logout();
+				}, tokens.expiresIn * 1000);
+				setSessionTimeout(timeout);
 			}
-		} catch (error) {
-			console.error('Error saving auth data to storage:', error);
 		}
-	}, [storageKey]);
+	}, [user, tokens, isMfaVerified, storageKey]);
 
-	// Clear auth data
-	const clearAuthData = useCallback(() => {
-		setUser(null);
-		setTokensState(null);
-		if (typeof window !== 'undefined') {
-			localStorage.removeItem(storageKey);
-		}
-	}, [storageKey]);
-
-	// Set tokens
 	const setTokens = useCallback((tokenData: AuthTokens) => {
 		setTokensState(tokenData);
-		if (user) {
-			saveAuthData(user, tokenData);
-		}
-	}, [user, saveAuthData]);
+	}, []);
 
-	// Clear tokens
 	const clearTokens = useCallback(() => {
 		setTokensState(null);
-		if (user) {
-			saveAuthData(user, null);
-		}
-	}, [user, saveAuthData]);
+	}, []);
 
-	// Get access token
 	const getAccessToken = useCallback(() => {
 		return tokens?.accessToken || null;
 	}, [tokens]);
 
-	// Get refresh token
 	const getRefreshToken = useCallback(() => {
 		return tokens?.refreshToken || null;
 	}, [tokens]);
 
-	// Validate token
 	const validateToken = useCallback(() => {
 		if (!tokens?.accessToken) return false;
-
-		// Check if token has expiration
-		if (tokens.expiresIn) {
-			const stored = localStorage.getItem(storageKey);
-			if (stored) {
-				try {
-					const parsed = JSON.parse(stored);
-					const savedAt = parsed.savedAt;
-					if (savedAt) {
-						const expiresAt = savedAt + (tokens.expiresIn * 1000);
-						if (Date.now() >= expiresAt) {
-							return false;
-						}
-					}
-				} catch {
-					// If we can't parse, assume valid
-				}
-			}
-		}
-
+		// More robust validation could happen here
 		return true;
-	}, [tokens, storageKey]);
+	}, [tokens]);
 
-	// Check authentication
 	const checkAuth = useCallback(async () => {
 		if (!validateToken()) {
 			clearAuthData();
 			return false;
 		}
+		return true;
+	}, [validateToken, clearAuthData]);
 
-		// Optionally verify token with backend
-		try {
-			const token = getAccessToken();
-			if (!token) {
-				clearAuthData();
-				return false;
-			}
-
-
-
-			return true;
-		} catch (error) {
-			console.error('Error checking auth:', error);
-			clearAuthData();
-			return false;
-		}
-	}, [validateToken, getAccessToken, clearAuthData]);
-
-	// Update user
 	const updateUser = useCallback((updates: Partial<User>) => {
-		if (user) {
-			const updatedUser = { ...user, ...updates };
-			setUser(updatedUser);
-			if (tokens) {
-				saveAuthData(updatedUser, tokens);
-			}
-		}
-	}, [user, tokens, saveAuthData]);
+		setUser(prev => prev ? { ...prev, ...updates } : null);
+	}, []);
+
+	const setMfaVerified = useCallback((verified: boolean) => {
+		setIsMfaVerified(verified);
+	}, []);
 
 	const contextValue: AuthContextType = {
 		user,
 		isAuthenticated: !!user && !!tokens?.accessToken && validateToken(),
 		isLoading,
+		isMfaVerified,
 		updateUser,
+		logout,
+		setMfaVerified,
 		getAccessToken,
 		getRefreshToken,
 		setTokens,

@@ -1,16 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Button from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
-import AddChartModal from '@/components/ui/AddChartModal';
-import EditChartModal from '@/components/ui/EditChartModal';
-import AddWidgetModal from '@/components/ui/AddWidgetModal';
-import EditWidgetModal from '@/components/ui/EditWidgetModal';
+import AddChartModal from '@/components/features/dashboard/AddChartModal';
+import EditChartModal from '@/components/features/dashboard/EditChartModal';
+import AddWidgetModal from '@/components/features/dashboard/AddWidgetModal';
+import EditWidgetModal from '@/components/features/dashboard/EditWidgetModal';
 import DeleteWidgetModal from '@/components/ui/DeleteWidgetModal';
-import StickyNote, { StickyNoteData } from '@/components/ui/StickyNote';
-import StickyNoteModal from '@/components/ui/StickyNoteModal';
 import { PlusIcon, Pencil1Icon, ReloadIcon } from '@radix-ui/react-icons';
+import AccessRestricted from '@/components/ui/AccessRestricted';
 import { useUpdateLineOfBusinessMutation } from '@/store/services/lineOfBusinessApi';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
@@ -47,8 +46,6 @@ import {
 } from '@/utils/offlineDispositions';
 import SortableChart from '@/components/dashboard/SortableChart';
 import WidgetCard from '@/components/dashboard/WidgetCard';
-
-import { StoredStickyNote, serializeStickyNote } from '@/utils/stickyNoteUtils';
 import { ChartDataItem } from '@/components/dashboard/charts/types';
 import { Chart, Widget, DispositionCategory, CallOutcome, useSetup, SetupData } from '@/contexts/SetupContext';
 import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton';
@@ -165,7 +162,7 @@ const DashboardContent: React.FC = () => {
 		}
 	};
 
-	const updateDashboardSettings = async (newSettings: Partial<typeof dashboardSettings>) => {
+	const updateDashboardSettings = useCallback(async (newSettings: Partial<typeof dashboardSettings>) => {
 		// Always update local SetupContext for immediate UI feedback
 		updateDashboardSettingsLocal(newSettings);
 		// If offline, skip server
@@ -182,9 +179,9 @@ const DashboardContent: React.FC = () => {
 				}
 			}
 		});
-	};
+	}, [updateDashboardSettingsLocal, isOffline, lineOfBusinessData, setupData, updateLineOfBusiness, dashboardSettings]);
 
-	const addChart = async (chart: Omit<Chart, 'id'>) => {
+	const addChart = useCallback(async (chart: Omit<Chart, 'id'>) => {
 		if (!canCreate) return;
 		// Always store locally into SetupContext first (authoritative dispositionSettings)
 		addChartLocal(chart);
@@ -249,9 +246,9 @@ const DashboardContent: React.FC = () => {
 				charts: [...existingCharts, positionedChart]
 			}
 		});
-	};
+	}, [canCreate, addChartLocal, isOffline, dashboardSettings, updateDashboardSettings]);
 
-	const removeChart = async (chartId: string) => {
+	const removeChart = useCallback(async (chartId: string) => {
 		if (!canDelete) return;
 		if (isOffline) {
 			removeChartLocal(chartId);
@@ -264,9 +261,9 @@ const DashboardContent: React.FC = () => {
 				charts: existingCharts.filter((chart: Chart) => chart.id !== chartId)
 			}
 		});
-	};
+	}, [canDelete, isOffline, removeChartLocal, dashboardSettings, updateDashboardSettings]);
 
-	const updateChart = async (chartId: string, updates: Partial<Chart>) => {
+	const updateChart = useCallback(async (chartId: string, updates: Partial<Chart>) => {
 		if (!canEdit) return;
 		if (isOffline) {
 			updateChartLocal(chartId, updates);
@@ -281,9 +278,9 @@ const DashboardContent: React.FC = () => {
 				)
 			}
 		});
-	};
+	}, [canEdit, isOffline, updateChartLocal, dashboardSettings, updateDashboardSettings]);
 
-	const updateChartsOrder = async (newCharts: Chart[]) => {
+	const updateChartsOrder = useCallback(async (newCharts: Chart[]) => {
 		if (!canEdit) return;
 		if (isOffline) {
 			updateChartsOrderLocal(newCharts);
@@ -295,7 +292,7 @@ const DashboardContent: React.FC = () => {
 				charts: newCharts
 			}
 		});
-	};
+	}, [canEdit, isOffline, updateChartsOrderLocal, updateDashboardSettings, dashboardSettings]);
 
 	const [isAddChartModalOpen, setIsAddChartModalOpen] = useState(false);
 	const [isEditChartModalOpen, setIsEditChartModalOpen] = useState(false);
@@ -305,10 +302,6 @@ const DashboardContent: React.FC = () => {
 	const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
 	const [isDeleteWidgetModalOpen, setIsDeleteWidgetModalOpen] = useState(false);
 	const [deletingWidget, setDeletingWidget] = useState<Widget | null>(null);
-	const [isStickyNoteModalOpen, setIsStickyNoteModalOpen] = useState(false);
-	const [stickyNotes, setStickyNotes] = useState<StickyNoteData[]>([]);
-	const [editingNote, setEditingNote] = useState<StickyNoteData | undefined>(undefined);
-	const [isLoaded, setIsLoaded] = useState(false);
 	const [hydrated, setHydrated] = useState(false);
 
 	const sensors = useSensors(
@@ -325,62 +318,10 @@ const DashboardContent: React.FC = () => {
 
 
 
-	// Load sticky notes from localStorage on mount
+	// Hydration state
 	useEffect(() => {
 		setHydrated(true);
-		const loadStickyNotes = () => {
-			try {
-				const savedNotes = localStorage.getItem('stickyNotes');
-				if (savedNotes) {
-					const parsed = JSON.parse(savedNotes);
-					if (Array.isArray(parsed) && parsed.length > 0) {
-						const storedNotes = parsed as StoredStickyNote[];
-						const loadedNotes = storedNotes.map((note, index): StickyNoteData => ({
-							id: note.id || `${Date.now()}-${index}`,
-							title: note.title || '',
-							content: note.content || '',
-							color: note.color || '#FFFACD',
-							todos: Array.isArray(note.todos) ? note.todos : [],
-							position: note.position ?? { x: 100 + (index * 20), y: 100 + (index * 20) },
-							rotation: note.rotation !== undefined ? note.rotation : Math.random() * 6 - 3,
-							isHidden: note.isHidden ?? false,
-							createdAt: note.createdAt ? new Date(note.createdAt) : new Date(),
-							updatedAt: note.updatedAt ? new Date(note.updatedAt) : new Date(),
-							reminder: note.reminder ? new Date(note.reminder) : undefined,
-						}));
-						setStickyNotes(loadedNotes);
-						setIsLoaded(true);
-					} else {
-						setIsLoaded(true);
-					}
-				} else {
-					setIsLoaded(true);
-				}
-			} catch (error) {
-				console.error('Error loading sticky notes:', error);
-				setIsLoaded(true);
-			}
-		};
-
-		loadStickyNotes();
 	}, []);
-
-	// Save sticky notes to localStorage whenever they change (but not on initial load)
-	useEffect(() => {
-		if (!isLoaded) return; // Don't save until initial load is complete
-
-		const saveStickyNotes = () => {
-			try {
-				// Convert dates to ISO strings for storage
-				const notesToSave: StoredStickyNote[] = stickyNotes.map(serializeStickyNote);
-				localStorage.setItem('stickyNotes', JSON.stringify(notesToSave));
-			} catch (error) {
-				console.error('Error saving sticky notes:', error);
-			}
-		};
-
-		saveStickyNotes();
-	}, [stickyNotes, isLoaded]);
 
 	// Pending dispositions count
 	const [pendingDispositionsCount, setPendingDispositionsCount] = useState(0);
@@ -549,84 +490,88 @@ const DashboardContent: React.FC = () => {
 		});
 	}, [dashboardSettings, combinedDispositions, pendingDispositionsCount, reportData]);
 
-	// Wrapper function to generate chart data using the utility function
-	const generateChartDataWrapper = (dataSource: string | string[], chartColor?: string, colors?: Record<string, string>): ChartDataItem[] => {
-		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, combinedDispositions, reportData);
-	};
-
-	const handleEditWidget = (widgetId: string) => {
+	const handleEditWidget = useCallback((widgetId: string) => {
 		if (!canEdit) return;
-		const widget = widgets.find((w: Widget) => w.id === widgetId);
+		const widget = (dashboardSettings.widgets as Widget[]).find((w: Widget) => w.id === widgetId);
 		if (widget) {
 			setEditingWidget(widget);
 			setIsEditWidgetModalOpen(true);
 		}
-	};
+	}, [canEdit, dashboardSettings.widgets]);
 
-	const handleDeleteWidget = (widgetId: string) => {
+	const handleDeleteWidget = useCallback((widgetId: string) => {
 		if (!canDelete) return;
-		const widget = widgets.find((w: Widget) => w.id === widgetId);
+		const widget = (dashboardSettings.widgets as Widget[]).find((w: Widget) => w.id === widgetId);
 		if (widget) {
 			setDeletingWidget(widget);
 			setIsDeleteWidgetModalOpen(true);
 		}
-	};
+	}, [canDelete, dashboardSettings.widgets]);
 
-	const handleConfirmDelete = () => {
+	const handleRemoveChart = useCallback((chartId: string) => {
 		if (!canDelete) return;
-		if (deletingWidget) {
-			const updatedWidgets = widgets.filter((w: Widget) => w.id !== deletingWidget.id);
-			updateDashboardSettings({
-				widgets: updatedWidgets,
-			});
-			setIsDeleteWidgetModalOpen(false);
-			setDeletingWidget(null);
-		}
-	};
+		removeChart(chartId);
+	}, [canDelete, removeChart]);
 
-	const handleSaveWidget = (widget: Widget) => {
-		if (!canEdit) return;
-		const updatedWidgets = widgets.map((w: Widget) => w.id === widget.id ? widget : w);
-		updateDashboardSettings({
-			widgets: updatedWidgets,
-		});
-		setIsEditWidgetModalOpen(false);
-		setEditingWidget(null);
-	};
-
-	const handleAddWidget = () => {
-		if (!canCreate) return;
-		setIsAddWidgetModalOpen(true);
-	};
-
-	const handleSaveNewWidget = (widgetData: Omit<Widget, 'id'>) => {
-		if (!canCreate) return;
-		const newWidget: Widget = {
-			...widgetData,
-			id: `widget-${Date.now()}`,
-		};
-		const updatedWidgets = [...widgets, newWidget];
-		updateDashboardSettings({
-			widgets: updatedWidgets,
-		});
-		setIsAddWidgetModalOpen(false);
-	};
-
-	const handleAddChart = (chartData: Omit<Chart, 'id'>) => {
-		if (!canCreate) return;
-		addChart(chartData);
-	};
-
-	const handleEditChart = (chartId: string) => {
+	const handleEditChart = useCallback((chartId: string) => {
 		if (!canEdit) return;
 		const chart = dashboardSettings.dispositionSettings.charts.find((c: Chart) => c.id === chartId);
 		if (chart) {
 			setEditingChart(chart);
 			setIsEditChartModalOpen(true);
 		}
-	};
+	}, [canEdit, dashboardSettings.dispositionSettings.charts]);
 
-	const handleSaveChart = (chart: Chart) => {
+	const generateChartDataWrapper = useCallback((dataSource: string | string[], chartColor?: string, colors?: Record<string, string>): ChartDataItem[] => {
+		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, combinedDispositions, reportData);
+	}, [dashboardSettings, pendingDispositionsCount, combinedDispositions, reportData]);
+
+	const handleConfirmDelete = useCallback(() => {
+		if (!canDelete) return;
+		if (deletingWidget) {
+			const updatedWidgets = (dashboardSettings.widgets as Widget[]).filter((w: Widget) => w.id !== deletingWidget.id);
+			updateDashboardSettings({
+				widgets: updatedWidgets,
+			});
+			setIsDeleteWidgetModalOpen(false);
+			setDeletingWidget(null);
+		}
+	}, [canDelete, deletingWidget, dashboardSettings.widgets, updateDashboardSettings]);
+
+	const handleSaveWidget = useCallback((widget: Widget) => {
+		if (!canEdit) return;
+		const updatedWidgets = (dashboardSettings.widgets as Widget[]).map((w: Widget) => w.id === widget.id ? widget : w);
+		updateDashboardSettings({
+			widgets: updatedWidgets,
+		});
+		setIsEditWidgetModalOpen(false);
+		setEditingWidget(null);
+	}, [canEdit, dashboardSettings.widgets, updateDashboardSettings]);
+
+	const handleAddWidget = useCallback(() => {
+		if (!canCreate) return;
+		setIsAddWidgetModalOpen(true);
+	}, [canCreate]);
+
+	const handleSaveNewWidget = useCallback((widgetData: Omit<Widget, 'id'>) => {
+		if (!canCreate) return;
+		const newWidget: Widget = {
+			...widgetData,
+			id: `widget-${Date.now()}`,
+		};
+		const updatedWidgets = [...(dashboardSettings.widgets as Widget[]), newWidget];
+		updateDashboardSettings({
+			widgets: updatedWidgets,
+		});
+		setIsAddWidgetModalOpen(false);
+	}, [canCreate, dashboardSettings.widgets, updateDashboardSettings]);
+
+	const handleAddChart = useCallback((chartData: Omit<Chart, 'id'>) => {
+		if (!canCreate) return;
+		addChart(chartData);
+	}, [canCreate, addChart]);
+
+	const handleSaveChart = useCallback((chart: Chart) => {
 		if (!canEdit) return;
 		// Persist all editable fields, including colors map for multi-source charts
 		const updates: Partial<Chart> = {
@@ -640,80 +585,8 @@ const DashboardContent: React.FC = () => {
 		updateChart(chart.id, updates);
 		setIsEditChartModalOpen(false);
 		setEditingChart(null);
-	};
+	}, [canEdit, updateChart]);
 
-	const handleRemoveChart = (chartId: string) => {
-		if (!canDelete) return;
-		removeChart(chartId);
-	};
-
-	const handleCreateStickyNote = (noteData: Omit<StickyNoteData, 'id' | 'createdAt' | 'updatedAt'>) => {
-		const newNote: StickyNoteData = {
-			...noteData,
-			id: Date.now().toString(),
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			position: noteData.position || {
-				x: 100 + (stickyNotes.length * 30),
-				y: 100 + (stickyNotes.length * 30)
-			},
-			rotation: noteData.rotation || Math.random() * 6 - 3,
-		};
-		setStickyNotes([...stickyNotes, newNote]);
-		setIsStickyNoteModalOpen(false);
-		setEditingNote(undefined);
-	};
-
-	const handleCreateStickyNoteDirectly = () => {
-		const newNote: StickyNoteData = {
-			id: Date.now().toString(),
-			title: '',
-			content: '',
-			color: '#FFFACD',
-			todos: [] as StickyNoteData['todos'],
-			position: {
-				x: 100 + (stickyNotes.length * 30),
-				y: 100 + (stickyNotes.length * 30)
-			},
-			rotation: Math.random() * 6 - 3,
-			createdAt: new Date(),
-			updatedAt: new Date(),
-		};
-		setStickyNotes([...stickyNotes, newNote]);
-	};
-
-	const handleUpdateStickyNote = (updatedNote: StickyNoteData) => {
-		const updatedNotes = stickyNotes.map(note => note.id === updatedNote.id ? { ...updatedNote, updatedAt: new Date() } : note);
-		setStickyNotes(updatedNotes);
-		// Save to localStorage immediately when position or content changes
-		try {
-			const notesToSave: StoredStickyNote[] = updatedNotes.map(serializeStickyNote);
-			localStorage.setItem('stickyNotes', JSON.stringify(notesToSave));
-			// Dispatch event to notify GlobalStickyNotes to reload
-			window.dispatchEvent(new CustomEvent('stickyNotesUpdated'));
-		} catch (error) {
-			console.error('Error saving sticky notes:', error);
-		}
-	};
-
-	const handleDeleteStickyNote = (noteId: string) => {
-		const updatedNotes = stickyNotes.filter(note => note.id !== noteId);
-		setStickyNotes(updatedNotes);
-		// Save to localStorage immediately when note is deleted
-		try {
-			const notesToSave: StoredStickyNote[] = updatedNotes.map(serializeStickyNote);
-			localStorage.setItem('stickyNotes', JSON.stringify(notesToSave));
-			// Dispatch event to notify GlobalStickyNotes to reload
-			window.dispatchEvent(new CustomEvent('stickyNotesUpdated'));
-		} catch (error) {
-			console.error('Error saving sticky notes:', error);
-		}
-	};
-
-	const handleOpenStickyNoteModal = () => {
-		setEditingNote(undefined);
-		setIsStickyNoteModalOpen(true);
-	};
 
 	const handleDragEnd = (event: DragEndEvent) => {
 		if (!canEdit) return;
@@ -738,10 +611,6 @@ const DashboardContent: React.FC = () => {
 		}
 	};
 
-	// Fix for unused variable warning
-	useEffect(() => {
-		if (false) handleOpenStickyNoteModal();
-	}, []);
 
 	if (hydrated && isLoading) {
 		return <DashboardSkeleton />;
@@ -750,17 +619,10 @@ const DashboardContent: React.FC = () => {
 	return (
 		<div>
 			{!canAccessDashboard && (
-				<div
-					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-8"
-					style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
-				>
-					<h2 className="font-inter text-[12px] md:text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>
-						Access Restricted
-					</h2>
-					<p className="font-lato text-[10px] md:text-[12px]" style={{ color: 'var(--text-tertiary)' }}>
-						You do not have access permission to view the dashboard.
-					</p>
-				</div>
+				<AccessRestricted
+					title="Access Restricted"
+					message="You do not have access permission to view the dashboard."
+				/>
 			)}
 			{canAccessDashboard && (
 				<>
@@ -826,7 +688,7 @@ const DashboardContent: React.FC = () => {
 							<Button
 								variant="primary"
 								size="md"
-								onClick={handleCreateStickyNoteDirectly}
+								onClick={() => window.dispatchEvent(new CustomEvent('createStickyNote'))}
 								className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
 								// style={outlineButtonStyle}
 								onMouseEnter={(event) => handlePrimaryHover(event, true)}
@@ -886,17 +748,11 @@ const DashboardContent: React.FC = () => {
 							))}
 						</div>
 					) : (
-						<div
-							className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-8"
-							style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
-						>
-							<h3 className="font-inter text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
-								View Restricted
-							</h3>
-							<p className="font-lato text-[10px] md:text-[12px]" style={{ color: 'var(--text-tertiary)' }}>
-								You do not have permission to view widgets and charts.
-							</p>
-						</div>
+						<AccessRestricted
+							title="View Restricted"
+							message="You do not have permission to view widgets and charts."
+							titleTag="h3"
+						/>
 					)}
 
 					{/* Charts Grid Container */}
@@ -991,15 +847,6 @@ const DashboardContent: React.FC = () => {
 						</div>
 					</DndContext>
 
-					{/* Sticky Notes - Always visible on the page */}
-					{stickyNotes.filter(note => !note.isHidden).map((note) => (
-						<StickyNote
-							key={note.id}
-							note={note}
-							onUpdate={handleUpdateStickyNote}
-							onDelete={handleDeleteStickyNote}
-						/>
-					))}
 
 					{/* Add Chart Modal */}
 					<AddChartModal
@@ -1048,16 +895,6 @@ const DashboardContent: React.FC = () => {
 						widgetTitle={deletingWidget?.title}
 					/>
 
-					{/* Sticky Note Modal */}
-					<StickyNoteModal
-						isOpen={isStickyNoteModalOpen}
-						onClose={() => {
-							setIsStickyNoteModalOpen(false);
-							setEditingNote(undefined);
-						}}
-						onSave={handleCreateStickyNote}
-						note={editingNote}
-					/>
 				</>
 			)}
 		</div>

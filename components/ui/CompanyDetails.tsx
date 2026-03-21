@@ -8,8 +8,9 @@ import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import CompanyDetailsSkeleton from '@/components/skeletons/CompanyDetailsSkeleton';
 import CompanyProfile from './CompanyProfile';
-import BusinessHours from './BusinessHours';
+import BusinessHours from '@/components/features/settings/BusinessHours';
 import Currencies from './Currencies';
+import OrganizationSettings from '@/components/features/settings/OrganizationSettings';
 
 interface CompanyDetailsProps {
 	className?: string;
@@ -19,7 +20,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const [updateCompany, { isLoading: isUpdating }] = useUpdateCompanyMutation();
 
-	const [activeTab, setActiveTab] = useState<'company-detail' | 'business-hour' | 'currencies'>('company-detail');
+	const [activeTab, setActiveTab] = useState<'company-detail' | 'business-hour' | 'currencies' | 'organization'>('company-detail');
 	const [isEditMode, setIsEditMode] = useState(false);
 
 	const [formData, setFormData] = useState({
@@ -201,6 +202,32 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 						>
 							Currencies
 						</button>
+						<button
+							onClick={() => setActiveTab('organization')}
+							className={`pb-2 px-1 font-inter text-[10px] md:text-[12px] font-medium transition-colors border-b-2 ${activeTab === 'organization'
+								? 'dark:text-gray-100 dark:border-gray-100'
+								: 'dark:text-gray-400 border-transparent dark:hover:text-gray-200'
+								}`}
+							style={activeTab === 'organization' ? {
+								color: 'var(--text-primary)',
+								borderBottomColor: 'var(--text-primary)'
+							} : {
+								color: 'var(--text-tertiary)',
+								borderBottomColor: 'transparent'
+							}}
+							onMouseEnter={(e) => {
+								if (activeTab !== 'organization') {
+									e.currentTarget.style.color = 'var(--text-primary)';
+								}
+							}}
+							onMouseLeave={(e) => {
+								if (activeTab !== 'organization') {
+									e.currentTarget.style.color = 'var(--text-tertiary)';
+								}
+							}}
+						>
+							Organization
+						</button>
 					</div>
 				</div>
 
@@ -224,6 +251,10 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 
 				{activeTab === 'currencies' && (
 					<Currencies />
+				)}
+
+				{activeTab === 'organization' && (
+					<OrganizationSettings />
 				)}
 
 			</div>

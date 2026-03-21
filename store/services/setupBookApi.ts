@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from './baseApi';
 
 export interface SetupBook {
     id: string;
@@ -45,19 +45,7 @@ export interface DeleteManySetupBookRecordsRequest {
     ids: string[];
 }
 
-export const setupBookApi = createApi({
-    reducerPath: 'setupBookApi',
-    tagTypes: ['SetupBook'],
-    baseQuery: fetchBaseQuery({
-        baseUrl: process.env.base_url,
-        prepareHeaders: (headers, { getState }) => {
-            const token = (getState() as any).auth?.tokens?.accessToken || localStorage.getItem('token');
-            if (token) {
-                headers.set('authorization', `Bearer ${token}`);
-            }
-            return headers;
-        },
-    }),
+export const setupBookApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         getSetupBooks: builder.query<SetupBook[], { page?: number; limit?: number; search?: string } | void>({
             query: (params) => {

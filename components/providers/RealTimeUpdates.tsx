@@ -18,10 +18,14 @@ export const RealTimeUpdates: React.FC = () => {
     // Step 1: Connect and Join the 'Room'
     if (isConnected && user) {
       // Join User Room 
+      const userId = user.id || user._id;
+      if (userId) {
+        emit('join', userId);
+      }
 
       // Join Company Room
-      const userCompany = user.company as unknown;
-      const companyId = user.companyId || (userCompany as { _id?: string })?._id || (userCompany as { id?: string })?.id;
+      const userCompany = user.company as any;
+      const companyId = user.companyId || userCompany?._id || userCompany?.id;
       if (companyId) {
         emit('joinCompany', companyId);
       }
@@ -29,7 +33,13 @@ export const RealTimeUpdates: React.FC = () => {
       // Join LineOfBusiness Room
       const lobId = selectedLineOfBusinessId || user.lineOfBusinessId;
       if (lobId) {
+        emit('joinLineOfBusiness', lobId);
+      }
 
+      // Join Role Room
+      const roleId = (user.role as any)?._id || (user.role as any)?.id || user.roleId;
+      if (roleId && typeof roleId === 'string') {
+        emit('joinRole', roleId);
       }
     }
   }, [isConnected, user, selectedLineOfBusinessId, emit]);
@@ -38,13 +48,15 @@ export const RealTimeUpdates: React.FC = () => {
     if (!socket) return;
 
     // Step 2: Listen for the roleUpdated Event
-    const handleRoleUpdated = (updatedRoleData: unknown) => {
-
-      const data = updatedRoleData as User;
-
-      // The payload might be the full user object or just the role changes.
-      // Based on the guide: "This event will carry the updated user data (including the new role/permissions)."
-      // So we expect updatedUser.
+    const handleRoleUpdated = (data: any) => {
+      // If it's a role-specific refresh signal
+      if (data.roleId) {
+        toast.info('Your role permissions have been updated. Refreshing...');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+        return;
+      }
 
       // Check if the update is for the current user
       if (data.id === user?.id || data._id === user?.id) {
