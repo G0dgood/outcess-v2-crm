@@ -155,12 +155,16 @@ export const syncPendingDispositions = async (
     sendFn?: (message: SocketMessage) => void
 ): Promise<{ success: number; failed: number }> => {
 	const pending = getPendingDispositions();
+	console.log(`[OfflineSync] Attempting to sync ${pending.length} pending dispositions`);
+	
 	let success = 0;
 	let failed = 0;
 
 	for (const disposition of pending) {
 		try {
 			if (sendFn) {
+				// Special check: if it's a socket-based sendFn, we should ensure it's not just queuing
+				// But we'll trust the caller for now.
 				sendFn({
 					type: 'disposition',
 					payload: {
@@ -168,19 +172,19 @@ export const syncPendingDispositions = async (
 						customerId: disposition.customerId,
 						customerName: disposition.customerName,
 						lineOfBusinessId: disposition.lineOfBusinessId,
-						timestamp: new Date().toISOString(),
+						timestamp: disposition.createdAt, // Use original creation time
 					},
 				});
+				
+				console.log(`[OfflineSync] Successfully pushed disposition ${disposition.id}`);
 				updateDispositionStatus(disposition.id, 'synced');
 				success++;
 			} else {
-				// If no send function, mark as failed
-				updateDispositionStatus(disposition.id, 'failed');
+				console.warn(`[OfflineSync] No send function provided for disposition ${disposition.id}`);
 				failed++;
 			}
 		} catch (error) {
-			console.error('Error syncing disposition:', error);
-			updateDispositionStatus(disposition.id, 'failed');
+			console.error(`[OfflineSync] Failed to sync disposition ${disposition.id}:`, error);
 			failed++;
 		}
 	}

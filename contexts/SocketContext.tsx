@@ -85,6 +85,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 
 	const socketRef = useRef<Socket | null>(null);
 	const messageQueueRef = useRef<any[]>([]);
+	const isSyncingDispositionsRef = useRef(false);
 
 	const {
 		url = process.env.base_url || 'http://localhost:8000',
@@ -105,23 +106,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 			// Show reconnected banner when network comes back
 			setIsReconnected(true);
 			setTimeout(() => setIsReconnected(false), 3000);
-
-			// Automatic Sync for Offline Dispositions
-			const pendingCount = getPendingDispositionsCount();
-			if (pendingCount > 0) {
-				toastInfo(`Network restored. Syncing ${pendingCount} pending dispositions...`);
-				
-				// Wait a moment for socket to potentially reconnect before syncing
-				setTimeout(async () => {
-					const result = await syncPendingDispositions(send);
-					if (result.success > 0) {
-						toastSuccess(`Successfully synced ${result.success} dispositions!`);
-					}
-					if (result.failed > 0) {
-						console.error(`Failed to sync ${result.failed} dispositions.`);
-					}
-				}, 2000);
-			}
 
 			// Update status immediately based on socket state
 			if (socketRef.current?.connected) {
@@ -307,6 +291,34 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 	const off = useCallback((event: string, handler: SocketEventHandler) => {
 		socketRef.current?.off(event, handler);
 	}, []);
+
+	// Auto-Sync for Offline Dispositions when both online and connected
+	useEffect(() => {
+		const attemptSync = async () => {
+			if (isOnline && status === 'connected' && !isSyncingDispositionsRef.current) {
+				const pendingCount = getPendingDispositionsCount();
+				if (pendingCount > 0) {
+					isSyncingDispositionsRef.current = true;
+					console.log(`[SocketContext] Starting automatic sync for ${pendingCount} pending dispositions`);
+					toastInfo(`Network restored. Syncing ${pendingCount} pending dispositions...`);
+					
+					try {
+						const result = await syncPendingDispositions(send);
+						if (result.success > 0) {
+							toastSuccess(`Successfully synced ${result.success} dispositions!`);
+						}
+						console.log(`[SocketContext] Sync completed. Success: ${result.success}, Failed: ${result.failed}`);
+					} catch (error) {
+						console.error('[SocketContext] Error during automatic sync:', error);
+					} finally {
+						isSyncingDispositionsRef.current = false;
+					}
+				}
+			}
+		};
+
+		attemptSync();
+	}, [isOnline, status, send]);
 
 	// Auto-connect
 	useEffect(() => {
