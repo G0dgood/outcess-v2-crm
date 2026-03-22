@@ -391,7 +391,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 							}}
 							onMouseEnter={(e) => {
 								e.currentTarget.style.color = 'var(--text-primary)';
-								e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+								e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
 							}}
 							onMouseLeave={(e) => {
 								e.currentTarget.style.color = 'var(--text-tertiary)';

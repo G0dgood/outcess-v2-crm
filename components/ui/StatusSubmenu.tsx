@@ -144,10 +144,12 @@ export const StatusSubmenu: React.FC<StatusSubmenuProps> = ({
        backgroundColor: 'transparent'
       }}
       onMouseEnter={(e) => {
-       e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+       e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+       e.currentTarget.style.color = 'var(--text-primary)';
       }}
       onMouseLeave={(e) => {
        e.currentTarget.style.backgroundColor = 'transparent';
+       e.currentTarget.style.color = 'var(--text-primary)';
       }}
      >
       {option.color && (

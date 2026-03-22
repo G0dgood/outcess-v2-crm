@@ -194,23 +194,11 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 		<div className="relative" ref={dropdownRef}>
 			<button
 				onClick={() => setIsOpen(!isOpen)}
-				className="flex items-center gap-2.5 p-1.5 px-2.5 rounded-xl transition-all duration-200 cursor-pointer group"
+				className={`flex items-center gap-2.5 p-1.5 px-2.5 rounded-xl transition-all duration-200 cursor-pointer group header-dropdown-trigger`}
 				title={mounted ? `${userName}${currentStatus ? ` - ${currentStatus.status}` : ''}` : ''}
 				style={{
 					backgroundColor: isOpen ? 'var(--bg-primary)' : 'transparent',
 					border: isOpen ? '1px solid var(--light-gray)' : '1px solid transparent'
-				}}
-				onMouseEnter={(e) => {
-					if (!isOpen) {
-						e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-						e.currentTarget.style.borderColor = 'var(--light-gray)';
-					}
-				}}
-				onMouseLeave={(e) => {
-					if (!isOpen) {
-						e.currentTarget.style.backgroundColor = 'transparent';
-						e.currentTarget.style.borderColor = 'transparent';
-					}
 				}}
 			>
 				<div className="relative">

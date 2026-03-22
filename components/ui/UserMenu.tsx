@@ -125,10 +125,12 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         backgroundColor: 'transparent'
        }}
        onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+        e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+        e.currentTarget.style.color = 'var(--text-primary)';
        }}
        onMouseLeave={(e) => {
         e.currentTarget.style.backgroundColor = 'transparent';
+        e.currentTarget.style.color = 'var(--text-secondary)';
        }}
       >
        <div className="flex items-center gap-2">
@@ -164,10 +166,12 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       backgroundColor: 'transparent'
      }}
      onMouseEnter={(e) => {
-      e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+      e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+      e.currentTarget.style.color = 'var(--text-primary)';
      }}
      onMouseLeave={(e) => {
       e.currentTarget.style.backgroundColor = 'transparent';
+      e.currentTarget.style.color = 'var(--text-secondary)';
      }}
     >
      Settings

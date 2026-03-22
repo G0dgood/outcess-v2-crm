@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { syncPendingDispositions, getPendingDispositionsCount } from '@/utils/offlineDispositions';
+import { toastSuccess, toastInfo } from '@/utils/toastWithSound';
 
 // Socket connection status
 export type SocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error' | 'reconnecting' | 'offline';
@@ -97,12 +99,29 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 	useEffect(() => {
 		if (typeof window === 'undefined') return;
 
-		const handleOnline = () => {
+		const handleOnline = async () => {
 			setIsOnline(true);
 
 			// Show reconnected banner when network comes back
 			setIsReconnected(true);
 			setTimeout(() => setIsReconnected(false), 3000);
+
+			// Automatic Sync for Offline Dispositions
+			const pendingCount = getPendingDispositionsCount();
+			if (pendingCount > 0) {
+				toastInfo(`Network restored. Syncing ${pendingCount} pending dispositions...`);
+				
+				// Wait a moment for socket to potentially reconnect before syncing
+				setTimeout(async () => {
+					const result = await syncPendingDispositions(send);
+					if (result.success > 0) {
+						toastSuccess(`Successfully synced ${result.success} dispositions!`);
+					}
+					if (result.failed > 0) {
+						console.error(`Failed to sync ${result.failed} dispositions.`);
+					}
+				}, 2000);
+			}
 
 			// Update status immediately based on socket state
 			if (socketRef.current?.connected) {

@@ -41,6 +41,7 @@
   --bg-secondary: var(--light-gray);
   --bg-tertiary: var(--medium-gray);
   --bg-main: var(--off-white);
+  --bg-hover: #F1F3F5;
 
   --text-primary: var(--primary);
   --text-secondary: var(--dark-slate-gray);
@@ -213,6 +214,7 @@
   --bg-secondary: var(--light-gray);
   --bg-tertiary: var(--medium-gray);
   --bg-main: oklch(0.145 0 0);
+  --bg-hover: #334155;
 
   --text-primary: var(--primary);
   --text-secondary: var(--dark-slate-gray);
@@ -1279,6 +1281,8 @@ body {
 
 .dark .dropdown-trigger:hover:not(:disabled) {
   border-color: var(--text-tertiary);
+  background-color: #ffffff;
+  color: #000000;
 }
 
 .dropdown-trigger:focus {
@@ -1389,12 +1393,13 @@ body {
 }
 
 .dropdown-option:hover {
-  background-color: #F5F7FA;
+  background-color: var(--bg-hover);
   color: var(--primary);
 }
 
 .dark .dropdown-option:hover {
-  background-color: var(--light-gray);
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .dropdown-option.selected {
@@ -1978,6 +1983,38 @@ main {
   .checkbox-medium .checkbox-text-label {
     font-size: 11px;
   }
+
+  /* Force black text on mobile dropdowns as requested */
+  .dropdown-trigger,
+  .dropdown-option,
+  .user-menu-item,
+  .status-option,
+  .notification-item-text {
+    color: #000000 !important;
+  }
+
+  /* Ensure background is light on mobile to support black text */
+  .dropdown-menu,
+  .user-menu-container,
+  .status-submenu-container,
+  .notification-dropdown-container {
+    background-color: #FFFFFF !important;
+  }
+}
+
+/* Header Dropdown Trigger (Profile) */
+.header-dropdown-trigger {
+  transition: all 0.2s ease;
+}
+
+.dark .header-dropdown-trigger:hover {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+}
+
+.dark .header-dropdown-trigger:hover * {
+  color: #000000 !important;
 }
 
 button {

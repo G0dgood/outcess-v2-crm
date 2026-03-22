@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, DispositionHistoryItem } from '@/utils/offlineDispositions';
+import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, DispositionHistoryItem, OFFLINE_DISPOSITIONS_EVENT } from '@/utils/offlineDispositions';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetDispositionsByCustomerQuery, useGetDispositionsByAgentIdQuery } from '@/store/services/dispositionApi';
 
@@ -87,13 +87,25 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 
 	// Load offline dispositions
 	useEffect(() => {
-		if (isOpen && showOfflineDispositions) {
-			const allOffline = getOfflineDispositions();
-			const filtered = customerId
-				? allOffline.filter(d => d.customerId === customerId)
-				: allOffline;
-			setOfflineDispositions(filtered);
+		const loadOffline = () => {
+			if (isOpen && showOfflineDispositions) {
+				const allOffline = getOfflineDispositions();
+				const filtered = customerId
+					? allOffline.filter(d => d.customerId === customerId)
+					: allOffline;
+				setOfflineDispositions(filtered);
+			}
+		};
+
+		loadOffline();
+
+		if (isOpen) {
+			window.addEventListener(OFFLINE_DISPOSITIONS_EVENT, loadOffline);
 		}
+
+		return () => {
+			window.removeEventListener(OFFLINE_DISPOSITIONS_EVENT, loadOffline);
+		};
 	}, [isOpen, showOfflineDispositions, customerId]);
 
 	useEffect(() => {
@@ -260,7 +272,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 												color: offline.status === 'pending' ? '#92400E' : '#065F46'
 											}}
 										>
-											{offline.status === 'pending' ? 'Pending Sync' : 'Synced'}
+											{offline.status === 'pending' ? '⏳ Pending Sync' : '✓ Synced'}
 										</span>
 										{offline.customerName && (
 											<span className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-secondary)' }}>

@@ -38,6 +38,13 @@ export interface OfflineDisposition {
 }
 
 const STORAGE_KEY = 'offline_dispositions';
+export const OFFLINE_DISPOSITIONS_EVENT = 'offlineDispositionsUpdated';
+
+const notifyUpdate = () => {
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(OFFLINE_DISPOSITIONS_EVENT));
+    }
+};
 
 /**
  * Get all offline dispositions
@@ -80,6 +87,7 @@ export const saveOfflineDisposition = (
 	const existing = getOfflineDispositions();
 	existing.push(offlineDisposition);
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+	notifyUpdate();
 
 	return offlineDisposition;
 };
@@ -101,6 +109,7 @@ export const updateDispositionStatus = (
 			dispositions[index].syncedAt = new Date().toISOString();
 		}
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(dispositions));
+		notifyUpdate();
 	}
 };
 
@@ -111,6 +120,7 @@ export const removeOfflineDisposition = (id: string): void => {
 	const dispositions = getOfflineDispositions();
 	const filtered = dispositions.filter(d => d.id !== id);
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+	notifyUpdate();
 };
 
 /**
@@ -134,6 +144,7 @@ export const clearSyncedDispositions = (): void => {
 	const dispositions = getOfflineDispositions();
 	const pending = dispositions.filter(d => d.status !== 'synced');
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(pending));
+	notifyUpdate();
 };
 
 /**
