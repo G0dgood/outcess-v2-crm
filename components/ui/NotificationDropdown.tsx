@@ -127,7 +127,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 				}, 100 * playedNotificationIds.current.size);
 			}
 		});
-	}, [notifications, isOpen, pathname, selectedLineOfBusinessId]);
+	}, [notifications, isOpen, pathname, selectedLineOfBusinessId, isLobLoading]);
 
 	// Clean up played notification IDs when panel closes
 	useEffect(() => {

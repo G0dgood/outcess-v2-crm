@@ -133,8 +133,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		}
 	}, [lineOfBusinessData, selectedLineOfBusinessId, setSelectedLineOfBusinessId]);
 
-	const currentStatus = (currentLOB as { status?: string } | undefined)?.status || '';
-
 	// Socket integration for Line of Business updates
 	useEffect(() => {
 		if (!socket || !selectedLineOfBusinessId) return;

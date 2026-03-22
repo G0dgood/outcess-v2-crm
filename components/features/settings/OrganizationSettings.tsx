@@ -34,7 +34,11 @@ const OrganizationSettings: React.FC = () => {
 								{companyId}
 							</code>
 							<button
-								onClick={() => companyId && copyToClipboard(companyId)}
+								onClick={() => {
+									if (companyId) {
+										copyToClipboard(companyId);
+									}
+								}}
 								className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
 								title="Copy ID"
 							>

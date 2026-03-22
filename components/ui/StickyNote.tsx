@@ -417,8 +417,8 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 								<input
 									type="text"
 									placeholder="Add item..."
-									onFocus={(e) => {
-										// e.target.value = '';
+									onFocus={() => {
+										// Focus handler
 									}}
 									onKeyDown={(e) => {
 										if (e.key === 'Enter' && e.currentTarget.value.trim()) {
