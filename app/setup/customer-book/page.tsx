@@ -45,13 +45,12 @@ interface FieldType {
 
 interface SortableRowProps {
 	field: CustomerField;
-	index: number;
 	handleEditField: (field: CustomerField) => void;
 	handleDeleteField: (fieldId: string) => void;
 	isLast: boolean;
 }
 
-const SortableRow = ({ field, index, handleEditField, handleDeleteField, isLast }: SortableRowProps) => {
+const SortableRow = ({ field, handleEditField, handleDeleteField, isLast }: SortableRowProps) => {
 	const {
 		attributes,
 		listeners,
@@ -499,7 +498,6 @@ export default function CustomerBookPage() {
 										<SortableRow
 											key={field.id}
 											field={field}
-											index={index}
 											handleEditField={handleEditField}
 											handleDeleteField={handleDeleteField}
 											isLast={index === customerBookSettings.configuredFields.length - 1}
