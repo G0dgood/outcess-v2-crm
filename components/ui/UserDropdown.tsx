@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { StatusConfirmationModal } from './StatusConfirmationModal';
 import { StatusSubmenu, StatusOption } from './StatusSubmenu';
 import { UserMenu } from './UserMenu';
@@ -47,13 +47,13 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 
 	// Use either controlled or internal state
 	const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
-	const setIsOpen = (value: boolean) => {
+	const setIsOpen = useCallback((value: boolean) => {
 		if (onToggle) {
 			onToggle(value);
 		} else {
 			setInternalIsOpen(value);
 		}
-	};
+	}, [onToggle]);
 	const [isStatusOpen, setIsStatusOpen] = useState(false);
 	const [isStatusConfirmOpen, setIsStatusConfirmOpen] = useState(false);
 	const [pendingStatus, setPendingStatus] = useState<StatusOption | null>(null);
@@ -117,14 +117,14 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, []);
+	}, [setIsOpen]);
 
 	// Close main dropdown when status submenu opens
 	useEffect(() => {
 		if (isStatusOpen) {
 			setIsOpen(false);
 		}
-	}, [isStatusOpen]);
+	}, [isStatusOpen, setIsOpen]);
 
 
 
@@ -157,11 +157,12 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 							status: pendingStatus.label,
 							reason: statusReason
 						}).unwrap();
-					} catch (err: any) {
+					} catch (err: unknown) {
+						const errorObj = err as { status?: number; data?: { message?: string } };
 						// Fallback to updateUser if team member not found (404)
-						if (err?.status === 404 ||
-							err?.data?.message?.toLowerCase().includes('not found') ||
-							err?.data?.message?.toLowerCase().includes('team member')) {
+						if (errorObj?.status === 404 ||
+							errorObj?.data?.message?.toLowerCase().includes('not found') ||
+							errorObj?.data?.message?.toLowerCase().includes('team member')) {
 
 							await updateUser({
 								id: userId,
@@ -174,9 +175,10 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 				}
 
 				toastSuccess('Status updated successfully');
-			} catch (error: any) {
+			} catch (error: unknown) {
 				console.error('Failed to update status:', error);
-				const errorMessage = error?.data?.message || error?.message || 'Failed to update status';
+				const errorObj = error as { data?: { message?: string }; message?: string };
+				const errorMessage = errorObj?.data?.message || errorObj?.message || 'Failed to update status';
 				toastError(errorMessage);
 			}
 		} else if (!userId) {
@@ -256,7 +258,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 				onClose={() => setIsOpen(false)}
 				onLogoutClick={onLogoutClick}
 				currentStatus={currentStatus}
-				showStatus={!!((user as any)?.role?.roleName === "supervisor" || (user as any)?.supervisorId)}
+				showStatus={!!((user as unknown as { role?: { roleName?: string } })?.role?.roleName === "supervisor" || (user as unknown as { supervisorId?: string })?.supervisorId)}
 			/>
 
 			{/* Status Submenu */}

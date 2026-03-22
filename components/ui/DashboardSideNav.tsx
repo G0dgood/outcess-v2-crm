@@ -68,8 +68,8 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const { lineOfBusinessData, isLoading: isLobLoading } = useLineOfBusiness();
-	const { canAccess, isLoading: isPrivilegeLoading, isAdmin } = usePrivilege();
+	const { lineOfBusinessData } = useLineOfBusiness();
+	const { canAccess, isAdmin } = usePrivilege();
 
 	const currentLOB = lineOfBusinessData?.lineOfBusiness;
 	const headerLogo = currentLOB?.logo;

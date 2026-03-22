@@ -11,10 +11,9 @@ import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
 import NotificationDropdown from './NotificationDropdown';
 import NotificationsModal from './NotificationsModal';
 import ThemeToggle from './ThemeToggle';
-import { plusJakartaStyle } from '../Options';
 import { useSocket } from '@/contexts/SocketContext';
 import { playNotificationSound } from '@/utils/soundEffects';
-import { toastSuccess, toastInfo } from '@/utils/toastWithSound';
+import { toastSuccess } from '@/utils/toastWithSound';
 import { setNavigating } from '@/utils/navigationState';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -116,8 +115,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const safeUserName = String(displayUser?.name ?? '');
 
 	const currentLOB = selectedLOBData?.lineOfBusiness || selectedLOBData;
-	const headerLogo = currentLOB?.logo;
-	const headerName = currentLOB?.companyName || 'Peoplely';
 
 	useEffect(() => {
 		const data = lineOfBusinessData as { lineOfBusinesses?: { _id: string; lineOfBusinessName: string; status?: string }[] } | undefined;
@@ -137,7 +134,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	}, [lineOfBusinessData, selectedLineOfBusinessId, setSelectedLineOfBusinessId]);
 
 	const currentStatus = (currentLOB as { status?: string } | undefined)?.status || '';
-	const isInReview = currentStatus.toLowerCase() === 'in review';
 
 	// Socket integration for Line of Business updates
 	useEffect(() => {
@@ -226,7 +222,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		}
 
 		previousUnreadCount.current = unreadCount;
-	}, [pathname, notifications, selectedLineOfBusinessId]);
+	}, [pathname, notifications, selectedLineOfBusinessId, isLobLoading]);
 
 	const handleNotificationClick = () => {
 		// Don't play sound if we're navigating - NotificationDropdown will handle it
@@ -453,7 +449,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 							typeof reduxUser.status === 'string'
 								? { status: reduxUser.status }
 								: {
-									status: reduxUser.status.status || (reduxUser.status as any).name || (reduxUser.status as any).label || 'Active',
+									status: reduxUser.status.status || (reduxUser.status as unknown as { name?: string }).name || (reduxUser.status as unknown as { label?: string }).label || 'Active',
 									color: reduxUser.status.color
 								}
 						) : undefined}

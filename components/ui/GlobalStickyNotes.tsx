@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import StickyNote, { StickyNoteData } from './StickyNote';
 import { useSelector } from 'react-redux';
 import { User } from '@/store/slices/authSlice';
@@ -8,7 +8,8 @@ import {
 	useGetStickyNotesQuery,
 	useCreateStickyNoteMutation,
 	useUpdateStickyNoteMutation,
-	useDeleteStickyNoteMutation
+	useDeleteStickyNoteMutation,
+	StickyNoteData as ApiStickyNoteData
 } from '@/store/services/stickyNoteApi';
 import { toastError } from '@/utils/toastWithSound';
 
@@ -23,7 +24,7 @@ const GlobalStickyNotes: React.FC = () => {
 	const [updateStickyNote] = useUpdateStickyNoteMutation();
 	const [deleteStickyNote] = useDeleteStickyNoteMutation();
 
-	const stickyNotes = apiResponse?.stickyNotes || [];
+	const stickyNotes = useMemo(() => apiResponse?.stickyNotes || [], [apiResponse?.stickyNotes]);
 	const [isVisible, setIsVisible] = useState(false);
 
 	// Migration logic: If API is empty but localStorage has notes, migrate them once
@@ -35,7 +36,7 @@ const GlobalStickyNotes: React.FC = () => {
 					const parsed = JSON.parse(savedNotes);
 					if (Array.isArray(parsed) && parsed.length > 0) {
 						// Migrate each note to the backend
-						parsed.forEach((note: any) => {
+						parsed.forEach((note: Partial<ApiStickyNoteData>) => {
 							createStickyNote({
 								...note,
 								userId,
@@ -62,11 +63,11 @@ const GlobalStickyNotes: React.FC = () => {
 					for (const note of hiddenNotes) {
 						await updateStickyNote({
 							...note,
-							id: note._id || note.id,
+							id: note._id || note.id || '',
 							userId,
 							isHidden: false,
 							updatedAt: new Date().toISOString()
-						} as any).unwrap();
+						} as ApiStickyNoteData & { id: string; userId: string }).unwrap();
 					}
 				} catch (error) {
 					console.error('Failed to restore notes:', error);
@@ -122,14 +123,14 @@ const GlobalStickyNotes: React.FC = () => {
 			// Convert Dates to ISO strings for the API if they are Date objects
 			const noteToUpdate = {
 				...updatedNote,
-				id: updatedNote.id || (updatedNote as any)._id,
+				id: updatedNote.id || (updatedNote as unknown as ApiStickyNoteData)._id || '',
 				userId,
 				createdAt: updatedNote.createdAt instanceof Date ? updatedNote.createdAt.toISOString() : updatedNote.createdAt,
 				updatedAt: new Date().toISOString(),
 				reminder: updatedNote.reminder instanceof Date ? updatedNote.reminder.toISOString() : updatedNote.reminder,
 			};
 
-			await updateStickyNote(noteToUpdate as any).unwrap();
+			await updateStickyNote(noteToUpdate as ApiStickyNoteData & { id: string; userId: string }).unwrap();
 		} catch (error) {
 			console.error('Failed to update note:', error);
 			toastError('Failed to save changes to the cloud');
@@ -168,7 +169,7 @@ const GlobalStickyNotes: React.FC = () => {
 						createdAt: note.createdAt ? new Date(note.createdAt) : new Date(),
 						updatedAt: note.updatedAt ? new Date(note.updatedAt) : new Date(),
 						reminder: note.reminder ? new Date(note.reminder) : undefined,
-					} as any}
+					} as StickyNoteData}
 					onUpdate={handleUpdateStickyNote}
 					onDelete={handleDeleteStickyNote}
 				/>
