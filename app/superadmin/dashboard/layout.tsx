@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { SetupProvider } from "@/contexts/SetupContext";
 import { useAuth } from "@/contexts/AuthContext";
 import SuperAdminSideNav from "@/components/features/admin/SuperAdminSideNav";
-import SuperAdminMobileSideNav from "@/components/features/admin/SuperAdminMobileSideNav";
 import SuperAdminHeader from "@/components/features/admin/SuperAdminHeader";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
@@ -14,9 +13,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 		setIsMobileMenuOpen(!isMobileMenuOpen);
 	};
 
-	const closeMobileMenu = () => {
-		setIsMobileMenuOpen(false);
-	};
 
 	return (
 		<div id="page-wrapper" className={isMobileMenuOpen ? 'mobile-nav-open' : ''}>

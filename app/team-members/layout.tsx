@@ -15,9 +15,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 		setIsMobileMenuOpen(!isMobileMenuOpen);
 	};
 
-	const closeMobileMenu = () => {
-		setIsMobileMenuOpen(false);
-	};
 
 	return (
 		<div id="page-wrapper" className={isMobileMenuOpen ? 'mobile-nav-open' : ''}>

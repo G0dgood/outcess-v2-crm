@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import { SetupProvider } from "@/contexts/SetupContext";
-import SuperAdminMobileSideNav from "@/components/features/admin/SuperAdminMobileSideNav";
 import SuperAdminSideNav from "@/components/features/admin/SuperAdminSideNav";
 import SuperAdminHeader from "@/components/features/admin/SuperAdminHeader";
 
@@ -12,9 +11,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 		setIsMobileMenuOpen(!isMobileMenuOpen);
 	};
 
-	const closeMobileMenu = () => {
-		setIsMobileMenuOpen(false);
-	};
 
 	return (
 		<div id="page-wrapper" className={isMobileMenuOpen ? 'mobile-nav-open' : ''}>
