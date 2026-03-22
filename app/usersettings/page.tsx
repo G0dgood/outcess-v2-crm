@@ -168,7 +168,7 @@ export default function SettingsPage() {
 			} else {
 				toast.error(data.error || 'Failed to update password');
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error('Failed to update password. Please try again.');
 		} finally {
 			setIsPasswordLoading(false);

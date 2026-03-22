@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
-import { updateUser as updateReduxUser, User } from '@/store/slices/authSlice';
+import { updateUser as updateReduxUser } from '@/store/slices/authSlice';
 
 export const RealTimeUpdates: React.FC = () => {
   const { socket, isConnected, emit, on, off } = useSocket();
@@ -24,7 +24,7 @@ export const RealTimeUpdates: React.FC = () => {
       }
 
       // Join Company Room
-      const userCompany = user.company as any;
+      const userCompany = user.company as Record<string, unknown>;
       const companyId = user.companyId || userCompany?._id || userCompany?.id;
       if (companyId) {
         emit('joinCompany', companyId);
@@ -37,7 +37,7 @@ export const RealTimeUpdates: React.FC = () => {
       }
 
       // Join Role Room
-      const roleId = (user.role as any)?._id || (user.role as any)?.id || user.roleId;
+      const roleId = (user.role as unknown as Record<string, unknown>)?._id || (user.role as unknown as Record<string, unknown>)?.id || user.roleId;
       if (roleId && typeof roleId === 'string') {
         emit('joinRole', roleId);
       }
@@ -48,7 +48,7 @@ export const RealTimeUpdates: React.FC = () => {
     if (!socket) return;
 
     // Step 2: Listen for the roleUpdated Event
-    const handleRoleUpdated = (data: any) => {
+    const handleRoleUpdated = (data: { id?: string; _id?: string; roleId?: string }) => {
       // If it's a role-specific refresh signal
       if (data.roleId) {
         toast.info('Your role permissions have been updated. Refreshing...');

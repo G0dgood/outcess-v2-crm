@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useRouter } from '@bprogress/next/app';
 import Icon from './Icon';
