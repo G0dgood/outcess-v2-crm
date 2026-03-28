@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MoonIcon, SunIcon } from '@radix-ui/react-icons';
 import { useTheme } from '@/contexts/ThemeContext';
+import Button from './Button';
 
 const ThemeDropdown: React.FC<{ inputClassName?: string }> = ({ inputClassName }) => {
 	const { isDarkMode, setTheme } = useTheme();
@@ -59,11 +60,13 @@ const ThemeDropdown: React.FC<{ inputClassName?: string }> = ({ inputClassName }
 
 	return (
 		<div className="relative dropdown-container" ref={dropdownRef}>
-			<button
+			<Button
+				variant="ghost"
+				size="sm"
 				type="button"
 				onClick={() => setIsOpen((prev) => !prev)}
 				onKeyDown={handleKeyDown}
-				className={`dropdown-trigger flex items-center gap-2 ${isOpen ? 'open' : ''} ${inputClassName}`}
+				className={`dropdown-trigger flex items-center gap-2 ${isOpen ? 'open' : ''} ${inputClassName} !rounded-none`}
 				aria-haspopup="true"
 				aria-expanded={isOpen}
 			>
@@ -88,33 +91,38 @@ const ThemeDropdown: React.FC<{ inputClassName?: string }> = ({ inputClassName }
 						strokeLinejoin="round"
 					/>
 				</svg>
-			</button>
+			</Button>
 
 			{isOpen && (
 				<div className="dropdown-menu dropdown-menu-right">
 					<div className="dropdown-options ">
-						<button
+						<Button
+							variant="ghost"
+							size="sm"
 							type="button"
+							fullWidth
 							onClick={() => handleThemeSelect('light')}
-							className={`cursor-pointer flex items-center gap-2 dropdown-option ${!isDarkMode ? 'selected' : ''}`}
+							className={`cursor-pointer flex items-center gap-2 dropdown-option ${!isDarkMode ? 'selected' : ''} !rounded-none justify-start px-4 py-2 h-auto`}
 						>
 							<div className="flex items-center gap-2">
-
 								<SunIcon className="w-4 h-4" />
-								<span className='whitespace-nowrap'>Light Mode</span>
+								<span className="whitespace-nowrap">Light Mode</span>
 							</div>
-						</button>
+						</Button>
 
-						<button
+						<Button
+							variant="ghost"
+							size="sm"
 							type="button"
+							fullWidth
 							onClick={() => handleThemeSelect('dark')}
-							className={`cursor-pointer dropdown-option ${isDarkMode ? 'selected' : ''}`}
+							className={`cursor-pointer dropdown-option ${isDarkMode ? 'selected' : ''} !rounded-none justify-start px-4 py-2 h-auto`}
 						>
 							<div className="flex items-center gap-2">
 								<MoonIcon className="w-4 h-4" />
 								<span className='whitespace-nowrap'>Dark Mode</span>
 							</div>
-						</button>
+						</Button>
 					</div>
 				</div>
 			)}

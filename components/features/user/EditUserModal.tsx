@@ -78,12 +78,15 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
 				{/* Modal Header */}
 				<div className="flex justify-between items-center border-b border-[#E5E7EB] pb-4 p-6">
 					<h2 className="font-inter text-[14px] md:text-[16px] font-semibold text-[#050711]">Edit User</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="text-gray-400 hover:text-gray-600 transition-colors"
+						className="text-gray-400 hover:text-gray-600 transition-colors p-1 h-auto"
+						title="Close Modal"
 					>
 						<Icon name="Close_round_light" size="lg" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Modal Form */}

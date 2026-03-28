@@ -131,19 +131,22 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
 					>
 						Create New Role
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+						className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors p-1 h-auto"
 						style={{ color: 'var(--text-tertiary)' }}
-						onMouseEnter={(e) => {
+						onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
 						}}
-						onMouseLeave={(e) => {
+						onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 							e.currentTarget.style.color = 'var(--text-tertiary)';
 						}}
+						title="Close Modal"
 					>
 						<Icon name="Close_round_light" size="lg" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Modal Form */}

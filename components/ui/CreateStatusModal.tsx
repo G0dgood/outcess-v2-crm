@@ -214,9 +214,11 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 					>
 						{isEditMode ? 'Edit Status' : 'Create Status'}
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors !rounded-none"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -229,7 +231,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Form Content */}
@@ -284,10 +286,12 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 									<div className="ml-7 mt-2" ref={dropdownRef}>
 										<div className="dropdown-container">
 											<div className="dropdown-wrapper relative">
-												<button
+												<Button
+													variant="outline"
+													size="md"
 													type="button"
 													onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-													className="dropdown-trigger w-full"
+													className="dropdown-trigger w-full !rounded-none justify-between"
 												>
 													<span className={`dropdown-text ${formData.selectedRoles.length === 0 ? 'placeholder' : ''}`}>
 														{getRoleSelectionDisplay()}
@@ -307,7 +311,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 															strokeLinejoin="round"
 														/>
 													</svg>
-												</button>
+												</Button>
 												{isRoleDropdownOpen && (
 													<div className="dropdown-menu">
 														<div className="dropdown-options">

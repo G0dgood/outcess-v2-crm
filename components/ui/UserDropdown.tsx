@@ -258,7 +258,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 				onClose={() => setIsOpen(false)}
 				onLogoutClick={onLogoutClick}
 				currentStatus={currentStatus}
-				showStatus={!!((user as unknown as { role?: { roleName?: string } })?.role?.roleName === "supervisor" || (user as unknown as { supervisorId?: string })?.supervisorId)}
+				showStatus={isAdmin || !!((user as unknown as { role?: { roleName?: string } })?.role?.roleName === "supervisor" || (user as unknown as { supervisorId?: string })?.supervisorId)}
 			/>
 
 			{/* Status Submenu */}

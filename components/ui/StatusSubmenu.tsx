@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeftIcon } from '@radix-ui/react-icons';
 import Image from 'next/image';
+import Button from './Button';
 
 export interface StatusOption {
  value: string;
@@ -115,12 +116,13 @@ export const StatusSubmenu: React.FC<StatusSubmenuProps> = ({
     className="px-4 py-2 border-b dark:border-gray-700"
     style={{ borderColor: 'var(--light-gray)' }}
    >
-    <button
+    <Button
+     variant="ghost"
+     size="sm"
      onClick={onBack}
-     className="flex items-center gap-2 transition-colors cursor-pointer"
+     className="flex items-center gap-2 transition-colors cursor-pointer !bg-transparent h-auto p-0"
      style={{
       color: 'var(--text-secondary)',
-      backgroundColor: 'transparent'
      }}
      onMouseEnter={(e) => {
       e.currentTarget.style.color = 'var(--text-primary)';
@@ -131,17 +133,19 @@ export const StatusSubmenu: React.FC<StatusSubmenuProps> = ({
     >
      <ArrowLeftIcon className="w-4 h-4" />
      <span className="text-[10px] md:text-[12px] font-medium">Back</span>
-    </button>
+    </Button>
    </div>
    <div style={{ backgroundColor: 'var(--accent-white)' }} className="dark:bg-gray-800">
     {statusOptions?.map((option) => (
-     <button
+     <Button
+      variant="ghost"
+      size="sm"
       key={option.value}
+      fullWidth
       onClick={() => onSelect(option)}
-      className="w-full px-4 py-2 text-left cursor-pointer font-lato font-medium text-[12px] md:text-[14px] leading-[150%] transition-colors flex items-center gap-2 whitespace-nowrap"
+      className="w-full px-4 py-2 text-left cursor-pointer font-lato font-medium text-[12px] md:text-[14px] leading-[150%] transition-colors flex items-center gap-2 whitespace-nowrap !rounded-none justify-start h-auto !bg-transparent"
       style={{
        color: 'var(--text-primary)',
-       backgroundColor: 'transparent'
       }}
       onMouseEnter={(e) => {
        e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
@@ -159,7 +163,7 @@ export const StatusSubmenu: React.FC<StatusSubmenuProps> = ({
        />
       )}
       {option.label.length > 25 ? `${option.label.substring(0, 25)}...` : option.label}
-     </button>
+     </Button>
     ))}
    </div>
   </div>

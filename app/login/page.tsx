@@ -14,6 +14,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useLoginMutation, useTeamMemberLoginMutation } from '@/store/services/authApi';
 import { login as loginAction } from '@/store/slices/authSlice';
+import { Button } from '@/components/ui/Button';
 
 interface ApiError {
 	data?: {
@@ -191,17 +192,7 @@ export default function LoginPage() {
 
 				<div className="login-form-container">
 					<div className="login-header">
-						{/* <div className="logo-container">
-							<Image
-								src="/peoplely-logo.svg"
-								alt="Peoplely Logo"
-								width={120}
-								height={40}
-								priority
-								className="logo"
-							/>
-						</div> */}
-						<h1 className="welcome-title" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>Welcome Back</h1>
+						<h1 className="welcome-title font-lato not-italic" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>Welcome People</h1>
 						<p className="welcome-subtitle font-lato font-normal text-base leading-[150%] text-[#6D7280] dark:text-gray-400">Please Login to continue.</p>
 					</div>
 
@@ -242,35 +233,21 @@ export default function LoginPage() {
 							}}>Forgot password?</a>
 						</div>
 
-						<button
+						<Button
 							type="submit"
-							className={`login-button ${isLoading ? 'loading' : ''}`}
-							disabled={isLoading}
-							style={{ backgroundColor: primaryColor }}
-							onMouseEnter={(e) => {
-								if (!isLoading) {
-									e.currentTarget.style.backgroundColor = primaryColor;
-									e.currentTarget.style.opacity = '0.9';
-								}
-							}}
-							onMouseLeave={(e) => {
-								if (!isLoading) {
-									e.currentTarget.style.backgroundColor = primaryColor;
-									e.currentTarget.style.opacity = '1';
-								}
-							}}
+							size="lg"
+							loading={isLoading}
+							className="flex items-center gap-2 px-2 !py-4 text-[10px] md:text-[12px] sm:px-4 sm:py-2"
 						>
-							{isLoading ? 'Logging in...' : 'Login'}
-						</button>
+							Login
+						</Button>
 
 						<div className="signup-footer">
 							<p className="signup-text">
 								Don&apos;t have an account?{' '}
-								<a href="/signup" className="signup-link" style={{ color: primaryColor }} onMouseEnter={(e) => {
-									e.currentTarget.style.opacity = '0.8';
-								}} onMouseLeave={(e) => {
-									e.currentTarget.style.opacity = '1';
-								}}>Create account</a>
+								<a href="/signup"
+									className={`font-lato not-italic font-semibold text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100 cursor-pointer `}
+									style={{ color: 'var(--text-primary)' }}> Create account</a>
 							</p>
 						</div>
 					</form>

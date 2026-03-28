@@ -46,7 +46,7 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  if (window.location.pathname === '/' || window.location.pathname.startsWith('/blog') || window.location.pathname.startsWith('/about') || window.location.pathname.startsWith('/careers') || window.location.pathname.startsWith('/support')) {
+                  if (window.location.pathname === '/' || window.location.pathname.startsWith('/blog') || window.location.pathname.startsWith('/about') || window.location.pathname.startsWith('/careers')) {
                     return;
                   }
                   const darkMode = localStorage.getItem('darkMode');

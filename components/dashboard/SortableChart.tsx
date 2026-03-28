@@ -5,6 +5,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import Dropdown from '@/components/ui/Dropdown';
 import Icon from '@/components/ui/Icon';
+import Button from '@/components/ui/Button';
 import type { Chart } from '@/contexts/SetupContext';
 import type { ChartDataItem } from './charts/types';
 import {
@@ -108,7 +109,6 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 							label=""
 							value={chart.timeRange}
 							onChange={(_value) => {
-								console.log(_value);
 							}}
 							options={[
 								{ value: 'daily', label: 'Daily' },
@@ -120,30 +120,34 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 						/>
 					</div>
 					{canEdit && (
-						<button
-							onClick={(e) => {
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.stopPropagation();
 								onEditChart(chart.id);
 							}}
-							onPointerDown={(e) => e.stopPropagation()}
-							className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+							onPointerDown={(e: React.PointerEvent<HTMLButtonElement>) => e.stopPropagation()}
+							className="p-1 h-auto text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
 							title="Edit chart"
 						>
 							<Icon name="Edit_duotone_line" size="sm" />
-						</button>
+						</Button>
 					)}
 					{canDelete && (
-						<button
-							onClick={(e) => {
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.stopPropagation();
 								onRemoveChart(chart.id);
 							}}
-							onPointerDown={(e) => e.stopPropagation()}
-							className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
+							onPointerDown={(e: React.PointerEvent<HTMLButtonElement>) => e.stopPropagation()}
+							className="p-1 h-auto text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
 							title="Remove chart"
 						>
-							<Icon name="Trash_light" size="lg" className='mt-3' />
-						</button>
+							<Icon name="Trash_light" size="lg" className="mt-3" />
+						</Button>
 					)}
 				</div>
 			</div>
@@ -177,5 +181,5 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 });
 
 SortableChart.displayName = 'SortableChart';
- 
- export default SortableChart;
+
+export default SortableChart;

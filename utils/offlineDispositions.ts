@@ -26,6 +26,8 @@ export interface DispositionHistoryItem {
 }
 
 export interface OfflineDisposition {
+	agent: string;
+	agentId: string;
 	id: string;
 	customerId?: string;
 	customerName?: string;
@@ -82,6 +84,8 @@ export const saveOfflineDisposition = (
 		status: 'pending',
 		createdAt: new Date().toISOString(),
 		updatedAt: new Date().toISOString(),
+		agent: '',
+		agentId: ''
 	};
 
 	const existing = getOfflineDispositions();
@@ -155,7 +159,7 @@ export const syncPendingDispositions = async (
     sendFn?: (message: SocketMessage) => void
 ): Promise<{ success: number; failed: number }> => {
 	const pending = getPendingDispositions();
-	console.log(`[OfflineSync] Attempting to sync ${pending.length} pending dispositions`);
+ 
 	
 	let success = 0;
 	let failed = 0;
@@ -176,15 +180,13 @@ export const syncPendingDispositions = async (
 					},
 				});
 				
-				console.log(`[OfflineSync] Successfully pushed disposition ${disposition.id}`);
+			 
 				updateDispositionStatus(disposition.id, 'synced');
 				success++;
-			} else {
-				console.warn(`[OfflineSync] No send function provided for disposition ${disposition.id}`);
+			} else { 
 				failed++;
 			}
 		} catch (error) {
-			console.error(`[OfflineSync] Failed to sync disposition ${disposition.id}:`, error);
 			failed++;
 		}
 	}

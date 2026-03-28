@@ -20,6 +20,7 @@ import {
 import SoundSettings from "@/components/ui/SoundSettings";
 import PageHeading from "@/components/ui/PageHeading";
 import SubPageHeading from "@/components/ui/SubPageHeading";
+import BackButton from "@/components/ui/BackButton";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 
@@ -259,6 +260,9 @@ export default function SettingsPage() {
 		<div className="space-y-8">
 			{/* Page Header */}
 			<div>
+				<div className="mb-4">
+					<BackButton />
+				</div>
 				<PageHeading
 					text="Account Settings"
 				/>
@@ -287,10 +291,12 @@ export default function SettingsPage() {
 							{ id: 'sound', label: 'Sound', icon: SpeakerLoudIcon },
 							// { id: 'email', label: 'Email', icon: Mail }, 
 						].map(({ id, label, icon: IconComponent }) => (
-							<button
+							<Button
 								key={id}
+								variant="ghost"
+								size="sm"
 								onClick={() => setActiveSection(id as 'profile' | 'password' | 'email' | 'preferences' | 'sound')}
-								className={`relative flex items-center space-x-2 py-3 px-4 font-medium text-[10px] md:text-[12px] transition-all duration-200 ${activeSection === id
+								className={`relative flex items-center space-x-2 py-3 px-4 font-medium text-[10px] md:text-[12px] transition-all duration-200 !rounded-none ${activeSection === id
 									? 'dark:text-gray-100'
 									: 'dark:text-gray-400 dark:hover:text-gray-300'
 									}`}
@@ -318,7 +324,7 @@ export default function SettingsPage() {
 										style={{ backgroundColor: primaryColor }}
 									/>
 								)}
-							</button>
+							</Button>
 						))}
 					</nav>
 				</div>
@@ -579,9 +585,11 @@ export default function SettingsPage() {
 											value={passwordData.currentPassword}
 											onChange={(value) => setPasswordData({ ...passwordData, currentPassword: value })}
 										/>
-										<button
+										<Button
+											variant="ghost"
+											size="sm"
 											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors !rounded-none"
 											style={{ color: 'var(--text-tertiary)' }}
 											onMouseEnter={(e) => {
 												e.currentTarget.style.color = 'var(--text-secondary)';
@@ -592,7 +600,7 @@ export default function SettingsPage() {
 											onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
 										>
 											{showPasswords.current ? <EyeClosedIcon className="h-5 w-5" /> : <EyeOpenIcon className="h-5 w-5" />}
-										</button>
+										</Button>
 									</div>
 								</div>
 
@@ -611,9 +619,11 @@ export default function SettingsPage() {
 											value={passwordData.newPassword}
 											onChange={(value) => setPasswordData({ ...passwordData, newPassword: value })}
 										/>
-										<button
+										<Button
+											variant="ghost"
+											size="sm"
 											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors !rounded-none"
 											style={{ color: 'var(--text-tertiary)' }}
 											onMouseEnter={(e) => {
 												e.currentTarget.style.color = 'var(--text-secondary)';
@@ -624,7 +634,7 @@ export default function SettingsPage() {
 											onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
 										>
 											{showPasswords.new ? <EyeClosedIcon className="h-5 w-5" /> : <EyeOpenIcon className="h-5 w-5" />}
-										</button>
+										</Button>
 									</div>
 								</div>
 
@@ -643,9 +653,11 @@ export default function SettingsPage() {
 											value={passwordData.confirmPassword}
 											onChange={(value) => setPasswordData({ ...passwordData, confirmPassword: value })}
 										/>
-										<button
+										<Button
+											variant="ghost"
+											size="sm"
 											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors !rounded-none"
 											style={{ color: 'var(--text-tertiary)' }}
 											onMouseEnter={(e) => {
 												e.currentTarget.style.color = 'var(--text-secondary)';
@@ -656,7 +668,7 @@ export default function SettingsPage() {
 											onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
 										>
 											{showPasswords.confirm ? <EyeClosedIcon className="h-5 w-5" /> : <EyeOpenIcon className="h-5 w-5" />}
-										</button>
+										</Button>
 									</div>
 								</div>
 

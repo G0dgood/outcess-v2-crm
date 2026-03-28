@@ -386,9 +386,11 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 										<td className="px-6 py-4 whitespace-nowrap">
 											<div className="flex items-center gap-3">
 												{canEdit && (
-													<button
+													<Button
+														variant="ghost"
+														size="sm"
 														onClick={() => handleEdit(status.id)}
-														className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+														className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors !rounded-none"
 														style={{ color: 'var(--text-tertiary)' }}
 														onMouseEnter={(e) => {
 															e.currentTarget.style.color = 'var(--text-secondary)';
@@ -401,12 +403,14 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 														aria-label="Edit status"
 													>
 														<Pencil1Icon className="w-4 h-4" />
-													</button>
+													</Button>
 												)}
 												{canDelete && (
-													<button
+													<Button
+														variant="ghost"
+														size="sm"
 														onClick={() => handleDelete(status.id)}
-														className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-700 transition-colors"
+														className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-700 transition-colors !rounded-none"
 														style={{ color: 'var(--text-tertiary)' }}
 														onMouseEnter={(e) => {
 															e.currentTarget.style.color = '#DC2626';
@@ -419,7 +423,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 														aria-label="Delete status"
 													>
 														<TrashIcon className="w-4 h-4" />
-													</button>
+													</Button>
 												)}
 											</div>
 										</td>

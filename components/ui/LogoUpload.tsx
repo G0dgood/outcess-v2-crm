@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import Icon from './Icon';
+import Button from './Button';
 
 interface LogoUploadProps {
 	label?: string;
@@ -166,13 +167,15 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 								unoptimized
 							/>
 							{!disabled && (
-								<button
+								<Button
+									variant="danger"
+									size="sm"
 									type="button"
 									onClick={handleRemove}
-									className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-[8px] md:text-[10px] hover:bg-red-600 transition-colors z-10"
+									className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] md:text-[12px] hover:bg-red-600 transition-colors z-10 p-0"
 								>
 									×
-								</button>
+								</Button>
 							)}
 						</div>
 						<p className="font-inter text-[10px] md:text-[12px] text-gray-600 mt-2">Click to change logo</p>

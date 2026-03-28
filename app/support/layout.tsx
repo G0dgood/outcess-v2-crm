@@ -1,0 +1,54 @@
+'use client';
+
+import React, { useState, Suspense } from 'react';
+import DashboardHeader from '@/components/ui/DashboardHeader';
+import DashboardSideNav from '@/components/ui/DashboardSideNav';
+import GlobalStickyNotes from '@/components/ui/GlobalStickyNotes';
+import OfflineBanner from '@/components/ui/OfflineBanner';
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { SetupProvider } from '@/contexts/SetupContext';
+import { TooltipProvider } from '@/components/ui/Tooltip';
+
+function LayoutContent({ children }: { children: React.ReactNode }) {
+ const { lineOfBusinessData } = useLineOfBusiness();
+ const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+ const toggleMobileMenu = () => {
+  setIsMobileMenuOpen(!isMobileMenuOpen);
+ };
+
+ return (
+  <div id="page-wrapper" className={isMobileMenuOpen ? 'mobile-nav-open' : ''}>
+   <OfflineBanner />
+   <DashboardHeader
+    companyName={lineOfBusinessData?.companyName || ''}
+    onMobileMenuToggle={toggleMobileMenu}
+    isMobileMenuOpen={isMobileMenuOpen}
+   />
+
+   {/* Desktop SideNav */}
+   <Suspense fallback={null}>
+    <DashboardSideNav
+     activeItem="support"
+     isMobileOpen={isMobileMenuOpen}
+     onMobileClose={() => setIsMobileMenuOpen(false)}
+    />
+   </Suspense>
+
+   <main>{children}</main>
+   <GlobalStickyNotes />
+  </div>
+ );
+}
+
+function Layout({ children }: { children: React.ReactNode }) {
+ return (
+  <SetupProvider>
+   <TooltipProvider>
+    <LayoutContent>{children}</LayoutContent>
+   </TooltipProvider>
+  </SetupProvider>
+ );
+}
+
+export default Layout;

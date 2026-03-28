@@ -183,20 +183,23 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 					>
 						Add User
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1 h-auto"
 						style={{ color: 'var(--text-tertiary)' }}
-						onMouseEnter={(e) => {
+						onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
 						}}
-						onMouseLeave={(e) => {
+						onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 							e.currentTarget.style.color = 'var(--text-tertiary)';
 						}}
+						title="Close Modal"
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Modal Form */}

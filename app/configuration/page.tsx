@@ -2,12 +2,14 @@
 
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GearIcon, TrashIcon } from '@radix-ui/react-icons';
+import { GearIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons';
+import Pagination from '@/components/ui/Pagination';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetLineOfBusinessByCompanyIdForheaderQuery, useDeleteLineOfBusinessMutation } from '@/store/services/lineOfBusinessApi';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
+import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
 import { toast } from 'sonner';
@@ -28,9 +30,11 @@ export default function ConfigurationPage() {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [recordToDelete, setRecordToDelete] = useState<{ id: string; name: string } | null>(null);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage, setItemsPerPage] = useState(10);
 
 	const { data: lineOfBusinessData, isLoading } = useGetLineOfBusinessByCompanyIdForheaderQuery(
-		companyId,
+		{ companyId, page: currentPage, limit: itemsPerPage },
 		{
 			skip: !companyId,
 		}
@@ -39,20 +43,12 @@ export default function ConfigurationPage() {
 	const [deleteLineOfBusiness] = useDeleteLineOfBusinessMutation();
 
 	const lineOfBusinesses = useMemo(() => {
-		const data = lineOfBusinessData as
-			| {
-				lineOfBusinesses?: {
-					_id: string;
-					lineOfBusinessName: string;
-					createdAt?: string;
-					progress?: number;
-					status?: string;
-				}[];
-			}
-			| undefined;
-
+		const data = lineOfBusinessData as any;
 		return data?.lineOfBusinesses || [];
 	}, [lineOfBusinessData]);
+
+	const totalPages = (lineOfBusinessData as any)?.pagination?.totalPages || 1;
+	const totalItems = (lineOfBusinessData as any)?.pagination?.total || 0;
 
 	const handleDeleteClick = (id: string, name: string) => {
 		setRecordToDelete({ id, name });
@@ -122,6 +118,7 @@ export default function ConfigurationPage() {
 					)}
 				</div>
 			</div>
+
 			{/* Line of Business Table */}
 			<div
 				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
@@ -130,12 +127,18 @@ export default function ConfigurationPage() {
 					borderColor: 'var(--light-gray)'
 				}}
 			>
-
-
+				<TablePaginationHeader
+					totalItems={totalItems}
+					itemsPerPage={itemsPerPage}
+					onItemsPerPageChange={(value) => {
+						setItemsPerPage(value);
+						setCurrentPage(1);
+					}}
+					label="Line of Businesses"
+				/>
 				<div className="overflow-x-auto">
-					<table
-					>
-						<thead >
+					<table className="min-w-full">
+						<thead>
 							<tr>
 								<th>Name</th>
 								<th>Progress</th>
@@ -144,77 +147,82 @@ export default function ConfigurationPage() {
 								<th>Action</th>
 							</tr>
 						</thead>
-						<tbody
-
-						>
+						<tbody className="divide-y dark:divide-gray-700">
 							{isLoading ? (
-								<SVGLoaderFetch colSpan={8} text={''} />
+								<SVGLoaderFetch colSpan={5} text={''} />
 							) : lineOfBusinesses.length === 0 ? (
-								<NoRecordFound colSpan={8} />
-							) : lineOfBusinesses.map((lob: {
-								_id: string;
-								lineOfBusinessName: string;
-								createdAt?: string;
-								progress?: number;
-								status?: string;
-							}) => (
-								<tr
-									key={lob._id}
-									onMouseEnter={(e) => {
-										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-									}}
-									onMouseLeave={(e) => {
-										e.currentTarget.style.backgroundColor = 'transparent';
-									}}
-								>
-									<td>
-										{lob.lineOfBusinessName}
-									</td>
-									<td>
-										<ProgressBar progress={typeof lob.progress === 'number' ? lob.progress : 0} />
-									</td>
-									<td>
-										<StatusBadge status={lob.status || 'In Review'} />
-									</td>
-									<td>
-										{lob.createdAt ? new Date(lob.createdAt).toLocaleDateString() : 'N/A'}
-									</td>
-									<td
+								<NoRecordFound colSpan={5} />
+							) : (
+								lineOfBusinesses.map((lob: any) => (
+									<tr
+										key={lob._id}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.backgroundColor = 'transparent';
+										}}
+										className="dark:hover:bg-gray-700/50"
 									>
-										<div className="flex items-center gap-2">
-											{canEdit && (
-												<button
-													onClick={() => {
-														setSelectedLineOfBusinessId(lob._id);
-														router.push('/setup');
-													}}
-													className="p-2 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700"
-													title="Configure"
-												>
-													<GearIcon width={18} height={18} style={{ color: 'var(--text-primary)' }} />
-												</button>
-											)}
-											{canEdit && (
-												<button
-													onClick={() => handleDeleteClick(lob._id, lob.lineOfBusinessName)}
-													className="p-2 hover:bg-red-50 rounded-full transition-colors dark:hover:bg-red-900/20 group"
-													title="Delete"
-												>
-													<TrashIcon
-														width={18}
-														height={18}
-														className="text-red-500 group-hover:text-red-600"
-													/>
-												</button>
-											)}
-										</div>
-									</td>
-								</tr>
-							))}
+										<td className="px-4 py-3">{lob.lineOfBusinessName}</td>
+										<td className="px-4 py-3">
+											<ProgressBar progress={typeof lob.progress === 'number' ? lob.progress : 0} />
+										</td>
+										<td className="px-4 py-3">
+											<StatusBadge status={lob.status || 'In Review'} />
+										</td>
+										<td className="px-4 py-3">
+											{lob.createdAt ? new Date(lob.createdAt).toLocaleDateString() : 'N/A'}
+										</td>
+										<td className="px-4 py-3">
+											<div className="flex items-center gap-2">
+												{canEdit && (
+													<Button
+														variant="ghost"
+														size="sm"
+														onClick={() => {
+															setSelectedLineOfBusinessId(lob._id);
+															router.push('/setup');
+														}}
+														className="p-2 transition-colors h-auto rounded-full"
+														title="Configure"
+													>
+														<GearIcon width={18} height={18} style={{ color: 'var(--text-primary)' }} />
+													</Button>
+												)}
+												{canEdit && (
+													<Button
+														variant="ghost"
+														size="sm"
+														onClick={() => handleDeleteClick(lob._id, lob.lineOfBusinessName)}
+														className="p-2 hover:bg-red-50 rounded-full transition-colors dark:hover:bg-red-900/20 group h-auto"
+														title="Delete"
+													>
+														<TrashIcon
+															width={18}
+															height={18}
+															className="text-red-500 group-hover:text-red-600"
+														/>
+													</Button>
+												)}
+											</div>
+										</td>
+									</tr>
+								))
+							)}
 						</tbody>
 					</table>
 				</div>
 			</div>
+			{lineOfBusinesses.length > 0 && (
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onPageChange={setCurrentPage}
+					primaryColor="var(--primary)"
+					secondaryColor="var(--primary)"
+				/>
+			)}
 
 			<DeleteRecordModal
 				isOpen={deleteModalOpen}

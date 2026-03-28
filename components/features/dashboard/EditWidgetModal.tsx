@@ -6,6 +6,7 @@ import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
 import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
+import { Cross2Icon } from '@radix-ui/react-icons';
 import type { Widget } from '@/contexts/SetupContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 // import { useSocket } from '@/contexts/SocketContext';
@@ -129,6 +130,12 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			setSelectedSubKey('');
 		}
 		setFormData(prev => ({ ...prev, [field]: value }));
+	};
+
+	const handleRemoveTitle = () => {
+		setSelectedCategory('');
+		setSelectedSubKey('');
+		setFormData(prev => ({ ...prev, title: '', subKey: '', value: 0 }));
 	};
 
 	const widgetTitleOptions = useMemo(() => {
@@ -304,6 +311,33 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 						options={subKeyOptions}
 						placeholder="Select specific option"
 					/>
+				)}
+
+				{formData.title && (
+					<div className="space-y-3">
+						<label
+							className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							Selected Data Source
+						</label>
+						<div className="flex items-center gap-3 p-2 border  dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
+							<span
+								className="text-[10px] md:text-[12px] flex-1 dark:text-gray-400"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
+								{selectedSubKey || formData.title}
+							</span>
+							<button
+								type="button"
+								onClick={handleRemoveTitle}
+								className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors text-red-500 hover:text-red-700 border border-transparent hover:border-red-200 dark:hover:border-red-900/30"
+								title="Remove data source"
+							>
+								<Cross2Icon className="w-3 h-3" />
+							</button>
+						</div>
+					</div>
 				)}
 
 				<Input

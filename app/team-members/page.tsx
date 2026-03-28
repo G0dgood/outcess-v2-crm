@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import Search from '@/components/ui/Search';
 import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
-import PaginationSummary from '@/components/ui/PaginationSummary';
+import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
 import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
@@ -78,10 +78,33 @@ const TeamMembersPage: React.FC = () => {
 	const { user } = useUserInfo();
 	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
 	const [supervisorFilter, setSupervisorFilter] = useState('');
+	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage, setItemsPerPage] = useState(10);
+	const [teamMembersData, setTeamMembersData] = useState<TeamMember[]>([]);
+	const [searchTerm, setSearchTerm] = useState('');
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+	const [statusModalMember, setStatusModalMember] = useState<TeamMember | null>(null);
+	const [shiftFilter, setShiftFilter] = useState<string>('');
 
-	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersBySupervisorIdQuery(supervisorFilter, {
-		skip: !supervisorFilter
-	});
+	// Handle search debouncing
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearchTerm(searchTerm);
+			setCurrentPage(1); // Reset to first page on new search
+		}, 500);
+
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
+
+	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersBySupervisorIdQuery(
+		{
+			supervisorId: supervisorFilter,
+			page: currentPage,
+			limit: itemsPerPage,
+			search: debouncedSearchTerm
+		},
+		{ skip: !supervisorFilter }
+	);
 
 	const companyId =
 		(user?.company as { _id?: string; id?: string } | undefined)?._id ||
@@ -101,17 +124,9 @@ const TeamMembersPage: React.FC = () => {
 
 	const supervisorId = supervisorFilter;
 
-	const [teamMembersData, setTeamMembersData] = useState<TeamMember[]>([]);
-	const [searchTerm, setSearchTerm] = useState('');
-	const [itemsPerPage, setItemsPerPage] = useState(10);
-	const [currentPage, setCurrentPage] = useState(1);
-	const [statusModalMember, setStatusModalMember] = useState<TeamMember | null>(null);
-	const [shiftFilter, setShiftFilter] = useState<string>('');
-
 	useEffect(() => {
 		if (socket) {
 			const handleStatusUpdate = (payload: TeamMemberStatusUpdatePayload) => {
-				console.log("Status Update:", payload);
 				const newStatus = typeof payload.status === 'object' ? payload.status.status : payload.status;
 				const newColor = typeof payload.status === 'object' ? payload.status.color : undefined;
 				const newReason =
@@ -134,7 +149,7 @@ const TeamMembersPage: React.FC = () => {
 			};
 
 			const handleRefresh = (payload: RefreshPayload) => {
-				console.log("Refresh Request:", payload?.message);
+
 				refetch();
 			};
 
@@ -150,21 +165,18 @@ const TeamMembersPage: React.FC = () => {
 
 	useEffect(() => {
 		if (teamMembersResponse) {
-			const rawMembers = teamMembersResponse?.data || teamMembersResponse?.teamMembers ||
-				teamMembersResponse || [];
-
-			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
+			const membersList = teamMembersResponse.teamMembers || [];
 
 			const mappedMembers: TeamMember[] = membersList.map((member: unknown) => {
 				const m = member as ApiTeamMember;
 
-				let status = 'Logged Out';
+				let status = 'Logged out';
 				let statusColor = undefined;
 				let reason = undefined;
 
 				if (m.status) {
 					if (typeof m.status === 'object') {
-						status = m.status.status || m.loginStatus || 'Logged Out';
+						status = m.status.status || m.loginStatus || 'Logged out';
 						statusColor = m.status.color;
 						reason = m.status.statusReason || m.status.reason || m.statusReason;
 					} else if (typeof m.status === 'string') {
@@ -172,7 +184,7 @@ const TeamMembersPage: React.FC = () => {
 						reason = m.statusReason;
 					}
 				} else {
-					status = m.loginStatus || 'Logged Out';
+					status = m.loginStatus || 'Logged out';
 					reason = m.statusReason;
 				}
 
@@ -297,20 +309,13 @@ const TeamMembersPage: React.FC = () => {
 
 	const filteredMembers = useMemo(() => {
 		return teamMembersData.filter(member => {
-			const matchesSearch =
-				searchTerm.trim().length === 0 ||
-				member.agentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				member.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				member.email.toLowerCase().includes(searchTerm.toLowerCase());
-
 			const matchesShift = !shiftFilter || member.shiftHourTitle === shiftFilter;
-
-			return matchesSearch && matchesShift;
+			return matchesShift;
 		});
-	}, [searchTerm, teamMembersData, shiftFilter]);
+	}, [teamMembersData, shiftFilter]);
 
-	const totalPages = Math.max(1, Math.ceil(filteredMembers.length / itemsPerPage));
-	const currentMembers = filteredMembers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+	const totalPages = teamMembersResponse?.pagination?.totalPages || 1;
+	const currentMembers = filteredMembers;
 
 	useEffect(() => {
 		if (currentPage > totalPages) {
@@ -382,25 +387,15 @@ const TeamMembersPage: React.FC = () => {
 					borderColor: 'var(--light-gray)',
 				}}
 			>
-				{filteredMembers.length > 0 && (
-					<div className="p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-						<PaginationSummary
-							totalItems={filteredMembers.length}
-							itemsPerPage={itemsPerPage}
-							onItemsPerPageChange={(value) => {
-								setItemsPerPage(value);
-								setCurrentPage(1);
-							}}
-							className="text-gray-600 dark:text-gray-400"
-						/>
-						<span
-							className="text-[10px] md:text-[12px] dark:text-gray-400"
-							style={{ color: 'var(--text-tertiary)' }}
-						>
-							Total of {filteredMembers.length} Team Members
-						</span>
-					</div>
-				)}
+				<TablePaginationHeader
+					totalItems={teamMembersResponse?.pagination?.total || 0}
+					itemsPerPage={itemsPerPage}
+					onItemsPerPageChange={(value) => {
+						setItemsPerPage(value);
+						setCurrentPage(1);
+					}}
+					label="Team Members"
+				/>
 
 				<div className="overflow-x-auto">
 					<table
@@ -514,7 +509,7 @@ const TeamMembersPage: React.FC = () => {
 					</table>
 				</div>
 				<div className="p-4 px-6">
-					{filteredMembers.length > 0 && (
+					{currentMembers.length > 0 && (
 						<Pagination
 							currentPage={currentPage}
 							totalPages={totalPages}

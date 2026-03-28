@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useRef, useCallb
 import { io, Socket } from 'socket.io-client';
 import { syncPendingDispositions, getPendingDispositionsCount } from '@/utils/offlineDispositions';
 import { toastSuccess, toastInfo } from '@/utils/toastWithSound';
+import { useAuth } from './AuthContext';
 
 // Socket connection status
 export type SocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error' | 'reconnecting' | 'offline';
@@ -81,6 +82,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 	const [isOnline, setIsOnline] = useState(true);
 	const [offlineModeEnabled, setOfflineModeEnabled] = useState(false);
 	const [isReconnected, setIsReconnected] = useState(false);
+	const { isAuthenticated } = useAuth();
 	const [networkSpeed, setNetworkSpeed] = useState<'fast' | 'slow' | 'unknown'>('unknown');
 
 	const socketRef = useRef<Socket | null>(null);
@@ -222,7 +224,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 				reconnection: true,
 			});
 
-			newSocket.on('connect', () => { 
+			newSocket.on('connect', () => {
 				setStatus('connected');
 				setLastError(null);
 				setReconnectAttempts(0);
@@ -231,7 +233,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 				flushMessageQueue();
 			});
 
-			newSocket.on('disconnect', (reason) => { 
+			newSocket.on('disconnect', (reason) => {
 				setStatus('disconnected');
 				if (reason === 'io server disconnect') {
 					newSocket.connect();
@@ -292,22 +294,22 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 		socketRef.current?.off(event, handler);
 	}, []);
 
-	// Auto-Sync for Offline Dispositions when both online and connected
+	// Auto-Sync for Offline Dispositions when both online and connected and authenticated
 	useEffect(() => {
 		const attemptSync = async () => {
-			if (isOnline && status === 'connected' && !isSyncingDispositionsRef.current) {
+			if (isOnline && status === 'connected' && isAuthenticated && !isSyncingDispositionsRef.current) {
 				const pendingCount = getPendingDispositionsCount();
 				if (pendingCount > 0) {
 					isSyncingDispositionsRef.current = true;
-					console.log(`[SocketContext] Starting automatic sync for ${pendingCount} pending dispositions`);
+
 					toastInfo(`Network restored. Syncing ${pendingCount} pending dispositions...`);
-					
+
 					try {
 						const result = await syncPendingDispositions(send);
 						if (result.success > 0) {
 							toastSuccess(`Successfully synced ${result.success} dispositions!`);
 						}
-						console.log(`[SocketContext] Sync completed. Success: ${result.success}, Failed: ${result.failed}`);
+
 					} catch (error) {
 						console.error('[SocketContext] Error during automatic sync:', error);
 					} finally {
@@ -318,7 +320,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 		};
 
 		attemptSync();
-	}, [isOnline, status, send]);
+	}, [isOnline, status, send, isAuthenticated]);
 
 	// Auto-connect
 	useEffect(() => {

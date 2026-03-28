@@ -10,7 +10,7 @@ import PageHeading from './PageHeading';
 import SubPageHeading from './SubPageHeading';
 import Button from './Button';
 import DeleteRoleModal from '@/components/features/role/DeleteRoleModal';
-import { ExclamationTriangleIcon, TrashIcon } from '@radix-ui/react-icons';
+import { ExclamationTriangleIcon, TrashIcon, CopyIcon } from '@radix-ui/react-icons';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { toast } from 'sonner';
 import CreateSupervisorRoleModal from './CreateSupervisorRoleModal';
@@ -85,6 +85,11 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
     }
   };
 
+  const handleCopyId = (id: string) => {
+    navigator.clipboard.writeText(id);
+    toast.success('Supervisor ID copied to clipboard');
+  };
+
   if (isLoading) {
     return <RolesSkeleton className={className} />;
   }
@@ -112,55 +117,79 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
 
       {roles?.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {roles.map((role) => (
-            <div
-              key={role._id || role.id || role.roleName}
-              className="dark:bg-gray-800 border dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow"
-              style={{
-                backgroundColor: 'var(--accent-white)',
-                borderColor: 'var(--light-gray)',
-                boxShadow:
-                  '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow =
-                  '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow =
-                  '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
-              }}
-            >
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3
-                    className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
-                    {role.supervisorTitle || 'Supervisor Role'}
-                  </h3>
-                  <p
-                    className="text-[10px] md:text-[12px] dark:text-gray-400"
-                    style={{ color: 'var(--text-tertiary)' }}
-                  >
-                    {role.description || ''}
-                  </p>
+          {roles.map((role) => {
+            const roleId = role._id || role.id || '';
+            return (
+              <div
+                key={roleId || role.roleName}
+                className="dark:bg-gray-800 border dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow group"
+                style={{
+                  backgroundColor: 'var(--accent-white)',
+                  borderColor: 'var(--light-gray)',
+                  boxShadow:
+                    '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow =
+                    '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow =
+                    '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
+                }}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3
+                      className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      {role.supervisorTitle || 'Supervisor Role'}
+                    </h3>
+                    <p
+                      className="text-[10px] md:text-[12px] dark:text-gray-400"
+                      style={{ color: 'var(--text-tertiary)' }}
+                    >
+                      {role.description || ''}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 -mr-2 -mt-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopyId(roleId);
+                      }}
+                      className="p-1.5 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700 h-auto !rounded-none"
+                      title="Copy Supervisor ID"
+                    >
+                      <CopyIcon className="w-4 h-4 text-blue-500" />
+                    </Button>
+                    {canDeleteSupervisorRole && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteRoleClick(roleId, role.roleName || '');
+                        }}
+                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700 h-auto !rounded-none"
+                        title="Delete Supervisor Role"
+                      >
+                        <TrashIcon className="w-4 h-4 text-red-500" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                {canDeleteSupervisorRole && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteRoleClick(role._id || role.id || '', role.roleName || '');
-                    }}
-                    className="p-1.5 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700 -mr-2 -mt-2"
-                    title="Delete Supervisor Role"
-                  >
-                    <TrashIcon className="w-4 h-4 text-red-500" />
-                  </button>
-                )}
+                <div className="flex justify-end mt-4">
+                  <span className="text-[9px] text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+                    ID: {roleId.substring(0, 8)}...
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div

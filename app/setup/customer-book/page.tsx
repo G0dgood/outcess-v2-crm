@@ -18,7 +18,7 @@ import {
 	useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Plus, Pencil, Trash2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
@@ -78,14 +78,23 @@ const SortableRow = ({ field, handleEditField, handleDeleteField, isLast }: Sort
 			className={!isLast ? 'dark:border-gray-700' : ''}
 		>
 			<td className="py-4 px-2 w-10">
-				<button
+				<Button
+					variant="ghost"
+					size="sm"
 					{...attributes}
 					{...listeners}
-					className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+					className="cursor-grab active:cursor-grabbing p-2 transition-colors h-auto"
 					style={{ color: 'var(--text-tertiary)' }}
+					onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+						e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+					}}
+					onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+						e.currentTarget.style.backgroundColor = 'transparent';
+					}}
+					title="Drag to reorder"
 				>
 					<GripVertical size={16} />
-				</button>
+				</Button>
 			</td>
 			<td
 				className="py-4 px-6 font-inter text-[10px] md:text-[12px] dark:text-gray-100"
@@ -122,24 +131,25 @@ const SortableRow = ({ field, handleEditField, handleDeleteField, isLast }: Sort
 					</span>
 				)}
 			</td>
-			<td className=" gap-5 border-none">
-				<button
+			<td className="flex items-center gap-5 border-none py-4 px-6">
+				<Button
+					variant="ghost"
+					size="sm"
 					onClick={() => handleEditField(field)}
-					className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors pr-5"
+					className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors p-1 h-auto"
+					title="Edit Field"
 				>
-					<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M11 2L14 5L4.5 14.5H1.5V11.5L11 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-					</svg>
-				</button>
-				<button
+					<Pencil size={16} />
+				</Button>
+				<Button
+					variant="ghost"
+					size="sm"
 					onClick={() => handleDeleteField(field.id)}
-					className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+					className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors p-1 h-auto"
+					title="Delete Field"
 				>
-					<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M2 4H14M5 4V2C5 1.44772 5.44772 1 6 1H10C10.5523 1 11 1.44772 11 2V4M13 4V14C13 14.5523 12.5523 15 12 15H4C3.44772 15 3 14.5523 3 14V4H13Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-						<path d="M6 7V11M10 7V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-					</svg>
-				</button>
+					<Trash2 size={16} />
+				</Button>
 			</td>
 		</tr>
 	);
@@ -431,9 +441,7 @@ export default function CustomerBookPage() {
 						}}
 						className="flex items-center gap-2 w-full sm:w-auto justify-center"
 					>
-						<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M8 1V15M1 8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-						</svg>
+						<Plus size={16} />
 						Add New Field
 					</Button>
 				</div>

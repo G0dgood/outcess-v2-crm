@@ -13,8 +13,8 @@ import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
 import { useGetRolesByLineOfBusinessIdQuery } from '@/store/services/roleApi';
-
 import { Skeleton } from '@/components/ui/skeleton';
+import Tabs from '@/components/ui/Tabs';
 
 const EditUserPage: React.FC = () => {
 	const router = useRouter();
@@ -30,7 +30,6 @@ const EditUserPage: React.FC = () => {
 	});
 
 	const [updateTeamMember] = useUpdateTeamMemberMutation();
-	// const [updateTeamMemberPassword, { isLoading: isUpdatingPassword }] = useUpdateTeamMemberPasswordMutation();
 	const [adminResetTeamMemberPassword, { isLoading: isResettingPassword }] = useAdminResetTeamMemberPasswordByIdMutation();
 
 	const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
@@ -64,7 +63,6 @@ const EditUserPage: React.FC = () => {
 		if (userResponse) {
 			const user = userResponse?.teamMember || userResponse.data || userResponse;
 
-			// Handle name splitting if firstName/lastName are missing
 			let fName = user?.firstName || '';
 			let lName = user?.lastName || '';
 
@@ -177,14 +175,15 @@ const EditUserPage: React.FC = () => {
 					phone: formData?.phone,
 					role: formData?.role,
 					status: formData?.status ? 'Active' : 'Inactive',
-					supervisorId: formData?.supervisorId
+					supervisorId: formData?.supervisorId || null
 				}
 			}).unwrap();
 			toast.success('User updated successfully');
 			router.push('/users');
-		} catch (error) {
+		} catch (error: unknown) {
 			console.error('Failed to update user:', error);
-			toast.error('Failed to update user');
+			const errorMessage = (error as any)?.data?.message || 'Failed to update user';
+			toast.error(errorMessage);
 		}
 	};
 
@@ -203,9 +202,10 @@ const EditUserPage: React.FC = () => {
 					await adminResetTeamMemberPassword({ id: userId, password: passwordData.newPassword }).unwrap();
 					toast.success('Password updated successfully');
 					router.push('/users');
-				} catch (error) {
+				} catch (error: unknown) {
 					console.error('Failed to update password:', error);
-					toast.error('Failed to update password');
+					const errorMessage = (error as any)?.data?.message || 'Failed to update password';
+					toast.error(errorMessage);
 				}
 			} else {
 				toast.error('Passwords do not match');
@@ -332,57 +332,15 @@ const EditUserPage: React.FC = () => {
 				</div>
 
 				{/* Tabs */}
-				<div
-					className="flex gap-6 border-b dark:border-gray-700"
-					style={{ borderColor: 'var(--light-gray)' }}
-				>
-					<button
-						onClick={() => setActiveTab('profile')}
-						className={`pb-2 px-1 font-medium transition-colors ${activeTab === 'profile'
-							? 'border-b-2'
-							: 'dark:text-gray-400 dark:hover:text-gray-200'
-							}`}
-						style={activeTab === 'profile'
-							? { borderColor: primaryColor, color: primaryColor }
-							: { color: 'var(--text-tertiary)' }
-						}
-						onMouseEnter={(e) => {
-							if (activeTab !== 'profile') {
-								e.currentTarget.style.color = 'var(--text-secondary)';
-							}
-						}}
-						onMouseLeave={(e) => {
-							if (activeTab !== 'profile') {
-								e.currentTarget.style.color = 'var(--text-tertiary)';
-							}
-						}}
-					>
-						Profile
-					</button>
-					<button
-						onClick={() => setActiveTab('security')}
-						className={`pb-2 px-1 font-medium transition-colors ${activeTab === 'security'
-							? 'border-b-2'
-							: 'dark:text-gray-400 dark:hover:text-gray-200'
-							}`}
-						style={activeTab === 'security'
-							? { borderColor: primaryColor, color: primaryColor }
-							: { color: 'var(--text-tertiary)' }
-						}
-						onMouseEnter={(e) => {
-							if (activeTab !== 'security') {
-								e.currentTarget.style.color = 'var(--text-secondary)';
-							}
-						}}
-						onMouseLeave={(e) => {
-							if (activeTab !== 'security') {
-								e.currentTarget.style.color = 'var(--text-tertiary)';
-							}
-						}}
-					>
-						Security
-					</button>
-				</div>
+				<Tabs
+					tabs={[
+						{ id: 'profile', label: 'Profile' },
+						{ id: 'security', label: 'Security' }
+					]}
+					activeTab={activeTab}
+					onTabChange={(id) => setActiveTab(id as 'profile' | 'security')}
+					activeColor={primaryColor}
+				/>
 			</div>
 
 			{/* Profile Form */}
@@ -532,20 +490,22 @@ const EditUserPage: React.FC = () => {
 							>
 								You&apos;re about to change the password of {formData.firstName} {formData.lastName}. The user will be logged out immediately.
 							</div>
-							<button
+							<Button
+								variant="ghost"
+								size="sm"
 								onClick={() => setShowAlert(false)}
-								className="shrink-0 dark:text-orange-400 dark:hover:text-orange-300 transition-colors"
+								className="shrink-0 transition-colors p-1 h-auto"
 								style={{ color: '#F97316' }}
-								onMouseEnter={(e) => {
+								onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 									e.currentTarget.style.color = '#EA580C';
 								}}
-								onMouseLeave={(e) => {
+								onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 									e.currentTarget.style.color = '#F97316';
 								}}
-								aria-label="Close alert"
+								title="Close alert"
 							>
 								<Cross2Icon className="w-4 h-4" />
-							</button>
+							</Button>
 						</div>
 					)}
 

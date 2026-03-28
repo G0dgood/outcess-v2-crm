@@ -76,9 +76,11 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 					>
 						Add Customer
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors !rounded-none"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -91,7 +93,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Modal Form */}
@@ -140,9 +142,11 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 					className="flex justify-between items-center p-6 border-t dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<button
+					<Button
+						variant="link"
+						size="sm"
 						onClick={onAddFields}
-						className="font-medium transition-colors"
+						className="font-medium transition-colors p-0 h-auto"
 						style={{ color: '#EA580C' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = '#C2410C';
@@ -152,7 +156,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 						}}
 					>
 						Add Fields
-					</button>
+					</Button>
 					<div className="flex gap-3">
 						<Button
 							variant="outline"

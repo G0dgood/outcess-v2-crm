@@ -3,6 +3,7 @@
 import React from 'react';
 import { FileTextIcon, TrashIcon } from '@radix-ui/react-icons';
 import Icon from '@/components/ui/Icon';
+import Button from '@/components/ui/Button';
 
 type FieldDef = { id: string; name: string };
 type RecordType = { id: string } & Record<string, string | number | boolean | null>;
@@ -38,28 +39,33 @@ const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> 
         </div>
         <div className="flex items-center gap-3">
           {canDelete && onDeleteSelected && selectedRecords.size > 0 && (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onDeleteSelected}
-              className="flex items-center gap-2 px-3 py-1.5 text-[8px] md:text-[10px] font-medium text-red-500 border border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 text-[8px] md:text-[10px] font-medium text-red-500 border border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors h-auto"
               title="Delete Selected"
             >
               <TrashIcon className="w-3.5 h-3.5" />
               Delete
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors cursor-pointer"
+            className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors cursor-pointer p-1 h-auto"
             style={{ color: 'var(--text-tertiary)' }}
-            onMouseEnter={(e) => {
+            onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.currentTarget.style.color = 'var(--text-secondary)';
             }}
-            onMouseLeave={(e) => {
+            onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.currentTarget.style.color = 'var(--text-tertiary)';
             }}
+            title="Close Drawer"
           >
             <Icon name="Close_round_light" size="lg" />
-          </button>
+          </Button>
         </div>
       </div>
 

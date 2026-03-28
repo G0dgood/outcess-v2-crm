@@ -12,12 +12,18 @@ export interface CreateDispositionRequest {
 export interface CreateDispositionResponse {
     message: string;
     disposition?: any;
+    dispositionId?: string;
+    timestamp: string;
+    agentId?: string;
+    lineOfBusinessId?: string;
+    customerId?: string;
 }
 
 export interface GetDispositionsRequest {
     lineOfBusinessId: string;
     page?: number;
     limit?: number;
+    search?: string;
 }
 
 export interface GetDispositionsByCustomerRequest {
@@ -38,6 +44,9 @@ export interface GetDispositionsReportRequest {
     lineOfBusinessId: string;
     startDate?: string;
     endDate?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
 }
 
 export interface GetDispositionsByAgentReportRequest {
@@ -47,6 +56,7 @@ export interface GetDispositionsByAgentReportRequest {
     limit?: number;
     startDate?: string;
     endDate?: string;
+    search?: string;
 }
 
 export const dispositionApi = baseApi.injectEndpoints({
@@ -60,8 +70,8 @@ export const dispositionApi = baseApi.injectEndpoints({
             invalidatesTags: ['Disposition'],
         }),
         getDispositionsByLineOfBusiness: builder.query<any, GetDispositionsRequest>({
-            query: ({ lineOfBusinessId, page = 1, limit = 20 }) => 
-                `api/v1/dispositions/${lineOfBusinessId}?page=${page}&limit=${limit}`,
+            query: ({ lineOfBusinessId, page = 1, limit = 20, search = "" }) => 
+                `api/v1/dispositions/${lineOfBusinessId}?page=${page}&limit=${limit}&search=${search}`,
             providesTags: ['Disposition'],
         }),
         getDispositionsByCustomer: builder.query<any, GetDispositionsByCustomerRequest>({
@@ -75,13 +85,13 @@ export const dispositionApi = baseApi.injectEndpoints({
             providesTags: ['Disposition'],
         }),
         getDispositionsByLineOfBusinessReport: builder.query<any, GetDispositionsReportRequest>({
-            query: ({ lineOfBusinessId, startDate, endDate }) => 
-                `api/v1/dispositions/${lineOfBusinessId}/report?startDate=${startDate}&endDate=${endDate}`,
+            query: ({ lineOfBusinessId, startDate, endDate, page = 1, limit = 20, search = "" }) => 
+                `api/v1/dispositions/${lineOfBusinessId}/report?startDate=${startDate}&endDate=${endDate}&page=${page}&limit=${limit}&search=${search}`,
             providesTags: ['Disposition'],
         }),
         getDispositionsByAgentReport: builder.query<any, GetDispositionsByAgentReportRequest>({
-            query: ({ lineOfBusinessId, agentId, page = 1, limit = 20, startDate , endDate  }) => 
-                `api/v1/dispositions/${lineOfBusinessId}/agent/${agentId}/report?page=${page}&limit=${limit}&startDate=${startDate}&endDate=${endDate}`,
+            query: ({ lineOfBusinessId, agentId, page = 1, limit = 20, startDate , endDate, search = ""  }) => 
+                `api/v1/dispositions/${lineOfBusinessId}/agent/${agentId}/report?page=${page}&limit=${limit}&startDate=${startDate}&endDate=${endDate}&search=${search}`,
             providesTags: ['Disposition'],
         }),
         getDashboardDispositionsByLineOfBusinessAndAgentIdReport: builder.query<any, GetDispositionsByAgentReportRequest>({

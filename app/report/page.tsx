@@ -6,6 +6,7 @@ import Search from '@/components/ui/Search';
 import Pagination from '@/components/ui/Pagination';
 import DateFilter from '@/components/ui/DateFilter';
 import { MixerHorizontalIcon } from '@radix-ui/react-icons';
+import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import PageHeading from '@/components/ui/PageHeading';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
@@ -48,6 +49,7 @@ const ReportPage: React.FC = () => {
 	const { canAccess, isAdmin, isLoading: isPrivilegeLoading } = usePrivilege();
 	const canView = canAccess('report', 'view');
 	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage, setItemsPerPage] = useState(10);
 
 	const formatDate = (date: Date) => {
 		const year = date.getFullYear();
@@ -62,12 +64,17 @@ const ReportPage: React.FC = () => {
 	});
 
 	const isAgent = !isAdmin;
+	const [searchTerm, setSearchTerm] = useState('');
+	const [isFilterOpen, setIsFilterOpen] = useState(false);
 
 	const { data: lobApiData, isLoading: isLobLoading } = useGetDispositionsByLineOfBusinessReportQuery(
 		{
 			lineOfBusinessId: selectedLineOfBusinessId || '',
 			startDate: dateRange.startDate,
-			endDate: dateRange.endDate
+			endDate: dateRange.endDate,
+			page: currentPage,
+			limit: itemsPerPage,
+			search: searchTerm
 		},
 		{ skip: !selectedLineOfBusinessId || isAgent || isPrivilegeLoading }
 	);
@@ -77,9 +84,10 @@ const ReportPage: React.FC = () => {
 			lineOfBusinessId: selectedLineOfBusinessId || '',
 			agentId: user?._id || user?.id || '',
 			page: currentPage,
-			limit: 10,
+			limit: itemsPerPage,
 			startDate: dateRange.startDate,
-			endDate: dateRange.endDate
+			endDate: dateRange.endDate,
+			search: searchTerm
 		},
 		{ skip: !selectedLineOfBusinessId || !isAgent || !(user?._id || user?.id) || isPrivilegeLoading }
 	);
@@ -87,13 +95,15 @@ const ReportPage: React.FC = () => {
 	const apiData = (isAgent ? agentApiData : lobApiData) as ReportApiResponse | ReportItem[] | undefined;
 	const isLoading = isPrivilegeLoading || (isAgent ? isAgentLoading : isLobLoading);
 
-	const [searchTerm, setSearchTerm] = useState('');
-	const [isFilterOpen, setIsFilterOpen] = useState(false);
 	const filterButtonRef = useRef<HTMLDivElement>(null);
 	const [tooltipLength, setTooltipLength] = useState(10);
 	const [filterType, setFilterType] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange'>('today');
 	const [customFromDate, setCustomFromDate] = useState('');
 	const [customToDate, setCustomToDate] = useState('');
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [searchTerm]);
 
 	useEffect(() => {
 		const savedLength = localStorage.getItem('report_tooltip_length');
@@ -210,20 +220,17 @@ const ReportPage: React.FC = () => {
 		setIsFilterOpen(false);
 	};
 
-	const filteredReports = reportData.filter(report => {
-		if (!searchTerm) return true;
-		const searchLower = searchTerm.toLowerCase();
-		return Object.values(report).some(value =>
-			String(value).toLowerCase().includes(searchLower)
-		);
-	});
+	const filteredReports = reportData;
 
-	const totalPages = isAgent
-		? ((!Array.isArray(apiData) && apiData?.totalPages) || 1)
-		: Math.ceil(filteredReports.length / 10);
+	const totalPages = apiData && !Array.isArray(apiData) && typeof apiData.pagination === 'object'
+		? (apiData.pagination as any).totalPages || 1
+		: 1;
 
-	const startIndex = isAgent ? 0 : (currentPage - 1) * 10;
-	const paginatedReports = filteredReports.slice(startIndex, startIndex + 10);
+	const totalItems = apiData && !Array.isArray(apiData) && typeof apiData.pagination === 'object'
+		? (apiData.pagination as any).total || 0
+		: 0;
+
+	const paginatedReports = reportData;
 
 	if (!canView) {
 		return null;
@@ -250,27 +257,20 @@ const ReportPage: React.FC = () => {
 				/>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
 					<div ref={filterButtonRef} className="relative">
-						<button
+						<Button
 							type="button"
+							variant="outline"
 							onClick={handleFilter}
-							className="inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 px-2 py-2  sm:px-4 sm:py-2 text-[10px] md:text-[12px] dark:bg-gray-800 border dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 dark:focus:ring-gray-400 cursor-pointer gap-2 whitespace-nowrap"
+							className="dark:bg-gray-800 border dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100 focus:ring-offset-2 dark:focus:ring-offset-gray-800 dark:focus:ring-gray-400 gap-2 whitespace-nowrap"
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)',
 								color: 'var(--text-secondary)'
 							}}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-								e.currentTarget.style.color = 'var(--text-secondary)';
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-								e.currentTarget.style.color = 'var(--text-secondary)';
-							}}
 						>
 							<MixerHorizontalIcon className="w-4 h-4" />
 							Filter Report
-						</button>
+						</Button>
 						{isFilterOpen && (
 							<div className="absolute top-full right-0 mt-2 z-50">
 								<DateFilter
@@ -302,6 +302,15 @@ const ReportPage: React.FC = () => {
 					borderColor: 'var(--light-gray)'
 				}}
 			>
+				<TablePaginationHeader
+					totalItems={totalItems}
+					itemsPerPage={itemsPerPage}
+					onItemsPerPageChange={(value) => {
+						setItemsPerPage(value);
+						setCurrentPage(1);
+					}}
+					label="Reports"
+				/>
 				<div className="overflow-x-auto">
 					<table
 						className="min-w-full divide-y dark:divide-gray-700"
@@ -390,7 +399,7 @@ const ReportPage: React.FC = () => {
 			</div>
 
 			{/* Pagination */}
-			{filteredReports?.length > 0 && (
+			{totalItems > 0 && (
 				<Pagination
 					currentPage={currentPage}
 					totalPages={totalPages}

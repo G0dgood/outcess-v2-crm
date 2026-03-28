@@ -2,6 +2,7 @@
 
 import React from 'react';
 import LandingHeader from '@/components/ui/LandingHeader';
+import Button from '@/components/ui/Button';
 import LandingFooter from '@/components/ui/landing/LandingFooter';
 import { plusJakartaStyle } from '@/components/Options';
 import { ArrowRightIcon, CalendarIcon } from '@radix-ui/react-icons';
@@ -176,23 +177,26 @@ const BlogPage: React.FC = () => {
 										{featuredPost.readTime}
 									</p>
 								</div>
-								<Link
-									href={`/blog/${encodeURIComponent(featuredPost.title.toLowerCase().replace(/\s+/g, '-'))}`}
+								<Button
+									onClick={() => window.location.href = `/blog/${encodeURIComponent(featuredPost.title.toLowerCase().replace(/\s+/g, '-'))}`}
+									variant="primary"
+									size="lg"
 									className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-[10px] md:text-[12px] transition-colors"
 									style={{
 										backgroundColor: '#050711',
 										color: 'white'
 									}}
-									onMouseEnter={(e) => {
+									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.backgroundColor = '#6C8B7D';
 									}}
-									onMouseLeave={(e) => {
+									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.backgroundColor = '#050711';
 									}}
+									title="Read Featured Article"
 								>
 									Read Article
 									<ArrowRightIcon className="w-4 h-4" />
-								</Link>
+								</Button>
 							</div>
 						</div>
 					</div>
@@ -206,28 +210,31 @@ const BlogPage: React.FC = () => {
 				<div className="max-w-6xl mx-auto">
 					<div className="flex flex-wrap gap-3">
 						{categories.map((category) => (
-							<button
+							<Button
 								key={category}
-								className="px-4 py-2 rounded-lg text-[10px] md:text-[12px] font-medium transition-colors"
+								variant={category === 'All' ? 'primary' : 'ghost'}
+								size="sm"
+								className="px-4 py-2 rounded-lg text-[10px] md:text-[12px] font-medium transition-colors h-auto hover:transform-none"
 								style={{
 									backgroundColor: category === 'All' ? '#050711' : 'transparent',
 									color: category === 'All' ? 'white' : 'var(--text-secondary)',
 									border: category !== 'All' ? '1px solid' : 'none',
 									borderColor: category !== 'All' ? 'var(--light-gray)' : 'transparent'
 								}}
-								onMouseEnter={(e) => {
+								onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 									if (category !== 'All') {
 										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
 									}
 								}}
-								onMouseLeave={(e) => {
+								onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 									if (category !== 'All') {
 										e.currentTarget.style.backgroundColor = 'transparent';
 									}
 								}}
+								title={`Category: ${category}`}
 							>
 								{category}
-							</button>
+							</Button>
 						))}
 					</div>
 				</div>
@@ -353,12 +360,15 @@ const BlogPage: React.FC = () => {
 								color: '#050711'
 							}}
 						/>
-						<button
+						<Button
+							variant="primary"
+							size="lg"
 							className="px-8 py-3 bg-[#050711] text-white rounded-lg font-semibold text-[10px] md:text-[12px] transition-colors hover:bg-[#050711]/90"
-							style={plusJakartaStyle}
+							style={{ backgroundColor: '#050711' }}
+							title="Subscribe to Newsletter"
 						>
 							Subscribe
-						</button>
+						</Button>
 					</div>
 				</div>
 			</section>

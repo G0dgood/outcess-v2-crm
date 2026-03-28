@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Icon from '@/components/ui/Icon';
+import Button from '@/components/ui/Button';
 
 interface WidgetCardProps {
 	title: string;
@@ -61,23 +62,25 @@ export const WidgetCard: React.FC<WidgetCardProps> = React.memo(({ title, value,
 				</h3>
 				<div className="relative" ref={dropdownRef}>
 					{(canEdit || canDelete) && (
-						<button
-							onClick={(e) => {
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.stopPropagation();
 								setIsDropdownOpen(!isDropdownOpen);
 							}}
-							className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors cursor-pointer"
+							className="p-1 h-auto transition-colors cursor-pointer"
 							style={{ color: 'var(--text-tertiary)' }}
-							onMouseEnter={(e) => {
+							onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.currentTarget.style.color = 'var(--text-secondary)';
 							}}
-							onMouseLeave={(e) => {
+							onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.currentTarget.style.color = 'var(--text-tertiary)';
 							}}
 							title="Widget options"
 						>
 							<Icon name="Ellipsis_vertical_light" size="sm" />
-						</button>
+						</Button>
 					)}
 					{isDropdownOpen && (canEdit || canDelete) && (
 						<div
@@ -88,40 +91,46 @@ export const WidgetCard: React.FC<WidgetCardProps> = React.memo(({ title, value,
 							}}
 						>
 							{canEdit && (
-								<button
+								<Button
+									variant="ghost"
+									size="md"
 									onClick={handleEdit}
-									className="w-full px-4 py-2 text-left text-[10px] md:text-[12px] dark:text-gray-300 dark:hover:bg-gray-700 transition-colors first:rounded-t-lg cursor-pointer"
+									fullWidth
+									className="justify-start px-4 py-2 h-auto text-[10px] md:text-[12px] transition-colors first:rounded-t-lg cursor-pointer"
 									style={{
 										color: 'var(--text-secondary)',
 										backgroundColor: 'transparent'
 									}}
-									onMouseEnter={(e) => {
+									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
 									}}
-									onMouseLeave={(e) => {
+									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.backgroundColor = 'transparent';
 									}}
 								>
 									Edit
-								</button>
+								</Button>
 							)}
 							{canDelete && (
-								<button
+								<Button
+									variant="ghost"
+									size="md"
 									onClick={handleDelete}
-									className="w-full px-4 py-2 text-left text-[10px] md:text-[12px] dark:text-gray-300 dark:hover:bg-gray-700 transition-colors last:rounded-b-lg cursor-pointer"
+									fullWidth
+									className="justify-start px-4 py-2 h-auto text-[10px] md:text-[12px] transition-colors last:rounded-b-lg cursor-pointer"
 									style={{
 										color: 'var(--text-secondary)',
 										backgroundColor: 'transparent'
 									}}
-									onMouseEnter={(e) => {
+									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
 									}}
-									onMouseLeave={(e) => {
+									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.backgroundColor = 'transparent';
 									}}
 								>
 									Delete
-								</button>
+								</Button>
 							)}
 						</div>
 					)}

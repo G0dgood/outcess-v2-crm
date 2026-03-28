@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Icon from '@/components/ui/Icon';
+import Button from '@/components/ui/Button';
 import { useSetup } from '@/contexts/SetupContext';
 
 interface ConfigurationDetail {
@@ -126,20 +127,22 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 										{card.title}
 									</h2>
 								</div>
-								<button
+								<Button
+									variant="ghost"
+									size="sm"
 									onClick={() => handleEditStep(card.step)}
-									className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+									className="transition-colors p-1 h-auto"
 									style={{ color: 'var(--text-tertiary)' }}
-									onMouseEnter={(e) => {
+									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.color = 'var(--text-secondary)';
 									}}
-									onMouseLeave={(e) => {
+									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.color = 'var(--text-tertiary)';
 									}}
 									title={`Edit ${card.title}`}
 								>
 									<Icon name="Edit_duotone_line" size="sm" />
-								</button>
+								</Button>
 							</div>
 						</div>
 

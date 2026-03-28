@@ -9,7 +9,7 @@ import CreateCustomRoleModal from '@/components/ui/CreateCustomRoleModal';
 import DeleteRoleModal from './DeleteRoleModal';
 import SubPageHeading from '@/components/ui/SubPageHeading';
 import PageHeading from '@/components/ui/PageHeading';
-import { ExclamationTriangleIcon, TrashIcon } from '@radix-ui/react-icons';
+import { ExclamationTriangleIcon, TrashIcon, CopyIcon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 
@@ -24,7 +24,6 @@ interface RolesProps {
 }
 
 const Roles: React.FC<RolesProps> = ({ className = '' }) => {
-	// const { user } = useUserInfo(); // user is unused
 	const { selectedLineOfBusinessId } = useLineOfBusiness();
 	const { data: rolesData, isLoading } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', { skip: !selectedLineOfBusinessId });
 	const { canAccess } = usePrivilege();
@@ -76,6 +75,11 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 		}
 	};
 
+	const handleCopyName = (roleName: string) => {
+		navigator.clipboard.writeText(roleName);
+		toast.success('Role name copied to clipboard');
+	};
+
 	if (isLoading) {
 		return <RolesSkeleton className={className} />;
 	}
@@ -109,7 +113,7 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 					{roles.map((role) => (
 						<div
 							key={role?.id}
-							className="dark:bg-gray-800 border dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow"
+							className="dark:bg-gray-800 border dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow group"
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)',
@@ -129,25 +133,46 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 								>
 									{role?.name}
 								</h3>
-								{canDelete && (
-									<button
-										onClick={(e) => {
+								<div className="flex items-center gap-1 -mr-2 -mt-2">
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 											e.stopPropagation();
-											handleDeleteRoleClick(role.id, role.name);
+											handleCopyName(role.name);
 										}}
-										className="p-1.5 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700 -mr-2 -mt-2"
-										title="Delete Role"
+										className="p-1.5 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700 h-auto"
+										title="Copy Role Name"
 									>
-										<TrashIcon className="w-4 h-4 text-red-500" />
-									</button>
-								)}
+										<CopyIcon className="w-4 h-4 text-blue-500" />
+									</Button>
+									{canDelete && (
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+												e.stopPropagation();
+												handleDeleteRoleClick(role?.id, role?.name);
+											}}
+											className="p-1.5 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700 h-auto"
+											title="Delete Role"
+										>
+											<TrashIcon className="w-4 h-4 text-red-500" />
+										</Button>
+									)}
+								</div>
 							</div>
-							<p
-								className="text-[10px] md:text-[12px] dark:text-gray-400"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								Users: {role?.userCount}
-							</p>
+							<div className="flex justify-between items-end">
+								<p
+									className="text-[10px] md:text-[12px] dark:text-gray-400"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									Users: {role?.userCount}
+								</p>
+								<span className="text-[9px] text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+									Role Name: {role?.name}
+								</span>
+							</div>
 						</div>
 					))}
 				</div>

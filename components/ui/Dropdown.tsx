@@ -191,7 +191,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
 									</div>
 								</div>
 							) : (
-								options.map((option) => (
+								options?.map((option) => (
 									<button
 										key={option.value}
 										type="button"

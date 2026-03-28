@@ -266,12 +266,14 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 											Update
 										</Button>
 									)}
-									<button
+									<Button
+										variant="ghost"
+										size="sm"
 										onClick={() => toggleAccordion(roleId)}
-										className="focus:outline-none"
+										className="focus:outline-none p-1 !rounded-none"
 									>
 										{isOpen ? <ChevronUpIcon className="w-5 h-5" /> : <ChevronDownIcon className="w-5 h-5" />}
-									</button>
+									</Button>
 								</div>
 							</div>
 

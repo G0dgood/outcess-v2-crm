@@ -20,7 +20,8 @@ const LoginTopHeader: React.FC<LoginTopHeaderProps> = ({ primaryColor, onUpgrade
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span>Upgrade</span>
+          <span
+            className={`font-lato not-italic font-semibold text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100 cursor-pointer `}>Upgrade</span>
         </button>
         <div className="header-separator"></div>
         <div className="flex-1 md:flex-none">
@@ -30,13 +31,6 @@ const LoginTopHeader: React.FC<LoginTopHeaderProps> = ({ primaryColor, onUpgrade
               style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>Peoplely</span>
           </div>
         </div>
-        {/* <div className="user-info">
-          <div className="user-email">{email}</div>
-          <div className="user-plan">{plan}</div>
-        </div> */}
-        {/* <div className="profile-icon">
-          <div className="profile-avatar"></div>
-        </div> */}
       </div>
     </div>
   );

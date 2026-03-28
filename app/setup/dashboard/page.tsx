@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Input from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
 import dynamic from 'next/dynamic';
 import { useSetup } from '@/contexts/SetupContext';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -74,12 +75,14 @@ export default function DashboardPage(): React.JSX.Element {
 					className="flex border-b dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={() => {
 							setDashboardStep('KPI Metric');
 							updateDashboardSettings({ activeTab: toActiveTab('KPI Metric') });
 						}}
-						className={`px-4 py-2 font-inter text-[10px] md:text-[12px] font-medium transition-colors ${dashboardStep === 'KPI Metric'
+						className={`px-4 py-2 font-inter text-[10px] md:text-[12px] font-medium transition-colors hover:transform-none h-auto rounded-none ${dashboardStep === 'KPI Metric'
 							? 'dark:text-gray-100 dark:border-gray-100'
 							: 'dark:text-gray-400 dark:hover:text-gray-300'
 							}`}
@@ -90,25 +93,28 @@ export default function DashboardPage(): React.JSX.Element {
 						} : {
 							color: 'var(--text-tertiary)'
 						}}
-						onMouseEnter={(e) => {
+						onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 							if (dashboardStep !== 'KPI Metric') {
 								e.currentTarget.style.color = 'var(--text-secondary)';
 							}
 						}}
-						onMouseLeave={(e) => {
+						onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 							if (dashboardStep !== 'KPI Metric') {
 								e.currentTarget.style.color = 'var(--text-tertiary)';
 							}
 						}}
+						title="KPI Metric Tab"
 					>
 						KPI Metric
-					</button>
-					<button
+					</Button>
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={() => {
 							setDashboardStep('Call Disposition');
 							updateDashboardSettings({ activeTab: toActiveTab('Call Disposition') });
 						}}
-						className={`px-4 py-2 font-inter text-[10px] md:text-[12px] font-medium transition-colors ${dashboardStep === 'Call Disposition'
+						className={`px-4 py-2 font-inter text-[10px] md:text-[12px] font-medium transition-colors hover:transform-none h-auto rounded-none ${dashboardStep === 'Call Disposition'
 							? 'dark:text-gray-100 dark:border-gray-100'
 							: 'dark:text-gray-400 dark:hover:text-gray-300'
 							}`}
@@ -119,19 +125,20 @@ export default function DashboardPage(): React.JSX.Element {
 						} : {
 							color: 'var(--text-tertiary)'
 						}}
-						onMouseEnter={(e) => {
+						onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 							if (dashboardStep !== 'Call Disposition') {
 								e.currentTarget.style.color = 'var(--text-secondary)';
 							}
 						}}
-						onMouseLeave={(e) => {
+						onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 							if (dashboardStep !== 'Call Disposition') {
 								e.currentTarget.style.color = 'var(--text-tertiary)';
 							}
 						}}
+						title="Call Disposition Tab"
 					>
 						Call Disposition
-					</button>
+					</Button>
 				</div>
 			</div>
 

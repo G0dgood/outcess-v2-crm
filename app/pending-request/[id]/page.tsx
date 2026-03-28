@@ -7,17 +7,17 @@ import Button from '@/components/ui/Button';
 import Textarea from '@/components/ui/Textarea';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import Tabs from '@/components/ui/Tabs';
 
 function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
 	const { id: _id } = usePromise(params);
-	console.log(_id);
 	const router = useRouter();
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const { isDarkMode } = useTheme();
 	const [activeTab, setActiveTab] = useState('basic-setup');
 	const [reviewNotes, setReviewNotes] = useState('');
 
-	// Sample pending business data - in a real app, this would be fetched based on params.id
+	// Sample pending business data
 	const businessData = {
 		companyName: 'Fairmoney',
 		submittedDate: 'Jan 15, 2024',
@@ -71,6 +71,8 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 		router.push('/admin/pending-request');
 	};
 
+	const activeColor = isDarkMode ? '#F3F4F6' : (lineOfBusinessData?.primaryColor || '#050711');
+
 	return (
 		<div>
 			{/* Header Section */}
@@ -101,44 +103,13 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 			</div>
 
 			{/* Navigation Tabs */}
-			<div
-				className="border-b dark:border-gray-700 mb-6"
-				style={{ borderColor: 'var(--light-gray)' }}
-			>
-				<nav className="flex space-x-8">
-					{tabs.map((tab) => {
-						const isActive = activeTab === tab.id;
-						const activeColor = isDarkMode ? '#F3F4F6' : (lineOfBusinessData.primaryColor || '#050711');
-						const inactiveColor = isDarkMode ? '#9CA3AF' : 'var(--text-tertiary)';
-						return (
-							<button
-								key={tab.id}
-								onClick={() => setActiveTab(tab.id)}
-								className={`py-4 px-1 border-b-2 font-medium text-[10px] md:text-[12px] transition-colors ${isActive
-									? ''
-									: 'border-transparent dark:text-gray-400'
-									}`}
-								style={{
-									borderBottomColor: isActive ? activeColor : 'transparent',
-									color: isActive ? activeColor : inactiveColor,
-								}}
-								onMouseEnter={(e) => {
-									if (!isActive) {
-										e.currentTarget.style.color = isDarkMode ? '#D1D5DB' : (lineOfBusinessData.secondaryColor || '#6C8B7D');
-									}
-								}}
-								onMouseLeave={(e) => {
-									if (!isActive) {
-										e.currentTarget.style.color = inactiveColor;
-									}
-								}}
-							>
-								{tab.label}
-							</button>
-						);
-					})}
-				</nav>
-			</div>
+			<Tabs
+				tabs={tabs}
+				activeTab={activeTab}
+				onTabChange={(id) => setActiveTab(id)}
+				activeColor={activeColor}
+				className="mb-6"
+			/>
 
 			{/* Tab Content */}
 			{activeTab === 'basic-setup' && (
@@ -286,7 +257,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 						{/* Menu Layout */}
 						<div>
 							<span
-								className="text-[10px] md:text-[12px] dark:text-gray-400"
+								className="text-[10px] md:text-[2px] dark:text-gray-400"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Menu Layout
@@ -324,7 +295,6 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 								Theme color
 							</span>
 							<div className="flex items-center gap-4 mt-2">
-								{/* Primary Color Swatch */}
 								<div className="flex items-center gap-2">
 									<div
 										className="w-8 h-8 rounded-full dark:border-gray-600"
@@ -341,7 +311,6 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 									</span>
 								</div>
 
-								{/* Secondary Color Swatch */}
 								<div className="flex items-center gap-2">
 									<div
 										className="w-8 h-8 rounded-full dark:border-gray-600"

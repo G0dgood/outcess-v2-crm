@@ -196,7 +196,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					await createDisposition({
 						fillDisposition: dispositionData,
 						customerId,
-						agentId: authUser?.id,
+						agentId: authUser?.userId || authUser?.id,
 						lineOfBusinessId: selectedLineOfBusinessId || undefined,
 						timestamp: new Date().toISOString(),
 					}).unwrap();
@@ -208,7 +208,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 							payload: {
 								fillDisposition: dispositionData,
 								customerId,
-								agentId: authUser?.id,
+								agentId: authUser?.userId || authUser?.id,
 								lineOfBusinessId: selectedLineOfBusinessId || undefined,
 								timestamp: new Date().toISOString(),
 							},
@@ -221,7 +221,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 						customerId,
 						customerName,
 						authUser?.name,
-						authUser?.id,
+						authUser?.userId || authUser?.id,
 						selectedLineOfBusinessId || undefined
 					);
 
@@ -419,7 +419,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 						/>
 						<button
 							type="button"
-							onClick={(e) => {
+							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 								// Find the input sibling and focus/click it
 								const input = e.currentTarget.previousElementSibling?.querySelector('input');
 								if (input) {
@@ -431,7 +431,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 									}
 								}
 							}}
-							className="absolute right-3 top-[38px] cursor-pointer dark:hover:text-gray-300 transition-colors z-10"
+							className="absolute right-3 top-[38px] cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							<CalendarIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
@@ -459,7 +459,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 								/>
 								<button
 									type="button"
-									onClick={(e) => {
+									onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 										const input = e.currentTarget.previousElementSibling as HTMLInputElement;
 										if (input) {
 											try {
@@ -470,7 +470,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 											}
 										}
 									}}
-									className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10"
+									className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									<CalendarIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
@@ -486,7 +486,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 								/>
 								<button
 									type="button"
-									onClick={(e) => {
+									onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 										const input = e.currentTarget.previousElementSibling as HTMLInputElement;
 										if (input) {
 											try {
@@ -497,7 +497,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 											}
 										}
 									}}
-									className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10"
+									className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									<ClockIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
@@ -569,7 +569,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					</div>
 					<button
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors !rounded-none"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';

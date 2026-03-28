@@ -1,17 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import Pagination from '@/components/ui/Pagination';
-import PaginationSummary from '@/components/ui/PaginationSummary';
+import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import Checkbox from '@/components/ui/Checkbox';
 import { useGetTeamMembersByLineOfBusinessIdQuery, useDeleteTeamMemberMutation } from '@/store/services/teamMembersApi';
 import PageHeading from '@/components/ui/PageHeading';
 import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import AddUserModal from '@/components/features/user/AddUserModal';
 import DeleteUserModal from '@/components/features/user/DeleteUserModal';
+import BulkUploadModal from '@/components/features/user/BulkUploadModal';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { toast } from 'sonner';
@@ -20,6 +21,7 @@ import { useSocket } from '@/contexts/SocketContext';
 import SelectedUsersDrawerContent from './SelectedUsersDrawerContent';
 import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
 import LoginStatusInfoBanner from '@/components/ui/LoginStatusInfoBanner';
+import SampleCsvDownloader from '@/components/ui/SampleCsvDownloader';
 
 interface User {
 	id: string;
@@ -81,8 +83,13 @@ interface ApiTeamMember {
 const UsersPage: React.FC = () => {
 	const router = useRouter();
 	const { lineOfBusinessData } = useLineOfBusiness();
+	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const lineOfBusinessId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
-	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersByLineOfBusinessIdQuery(lineOfBusinessId, { skip: !lineOfBusinessId });
+	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersByLineOfBusinessIdQuery(
+		{ lineOfBusinessId, page: currentPage, limit: itemsPerPage },
+		{ skip: !lineOfBusinessId }
+	);
 	const [deleteTeamMember] = useDeleteTeamMemberMutation();
 	const { canAccess } = usePrivilege();
 	const { socket } = useSocket();
@@ -90,13 +97,23 @@ const UsersPage: React.FC = () => {
 	const canEdit = canAccess('teamMembers', 'edit');
 	const canDelete = canAccess('teamMembers', 'delete');
 
-	console.log('teamMembersResponse---->', teamMembersResponse);
+	const userImportFields = useMemo(() => {
+		return [
+			{ name: 'firstName' },
+			{ name: 'lastName' },
+			{ name: 'email' },
+			{ name: 'phone' },
+			{ name: 'role' },
+			{ name: 'userId' },
+			{ name: 'password' },
+			{ name: 'supervisorId' },
+		];
+	}, []);
 
 	const [searchTerm, setSearchTerm] = useState('');
-	const [currentPage, setCurrentPage] = useState(1);
-	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
 	const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+	const [isBulkUploadModalOpen, setIsBulkUploadModalOpen] = useState(false);
 	const [deleteUser, setDeleteUser] = useState<{ id: string; name: string } | null>(null);
 	const [statusModalUser, setStatusModalUser] = useState<User | null>(null);
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -110,7 +127,6 @@ const UsersPage: React.FC = () => {
 	useEffect(() => {
 		if (socket) {
 			const handleStatusUpdate = (payload: TeamMemberStatusUpdatePayload) => {
-				console.log("Status Update (Users Page):", payload);
 				const newStatus = typeof payload.status === 'object' ? payload.status.status : payload.status;
 				const newColor = typeof payload.status === 'object' ? payload.status.color : undefined;
 				const newReason =
@@ -136,7 +152,6 @@ const UsersPage: React.FC = () => {
 			};
 
 			const handleRefresh = (payload: RefreshPayload) => {
-				console.log("Refresh Request (Users Page):", payload?.message);
 				refetch();
 			};
 
@@ -152,10 +167,9 @@ const UsersPage: React.FC = () => {
 
 	useEffect(() => {
 		if (teamMembersResponse) {
-			const rawMembers = teamMembersResponse.teamMembers || teamMembersResponse.data || teamMembersResponse || [];
-			const membersList = Array.isArray(rawMembers) ? rawMembers : (rawMembers.docs || []);
+			const membersList = teamMembersResponse.teamMembers || [];
 
-			const mappedUsers = membersList.map((member: unknown) => {
+			const mappedUsers = membersList.map((member: any) => {
 				const m = member as ApiTeamMember;
 				const fullName = m?.name || '';
 				const [firstName, ...lastNameParts] = fullName.split(' ');
@@ -219,11 +233,12 @@ const UsersPage: React.FC = () => {
 		user.role.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
-	const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-	const currentUsers = filteredUsers.slice(
-		(currentPage - 1) * itemsPerPage,
-		currentPage * itemsPerPage
-	);
+	const totalPages = teamMembersResponse?.pagination?.totalPages || 1;
+	// When using backend pagination, filteredUsers is already the current page of data from the API
+	// However, the component also has a local search filter. 
+	// To be fully backend-driven, search should also be on the backend.
+	// For now, we'll keep the local mapping, but the list is already limited by the backend.
+	const currentUsers = filteredUsers;
 
 	const handleAddUser = () => {
 		setIsAddUserModalOpen(true);
@@ -320,15 +335,30 @@ const UsersPage: React.FC = () => {
 					showClearButton={true}
 				/>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
+					<SampleCsvDownloader
+						fields={userImportFields}
+						fileName="sample_users.csv"
+						className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+					/>
 					{canCreate && (
-						<Button
-							variant="primary"
-							size="md"
-							onClick={handleAddUser}
-							className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
-						>
-							Add User
-						</Button>
+						<>
+							<Button
+								variant="outline"
+								size="md"
+								onClick={() => setIsBulkUploadModalOpen(true)}
+								className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+							>
+								Upload
+							</Button>
+							<Button
+								variant="primary"
+								size="md"
+								onClick={handleAddUser}
+								className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+							>
+								Add User
+							</Button>
+						</>
 					)}
 				</div>
 			</div>
@@ -345,25 +375,15 @@ const UsersPage: React.FC = () => {
 					borderColor: 'var(--light-gray)'
 				}}
 			>
-				{filteredUsers.length > 0 && (
-					<div className="p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-						<PaginationSummary
-							totalItems={filteredUsers.length}
-							itemsPerPage={itemsPerPage}
-							onItemsPerPageChange={(value) => {
-								setItemsPerPage(value);
-								setCurrentPage(1);
-							}}
-							className="text-gray-600"
-						/>
-						<span
-							className="text-[10px] md:text-[12px] dark:text-gray-400"
-							style={{ color: 'var(--text-tertiary)' }}
-						>
-							Total of {filteredUsers.length} Users
-						</span>
-					</div>
-				)}
+				<TablePaginationHeader
+					totalItems={teamMembersResponse?.pagination?.total || 0}
+					itemsPerPage={itemsPerPage}
+					onItemsPerPageChange={(value) => {
+						setItemsPerPage(value);
+						setCurrentPage(1);
+					}}
+					label="Users"
+				/>
 				<div className="overflow-x-auto">
 					<table>
 						<thead>
@@ -422,7 +442,7 @@ const UsersPage: React.FC = () => {
 									<td>{user.email}</td>
 									<td>{user.phone}</td>
 									<td>{user.role}</td>
-									<td 
+									<td
 									>
 										{user.shiftHour?.title ? user.shiftHour.title : 'No shift assigned'}
 									</td>
@@ -445,9 +465,11 @@ const UsersPage: React.FC = () => {
 									<td>
 										<div className="flex items-center gap-2">
 											{canEdit && (
-												<button
+												<Button
+													variant="ghost"
+													size="sm"
 													onClick={() => router.push(`/users/${user.id}/edit`)}
-													className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+													className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer !rounded-none"
 													style={{ color: 'var(--text-secondary)' }}
 													onMouseEnter={(e) => {
 														e.currentTarget.style.color = '#2563EB';
@@ -460,12 +482,14 @@ const UsersPage: React.FC = () => {
 													title="Edit User"
 												>
 													<Pencil1Icon className="w-5 h-5" />
-												</button>
+												</Button>
 											)}
 											{canDelete && (
-												<button
+												<Button
+													variant="ghost"
+													size="sm"
 													onClick={() => handleDeleteClick(user)}
-													className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
+													className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer !rounded-none"
 													style={{ color: 'var(--text-secondary)' }}
 													onMouseEnter={(e) => {
 														e.currentTarget.style.color = '#DC2626';
@@ -478,7 +502,7 @@ const UsersPage: React.FC = () => {
 													title="Delete User"
 												>
 													<TrashIcon className="w-5 h-5" />
-												</button>
+												</Button>
 											)}
 										</div>
 									</td>
@@ -490,7 +514,7 @@ const UsersPage: React.FC = () => {
 			</div>
 
 			{/* Pagination */}
-			{filteredUsers.length > 0 && (
+			{currentUsers.length > 0 && (
 				<Pagination
 					currentPage={currentPage}
 					totalPages={totalPages}
@@ -506,6 +530,12 @@ const UsersPage: React.FC = () => {
 			<AddUserModal
 				isOpen={isAddUserModalOpen}
 				onClose={() => setIsAddUserModalOpen(false)}
+			/>
+
+			{/* Bulk Upload Modal */}
+			<BulkUploadModal
+				isOpen={isBulkUploadModalOpen}
+				onClose={() => setIsBulkUploadModalOpen(false)}
 			/>
 
 			{/* Delete User Modal */}

@@ -271,23 +271,26 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 							</span>
 						)}
 					</div>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1 h-auto"
 						style={{ color: 'var(--text-tertiary)' }}
-						onMouseEnter={(e) => {
+						onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
 						}}
-						onMouseLeave={(e) => {
+						onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 							e.currentTarget.style.color = 'var(--text-tertiary)';
 						}}
+						title="Close Modal"
 					>
 						<Icon name="Close_round_light" size="lg" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Modal Form */}
-				<div className="space-y-4 p-6 overflow-y-auto flex-1 min-h-0">
+				<div className="space-y-4 p-6 overflow-y-auto flex-1 min-h-0 max-h-[60vh] no-scrollbar">
 					<Input
 						label="Chart Title"
 						placeholder="Enter chart title"

@@ -3,14 +3,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useRouter } from '@bprogress/next/app';
+import Button from './Button';
 import Icon from './Icon';
 import Dropdown from './Dropdown';
 import UserDropdown from './UserDropdown';
 import StatusBadge from './StatusBadge';
+import LogoutConfirmationModal from './LogoutConfirmationModal';
 import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
-import NotificationDropdown from './NotificationDropdown';
-import NotificationsModal from './NotificationsModal';
 import ThemeToggle from './ThemeToggle';
+import NotificationBell from './NotificationBell';
 import { useSocket } from '@/contexts/SocketContext';
 import { playNotificationSound } from '@/utils/soundEffects';
 import { toastSuccess } from '@/utils/toastWithSound';
@@ -18,7 +19,8 @@ import { setNavigating } from '@/utils/navigationState';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useGetLineOfBusinessByCompanyIdForheaderQuery } from '@/store/services/lineOfBusinessApi';
-import { useLogoutMutation, useTeamMemberLogoutMutation } from '@/store/services/authApi';
+import { useLogoutMutation, useTeamMemberLogoutMutation, useUpdateUserMutation } from '@/store/services/authApi';
+import { useUpdateTeamMemberStatusMutation } from '@/store/services/teamMembersApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout as logoutAction, User } from '@/store/slices/authSlice';
 import { statusApi } from '@/store/services/statusApi';
@@ -61,12 +63,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		setMounted(true);
 	}, []);
 
-	const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
 	const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
-	const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
+	const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+	const [isLoggingOut, setIsLoggingOut] = useState(false);
 	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket, socket } = useSocket();
 	const [logoutApi] = useLogoutMutation();
 	const [teamMemberLogoutApi] = useTeamMemberLogoutMutation();
+	const [updateTeamMemberStatus] = useUpdateTeamMemberStatusMutation();
+	const [updateUser] = useUpdateUserMutation();
 	const { isAdmin, canAccess } = usePrivilege();
 
 	// Get user from Redux store
@@ -80,7 +84,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					String(
 						reduxUser.name ||
 						`${reduxUser.firstName || ''} 
-						${reduxUser.lastName ||
+      ${reduxUser.lastName ||
 							''}`.trim() ||
 						'User'
 					),
@@ -97,7 +101,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const previousLobId = useRef(selectedLineOfBusinessId);
 	const companyId = selectedLOBData?.companyId || displayUser?.companyId || (reduxUser?.company as { _id?: string })?._id || '';
 
-	const { data: lineOfBusinessData } = useGetLineOfBusinessByCompanyIdForheaderQuery(companyId, {
+	const { data: lineOfBusinessData } = useGetLineOfBusinessByCompanyIdForheaderQuery({ companyId }, {
 		skip: !companyId
 	});
 
@@ -143,7 +147,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 		// Listen for status list updates
 		const handleStatusListUpdate = (_data: unknown) => {
-			console.log("Status list updated:", _data);
+
 			// Invalidate RTK Query cache for statuses
 			dispatch(statusApi.util.invalidateTags(['Statuses']));
 		};
@@ -222,27 +226,76 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		previousUnreadCount.current = unreadCount;
 	}, [pathname, notifications, selectedLineOfBusinessId, isLobLoading]);
 
-	const handleNotificationClick = () => {
-		// Don't play sound if we're navigating - NotificationDropdown will handle it
-		if (isNavigating.current) {
-			setIsNotificationPanelOpen(!isNotificationPanelOpen);
-			if (!isNotificationPanelOpen) setIsUserDropdownOpen(false);
-			onNotificationsClick?.();
-			return;
-		}
-
-		const newState = !isNotificationPanelOpen;
-		setIsNotificationPanelOpen(newState);
-		if (newState) setIsUserDropdownOpen(false);
+	const handleNotificationToggle = (isOpen: boolean) => {
+		if (isOpen) setIsUserDropdownOpen(false);
 		onNotificationsClick?.();
-		// Note: Sound is now handled by NotificationDropdown component to avoid duplicate sounds
-		// Close profile dropdown if open
-		// setShowDropdown(false);
 	};
 
-	// Handle logout
-	const handleLogout = async () => {
+	// Trigger logout modal
+	const handleLogout = () => {
+		setIsUserDropdownOpen(false);
+		setIsLogoutModalOpen(true);
+	};
+
+	// Perform actual logout after confirmation
+	const handleConfirmLogout = async () => {
+		setIsLoggingOut(true);
 		try {
+			// Explicitly update status to "Logged out" FIRST before calling logout API
+			if (reduxUser?.id) {
+				const statusData = {
+					status: "Logged out",
+					color: "#FF0000",
+					reason: "User confirmed logout"
+				};
+
+				try {
+					if (isAdmin) {
+						// Use direct user update for admins
+						await updateUser({
+							id: reduxUser.id,
+							data: { status: statusData }
+						}).unwrap();
+					} else {
+						// Otherwise try team member status update
+						try {
+							await updateTeamMemberStatus({
+								id: reduxUser.id,
+								status: "Logged out",
+								reason: "User confirmed logout"
+							}).unwrap();
+						} catch (err: unknown) {
+							const errorObj = err as { status?: number; data?: { message?: string } };
+							// Fallback to updateUser if team member not found (404)
+							if (errorObj?.status === 404 ||
+								errorObj?.data?.message?.toLowerCase().includes('not found') ||
+								errorObj?.data?.message?.toLowerCase().includes('team member')) {
+
+								await updateUser({
+									id: reduxUser.id,
+									data: { status: statusData }
+								}).unwrap();
+							} else {
+								throw err;
+							}
+						}
+					}
+					console.log('Status updated to Logged out before session termination');
+
+					// Emit socket update for real-time tracking
+					if (socket && socket.connected) {
+						socket.emit('teamMemberStatusUpdate', {
+							teamMemberId: reduxUser.id,
+							name: displayUser?.name,
+							status: statusData,
+							timestamp: new Date().toISOString()
+						});
+					}
+				} catch (statusError) {
+					console.warn('Failed to update status explicitly, proceeding with logout sequence:', statusError);
+				}
+			}
+
 			// Call API to invalidate session on server
 			if (reduxUser?.id) {
 				if (reduxUser.isTeamMember) {
@@ -251,11 +304,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					await logoutApi({ userId: reduxUser.id }).unwrap();
 				}
 			} else {
-				// If no user ID, just call without or skip API call? 
-				// The API now requires userId. If we don't have it, we probably can't call the API effectively.
-				// But let's try to call it with empty string if really needed, or just skip.
-				// Given the requirement, I should probably only call it if I have an ID.
-				// But to be safe and clear state, maybe I should just proceed to local logout if ID is missing.
 				console.warn('No user ID found for logout API call');
 			}
 
@@ -266,6 +314,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 			// Show success message
 			toastSuccess('Logged out successfully');
+
+			// Close modal
+			setIsLogoutModalOpen(false);
 
 			// Redirect to login page
 			setTimeout(() => {
@@ -278,8 +329,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 			disconnectSocket();
 			dispatch(logoutAction());
 
+			// Close modal
+			setIsLogoutModalOpen(false);
+
 			// Even if there's an error, redirect to login
 			router.push('/login');
+		} finally {
+			setIsLoggingOut(false);
 		}
 	};
 
@@ -307,9 +363,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		<header id="header" >
 			<div className="flex items-center justify-between py-2.5">
 				{/* Menu Toggle - Mobile Only */}
-				<button
+				<Button
+					variant="ghost"
+					size="sm"
 					onClick={onMobileMenuToggle}
-					className="md:hidden p-2 text-black dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+					className="md:hidden p-2 text-black dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors cursor-pointer !rounded-none"
 					title="Menu"
 				>
 					<div className={`transition-all duration-300 ease-in-out transform ${isMobileMenuOpen ? 'rotate-90 scale-110' : 'rotate-0 scale-100'}`}>
@@ -319,30 +377,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 							<HamburgerMenuIcon className="w-6 h-6 " />
 						)}
 					</div>
-				</button>
-
-				<div />
-				{/* Right side - Icons */}
-				<div className="flex items-center justify-center gap-4">
-					{/* Offline Indicator */}
-					{(isOffline || socketStatus === 'offline') && (
-						<div
-							className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-							style={{
-								backgroundColor: 'var(--status-error)',
-								color: 'var(--text-inverse)',
-							}}
-							title="Offline - Messages will be queued"
-						>
-							<Icon name="cloud-off" size="sm" color="white" />
-							<span className="text-[8px] md:text-[10px] font-medium hidden sm:inline">Offline</span>
-						</div>
-					)}
-
-					{/* Dark/Light Mode Toggle */}
-					<ThemeToggle />
-
-					{/* LOB Dropdown - Only for Administrator or users with Dashboard Edit permission */}
+				</Button>
+				<div>
 					{(isAdmin || canAccess('dashboard', 'edit')) && (
 						<Dropdown
 							label=""
@@ -373,11 +409,36 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 						/>
 					)}
 
+				</div>
+				{/* Right side - Icons */}
+				<div className="flex items-center justify-center gap-5">
+					{/* Offline Indicator */}
+					{(isOffline || socketStatus === 'offline') && (
+						<div
+							className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+							style={{
+								backgroundColor: 'var(--status-error)',
+								color: 'var(--text-inverse)',
+							}}
+							title="Offline - Messages will be queued"
+						>
+							<Icon name="cloud-off" size="sm" color="white" />
+							<span className="text-[8px] md:text-[10px] font-medium hidden sm:inline">Offline</span>
+						</div>
+					)}
+
+					{/* LOB Dropdown - Only for Administrator or users with Dashboard Edit permission */}
+
+					{/* Dark/Light Mode Toggle */}
+					<ThemeToggle />
+
+
+
 					{/* Sticky Notes Icon - Only show if notes exist */}
 					{hasStickyNotes && (
 						<button
 							onClick={handleNoteIconClick}
-							className="hidden md:inline-flex p-2 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer relative"
+							className="hidden md:inline-flex p-2 dark:text-gray-300 dark:hover:text-gray-100 transition-colors cursor-pointer relative !rounded-none "
 							style={{
 								color: 'var(--text-tertiary)',
 								backgroundColor: 'transparent'
@@ -399,41 +460,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					)}
 
 					{/* Notifications Bell */}
-					<div className="relative">
-						<button
-							onClick={handleNotificationClick}
-							className="p-1 w-7 h-7 flex justify-center items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer relative"
-							title="Notifications"
-						>
-							<Icon name="Bell_light" size="3xl" />
-							{unreadCount > 0 && (
-								<span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-gray-800">
-									{unreadCount > 99 ? '99+' : unreadCount}
-								</span>
-							)}
-						</button>
-
-						<NotificationDropdown
-							isOpen={isNotificationPanelOpen}
-							onClose={() => setIsNotificationPanelOpen(false)}
-							notifications={notifications}
-							onShowMore={() => {
-								setIsNotificationPanelOpen(false);
-								setIsNotificationsModalOpen(true);
-							}}
-							onMarkAsRead={(id) => markAsRead(id)}
-						/>
-					</div>
-
-					{/* Notifications Modal - Render at header level so it persists */}
-					{isNotificationsModalOpen && (
-						<NotificationsModal
-							isOpen={isNotificationsModalOpen}
-							onClose={() => setIsNotificationsModalOpen(false)}
-							notifications={notifications}
-							onMarkAsRead={(id) => markAsRead(id)}
-						/>
-					)}
+					<NotificationBell
+						notifications={notifications}
+						unreadCount={unreadCount}
+						onMarkAsRead={(id) => markAsRead(id)}
+						onToggle={handleNotificationToggle}
+						isNavigating={isNavigating.current}
+					/>
 
 					{/* User Dropdown */}
 					<UserDropdown
@@ -457,13 +490,23 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 						isOpen={isUserDropdownOpen}
 						onToggle={(open) => {
 							setIsUserDropdownOpen(open);
-							if (open) setIsNotificationPanelOpen(false);
 						}}
 					/>
 				</div>
 			</div>
+
+			<LogoutConfirmationModal
+				isOpen={isLogoutModalOpen}
+				onClose={() => setIsLogoutModalOpen(false)}
+				onConfirm={handleConfirmLogout}
+				isLoading={isLoggingOut}
+				initials={displayUser?.name?.charAt(0).toUpperCase() || 'U'}
+				status={reduxUser?.status?.status || (isOnline ? 'Online' : 'Offline')}
+				statusColor={reduxUser?.status?.color || (isOnline ? '#22C55E' : '#94A3B8')}
+			/>
 		</header>
 	);
 };
 
 export default DashboardHeader;
+

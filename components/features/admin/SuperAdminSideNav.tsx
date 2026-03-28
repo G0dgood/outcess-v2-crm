@@ -10,6 +10,7 @@ import {
 	DoubleArrowRightIcon,
 	GearIcon,
 } from '@radix-ui/react-icons';
+import Button from '@/components/ui/Button';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import {
 	Tooltip,
@@ -126,9 +127,12 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 						{navItems.map((item) => {
 							const isActive = currentActiveItem === item.id;
 							const itemContent = (
-								<button
+								<Button
+									variant="ghost"
+									size="md"
+									fullWidth
 									onClick={() => handleItemClick(item)}
-									className={`cursor-pointer w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 transition-all duration-200 ${isActive
+									className={`cursor-pointer w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 transition-all duration-200 !rounded-none ${isActive
 										? 'text-white'
 										: 'dark:text-gray-300 hover:text-white dark:hover:text-white'
 										}`}
@@ -137,7 +141,7 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 										color: isActive ? 'white' : 'var(--text-secondary)',
 										'--hover-bg': lineOfBusinessData?.secondaryColor || '#6C8B7D'
 									} as React.CSSProperties}
-									onMouseEnter={(e) => {
+									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 										if (!isActive) {
 											e.currentTarget.style.backgroundColor = lineOfBusinessData?.secondaryColor || '#6C8B7D';
 											// Update icon and text colors to white on hover
@@ -147,7 +151,7 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 											if (text) text.style.color = 'white';
 										}
 									}}
-									onMouseLeave={(e) => {
+									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 										if (!isActive) {
 											e.currentTarget.style.backgroundColor = 'transparent';
 											// Reset icon and text colors
@@ -157,6 +161,7 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 											if (text) text.style.color = 'var(--text-secondary)';
 										}
 									}}
+									title={item.label}
 								>
 									<div
 										className={`shrink-0 transition-colors duration-200 ${isActive ? 'text-white' : 'dark:text-gray-400'}`}
@@ -172,7 +177,7 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 											{item.label}
 										</span>
 									)}
-								</button>
+								</Button>
 							);
 
 							return (
@@ -199,13 +204,16 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 
 				{/* Toggle Button */}
 				<div className={`p-4 border-t ${isCollapsed ? 'flex justify-center' : 'flex justify-end'}`} style={{ borderColor: 'var(--light-gray)' }}>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={toggleCollapse}
-						className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+						className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors h-auto !rounded-none"
 						style={{ color: 'var(--text-secondary)' }}
+						title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
 					>
 						{isCollapsed ? <DoubleArrowRightIcon className="w-5 h-5" /> : <DoubleArrowLeftIcon className="w-5 h-5" />}
-					</button>
+					</Button>
 				</div>
 			</nav>
 		</TooltipProvider>

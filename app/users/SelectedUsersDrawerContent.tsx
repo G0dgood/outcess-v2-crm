@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PersonIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import Icon from '@/components/ui/Icon';
+import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { useDeleteManyTeamMembersMutation } from '@/store/services/teamMembersApi';
 
@@ -50,7 +51,9 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
     } catch {
       toast.error('Failed to delete selected users');
     }
-  }; return (
+  };
+
+  return (
     <>
       {/* Drawer Header */}
       <div
@@ -71,29 +74,34 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
         </div>
         <div className="flex items-center gap-2">
           {selectedUsers.size > 0 && (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setShowBulkDeleteConfirm(true)}
               disabled={isDeletingMany}
-              className="flex items-center gap-2 px-3 py-1.5 text-[8px] md:text-[10px] font-medium text-red-500 border border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 text-[8px] md:text-[10px] font-medium text-red-500 border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               title="Delete Selected"
             >
               <TrashIcon className="w-3.5 h-3.5" />
               Delete
-            </button> 
+            </Button> 
           )}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors cursor-pointer"
+            className="p-1 h-auto transition-colors cursor-pointer"
             style={{ color: 'var(--text-tertiary)' }}
-            onMouseEnter={(e) => {
+            onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.currentTarget.style.color = 'var(--text-secondary)';
             }}
-            onMouseLeave={(e) => {
+            onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.currentTarget.style.color = 'var(--text-tertiary)';
             }}
+            title="Close"
           >
             <Icon name="Close_round_light" size="lg" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -163,22 +171,26 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
                       </div>
                       <div className="flex items-center gap-1 ml-2">
                         {onEdit && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => onEdit(user)}
                             className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-gray-700 rounded-md transition-colors"
                             title="Edit User"
                           >
                             <Pencil1Icon className="w-4 h-4" />
-                          </button>
+                          </Button>
                         )}
                         {onDelete && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => onDelete(user)}
                             className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-700 rounded-md transition-colors"
                             title="Delete User"
                           >
                             <TrashIcon className="w-4 h-4" />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -231,19 +243,23 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
               Are you sure you want to delete {selectedUsers.size} selected users? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
-              <button
+              <Button
+                variant="outline"
+                size="md"
                 onClick={() => setShowBulkDeleteConfirm(false)}
-                className="px-4 py-2 text-[10px] md:text-[12px] font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 font-medium"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                size="md"
                 onClick={handleBulkDelete}
-                disabled={isDeletingMany}
-                className="px-4 py-2 text-[10px] md:text-[12px] font-medium text-white bg-red-600   hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                loading={isDeletingMany}
+                className="px-4 py-2 font-medium"
               >
-                {isDeletingMany ? 'Deleting...' : 'Delete'}
-              </button>
+                Delete
+              </Button>
             </div>
           </div>
         </div>

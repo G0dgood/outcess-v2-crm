@@ -134,19 +134,15 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 					>
 						Create Setup Book
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors !p-1"
 						style={{ color: 'var(--text-tertiary)' }}
-						onMouseEnter={(e) => {
-							e.currentTarget.style.color = 'var(--text-secondary)';
-						}}
-						onMouseLeave={(e) => {
-							e.currentTarget.style.color = 'var(--text-tertiary)';
-						}}
 					>
 						<Icon name="Close_round_light" size="lg" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Modal Form */}

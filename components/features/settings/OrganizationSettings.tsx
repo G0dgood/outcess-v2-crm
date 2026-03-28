@@ -33,17 +33,19 @@ const OrganizationSettings: React.FC = () => {
 							<code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-[10px] md:text-[12px] font-mono">
 								{companyId}
 							</code>
-							<button
+							<Button
+								variant="ghost"
+								size="sm"
 								onClick={() => {
 									if (companyId) {
 										copyToClipboard(companyId);
 									}
 								}}
-								className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+								className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors h-auto"
 								title="Copy ID"
 							>
 								<CopyIcon className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
-							</button>
+							</Button>
 						</div>
 					</div>
 					<div className="space-y-1">
@@ -52,7 +54,7 @@ const OrganizationSettings: React.FC = () => {
 							<span className="px-2 py-0.5 rounded-full text-[10px] bg-green-100 text-green-700 font-medium">
 								{planType}
 							</span>
-							<button className="text-[10px] text-blue-600 hover:underline">Upgrade Plan</button>
+							<Button variant="link" size="sm" className="text-[10px] text-blue-600 hover:underline p-0 h-auto" title="Upgrade Plan">Upgrade Plan</Button>
 						</div>
 					</div>
 				</div>

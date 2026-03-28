@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
 import PasswordInput from '@/components/ui/PasswordInput';
 import Checkbox from '@/components/ui/Checkbox';
 import { useRouter } from 'next/navigation';
@@ -14,6 +15,7 @@ import { useCreateCompanyMutation } from '@/store/services/companyApi';
 import { useDispatch } from 'react-redux';
 import { setUser, register as registerAction } from '@/store/slices/authSlice';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { Button } from '@/components/ui/Button';
 
 export default function SignUpPage() {
 	const { setSelectedLineOfBusinessId } = useLineOfBusiness();
@@ -208,17 +210,7 @@ export default function SignUpPage() {
 			<div className="login-form-section w-full md:w-1/2">
 				<div className="login-form-container">
 					<div className="login-header">
-						{/* <div className="logo-container">
-							<Image
-								src="/peoplely-logo.svg"
-								alt="Peoplely Logo"
-								width={120}
-								height={40}
-								priority
-							// className="logo"
-							/>
-						</div> */}
-						<h1 className="welcome-title" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>
+						<h1 className="welcome-title font-lato not-italic" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>
 							{step === 3 ? 'Company Details' : 'Create Account'}
 						</h1>
 						<p className="font-lato not-italic font-normal text-base leading-[150%] text-[#6D7280] dark:text-gray-400">
@@ -229,30 +221,28 @@ export default function SignUpPage() {
 					<form onSubmit={getSubmitHandler} className="login-form" noValidate>
 						{step === 1 && (
 							<>
-								<div className="name-fields">
-									<Input
-										label="First Name"
-										name="firstname"
-										id="firstname"
-										placeholder="Enter first name"
-										value={formData.firstname}
-										onChange={handleInputChange('firstname')}
-										required
-										error={errors.firstname}
-										autoComplete="given-name"
-									/>
-									<Input
-										label="Last Name"
-										name="lastname"
-										id="lastname"
-										placeholder="Enter last name"
-										value={formData.lastname}
-										onChange={handleInputChange('lastname')}
-										required
-										error={errors.lastname}
-										autoComplete="family-name"
-									/>
-								</div>
+								<Input
+									label="First Name"
+									name="firstname"
+									id="firstname"
+									placeholder="Enter first name"
+									value={formData.firstname}
+									onChange={handleInputChange('firstname')}
+									required
+									error={errors.firstname}
+									autoComplete="given-name"
+								/>
+								<Input
+									label="Last Name"
+									name="lastname"
+									id="lastname"
+									placeholder="Enter last name"
+									value={formData.lastname}
+									onChange={handleInputChange('lastname')}
+									required
+									error={errors.lastname}
+									autoComplete="family-name"
+								/>
 
 								<Input
 									label="Username"
@@ -358,57 +348,40 @@ export default function SignUpPage() {
 									error={errors.companyname}
 								/>
 
-								<Input
+								<Textarea
 									label="Company Description"
 									name="companydescription"
-									id="companydescription"
 									placeholder="Describe your company"
 									value={formData.companydescription}
 									onChange={handleInputChange('companydescription')}
+									rows={4}
 								/>
 							</>
 						)}
 
-						<div style={{ display: 'flex', gap: '10px' }}>
+						<div style={{ display: 'flex', gap: '10px' }} className="flex flex-row justify-between items-center">
 							{step === 2 && (
-								<button
+								<Button
 									type="button"
+									variant="outline"
 									onClick={handleBack}
-									className="login-button back-button"
-									style={{
-										backgroundColor: 'transparent',
-										border: `1px solid ${primaryColor}`,
-										color: primaryColor,
-										width: '100px'
-									}}
+									className="flex items-center gap-2 px-2 !py-4 text-[10px] md:text-[12px] sm:px-4 sm:py-2"
 									disabled={isLoading}
 								>
 									Back
-								</button>
+								</Button>
 							)}
-							<button
+							<Button
 								type="submit"
-								className={`login-button ${isLoading ? 'loading' : ''}`}
-								disabled={isLoading}
-								style={{ backgroundColor: primaryColor, flex: 1 }}
-								onMouseEnter={(e) => {
-									if (!isLoading) {
-										e.currentTarget.style.backgroundColor = primaryColor;
-										e.currentTarget.style.opacity = '0.9';
-									}
-								}}
-								onMouseLeave={(e) => {
-									if (!isLoading) {
-										e.currentTarget.style.backgroundColor = primaryColor;
-										e.currentTarget.style.opacity = '1';
-									}
-								}}
+								loading={isLoading}
+								style={{ flex: 1 }}
+								className="flex items-center gap-2 px-2 !py-4 text-[10px] md:text-[12px] sm:px-4 sm:py-2"
 							>
 								{step === 1 ? 'Next' : (
 									step === 2 ? (isLoading ? 'Creating Account...' : 'Create Account') :
 										(isLoading ? 'Creating Company...' : 'Finish Setup')
 								)}
-							</button>
+							</Button>
 						</div>
 
 						<div className="signup-footer" style={{ marginTop: '24px', textAlign: 'center' }}>
@@ -416,10 +389,8 @@ export default function SignUpPage() {
 								Already have an account?{' '}
 								<a
 									href="/login"
-									className="signup-link"
-									style={{ color: primaryColor, fontWeight: 600, textDecoration: 'none', transition: 'opacity 0.2s' }}
-									onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.8'; }}
-									onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+									className={`font-lato not-italic font-semibold text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100 cursor-pointer `}
+									style={{ color: 'var(--text-primary)' }}
 								>
 									Login
 								</a>

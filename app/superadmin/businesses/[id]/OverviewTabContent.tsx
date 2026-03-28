@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from '@/components/ui/Button';
 
 interface BusinessData {
  businessId: string;
@@ -237,23 +238,26 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
     </h2>
     <div className="flex flex-wrap gap-2">
      {businessData.activeModules.map((module, index) => (
-      <button
+      <Button
        key={index}
-       className="px-4 py-2 text-[10px] md:text-[12px] font-medium dark:text-gray-300 dark:bg-gray-700 border dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+       variant="ghost"
+       size="sm"
+       className="px-4 py-2 text-[10px] md:text-[12px] font-medium transition-colors h-auto"
        style={{
         color: 'var(--text-secondary)',
         backgroundColor: 'var(--bg-primary)',
         borderColor: 'var(--light-gray)'
        }}
-       onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = '#E2E8F0';
+       onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+        e.currentTarget.style.backgroundColor = 'var(--light-gray)';
        }}
-       onMouseLeave={(e) => {
+       onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
        }}
+       title={`Module: ${module}`}
       >
        {module}
-      </button>
+      </Button>
      ))}
     </div>
    </div>

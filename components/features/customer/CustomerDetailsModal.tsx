@@ -5,6 +5,7 @@ import Button from '@/components/ui/Button';
 import FillDispositionModal, { DispositionFormState } from '@/components/ui/FillDispositionModal';
 import SMSModal from '@/components/ui/SMSModal';
 import DispositionHistoryModal from '@/components/ui/DispositionHistoryModal';
+import Modal from '@/components/ui/Modal';
 import { Cross2Icon, ChatBubbleIcon, ClipboardIcon, PersonIcon, EnvelopeClosedIcon, HomeIcon, MobileIcon } from '@radix-ui/react-icons';
 import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, DispositionHistoryItem } from '@/utils/offlineDispositions';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
@@ -26,7 +27,8 @@ interface ApiDispositionItem {
 	timestamp?: string;
 	createdAt?: string;
 	syncedAt?: string;
-	agent?: { name: string } | string;
+	agent?: { name: string; userId?: string; _id?: string } | string;
+	agentId?: string;
 	fillDisposition?: DispositionFieldEntry[];
 	dispositionData?: DispositionFieldEntry[];
 }
@@ -45,6 +47,8 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 	const [isDispositionHistoryModalOpen, setIsDispositionHistoryModalOpen] = useState(false);
 	const [selectedDispositionData, setSelectedDispositionData] = useState<Partial<DispositionFormState> | undefined>(undefined);
 	const [selectedDispositionHistoryItem, setSelectedDispositionHistoryItem] = useState<DispositionHistoryItem | null>(null);
+	const [fullComment, setFullComment] = useState<string | null>(null);
+	const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
 	const [isAnimating, setIsAnimating] = useState(false);
 	const [shouldRender, setShouldRender] = useState(false);
 	const [offlineDispositions, setOfflineDispositions] = useState<OfflineDisposition[]>([]);
@@ -120,6 +124,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 			date: new Date(item.timestamp || item.createdAt || item.syncedAt || '').toLocaleDateString(),
 			time: new Date(item.timestamp || item.createdAt || item.syncedAt || '').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
 			agent: (typeof item.agent === 'object' ? item.agent?.name : item.agent) || 'Unknown Agent',
+			agentId: (typeof item.agent === 'object' ? (item.agent?.userId || item.agent?._id) : item.agentId) || '-',
 			isOffline: false,
 			dispositionData: item.fillDisposition || item.dispositionData || [],
 			timestamp: new Date(item.timestamp || item.createdAt || item.syncedAt || '').getTime()
@@ -132,7 +137,8 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 				id: offline.id,
 				date: dateStr,
 				time: timeStr,
-				agent: 'Offline Entry',
+				agent: offline?.agent,
+				agentId: offline?.agentId || '-',
 				isOffline: true,
 				offlineStatus: offline?.status,
 				dispositionData: offline?.dispositionData,
@@ -178,11 +184,15 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 		}
 	};
 
+	const handleCommentClick = (comment: string) => {
+		setFullComment(comment);
+		setIsCommentModalOpen(true);
+	};
+
 	if (!shouldRender || !customer) return null;
 
 	return (
 		<div>
-			<button className={""}>noew</button>
 
 			<div className={`fixed inset-0 z-50 overflow-hidden transition-opacity duration-300 ease-in-out ${isAnimating ? 'opacity-100' : 'opacity-0'}`}>
 				{/* Backdrop */}
@@ -210,22 +220,25 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 							>
 								Customer Details
 							</h2>
-							<button
+							<Button
+								variant="ghost"
+								size="sm"
 								onClick={onClose}
-								className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+								className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors h-auto"
 								style={{ color: 'var(--text-tertiary)' }}
-								onMouseEnter={(e) => {
+								onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 									e.currentTarget.style.color = 'var(--text-secondary)';
 									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
 								}}
-								onMouseLeave={(e) => {
+								onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 									e.currentTarget.style.color = 'var(--text-tertiary)';
 									e.currentTarget.style.backgroundColor = 'transparent';
 								}}
+								title="Close Modal"
 								aria-label="Close"
 							>
 								<Cross2Icon className="w-5 h-5" />
-							</button>
+							</Button>
 						</div>
 					</div>
 
@@ -489,30 +502,38 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 												</td>
 												{dynamicHeaders?.map((header) => {
 													const field = item.dispositionData?.find((f: DispositionFieldEntry) => f.fieldName === header);
+													const isComment = header.toLowerCase().includes('comment');
+													const value = field ? String(field.fieldValue || '-') : '-';
+													const displayValue = isComment && value.length > 20 ? `${value.substring(0, 20)}...` : value;
+
 													return (
 														<td
 															key={header}
-															className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
-															style={{ color: 'var(--text-primary)' }}
+															className={`px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100 ${isComment && value.length > 20 ? 'cursor-pointer hover:underline text-orange-500' : ''}`}
+															style={{ color: isComment && value.length > 20 ? '#F97316' : 'var(--text-primary)' }}
+															onClick={() => isComment && value.length > 20 ? handleCommentClick(value) : undefined}
 														>
-															{field ? String(field.fieldValue) : '-'}
+															{displayValue}
 														</td>
 													);
 												})}
 												<td className="px-6 py-4 whitespace-nowrap">
-													<button
+													<Button
+														variant="link"
+														size="sm"
 														onClick={() => handleViewDetails(item.id)}
-														className="dark:text-gray-300 dark:hover:text-gray-200 hover:underline transition-colors font-medium"
+														className="dark:text-gray-300 dark:hover:text-gray-200 hover:underline transition-colors font-medium p-0 h-auto"
 														style={{ color: 'var(--muted-sage-green)' }}
-														onMouseEnter={(e) => {
+														onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 															e.currentTarget.style.color = 'var(--interactive-secondary)';
 														}}
-														onMouseLeave={(e) => {
+														onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 															e.currentTarget.style.color = 'var(--muted-sage-green)';
 														}}
+														title="View Disposition Details"
 													>
 														View Details
-													</button>
+													</Button>
 												</td>
 											</tr>
 										))}
@@ -551,8 +572,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 					isOpen={isSMSModalOpen}
 					onClose={() => setIsSMSModalOpen(false)}
 					onSend={(data) => {
-						// Implement send SMS logic here
-						console.log("SMS data:", data);
+						// Implement send SMS logic here 
 					}}
 					initialPhone={customer?.phone ? String(customer.phone) : undefined}
 				/>
@@ -567,6 +587,24 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 					dispositionItem={selectedDispositionHistoryItem}
 					customerId={customer?.id}
 				/>
+
+				<Modal
+					isOpen={isCommentModalOpen}
+					onClose={() => {
+						setIsCommentModalOpen(false);
+						setFullComment(null);
+					}}
+					title="Full Comment"
+				>
+					<div className="p-6">
+						<p 
+							className="text-base leading-relaxed dark:text-gray-300 whitespace-pre-wrap"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							{fullComment}
+						</p>
+					</div>
+				</Modal>
 			</div>
 		</div>
 	);

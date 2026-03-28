@@ -33,15 +33,19 @@ export const companyApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Company'],
         }),
-        getAllCompanies: builder.query<any, void>({
-            query: () => 'api/v1/super-admin/companies',
+        getAllCompanies: builder.query<any, { page?: number; limit?: number; search?: string; status?: string } | void>({
+            query: (params) => {
+                const { page = 1, limit = 10, search = "", status = "all" } = params || {};
+                return `api/v1/super-admin/companies?page=${page}&limit=${limit}&search=${search}&status=${status}`;
+            },
             providesTags: ['Company'],
         }),
         superAdminGetTeamMembersByCompanyId: builder.query<any, string>({
             query: (companyId) => `api/v1/super-admin/companies/${companyId}/team-members`,
         }),
-        superAdminGetActivityLogsByCompanyId: builder.query<any, string>({
-            query: (companyId) => `api/v1/super-admin/companies/${companyId}/activity-logs`,
+        superAdminGetActivityLogsByCompanyId: builder.query<any, { companyId: string; page?: number; limit?: number }>({
+            query: ({ companyId, page = 1, limit = 10 }) => 
+                `api/v1/super-admin/companies/${companyId}/activity-logs?page=${page}&limit=${limit}`,
         }),
         superAdminGetCompanyDetails: builder.query<any, string>({
             query: (companyId) => `api/v1/super-admin/companies/${companyId}/details`,

@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from './Button';
 
 interface PaginationProps {
 	currentPage: number;
@@ -83,13 +84,15 @@ const Pagination: React.FC<PaginationProps> = ({
 		<div className={`mt-6 flex items-center justify-between ${className}`}>
 			{/* Previous Button */}
 			<div className="flex items-center gap-2">
-				<button
+				<Button
+					variant="ghost"
+					size="sm"
 					onClick={handlePrevious}
 					disabled={currentPage === 1}
-					className="py-2 text-[10px] md:text-[12px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+					className="py-2 text-[10px] md:text-[12px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer !rounded-none"
 				>
 					Previous
-				</button>
+				</Button>
 			</div>
 
 			{/* Page Numbers */}
@@ -107,30 +110,34 @@ const Pagination: React.FC<PaginationProps> = ({
 					const isCurrentPage = currentPage === pageNumber;
 
 					return (
-						<button
+						<Button
 							key={pageNumber}
+							variant={isCurrentPage ? 'primary' : 'ghost'}
+							size="sm"
 							onClick={() => onPageChange(pageNumber)}
-							className={`cursor-pointer font-inter font-medium leading-[150%] px-3 py-1 text-[10px] md:text-[12px] transition-colors ${isCurrentPage
+							className={`cursor-pointer font-inter font-medium leading-[150%] px-3 py-1 text-[10px] md:text-[12px] transition-colors !rounded-none ${isCurrentPage
 								? 'text-white shadow-sm'
 								: 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
 								}`}
 							style={isCurrentPage ? { backgroundColor: primaryColor } : {}}
 						>
 							{pageNumber}
-						</button>
+						</Button>
 					);
 				})}
 			</div>
 
 			{/* Next Button */}
 			<div className="flex items-center gap-2">
-				<button
+				<Button
+					variant="ghost"
+					size="sm"
 					onClick={handleNext}
 					disabled={currentPage === totalPages}
-					className="py-2 text-[10px] md:text-[12px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+					className="py-2 text-[10px] md:text-[12px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer !rounded-none"
 				>
 					Next
-				</button>
+				</Button>
 			</div>
 		</div>
 	);

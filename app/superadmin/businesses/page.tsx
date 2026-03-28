@@ -4,10 +4,12 @@ import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
 import Search from '@/components/ui/Search';
+import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetAllCompaniesQuery } from '@/store/services/companyApi';
 import { useRouter } from 'next/navigation';
 import React, { useMemo, useState } from 'react';
+import { Button } from '@/components/ui/Button';
 
 interface Business {
 	id: string;
@@ -34,10 +36,19 @@ const BusinessesManagementPage: React.FC = () => {
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [statusFilter, setStatusFilter] = useState<string>('all');
+	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [currentPage, setCurrentPage] = useState(1);
-	const [itemsPerPage] = useState(10);
 
-	const { data: companiesData, isLoading } = useGetAllCompaniesQuery();
+	const { data: companiesData, isLoading } = useGetAllCompaniesQuery({ 
+		page: currentPage, 
+		limit: itemsPerPage,
+		search: searchTerm,
+		status: statusFilter
+	});
+
+	React.useEffect(() => {
+		setCurrentPage(1);
+	}, [searchTerm, statusFilter]);
 
 
 
@@ -58,21 +69,11 @@ const BusinessesManagementPage: React.FC = () => {
 		}));
 	}, [companiesData]);
 
-	const filteredBusinesses = useMemo(() => {
-		return businesses.filter(business => {
-			const matchesSearch = !searchTerm ||
-				business.companyName.toLowerCase().includes(searchTerm.toLowerCase())
+	const filteredBusinesses = businesses;
 
-			const matchesStatus = statusFilter === 'all' || business.status.toLowerCase() === statusFilter.toLowerCase();
-
-			return matchesSearch && matchesStatus;
-		});
-	}, [searchTerm, statusFilter, businesses]);
-
-	const totalPages = Math.ceil(filteredBusinesses.length / itemsPerPage);
-	const startIndex = (currentPage - 1) * itemsPerPage;
-	const endIndex = startIndex + itemsPerPage;
-	const paginatedBusinesses = filteredBusinesses.slice(startIndex, endIndex);
+	const totalPages = companiesData?.pagination?.totalPages || 1;
+	const totalItems = companiesData?.pagination?.total || 0;
+	const paginatedBusinesses = businesses;
 
 	const statusOptions = [
 		{ value: 'all', label: 'All Statuses' },
@@ -127,6 +128,15 @@ const BusinessesManagementPage: React.FC = () => {
 					borderColor: 'var(--light-gray)'
 				}}
 			>
+				<TablePaginationHeader
+					totalItems={totalItems}
+					itemsPerPage={itemsPerPage}
+					onItemsPerPageChange={(value) => {
+						setItemsPerPage(value);
+						setCurrentPage(1);
+					}}
+					label="Businesses"
+				/>
 				<div className="overflow-x-auto">
 					<table
 						className="min-w-full divide-y dark:divide-gray-700"
@@ -224,19 +234,15 @@ const BusinessesManagementPage: React.FC = () => {
 											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<button
+											<Button
+												variant="ghost"
+												size="sm"
 												onClick={() => handleViewDetail(business.id)}
-												className="dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-[10px] md:text-[12px] font-medium transition-colors cursor-pointer"
+												className="dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
 												style={{ color: '#2563EB' }}
-												onMouseEnter={(e) => {
-													e.currentTarget.style.color = '#1D4ED8';
-												}}
-												onMouseLeave={(e) => {
-													e.currentTarget.style.color = '#2563EB';
-												}}
 											>
 												View Detail
-											</button>
+											</Button>
 										</td>
 									</tr>
 								))
@@ -247,9 +253,7 @@ const BusinessesManagementPage: React.FC = () => {
 			</div>
 
 			{/* Pagination Section */}
-			<div className="mt-6 flex items-center justify-between">
-
-				{/* Pagination Controls */}
+			{totalItems > 0 && (
 				<Pagination
 					currentPage={currentPage}
 					totalPages={totalPages}
@@ -259,7 +263,7 @@ const BusinessesManagementPage: React.FC = () => {
 					primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
 					secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
 				/>
-			</div>
+			)}
 		</div>
 	);
 };

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Button from './Button';
 
 interface Business {
 	id: string;
@@ -49,8 +50,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 		},
 	];
 
-	const handleView = (_id: string) => {
-		console.log('View business:', _id);
+	const handleView = (_id: string) => { 
 		// TODO: Navigate to business details page
 	};
 
@@ -161,9 +161,11 @@ const RegisteredBusinessesTable: React.FC = () => {
 								</span>
 							</td>
 							<td className="px-6 py-4 whitespace-nowrap">
-								<button
+								<Button
+									variant="ghost"
+									size="sm"
 									onClick={() => handleView(business.id)}
-									className="dark:text-blue-400 dark:hover:text-blue-300 text-[10px] md:text-[12px] font-medium transition-colors"
+									className="dark:text-blue-400 dark:hover:text-blue-300 text-[10px] md:text-[12px] font-medium transition-colors !rounded-none"
 									style={{ color: '#2563EB' }}
 									onMouseEnter={(e) => {
 										e.currentTarget.style.color = '#1D4ED8';
@@ -173,7 +175,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 									}}
 								>
 									View
-								</button>
+								</Button>
 							</td>
 						</tr>
 					))}

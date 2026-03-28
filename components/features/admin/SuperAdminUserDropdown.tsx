@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
 import Image from 'next/image';
+import Button from '@/components/ui/Button';
 
 interface AdminUserDropdownProps {
 	userName?: string;
@@ -46,19 +47,21 @@ const AdminUserDropdown: React.FC<AdminUserDropdownProps> = ({
 
 	return (
 		<div className="relative" ref={dropdownRef}>
-			<button
+			<Button
+				variant="ghost"
+				size="sm"
 				onClick={() => setIsOpen(!isOpen)}
-				className="p-1 rounded-full transition-colors cursor-pointer"
+				className="p-1 rounded-full transition-colors cursor-pointer h-auto"
 				title={mounted ? userName : ''}
 				style={{
 					color: 'var(--text-tertiary)',
 					backgroundColor: 'transparent'
 				}}
-				onMouseEnter={(e) => {
+				onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 					e.currentTarget.style.color = 'var(--text-primary)';
 					e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
 				}}
-				onMouseLeave={(e) => {
+				onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 					e.currentTarget.style.color = 'var(--text-tertiary)';
 					e.currentTarget.style.backgroundColor = 'transparent';
 				}}
@@ -97,7 +100,7 @@ const AdminUserDropdown: React.FC<AdminUserDropdownProps> = ({
 						></div>
 					)}
 				</div>
-			</button>
+			</Button>
 
 			{/* User Dropdown */}
 			{isOpen && (
@@ -154,25 +157,29 @@ const AdminUserDropdown: React.FC<AdminUserDropdownProps> = ({
 					{/* Menu Items */}
 					<div style={{ backgroundColor: 'var(--accent-white)' }} className="dark:bg-gray-800">
 						{/* Settings */}
-						<button
+						<Button
+							variant="ghost"
+							size="md"
+							fullWidth
 							onClick={() => {
 								router.push('/superadmin/settings');
 								setIsOpen(false);
 							}}
-							className="w-full px-4 py-2 text-left cursor-pointer transition-colors"
+							className="px-4 py-2 text-left cursor-pointer transition-colors !justify-start !rounded-none"
 							style={{
 								color: 'var(--text-secondary)',
 								backgroundColor: 'transparent'
 							}}
-							onMouseEnter={(e) => {
+							onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
 							}}
-							onMouseLeave={(e) => {
+							onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.currentTarget.style.backgroundColor = 'transparent';
 							}}
+							title="Account Settings"
 						>
 							Settings
-						</button>
+						</Button>
 
 						{/* Separator */}
 						<div
@@ -181,26 +188,30 @@ const AdminUserDropdown: React.FC<AdminUserDropdownProps> = ({
 						></div>
 
 						{/* Logout */}
-						<button
+						<Button
+							variant="ghost"
+							size="md"
+							fullWidth
 							onClick={() => {
 								onLogoutClick?.();
 								setIsOpen(false);
 							}}
-							className="w-full px-4 py-2 text-left flex items-center gap-2 cursor-pointer transition-colors"
+							className="px-4 py-2 text-left flex items-center gap-2 cursor-pointer transition-colors !justify-start !rounded-none"
 							style={{
 								color: 'var(--status-error)',
 								backgroundColor: 'transparent'
 							}}
-							onMouseEnter={(e) => {
+							onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.currentTarget.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
 							}}
-							onMouseLeave={(e) => {
+							onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.currentTarget.style.backgroundColor = 'transparent';
 							}}
+							title="Log out of application"
 						>
 							<Icon name="Sign_out_squre_light" size="lg" color="red" className="dark:invert-0! dark:opacity-100!" />
 							Log out
-						</button>
+						</Button>
 					</div>
 				</div>
 			)}

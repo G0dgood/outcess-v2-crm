@@ -61,7 +61,7 @@ const LandingHeader: React.FC = () => {
 					</Link>
 					<Link
 						href="/signup"
-						className="inline-flex flex-row justify-center items-center px-4 py-2 gap-2 h-10 bg-[#050711] text-white text-[10px] md:text-[12px] font-semibold transition-transform hover:-translate-y-0.5 md:h-[48px] md:py-3 md:text-[12px] md:text-[14px]"
+						className="inline-flex flex-row justify-center items-center px-4 py-2 gap-2 h-10 bg-[#050711] text-white text-[10px] md:text-[12px] font-semibold md:h-[48px] md:py-3 md:text-[12px] md:text-[14px]"
 					>
 						Start Free Trial
 					</Link>

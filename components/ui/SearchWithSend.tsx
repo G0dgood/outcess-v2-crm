@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from './Button';
 import Icon from './Icon';
 
 interface SearchWithSendProps {
@@ -56,10 +57,10 @@ const SearchWithSend: React.FC<SearchWithSendProps> = ({
 				<button
 					onClick={handleSearchClick}
 					disabled={disabled}
-					className="h-[32px] w-[32px] flex items-center justify-center transition-colors text-white ml-2 cursor-pointer"
+					className="h-[32px] w-[32px] flex items-center justify-center transition-colors !rounded-none"
 					style={{
-						backgroundColor: buttonColor || '#000000', // Default fallback
-						opacity: disabled ? 0.7 : 1
+						backgroundColor: buttonColor || '#000000',
+						color: 'white'
 					}}
 				>
 					<Icon name="search-refraction" size="sm" color="white" />

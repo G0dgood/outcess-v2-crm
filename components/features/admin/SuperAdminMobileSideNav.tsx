@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import SuperAdminSideNav from './SuperAdminSideNav';
+import Button from '@/components/ui/Button';
 
 
 interface SuperAdminMobileSideNavProps {
@@ -97,13 +98,15 @@ const SuperAdminMobileSideNav: React.FC<SuperAdminMobileSideNavProps> = ({
 					className="flex items-center justify-end p-4 border-b dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+						className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer h-auto"
 						title="Close menu"
 					>
 						<Cross2Icon className="w-6 h-6" />
-					</button>
+					</Button>
 				</div>
 				{/* Navigation */}
 				<SuperAdminSideNav isMobileOpen={isOpen} onMobileClose={onClose} isMobile />

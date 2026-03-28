@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from './Icon';
+import Button from './Button';
 
 interface SearchProps {
 	placeholder?: string;
@@ -60,20 +61,23 @@ const Search: React.FC<SearchProps> = ({
 				}}
 			/>
 			{showClearButton && value && (
-				<button
+				<Button
+					variant="ghost"
+					size="sm"
 					onClick={handleClear}
-					className="flex items-center dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+					className="flex items-center dark:text-gray-500 dark:hover:text-gray-300 transition-colors p-1 h-auto"
 					style={{ color: 'var(--text-tertiary)' }}
-					onMouseEnter={(e) => {
+					onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 						e.currentTarget.style.color = 'var(--text-secondary)';
 					}}
-					onMouseLeave={(e) => {
+					onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 						e.currentTarget.style.color = 'var(--text-tertiary)';
 					}}
 					type="button"
+					title="Clear Search"
 				>
 					<Icon name="Close_round_light" size="sm" />
-				</button>
+				</Button>
 			)}
 		</div>
 	);

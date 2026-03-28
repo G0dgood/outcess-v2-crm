@@ -182,22 +182,25 @@ const BusinessHours = () => {
 							Business Hour
 						</h2>
 						{!isBusinessHourEditMode && businessHourData.businessDays && (
-							<button
+							<Button
+								variant="ghost"
+								size="sm"
 								onClick={() => setIsBusinessHourEditMode(true)}
-								className="p-1 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+								className="p-1 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors h-auto"
 								style={{ color: 'var(--text-tertiary)' }}
-								onMouseEnter={(e) => {
+								onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 									e.currentTarget.style.color = 'var(--text-secondary)';
 									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
 								}}
-								onMouseLeave={(e) => {
+								onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 									e.currentTarget.style.color = 'var(--text-tertiary)';
 									e.currentTarget.style.backgroundColor = 'transparent';
 								}}
+								title="Edit business hour"
 								aria-label="Edit business hour"
 							>
 								<Pencil1Icon className="w-4 h-4" />
-							</button>
+							</Button>
 						)}
 					</div>
 					<Button

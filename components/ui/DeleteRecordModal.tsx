@@ -38,19 +38,15 @@ const DeleteRecordModal: React.FC<DeleteRecordModalProps> = ({
 					>
 						Delete Record
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors !p-1"
 						style={{ color: 'var(--text-tertiary)' }}
-						onMouseEnter={(e) => {
-							e.currentTarget.style.color = 'var(--text-secondary)';
-						}}
-						onMouseLeave={(e) => {
-							e.currentTarget.style.color = 'var(--text-tertiary)';
-						}}
 					>
 						<Icon name="Close_round_light" size="lg" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Modal Content */}
@@ -76,19 +72,9 @@ const DeleteRecordModal: React.FC<DeleteRecordModalProps> = ({
 						Cancel
 					</Button>
 					<Button
-						variant="primary"
+						variant="danger"
 						size="md"
 						onClick={onConfirm}
-						style={{
-							backgroundColor: '#DC2626',
-							color: 'white'
-						}}
-						onMouseEnter={(e) => {
-							e.currentTarget.style.backgroundColor = '#B91C1C';
-						}}
-						onMouseLeave={(e) => {
-							e.currentTarget.style.backgroundColor = '#DC2626';
-						}}
 					>
 						Delete
 					</Button>

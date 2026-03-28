@@ -65,23 +65,14 @@ export const RealTimeUpdates: React.FC = () => {
 
         // Update Redux state
         dispatch(updateReduxUser(data));
-
-        toast.info('Your permissions have been updated.');
       }
     };
 
-    // Step 3: Listen for the Notification (Optional)
-    const handleNotification = (data: unknown) => {
-      const notification = data as { message?: string };
-      toast(notification.message || 'New notification received');
-    };
-
     on('roleUpdated', handleRoleUpdated);
-    on('notification', handleNotification);
+    // Removed handleNotification listener to prevent colorless duplicate alerts during updates
 
     return () => {
       off('roleUpdated', handleRoleUpdated);
-      off('notification', handleNotification);
     };
   }, [socket, on, off, updateUser, dispatch, user?.id]);
 

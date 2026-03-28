@@ -4,7 +4,8 @@ import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Search from '@/components/ui/Search';
 import Pagination from '@/components/ui/Pagination';
-import PaginationSummary from '@/components/ui/PaginationSummary';
+import Button from '@/components/ui/Button';
+import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -106,6 +107,15 @@ const PendingRequestPage: React.FC = () => {
 					borderColor: 'var(--light-gray)'
 				}}
 			>
+				<TablePaginationHeader
+					totalItems={filteredBusinesses.length}
+					itemsPerPage={itemsPerPage}
+					onItemsPerPageChange={(value) => {
+						setItemsPerPage(value);
+						setCurrentPage(1);
+					}}
+					label="Requests"
+				/>
 				<div className="overflow-x-auto">
 					<table
 						className="min-w-full divide-y dark:divide-gray-700"
@@ -211,19 +221,22 @@ const PendingRequestPage: React.FC = () => {
 											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<button
+											<Button
+												variant="ghost"
+												size="sm"
 												onClick={() => handleViewDetail(business.id)}
-												className="dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-[10px] md:text-[12px] font-medium transition-colors cursor-pointer"
+												className="hover:text-blue-800 text-[10px] md:text-[12px] font-medium transition-colors cursor-pointer p-0 h-auto"
 												style={{ color: '#2563EB' }}
-												onMouseEnter={(e) => {
+												onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 													e.currentTarget.style.color = '#1D4ED8';
 												}}
-												onMouseLeave={(e) => {
+												onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 													e.currentTarget.style.color = '#2563EB';
 												}}
+												title={`View detail for ${business.companyName}`}
 											>
 												View Detail
-											</button>
+											</Button>
 										</td>
 									</tr>
 								))
@@ -234,18 +247,7 @@ const PendingRequestPage: React.FC = () => {
 			</div>
 
 			{/* Pagination Section */}
-			<div className="mt-6 flex items-center justify-between">
-				{/* Showing X of Y */}
-				<PaginationSummary
-					totalItems={filteredBusinesses.length}
-					itemsPerPage={itemsPerPage}
-					onItemsPerPageChange={(value) => {
-						setItemsPerPage(value);
-						setCurrentPage(1);
-					}}
-				/>
-
-				{/* Pagination Controls */}
+			<div className="mt-6">
 				<Pagination
 					currentPage={currentPage}
 					totalPages={totalPages}

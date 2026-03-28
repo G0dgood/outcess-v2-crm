@@ -13,6 +13,7 @@ import ActivityLogTabContent from './ActivityLogTabContent';
 import BillingTabContent from './BillingTabContent';
 import OverviewTabContent from './OverviewTabContent';
 import UsersTabContent, { User } from './UsersTabContent';
+import Tabs from '@/components/ui/Tabs';
 
 interface TeamMemberResponse {
 	_id: string;
@@ -60,20 +61,16 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 
 	const { data: companyDetailsData, isLoading: isLoadingCompanyDetails } = useSuperAdminGetCompanyDetailsQuery(id);
 
-
-
-
 	const businessData = useMemo(() => {
 		if (!companyDetailsData?.businessData) return null;
 		return companyDetailsData.businessData;
 	}, [companyDetailsData]);
 
 	const { data: teamMembersData, isLoading: isLoadingTeamMembers } = useSuperAdminGetTeamMembersByCompanyIdQuery(id);
-	const { data: activityLogsData, isLoading: isLoadingActivityLogs } = useSuperAdminGetActivityLogsByCompanyIdQuery(id);
+	const { data: activityLogsData, isLoading: isLoadingActivityLogs } = useSuperAdminGetActivityLogsByCompanyIdQuery({ companyId: id, page: 1, limit: 100 });
 
 	const users = useMemo(() => {
 		if (!teamMembersData) return [];
-		// Handle different response structures
 		const data = teamMembersData as TeamMembersData | TeamMemberResponse[];
 		const members = Array.isArray(data) ? data : (data.teamMembers || data.data || []);
 
@@ -91,7 +88,6 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 
 	const mappedActivityLogs = useMemo(() => {
 		if (!activityLogsData) return [];
-		// Handle different response structures if needed
 		const data = activityLogsData as ActivityLogsData | ActivityLogResponse[];
 		const logs = Array.isArray(data) ? data : (data.activityLogs || data.data || []);
 
@@ -105,7 +101,6 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 		}));
 	}, [activityLogsData]);
 
-	// Sample billing data - in a real app, this would be fetched based on params.id
 	const billingHistory = [
 		{ id: '1', date: '13-11-2023', amount: 'N500,000', status: 'Paid' },
 		{ id: '2', date: '13-12-2023', amount: 'N500,000', status: 'Paid' },
@@ -138,7 +133,6 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 	};
 
 	const handleConfirmDeactivate = (reason: string) => {
-		console.log('Deactivate reason:', reason);
 		// TODO: Implement deactivate business logic with reason
 	};
 
@@ -174,44 +168,18 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 				className="flex items-center justify-between mb-6 border-b dark:border-gray-700"
 				style={{ borderColor: 'var(--light-gray)' }}
 			>
-				<div className="flex items-center gap-6">
-					{tabs?.map((tab) => {
-						const isActive = activeTab === tab?.id;
-						const activeColor = lineOfBusinessData?.primaryColor || '#2563EB';
-						return (
-							<button
-								key={tab.id}
-								onClick={() => setActiveTab(tab.id)}
-								className={`pb-4 px-1 font-medium text-[10px] md:text-[12px] transition-colors ${isActive
-									? 'dark:text-blue-400 border-b-2 dark:border-blue-400'
-									: 'dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-									}`}
-								style={isActive ? {
-									color: activeColor,
-									borderBottomColor: activeColor
-								} : {
-									color: 'var(--text-tertiary)'
-								}}
-								onMouseEnter={(e) => {
-									if (!isActive) {
-										e.currentTarget.style.color = 'var(--text-primary)';
-									}
-								}}
-								onMouseLeave={(e) => {
-									if (!isActive) {
-										e.currentTarget.style.color = 'var(--text-tertiary)';
-									}
-								}}
-							>
-								{tab.label}
-							</button>
-						);
-					})}
-				</div>
+				<Tabs
+					tabs={tabs}
+					activeTab={activeTab}
+					onTabChange={(id) => setActiveTab(id)}
+					activeColor={lineOfBusinessData?.primaryColor || '#2563EB'}
+					className="border-b-0"
+				/>
 				<Button
 					variant="danger"
 					size="md"
 					onClick={handleDeactivate}
+					className="mb-4"
 				>
 					Deactivate Business
 				</Button>
@@ -253,4 +221,4 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 			/>
 		</div>
 	);
-};
+}

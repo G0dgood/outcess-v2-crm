@@ -224,20 +224,22 @@ const IntegrationsPage: React.FC = () => {
 								</div>
 							</div>
 							{integration.status === 'connected' && canEdit && (
-								<button
+								<Button
+									variant="ghost"
+									size="sm"
 									onClick={() => handleDisconnect(integration.id)}
-									className="p-1 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+									className="p-1 transition-colors h-auto"
 									style={{ color: 'var(--text-tertiary)' }}
-									onMouseEnter={(e) => {
+									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.color = '#DC2626';
 									}}
-									onMouseLeave={(e) => {
+									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.color = 'var(--text-tertiary)';
 									}}
 									title="Disconnect"
 								>
 									<Cross2Icon className="w-4 h-4" />
-								</button>
+								</Button>
 							)}
 						</div>
 

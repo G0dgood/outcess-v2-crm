@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { EyeOpenIcon, EyeNoneIcon } from '@radix-ui/react-icons';
+import Button from '@/components/ui/Button';
 
 interface InputProps {
 	label: string;
@@ -70,10 +71,13 @@ export const Input: React.FC<InputProps> = ({
 					autoComplete={autoComplete}
 				/>
 				{isPassword && (
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						type="button"
 						onClick={togglePasswordVisibility}
-						className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
+						className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none p-1 h-auto"
+						title={showPassword ? 'Hide password' : 'Show password'}
 						aria-label={showPassword ? 'Hide password' : 'Show password'}
 					>
 						{showPassword ? (
@@ -81,7 +85,7 @@ export const Input: React.FC<InputProps> = ({
 						) : (
 							<EyeNoneIcon className="w-4 h-4" />
 						)}
-					</button>
+					</Button>
 				)}
 			</div>
 			{error && <span className="input-error">{error}</span>}

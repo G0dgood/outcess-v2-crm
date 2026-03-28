@@ -16,7 +16,7 @@ function PaymentPageContent() {
 	const { lineOfBusinessData } = useLineOfBusiness();
 
 	const planName = searchParams.get('plan') || 'Pro';
-	const planPrice = searchParams.get('price') || '$12/month';
+	const planPrice = searchParams.get('price') || '$50000/month';
 	const billingCycle = (searchParams.get('billing') as 'monthly' | 'annual') || 'monthly';
 
 	const [formData, setFormData] = useState({
@@ -324,10 +324,12 @@ function PaymentPageContent() {
 								</div>
 
 								{/* Billing Cycle */}
-								<button
+								<Button
+									variant="ghost"
+									size="sm"
 									type="button"
 									onClick={() => setOrderBillingCycle(prev => prev === 'monthly' ? 'annual' : 'monthly')}
-									className="flex items-center justify-between w-full py-3 border-t transition-colors hover:opacity-80"
+									className="flex items-center justify-between w-full py-3 border-t transition-colors hover:opacity-80 !rounded-none h-auto"
 									style={{ borderColor: 'var(--light-gray)' }}
 								>
 									<span className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-secondary)' }}>Billing cycle</span>
@@ -335,7 +337,7 @@ function PaymentPageContent() {
 										<span className="text-[10px] md:text-[12px] font-medium capitalize" style={{ color: 'var(--text-primary)' }}>{orderBillingCycle}</span>
 										<ChevronDownIcon className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
 									</div>
-								</button>
+								</Button>
 
 								{/* Price Breakdown */}
 								<div className="flex items-center justify-between py-3 border-t" style={{ borderColor: 'var(--light-gray)' }}>
@@ -349,14 +351,16 @@ function PaymentPageContent() {
 								<div className="flex items-center justify-between py-3 border-t" style={{ borderColor: 'var(--light-gray)' }}>
 									<span className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-secondary)' }}>Promo code</span>
 									{!showPromoCode ? (
-										<button
+										<Button
+											variant="link"
+											size="sm"
 											type="button"
 											onClick={() => setShowPromoCode(true)}
-											className="text-[10px] md:text-[12px] font-medium hover:underline"
+											className="text-[10px] md:text-[12px] font-medium hover:underline p-0 h-auto"
 											style={{ color: primaryColor }}
 										>
 											Add
-										</button>
+										</Button>
 									) : (
 										<div className="flex items-center gap-2">
 											<input
@@ -367,17 +371,19 @@ function PaymentPageContent() {
 												className="text-[10px] md:text-[12px] border px-2 py-1 w-24"
 												style={{ borderColor: 'var(--light-gray)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
 											/>
-											<button
+											<Button
+												variant="ghost"
+												size="sm"
 												type="button"
 												onClick={() => {
 													setShowPromoCode(false);
 													setPromoCode('');
 												}}
-												className="text-[10px] md:text-[12px] hover:opacity-80"
+												className="text-[10px] md:text-[12px] hover:opacity-80 p-1 h-auto !rounded-none"
 												style={{ color: 'var(--text-secondary)' }}
 											>
 												Cancel
-											</button>
+											</Button>
 										</div>
 									)}
 								</div>
@@ -414,14 +420,16 @@ function PaymentPageContent() {
 											</svg>
 											<p className="text-[8px] md:text-[10px]" style={{ color: 'var(--text-secondary)' }}>
 												Save 17% by{' '}
-												<button
+												<Button
+													variant="link"
+													size="sm"
 													type="button"
 													onClick={() => setOrderBillingCycle('annual')}
-													className="underline hover:opacity-80"
+													className="underline hover:opacity-80 p-0 h-auto inline font-normal"
 													style={{ color: primaryColor }}
 												>
 													switching to yearly billing
-												</button>
+												</Button>
 											</p>
 										</div>
 									</div>

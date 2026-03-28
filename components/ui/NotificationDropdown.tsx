@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from 'react';
+import Button from './Button';
 import { PersonIcon } from '@radix-ui/react-icons';
 import { usePathname } from 'next/navigation';
 import { playNotificationSound } from '@/utils/soundEffects';
@@ -168,9 +169,11 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 						>
 							Notification ({notifications.filter(n => !n.isRead).length})
 						</h3>
-						<button
+						<Button
+							variant="ghost"
+							size="sm"
 							onClick={onClose}
-							className="dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
+							className="dark:text-gray-300 dark:hover:text-gray-100 transition-colors !rounded-none"
 							style={{ color: 'var(--text-primary)' }}
 							onMouseEnter={(e) => {
 								e.currentTarget.style.color = 'var(--text-primary)';
@@ -182,7 +185,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 							<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
 							</svg>
-						</button>
+						</Button>
 					</div>
 
 					{/* Notifications List */}
@@ -246,8 +249,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 											</div>
 
 											{/* Action Menu */}
-											<button
-												className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors ml-2"
+											<Button
+												variant="ghost"
+												size="sm"
+												className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors ml-2 !rounded-none"
 												style={{ color: 'var(--text-tertiary)' }}
 												onMouseEnter={(e) => {
 													e.currentTarget.style.color = 'var(--text-secondary)';
@@ -259,7 +264,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 												<svg className="cursor-pointer w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
 													<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
 												</svg>
-											</button>
+											</Button>
 										</div>
 									</div>
 
@@ -277,7 +282,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 							borderColor: 'var(--light-gray)'
 						}}
 					>
-						<button
+						<Button
+							variant="ghost"
+							size="sm"
+							fullWidth
 							onClick={() => {
 								if (onShowMore) {
 									onShowMore();
@@ -285,7 +293,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 									onClose();
 								}
 							}}
-							className="text-[10px] md:text-[12px] dark:text-gray-300 dark:hover:text-gray-100 font-medium transition-colors font-inter not-italic leading-[145%] font-features cursor-pointer"
+							className="text-[10px] md:text-[12px] dark:text-gray-300 dark:hover:text-gray-100 font-medium transition-colors font-inter not-italic leading-[145%] font-features cursor-pointer !rounded-none"
 							style={{ color: 'var(--text-primary)' }}
 							onMouseEnter={(e) => {
 								e.currentTarget.style.color = 'var(--text-primary)';
@@ -295,7 +303,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 							}}
 						>
 							Show more
-						</button>
+						</Button>
 					</div>
 
 				</div>

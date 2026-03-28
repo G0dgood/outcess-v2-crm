@@ -6,6 +6,7 @@ import { Cross2Icon } from '@radix-ui/react-icons';
 import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, DispositionHistoryItem, OFFLINE_DISPOSITIONS_EVENT } from '@/utils/offlineDispositions';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetDispositionsByCustomerQuery, useGetDispositionsByAgentIdQuery } from '@/store/services/dispositionApi';
+import moment from 'moment';
 
 interface DispositionHistoryModalProps {
 	isOpen: boolean;
@@ -35,7 +36,7 @@ interface ApiDispositionItem {
 	timestamp?: string;
 	createdAt?: string;
 	syncedAt?: string;
-	agent?: { name: string; _id?: string } | string;
+	agent?: { name: string; _id?: string; userId?: string } | string;
 	agentId?: string;
 }
 
@@ -75,15 +76,16 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 	const syncedDispositions: SyncedDispositionViewModel[] = React.useMemo(() => {
 		if (!apiData) return [];
 		const list = Array.isArray(apiData) ? apiData : (apiData.data || []);
-		return list.map((item: ApiDispositionItem) => ({
+		return list?.map((item: ApiDispositionItem) => ({
 			id: item._id || item.id || '',
 			customerName: item.customer?.Name || item.customerName,
 			dispositionData: (item.fillDisposition || item.dispositionData || []) as DispositionFieldEntry[],
 			syncedAt: item.timestamp || item.createdAt || item.syncedAt || '',
 			agent: (typeof item.agent === 'object' ? item.agent?.name : item.agent) || 'Unknown Agent',
-			agentId: (typeof item.agent === 'object' ? item.agent?._id : undefined) || item.agentId
+			agentId: (typeof item.agent === 'object' ? (item.agent?.userId || item.agent?._id) : undefined) || item.agentId
 		}));
 	}, [apiData]);
+
 
 	// Load offline dispositions
 	useEffect(() => {
@@ -134,26 +136,17 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 	if (!isOpen) return null;
 
 	// Show dispositions list if no specific item is provided
-	const hasDispositions = offlineDispositions.length > 0 || syncedDispositions.length > 0;
+	const hasDispositions = offlineDispositions?.length > 0 || syncedDispositions?.length > 0;
 	const showDispositionsList = !dispositionItem && hasDispositions;
 
 	// Format date contacted
 	const formatDateContacted = (item: DispositionHistoryItem) => {
-		try {
-			const date = new Date(item.date);
-			const options: Intl.DateTimeFormatOptions = {
-				year: 'numeric',
-				month: 'long',
-				day: 'numeric',
-				hour: 'numeric',
-				minute: '2-digit',
-				hour12: true
-			};
-			return date.toLocaleDateString('en-US', options);
-		} catch {
-			return `${item.date} [${item.time}]`;
-		}
+		const dateObj = item.date ? moment(item.date) : moment(item.timestamp);
+		if (!dateObj.isValid()) return `${item.date || '-'} [${item.time || '-'}]`;
+		return dateObj.format('MMMM D, YYYY h:mm A');
 	};
+
+	 
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
@@ -203,7 +196,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 							</h3>
 
 							{/* Synced Dispositions */}
-							{syncedDispositions.map((synced: SyncedDispositionViewModel) => (
+							{syncedDispositions?.map((synced: SyncedDispositionViewModel) => (
 								<div
 									key={synced.id}
 									className="border dark:border-gray-600 p-4"
@@ -229,10 +222,10 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 										)}
 									</div>
 									<div className="grid grid-cols-2 gap-4 text-[10px] md:text-[12px]">
-										{synced.dispositionData?.map((field: DispositionFieldEntry) => (
-											<div key={field.fieldId}>
-												<span style={{ color: 'var(--text-tertiary)' }}>{field.fieldName}: </span>
-												<span style={{ color: 'var(--text-primary)' }}>{String(field.fieldValue || '-')}</span>
+										{synced?.dispositionData?.map((field: DispositionFieldEntry) => (
+											<div key={field?.fieldId}>
+												<span style={{ color: 'var(--text-tertiary)' }}>{field?.fieldName}: </span>
+												<span style={{ color: 'var(--text-primary)' }}>{String(field?.fieldValue || '-')}</span>
 											</div>
 										))}
 										<div>
@@ -255,7 +248,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 							))}
 
 							{/* Offline Dispositions */}
-							{offlineDispositions.map((offline) => (
+							{offlineDispositions?.map((offline) => (
 								<div
 									key={offline.id}
 									className="border dark:border-gray-600 p-4 "

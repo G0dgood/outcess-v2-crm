@@ -144,42 +144,46 @@ const ActivityLogTabContent: React.FC<ActivityLogTabContentProps> = ({ activityL
      Recent Activity
     </h2>
     <div className="flex items-center gap-3">
-     <button
-      type="button"
-      className="flex items-center gap-2 px-4 py-2 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+     <Button
+      variant="outline"
+      size="md"
+      className="flex items-center gap-2 px-4 py-2 transition-colors"
       style={{
        borderColor: 'var(--light-gray)',
        color: 'var(--text-secondary)',
        backgroundColor: 'var(--accent-white)'
       }}
-      onMouseEnter={(e) => {
+      onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
        e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
       }}
-      onMouseLeave={(e) => {
+      onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
        e.currentTarget.style.backgroundColor = 'var(--accent-white)';
       }}
+      title="Filter by time"
      >
       <CalendarIcon className="w-4 h-4" />
       <span>Last 7 Days</span>
-     </button>
-     <button
-      type="button"
-      className="flex items-center gap-2 px-4 py-2 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+     </Button>
+     <Button
+      variant="outline"
+      size="md"
+      className="flex items-center gap-2 px-4 py-2 transition-colors"
       style={{
        borderColor: 'var(--light-gray)',
        color: 'var(--text-secondary)',
        backgroundColor: 'var(--accent-white)'
       }}
-      onMouseEnter={(e) => {
+      onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
        e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
       }}
-      onMouseLeave={(e) => {
+      onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
        e.currentTarget.style.backgroundColor = 'var(--accent-white)';
       }}
+      title="Filter by role"
      >
       <MixerHorizontalIcon className="w-4 h-4" />
       <span>User Role</span>
-     </button>
+     </Button>
      <Button
       variant="primary"
       size="md"

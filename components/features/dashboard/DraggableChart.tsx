@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Dropdown } from '@/components/ui/Dropdown';
 import Icon from '@/components/ui/Icon';
+import Button from '@/components/ui/Button';
 
 interface DraggableChartProps {
 	chart: {
@@ -123,8 +124,7 @@ const DraggableChart: React.FC<DraggableChartProps> = React.memo(({
 					<Dropdown
 						label=""
 						value={chart.timeRange}
-						onChange={(_value) => {
-							console.log("Time range changed:", _value);
+						onChange={(_value) => { 
 						}}
 						options={[
 							{ value: 'daily', label: 'Daily' },
@@ -133,13 +133,16 @@ const DraggableChart: React.FC<DraggableChartProps> = React.memo(({
 						]}
 						className="min-w-[100px]"
 					/>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={() => onRemove(chart.id)}
-						className="text-gray-400 hover:text-red-600 transition-colors p-1"
+						onPointerDown={(e) => e.stopPropagation()}
+						className="text-gray-400 hover:text-red-800 dark:hover:text-red-300 transition-colors p-1 h-auto"
 						title="Remove chart"
 					>
 						<Icon name="Trash_light" size="sm" />
-					</button>
+					</Button>
 				</div>
 			</div>
 

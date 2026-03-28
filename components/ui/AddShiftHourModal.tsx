@@ -160,9 +160,11 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 					>
 						{initialData ? 'Edit Shift Hour' : 'New Shift Hour'}
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors !rounded-none"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -175,7 +177,7 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Form Content */}

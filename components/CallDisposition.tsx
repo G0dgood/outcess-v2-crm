@@ -355,9 +355,11 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 								</span>
 							</div>
 							<div className="flex items-center gap-2">
-								<button
+								<Button
+									variant="ghost"
+									size="sm"
 									onClick={() => handleEditDisposition(disposition.id)}
-									className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+									className="p-1 h-auto transition-colors"
 									style={{ color: 'var(--text-tertiary)' }}
 									onMouseEnter={(e) => {
 										e.currentTarget.style.color = 'var(--text-secondary)';
@@ -365,12 +367,15 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 									onMouseLeave={(e) => {
 										e.currentTarget.style.color = 'var(--text-tertiary)';
 									}}
+									title="Edit Disposition"
 								>
 									<Icon name="Edit_duotone_line" size="sm" />
-								</button>
-								<button
+								</Button>
+								<Button
+									variant="ghost"
+									size="sm"
 									onClick={() => handleDeleteDisposition(disposition.id)}
-									className="dark:text-gray-500 dark:hover:text-red-400 transition-colors"
+									className="p-1 h-auto transition-colors"
 									style={{ color: 'var(--text-tertiary)' }}
 									onMouseEnter={(e) => {
 										e.currentTarget.style.color = '#DC2626';
@@ -378,9 +383,10 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 									onMouseLeave={(e) => {
 										e.currentTarget.style.color = 'var(--text-tertiary)';
 									}}
+									title="Delete Disposition"
 								>
 									<Icon name="Trash_light" size="sm" />
-								</button>
+								</Button>
 							</div>
 						</div>
 					))}

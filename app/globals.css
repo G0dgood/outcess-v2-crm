@@ -140,6 +140,15 @@
   box-shadow: 0 30px 60px -30px rgba(5, 7, 17, 0.25);
 }
 
+.hover-bg-custom:hover {
+  background-color: var(--hover-bg) !important;
+  color: var(--hover-text, white) !important;
+}
+
+.hover-bg-custom:hover * {
+  color: var(--hover-text, white) !important;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -797,7 +806,6 @@ body {
 }
 
 .login-button:hover:not(:disabled) {
-  transform: translateY(-1px);
   box-shadow: 0 4px 12px var(--shadow-dark);
 }
 

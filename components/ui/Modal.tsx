@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/Button';
 
 interface ModalProps {
 	isOpen: boolean;
@@ -165,21 +166,17 @@ export const Modal: React.FC<ModalProps> = ({
 								</h2>
 							)}
 							{showCloseButton && (
-								<button
+								<Button
+									variant="ghost"
+									size="sm"
 									onClick={onClose}
-									className="dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+									className="dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors !p-1"
 									style={{ color: 'var(--text-tertiary)' }}
-									onMouseEnter={(e) => {
-										e.currentTarget.style.color = 'var(--text-secondary)';
-									}}
-									onMouseLeave={(e) => {
-										e.currentTarget.style.color = 'var(--text-tertiary)';
-									}}
 								>
 									<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 										<path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 									</svg>
-								</button>
+								</Button>
 							)}
 						</div>
 					)}

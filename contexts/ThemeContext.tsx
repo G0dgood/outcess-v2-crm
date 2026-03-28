@@ -25,7 +25,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 		setIsDarkMode(shouldBeDark);
 		
 		// Update DOM immediately
-		if (window.location.pathname === '/' || window.location.pathname.startsWith('/blog') || window.location.pathname.startsWith('/about') || window.location.pathname.startsWith('/careers') || window.location.pathname.startsWith('/support')) {
+		if (window.location.pathname === '/' || window.location.pathname.startsWith('/blog') || window.location.pathname.startsWith('/about') || window.location.pathname.startsWith('/careers')) {
 			document.documentElement.classList.remove('dark');
 		} else if (shouldBeDark) {
 			document.documentElement.classList.add('dark');
@@ -38,7 +38,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 	useEffect(() => {
 		if (!mounted) return;
 		
-		if (pathname === '/' || pathname?.startsWith('/blog') || pathname?.startsWith('/about') || pathname?.startsWith('/careers') || pathname?.startsWith('/support')) {
+		if (pathname === '/' || pathname?.startsWith('/blog') || pathname?.startsWith('/about') || pathname?.startsWith('/careers')) {
 			document.documentElement.classList.remove('dark');
 			return;
 		}

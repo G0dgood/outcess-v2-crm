@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Input from './Input';
+import Button from './Button';
 
 interface ColorPickerProps {
 	value: string;
@@ -356,12 +357,15 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
 					{/* Close button */}
 					<div className="flex justify-end">
-						<button
+						<Button
+							variant="link"
+							size="sm"
 							onClick={() => setIsOpen(false)}
-							className="px-3 py-1 text-[10px] md:text-[12px] text-gray-600 hover:text-gray-800"
+							className="px-3 py-1 text-[10px] md:text-[12px] text-gray-600 hover:text-gray-800 p-0 h-auto"
+							title="Close Color Picker"
 						>
 							Done
-						</button>
+						</Button>
 					</div>
 				</div>
 			)}

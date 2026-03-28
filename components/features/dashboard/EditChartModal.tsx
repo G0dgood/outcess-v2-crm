@@ -6,6 +6,7 @@ import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
 import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
+import { Cross2Icon } from '@radix-ui/react-icons';
 import { useSocket } from '@/contexts/SocketContext';
 import type { Chart } from '@/contexts/SetupContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
@@ -165,6 +166,16 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		}));
 	};
 
+	const handleRemoveDataSource = (sourceToRemove: string) => {
+		setFormData(prev => {
+			const dataSourceArray = Array.isArray(prev.dataSource) ? prev.dataSource : [];
+			const newDataSource = dataSourceArray.filter(source => source !== sourceToRemove);
+			const newColors = { ...prev.colors };
+			delete newColors[sourceToRemove];
+			return { ...prev, dataSource: newDataSource, colors: newColors };
+		});
+	};
+
 	const handleSave = () => {
 		const dataSourceArray = Array.isArray(formData.dataSource) ? formData.dataSource : [];
 		if (formData.title.trim() && dataSourceArray.length > 0 && chart) {
@@ -234,7 +245,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 			title="Edit Chart"
 			size="md"
 		>
-			<div className="p-6 space-y-4">
+			<div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto no-scrollbar">
 				<Input
 					label="Chart Title"
 					placeholder="Enter chart title"
@@ -285,12 +296,22 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 									>
 										{sourceLabel}
 									</span>
-									<div className="w-48">
-										<ColorPicker
-											label=""
-											value={formData.colors?.[source] || formData.color || '#050711'}
-											onChange={(color) => handleColorChange(source, color)}
-										/>
+									<div className="flex items-center gap-2 w-48">
+										<div className="flex-1">
+											<ColorPicker
+												label=""
+												value={formData.colors?.[source] || formData.color || '#050711'}
+												onChange={(color) => handleColorChange(source, color)}
+											/>
+										</div>
+										<button
+											type="button"
+											onClick={() => handleRemoveDataSource(source)}
+											className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-red-500 hover:text-red-700 border border-transparent hover:border-red-200 dark:hover:border-red-900/30"
+											title={`Remove ${sourceLabel}`}
+										>
+											<Cross2Icon className="w-3 h-3" />
+										</button>
 									</div>
 								</div>
 							);

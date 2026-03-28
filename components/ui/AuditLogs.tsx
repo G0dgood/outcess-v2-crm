@@ -6,6 +6,7 @@ import { useUserInfo } from '@/contexts/UserInfoContext';
 import PageHeading from './PageHeading';
 import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
 import Pagination from './Pagination';
+import TablePaginationHeader from './TablePaginationHeader';
 
 interface ActivityLog {
 	_id: string;
@@ -24,17 +25,19 @@ const AuditLogs: React.FC = () => {
 	const companyId = user?.companyId || user?.company?._id || '';
 
 	const [currentPage, setCurrentPage] = useState(1);
-	const [itemsPerPage] = useState(15);
+	const [itemsPerPage, setItemsPerPage] = useState(15);
 
-	const { data: logsData, isLoading } = useSuperAdminGetActivityLogsByCompanyIdQuery(companyId, {
-		skip: !companyId
-	});
+	const { data: logsData, isLoading } = useSuperAdminGetActivityLogsByCompanyIdQuery(
+		{ companyId, page: currentPage, limit: itemsPerPage },
+		{ skip: !companyId }
+	);
 
 	const rawLogs = logsData?.activityLogs || logsData?.logs || logsData || [];
 	const logs: ActivityLog[] = Array.isArray(rawLogs) ? rawLogs : [];
-	const totalItems = logs.length;
-	const totalPages = Math.ceil(totalItems / itemsPerPage);
-	const currentLogs = logs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+	const totalItems = logsData?.pagination?.total || logs.length;
+	const totalPages = logsData?.pagination?.totalPages || Math.ceil(totalItems / itemsPerPage);
+	const currentLogs = logs; // Backend already paginated
 
 	const formatDate = (dateString: string) => {
 		return new Date(dateString).toLocaleString('en-GB', {
@@ -59,6 +62,15 @@ const AuditLogs: React.FC = () => {
 				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
 				style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
 			>
+				<TablePaginationHeader
+					totalItems={totalItems}
+					itemsPerPage={itemsPerPage}
+					onItemsPerPageChange={(value) => {
+						setItemsPerPage(value);
+						setCurrentPage(1);
+					}}
+					label="Logs"
+				/>
 				<div className="overflow-x-auto">
 					<table className="min-w-full divide-y dark:divide-gray-700">
 						<thead style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -111,16 +123,14 @@ const AuditLogs: React.FC = () => {
 					</table>
 				</div>
 
-				{totalPages > 1 && (
-					<div className="p-4 px-6 border-t" style={{ borderColor: 'var(--light-gray)' }}>
-						<Pagination
-							currentPage={currentPage}
-							totalPages={totalPages}
-							onPageChange={setCurrentPage}
-						/>
-					</div>
-				)}
 			</div>
+			{totalPages > 1 && (
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onPageChange={setCurrentPage}
+				/>
+			)}
 		</div>
 	);
 };

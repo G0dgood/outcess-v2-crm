@@ -50,6 +50,7 @@ import { ChartDataItem } from '@/components/dashboard/charts/types';
 import { Chart, Widget, DispositionCategory, CallOutcome, useSetup, SetupData } from '@/contexts/SetupContext';
 import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { EmptyState } from '@/components/empty-state';
 
 // Use shared type from SetupContext for consistency
 type DashboardSettings = SetupData['dashboardSettings'];
@@ -302,6 +303,8 @@ const DashboardContent: React.FC = () => {
 	const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
 	const [isDeleteWidgetModalOpen, setIsDeleteWidgetModalOpen] = useState(false);
 	const [deletingWidget, setDeletingWidget] = useState<Widget | null>(null);
+	const [isDeleteChartModalOpen, setIsDeleteChartModalOpen] = useState(false);
+	const [deletingChart, setDeletingChart] = useState<Chart | null>(null);
 	const [hydrated, setHydrated] = useState(false);
 
 	const sensors = useSensors(
@@ -510,8 +513,30 @@ const DashboardContent: React.FC = () => {
 
 	const handleRemoveChart = useCallback((chartId: string) => {
 		if (!canDelete) return;
-		removeChart(chartId);
-	}, [canDelete, removeChart]);
+		const chart = dashboardSettings.dispositionSettings.charts.find((c: Chart) => c.id === chartId);
+		if (chart) {
+			setDeletingChart(chart);
+			setIsDeleteChartModalOpen(true);
+		}
+	}, [canDelete, dashboardSettings.dispositionSettings.charts]);
+
+	const handleConfirmDeleteChart = useCallback(() => {
+		if (!canDelete || !deletingChart) return;
+
+		const updatedCharts = dashboardSettings.dispositionSettings.charts.filter(
+			(chart: Chart) => chart.id !== deletingChart.id
+		);
+
+		updateDashboardSettings({
+			dispositionSettings: {
+				...dashboardSettings.dispositionSettings,
+				charts: updatedCharts
+			}
+		});
+
+		setIsDeleteChartModalOpen(false);
+		setDeletingChart(null);
+	}, [canDelete, deletingChart, dashboardSettings.dispositionSettings, updateDashboardSettings]);
 
 	const handleEditChart = useCallback((chartId: string) => {
 		if (!canEdit) return;
@@ -788,61 +813,68 @@ const DashboardContent: React.FC = () => {
 									</div>
 								</SortableContext>
 							) : (
-								<div className="p-12 flex flex-col items-center justify-center">
-									<svg
-										width="120"
-										height="120"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="1.5"
-										className="mb-6"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										<path
-											d="M3 3V21H21"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										/>
-										<path
-											d="M7 16L12 11L16 15L21 10"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										/>
-										<path
-											d="M21 10V3H14"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										/>
-										<circle cx="7" cy="16" r="1.5" fill="currentColor" />
-										<circle cx="12" cy="11" r="1.5" fill="currentColor" />
-										<circle cx="16" cy="15" r="1.5" fill="currentColor" />
-										<circle cx="21" cy="10" r="1.5" fill="currentColor" />
-									</svg>
-									<h3
-										className="font-inter text-[12px] md:text-[14px] font-semibold mb-2"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										No Charts Configured
-									</h3>
-									<p
-										className="font-inter text-[10px] md:text-[12px] text-center mb-6 max-w-md"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										Add your first chart to visualize your disposition data and track important metrics.
-									</p>
-									{showAddButtons && (
-										<Button
-											variant="primary"
-											size="md"
-											onClick={() => setIsAddChartModalOpen(true)}
-											className="flex items-center gap-2 px-2 py-1 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
-										>
-											<PlusIcon className="w-4 h-4" />
-											<span className="hidden sm:inline">Add Chart</span>
-										</Button>
-									)}
-								</div>
+								<EmptyState
+									iconName="NOProduct"
+									title="No Charts Configured"
+									description="Add your first chart to visualize your disposition data and track important metrics."
+									linkLabel="Add Chart"
+									onClick={() => setIsAddChartModalOpen(true)}
+								/>
+								// <div className="p-12 flex flex-col items-center justify-center">
+								// 	<svg
+								// 		width="120"
+								// 		height="120"
+								// 		viewBox="0 0 24 24"
+								// 		fill="none"
+								// 		stroke="currentColor"
+								// 		strokeWidth="1.5"
+								// 		className="mb-6"
+								// 		style={{ color: 'var(--text-tertiary)' }}
+								// 	>
+								// 		<path
+								// 			d="M3 3V21H21"
+								// 			strokeLinecap="round"
+								// 			strokeLinejoin="round"
+								// 		/>
+								// 		<path
+								// 			d="M7 16L12 11L16 15L21 10"
+								// 			strokeLinecap="round"
+								// 			strokeLinejoin="round"
+								// 		/>
+								// 		<path
+								// 			d="M21 10V3H14"
+								// 			strokeLinecap="round"
+								// 			strokeLinejoin="round"
+								// 		/>
+								// 		<circle cx="7" cy="16" r="1.5" fill="currentColor" />
+								// 		<circle cx="12" cy="11" r="1.5" fill="currentColor" />
+								// 		<circle cx="16" cy="15" r="1.5" fill="currentColor" />
+								// 		<circle cx="21" cy="10" r="1.5" fill="currentColor" />
+								// 	</svg>
+								// 	<h3
+								// 		className="font-inter text-[12px] md:text-[14px] font-semibold mb-2"
+								// 		style={{ color: 'var(--text-primary)' }}
+								// 	>
+								// 		No Charts Configured
+								// 	</h3>
+								// 	<p
+								// 		className="font-inter text-[10px] md:text-[12px] text-center mb-6 max-w-md"
+								// 		style={{ color: 'var(--text-tertiary)' }}
+								// 	>
+								// 		Add your first chart to visualize your disposition data and track important metrics.
+								// 	</p>
+								// 	{showAddButtons && (
+								// 		<Button
+								// 			variant="primary"
+								// 			size="md"
+								// 			onClick={() => setIsAddChartModalOpen(true)}
+								// 			className="flex items-center gap-2 px-2 py-1 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
+								// 		>
+								// 			<PlusIcon className="w-4 h-4" />
+								// 			<span className="hidden sm:inline">Add Chart</span>
+								// 		</Button>
+								// 	)}
+								// </div>
 							)}
 						</div>
 					</DndContext>
@@ -893,6 +925,17 @@ const DashboardContent: React.FC = () => {
 						}}
 						onConfirm={handleConfirmDelete}
 						widgetTitle={deletingWidget?.title}
+					/>
+
+					{/* Delete Chart Modal */}
+					<DeleteWidgetModal
+						isOpen={isDeleteChartModalOpen}
+						onClose={() => {
+							setIsDeleteChartModalOpen(false);
+							setDeletingChart(null);
+						}}
+						onConfirm={handleConfirmDeleteChart}
+						widgetTitle={deletingChart?.title}
 					/>
 
 				</>

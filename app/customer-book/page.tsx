@@ -10,7 +10,7 @@ import { ArrowRightIcon } from '@radix-ui/react-icons';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useGetSetupBookBySearchIdQuery } from '@/store/services/setupBookApi';
-import { toast } from 'sonner';
+import { toastError } from '@/utils/toastWithSound';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import AccessRestricted from '@/components/ui/AccessRestricted';
 import { SetupData } from '@/contexts/SetupContext';
@@ -87,7 +87,7 @@ const CustomerBookPage: React.FC = () => {
 			if (error && 'data' in error) {
 				const errorData = (error as { data: { message?: string } }).data;
 				if (errorData?.message === "Record not found") {
-					toast.error(errorData?.message);
+					toastError(errorData?.message);
 				}
 			}
 		}
@@ -214,23 +214,16 @@ const CustomerBookPage: React.FC = () => {
 												</td>
 											))}
 											<td className="px-6 py-4 whitespace-nowrap">
-												<button
+												<Button
+													variant="ghost"
+													size="sm"
 													onClick={() => canView ? handleViewCustomer(customer) : undefined}
-													className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+													className="dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
 													style={{ color: 'var(--text-secondary)' }}
-													onMouseEnter={(e) => {
-														e.currentTarget.style.color = 'var(--muted-sage-green)';
-														e.currentTarget.style.backgroundColor = 'rgba(108, 139, 125, 0.1)';
-													}}
-													onMouseLeave={(e) => {
-														e.currentTarget.style.color = 'var(--text-secondary)';
-														e.currentTarget.style.backgroundColor = 'transparent';
-													}}
-													title="View Customer"
 													disabled={!canView}
 												>
 													<ArrowRightIcon className="w-5 h-5" />
-												</button>
+												</Button>
 											</td>
 										</tr>
 									))}

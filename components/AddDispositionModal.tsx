@@ -88,19 +88,22 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 					>
 						{title}
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="dark:text-gray-500 dark:hover:text-gray-300"
+						className="dark:text-gray-500 dark:hover:text-gray-300 p-1 h-auto"
 						style={{ color: 'var(--text-tertiary)' }}
-						onMouseEnter={(e) => {
+						onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
 						}}
-						onMouseLeave={(e) => {
+						onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 							e.currentTarget.style.color = 'var(--text-tertiary)';
 						}}
+						title="Close Modal"
 					>
 						<Icon name="Close_round_light" size="lg" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Scrollable Body */}
@@ -143,42 +146,48 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 											onChange={(value) => onDropdownOptionChange(index, value)}
 											className="flex-1"
 										/>
-										<button
+										<Button
+											variant="ghost"
+											size="sm"
 											onClick={() => {
 												const newOptions = dispositionForm.dropdownOptions.filter((_, i) => i !== index);
 												setDispositionForm(prev => ({ ...prev, dropdownOptions: newOptions }));
 											}}
-											className="dark:text-red-400 dark:hover:text-red-300 p-2"
+											className="dark:text-red-400 dark:hover:text-red-300 p-2 h-auto"
 											style={{ color: '#DC2626' }}
-											onMouseEnter={(e) => {
+											onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 												e.currentTarget.style.color = '#B91C1C';
 											}}
-											onMouseLeave={(e) => {
+											onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 												e.currentTarget.style.color = '#DC2626';
 											}}
 											type="button"
+											title="Remove Option"
 										>
 											<Icon name="Trash_light" size="sm" />
-										</button>
+										</Button>
 									</div>
 								))}
-								<button
+								<Button
+									variant="link"
+									size="sm"
 									onClick={onAddDropdownOption}
-									className="dark:text-blue-400 font-inter text-[10px] md:text-[12px] hover:underline flex items-center gap-1"
+									className="dark:text-blue-400 font-inter text-[10px] md:text-[12px] hover:underline flex items-center gap-1 p-0 h-auto"
 									style={{ color: '#2563EB' }}
-									onMouseEnter={(e) => {
+									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.textDecoration = 'underline';
 									}}
-									onMouseLeave={(e) => {
+									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.textDecoration = 'none';
 									}}
+									title="Add Option"
 								>
 									<PlusIcon
 										className="w-4 h-4"
 										style={{ color: '#2563EB' }}
 									/>
 									Add Option
-								</button>
+								</Button>
 							</div>
 						</div>
 					)}

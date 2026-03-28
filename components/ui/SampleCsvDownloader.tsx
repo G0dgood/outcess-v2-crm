@@ -11,9 +11,10 @@ interface SampleCsvDownloaderProps {
 	fields: Field[];
 	className?: string;
 	extraHeaders?: string[];
+	fileName?: string;
 }
 
-const SampleCsvDownloader: React.FC<SampleCsvDownloaderProps> = ({ fields, className, extraHeaders = [] }) => {
+const SampleCsvDownloader: React.FC<SampleCsvDownloaderProps> = ({ fields, className, extraHeaders = [], fileName = 'sample_data.csv' }) => {
 	const downloadSampleCsv = () => {
 		const fieldHeaders = fields ? fields.map((field) => field.name) : [];
 		
@@ -35,7 +36,7 @@ const SampleCsvDownloader: React.FC<SampleCsvDownloaderProps> = ({ fields, class
 		const url = URL.createObjectURL(blob);
 		const link = document.createElement('a');
 		link.setAttribute('href', url);
-		link.setAttribute('download', 'sample_setup_book.csv');
+		link.setAttribute('download', fileName.endsWith('.csv') ? fileName : `${fileName}.csv`);
 		link.style.visibility = 'hidden';
 		document.body.appendChild(link);
 		link.click();

@@ -18,7 +18,9 @@ export type ModuleId =
 	| 'systemSetting'
 	| 'auditLog'
 	| 'teamMembers'
-	| 'lobPlan';
+	| 'lobPlan'
+	| 'support'
+	| 'allSupport';
 
 export type PermissionAction =
 	| 'view'
@@ -70,14 +72,14 @@ interface PrivilegeContextType {
 }
 
 import { useSelector, useDispatch } from 'react-redux';
-import { 
-    selectUserPrivileges, 
-    selectIsPrivilegeLoading, 
-    selectIsAdmin, 
-    selectIsSuperAdmin,
-    setPrivileges as setReduxPrivileges,
-    clearPrivileges as clearReduxPrivileges,
-    setLoading as setReduxLoading
+import {
+	selectUserPrivileges,
+	selectIsPrivilegeLoading,
+	selectIsAdmin,
+	selectIsSuperAdmin,
+	setPrivileges as setReduxPrivileges,
+	clearPrivileges as clearReduxPrivileges,
+	setLoading as setReduxLoading
 } from '@/store/slices/privilegeSlice';
 
 const PrivilegeContext = createContext<PrivilegeContextType | undefined>(undefined);
@@ -92,15 +94,15 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 	initialPrivileges,
 }) => {
 	const dispatch = useDispatch();
-    const userPrivileges = useSelector(selectUserPrivileges);
-    const isLoading = useSelector(selectIsPrivilegeLoading);
-    const isAdmin = useSelector(selectIsAdmin);
-    const isSuperAdmin = useSelector(selectIsSuperAdmin);
+	const userPrivileges = useSelector(selectUserPrivileges);
+	const isLoading = useSelector(selectIsPrivilegeLoading);
+	const isAdmin = useSelector(selectIsAdmin);
+	const isSuperAdmin = useSelector(selectIsSuperAdmin);
 
 	const { socket } = useSocket();
 	const { selectedLineOfBusinessId } = useLineOfBusiness();
 	const { user, updateUser } = useAuth();
-	
+
 	// Add reactive query for roles in this LOB
 	const { data: rolesData } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
 		skip: !selectedLineOfBusinessId
@@ -111,7 +113,7 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		if (!rolesData?.roles || !userPrivileges?.role) return;
 
 		const currentRoleId = userPrivileges.roleId || userPrivileges.role.id || (userPrivileges.role as any)._id;
-		const matchingRole = rolesData.roles.find((r: any) => 
+		const matchingRole = rolesData.roles.find((r: any) =>
 			(r._id || r.id) === currentRoleId
 		);
 
@@ -135,8 +137,7 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 					} as any
 				});
 			}
-			
-			console.log('Privileges updated reactively via RTK Query');
+
 		}
 	}, [rolesData, userPrivileges, user, updateUser, dispatch]);
 
@@ -169,7 +170,7 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 
 		socket.emit("joinLineOfBusiness", selectedLineOfBusinessId);
 
-		const handleUpdateRole = (data: any) => { 
+		const handleUpdateRole = (data: any) => {
 			if (!userPrivileges || !userPrivileges.role) return;
 
 			const currentRoleId = userPrivileges.roleId || userPrivileges.role.id || (userPrivileges.role as any)._id;

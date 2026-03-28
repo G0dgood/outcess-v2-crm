@@ -382,24 +382,27 @@ export default function SettingsPage() {
 							const activeColor = isDarkMode ? '#F3F4F6' : (primaryColor || '#050711');
 							const inactiveColor = isDarkMode ? '#9CA3AF' : 'var(--text-tertiary)';
 							return (
-								<button
+								<Button
 									key={id}
+									variant="ghost"
+									size="sm"
 									onClick={() => setActiveSection(id as 'profile' | 'password' | 'email' | 'payment' | 'preferences')}
-									className={`relative flex items-center space-x-2 py-3 px-4 font-medium text-[10px] md:text-[12px] transition-all duration-200 ${isActive ? '' : 'dark:text-gray-400 dark:hover:text-gray-300'
+									className={`relative flex items-center space-x-2 py-3 px-4 font-medium text-[10px] md:text-[12px] transition-all duration-200 h-auto hover:transform-none rounded-none ${isActive ? '' : 'dark:text-gray-400 dark:hover:text-gray-300'
 										}`}
 									style={{
 										color: isActive ? activeColor : inactiveColor,
 									}}
-									onMouseEnter={(e) => {
+									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 										if (!isActive) {
 											e.currentTarget.style.color = isDarkMode ? '#D1D5DB' : (secondaryColor || '#6C8B7D');
 										}
 									}}
-									onMouseLeave={(e) => {
+									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 										if (!isActive) {
 											e.currentTarget.style.color = inactiveColor;
 										}
 									}}
+									title={`${label} settings`}
 								>
 									<IconComponent className="h-4 w-4 transition-colors" />
 									<span>{label}</span>
@@ -409,7 +412,7 @@ export default function SettingsPage() {
 											style={{ backgroundColor: activeColor }}
 										/>
 									)}
-								</button>
+								</Button>
 							);
 						})}
 					</nav>
@@ -671,20 +674,22 @@ export default function SettingsPage() {
 											value={passwordData.currentPassword}
 											onChange={(value) => setPasswordData({ ...passwordData, currentPassword: value })}
 										/>
-										<button
-											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+										<Button
+											variant="ghost"
+											size="sm"
+											className="absolute right-3 top-1/2 -translate-y-1/2 p-1 h-auto transition-colors"
 											style={{ color: 'var(--text-tertiary)' }}
-											onMouseEnter={(e) => {
+											onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 												e.currentTarget.style.color = 'var(--text-secondary)';
 											}}
-											onMouseLeave={(e) => {
+											onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 												e.currentTarget.style.color = 'var(--text-tertiary)';
 											}}
 											onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+											title={showPasswords.current ? "Hide password" : "Show password"}
 										>
 											{showPasswords.current ? <EyeClosedIcon className="h-5 w-5" /> : <EyeOpenIcon className="h-5 w-5" />}
-										</button>
+										</Button>
 									</div>
 								</div>
 
@@ -703,20 +708,23 @@ export default function SettingsPage() {
 											value={passwordData.newPassword}
 											onChange={(value) => setPasswordData({ ...passwordData, newPassword: value })}
 										/>
-										<button
+										<Button
+											variant="ghost"
+											size="sm"
 											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors p-1 h-auto"
 											style={{ color: 'var(--text-tertiary)' }}
-											onMouseEnter={(e) => {
+											onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 												e.currentTarget.style.color = 'var(--text-secondary)';
 											}}
-											onMouseLeave={(e) => {
+											onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 												e.currentTarget.style.color = 'var(--text-tertiary)';
 											}}
 											onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+											title={showPasswords.new ? "Hide password" : "Show password"}
 										>
 											{showPasswords.new ? <EyeClosedIcon className="h-5 w-5" /> : <EyeOpenIcon className="h-5 w-5" />}
-										</button>
+										</Button>
 									</div>
 								</div>
 
@@ -735,20 +743,22 @@ export default function SettingsPage() {
 											value={passwordData.confirmPassword}
 											onChange={(value) => setPasswordData({ ...passwordData, confirmPassword: value })}
 										/>
-										<button
-											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+										<Button
+											variant="ghost"
+											size="sm"
+											className="absolute right-3 top-1/2 -translate-y-1/2 p-1 h-auto transition-colors"
 											style={{ color: 'var(--text-tertiary)' }}
-											onMouseEnter={(e) => {
+											onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 												e.currentTarget.style.color = 'var(--text-secondary)';
 											}}
-											onMouseLeave={(e) => {
+											onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 												e.currentTarget.style.color = 'var(--text-tertiary)';
 											}}
-											onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+											onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+											title={showPasswords.new ? "Hide password" : "Show password"}
 										>
-											{showPasswords.confirm ? <EyeClosedIcon className="h-5 w-5" /> : <EyeOpenIcon className="h-5 w-5" />}
-										</button>
+											{showPasswords.new ? <EyeClosedIcon className="h-5 w-5" /> : <EyeOpenIcon className="h-5 w-5" />}
+										</Button>
 									</div>
 								</div>
 
@@ -1137,19 +1147,22 @@ export default function SettingsPage() {
 										</p>
 									</div>
 								</div>
-								<button
+								<Button
+									variant="ghost"
+									size="sm"
 									onClick={toggleTheme}
-									className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${isDarkMode
+									className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 p-0 hover:bg-transparent ${isDarkMode
 										? 'focus:ring-offset-gray-800 focus:ring-gray-500'
 										: 'focus:ring-offset-white focus:ring-gray-500'
 										}`}
 									style={isDarkMode ? { backgroundColor: primaryColor } : { backgroundColor: '#D1D5DB' }}
+									title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
 								>
 									<span
-										className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isDarkMode ? 'translate-x-6' : 'translate-x-1'
+										className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isDarkMode ? 'translate-x-[22px]' : 'translate-x-1'
 											}`}
 									/>
-								</button>
+								</Button>
 							</div>
 						</div>
 					</div>

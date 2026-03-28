@@ -114,10 +114,9 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 
 	return (
 		<div
-			className="dark:bg-gray-800 border dark:border-gray-700 shadow-lg dark:shadow-xl p-6 w-full md:w-[283px] whitespace-nowrap"
+			className="dark:bg-gray-800 shadow-lg dark:shadow-xl p-6 w-full md:w-[283px] whitespace-nowrap"
 			style={{
-				backgroundColor: 'var(--accent-white)',
-				borderColor: 'var(--light-gray)'
+				backgroundColor: 'var(--accent-white)'
 			}}
 		>
 			<div className="space-y-4">
@@ -266,15 +265,8 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							<button
 								type="button"
 								onClick={handleFromIconClick}
-								className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors"
+								className="absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors !p-1"
 								style={{ color: 'var(--text-tertiary)' }}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.color = 'var(--text-secondary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.color = 'var(--text-tertiary)';
-								}}
-								aria-label="Open date picker"
 							>
 								<CalendarIcon
 									className="w-4 h-4 dark:text-gray-500"
@@ -294,15 +286,8 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							<button
 								type="button"
 								onClick={handleToIconClick}
-								className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors"
+								className="absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors !p-1"
 								style={{ color: 'var(--text-tertiary)' }}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.color = 'var(--text-secondary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.color = 'var(--text-tertiary)';
-								}}
-								aria-label="Open date picker"
 							>
 								<CalendarIcon
 									className="w-4 h-4 dark:text-gray-500"
@@ -315,13 +300,16 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 
 				{/* Apply Button */}
 				<div className="flex justify-end pt-2">
-					<Button
-						variant="primary"
-						size="md"
+					<button
 						onClick={handleApply}
+						className="px-4 py-2 text-white font-medium transition-all duration-200 hover-bg-custom w-full md:w-auto"
+						style={{
+							backgroundColor: lineOfBusinessData?.primaryColor || '#050711',
+							'--hover-bg': lineOfBusinessData?.secondaryColor || '#6C8B7D'
+						} as React.CSSProperties}
 					>
 						Apply
-					</Button>
+					</button>
 				</div>
 			</div>
 		</div>

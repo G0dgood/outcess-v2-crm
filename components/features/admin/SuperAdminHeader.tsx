@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import { BellIcon } from '@radix-ui/react-icons';
-import SuperAdminUserDropdown from './SuperAdminUserDropdown';
-import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
+import { BellIcon, HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
+import Button from '@/components/ui/Button';
 import ThemeDropdown from '@/components/ui/ThemeDropdown';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSocket } from '@/contexts/SocketContext';
@@ -12,6 +11,7 @@ import { toastSuccess } from '@/utils/toastWithSound';
 import { useDispatch } from 'react-redux';
 import { useLogoutMutation, useTeamMemberLogoutMutation } from '@/store/services/authApi';
 import { logout as logoutAction } from '@/store/slices/authSlice';
+import SuperAdminUserDropdown from './SuperAdminUserDropdown';
 
 interface SuperAdminHeaderProps {
 	userName?: string;
@@ -85,9 +85,11 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 		<header id="header" style={{ backgroundColor: 'var(--accent-white)', borderBottom: '1px solid var(--light-gray)' }}>
 			<div className="flex items-center justify-end h-full px-6">
 				{/* Hamburger Menu - Mobile Only */}
-				<button
+				<Button
+					variant="ghost"
+					size="sm"
 					onClick={onMobileMenuToggle}
-					className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer mr-auto"
+					className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer mr-auto h-auto"
 					title="Menu"
 				>
 					<div className={`transition-all duration-300 ease-in-out transform ${isMobileMenuOpen ? 'rotate-90 scale-110' : 'rotate-0 scale-100'}`}>
@@ -97,7 +99,7 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 							<HamburgerMenuIcon className="w-6 h-6" />
 						)}
 					</div>
-				</button>
+				</Button>
 
 				{/* Right side - Icons */}
 				<div className="flex items-center justify-center gap-4">
@@ -105,13 +107,15 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 					<ThemeDropdown />
 
 					{/* Notifications Bell */}
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onNotificationsClick}
-						className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+						className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer h-auto"
 						title="Notifications"
 					>
 						<BellIcon className="w-6 h-6" />
-					</button>
+					</Button>
 
 					{/* User Dropdown */}
 					<SuperAdminUserDropdown

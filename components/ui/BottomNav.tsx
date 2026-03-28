@@ -30,8 +30,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 	currentStep
 }) => {
 
-	console.log('dashboardStep---->', dashboardStep)
-	console.log('currentStep---->', currentStep)
+
 
 
 	return (

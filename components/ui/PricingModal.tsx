@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Modal from './Modal';
 import Button from './Button';
+import BillingToggle from './BillingToggle';
 import { CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 
@@ -44,7 +45,6 @@ const PricingModal: React.FC<PricingModalProps> = ({
 			monthlyPrice: 0,
 			annualPrice: 0,
 			features: [
-				'2GB storage',
 				'Up to 3 users',
 				'Basic features',
 				'Email support',
@@ -58,11 +58,10 @@ const PricingModal: React.FC<PricingModalProps> = ({
 			id: 'pro',
 			name: 'Pro',
 			description: 'For growing teams',
-			monthlyPrice: 12,
-			annualPrice: 120,
+			monthlyPrice: 12000,
+			annualPrice: 120000,
 			popular: true,
 			features: [
-				'50GB storage',
 				'Up to 25 users',
 				'Advanced features',
 				'Priority support',
@@ -75,10 +74,9 @@ const PricingModal: React.FC<PricingModalProps> = ({
 			id: 'business',
 			name: 'Business',
 			description: 'For larger organizations',
-			monthlyPrice: 25,
-			annualPrice: 250,
+			monthlyPrice: 25000,
+			annualPrice: 250000,
 			features: [
-				'Unlimited storage',
 				'Unlimited users',
 				'All Pro features',
 				'Dedicated support',
@@ -113,14 +111,14 @@ const PricingModal: React.FC<PricingModalProps> = ({
 	const getDisplayPrice = (plan: PricingPlan) => {
 		if (plan.monthlyPrice === 0) return 'Free';
 		const price = billingCycle === 'annual' ? plan.annualPrice : plan.monthlyPrice;
-		return `$${price}${billingCycle === 'annual' ? '/year' : '/month'}`;
+		return `₦${price}${billingCycle === 'annual' ? '/year' : '/month'}`;
 	};
 
 	const getSavings = (plan: PricingPlan) => {
 		if (plan.monthlyPrice === 0) return null;
 		const monthlyTotal = plan.monthlyPrice * 12;
 		const savings = monthlyTotal - plan.annualPrice;
-		return savings > 0 ? `Save $${savings}/year` : null;
+		return savings > 0 ? `Save ₦${savings}/year` : null;
 	};
 
 	return (
@@ -138,41 +136,11 @@ const PricingModal: React.FC<PricingModalProps> = ({
 					<h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Choose Your Plan</h2>
 					<p className="text-base mb-6" style={{ color: 'var(--text-secondary)' }}>Select the perfect plan for your needs</p>
 
-					{/* Billing Toggle */}
-					<div className="inline-flex items-center p-1" style={{ backgroundColor: 'var(--light-gray)' }}>
-						<button
-							onClick={() => setBillingCycle('monthly')}
-							className={`px-6 py-2   text-[10px] md:text-[12px] font-medium transition-all ${billingCycle === 'monthly'
-								? 'shadow-sm'
-								: 'hover:opacity-80'
-								}`}
-							style={{
-								backgroundColor: billingCycle === 'monthly' ? 'var(--accent-white)' : 'transparent',
-								color: billingCycle === 'monthly' ? 'var(--text-primary)' : 'var(--text-tertiary)'
-							}}
-						>
-							Monthly
-						</button>
-						<button
-							onClick={() => setBillingCycle('annual')}
-							className={`px-6 py-2   text-[10px] md:text-[12px] font-medium transition-all relative ${billingCycle === 'annual'
-								? 'shadow-sm'
-								: 'hover:opacity-80'
-								}`}
-							style={{
-								backgroundColor: billingCycle === 'annual' ? 'var(--accent-white)' : 'transparent',
-								color: billingCycle === 'annual' ? 'var(--text-primary)' : 'var(--text-tertiary)'
-							}}
-						>
-							Annual
-							<span
-								className="ml-2 text-[8px] md:text-[10px] text-white px-2 py-0.5 rounded-full"
-								style={{ backgroundColor: primaryColor }}
-							>
-								Save 17%
-							</span>
-						</button>
-					</div>
+					<BillingToggle
+						billingCycle={billingCycle}
+						onChange={setBillingCycle}
+						primaryColor={primaryColor}
+					/>
 				</div>
 
 				{/* Pricing Cards */}
@@ -215,14 +183,14 @@ const PricingModal: React.FC<PricingModalProps> = ({
 									</div>
 									<p className="text-[10px] md:text-[12px] mb-4" style={{ color: 'var(--text-secondary)' }}>{plan.description}</p>
 									<div className="flex items-baseline gap-2 mb-3">
-										<span className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+										<span className="text-[20px] md:text-[24px] font-bold" style={{ color: 'var(--text-primary)' }}>
 											{getDisplayPrice(plan)}
 										</span>
-										{billingCycle === 'annual' && savings && (
+										{/* {billingCycle === 'annual' && savings && (
 											<span className="text-[10px] md:text-[12px] font-medium" style={{ color: secondaryColor }}>
 												{savings}
 											</span>
-										)}
+										)} */}
 									</div>
 								</div>
 
@@ -248,8 +216,10 @@ const PricingModal: React.FC<PricingModalProps> = ({
 										variant={plan.popular ? 'primary' : 'outline'}
 										size="md"
 										fullWidth
+										className={`font-lato not-italic font-semibold text-[10px] md:text-[12px] leading-[150%] !dark:text-gray-100 cursor-pointer `}
+										// style={{ color: 'var(--text-primary)' }}
 										onClick={() => handleSelectPlan(plan.id)}
-										style={plan.popular ? { backgroundColor: primaryColor } : undefined}
+									// style={plan.popular ? { backgroundColor: primaryColor } : undefined}
 									>
 										{plan.monthlyPrice === 0 ? 'Get Started' : 'Get Started'}
 									</Button>
@@ -263,7 +233,10 @@ const PricingModal: React.FC<PricingModalProps> = ({
 				<div className="text-[10px] md:text-[12px] space-y-1" style={{ color: 'var(--text-tertiary)' }}>
 					<p>All plans include a 14-day free trial. Cancel anytime.</p>
 					<p>
-						Need help choosing? <a href="#" className="hover:underline" style={{ color: primaryColor }}>Contact sales</a>
+						Need help choosing? <a href="#"
+							className={`font-lato not-italic font-semibold text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100 cursor-pointer hover:underline`}
+							style={{ color: 'var(--text-primary)' }}
+						> Contact sales</a>
 					</p>
 				</div>
 			</div>

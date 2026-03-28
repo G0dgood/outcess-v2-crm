@@ -72,9 +72,12 @@ export const lineOfBusinessApi = baseApi.injectEndpoints({
       query: (companyId) => `api/v1/line-of-business/company/${companyId}`,
       providesTags: ["LineOfBusiness"],
     }),
-    getLineOfBusinessByCompanyIdForheader: builder.query<unknown, string>({
-      query: (companyId) =>
-        `api/v1/line-of-business/company/${companyId}/header`,
+    getLineOfBusinessByCompanyIdForheader: builder.query<
+      unknown,
+      { companyId: string; page?: number; limit?: number }
+    >({
+      query: ({ companyId, page = 1, limit = 10 }) =>
+        `api/v1/line-of-business/company/${companyId}/header?page=${page}&limit=${limit}`,
       providesTags: ["LineOfBusiness"],
     }),
     updateLineOfBusiness: builder.mutation<

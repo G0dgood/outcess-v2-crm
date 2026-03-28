@@ -24,9 +24,7 @@ form select {
   color: var(--gray);
   outline: none;
   border: 0;
-  border-bottom: 1px solid var(--border);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+  border-bottom: 1px solid var(--border); 
 }
 
 form input[type="text"]:focus,
@@ -36,9 +34,7 @@ form input[type="date"]:focus,
 form input[type="number"]:focus,
 form select:focus {
   outline: none;
-  border-bottom: 1px solid var(--accent-blue);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+  border-bottom: 1px solid var(--accent-blue); 
 }
 
 form input[type="text"]:disabled,
@@ -47,9 +43,7 @@ form input[type="password"]:disabled,
 form input[type="date"]:disabled,
 form input[type="number"]:disabled,
 form select:disabled {
-  border-bottom: 1px solid var(--border);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+  border-bottom: 1px solid var(--border); 
 }
 
 form input::-webkit-input-placeholder {
@@ -75,9 +69,7 @@ form input[type="submit"] {
   padding: 9px 26px;
   border: none;
   box-shadow: 0 0 1px rgba(0, 0, 0, 0.15), 0 0 2px rgba(0, 0, 0, 0.15),
-    0 0 16px rgba(218, 209, 209, 0.15);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+    0 0 16px rgba(218, 209, 209, 0.15); 
 }
 
 .input-group form input[type="button"]:hover,
@@ -100,9 +92,7 @@ form input[type="submit"] {
   color: var(--gray);
   outline: none;
   border: 0;
-  border-bottom: 1px solid var(--border);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+  border-bottom: 1px solid var(--border); 
   border-radius: 0px;
 }
 
@@ -111,18 +101,14 @@ form input[type="submit"] {
 .input-group input[type="password"]:focus,
 .input-group select:focus {
   outline: none;
-  border-bottom: 1px solid var(--accent-blue);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+  border-bottom: 1px solid var(--accent-blue); 
 }
 
 .input-group input[type="text"]:disabled,
 .input-group input[type="email"]:disabled,
 .input-group input[type="password"]:disabled,
 .input-group select:disabled {
-  border-bottom: 1px solid var(--border);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+  border-bottom: 1px solid var(--border); 
 }
 
 .input-group input::-webkit-input-placeholder {
@@ -147,9 +133,7 @@ form input[type="submit"] {
   padding: 9px 26px;
   border: none;
   box-shadow: 0 0 1px rgba(0, 0, 0, 0.15), 0 0 2px rgba(0, 0, 0, 0.15),
-    0 0 16px rgba(218, 209, 209, 0.15);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+    0 0 16px rgba(218, 209, 209, 0.15);  
 }
 
 .input-group input[type="button"]:hover,
@@ -213,9 +197,6 @@ input :hover {
   border: 1px solid var(--accent-blue-soft);
 }
 
-/* input :focus{ 
-  border: 1px solid var(--accent-blue) ; 
-} */
 /* button */
 .btn {
   background-color: var(--accent-blue);
@@ -459,9 +440,7 @@ textarea :hover {
   justify-content: space-between;
   min-height: 38px;
   outline: 0;
-  position: relative;
-  -webkit-transition: all 100ms;
-  transition: all 100ms;
+  position: relative; 
   background-color: hsl(0, 0%, 100%);
   border-color: var(--accent-purple);
   border-radius: 4px;
