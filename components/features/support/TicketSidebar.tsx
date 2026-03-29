@@ -1,11 +1,8 @@
 import { Plus, X } from 'lucide-react';
-import { useGetTeamMembersByLineOfBusinessIdQuery } from '../../../store/services/teamMembersApi';
 import { useUpdateTicketMutation, SupportTicket, PopulatedMember, PopulatedRole } from '../../../store/services/supportApi';
-import { Button } from '../../ui/Button';
-import { Modal } from '../../ui/Modal';
 import React, { useState } from 'react';
-import { Dropdown } from '../../ui/Dropdown';
 import Image from 'next/image';
+import { AddTicketMemberModal } from './AddTicketMemberModal';
 
 interface TicketSidebarProps {
 	ticket: SupportTicket;
@@ -17,14 +14,9 @@ interface TicketSidebarProps {
 
 export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusinessData }) => {
 	const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
-	const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
-
-	const { data: teamMembersData } = useGetTeamMembersByLineOfBusinessIdQuery({
-		lineOfBusinessId: ticket?.lineOfBusinessId,
-		limit: 100,
-	});
 
 	const [updateTicket] = useUpdateTicketMutation();
+
 
 	const getRoleLabel = (role: string | PopulatedRole | undefined): string => {
 		if (!role) return 'Agent';
@@ -41,23 +33,7 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 		return 'Unknown';
 	};
 
-	const handleAddMembers = async () => {
-		if (selectedMemberIds.length === 0) return;
 
-		const currentAssignees = ticket?.assignedToIds || [];
-		const currentIds = currentAssignees.map((a) => typeof a === 'string' ? a : a._id);
-
-		// Merge new IDs, avoiding duplicates
-		const newAssigneeIds = Array.from(new Set([...currentIds, ...selectedMemberIds]));
-
-		await updateTicket({
-			id: ticket._id,
-			data: { assignedToIds: newAssigneeIds }
-		});
-
-		setSelectedMemberIds([]);
-		setIsAddUserModalOpen(false);
-	};
 
 	const handleRemoveMember = async (memberId: string) => {
 		const currentAssignees = ticket?.assignedToIds || [];
@@ -71,8 +47,7 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 		});
 	};
 
-	const availableMembers = (teamMembersData?.teamMembers || [])
-		.filter((member: PopulatedMember) => !ticket?.assignedToIds?.some((a) => (typeof a === 'string' ? a : a._id) === member._id));
+
 
 	return (
 		<>
@@ -129,18 +104,18 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 					</button>
 				</div>
 				<div className="space-y-3">
-					{(!ticket?.assignedToIds || ticket?.assignedToIds.length === 0) ? (
+					{(!ticket?.assignedToIds || ticket?.assignedToIds?.length === 0) ? (
 						<p className="text-[11px] text-gray-400 italic">No members assigned.</p>
 					) : (
-						ticket.assignedToIds.map((assignee) => {
+						ticket?.assignedToIds?.map((assignee) => {
 							if (typeof assignee === 'string') return null;
 							return (
-								<div key={assignee._id} className="flex items-center justify-between group">
+								<div key={assignee?._id} className="flex items-center justify-between group">
 									<div className="flex items-center gap-3">
 										<div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden shadow-sm relative">
-											{assignee.avatar ? (
+											{assignee?.avatar ? (
 												<Image
-													src={assignee.avatar}
+													src={assignee?.avatar}
 													alt={getNameLabel(assignee)}
 													width={32}
 													height={32}
@@ -151,7 +126,7 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 													className="w-full h-full flex items-center justify-center text-[10px] font-bold text-white uppercase"
 													style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
 												>
-													{(assignee.firstName?.[0] || (typeof assignee.name === 'string' ? assignee.name?.[0] : '') || '?')}
+													{(assignee?.firstName?.[0] || (typeof assignee?.name === 'string' ? assignee?.name?.[0] : '') || '?')}
 												</div>
 											)}
 										</div>
@@ -160,7 +135,7 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 										</span>
 									</div>
 									<button
-										onClick={() => handleRemoveMember(assignee._id)}
+										onClick={() => handleRemoveMember(assignee?._id)}
 										className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all"
 									>
 										<X className="w-3 h-3 text-red-500" />
@@ -177,10 +152,10 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 				<h3 className="font-bold text-sm uppercase tracking-widest text-gray-400">Requester</h3>
 				<div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800/50 p-3 border dark:border-gray-700">
 					<div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0 overflow-hidden shadow-sm relative">
-						{typeof ticket?.creatorId === 'object' && ticket.creatorId.avatar ? (
+						{ticket?.creatorId && typeof ticket.creatorId === 'object' && ticket?.creatorId?.avatar ? (
 							<Image
-								src={ticket.creatorId.avatar}
-								alt={getNameLabel(ticket.creatorId)}
+								src={ticket?.creatorId?.avatar}
+								alt={getNameLabel(ticket?.creatorId)}
 								width={40}
 								height={40}
 								className="w-full h-full object-cover"
@@ -190,7 +165,7 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 								className="w-full h-full flex items-center justify-center text-[12px] font-bold text-white transition-colors"
 								style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
 							>
-								{(typeof ticket?.creatorId === 'object' ? (ticket?.creatorId?.firstName?.[0] || ticket?.creatorId?.name?.[0] || '?') : '?').toUpperCase()}
+								{(ticket?.creatorId && typeof ticket.creatorId === 'object' ? (ticket?.creatorId?.firstName?.[0] || ticket?.creatorId?.name?.[0] || '?') : '?').toUpperCase()}
 							</div>
 						)}
 					</div>
@@ -203,49 +178,12 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 				</div>
 			</div>
 
-			{/* Add Member Modal */}
-			<Modal
+			<AddTicketMemberModal
 				isOpen={isAddUserModalOpen}
 				onClose={() => setIsAddUserModalOpen(false)}
-				title="Invite Member to Ticket"
-				size="sm"
-			>
-				<div className="p-6 space-y-6">
-					<Dropdown
-						label="Select Members"
-						placeholder="Search and select teammates..."
-						multiple={true}
-						options={availableMembers.map((member: PopulatedMember) => ({
-							value: member._id,
-							label: `${member.firstName} ${member.lastName || ''} (${getRoleLabel(member.role)})`
-						}))}
-						value={selectedMemberIds}
-						onChange={(val) => setSelectedMemberIds(val as string[])}
-					/>
-
-					<div className="flex gap-3">
-						<Button
-							variant="outline"
-							className="flex-1"
-							onClick={() => {
-								setSelectedMemberIds([]);
-								setIsAddUserModalOpen(false);
-							}}
-						>
-							Cancel
-						</Button>
-						<Button
-							variant="primary"
-							className="flex-1 text-white"
-							style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
-							onClick={handleAddMembers}
-							disabled={selectedMemberIds.length === 0}
-						>
-							Confirm
-						</Button>
-					</div>
-				</div>
-			</Modal>
+				ticket={ticket}
+				lineOfBusinessData={lineOfBusinessData}
+			/>
 		</>
 	);
 };
