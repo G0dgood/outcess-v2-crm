@@ -72,7 +72,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 	const { lineOfBusinessData } = useLineOfBusiness();
-	const { user } = useAuth();
+	useAuth();
 	const { canAccess, isAdmin } = usePrivilege();
 
 	const currentLOB = lineOfBusinessData?.lineOfBusiness;
@@ -270,6 +270,11 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 			if (onItemClick) onItemClick(item.id);
 			else router.push(item.path);
 		}
+	};
+
+	const handleView = (_id: string, path: string) => {
+		router.push(path);
+		if (onMobileClose) onMobileClose();
 	};
 
 	const handleSubItemClick = (path: string) => {

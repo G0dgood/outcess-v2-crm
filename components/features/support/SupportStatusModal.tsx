@@ -11,9 +11,6 @@ interface SupportStatusModalProps {
 	onConfirm: (status: string) => void;
 	ticket?: { status: string };
 	type: 'Resolve' | 'Close' | 'Reopen' | 'Done';
-	lineOfBusinessData?: {
-		primaryColor?: string;
-	};
 }
 
 export const SupportStatusModal: React.FC<SupportStatusModalProps> = ({
@@ -22,7 +19,6 @@ export const SupportStatusModal: React.FC<SupportStatusModalProps> = ({
 	onConfirm,
 	ticket,
 	type,
-	lineOfBusinessData,
 }) => {
 	const config = {
 		Resolve: {

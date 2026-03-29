@@ -104,7 +104,8 @@ export const SupportStatusDropdown: React.FC<SupportStatusDropdownProps> = ({ ti
    }).unwrap();
    toastSuccess(`Status updated to ${newStatus}`);
    setIsOpen(false);
-  } catch (err: any) {
+  } catch (error: unknown) {
+   const err = error as { data?: { message?: string } };
    toastError(err?.data?.message || 'Failed to update status');
   }
  };

@@ -50,8 +50,9 @@ const RegisteredBusinessesTable: React.FC = () => {
 		},
 	];
 
-	const handleView = (_id: string) => {
-		// TODO: Navigate to business details page
+	const handleView = (id: string) => {
+		// TODO: Navigate to business details page with id
+		console.log('Viewing business:', id);
 	};
 
 	return (
