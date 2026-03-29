@@ -18,12 +18,11 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useSocket } from '@/contexts/SocketContext';
-import { Send, ChevronUp, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Send, ChevronUp, CheckCircle, ArrowLeft, RefreshCw, XCircle, PanelRightOpen, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { TicketSidebar } from '@/components/features/support/TicketSidebar';
 import SupportDetailsSkeleton from '@/components/skeletons/SupportDetailsSkeleton';
 import { SupportStatusModal } from '@/components/features/support/SupportStatusModal';
-import { RefreshCw, XCircle } from 'lucide-react';
 
 
 export default function TicketDetailsPage({ params }: { params: Promise<{ ticketId: string }> }) {
@@ -35,6 +34,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 	const [newMessage, setNewMessage] = useState('');
 	const [messages, setMessages] = useState<TicketMessage[]>([]);
 	const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+	const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 	const [statusModalType, setStatusModalType] = useState<'Resolve' | 'Close' | 'Reopen'>('Resolve');
 	const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -144,64 +144,95 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 					<PageHeading text={`Ticket #${ticket?.ticketId}`} />
 				</div>
 
-				{/* Action Buttons in Header */}
-				<div className="flex items-center gap-3">
-					{ticket?.status !== 'Resolved' && ticket?.status !== 'Closed' && (
-						<Button
-							variant="outline"
-							size="md"
-							onClick={() => {
-								setStatusModalType('Resolve');
-								setIsStatusModalOpen(true);
-							}}
-							className="text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-900/50 dark:hover:bg-green-900/20 shadow-sm"
-						>
-							<CheckCircle className="w-4 h-4 mr-2" />
-							Resolve Ticket
-						</Button>
-					)}
-					{ticket?.status !== 'Closed' && (
-						<Button
-							variant="outline"
-							size="md"
-							onClick={() => {
-								setStatusModalType('Close');
-								setIsStatusModalOpen(true);
-							}}
-							className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/20 shadow-sm"
-						>
-							<XCircle className="w-4 h-4 mr-2" />
-							Close Ticket
-						</Button>
-					)}
-					{(ticket?.status === 'Resolved' || ticket?.status === 'Closed') && (
-						<Button
-							variant="outline"
-							size="md"
-							onClick={() => {
-								setStatusModalType('Reopen');
-								setIsStatusModalOpen(true);
-							}}
-							className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900/50 dark:hover:bg-blue-900/20 shadow-sm"
-						>
-							<RefreshCw className="w-4 h-4 mr-2" />
-							Reopen Ticket
-						</Button>
-					)}
-					{(user?.role === 'supervisor' || user?.role === 'admin') && (typeof ticket?.escalationLevel === 'object' ? (ticket?.escalationLevel as PopulatedRole)?.roleName : ticket?.escalationLevel) !== 'SuperAdmin' && (
-						<Button
-							variant="outline"
-							size="md"
-							onClick={() => {
-								const currentLevel = typeof ticket?.escalationLevel === 'object' ? (ticket?.escalationLevel as PopulatedRole)?.roleName : ticket?.escalationLevel;
-								handleEscalate(currentLevel === 'Supervisor' ? 'Admin' : 'SuperAdmin');
-							}}
-							className="text-purple-600 border-purple-200 hover:bg-purple-50 dark:text-purple-400 dark:border-purple-900/50 dark:hover:bg-purple-900/20 shadow-sm"
-						>
-							<ChevronUp className="w-4 h-4 mr-2" />
-							Escalate
-						</Button>
-					)}
+				<div className="flex items-center gap-2">
+					{/* Mobile Info Toggle */}
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={() => setIsMobileSidebarOpen(true)}
+						className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+					>
+						<PanelRightOpen className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+					</Button>
+
+					<div className="hidden sm:flex items-center gap-3">
+						{ticket?.status !== 'Resolved' && ticket?.status !== 'Closed' && (
+							<Button
+								variant="outline"
+								size="md"
+								onClick={() => {
+									setStatusModalType('Resolve');
+									setIsStatusModalOpen(true);
+								}}
+								className="text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-900/50 dark:hover:bg-green-900/20 shadow-sm"
+							>
+								<CheckCircle className="w-4 h-4 mr-2" />
+								Resolve Ticket
+							</Button>
+						)}
+						{ticket?.status !== 'Closed' && (
+							<Button
+								variant="outline"
+								size="md"
+								onClick={() => {
+									setStatusModalType('Close');
+									setIsStatusModalOpen(true);
+								}}
+								className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/20 shadow-sm"
+							>
+								<XCircle className="w-4 h-4 mr-2" />
+								Close Ticket
+							</Button>
+						)}
+						{(ticket?.status === 'Resolved' || ticket?.status === 'Closed') && (
+							<Button
+								variant="outline"
+								size="md"
+								onClick={() => {
+									setStatusModalType('Reopen');
+									setIsStatusModalOpen(true);
+								}}
+								className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900/50 dark:hover:bg-blue-900/20 shadow-sm"
+							>
+								<RefreshCw className="w-4 h-4 mr-2" />
+								Reopen Ticket
+							</Button>
+						)}
+						{(user?.role === 'supervisor' || user?.role === 'admin') && (typeof ticket?.escalationLevel === 'object' ? (ticket?.escalationLevel as PopulatedRole)?.roleName : ticket?.escalationLevel) !== 'SuperAdmin' && (
+							<Button
+								variant="outline"
+								size="md"
+								onClick={() => {
+									const currentLevel = typeof ticket?.escalationLevel === 'object' ? (ticket?.escalationLevel as PopulatedRole)?.roleName : ticket?.escalationLevel;
+									handleEscalate(currentLevel === 'Supervisor' ? 'Admin' : 'SuperAdmin');
+								}}
+								className="text-purple-600 border-purple-200 hover:bg-purple-50 dark:text-purple-400 dark:border-purple-900/50 dark:hover:bg-purple-900/20 shadow-sm"
+							>
+								<ChevronUp className="w-4 h-4 mr-2" />
+								Escalate
+							</Button>
+						)}
+					</div>
+
+					{/* Mobile Status Actions (Icon only to save space) */}
+					<div className="flex sm:hidden items-center gap-1">
+						{ticket?.status !== 'Resolved' && ticket?.status !== 'Closed' && (
+							<button
+								onClick={() => { setStatusModalType('Resolve'); setIsStatusModalOpen(true); }}
+								className="p-2 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20 rounded-full"
+							>
+								<CheckCircle className="w-5 h-5" />
+							</button>
+						)}
+						{(ticket?.status === 'Resolved' || ticket?.status === 'Closed') && (
+							<button
+								onClick={() => { setStatusModalType('Reopen'); setIsStatusModalOpen(true); }}
+								className="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-full"
+							>
+								<RefreshCw className="w-5 h-5" />
+							</button>
+						)}
+					</div>
 				</div>
 			</div>
 
@@ -312,8 +343,26 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 				</div>
 
 				{/* Right Column: Ticket Context Sidebar */}
-				<div className="w-full lg:w-80 shrink-0 flex flex-col gap-6 overflow-y-auto no-scrollbar min-h-0">
-					<TicketSidebar ticket={ticket as SupportTicket} lineOfBusinessData={lineOfBusinessData} />
+				{/* Backdrop for mobile */}
+				{isMobileSidebarOpen && (
+					<div 
+						className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] lg:hidden transition-opacity"
+						onClick={() => setIsMobileSidebarOpen(false)}
+					/>
+				)}
+				<div className={`
+					fixed inset-y-0 right-0 w-[85%] sm:w-80 bg-white dark:bg-gray-900 z-[70] shadow-2xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-0 lg:shadow-none lg:flex lg:flex-col lg:gap-6 lg:bg-transparent dark:lg:bg-transparent
+					${isMobileSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
+				`}>
+					<div className="flex lg:hidden items-center justify-between p-4 border-b dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
+						<h3 className="font-bold text-sm uppercase tracking-widest text-gray-500">Ticket Info</h3>
+						<button onClick={() => setIsMobileSidebarOpen(false)} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full">
+							<X className="w-5 h-5 text-gray-500" />
+						</button>
+					</div>
+					<div className="flex-1 overflow-y-auto no-scrollbar p-1 lg:p-0">
+						<TicketSidebar ticket={ticket as SupportTicket} lineOfBusinessData={lineOfBusinessData} />
+					</div>
 				</div>
 
 			</div>
