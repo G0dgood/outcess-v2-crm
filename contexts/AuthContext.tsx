@@ -78,7 +78,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({
 	children,
-	apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.base_url || '/api',
+	apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '/api',
 	storageKey = 'peoplely_auth',
 }) => {
 	const [user, setUser] = useState<User | null>(null);
