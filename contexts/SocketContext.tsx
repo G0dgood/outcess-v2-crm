@@ -90,7 +90,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 	const isSyncingDispositionsRef = useRef(false);
 
 	const {
-		url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+		url = process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
 		autoConnect = true,
 		enableOfflineMode: configEnableOfflineMode = true,
 		maxQueueSize = 100,
