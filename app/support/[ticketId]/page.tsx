@@ -42,6 +42,9 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 	const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const isTypingRef = useRef(false);
 	const audioRef = useRef<HTMLAudioElement | null>(null);
+	
+	const userRole = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
+	const isSupervisorOrAdmin = userRole?.toLowerCase() === 'supervisor' || userRole?.toLowerCase() === 'admin';
 
 	const { data: ticketData, isLoading, refetch } = useGetTicketByIdQuery(ticketId, {
 		skip: !ticketId,
@@ -296,7 +299,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 								Reopen Ticket
 							</Button>
 						)}
-						{ticket?.status !== 'Done' && (
+						{ticket?.status !== 'Done' && isSupervisorOrAdmin && (
 							<Button
 								variant="primary"
 								size="md"
