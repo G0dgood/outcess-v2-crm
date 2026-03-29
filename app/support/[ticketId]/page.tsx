@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, use } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import Textarea from '@/components/ui/Textarea';
@@ -91,7 +92,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 				},
 			}).unwrap();
 			setNewMessage('');
-		} catch (error) {
+		} catch (_error) {
 			toast.error('Failed to send message');
 		}
 	};
@@ -101,7 +102,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 			await updateTicket({ id: ticketId, data: { status } }).unwrap();
 			toast.success(`Ticket marked as ${status}`);
 			refetch();
-		} catch (error) {
+		} catch (_error) {
 			toast.error('Failed to update status');
 		}
 	};
@@ -114,7 +115,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 			}).unwrap();
 			toast.success(`Ticket escalated to ${level}`);
 			refetch();
-		} catch (error) {
+		} catch (_error) {
 			toast.error('Failed to escalate ticket');
 		}
 	};
@@ -230,7 +231,13 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 										<div className={`max-w-[85%] lg:max-w-[70%] flex items-start gap-3 ${isOwn ? 'flex-row-reverse' : ''}`}>
 											<div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0 overflow-hidden mt-1 px-0 flex items-center justify-center shadow-sm">
 												{msg.senderId?.avatar ? (
-													<img src={msg.senderId.avatar} className="w-full h-full object-cover" />
+													<Image 
+														src={msg.senderId.avatar} 
+														className="w-full h-full object-cover" 
+														alt={msg.senderId?.firstName || msg.senderId?.name || 'User avatar'}
+														width={32}
+														height={32}
+													/>
 												) : (
 													<div
 														className="w-full h-full flex items-center justify-center text-[10px] font-bold transition-colors"

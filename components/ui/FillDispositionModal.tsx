@@ -196,7 +196,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					await createDisposition({
 						fillDisposition: dispositionData,
 						customerId,
-						agentId: authUser?.userId || authUser?.id,
+						agentId: (authUser?.userId as string) || authUser?.id,
 						lineOfBusinessId: selectedLineOfBusinessId || undefined,
 						timestamp: new Date().toISOString(),
 					}).unwrap();
@@ -208,7 +208,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 							payload: {
 								fillDisposition: dispositionData,
 								customerId,
-								agentId: authUser?.userId || authUser?.id,
+								agentId: (authUser?.userId as string) || authUser?.id,
 								lineOfBusinessId: selectedLineOfBusinessId || undefined,
 								timestamp: new Date().toISOString(),
 							},
@@ -221,7 +221,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 						customerId,
 						customerName,
 						authUser?.name,
-						authUser?.userId || authUser?.id,
+						(authUser?.userId as string) || authUser?.id,
 						selectedLineOfBusinessId || undefined
 					);
 

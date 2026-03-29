@@ -57,9 +57,7 @@ interface TeamMemberStatusUpdatePayload {
 	timestamp?: string;
 }
 
-interface RefreshPayload {
-	message?: string;
-}
+
 
 interface ApiTeamMember {
 	_id?: string;

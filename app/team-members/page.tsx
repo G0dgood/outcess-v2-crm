@@ -43,9 +43,7 @@ interface TeamMemberStatusUpdatePayload {
 	timestamp?: string;
 }
 
-interface RefreshPayload {
-	message?: string;
-}
+
 
 interface ApiTeamMember {
 	_id?: string;
@@ -148,8 +146,7 @@ const TeamMembersPage: React.FC = () => {
 				);
 			};
 
-			const handleRefresh = (_payload: RefreshPayload) => {
-
+			const handleRefresh = () => {
 				refetch();
 			};
 
@@ -174,33 +171,33 @@ const TeamMembersPage: React.FC = () => {
 				let statusColor = undefined;
 				let reason = undefined;
 
-				if (m.status) {
-					if (typeof m.status === 'object') {
-						status = m.status.status || m.loginStatus || 'Logged out';
-						statusColor = m.status.color;
-						reason = m.status.statusReason || m.status.reason || m.statusReason;
-					} else if (typeof m.status === 'string') {
-						status = m.status;
-						reason = m.statusReason;
+				if (m?.status) {
+					if (typeof m?.status === 'object') {
+						status = m?.status?.status || m?.loginStatus || 'Logged out';
+						statusColor = m?.status?.color;
+						reason = m?.status?.statusReason || m?.status?.reason || m?.statusReason;
+					} else if (typeof m?.status === 'string') {
+						status = m?.status;
+						reason = m?.statusReason;
 					}
 				} else {
-					status = m.loginStatus || 'Logged out';
-					reason = m.statusReason;
+					status = m?.loginStatus || 'Logged out';
+					reason = m?.statusReason;
 				}
 
 				return {
-					_id: m._id || m.id || '',
-					agentId: m.userId || 'N/A', // Prioritize userId from API response
-					fullName: m.name || `${m.firstName || ''} ${m.lastName || ''}`.trim(),
-					email: m.email || '',
-					phone: m.phone || '',
-					role: (typeof m.role === 'object' ? (m.role?.roleName || m.role?.name) : (m.role || 'agent'))?.toLowerCase() as TeamMember['role'],
-					supervisor: (typeof m.supervisor === 'object' ? m.supervisor?.name : m.supervisor) || 'Unassigned',
+					_id: m?._id || m?.id || '',
+					agentId: m?.userId || 'N/A', // Prioritize userId from API response
+					fullName: m?.name || `${m?.firstName || ''} ${m?.lastName || ''}`.trim(),
+					email: m?.email || '',
+					phone: m?.phone || '',
+					role: (typeof m?.role === 'object' ? (m?.role?.roleName || m?.role?.name) : (m?.role || 'agent'))?.toLowerCase() as TeamMember['role'],
+					supervisor: (typeof m?.supervisor === 'object' ? m?.supervisor?.name : m?.supervisor) || 'Unassigned',
 					status,
 					statusColor,
 					reason,
-					team: (typeof m.team === 'object' ? m.team?.name : m.team) || 'Unassigned',
-					shiftHourTitle: m.shiftHour?.title || ''
+					team: (typeof m?.team === 'object' ? m?.team?.name : m?.team) || 'Unassigned',
+					shiftHourTitle: m?.shiftHour?.title || ''
 				};
 			});
 			setTeamMembersData(mappedMembers);

@@ -15,7 +15,7 @@ import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTe
 import { useGetRolesByLineOfBusinessIdQuery } from '@/store/services/roleApi';
 import { Skeleton } from '@/components/ui/skeleton';
 import Tabs from '@/components/ui/Tabs';
-import { TeamMember } from '@/store/services/teamMembersApi';
+
 
 interface ApiError {
 	data?: {

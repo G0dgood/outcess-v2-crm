@@ -132,7 +132,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 		setIsDeactivateModalOpen(true);
 	};
 
-	const handleConfirmDeactivate = (reason: string) => {
+	const handleConfirmDeactivate = (_reason: string) => {
 		// TODO: Implement deactivate business logic with reason
 	};
 
