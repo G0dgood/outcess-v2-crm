@@ -112,7 +112,7 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({ isOpen, onClose
 
 	const handleSendMessage = async (e?: React.FormEvent) => {
 		e?.preventDefault();
-		if (!newMessage.trim()) return;
+		if (!newMessage.trim() || isSending) return;
 
 		try {
 			await addMessage({

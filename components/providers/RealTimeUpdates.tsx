@@ -4,11 +4,12 @@ import React, { useEffect } from 'react';
 import { useSocket } from '@/contexts/SocketContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { toastInfo } from '@/utils/toastWithSound';
+import { toastInfo, toastSuccess } from '@/utils/toastWithSound';
 import { useDispatch } from 'react-redux';
 import { updateUser as updateReduxUser } from '@/store/slices/authSlice';
 import { usePathname } from 'next/navigation';
 import { TicketMessage } from '@/store/services/supportApi';
+import { teamMembersApi } from '@/store/services/teamMembersApi';
 
 export const RealTimeUpdates: React.FC = () => {
   const pathname = usePathname();
@@ -67,6 +68,22 @@ export const RealTimeUpdates: React.FC = () => {
       }
     };
 
+    // Handle Team Member Status Updates
+    const handleTeamMemberStatusUpdate = (payload: any) => {
+      const newStatus = typeof payload.status === 'object' ? payload.status.status : payload.status;
+      const memberName = payload.name || 'A team member';
+      
+      // Only notify if it's not the current user themselves (already handled by updateStatus mutation normally)
+      const currentUserId = user?.id || user?._id;
+      if (payload.teamMemberId === currentUserId) return;
+
+      // Show global notification
+      toastSuccess(`${memberName} is now ${newStatus}`);
+      
+      // Invalidate cache to refresh any active lists (including TeamMembersPage)
+      dispatch(teamMembersApi.util.invalidateTags(['TeamMembers']));
+    };
+
     // Handle Global Message Notifications
     const handleGlobalMessage = (message: TicketMessage) => {
       // Don't notify if it's from me
@@ -90,10 +107,12 @@ export const RealTimeUpdates: React.FC = () => {
     };
 
     on('roleUpdated', handleRoleUpdated);
+    on('teamMemberStatusUpdate', handleTeamMemberStatusUpdate);
     on('newTicketMessage', handleGlobalMessage);
 
     return () => {
       off('roleUpdated', handleRoleUpdated);
+      off('teamMemberStatusUpdate', handleTeamMemberStatusUpdate);
       off('newTicketMessage', handleGlobalMessage);
     };
   }, [socket, on, off, updateUser, dispatch, user?.id, user?._id, pathname]);

@@ -225,8 +225,6 @@ const TeamMembersPage: React.FC = () => {
 
 			setTeamMembersData(prevMembers => prevMembers.map(member => {
 				if (member._id === updateData.teamMemberId || member.agentId === updateData.teamMemberId) {
-					// Show toast notification
-					toastSuccess(`${member.fullName} is now ${newStatus}`);
 					return {
 						...member,
 						status: newStatus,

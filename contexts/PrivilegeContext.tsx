@@ -19,7 +19,7 @@ export type ModuleId =
 	| 'auditLog'
 	| 'status'
 	| 'roles'
-	| 'permissions'
+	| 'permission'
 	| 'teamMembers'
 	| 'lobPlan'
 	| 'support'

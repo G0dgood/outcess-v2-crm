@@ -16,7 +16,7 @@ type SettingsTab = 'settings' | 'fields' | 'status' | 'permission' | 'company-de
 const subModuleMapping: Record<string, ModuleId> = {
 	'settings': 'systemSetting',
 	'status': 'status',
-	'permission': 'permissions',
+	'permission': 'permission',
 	'company-details': 'systemSetting',
 	'roles': 'roles',
 	'supervisors': 'userManagement',
