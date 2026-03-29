@@ -72,7 +72,7 @@ const SMSMessagePreview: React.FC<SMSMessagePreviewProps> = ({
 					color: 'var(--text-primary)'
 				}}
 			>
-				"{sms.message}"
+				&quot;{sms.message}&quot;
 			</div>
 
 			{/* Timestamp */}

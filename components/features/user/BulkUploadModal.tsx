@@ -59,9 +59,10 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 			setResult(res.summary ? { ...res.summary, errors: res.errors } : res);
 			toast.success('Upload completed successfully');
 			setFile(null);
-		} catch (error: any) {
-			console.error('Bulk upload failed:', error);
-			toast.error(error?.data?.message || 'Failed to process bulk upload');
+		} catch (error: unknown) {
+			const err = error as { data?: { message?: string } };
+			console.error('Bulk upload failed:', err);
+			toast.error(err?.data?.message || 'Failed to process bulk upload');
 		}
 	};
 

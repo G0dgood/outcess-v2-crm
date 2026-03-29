@@ -12,7 +12,7 @@ export interface TabItem {
 interface TabsProps {
   tabs: (string | TabItem)[];
   activeTab: string;
-  onTabChange: (tabId: any) => void;
+  onTabChange: (tabId: string) => void;
   activeColor?: string;
   className?: string;
 }

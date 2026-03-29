@@ -10,7 +10,9 @@ interface SupportStatusModalProps {
 	onClose: () => void;
 	onConfirm: (status: string) => void;
 	type: 'Resolve' | 'Close' | 'Reopen';
-	lineOfBusinessData?: any;
+	lineOfBusinessData?: {
+		primaryColor?: string;
+	};
 }
 
 export const SupportStatusModal: React.FC<SupportStatusModalProps> = ({

@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Search from '@/components/ui/Search';
 import Button from '@/components/ui/Button';
 import { useGetTicketsByLineOfBusinessIdQuery } from '@/store/services/supportApi';
-import { useAuth } from '@/contexts/AuthContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import PageHeading from '@/components/ui/PageHeading';
 import Pagination from '@/components/ui/Pagination';
@@ -21,13 +20,12 @@ import { usePrivilege } from '@/contexts/PrivilegeContext';
 
 const AllSupportPage = () => {
 	const router = useRouter();
-	const { user } = useAuth();
 	const { canAccess } = usePrivilege();
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const lineOfBusinessId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
 
 	const [searchQuery, setSearchQuery] = useState('');
-	const [activeTab, setActiveTab] = useState<'All Tickets' | 'New' | 'On-Going' | 'Resolved'>('All Tickets');
+	const [activeTab, setActiveTab] = useState<'All Tickets' | 'New' | 'In Progress' | 'Resolved'>('All Tickets');
 	const [page, setPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [priorityFilter, setPriorityFilter] = useState('');
@@ -78,7 +76,7 @@ const AllSupportPage = () => {
 	const getStatusIcon = (status: string) => {
 		switch (status) {
 			case 'New': return <Inbox className="w-4 h-4" />;
-			case 'On-Going': return <Clock className="w-4 h-4" />;
+			case 'In Progress': return <Clock className="w-4 h-4" />;
 			case 'Resolved': return <CheckCircle2 className="w-4 h-4" />;
 			default: return <Inbox className="w-4 h-4" />;
 		}
@@ -87,7 +85,7 @@ const AllSupportPage = () => {
 	const supportTabs: TabItem[] = [
 		{ id: 'All Tickets', label: 'All Tickets' },
 		{ id: 'New', label: 'New', icon: getStatusIcon('New') },
-		{ id: 'On-Going', label: 'On-Going', icon: getStatusIcon('On-Going') },
+		{ id: 'In Progress', label: 'In Progress', icon: getStatusIcon('In Progress') },
 		{ id: 'Resolved', label: 'Resolved', icon: getStatusIcon('Resolved') },
 	];
 
@@ -161,7 +159,7 @@ const AllSupportPage = () => {
 			<Tabs
 				tabs={supportTabs}
 				activeTab={activeTab}
-				onTabChange={(tabId) => setActiveTab(tabId as any)}
+				onTabChange={(tabId) => setActiveTab(tabId as typeof activeTab)}
 				activeColor={lineOfBusinessData?.primaryColor}
 			/>
 

@@ -1,6 +1,6 @@
 import { User, Calendar, Flag, Trash, AlertTriangle } from 'lucide-react';
 import moment from 'moment';
-import { useDeleteTicketMutation } from '@/store/services/supportApi';
+import { useDeleteTicketMutation, SupportTicket, PopulatedMember } from '@/store/services/supportApi';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import Modal from '@/components/ui/Modal';
@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/Button';
 import { useState } from 'react';
 
 interface TicketListProps {
-	tickets: any[];
+	tickets: SupportTicket[];
 	isLoading: boolean;
-	lineOfBusinessData: any;
+	lineOfBusinessData?: {
+		primaryColor?: string;
+	};
 	onOpenTicket: (id: string) => void;
 }
 
@@ -19,12 +21,12 @@ const TicketList: React.FC<TicketListProps> = ({
 	isLoading,
 	onOpenTicket
 }) => {
-	const { user } = useAuth();
+	useAuth(); // Removed unused 'user' assignment
 	const [deleteTicket, { isLoading: isDeleting }] = useDeleteTicketMutation();
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-	const [ticketToDelete, setTicketToDelete] = useState<any>(null);
+	const [ticketToDelete, setTicketToDelete] = useState<SupportTicket | null>(null);
 
-	const handleDeleteClick = (e: React.MouseEvent, ticket: any) => {
+	const handleDeleteClick = (e: React.MouseEvent, ticket: SupportTicket) => {
 		e.stopPropagation();
 		setTicketToDelete(ticket);
 		setIsDeleteModalOpen(true);
@@ -38,8 +40,9 @@ const TicketList: React.FC<TicketListProps> = ({
 			toast.success('Ticket deleted successfully');
 			setIsDeleteModalOpen(false);
 			setTicketToDelete(null);
-		} catch (err: any) {
-			toast.error(err.data?.message || 'Failed to delete ticket');
+		} catch (err: unknown) {
+			const error = err as { data?: { message?: string } };
+			toast.error(error.data?.message || 'Failed to delete ticket');
 		}
 	};
 
@@ -53,9 +56,7 @@ const TicketList: React.FC<TicketListProps> = ({
 	};
 
 	const getDisplayStatus = (status: string) => {
-		const normalized = status.toUpperCase();
-		if (normalized === 'IN PROGRESS') return 'IN PROGRESS';
-		return normalized;
+		return status.toUpperCase();
 	};
 
 	const getStatusColors = (status: string) => {
@@ -140,10 +141,12 @@ const TicketList: React.FC<TicketListProps> = ({
 
 						{/* Middle section: Metadata MetadataIcons */}
 						<div className="hidden md:flex items-center gap-10 lg:gap-16 flex-1 justify-center">
-							<div className="flex items-center gap-1.5 group/icon" title={`Creator: ${ticket.creatorName || ticket.creatorId?.firstName || 'User'}`}>
+							<div className="flex items-center gap-1.5 group/icon" title={`Creator: ${typeof ticket.creatorId === 'object' ? (ticket.creatorId?.firstName || ticket.creatorId?.name || 'User') : 'User'}`}>
 								<User className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover/icon:text-[#F97316] transition-colors" />
 								<span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 group-hover/icon:text-[#F97316] transition-colors">
-									{ticket.creatorName || (ticket.creatorId?.firstName ? `${ticket.creatorId.firstName} ${ticket.creatorId.lastName}` : ticket.creatorId?.name || 'Unknown')}
+									{typeof ticket.creatorId === 'object'
+										? (ticket.creatorId?.firstName ? `${ticket.creatorId.firstName} ${ticket.creatorId.lastName || ''}` : ticket.creatorId?.name || 'Unknown')
+										: 'Unknown'}
 								</span>
 							</div>
 

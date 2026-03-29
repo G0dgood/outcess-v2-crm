@@ -15,6 +15,20 @@ import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTe
 import { useGetRolesByLineOfBusinessIdQuery } from '@/store/services/roleApi';
 import { Skeleton } from '@/components/ui/skeleton';
 import Tabs from '@/components/ui/Tabs';
+import { TeamMember } from '@/store/services/teamMembersApi';
+
+interface ApiError {
+	data?: {
+		message?: string;
+	};
+}
+
+interface Role {
+	_id: string;
+	id?: string;
+	roleName: string;
+	supervisorTitle?: string;
+}
 
 const EditUserPage: React.FC = () => {
 	const router = useRouter();
@@ -98,12 +112,12 @@ const EditUserPage: React.FC = () => {
 			: [];
 
 		const baseOptions = rawRoles
-			.filter((role: unknown) => {
+			.filter((role: unknown): role is { _id?: string; id?: string } => {
 				const r = role as { _id?: string; id?: string };
-				return r._id || r.id;
+				return !!(r._id || r.id);
 			})
-			.map((role: unknown) => {
-				const r = role as { roleName: string; _id?: string; id?: string; supervisorTitle?: string };
+			.map((role) => {
+				const r = role as Role;
 				return {
 					value: r._id || r.id || '',
 					label: r.supervisorTitle || r.roleName
@@ -182,7 +196,7 @@ const EditUserPage: React.FC = () => {
 			router.push('/users');
 		} catch (error: unknown) {
 			console.error('Failed to update user:', error);
-			const errorMessage = (error as any)?.data?.message || 'Failed to update user';
+			const errorMessage = (error as ApiError)?.data?.message || 'Failed to update user';
 			toast.error(errorMessage);
 		}
 	};
@@ -204,7 +218,7 @@ const EditUserPage: React.FC = () => {
 					router.push('/users');
 				} catch (error: unknown) {
 					console.error('Failed to update password:', error);
-					const errorMessage = (error as any)?.data?.message || 'Failed to update password';
+					const errorMessage = (error as ApiError)?.data?.message || 'Failed to update password';
 					toast.error(errorMessage);
 				}
 			} else {

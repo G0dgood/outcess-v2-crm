@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GearIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons';
+import { GearIcon, TrashIcon } from '@radix-ui/react-icons';
 import Pagination from '@/components/ui/Pagination';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
@@ -47,8 +47,8 @@ export default function ConfigurationPage() {
 		return data?.lineOfBusinesses || [];
 	}, [lineOfBusinessData]);
 
-	const totalPages = (lineOfBusinessData as any)?.pagination?.totalPages || 1;
-	const totalItems = (lineOfBusinessData as any)?.pagination?.total || 0;
+	const totalPages = (lineOfBusinessData as { pagination?: { totalPages?: number } })?.pagination?.totalPages || 1;
+	const totalItems = (lineOfBusinessData as { pagination?: { total?: number } })?.pagination?.total || 0;
 
 	const handleDeleteClick = (id: string, name: string) => {
 		setRecordToDelete({ id, name });

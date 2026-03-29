@@ -146,7 +146,6 @@ const PricingModal: React.FC<PricingModalProps> = ({
 				{/* Pricing Cards */}
 				<div className="flex flex-col md:flex-row gap-6 mb-8">
 					{plans.map((plan) => {
-						const savings = getSavings(plan);
 						return (
 							<div
 								key={plan.id}

@@ -1,5 +1,22 @@
  import { baseApi } from './baseApi';
 
+export interface PopulatedMember {
+    _id: string;
+    id?: string;
+    firstName?: string;
+    lastName?: string;
+    name?: string;
+    avatar?: string;
+    role?: string | PopulatedRole;
+}
+
+export interface PopulatedRole {
+    _id: string;
+    id?: string;
+    roleName: string;
+    name?: string;
+}
+
 export interface SupportTicket {
     _id: string;
     ticketId: string;
@@ -7,13 +24,13 @@ export interface SupportTicket {
     description: string;
     status: 'New' | 'In Progress' | 'Resolved' | 'Closed' | 'Reopened';
     priority: 'Low' | 'Medium' | 'High';
-    creatorId: any;
+    creatorId: string | PopulatedMember;
     creatorType: 'User' | 'TeamMember';
-    assignedToIds?: any[];
-    assignedToType?: 'User' | 'TeamMember' | any;
+    assignedToIds?: (string | PopulatedMember)[];
+    assignedToType?: string | PopulatedRole;
     companyId: string;
     lineOfBusinessId: string;
-    escalationLevel: 'Supervisor' | 'Admin' | 'SuperAdmin' | any;
+    escalationLevel?: string | PopulatedRole;
     lastMessageAt: string;
     createdAt: string;
     updatedAt: string;

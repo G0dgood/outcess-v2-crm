@@ -32,10 +32,6 @@ const SupportPage = () => {
 	const [priorityFilter, setPriorityFilter] = useState('');
 	const [dateFilter, setDateFilter] = useState<{ filterType: string; startDate?: string; endDate?: string } | null>(null);
 	const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
-	const isLightBackground = lineOfBusinessData?.primaryColor ?
-		(parseInt(lineOfBusinessData.primaryColor.replace('#', '').substring(0, 2), 16) * 299 +
-			parseInt(lineOfBusinessData.primaryColor.replace('#', '').substring(2, 4), 16) * 587 +
-			parseInt(lineOfBusinessData.primaryColor.replace('#', '').substring(4, 6), 16) * 114) / 1000 > 155 : false;
 
 	const hasAccess = canAccess('support', 'view');
 	const lineOfBusinessId = (user as { lineOfBusinessId?: string })?.lineOfBusinessId || '';
@@ -163,7 +159,7 @@ const SupportPage = () => {
 			<Tabs
 				tabs={supportTabs}
 				activeTab={activeTab}
-				onTabChange={(tabId) => setActiveTab(tabId as any)}
+				onTabChange={(tabId) => setActiveTab(tabId as typeof activeTab)}
 				activeColor={lineOfBusinessData?.primaryColor}
 			/>
 

@@ -249,20 +249,7 @@ const DashboardContent: React.FC = () => {
 		});
 	}, [canCreate, addChartLocal, isOffline, dashboardSettings, updateDashboardSettings]);
 
-	const removeChart = useCallback(async (chartId: string) => {
-		if (!canDelete) return;
-		if (isOffline) {
-			removeChartLocal(chartId);
-			return;
-		}
-		const existingCharts = dashboardSettings.dispositionSettings?.charts || [];
-		await updateDashboardSettings({
-			dispositionSettings: {
-				...dashboardSettings.dispositionSettings,
-				charts: existingCharts.filter((chart: Chart) => chart.id !== chartId)
-			}
-		});
-	}, [canDelete, isOffline, removeChartLocal, dashboardSettings, updateDashboardSettings]);
+
 
 	const updateChart = useCallback(async (chartId: string, updates: Partial<Chart>) => {
 		if (!canEdit) return;

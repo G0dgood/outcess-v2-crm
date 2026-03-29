@@ -148,7 +148,7 @@ const TeamMembersPage: React.FC = () => {
 				);
 			};
 
-			const handleRefresh = (payload: RefreshPayload) => {
+			const handleRefresh = (_payload: RefreshPayload) => {
 
 				refetch();
 			};

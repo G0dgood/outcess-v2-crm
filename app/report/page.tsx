@@ -220,14 +220,14 @@ const ReportPage: React.FC = () => {
 		setIsFilterOpen(false);
 	};
 
-	const filteredReports = reportData;
+
 
 	const totalPages = apiData && !Array.isArray(apiData) && typeof apiData.pagination === 'object'
-		? (apiData.pagination as any).totalPages || 1
+		? (apiData.pagination as { totalPages?: number }).totalPages || 1
 		: 1;
 
 	const totalItems = apiData && !Array.isArray(apiData) && typeof apiData.pagination === 'object'
-		? (apiData.pagination as any).total || 0
+		? (apiData.pagination as { total?: number }).total || 0
 		: 0;
 
 	const paginatedReports = reportData;

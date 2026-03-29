@@ -69,7 +69,7 @@ const BusinessesManagementPage: React.FC = () => {
 		}));
 	}, [companiesData]);
 
-	const filteredBusinesses = businesses;
+
 
 	const totalPages = companiesData?.pagination?.totalPages || 1;
 	const totalItems = companiesData?.pagination?.total || 0;

@@ -124,7 +124,7 @@ const DraggableChart: React.FC<DraggableChartProps> = React.memo(({
 					<Dropdown
 						label=""
 						value={chart.timeRange}
-						onChange={(_value) => { 
+						onChange={() => {
 						}}
 						options={[
 							{ value: 'daily', label: 'Daily' },

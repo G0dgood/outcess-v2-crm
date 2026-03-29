@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 
@@ -41,10 +41,10 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     else setUncontrolledIsOpen(nextState);
   };
 
-  const close = () => {
+  const close = useCallback(() => {
     if (onToggle) onToggle(false);
     else setUncontrolledIsOpen(false);
-  };
+  }, [onToggle]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -59,7 +59,7 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, onToggle, isMobile]);
+  }, [isOpen, isMobile, close]);
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>

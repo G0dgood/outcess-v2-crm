@@ -151,7 +151,7 @@ const UsersPage: React.FC = () => {
 				);
 			};
 
-			const handleRefresh = (payload: RefreshPayload) => {
+			const handleRefresh = (_payload: RefreshPayload) => {
 				refetch();
 			};
 
@@ -169,7 +169,7 @@ const UsersPage: React.FC = () => {
 		if (teamMembersResponse) {
 			const membersList = teamMembersResponse.teamMembers || [];
 
-			const mappedUsers = membersList.map((member: any) => {
+			const mappedUsers = membersList.map((member: ApiTeamMember) => {
 				const m = member as ApiTeamMember;
 				const fullName = m?.name || '';
 				const [firstName, ...lastNameParts] = fullName.split(' ');

@@ -50,7 +50,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 		},
 	];
 
-	const handleView = (_id: string) => { 
+	const handleView = (id: string) => {
 		// TODO: Navigate to business details page
 	};
 
@@ -68,34 +68,19 @@ const RegisteredBusinessesTable: React.FC = () => {
 					}}
 				>
 					<tr>
-						<th
-							className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
-							style={{ color: 'var(--text-primary)' }}
-						>
+						<th>
 							Company Name
 						</th>
-						<th
-							className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
-							style={{ color: 'var(--text-primary)' }}
-						>
+						<th>
 							Status
 						</th>
-						<th
-							className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
-							style={{ color: 'var(--text-primary)' }}
-						>
+						<th>
 							Users
 						</th>
-						<th
-							className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
-							style={{ color: 'var(--text-primary)' }}
-						>
+						<th>
 							Last Active
 						</th>
-						<th
-							className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-300 uppercase tracking-wider"
-							style={{ color: 'var(--text-primary)' }}
-						>
+						<th>
 							Action
 						</th>
 					</tr>

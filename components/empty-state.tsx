@@ -1,5 +1,4 @@
 import type { MouseEventHandler } from "react";
-import Link from "next/link";
 import Icon from "@/components/ui/Icon";
 import Button from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
@@ -27,10 +26,10 @@ export function EmptyState({
   const action = onClick && href && linkLabel ? (
     <Button
       variant="link"
-      onClick={(e) => {
-        onClick(e as unknown as any);
-        router.push(href);
-      }}
+			onClick={(e) => {
+				onClick(e as any);
+				router.push(href);
+			}}
       className="mt-4"
     >
       <div className="flex items-center justify-between gap-1 border-b-[1.5px] border-tecnova-blue text-tecnova-blue font-work-sans font-normal text-[12px] leading-5 tracking-[-0.02em]">
@@ -40,7 +39,7 @@ export function EmptyState({
     </Button>
   ) : onClick && linkLabel ? (
     <Button
-      onClick={(e) => onClick(e as unknown as any)}
+			onClick={(e) => onClick(e as any)}
       className="mt-8"
       size="md"
     >

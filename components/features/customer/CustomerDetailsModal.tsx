@@ -571,7 +571,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 				<SMSModal
 					isOpen={isSMSModalOpen}
 					onClose={() => setIsSMSModalOpen(false)}
-					onSend={(data) => {
+					onSend={() => {
 						// Implement send SMS logic here 
 					}}
 					initialPhone={customer?.phone ? String(customer.phone) : undefined}

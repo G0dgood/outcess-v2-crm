@@ -10,7 +10,7 @@ import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import Tabs from '@/components/ui/Tabs';
 
 function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
-	const { id: _id } = usePromise(params);
+	usePromise(params);
 	const router = useRouter();
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const { isDarkMode } = useTheme();
