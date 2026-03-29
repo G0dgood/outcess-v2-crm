@@ -248,7 +248,7 @@ const TicketList: React.FC<TicketListProps> = ({
 			<AddTicketMemberModal
 				isOpen={!!assigningTicket}
 				onClose={() => setAssigningTicket(null)}
-				ticket={assigningTicket as any}
+				ticket={assigningTicket as SupportTicket}
 				lineOfBusinessData={lineOfBusinessData}
 			/>
 		</div>

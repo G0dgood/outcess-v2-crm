@@ -43,7 +43,8 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 			return fullName || ticket?.creatorName || 'User';
 		}
 		
-		if ((member as any).fullName) return (member as any).fullName;
+		const fallbackName = (member as { fullName?: string }).fullName;
+		if (fallbackName) return fallbackName;
 		return ticket?.creatorName || 'Unknown';
 	};
 

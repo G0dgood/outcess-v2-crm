@@ -19,7 +19,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { Send, ChevronUp, CheckCircle, ArrowLeft, RefreshCw, XCircle, PanelRightOpen, X } from 'lucide-react';
-import { toast } from 'sonner';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import { TicketSidebar } from '@/components/features/support/TicketSidebar';
 import SupportDetailsSkeleton from '@/components/skeletons/SupportDetailsSkeleton';
@@ -167,8 +166,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 	const getSenderName = (msg: TicketMessage) => {
 		const sender = msg.senderId;
 		
-		// Permission check: only supervisors or admins should see this
-		const userRole = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
+		// Extract raw IDs as strings for reliable comparison
 		const senderIdStr = typeof sender === 'object' ? (sender?._id || sender?.id)?.toString() : sender?.toString();
 		const creatorIdStr = typeof ticket?.creatorId === 'object' ? (ticket?.creatorId?._id || (ticket?.creatorId as { id?: string })?.id)?.toString() : ticket?.creatorId?.toString();
 		const userIdStr = user?.id?.toString();
@@ -375,7 +373,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 						) : (
 							messages?.map((msg, idx) => {
 								const senderIdStr = typeof msg.senderId === 'object' ? (msg.senderId?._id || msg.senderId?.id)?.toString() : msg.senderId?.toString();
-								const creatorIdStr = typeof ticket?.creatorId === 'object' ? (ticket?.creatorId?._id || (ticket?.creatorId as any)?.id)?.toString() : ticket?.creatorId?.toString();
+								const creatorIdStr = typeof ticket?.creatorId === 'object' ? (ticket?.creatorId?._id || (ticket?.creatorId as { id?: string })?.id)?.toString() : ticket?.creatorId?.toString();
 								const userIdStr = user?.id?.toString();
 
 								const isMe = (userIdStr && senderIdStr === userIdStr);
