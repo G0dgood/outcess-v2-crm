@@ -33,11 +33,11 @@ const TeamSupportPage = () => {
  const [page, setPage] = useState(1);
  const [itemsPerPage, setItemsPerPage] = useState(10);
  const [priorityFilter, setPriorityFilter] = useState('');
- const [dateFilter, setDateFilter] = useState<{ filterType: string; startDate?: string; endDate?: string } | null>(null);
+ const [dateFilter, setDateFilter] = useState<{ filterType: "all" | "last7days" | "today" | "yesterday" | "last30days" | "dateRange" | undefined; startDate?: string; endDate?: string } | null>(null);
  const [supervisorFilter, setSupervisorFilter] = useState<string>(user?.id || '');
 
  // Permission check: only supervisors or admins should see this
- const userRole = typeof user?.role === 'object' ? (user?.role as any)?.roleName : user?.role;
+ const userRole = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
  const isSupervisor = userRole?.toLowerCase() === 'supervisor' || userRole?.toLowerCase() === 'admin' || isAdmin;
  const hasAccess = canAccess('support', 'view') && isSupervisor;
 
@@ -182,8 +182,8 @@ const TeamSupportPage = () => {
      >
       {({ close }) => (
        <DateFilter
-        initialFilter={(dateFilter?.filterType as any) || 'last7days'}
-        onApply={(filter: any) => {
+        initialFilter={(dateFilter?.filterType as "all" | "last7days" | "today" | "yesterday" | "last30days" | "dateRange" | undefined) || 'last7days'}
+        onApply={(filter: { filterType: "all" | "last7days" | "today" | "yesterday" | "last30days" | "dateRange" | undefined; startDate?: string; endDate?: string } | null) => {
          setDateFilter(filter);
          setPage(1);
          close();
