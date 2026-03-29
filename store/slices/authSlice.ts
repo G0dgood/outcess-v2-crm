@@ -107,6 +107,7 @@ const saveAuthToStorage = (state: AuthState) => {
 const clearAuthFromStorage = () => {
 	if (typeof window === 'undefined') return;
 	try {
+		localStorage.removeItem('peoplely_auth');
 		localStorage.removeItem('peoplely-user');
 		localStorage.removeItem('token');
 		localStorage.removeItem('synced_dispositions');

@@ -26,6 +26,7 @@ import { logout as logoutAction, User } from '@/store/slices/authSlice';
 import { statusApi } from '@/store/services/statusApi';
 import { useGetNotificationsByLineOfBusinessIdQuery, useMarkNotificationAsReadMutation } from '@/store/services/notificationApi';
 import { useGetStickyNotesQuery } from '@/store/services/stickyNoteApi';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DashboardHeaderProps {
 	name?: string;
@@ -72,6 +73,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const [updateTeamMemberStatus] = useUpdateTeamMemberStatusMutation();
 	const [updateUser] = useUpdateUserMutation();
 	const { isAdmin, canAccess } = usePrivilege();
+	const { logout: contextLogout } = useAuth();
 
 	// Get user from Redux store
 	const reduxUser = useSelector((state: { auth: { user: User | null } }) => state.auth.user);
@@ -311,6 +313,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 			disconnectSocket();
 			// Logout from Redux
 			dispatch(logoutAction());
+			// Logout from Context
+			contextLogout();
 
 			// Show success message
 			toastSuccess('Logged out successfully');
@@ -328,6 +332,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 			// Still perform client-side cleanup even if API fails
 			disconnectSocket();
 			dispatch(logoutAction());
+			contextLogout();
 
 			// Close modal
 			setIsLogoutModalOpen(false);
