@@ -118,8 +118,9 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({ isOpen, onClose
 			await addMessage({
 				id: ticketId,
 				data: {
-					senderId: user?.id,
+					senderId: user?.id || '',
 					senderType: 'User',
+					senderName: user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User',
 					message: newMessage.trim(),
 				},
 			}).unwrap();
@@ -154,11 +155,11 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({ isOpen, onClose
 
 	const getStatusColor = (status?: string) => {
 		switch (status) {
-			case 'New': return 'bg-blue-500';
+			case 'Open': return 'bg-blue-500';
 			case 'In Progress': return 'bg-amber-500';
-			case 'Resolved': return 'bg-green-500';
+			case 'Completed': return 'bg-green-500';
 			case 'Closed': return 'bg-gray-500';
-			case 'Reopened': return 'bg-purple-500';
+			case 'Pending': return 'bg-purple-500';
 			default: return 'bg-gray-500';
 		}
 	};
@@ -222,15 +223,15 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({ isOpen, onClose
 							</div>
 						</div>
 						<div className="flex items-center gap-2">
-							{ticket?.status !== 'Resolved' && (
+							{ticket?.status !== 'Completed' && (
 								<Button
 									variant="outline"
 									size="sm"
-									onClick={() => handleStatusChange('Resolved')}
+									onClick={() => handleStatusChange('Completed')}
 									className="text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-900/50 dark:hover:bg-green-900/20"
 								>
 									<CheckCircle className="w-4 h-4 mr-1" />
-									Resolve
+									Complete
 								</Button>
 							)}
 							{(user?.role === 'supervisor' || user?.role === 'admin') && (typeof ticket?.escalationLevel === 'object' ? (ticket?.escalationLevel as unknown as PopulatedRole)?.roleName : ticket?.escalationLevel) !== 'SuperAdmin' && (
