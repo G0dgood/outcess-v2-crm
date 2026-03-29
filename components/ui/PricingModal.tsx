@@ -114,12 +114,7 @@ const PricingModal: React.FC<PricingModalProps> = ({
 		return `₦${price}${billingCycle === 'annual' ? '/year' : '/month'}`;
 	};
 
-	const getSavings = (plan: PricingPlan) => {
-		if (plan.monthlyPrice === 0) return null;
-		const monthlyTotal = plan.monthlyPrice * 12;
-		const savings = monthlyTotal - plan.annualPrice;
-		return savings > 0 ? `Save ₦${savings}/year` : null;
-	};
+
 
 	return (
 		<Modal

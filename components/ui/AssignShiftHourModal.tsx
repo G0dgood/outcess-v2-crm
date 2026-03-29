@@ -59,8 +59,7 @@ const AssignShiftHourModal: React.FC<AssignShiftHourModalProps> = ({
 
 	useEffect(() => {
 		if (teamMembersResponse) {
-			const raw = teamMembersResponse.teamMembers || teamMembersResponse.data || teamMembersResponse || [];
-			const list = Array.isArray(raw) ? raw : raw.docs || [];
+			const list = teamMembersResponse.teamMembers || [];
 			setTeamMembers(list as ApiTeamMember[]);
 		}
 	}, [teamMembersResponse]);

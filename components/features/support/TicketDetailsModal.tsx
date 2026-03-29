@@ -9,7 +9,6 @@ import {
 	useUpdateTicketMutation,
 	useEscalateTicketMutation,
 	PopulatedRole,
-	PopulatedMember
 } from '@/store/services/supportApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';

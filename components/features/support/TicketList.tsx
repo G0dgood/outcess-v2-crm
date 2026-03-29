@@ -1,6 +1,6 @@
 import { User, Calendar, Flag, Trash, AlertTriangle } from 'lucide-react';
 import moment from 'moment';
-import { useDeleteTicketMutation, SupportTicket, PopulatedMember } from '@/store/services/supportApi';
+import { useDeleteTicketMutation, SupportTicket } from '@/store/services/supportApi';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import Modal from '@/components/ui/Modal';

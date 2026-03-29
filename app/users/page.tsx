@@ -151,7 +151,7 @@ const UsersPage: React.FC = () => {
 				);
 			};
 
-			const handleRefresh = (_payload: RefreshPayload) => {
+			const handleRefresh = () => {
 				refetch();
 			};
 

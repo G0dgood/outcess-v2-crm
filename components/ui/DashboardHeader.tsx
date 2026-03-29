@@ -118,7 +118,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const [lobOptions, setLobOptions] = useState<{ value: string; label: string; status?: string }[]>([]);
 	const safeUserName = String(displayUser?.name ?? '');
 
-	const currentLOB = selectedLOBData?.lineOfBusiness || selectedLOBData;
+
 
 	useEffect(() => {
 		const data = lineOfBusinessData as { lineOfBusinesses?: { _id: string; lineOfBusinessName: string; status?: string }[] } | undefined;
@@ -146,7 +146,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 
 		// Listen for status list updates
-		const handleStatusListUpdate = (_data: unknown) => {
+		const handleStatusListUpdate = () => {
 
 			// Invalidate RTK Query cache for statuses
 			dispatch(statusApi.util.invalidateTags(['Statuses']));
