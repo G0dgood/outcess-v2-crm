@@ -195,9 +195,9 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 	const subModuleMapping: Record<string, ModuleId> = {
 		'general-settings-tab': 'systemSetting',
 		'status-tab': 'status',
-		'permission-tab': 'userManagement',
+		'permission-tab': 'permissions',
 		'company-details-tab': 'systemSetting',
-		'roles-tab': 'userManagement',
+		'roles-tab': 'roles',
 		'supervisors-tab': 'userManagement',
 		'audit-logs-tab': 'auditLog',
 		'support-mine': 'support',

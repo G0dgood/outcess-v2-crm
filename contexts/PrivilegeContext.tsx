@@ -18,6 +18,8 @@ export type ModuleId =
 	| 'systemSetting'
 	| 'auditLog'
 	| 'status'
+	| 'roles'
+	| 'permissions'
 	| 'teamMembers'
 	| 'lobPlan'
 	| 'support'
