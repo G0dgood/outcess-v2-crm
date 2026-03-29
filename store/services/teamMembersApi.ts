@@ -15,6 +15,20 @@ export interface TeamMember {
   supervisorId?: string | null;
 }
 
+export interface StatusPayload {
+  status: string;
+  color?: string;
+  reason?: string;
+  statusReason?: string;
+}
+
+export interface TeamMemberStatusUpdatePayload {
+  teamMemberId: string;
+  status: StatusPayload | string;
+  name?: string;
+  timestamp?: string;
+}
+
 export interface CreateTeamMemberRequest {
   name: string;
   email: string;

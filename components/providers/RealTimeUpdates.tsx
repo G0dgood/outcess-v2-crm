@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux';
 import { updateUser as updateReduxUser } from '@/store/slices/authSlice';
 import { usePathname } from 'next/navigation';
 import { TicketMessage } from '@/store/services/supportApi';
-import { teamMembersApi } from '@/store/services/teamMembersApi';
+import { teamMembersApi, TeamMemberStatusUpdatePayload } from '@/store/services/teamMembersApi';
 
 export const RealTimeUpdates: React.FC = () => {
   const pathname = usePathname();
@@ -69,7 +69,7 @@ export const RealTimeUpdates: React.FC = () => {
     };
 
     // Handle Team Member Status Updates
-    const handleTeamMemberStatusUpdate = (payload: any) => {
+    const handleTeamMemberStatusUpdate = (payload: TeamMemberStatusUpdatePayload) => {
       const newStatus = typeof payload.status === 'object' ? payload.status.status : payload.status;
       const memberName = payload.name || 'A team member';
       
