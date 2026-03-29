@@ -94,7 +94,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 		if (sessionTimeout) clearTimeout(sessionTimeout);
 		if (typeof window !== 'undefined') {
 			localStorage.removeItem(storageKey);
-			localStorage.removeItem('token');
+			localStorage.removeItem('peoplely-token');
 			localStorage.removeItem('peoplely-user');
 			localStorage.removeItem('userPrivileges');
 			localStorage.removeItem('peoplely_auth');

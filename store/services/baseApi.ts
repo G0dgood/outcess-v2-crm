@@ -5,7 +5,7 @@ export const baseApi = createApi({
     baseQuery: fetchBaseQuery({ 
         baseUrl: process.env.base_url || 'http://localhost:8000',
         prepareHeaders: (headers, { getState }) => {
-            const token = (getState() as any).auth?.tokens?.accessToken || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+            const token = (getState() as any).auth?.tokens?.accessToken || (typeof window !== 'undefined' ? localStorage.getItem('peoplely-token') : null);
             if (token) {
                 headers.set('authorization', `Bearer ${token}`);
             }

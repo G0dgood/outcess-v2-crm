@@ -136,7 +136,7 @@ export default function SignUpPage() {
 							user: normalizedUser,
 							tokens: { accessToken: response.token }
 						}));
-						localStorage.setItem('token', response.token);
+						localStorage.setItem('peoplely-token', response.token);
 						localStorage.setItem('peoplely-user', JSON.stringify(normalizedUser));
 					} else {
 						// Fallback if no token (shouldn't happen for successful auth)

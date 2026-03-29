@@ -61,7 +61,7 @@ const loadAuthFromStorage = (): Partial<AuthState> => {
 
 	try {
 		const storedUser = localStorage.getItem('peoplely-user');
-		const storedToken = localStorage.getItem('token');
+		const storedToken = localStorage.getItem('peoplely-token');
 		
 		if (storedUser && storedToken) {
 			const parsedUser = JSON.parse(storedUser);
@@ -93,10 +93,10 @@ const saveAuthToStorage = (state: AuthState) => {
 	try {
 		if (state.user && state.tokens) {
 			localStorage.setItem('peoplely-user', JSON.stringify(state.user));
-			localStorage.setItem('token', state.tokens.accessToken);
+			localStorage.setItem('peoplely-token', state.tokens.accessToken);
 		} else {
 			localStorage.removeItem('peoplely-user');
-			localStorage.removeItem('token');
+			localStorage.removeItem('peoplely-token');
 		}
 	} catch (error) {
 		console.error('Error saving auth data to storage:', error);
@@ -109,7 +109,7 @@ const clearAuthFromStorage = () => {
 	try {
 		localStorage.removeItem('peoplely_auth');
 		localStorage.removeItem('peoplely-user');
-		localStorage.removeItem('token');
+		localStorage.removeItem('peoplely-token');
 		localStorage.removeItem('synced_dispositions');
 		localStorage.removeItem('stickyNotes');
 		localStorage.removeItem('userPrivileges');
