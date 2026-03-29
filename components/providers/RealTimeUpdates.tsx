@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useSocket } from '@/contexts/SocketContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { toast } from 'sonner';
+import { toastInfo } from '@/utils/toastWithSound';
 import { useDispatch } from 'react-redux';
 import { updateUser as updateReduxUser } from '@/store/slices/authSlice';
 import { usePathname } from 'next/navigation';
@@ -16,14 +16,6 @@ export const RealTimeUpdates: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { selectedLineOfBusinessId } = useLineOfBusiness();
   const dispatch = useDispatch();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Initialize notification sound
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
-    }
-  }, []);
 
   // Socket Connection and Room Joining
   useEffect(() => {
@@ -62,7 +54,7 @@ export const RealTimeUpdates: React.FC = () => {
     // Handle Role Updates
     const handleRoleUpdated = (data: { id?: string; _id?: string; roleId?: string }) => {
       if (data.roleId) {
-        toast.info('Your role permissions have been updated. Refreshing...');
+        toastInfo('Your role permissions have been updated. Refreshing...');
         setTimeout(() => {
           window.location.reload();
         }, 1500);
@@ -87,14 +79,8 @@ export const RealTimeUpdates: React.FC = () => {
       const isOnTicketPage = pathname?.includes(`/support/${message.ticketId || ''}`);
       if (isOnTicketPage) return;
 
-      // Play sound and show toast
-      const savedSound = localStorage.getItem('notification_sound_url') || 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3';
-      if (audioRef.current) {
-        audioRef.current.src = savedSound;
-        audioRef.current.play().catch(err => console.log('Audio playback failed:', err));
-      }
-
-      toast.info(`New message on ticket #${message.ticketDisplayId || 'Support'}`, {
+      // Show toast with sound using the utility
+      toastInfo(`New message on ticket #${message.ticketDisplayId || 'Support'}`, {
         description: message.message?.substring(0, 50) + (message.message?.length > 50 ? '...' : ''),
         action: {
           label: 'View',
