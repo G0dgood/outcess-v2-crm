@@ -53,6 +53,7 @@ interface AuthContextType {
 	clearTokens: () => void;
 
 	// Session management
+	login: (user: User, tokens: AuthTokens) => void;
 	checkAuth: () => Promise<boolean>;
 	validateToken: () => boolean;
 }
@@ -95,6 +96,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 			localStorage.removeItem(storageKey);
 			localStorage.removeItem('token');
 			localStorage.removeItem('peoplely-user');
+			localStorage.removeItem('userPrivileges');
+			localStorage.removeItem('peoplely_auth');
 		}
 	}, [storageKey, sessionTimeout]);
 
@@ -120,14 +123,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 				setUser(u);
 				setTokensState(t);
 				setIsMfaVerified(mfaVerified || false);
-			} else {
-				// Fallback to legacy keys
-				const storedUser = localStorage.getItem('peoplely-user');
-				const storedToken = localStorage.getItem('token');
-				if (storedUser && storedToken) {
-					setUser(JSON.parse(storedUser));
-					setTokensState({ accessToken: storedToken });
-				}
 			}
 		} catch (error) {
 			console.error('Error loading auth data from storage:', error);
@@ -199,6 +194,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 		setIsMfaVerified(verified);
 	}, []);
 
+	const login = useCallback((userData: User, tokenData: AuthTokens) => {
+		setUser(userData);
+		setTokensState(tokenData);
+		setIsMfaVerified(false);
+	}, []);
+
 	const contextValue: AuthContextType = {
 		user,
 		isAuthenticated: !!user && !!tokens?.accessToken && validateToken(),
@@ -211,6 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 		getRefreshToken,
 		setTokens,
 		clearTokens,
+		login,
 		checkAuth,
 		validateToken,
 	};

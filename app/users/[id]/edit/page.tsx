@@ -120,7 +120,8 @@ const EditUserPage: React.FC = () => {
 				const r = role as Role;
 				return {
 					value: r._id || r.id || '',
-					label: r.supervisorTitle || r.roleName
+					label: r.supervisorTitle || r.roleName,
+					status: (r.supervisorTitle || r.roleName?.toLowerCase().includes('supervisor')) ? 'supervisor' : undefined
 				};
 			});
 
@@ -138,7 +139,8 @@ const EditUserPage: React.FC = () => {
 		const supervisorOptions = supervisorRoles
 			.map((role) => ({
 				value: (role._id || role.id || '') as string,
-				label: (role.supervisorTitle || role.roleName || '') as string
+				label: (role.supervisorTitle || role.roleName || '') as string,
+				status: 'supervisor'
 			}))
 			.filter((opt) => opt.value && opt.label);
 
@@ -408,6 +410,20 @@ const EditUserPage: React.FC = () => {
 							onChange={(value) => handleInputChange('role')(Array.isArray(value) ? value[0] : value)}
 							options={roleOptions}
 							placeholder="Select Role"
+							renderOptionRight={(option) => 
+								option.status === 'supervisor' ? (
+									<span 
+										className="text-[8px] px-1.5 py-0.5 rounded-full font-medium"
+										style={{ 
+											backgroundColor: `${primaryColor}15`, 
+											color: primaryColor,
+											border: `1px solid ${primaryColor}30`
+										}}
+									>
+										Supervisor
+									</span>
+								) : null
+							}
 						/>
 
 						{shouldShowSupervisor && (

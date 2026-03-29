@@ -192,6 +192,11 @@ input:focus {
   box-shadow: 0 0 5px var(--accent-blue-light);
 }
 
+.dark input:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+}
+
 
 input :hover {
   border: 1px solid var(--accent-blue-soft);
@@ -396,6 +401,11 @@ Select:focus {
   box-shadow: 0 0 5px var(--accent-blue-light);
 }
 
+.dark Select:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+}
+
 Select :hover {
   border: 1px solid var(--accent-blue-light);
 }
@@ -415,6 +425,11 @@ textarea:focus {
   outline: none;
   border-color: var(--accent-blue);
   box-shadow: 0 0 5px var(--accent-blue-light);
+}
+
+.dark textarea:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
 }
 
 textarea :hover {

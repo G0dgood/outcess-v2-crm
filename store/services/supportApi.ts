@@ -22,7 +22,7 @@ export interface SupportTicket {
     ticketId: string;
     title: string;
     description: string;
-    status: 'New' | 'In Progress' | 'Resolved' | 'Closed' | 'Reopened';
+    status: 'New' | 'In Progress' | 'Resolved' | 'Closed' | 'Reopened' | 'Done';
     priority: 'Low' | 'Medium' | 'High';
     creatorId: string | PopulatedMember;
     creatorType: 'User' | 'TeamMember';
@@ -30,6 +30,8 @@ export interface SupportTicket {
     assignedToType?: string | PopulatedRole;
     companyId: string;
     lineOfBusinessId: string;
+    creatorName?: string;
+    supervisorId?: string;
     escalationLevel?: string | PopulatedRole;
     lastMessageAt: string;
     createdAt: string;
@@ -41,6 +43,7 @@ export interface TicketMessage {
     ticketId: string;
     senderId: any;
     senderType: 'User' | 'TeamMember';
+    senderName?: string;
     message: string;
     attachments: string[];
     createdAt: string;
@@ -58,6 +61,13 @@ export const supportApi = baseApi.injectEndpoints({
         getTicketsByLineOfBusinessId: builder.query<{ tickets: SupportTicket[]; total: number; totalPages: number }, { lineOfBusinessId: string; status?: string; priority?: string; page?: number; limit?: number }>({
             query: ({ lineOfBusinessId, ...params }) => ({
                 url: `api/v1/support-tickets/line-of-business/${lineOfBusinessId}`,
+                params,
+            }),
+            providesTags: ['SupportTicket'],
+        }),
+        getTicketsBySupervisorId: builder.query<{ tickets: SupportTicket[]; total: number; totalPages: number }, { supervisorId: string; status?: string; priority?: string; page?: number; limit?: number; search?: string; startDate?: string; endDate?: string }>({
+            query: ({ supervisorId, ...params }) => ({
+                url: `api/v1/support-tickets/supervisor/${supervisorId}`,
                 params,
             }),
             providesTags: ['SupportTicket'],
@@ -90,7 +100,7 @@ export const supportApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: (result, error, { id }) => [{ type: 'SupportTicket', id }, 'SupportTicket'],
         }),
-        addMessage: builder.mutation<any, { id: string; data: any }>({
+        addMessage: builder.mutation<void, { id: string; data: { senderId: string; senderType: string; senderName: string; message: string; attachments?: string[] } }>({
             query: ({ id, data }) => ({
                 url: `api/v1/support-tickets/${id}/messages`,
                 method: 'POST',
@@ -113,6 +123,7 @@ export const supportApi = baseApi.injectEndpoints({
 export const {
     useGetTicketsQuery,
     useGetTicketsByLineOfBusinessIdQuery,
+    useGetTicketsBySupervisorIdQuery,
     useGetTicketByIdQuery,
     useCreateTicketMutation,
     useUpdateTicketMutation,

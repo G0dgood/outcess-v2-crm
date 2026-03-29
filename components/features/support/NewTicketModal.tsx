@@ -110,12 +110,14 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 				? `${user.firstName} ${user.lastName}`
 				: user?.name || user?.username || 'Unknown User';
 
+			const supervisorId = user?.supervisorId || (user?.supervisor as any)?._id || (user?.supervisor as any)?.id;
+
 			const ticketData = {
 				title,
 				description,
 				priority,
 				creatorId,
-				creatorType: 'User',
+				creatorType: user?.isTeamMember ? 'TeamMember' : 'User',
 				creatorName,
 				companyId,
 				lineOfBusinessId: selectedLineOfBusinessId,
@@ -123,6 +125,8 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 				assignedToIds,
 				assignedToType: roleId,
 				escalationLevel: roleId,
+				supervisorId,
+				status: 'New',
 			};
 
 			await createTicket(ticketData).unwrap();

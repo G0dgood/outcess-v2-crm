@@ -20,6 +20,7 @@ export type ModuleId =
 	| 'teamMembers'
 	| 'lobPlan'
 	| 'support'
+	| 'teamMemberSupport'
 	| 'allSupport';
 
 export type PermissionAction =

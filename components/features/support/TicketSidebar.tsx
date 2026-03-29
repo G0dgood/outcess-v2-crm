@@ -3,6 +3,7 @@ import { useUpdateTicketMutation, SupportTicket, PopulatedMember, PopulatedRole 
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { AddTicketMemberModal } from './AddTicketMemberModal';
+import { RemoveTicketMemberModal } from './RemoveTicketMemberModal';
 
 interface TicketSidebarProps {
 	ticket: SupportTicket;
@@ -14,37 +15,69 @@ interface TicketSidebarProps {
 
 export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusinessData }) => {
 	const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+	const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
+	const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
 
-	const [updateTicket] = useUpdateTicketMutation();
+	const [updateTicket, { isLoading: isUpdating }] = useUpdateTicketMutation();
 
 
-	const getRoleLabel = (role: string | PopulatedRole | undefined): string => {
+	const getRoleLabel = (role: any): string => {
 		if (!role) return 'Agent';
 		if (typeof role === 'string') return role;
 		if (typeof role === 'object') return role.roleName || role.name || 'Agent';
 		return 'Agent';
 	};
 
-	const getNameLabel = (p: PopulatedMember | string | undefined): string => {
-		if (!p) return 'Unknown';
-		if (typeof p === 'string') return p;
-		if (p.firstName) return `${p.firstName} ${p.lastName || ''}`.trim();
-		if (typeof p.name === 'string') return p.name;
-		return 'Unknown';
+	const getMemberName = (member: any): string => {
+		if (!member) return 'Unknown';
+		if (member.firstName || member.lastName) {
+			return `${member.firstName || ''} ${member.lastName || ''}`.trim();
+		}
+		return member.name || member.fullName || 'Teammate';
+	};
+
+	const getNameLabel = (p: any): string => {
+		if (!p || p === null) return ticket?.creatorName || 'Unknown';
+		if (typeof p === 'string') return ticket?.creatorName || p;
+		
+		// If it's a TeamMember, it has 'name'
+		if (p.name) return p.name;
+		
+		// If it's a User, it has 'firstName' and 'lastName'
+		if (p.firstName || p.lastName) {
+			const fullName = `${p.firstName || ''} ${p.lastName || ''}`.trim();
+			return fullName || ticket?.creatorName || 'User';
+		}
+		
+		if (p.fullName) return p.fullName;
+		return ticket?.creatorName || 'Unknown';
 	};
 
 
 
-	const handleRemoveMember = async (memberId: string) => {
+	const handleRemoveMember = (member: any) => {
+		setMemberToRemove({
+			id: member._id,
+			name: getNameLabel(member)
+		});
+		setIsRemoveModalOpen(true);
+	};
+
+	const handleConfirmRemove = async () => {
+		if (!memberToRemove) return;
+
 		const currentAssignees = ticket?.assignedToIds || [];
 		const newAssigneeIds = currentAssignees
 			.map((a) => typeof a === 'string' ? a : a._id)
-			.filter((id: string) => id !== memberId);
+			.filter((id: string) => id !== memberToRemove.id);
 
 		await updateTicket({
 			id: ticket._id,
 			data: { assignedToIds: newAssigneeIds }
 		});
+
+		setIsRemoveModalOpen(false);
+		setMemberToRemove(null);
 	};
 
 
@@ -96,12 +129,14 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 			<div className="border dark:border-gray-700 p-6 shadow-sm space-y-4" style={{ backgroundColor: 'var(--accent-white)' }}>
 				<div className="flex justify-between items-center">
 					<h3 className="font-bold text-sm uppercase tracking-widest text-gray-400">Assignees</h3>
-					<button
-						onClick={() => setIsAddUserModalOpen(true)}
-						className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-					>
-						<Plus className="w-4 h-4 text-gray-500" />
-					</button>
+					{ticket?.status !== 'Closed' && (
+						<button
+							onClick={() => setIsAddUserModalOpen(true)}
+							className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+						>
+							<Plus className="w-4 h-4 text-gray-500" />
+						</button>
+					)}
 				</div>
 				<div className="space-y-3">
 					{(!ticket?.assignedToIds || ticket?.assignedToIds?.length === 0) ? (
@@ -134,12 +169,14 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 											{getNameLabel(assignee)}
 										</span>
 									</div>
-									<button
-										onClick={() => handleRemoveMember(assignee?._id)}
-										className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all"
-									>
-										<X className="w-3 h-3 text-red-500" />
-									</button>
+									{ticket?.status !== 'Closed' && (
+										<button
+											onClick={() => handleRemoveMember(assignee)}
+											className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all"
+										>
+											<X className="w-3 h-3 text-red-500" />
+										</button>
+									)}
 								</div>
 							);
 						})
@@ -173,7 +210,9 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 						<span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
 							{getNameLabel(ticket?.creatorId)}
 						</span>
-						<span className="text-[11px] text-gray-500 font-medium">Customer User</span>
+						<span className="text-[11px] text-gray-500 font-medium">
+							{ticket?.creatorType === 'TeamMember' ? 'Agent' : 'Customer User'}
+						</span>
 					</div>
 				</div>
 			</div>
@@ -183,6 +222,14 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 				onClose={() => setIsAddUserModalOpen(false)}
 				ticket={ticket}
 				lineOfBusinessData={lineOfBusinessData}
+			/>
+
+			<RemoveTicketMemberModal
+				isOpen={isRemoveModalOpen}
+				onClose={() => setIsRemoveModalOpen(false)}
+				onConfirm={handleConfirmRemove}
+				memberName={memberToRemove?.name || ''}
+				isLoading={isUpdating}
 			/>
 		</>
 	);

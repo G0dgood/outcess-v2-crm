@@ -15,6 +15,7 @@ import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useLoginMutation, useTeamMemberLoginMutation } from '@/store/services/authApi';
 import { login as loginAction } from '@/store/slices/authSlice';
 import { Button } from '@/components/ui/Button';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ApiError {
 	data?: {
@@ -28,6 +29,7 @@ interface ApiError {
 export default function LoginPage() {
 	const router = useRouter();
 	const dispatch = useDispatch();
+	const authContext = useAuth();
 	const [login] = useLoginMutation();
 	const [teamMemberLogin] = useTeamMemberLoginMutation();
 	const { isDarkMode } = useTheme();
@@ -44,6 +46,13 @@ export default function LoginPage() {
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isLoading, setIsLoading] = useState(false);
 	const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+
+	// Redirect authenticated users back to dashboard
+	React.useEffect(() => {
+		if (authContext.isAuthenticated && !authContext.isLoading) {
+			router.push('/dashboard');
+		}
+	}, [authContext.isAuthenticated, authContext.isLoading, router]);
 
 	const handleInputChange = (field: string) => (value: string) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
@@ -98,24 +107,20 @@ export default function LoginPage() {
 				const token = user?.token || response.token;
 
 				if (user && token) {
-					// Normalize user object
+					// Normalize user object - ALWAYS use _id for consistent linking
 					const normalizedUser = {
 						...user,
-						id: user.id || user._id
+						id: user._id || user.id,
+						isTeamMember: !!response.teamMember
 					};
 
-					// Remove token from user object to keep it clean in state
-					// (Optional, but good practice if token is stored separately)
-					// const { token: _, ...userWithoutToken } = normalizedUser; 
+					// Login to Context for immediate sync - This now handles all storage
+					authContext.login(normalizedUser, { accessToken: token });
 
 					dispatch(loginAction({
 						user: normalizedUser,
 						tokens: { accessToken: token }
 					}));
-
-					// Save to localStorage for persistence
-					localStorage.setItem('token', token);
-					localStorage.setItem('peoplely-user', JSON.stringify(normalizedUser));
 
 					// Update PrivilegeContext with the user's role and permissions
 					if (normalizedUser.role && typeof normalizedUser.role === 'object') {
@@ -139,9 +144,6 @@ export default function LoginPage() {
 					} else {
 						router.push('/dashboard');
 					}
-				} else {
-					toast.error('Login failed: Invalid response from server');
-					setIsLoading(false);
 				}
 			} catch (err: unknown) {
 				// Enhanced error logging

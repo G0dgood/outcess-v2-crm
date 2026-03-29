@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useRouter } from '@bprogress/next/app';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePrivilege, ModuleId } from '@/contexts/PrivilegeContext';
 import Icon from './Icon';
 import { plusJakartaStyle } from '../Options';
@@ -71,6 +72,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 	const { lineOfBusinessData } = useLineOfBusiness();
+	const { user } = useAuth();
 	const { canAccess, isAdmin } = usePrivilege();
 
 	const currentLOB = lineOfBusinessData?.lineOfBusiness;
@@ -158,6 +160,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 
 	const supportSubItems = [
 		{ id: 'support-mine', label: 'Support', icon: 'support', path: '/support', privilege: { module: 'support', action: 'view' } },
+		{ id: 'support-team', label: 'Team Support', icon: 'users', path: '/support/team', privilege: { module: 'support', action: 'view' } },
 		{ id: 'support-all', label: 'All Support', icon: 'support', path: '/support/all', privilege: { module: 'allSupport', action: 'view' } },
 	];
 
@@ -198,6 +201,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		'supervisors-tab': 'userManagement',
 		'audit-logs-tab': 'systemSetting',
 		'support-mine': 'support',
+		'support-team': 'teamMemberSupport',
 		'support-all': 'allSupport',
 	};
 
@@ -227,6 +231,9 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 			if (subItem.restrictedToAdmin && !isAdmin) return;
 			const moduleId = subModuleMapping[subItem.id];
 			const hasAccess = moduleId ? canAccess(moduleId, 'view') : true;
+			
+
+
 			if (hasAccess) visible.push(subItem);
 		});
 		return visible;

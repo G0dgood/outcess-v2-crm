@@ -9,7 +9,7 @@ interface SupportStatusModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onConfirm: (status: string) => void;
-	type: 'Resolve' | 'Close' | 'Reopen';
+	type: 'Resolve' | 'Close' | 'Reopen' | 'Done';
 	lineOfBusinessData?: {
 		primaryColor?: string;
 	};
@@ -46,6 +46,14 @@ export const SupportStatusModal: React.FC<SupportStatusModalProps> = ({
 			icon: <RefreshCw className="w-6 h-6 text-blue-600 dark:text-blue-400" />,
 			iconBg: 'bg-blue-100 dark:bg-blue-900/20',
 			status: 'In Progress',
+		},
+		Done: {
+			title: 'Mark as Done',
+			confirmText: 'Yes, Done',
+			description: 'Are you sure you want to mark this ticket as Done? This is a final action and the ticket cannot be reopened.',
+			icon: <CheckCircle className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />,
+			iconBg: 'bg-indigo-100 dark:bg-indigo-900/20',
+			status: 'Done',
 		},
 	};
 

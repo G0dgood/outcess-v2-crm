@@ -20,6 +20,7 @@ import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { Send, ChevronUp, CheckCircle, ArrowLeft, RefreshCw, XCircle, PanelRightOpen, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { TicketSidebar } from '@/components/features/support/TicketSidebar';
 import SupportDetailsSkeleton from '@/components/skeletons/SupportDetailsSkeleton';
 import { SupportStatusModal } from '@/components/features/support/SupportStatusModal';
@@ -30,13 +31,17 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 	const { ticketId } = use(params);
 	const { user } = useAuth();
 	const { lineOfBusinessData } = useLineOfBusiness();
-	const { socket } = useSocket();
+	const { socket, isConnected } = useSocket();
 	const [newMessage, setNewMessage] = useState('');
 	const [messages, setMessages] = useState<TicketMessage[]>([]);
+	const [typingUsers, setTypingUsers] = useState<string[]>([]);
 	const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 	const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-	const [statusModalType, setStatusModalType] = useState<'Resolve' | 'Close' | 'Reopen'>('Resolve');
+	const [statusModalType, setStatusModalType] = useState<'Resolve' | 'Close' | 'Reopen' | 'Done'>('Resolve');
 	const scrollRef = useRef<HTMLDivElement>(null);
+	const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const isTypingRef = useRef(false);
+	const audioRef = useRef<HTMLAudioElement | null>(null);
 
 	const { data: ticketData, isLoading, refetch } = useGetTicketByIdQuery(ticketId, {
 		skip: !ticketId,
@@ -56,20 +61,53 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 
 	// Handle socket connection and new messages
 	useEffect(() => {
-		if (socket && ticketId) {
-			socket.emit('join', ticketId);
+		// Initialize notification sound
+		if (typeof window !== 'undefined') {
+			audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+		}
+
+		if (isConnected && socket && ticketId) {
+			socket.emit('joinTicket', ticketId);
 
 			const handleNewMessage = (message: TicketMessage) => {
-				setMessages((prev) => [...prev, message]);
+				setMessages((prev) => {
+					// Prevent duplicate messages if already in state
+					if (prev.some(m => m._id === message._id)) return prev;
+					return [...prev, message];
+				});
+
+				// Play sound if message is not from current user
+				const senderId = typeof message.senderId === 'object' ? (message.senderId?._id || message.senderId?.id) : message.senderId;
+				if (senderId && user?.id && senderId.toString() !== user.id.toString()) {
+					audioRef.current?.play().catch(err => console.log('Audio playback prevented:', err));
+					
+					// Also show a small toast if we aren't looking at the message (optional enhancement)
+					toast.info(`New message from ${message.senderName || 'Support'}`);
+				}
+			};
+
+			const handleTypingIndicator = ({ name, isTyping, userId: senderUserId }: { name: string, isTyping: boolean, userId: string }) => {
+				if (senderUserId === user?.id) return;
+				
+				setTypingUsers(prev => {
+					if (isTyping) {
+						if (prev.includes(name)) return prev;
+						return [...prev, name];
+					} else {
+						return prev.filter(u => u !== name);
+					}
+				});
 			};
 
 			socket.on('newTicketMessage', handleNewMessage);
+			socket.on('typing_indicator', handleTypingIndicator);
 
 			return () => {
 				socket.off('newTicketMessage', handleNewMessage);
+				socket.off('typing_indicator', handleTypingIndicator);
 			};
 		}
-	}, [socket, ticketId]);
+	}, [socket, ticketId, user]);
 
 	// Scroll to bottom on new message
 	useEffect(() => {
@@ -86,24 +124,36 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 			await addMessage({
 				id: ticketId,
 				data: {
-					senderId: user?.id,
-					senderType: 'User',
+					senderId: user?.id || '',
+					senderType: user?.isTeamMember ? 'TeamMember' : 'User',
+					senderName: user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User',
 					message: newMessage.trim(),
 				},
 			}).unwrap();
 			setNewMessage('');
+			
+			// Stop typing immediately on send
+			if (isTypingRef.current && socket) {
+				socket.emit('typing_stop', { 
+					ticketId, 
+					userId: user?.id,
+					name: user?.name || user?.firstName 
+				});
+				isTypingRef.current = false;
+			}
 		} catch (_error) {
-			toast.error('Failed to send message');
+			toastError('Failed to send message');
 		}
 	};
 
 	const handleStatusChange = async (status: string) => {
 		try {
 			await updateTicket({ id: ticketId, data: { status } }).unwrap();
-			toast.success(`Ticket marked as ${status}`);
+			toastSuccess(`Ticket marked as ${status}`);
+			setIsStatusModalOpen(false);
 			refetch();
 		} catch (_error) {
-			toast.error('Failed to update status');
+			toastError('Failed to update status');
 		}
 	};
 
@@ -113,11 +163,62 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 				id: ticketId,
 				data: { escalationLevel: level }
 			}).unwrap();
-			toast.success(`Ticket escalated to ${level}`);
+			toastSuccess(`Ticket escalated to ${level}`);
 			refetch();
 		} catch (_error) {
-			toast.error('Failed to escalate ticket');
+			toastError('Failed to escalate ticket');
 		}
+	};
+
+	const getSenderName = (msg: TicketMessage) => {
+		const sender = msg.senderId;
+		
+		// Extract raw IDs for comparison
+		// Extract raw IDs as strings for reliable comparison
+		const senderIdStr = typeof sender === 'object' ? (sender?._id || sender?.id)?.toString() : sender?.toString();
+		const creatorIdStr = typeof ticket?.creatorId === 'object' ? (ticket?.creatorId?._id || (ticket?.creatorId as any)?.id)?.toString() : ticket?.creatorId?.toString();
+		const userIdStr = user?.id?.toString();
+
+		// 1. Check if it's the current user (Highest priority)
+		const isMe = (userIdStr && (senderIdStr === userIdStr));
+		
+		// 2. Creator Fallback (Only for the first message)
+		const isFirstMessage = messages[0]?._id === msg._id;
+		const isLikelyMe = isFirstMessage && (!senderIdStr || senderIdStr === null) && userIdStr && creatorIdStr && userIdStr === creatorIdStr;
+		
+		if (isMe || isLikelyMe) return 'You';
+
+		// 2. Use permanently captured senderName if available
+		if (msg.senderName) return msg.senderName;
+		
+		// 3. Handle null/missing sender (population fail)
+		// If population failed for both this message and the ticket creator, or if they match
+		if (!sender || sender === null) {
+			if (!creatorIdStr || creatorIdStr === null || creatorIdStr === senderIdStr) {
+				return ticket?.creatorName || 'Support Team';
+			}
+			
+			// If it's the first message (initial ticket description), it's definitely the creator
+			if (messages[0]?._id === msg._id) return ticket?.creatorName || 'Support Team';
+			
+			return 'Support Team';
+		}
+
+		// 3. If it's a populated object, try to get name from it
+		if (typeof sender === 'object') {
+			if (sender.name) return sender.name;
+			if (sender.firstName || sender.lastName) {
+				const fullName = `${sender.firstName || ''} ${sender.lastName || ''}`.trim();
+				if (fullName) return fullName;
+			}
+		}
+		
+		// 4. Fallback to ticket's creatorName if IDs match
+		if (senderIdStr && creatorIdStr && senderIdStr === creatorIdStr) {
+			if (ticket?.creatorName) return ticket.creatorName;
+		}
+		
+		return 'Support Team';
 	};
 
 	if (isLoading) {
@@ -136,7 +237,13 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 					<Button
 						variant="ghost"
 						size="sm"
-						onClick={() => router.push('/support')}
+						onClick={() => {
+							if (window.history.length > 1) {
+								router.back();
+							} else {
+								router.push('/support');
+							}
+						}}
 						className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors !rounded-none"
 					>
 						<ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -192,13 +299,30 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 									setStatusModalType('Reopen');
 									setIsStatusModalOpen(true);
 								}}
-								className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900/50 dark:hover:bg-blue-900/20 shadow-sm"
+								className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900/50 dark:hover:bg-green-900/20 shadow-sm"
 							>
 								<RefreshCw className="w-4 h-4 mr-2" />
 								Reopen Ticket
 							</Button>
 						)}
-						{(user?.role === 'supervisor' || user?.role === 'admin') && (typeof ticket?.escalationLevel === 'object' ? (ticket?.escalationLevel as PopulatedRole)?.roleName : ticket?.escalationLevel) !== 'SuperAdmin' && (
+						{ticket?.status !== 'Done' && (
+							<Button
+								variant="primary"
+								size="md"
+								onClick={() => {
+									setStatusModalType('Done');
+									setIsStatusModalOpen(true);
+								}}
+								className="text-white shadow-sm"
+								style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
+							>
+								<CheckCircle className="w-4 h-4 mr-2" />
+								Mark as Done
+							</Button>
+						)}
+						{(user?.role === 'supervisor' || user?.role === 'admin') && 
+							ticket?.status !== 'Closed' && 
+							(typeof ticket?.escalationLevel === 'object' ? (ticket?.escalationLevel as PopulatedRole)?.roleName : ticket?.escalationLevel) !== 'SuperAdmin' && (
 							<Button
 								variant="outline"
 								size="md"
@@ -216,20 +340,20 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 
 					{/* Mobile Status Actions (Icon only to save space) */}
 					<div className="flex sm:hidden items-center gap-1">
-						{ticket?.status !== 'Resolved' && ticket?.status !== 'Closed' && (
-							<button
-								onClick={() => { setStatusModalType('Resolve'); setIsStatusModalOpen(true); }}
-								className="p-2 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20 rounded-full"
-							>
-								<CheckCircle className="w-5 h-5" />
-							</button>
-						)}
 						{(ticket?.status === 'Resolved' || ticket?.status === 'Closed') && (
 							<button
 								onClick={() => { setStatusModalType('Reopen'); setIsStatusModalOpen(true); }}
 								className="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-full"
 							>
 								<RefreshCw className="w-5 h-5" />
+							</button>
+						)}
+						{ticket?.status !== 'Done' && (
+							<button
+								onClick={() => { setStatusModalType('Done'); setIsStatusModalOpen(true); }}
+								className="p-2 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-900/20 rounded-full"
+							>
+								<CheckCircle className="w-5 h-5" />
 							</button>
 						)}
 					</div>
@@ -256,16 +380,24 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 							<div className="flex items-center justify-center h-full text-sm text-gray-400 italic">No messages yet. Add the first response!</div>
 						) : (
 							messages?.map((msg, idx) => {
-								const isOwn = msg.senderId?._id === user?.id || msg.senderId === user?.id;
+								const senderIdStr = typeof msg.senderId === 'object' ? (msg.senderId?._id || msg.senderId?.id)?.toString() : msg.senderId?.toString();
+								const creatorIdStr = typeof ticket?.creatorId === 'object' ? (ticket?.creatorId?._id || (ticket?.creatorId as any)?.id)?.toString() : ticket?.creatorId?.toString();
+								const userIdStr = user?.id?.toString();
+
+								const isMe = (userIdStr && senderIdStr === userIdStr);
+								const isFirstMessage = idx === 0;
+								const isLikelyMe = isFirstMessage && (!senderIdStr || senderIdStr === null) && userIdStr && creatorIdStr && userIdStr === creatorIdStr;
+								
+								const isOwn = isMe || isLikelyMe;
 								return (
 									<div key={idx} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
 										<div className={`max-w-[85%] lg:max-w-[70%] flex items-start gap-3 ${isOwn ? 'flex-row-reverse' : ''}`}>
 											<div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0 overflow-hidden mt-1 px-0 flex items-center justify-center shadow-sm">
 												{msg.senderId?.avatar ? (
-													<Image 
-														src={msg.senderId.avatar} 
-														className="w-full h-full object-cover" 
-														alt={msg.senderId?.firstName || msg.senderId?.name || 'User avatar'}
+													<Image
+														src={msg.senderId.avatar}
+														className="w-full h-full object-cover"
+														alt={getSenderName(msg)}
 														width={32}
 														height={32}
 													/>
@@ -277,21 +409,33 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 															color: lineOfBusinessData?.primaryColor || 'var(--primary)'
 														}}
 													>
-														{(msg.senderId?.firstName?.[0] || msg.senderId?.name?.[0] || '?').toUpperCase()}
+														{(() => {
+															// Derives initials from getSenderName result for consistency
+															const fullName = getSenderName(msg);
+															
+															// If it's Me, use my current known initials
+															if (fullName === 'You') {
+																const initials = (user?.name || user?.firstName || 'Y') as string;
+																return initials[0].toUpperCase();
+															}
+															
+															// Otherwise use the derived name's first char
+															return (fullName?.[0] || '?').toUpperCase();
+														})()}
 													</div>
 												)}
 											</div>
 											<div className={`space-y-1.5 ${isOwn ? 'items-end' : 'items-start'}`}>
 												<div className="flex items-center gap-2 px-1">
 													<span className="text-[11px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-														{isOwn ? 'You' : (msg.senderId?.firstName || msg.senderId?.name || 'Support Team')}
+														{getSenderName(msg)}
 													</span>
 													<span className="text-[10px] text-gray-400 dark:text-gray-500">
 														{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
 													</span>
 												</div>
 												<div className={`p-3.5 rounded-2xl text-[13px] leading-relaxed transition-all shadow-sm ${isOwn
-													? 'text-white rounded-tr-none'
+													? 'text-white dark:text-black rounded-tr-none'
 													: 'bg-white dark:bg-gray-800 border dark:border-gray-700 text-gray-800 dark:text-gray-100 rounded-tl-none'
 													}`}
 													style={isOwn ? { backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' } : {}}
@@ -304,6 +448,26 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 								);
 							})
 						)}
+						
+						{/* Typing Indicator */}
+						{typingUsers.length > 0 && (
+							<div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+								<div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-none p-3 shadow-sm border dark:border-gray-700">
+									<div className="flex items-center gap-2">
+										<div className="flex gap-1">
+											<span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+											<span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+											<span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+										</div>
+										<span className="text-[11px] text-gray-500 font-medium italic">
+											{typingUsers.length === 1 
+												? `${typingUsers[0]} is typing...` 
+												: `${typingUsers.length} people are typing...`}
+										</span>
+									</div>
+								</div>
+							</div>
+						)}
 					</div>
 
 					{/* Input Area */}
@@ -313,17 +477,56 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 					>
 						<form
 							onSubmit={handleSendMessage}
-							className="flex items-end gap-3"
+							className="flex items-center gap-3"
 						>
 							<div className="flex-1">
 								<Textarea
 									label=""
-									placeholder="Type your response here..."
+									placeholder={ticket?.status === 'Closed' ? 'This ticket is closed and cannot be replied to.' : 'Type your response here...'}
 									value={newMessage}
-									onChange={(val) => setNewMessage(val)}
-									className="min-h-[30px] max-h-[70px] tracking-wide"
+									onChange={(val) => {
+										setNewMessage(val);
+										
+										const userName = user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User';
+
+										// Handle typing indicator
+										if (socket && user && !isTypingRef.current && val.trim()) {
+											isTypingRef.current = true;
+											socket.emit('typing_start', { 
+												ticketId, 
+												userId: user.id,
+												name: userName 
+											});
+										}
+										
+										// Immediate stop if cleared
+										if (isTypingRef.current && !val.trim() && socket) {
+											socket.emit('typing_stop', { 
+												ticketId, 
+												userId: user?.id,
+												name: userName 
+											});
+											isTypingRef.current = false;
+										}
+
+										if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+										
+										typingTimeoutRef.current = setTimeout(() => {
+											if (isTypingRef.current && socket) {
+												socket.emit('typing_stop', { 
+													ticketId, 
+													userId: user?.id,
+													name: userName 
+												});
+												isTypingRef.current = false;
+											}
+										}, 3000);
+									}}
+									disabled={ticket?.status === 'Closed'}
+									className="!gap-0 transition-all"
+									inputClassName={`!h-[50px] !py-3 resize-none shadow-none border-gray-200 dark:border-gray-700 focus:border-gray-300 transition-all ${ticket?.status === 'Closed' ? 'bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed opacity-60' : ''}`}
 									onKeyDown={(e) => {
-										if (e.key === 'Enter' && !e.shiftKey) {
+										if (e.key === 'Enter' && !e.shiftKey && ticket?.status !== 'Closed') {
 											e.preventDefault();
 											handleSendMessage();
 										}
@@ -332,7 +535,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 							</div>
 							<Button
 								type="submit"
-								disabled={!newMessage.trim()}
+								disabled={!newMessage.trim() || ticket?.status === 'Closed'}
 								className="text-white h-[50px] px-8 shadow-md hover:shadow-lg transition-shadow"
 								style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
 							>
@@ -345,7 +548,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 				{/* Right Column: Ticket Context Sidebar */}
 				{/* Backdrop for mobile */}
 				{isMobileSidebarOpen && (
-					<div 
+					<div
 						className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] lg:hidden transition-opacity"
 						onClick={() => setIsMobileSidebarOpen(false)}
 					/>

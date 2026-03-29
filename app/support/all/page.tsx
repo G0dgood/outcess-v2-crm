@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Search from '@/components/ui/Search';
-import Button from '@/components/ui/Button';
 import { useGetTicketsByLineOfBusinessIdQuery } from '@/store/services/supportApi';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import PageHeading from '@/components/ui/PageHeading';
@@ -10,13 +9,13 @@ import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import FilterDropdown from '@/components/ui/FilterDropdown';
 import DateFilter from '@/components/ui/DateFilter';
-import { Plus, Clock, CheckCircle2, Inbox } from 'lucide-react';
-import NewTicketModal from '@/components/features/support/NewTicketModal';
 import TicketList from '@/components/features/support/TicketList';
 import { useRouter } from 'next/navigation';
 import SupportSkeleton from '@/components/skeletons/SupportSkeleton';
 import Tabs, { TabItem } from '@/components/ui/Tabs';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import AccessDenied from '@/components/ui/AccessDenied';
+import { CheckCircle2, Clock, Inbox, XCircle } from 'lucide-react';
 
 const AllSupportPage = () => {
 	const router = useRouter();
@@ -25,12 +24,11 @@ const AllSupportPage = () => {
 	const lineOfBusinessId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
 
 	const [searchQuery, setSearchQuery] = useState('');
-	const [activeTab, setActiveTab] = useState<'All Tickets' | 'New' | 'In Progress' | 'Resolved'>('All Tickets');
+	const [activeTab, setActiveTab] = useState<'All Tickets' | 'New' | 'In Progress' | 'Resolved' | 'Closed' | 'Done'>('All Tickets');
 	const [page, setPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [priorityFilter, setPriorityFilter] = useState('');
 	const [dateFilter, setDateFilter] = useState<{ filterType: string; startDate?: string; endDate?: string } | null>(null);
-	const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
 
 
 	const hasAccess = canAccess('allSupport', 'view');
@@ -38,11 +36,11 @@ const AllSupportPage = () => {
 
 	const { data: ticketsData, isLoading } = useGetTicketsByLineOfBusinessIdQuery({
 		lineOfBusinessId,
-		status: activeTab,
+		status: activeTab === 'All Tickets' ? undefined : activeTab,
 		page,
 		limit: itemsPerPage,
 		priority: priorityFilter || undefined,
-	}, { skip: !lineOfBusinessId });
+	}, { skip: !lineOfBusinessId || !hasAccess });
 
 
 	console.log("lineOfBusinessId----->", lineOfBusinessId)
@@ -50,17 +48,7 @@ const AllSupportPage = () => {
 
 
 	if (!hasAccess) {
-		return (
-			<div className="flex flex-col items-center justify-center h-[60vh] text-center">
-				<div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-full mb-4">
-					<Clock className="w-10 h-10 text-red-500" />
-				</div>
-				<h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Access Denied</h2>
-				<p className="text-gray-500 dark:text-gray-400 max-w-sm">
-					You do not have permission to access the Support module. Please contact your administrator.
-				</p>
-			</div>
-		);
+		return <AccessDenied />;
 	}
 
 	if (isLoading && !ticketsData) {
@@ -78,6 +66,7 @@ const AllSupportPage = () => {
 			case 'New': return <Inbox className="w-4 h-4" />;
 			case 'In Progress': return <Clock className="w-4 h-4" />;
 			case 'Resolved': return <CheckCircle2 className="w-4 h-4" />;
+			case 'Closed': return <XCircle className="w-4 h-4" />;
 			default: return <Inbox className="w-4 h-4" />;
 		}
 	};
@@ -87,6 +76,8 @@ const AllSupportPage = () => {
 		{ id: 'New', label: 'New', icon: getStatusIcon('New') },
 		{ id: 'In Progress', label: 'In Progress', icon: getStatusIcon('In Progress') },
 		{ id: 'Resolved', label: 'Resolved', icon: getStatusIcon('Resolved') },
+		{ id: 'Closed', label: 'Closed', icon: getStatusIcon('Closed') },
+		{ id: 'Done', label: 'Done', icon: <CheckCircle2 className="w-4 h-4" /> },
 	];
 
 	return (
@@ -143,15 +134,6 @@ const AllSupportPage = () => {
 							/>
 						)}
 					</FilterDropdown>
-					<Button
-						onClick={() => setIsNewTicketModalOpen(true)}
-						variant="primary"
-						size="md"
-						icon={<Plus className="w-4 h-4" />}
-						className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
-					>
-						New Ticket
-					</Button>
 				</div>
 			</div>
 
@@ -198,10 +180,6 @@ const AllSupportPage = () => {
 				/>
 			)}
 
-			<NewTicketModal
-				isOpen={isNewTicketModalOpen}
-				onClose={() => setIsNewTicketModalOpen(false)}
-			/>
 		</div>
 	);
 };

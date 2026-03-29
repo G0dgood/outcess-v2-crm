@@ -11,13 +11,14 @@ import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import FilterDropdown from '@/components/ui/FilterDropdown';
 import DateFilter from '@/components/ui/DateFilter';
-import { Plus, Clock, CheckCircle2, Inbox } from 'lucide-react';
-import NewTicketModal from '@/components/features/support/NewTicketModal';
 import TicketList from '@/components/features/support/TicketList';
+import NewTicketModal from '@/components/features/support/NewTicketModal';
 import { useRouter } from 'next/navigation';
 import SupportSkeleton from '@/components/skeletons/SupportSkeleton';
 import Tabs, { TabItem } from '@/components/ui/Tabs';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { Clock, Inbox, CheckCircle2, Plus, XCircle } from 'lucide-react';
+import AccessDenied from '@/components/ui/AccessDenied';
 
 const SupportPage = () => {
 	const router = useRouter();
@@ -26,7 +27,7 @@ const SupportPage = () => {
 	const { lineOfBusinessData } = useLineOfBusiness();
 
 	const [searchQuery, setSearchQuery] = useState('');
-	const [activeTab, setActiveTab] = useState<'All Tickets' | 'New' | 'In Progress' | 'Resolved'>('All Tickets');
+	const [activeTab, setActiveTab] = useState<'All Tickets' | 'New' | 'In Progress' | 'Resolved' | 'Closed' | 'Done'>('All Tickets');
 	const [page, setPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [priorityFilter, setPriorityFilter] = useState('');
@@ -37,7 +38,7 @@ const SupportPage = () => {
 	const lineOfBusinessId = (user as { lineOfBusinessId?: string })?.lineOfBusinessId || '';
 
 	const { data: ticketsData, isLoading } = useGetTicketsQuery({
-		status: activeTab,
+		status: activeTab === 'All Tickets' ? undefined : activeTab,
 		companyId: (user as { companyId?: string })?.companyId || '',
 		lineOfBusinessId,
 		userId: user?.id,
@@ -50,18 +51,9 @@ const SupportPage = () => {
 	}, { skip: !hasAccess });
 
 	if (!hasAccess) {
-		return (
-			<div className="flex flex-col items-center justify-center h-[60vh] text-center">
-				<div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-full mb-4">
-					<Clock className="w-10 h-10 text-red-500" />
-				</div>
-				<h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Access Denied</h2>
-				<p className="text-gray-500 dark:text-gray-400 max-sm">
-					You do not have permission to access the Support module. Please contact your administrator.
-				</p>
-			</div>
-		);
+		return <AccessDenied />;
 	}
+
 
 	if (isLoading && !ticketsData) {
 		return (
@@ -78,6 +70,7 @@ const SupportPage = () => {
 			case 'New': return <Inbox className="w-4 h-4" />;
 			case 'In Progress': return <Clock className="w-4 h-4" />;
 			case 'Resolved': return <CheckCircle2 className="w-4 h-4" />;
+			case 'Closed': return <XCircle className="w-4 h-4" />;
 			default: return <Inbox className="w-4 h-4" />;
 		}
 	};
@@ -87,6 +80,8 @@ const SupportPage = () => {
 		{ id: 'New', label: 'New', icon: getStatusIcon('New') },
 		{ id: 'In Progress', label: 'In Progress', icon: getStatusIcon('In Progress') },
 		{ id: 'Resolved', label: 'Resolved', icon: getStatusIcon('Resolved') },
+		{ id: 'Closed', label: 'Closed', icon: getStatusIcon('Closed') },
+		{ id: 'Done', label: 'Done', icon: <CheckCircle2 className="w-4 h-4" /> },
 	];
 
 	return (

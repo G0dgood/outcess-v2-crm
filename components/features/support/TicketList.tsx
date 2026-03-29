@@ -1,17 +1,19 @@
-import { User, Calendar, Flag, Trash, AlertTriangle } from 'lucide-react';
+import { Calendar, Flag, Trash } from 'lucide-react';
 import moment from 'moment';
 import { useDeleteTicketMutation, SupportTicket } from '@/store/services/supportApi';
-import { toast } from 'sonner';
+import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { useAuth } from '@/contexts/AuthContext';
-import Modal from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
 import { useState } from 'react';
+import ParticipantAvatars from './ParticipantAvatars';
+import { AddTicketMemberModal } from './AddTicketMemberModal';
+import { DeleteTicketModal } from './DeleteTicketModal';
 
 interface TicketListProps {
 	tickets: SupportTicket[];
 	isLoading: boolean;
-	lineOfBusinessData?: {
+	lineOfBusinessData: {
 		primaryColor?: string;
+		_id?: string;
 	};
 	onOpenTicket: (id: string) => void;
 }
@@ -19,12 +21,14 @@ interface TicketListProps {
 const TicketList: React.FC<TicketListProps> = ({
 	tickets,
 	isLoading,
+	lineOfBusinessData,
 	onOpenTicket
 }) => {
 	useAuth(); // Removed unused 'user' assignment
 	const [deleteTicket, { isLoading: isDeleting }] = useDeleteTicketMutation();
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 	const [ticketToDelete, setTicketToDelete] = useState<SupportTicket | null>(null);
+	const [assigningTicket, setAssigningTicket] = useState<SupportTicket | null>(null);
 
 	const handleDeleteClick = (e: React.MouseEvent, ticket: SupportTicket) => {
 		e.stopPropagation();
@@ -37,12 +41,12 @@ const TicketList: React.FC<TicketListProps> = ({
 
 		try {
 			await deleteTicket(ticketToDelete._id).unwrap();
-			toast.success('Ticket deleted successfully');
+			toastSuccess('Ticket deleted successfully');
 			setIsDeleteModalOpen(false);
 			setTicketToDelete(null);
 		} catch (err: unknown) {
 			const error = err as { data?: { message?: string } };
-			toast.error(error.data?.message || 'Failed to delete ticket');
+			toastError(error.data?.message || 'Failed to delete ticket');
 		}
 	};
 
@@ -69,6 +73,15 @@ const TicketList: React.FC<TicketListProps> = ({
 		}
 		if (normalized === 'in progress') {
 			return { border: 'border-yellow-500', bg: 'bg-yellow-500', badgeBg: 'bg-yellow-600' };
+		}
+		if (normalized === 'reopened') {
+			return { border: 'border-purple-500', bg: 'bg-purple-500', badgeBg: 'bg-purple-600' };
+		}
+		if (normalized === 'closed') {
+			return { border: 'border-indigo-500', bg: 'bg-indigo-500', badgeBg: 'bg-indigo-600' };
+		}
+		if (normalized === 'done') {
+			return { border: 'border-emerald-600', bg: 'bg-emerald-600', badgeBg: 'bg-emerald-700' };
 		}
 		// Default to orange for other statuses
 		return { border: 'border-[#F97316]', bg: 'bg-[#F97316]', badgeBg: 'bg-[#F97316]' };
@@ -108,125 +121,136 @@ const TicketList: React.FC<TicketListProps> = ({
 	}
 
 	return (
-		<div className="flex flex-col border overflow-hidden dark:border-gray-700 bg-white dark:bg-gray-900">
+		<div className="flex flex-col border overflow-hidden dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+			{/* Grid Header */}
+			<div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b dark:border-gray-700">
+				<div className="col-span-4 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+					Ticket Info
+				</div>
+				<div className="col-span-3 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center">
+					Participants
+				</div>
+				<div className="col-span-2 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center">
+					Date
+				</div>
+				<div className="col-span-1 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center">
+					Priority
+				</div>
+				<div className="col-span-2 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-right">
+					Status
+				</div>
+			</div>
+
 			{tickets.map((ticket) => {
 				const colors = getStatusColors(ticket.status);
+				const requester = typeof ticket.creatorId === 'object' ? ticket.creatorId : null;
+				const assignees = (ticket.assignedToIds || []).filter(a => typeof a === 'object');
+
+				const handleCardClick = () => {
+					if (!ticket.assignedToIds || ticket.assignedToIds.length === 0) {
+						toastInfo('Please assign the ticket first');
+						return;
+					}
+					onOpenTicket(ticket._id);
+				};
+
 				return (
 					<div
 						key={ticket._id}
-						onClick={() => onOpenTicket(ticket._id)}
-						className="flex items-center justify-between p-4 border-b last:border-b-0 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-all cursor-pointer group"
+						onClick={handleCardClick}
+						className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-4 border-b last:border-b-0 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-all cursor-pointer group"
 					>
-						{/* Left section: Status Icon + Title */}
-						<div className="flex items-center gap-4 flex-1 min-w-0">
-							<div className={`relative flex items-center justify-center w-5 h-5 rounded-full border-2 shrink-0 ${colors.border}`}>
+						{/* Info Section: col-span-4 */}
+						<div className="col-span-1 md:col-span-4 flex items-start gap-4 min-w-0">
+							<div className={`mt-1.5 relative flex items-center justify-center w-5 h-5 rounded-full border-2 shrink-0 ${colors.border}`}>
 								<div className={`w-2 h-2 rounded-full ${colors.bg}`} />
 							</div>
 							<div className="flex flex-col min-w-0">
-								<div className="flex items-center gap-2">
-									<h3
-										className="text-[14px] font-semibold text-gray-800 dark:text-gray-100 group-hover:text-[#F97316] dark:group-hover:text-[#F97316] transition-colors truncate"
-									>
-										{ticket.title}
-									</h3>
-									<span className="text-gray-300 dark:text-gray-700 font-light flex-shrink-0">
-										—
+								<div className="flex items-center gap-2 flex-wrap">
+									<span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border dark:border-gray-700 shadow-sm">
+										#{ticket?.ticketId || ticket?._id.slice(-6).toUpperCase()}
 									</span>
+									<h3 className="text-[14px] font-bold text-gray-800 dark:text-gray-100 group-hover:text-[#F97316] dark:group-hover:text-[#F97316] transition-colors truncate">
+										{ticket?.title}
+									</h3>
 								</div>
-								<p className="text-[11px] text-gray-400 dark:text-gray-500 truncate max-w-[200px] md:max-w-xs">
-									{ticket.description || 'No description provided'}
+								<p className="text-[11px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
+									{ticket?.description || 'No description provided'}
 								</p>
 							</div>
 						</div>
 
-						{/* Middle section: Metadata MetadataIcons */}
-						<div className="hidden md:flex items-center gap-10 lg:gap-16 flex-1 justify-center">
-							<div className="flex items-center gap-1.5 group/icon" title={`Creator: ${typeof ticket.creatorId === 'object' ? (ticket.creatorId?.firstName || ticket.creatorId?.name || 'User') : 'User'}`}>
-								<User className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover/icon:text-[#F97316] transition-colors" />
-								<span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 group-hover/icon:text-[#F97316] transition-colors">
-									{typeof ticket.creatorId === 'object'
-										? (ticket.creatorId?.firstName ? `${ticket.creatorId.firstName} ${ticket.creatorId.lastName || ''}` : ticket.creatorId?.name || 'Unknown')
-										: 'Unknown'}
-								</span>
-							</div>
+						{/* Participants Section: col-span-3 */}
+						<div className="hidden md:flex items-center justify-center md:col-span-3">
+							<ParticipantAvatars
+								requester={requester}
+								assignees={assignees}
+								creatorName={ticket.creatorName}
+								onAssign={() => setAssigningTicket(ticket)}
+								status={ticket.status}
+							/>
+						</div>
 
-							<div className="flex items-center gap-1.5 group/icon" title={`Created: ${new Date(ticket.createdAt).toLocaleDateString()}`}>
-								<Calendar className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover/icon:text-[#F97316] transition-colors" />
-								<span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 group-hover/icon:text-[#F97316] transition-colors">
+						{/* Date Section: col-span-2 */}
+						<div className="hidden md:flex flex-col items-center justify-center md:col-span-2 text-center">
+							<div className="flex items-center gap-1.5">
+								<Calendar className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 group-hover:text-[#F97316] transition-colors shrink-0" />
+								<span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
 									{moment(ticket.createdAt).format('MMM DD, YYYY')}
-								</span>
-							</div>
-
-							<div className="flex items-center gap-1.5 group/icon" title={`Priority: ${ticket.priority}`}>
-								<Flag className={`w-4 h-4 transition-colors ${getPriorityColor(ticket.priority)}`} />
-								<span className={`text-[11px] font-bold transition-colors uppercase tracking-wider ${getPriorityColor(ticket.priority)}`}>
-									{ticket.priority}
 								</span>
 							</div>
 						</div>
 
-						{/* Right section: Status Badge & Actions */}
-						<div className="flex items-center gap-4 ml-4 shrink-0">
-							<div className={`flex items-center gap-3 px-3 py-1.5 min-w-[110px] justify-between shadow-sm ${colors.badgeBg}`}>
-								<div className="w-5 h-5 rounded-full border-2 border-white/30 flex items-center justify-center">
-									<div className="w-2 h-2 rounded-full bg-white shadow-sm" />
+						{/* Priority Section: col-span-1 */}
+						<div className="hidden md:flex justify-center md:col-span-1">
+							<div className="flex items-center gap-1.5" title={`Priority: ${ticket.priority}`}>
+								<Flag className={`w-3.5 h-3.5 transition-colors ${getPriorityColor(ticket.priority)}`} />
+								<span className={`text-[10px] font-bold transition-colors uppercase tracking-wider ${getPriorityColor(ticket.priority)}`}>
+									{ticket.priority?.charAt(0)}
+								</span>
+							</div>
+						</div>
+
+						{/* Status & Actions Section: col-span-2 */}
+						<div className="col-span-1 md:col-span-2 flex items-center justify-end gap-3 ml-auto">
+							<div className={`flex items-center gap-2 px-2.5 py-1 min-w-[90px] justify-between shadow-sm  ${colors.badgeBg} bg-opacity-90`}>
+								<div className="w-3 h-3 rounded-full border border-white/30 flex items-center justify-center">
+									<div className="w-1 h-1 rounded-full bg-white" />
 								</div>
-								<span className="text-[10px] md:text-[11px] font-bold text-white tracking-widest whitespace-nowrap uppercase">
+								<span className="text-[9px] font-black text-white tracking-widest whitespace-nowrap uppercase">
 									{getDisplayStatus(ticket.status)}
 								</span>
 							</div>
 
-							<button
-								onClick={(e) => handleDeleteClick(e, ticket)}
-								disabled={isDeleting}
-								className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
-								title="Delete Ticket"
-							>
-								<Trash className="w-4 h-4" />
-							</button>
+							{ticket.status === 'New' && (
+								<button
+									onClick={(e) => handleDeleteClick(e, ticket)}
+									disabled={isDeleting}
+									className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all"
+									title="Delete Ticket"
+								>
+									<Trash className="w-3.5 h-3.5" />
+								</button>
+							)}
 						</div>
 					</div>
 				);
 			})}
 
-			<Modal
+			<DeleteTicketModal
 				isOpen={isDeleteModalOpen}
 				onClose={() => setIsDeleteModalOpen(false)}
-				title="Confirm Deletion"
-				size="sm"
-			>
-				<div className="p-6">
-					<div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full dark:bg-red-900/20">
-						<AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-500" />
-					</div>
-					<div className="mt-4 text-center">
-						<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-							Delete Ticket?
-						</h3>
-						<p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-							Are you sure you want to delete <span className="font-semibold">{ticketToDelete?.ticketId}</span>?
-							This action cannot be undone and all messages will be lost.
-						</p>
-					</div>
-					<div className="flex gap-3 mt-8">
-						<Button
-							variant="ghost"
-							className="flex-1 dark:text-gray-400 dark:hover:bg-gray-800"
-							onClick={() => setIsDeleteModalOpen(false)}
-						>
-							Cancel
-						</Button>
-						<Button
-							variant="danger"
-							className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-							onClick={handleConfirmDelete}
-							loading={isDeleting}
-						>
-							Delete
-						</Button>
-					</div>
-				</div>
-			</Modal>
+				onConfirm={handleConfirmDelete}
+				ticketId={ticketToDelete?.ticketId || ''}
+				isLoading={isDeleting}
+			/>
+
+			<AddTicketMemberModal
+				isOpen={!!assigningTicket}
+				onClose={() => setAssigningTicket(null)}
+				ticket={assigningTicket as any}
+				lineOfBusinessData={lineOfBusinessData}
+			/>
 		</div>
 	);
 };

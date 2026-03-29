@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const SupportDetailsSkeleton = () => {
   return (
-    <div className="p-0 flex flex-col" style={{ height: 'calc(100vh - 100px)' }}>
+    <div className="p-0 flex flex-col" style={{ height: 'calc(95vh - 100px)' }}>
       {/* Header Skeleton */}
       <div className="flex items-center justify-between gap-4 mb-6 shrink-0">
         <div className="flex items-center gap-4">
@@ -18,13 +18,13 @@ const SupportDetailsSkeleton = () => {
 
       {/* Main Two-Column Content Area */}
       <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
-        
+
         {/* Left Column: Chat Area Skeleton */}
         <div className="flex flex-col flex-1 border dark:border-gray-700 rounded-xl overflow-hidden shadow-md bg-white dark:bg-gray-800">
           <div className="p-4 border-b dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
             <Skeleton className="h-5 w-48" />
           </div>
-          
+
           <div className="flex-1 p-5 space-y-6 overflow-hidden">
             {[1, 2, 3].map((i) => (
               <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>

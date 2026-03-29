@@ -30,11 +30,19 @@ export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({
 		limit: 100,
 	}, { skip: !isOpen });
 
-	const getRoleLabel = (role: string | PopulatedRole | undefined): string => {
+	const getRoleLabel = (role: any): string => {
 		if (!role) return 'Agent';
 		if (typeof role === 'string') return role;
 		if (typeof role === 'object') return role.roleName || role.name || 'Agent';
 		return 'Agent';
+	};
+
+	const getMemberName = (member: any): string => {
+		if (!member) return 'Unknown';
+		if (member.firstName || member.lastName) {
+			return `${member.firstName || ''} ${member.lastName || ''}`.trim();
+		}
+		return member.name || member.fullName || 'Teammate';
 	};
 
 	const handleAddMembers = async () => {
@@ -73,9 +81,9 @@ export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({
 					label="Select Members"
 					placeholder="Search and select teammates..."
 					multiple={true}
-					options={availableMembers.map((member: PopulatedMember) => ({
+					options={availableMembers.map((member: any) => ({
 						value: member._id,
-						label: `${member.firstName} ${member.lastName || ''} (${getRoleLabel(member.role)})`
+						label: `${getMemberName(member)} (${getRoleLabel(member.role)})`
 					}))}
 					value={selectedMemberIds}
 					onChange={(val) => setSelectedMemberIds(val as string[])}
