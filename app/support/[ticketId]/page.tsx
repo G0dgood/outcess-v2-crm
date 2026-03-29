@@ -41,7 +41,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 	const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const isTypingRef = useRef(false);
 	const audioRef = useRef<HTMLAudioElement | null>(null);
-	
+
 	const userRole = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
 	const isSupervisorOrAdmin = userRole?.toLowerCase() === 'supervisor' || userRole?.toLowerCase() === 'admin';
 
@@ -81,7 +81,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 
 			const handleTypingIndicator = ({ name, isTyping, userId: senderUserId }: { name: string, isTyping: boolean, userId: string }) => {
 				if (senderUserId === user?.id) return;
-				
+
 				setTypingUsers(prev => {
 					if (isTyping) {
 						if (prev.includes(name)) return prev;
@@ -124,13 +124,13 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 				},
 			}).unwrap();
 			setNewMessage('');
-			
+
 			// Stop typing immediately on send
 			if (isTypingRef.current && socket) {
-				socket.emit('typing_stop', { 
-					ticketId, 
+				socket.emit('typing_stop', {
+					ticketId,
 					userId: user?.id,
-					name: user?.name || user?.firstName 
+					name: user?.name || user?.firstName
 				});
 				isTypingRef.current = false;
 			}
@@ -165,7 +165,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 
 	const getSenderName = (msg: TicketMessage) => {
 		const sender = msg.senderId;
-		
+
 		// Extract raw IDs as strings for reliable comparison
 		const senderIdStr = typeof sender === 'object' ? (sender?._id || sender?.id)?.toString() : sender?.toString();
 		const creatorIdStr = typeof ticket?.creatorId === 'object' ? (ticket?.creatorId?._id || (ticket?.creatorId as { id?: string })?.id)?.toString() : ticket?.creatorId?.toString();
@@ -173,26 +173,26 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 
 		// 1. Check if it's the current user (Highest priority)
 		const isMe = (userIdStr && (senderIdStr === userIdStr));
-		
+
 		// 2. Creator Fallback (Only for the first message)
 		const isFirstMessage = messages[0]?._id === msg._id;
 		const isLikelyMe = isFirstMessage && (!senderIdStr || senderIdStr === null) && userIdStr && creatorIdStr && userIdStr === creatorIdStr;
-		
+
 		if (isMe || isLikelyMe) return 'You';
 
 		// 2. Use permanently captured senderName if available
 		if (msg.senderName) return msg.senderName;
-		
+
 		// 3. Handle null/missing sender (population fail)
 		// If population failed for both this message and the ticket creator, or if they match
 		if (!sender || sender === null) {
 			if (!creatorIdStr || creatorIdStr === null || creatorIdStr === senderIdStr) {
 				return ticket?.creatorName || 'Support Team';
 			}
-			
+
 			// If it's the first message (initial ticket description), it's definitely the creator
 			if (messages[0]?._id === msg._id) return ticket?.creatorName || 'Support Team';
-			
+
 			return 'Support Team';
 		}
 
@@ -204,12 +204,12 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 				if (fullName) return fullName;
 			}
 		}
-		
+
 		// 4. Fallback to ticket's creatorName if IDs match
 		if (senderIdStr && creatorIdStr && senderIdStr === creatorIdStr) {
 			if (ticket?.creatorName) return ticket.creatorName;
 		}
-		
+
 		return 'Support Team';
 	};
 
@@ -284,19 +284,19 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 							</Button>
 						)}
 						{(ticket?.status === 'Completed' || ticket?.status === 'Closed') && (
-								<Button
-									variant="outline"
-									size="md"
-									onClick={() => {
-										setStatusModalType('Reopen');
-										setIsStatusModalOpen(true);
-									}}
-									className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900/50 dark:hover:bg-green-900/20 shadow-sm"
-								>
-									<RefreshCw className="w-4 h-4 mr-2" />
-									Reopen Ticket
-								</Button>
-							)}
+							<Button
+								variant="outline"
+								size="md"
+								onClick={() => {
+									setStatusModalType('Reopen');
+									setIsStatusModalOpen(true);
+								}}
+								className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900/50 dark:hover:bg-green-900/20 shadow-sm"
+							>
+								<RefreshCw className="w-4 h-4 mr-2" />
+								Reopen Ticket
+							</Button>
+						)}
 						{ticket?.status !== 'Completed' && ticket?.status !== 'Closed' && isSupervisorOrAdmin && (
 							<Button
 								variant="primary"
@@ -312,22 +312,22 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 								Mark as Completed
 							</Button>
 						)}
-						{(user?.role === 'supervisor' || user?.role === 'admin') && 
-							ticket?.status !== 'Closed' && 
+						{(user?.role === 'supervisor' || user?.role === 'admin') &&
+							ticket?.status !== 'Closed' &&
 							(typeof ticket?.escalationLevel === 'object' ? (ticket?.escalationLevel as PopulatedRole)?.roleName : ticket?.escalationLevel) !== 'SuperAdmin' && (
-							<Button
-								variant="outline"
-								size="md"
-								onClick={() => {
-									const currentLevel = typeof ticket?.escalationLevel === 'object' ? (ticket?.escalationLevel as PopulatedRole)?.roleName : ticket?.escalationLevel;
-									handleEscalate(currentLevel === 'Supervisor' ? 'Admin' : 'SuperAdmin');
-								}}
-								className="text-purple-600 border-purple-200 hover:bg-purple-50 dark:text-purple-400 dark:border-purple-900/50 dark:hover:bg-purple-900/20 shadow-sm"
-							>
-								<ChevronUp className="w-4 h-4 mr-2" />
-								Escalate
-							</Button>
-						)}
+								<Button
+									variant="outline"
+									size="md"
+									onClick={() => {
+										const currentLevel = typeof ticket?.escalationLevel === 'object' ? (ticket?.escalationLevel as PopulatedRole)?.roleName : ticket?.escalationLevel;
+										handleEscalate(currentLevel === 'Supervisor' ? 'Admin' : 'SuperAdmin');
+									}}
+									className="text-purple-600 border-purple-200 hover:bg-purple-50 dark:text-purple-400 dark:border-purple-900/50 dark:hover:bg-purple-900/20 shadow-sm"
+								>
+									<ChevronUp className="w-4 h-4 mr-2" />
+									Escalate
+								</Button>
+							)}
 					</div>
 
 					{/* Mobile Status Actions (Icon only to save space) */}
@@ -379,7 +379,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 								const isMe = (userIdStr && senderIdStr === userIdStr);
 								const isFirstMessage = idx === 0;
 								const isLikelyMe = isFirstMessage && (!senderIdStr || senderIdStr === null) && userIdStr && creatorIdStr && userIdStr === creatorIdStr;
-								
+
 								const isOwn = isMe || isLikelyMe;
 								return (
 									<div key={idx} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
@@ -404,13 +404,13 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 														{(() => {
 															// Derives initials from getSenderName result for consistency
 															const fullName = getSenderName(msg);
-															
+
 															// If it's Me, use my current known initials
 															if (fullName === 'You') {
 																const initials = (user?.name || user?.firstName || 'Y') as string;
 																return initials[0].toUpperCase();
 															}
-															
+
 															// Otherwise use the derived name's first char
 															return (fullName?.[0] || '?').toUpperCase();
 														})()}
@@ -440,7 +440,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 								);
 							})
 						)}
-						
+
 						{/* Typing Indicator */}
 						{typingUsers.length > 0 && (
 							<div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -452,8 +452,8 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 											<span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
 										</div>
 										<span className="text-[11px] text-gray-500 font-medium italic">
-											{typingUsers.length === 1 
-												? `${typingUsers[0]} is typing...` 
+											{typingUsers.length === 1
+												? `${typingUsers[0]} is typing...`
 												: `${typingUsers.length} people are typing...`}
 										</span>
 									</div>
@@ -478,37 +478,37 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 									value={newMessage}
 									onChange={(val) => {
 										setNewMessage(val);
-										
+
 										const userName = user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User';
 
 										// Handle typing indicator
 										if (socket && user && !isTypingRef.current && val.trim()) {
 											isTypingRef.current = true;
-											socket.emit('typing_start', { 
-												ticketId, 
+											socket.emit('typing_start', {
+												ticketId,
 												userId: user.id,
-												name: userName 
+												name: userName
 											});
 										}
-										
+
 										// Immediate stop if cleared
 										if (isTypingRef.current && !val.trim() && socket) {
-											socket.emit('typing_stop', { 
-												ticketId, 
+											socket.emit('typing_stop', {
+												ticketId,
 												userId: user?.id,
-												name: userName 
+												name: userName
 											});
 											isTypingRef.current = false;
 										}
 
 										if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-										
+
 										typingTimeoutRef.current = setTimeout(() => {
 											if (isTypingRef.current && socket) {
-												socket.emit('typing_stop', { 
-													ticketId, 
+												socket.emit('typing_stop', {
+													ticketId,
 													userId: user?.id,
-													name: userName 
+													name: userName
 												});
 												isTypingRef.current = false;
 											}
@@ -567,7 +567,6 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 				onClose={() => setIsStatusModalOpen(false)}
 				onConfirm={handleStatusChange}
 				type={statusModalType}
-				lineOfBusinessData={lineOfBusinessData}
 			/>
 		</div>
 	);

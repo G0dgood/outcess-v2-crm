@@ -69,21 +69,11 @@ const RegisteredBusinessesTable: React.FC = () => {
 					}}
 				>
 					<tr>
-						<th>
-							Company Name
-						</th>
-						<th>
-							Status
-						</th>
-						<th>
-							Users
-						</th>
-						<th>
-							Last Active
-						</th>
-						<th>
-							Action
-						</th>
+						<th>Company Name</th>
+						<th>Status</th>
+						<th>Users</th>
+						<th>Last Active</th>
+						<th>Action</th>
 					</tr>
 				</thead>
 				<tbody

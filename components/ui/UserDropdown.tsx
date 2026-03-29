@@ -222,7 +222,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 							}}
 						>
 							<span
-								className="font-semibold text-[12px]"
+								className="font-semibold text-[12px] transition-colors duration-200 dark:group-hover:!text-white"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{mounted ? userName.charAt(0).toUpperCase() : ''}
