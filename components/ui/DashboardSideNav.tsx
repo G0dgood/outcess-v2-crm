@@ -152,7 +152,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		{ id: 'general-settings-tab', label: 'General', icon: 'settings', path: '/settings?tab=settings' },
 		{ id: 'status-tab', label: 'Status', icon: 'id-card', path: '/settings?tab=status' },
 		{ id: 'permission-tab', label: 'Permission', icon: 'chart', path: '/settings?tab=permission' },
-		{ id: 'company-details-tab', label: 'Company Details', icon: 'settings', path: '/settings?tab=company-details' },
+		{ id: 'company-details-tab', label: 'Company Details', icon: 'settings', path: '/settings?tab=company-details', restrictedToAdmin: true },
 		{ id: 'roles-tab', label: 'Roles', icon: 'book', path: '/settings?tab=roles' },
 		{ id: 'supervisors-tab', label: 'Supervisors', icon: 'users', path: '/settings?tab=supervisors' },
 		{ id: 'audit-logs-tab', label: 'Audit Logs', icon: 'clock', path: '/settings?tab=audit-logs' },
@@ -194,12 +194,12 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 
 	const subModuleMapping: Record<string, ModuleId> = {
 		'general-settings-tab': 'systemSetting',
-		'status-tab': 'systemSetting',
+		'status-tab': 'status',
 		'permission-tab': 'userManagement',
 		'company-details-tab': 'systemSetting',
 		'roles-tab': 'userManagement',
 		'supervisors-tab': 'userManagement',
-		'audit-logs-tab': 'systemSetting',
+		'audit-logs-tab': 'auditLog',
 		'support-mine': 'support',
 		'support-team': 'teamMemberSupport',
 		'support-all': 'allSupport',

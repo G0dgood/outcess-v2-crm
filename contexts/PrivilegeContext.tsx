@@ -17,6 +17,7 @@ export type ModuleId =
 	| 'report'
 	| 'systemSetting'
 	| 'auditLog'
+	| 'status'
 	| 'teamMembers'
 	| 'lobPlan'
 	| 'support'
