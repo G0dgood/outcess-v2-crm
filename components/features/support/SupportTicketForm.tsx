@@ -71,6 +71,21 @@ export const SupportTicketForm: React.FC<SupportTicketFormProps> = ({
 		return 0;
 	});
 
+	const getPrioritySettings = (p: 'Low' | 'Medium' | 'High') => {
+		switch (p) {
+			case 'Low':
+				return { color: '#10b981', width: '33.33%', label: 'Routine issue' };
+			case 'Medium':
+				return { color: '#f59e0b', width: '66.66%', label: 'Requires attention' };
+			case 'High':
+				return { color: '#ef4444', width: '100%', label: 'Urgent priority' };
+			default:
+				return { color: '#94a3b8', width: '0%', label: '' };
+		}
+	};
+
+	const prioritySettings = getPrioritySettings(priority);
+
 	return (
 		<div className="p-6 overflow-y-auto flex-1">
 			<form onSubmit={onSubmit} className="space-y-6">
@@ -110,6 +125,22 @@ export const SupportTicketForm: React.FC<SupportTicketFormProps> = ({
 								</button>
 							);
 						})}
+					</div>
+
+					{/* Priority Progress Bar */}
+					<div className="mt-4 space-y-2">
+						<div className="h-1.5 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+							<div 
+								className="h-full transition-all duration-500 ease-out rounded-full shadow-[0_0_8px_rgba(0,0,0,0.1)]"
+								style={{ 
+									width: prioritySettings.width, 
+									backgroundColor: prioritySettings.color 
+								}}
+							/>
+						</div>
+						<p className="text-[10px] uppercase tracking-wider font-bold" style={{ color: prioritySettings.color }}>
+							{prioritySettings.label}
+						</p>
 					</div>
 				</div>
 

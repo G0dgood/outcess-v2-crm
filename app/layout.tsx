@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Roboto, Lato, Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import NewProvider from "@/components/providers/NewProvider";
@@ -30,6 +30,13 @@ const plusJakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Peoplely",
   description: "Peoplely is a CRM software for your business.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
