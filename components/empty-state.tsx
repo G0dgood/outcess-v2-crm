@@ -27,7 +27,7 @@ export function EmptyState({
     <Button
       variant="link"
 			onClick={(e) => {
-				onClick(e as any);
+				onClick(e as React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>);
 				router.push(href);
 			}}
       className="mt-4"
@@ -39,7 +39,7 @@ export function EmptyState({
     </Button>
   ) : onClick && linkLabel ? (
     <Button
-			onClick={(e) => onClick(e as any)}
+			onClick={(e) => onClick(e as React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>)}
       className="mt-8"
       size="md"
     >

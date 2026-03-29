@@ -6,7 +6,6 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useRouter } from '@bprogress/next/app';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { usePrivilege, ModuleId } from '@/contexts/PrivilegeContext';
-import Button from './Button';
 import Icon from './Icon';
 import { plusJakartaStyle } from '../Options';
 import {
@@ -52,12 +51,13 @@ interface NavItem {
 	isRestricted?: boolean;
 }
 
-interface SettingsSubItem {
+interface SubNavItem {
 	id: string;
 	label: string;
 	icon: string;
 	path: string;
-	isRestricted?: boolean;
+	privilege?: { module: string; action: string };
+	restrictedToAdmin?: boolean;
 }
 
 const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
@@ -221,8 +221,8 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		visibleNavItems.push({ id: 'access-restricted', label: 'Access Restricted', icon: 'lock', path: '#', isRestricted: true });
 	}
 
-	const getVisibleSubItems = (items: any[]) => {
-		const visible: any[] = [];
+	const getVisibleSubItems = (items: SubNavItem[]) => {
+		const visible: SubNavItem[] = [];
 		items.forEach(subItem => {
 			if (subItem.restrictedToAdmin && !isAdmin) return;
 			const moduleId = subModuleMapping[subItem.id];
@@ -291,7 +291,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 		}
 	};
 
-	const FloatingMenu = ({ items, pos, isOpen, onClose }: { items: any[], pos: any, isOpen: boolean, onClose: () => void }) => {
+	const FloatingMenu = ({ items, pos, isOpen, onClose }: { items: SubNavItem[], pos: { top: number; left: number } | null, isOpen: boolean, onClose: () => void }) => {
 		if (!isOpen || !isCollapsed || !pos) return null;
 		return (
 			<div

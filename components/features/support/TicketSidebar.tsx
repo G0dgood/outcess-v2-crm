@@ -72,7 +72,7 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 	};
 
 	const availableMembers = (teamMembersData?.teamMembers || [])
-		.filter((member: any) => !ticket?.assignedToIds?.some((a) => (typeof a === 'string' ? a : a._id) === member._id));
+		.filter((member: PopulatedMember) => !ticket?.assignedToIds?.some((a) => (typeof a === 'string' ? a : a._id) === member._id));
 
 	return (
 		<>
@@ -215,7 +215,7 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 						label="Select Members"
 						placeholder="Search and select teammates..."
 						multiple={true}
-						options={availableMembers.map((member: any) => ({
+						options={availableMembers.map((member: PopulatedMember) => ({
 							value: member._id,
 							label: `${member.firstName} ${member.lastName || ''} (${getRoleLabel(member.role)})`
 						}))}

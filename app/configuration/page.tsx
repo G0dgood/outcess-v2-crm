@@ -17,6 +17,14 @@ import ProgressBar from '@/components/ui/ProgressBar';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 
+interface LineOfBusiness {
+	_id: string;
+	lineOfBusinessName: string;
+	progress?: number;
+	status?: string;
+	createdAt?: string;
+}
+
 export default function ConfigurationPage() {
 	const router = useRouter();
 	const { user } = useUserInfo();
@@ -43,7 +51,7 @@ export default function ConfigurationPage() {
 	const [deleteLineOfBusiness] = useDeleteLineOfBusinessMutation();
 
 	const lineOfBusinesses = useMemo(() => {
-		const data = lineOfBusinessData as any;
+		const data = lineOfBusinessData as { lineOfBusinesses?: LineOfBusiness[] } | undefined;
 		return data?.lineOfBusinesses || [];
 	}, [lineOfBusinessData]);
 
@@ -150,10 +158,10 @@ export default function ConfigurationPage() {
 						<tbody className="divide-y dark:divide-gray-700">
 							{isLoading ? (
 								<SVGLoaderFetch colSpan={5} text={''} />
-							) : lineOfBusinesses.length === 0 ? (
+							) : lineOfBusinesses?.length === 0 ? (
 								<NoRecordFound colSpan={5} />
 							) : (
-								lineOfBusinesses.map((lob: any) => (
+								lineOfBusinesses?.map((lob: LineOfBusiness) => (
 									<tr
 										key={lob._id}
 										onMouseEnter={(e) => {

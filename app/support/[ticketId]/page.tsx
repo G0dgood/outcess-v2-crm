@@ -11,7 +11,8 @@ import {
 	useUpdateTicketMutation,
 	useEscalateTicketMutation,
 	SupportTicket,
-	PopulatedRole
+	PopulatedRole,
+	TicketMessage
 } from '@/store/services/supportApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
@@ -31,7 +32,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 	const { lineOfBusinessData } = useLineOfBusiness();
 	const { socket } = useSocket();
 	const [newMessage, setNewMessage] = useState('');
-	const [messages, setMessages] = useState<any[]>([]);
+	const [messages, setMessages] = useState<TicketMessage[]>([]);
 	const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 	const [statusModalType, setStatusModalType] = useState<'Resolve' | 'Close' | 'Reopen'>('Resolve');
 	const scrollRef = useRef<HTMLDivElement>(null);
@@ -45,21 +46,19 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 	const [escalateTicket] = useEscalateTicketMutation();
 
 	const ticket = ticketData?.ticket;
-	const initialMessages = ticketData?.messages || [];
-
 	// Initialize messages
 	useEffect(() => {
-		if (initialMessages.length > 0) {
-			setMessages(initialMessages);
+		if (ticketData?.messages && ticketData.messages.length > 0) {
+			setMessages(ticketData.messages);
 		}
-	}, [initialMessages]);
+	}, [ticketData?.messages]);
 
 	// Handle socket connection and new messages
 	useEffect(() => {
 		if (socket && ticketId) {
 			socket.emit('join', ticketId);
 
-			const handleNewMessage = (message: any) => {
+			const handleNewMessage = (message: TicketMessage) => {
 				setMessages((prev) => [...prev, message]);
 			};
 
