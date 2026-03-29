@@ -20,7 +20,7 @@ import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { Send, ChevronUp, CheckCircle, ArrowLeft, RefreshCw, XCircle, PanelRightOpen, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
+import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import { TicketSidebar } from '@/components/features/support/TicketSidebar';
 import SupportDetailsSkeleton from '@/components/skeletons/SupportDetailsSkeleton';
 import { SupportStatusModal } from '@/components/features/support/SupportStatusModal';
@@ -75,15 +75,6 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 					if (prev.some(m => m._id === message._id)) return prev;
 					return [...prev, message];
 				});
-
-				// Play sound if message is not from current user
-				const senderId = typeof message.senderId === 'object' ? (message.senderId?._id || message.senderId?.id) : message.senderId;
-				if (senderId && user?.id && senderId.toString() !== user.id.toString()) {
-					audioRef.current?.play().catch(err => console.log('Audio playback prevented:', err));
-					
-					// Also show a small toast if we aren't looking at the message (optional enhancement)
-					toast.info(`New message from ${message.senderName || 'Support'}`);
-				}
 			};
 
 			const handleTypingIndicator = ({ name, isTyping, userId: senderUserId }: { name: string, isTyping: boolean, userId: string }) => {
@@ -107,7 +98,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 				socket.off('typing_indicator', handleTypingIndicator);
 			};
 		}
-	}, [socket, ticketId, user]);
+	}, [socket, ticketId, user, isConnected]);
 
 	// Scroll to bottom on new message
 	useEffect(() => {
@@ -141,7 +132,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 				});
 				isTypingRef.current = false;
 			}
-		} catch (_error) {
+		} catch {
 			toastError('Failed to send message');
 		}
 	};
@@ -152,7 +143,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 			toastSuccess(`Ticket marked as ${status}`);
 			setIsStatusModalOpen(false);
 			refetch();
-		} catch (_error) {
+		} catch {
 			toastError('Failed to update status');
 		}
 	};
@@ -165,7 +156,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 			}).unwrap();
 			toastSuccess(`Ticket escalated to ${level}`);
 			refetch();
-		} catch (_error) {
+		} catch {
 			toastError('Failed to escalate ticket');
 		}
 	};
@@ -173,10 +164,10 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 	const getSenderName = (msg: TicketMessage) => {
 		const sender = msg.senderId;
 		
-		// Extract raw IDs for comparison
-		// Extract raw IDs as strings for reliable comparison
+		// Permission check: only supervisors or admins should see this
+		const userRole = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
 		const senderIdStr = typeof sender === 'object' ? (sender?._id || sender?.id)?.toString() : sender?.toString();
-		const creatorIdStr = typeof ticket?.creatorId === 'object' ? (ticket?.creatorId?._id || (ticket?.creatorId as any)?.id)?.toString() : ticket?.creatorId?.toString();
+		const creatorIdStr = typeof ticket?.creatorId === 'object' ? (ticket?.creatorId?._id || (ticket?.creatorId as { id?: string })?.id)?.toString() : ticket?.creatorId?.toString();
 		const userIdStr = user?.id?.toString();
 
 		// 1. Check if it's the current user (Highest priority)
@@ -393,7 +384,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 									<div key={idx} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
 										<div className={`max-w-[85%] lg:max-w-[70%] flex items-start gap-3 ${isOwn ? 'flex-row-reverse' : ''}`}>
 											<div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0 overflow-hidden mt-1 px-0 flex items-center justify-center shadow-sm">
-												{msg.senderId?.avatar ? (
+												{typeof msg.senderId === 'object' && msg.senderId?.avatar ? (
 													<Image
 														src={msg.senderId.avatar}
 														className="w-full h-full object-cover"

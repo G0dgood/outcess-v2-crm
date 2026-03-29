@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Plus, X } from 'lucide-react';
 import { Modal } from '../../ui/Modal';
 import { Dropdown } from '../../ui/Dropdown';
 import { Button } from '../../ui/Button';
 import { useGetTeamMembersByLineOfBusinessIdQuery } from '../../../store/services/teamMembersApi';
-import { useUpdateTicketMutation, SupportTicket, PopulatedMember, PopulatedRole } from '../../../store/services/supportApi';
+import { useUpdateTicketMutation, SupportTicket, PopulatedMember } from '../../../store/services/supportApi';
 
 interface AddTicketMemberModalProps {
 	isOpen: boolean;
@@ -30,19 +29,19 @@ export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({
 		limit: 100,
 	}, { skip: !isOpen });
 
-	const getRoleLabel = (role: any): string => {
+	const getRoleLabel = (role: string | { roleName?: string; name?: string } | undefined): string => {
 		if (!role) return 'Agent';
 		if (typeof role === 'string') return role;
 		if (typeof role === 'object') return role.roleName || role.name || 'Agent';
 		return 'Agent';
 	};
 
-	const getMemberName = (member: any): string => {
+	const getMemberName = (member: PopulatedMember): string => {
 		if (!member) return 'Unknown';
 		if (member.firstName || member.lastName) {
 			return `${member.firstName || ''} ${member.lastName || ''}`.trim();
 		}
-		return member.name || member.fullName || 'Teammate';
+		return member.name || 'Teammate';
 	};
 
 	const handleAddMembers = async () => {
@@ -81,7 +80,7 @@ export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({
 					label="Select Members"
 					placeholder="Search and select teammates..."
 					multiple={true}
-					options={availableMembers.map((member: any) => ({
+					options={availableMembers.map((member: PopulatedMember) => ({
 						value: member._id,
 						label: `${getMemberName(member)} (${getRoleLabel(member.role)})`
 					}))}

@@ -18,10 +18,12 @@ const ParticipantAvatars: React.FC<ParticipantAvatarsProps> = ({
 	onAssign,
 	status
 }) => {
-	const getInitials = (member: any) => {
-		if (member?.firstName) return member.firstName[0];
-		if (member?.name) return member.name[0];
+	const getInitials = (member: PopulatedMember | { name?: string } | string | null | undefined) => {
 		if (typeof member === 'string') return member[0];
+		if (member && typeof member === 'object') {
+			if ('firstName' in member && member.firstName) return member.firstName[0];
+			if ('name' in member && member.name) return member.name[0];
+		}
 		return '?';
 	};
 
@@ -55,9 +57,9 @@ const ParticipantAvatars: React.FC<ParticipantAvatarsProps> = ({
 				{/* Requester Avatar */}
 				<div
 					className={`relative w-8 h-8 rounded-full border-2 ${requesterColor.border} bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden shadow-sm z-30`}
-					title={`Requester: ${requester?.firstName || creatorName}`}
+					title={`Requester: ${requester && typeof requester === 'object' ? (requester?.firstName || requester?.name || creatorName) : creatorName}`}
 				>
-					{requester?.avatar ? (
+					{requester && typeof requester === 'object' && requester?.avatar ? (
 						<Image src={requester.avatar} alt="R" width={32} height={32} className="w-full h-full object-cover" />
 					) : (
 						<span className={`text-[10px] font-bold ${requesterColor.text}`}>
@@ -68,15 +70,16 @@ const ParticipantAvatars: React.FC<ParticipantAvatarsProps> = ({
 
 				{/* Assignee Avatars */}
 				{assignees.map((assignee, idx) => {
-					const assigneeColor = getMemberColor(assignee._id || assignee.id);
+					const assigneeId = typeof assignee === 'object' ? (assignee._id || assignee.id) : assignee;
+					const assigneeColor = getMemberColor(assigneeId);
 					return (
 						<div
-							key={assignee._id}
+							key={assigneeId}
 							className={`relative w-8 h-8 rounded-full border-2 ${assigneeColor.border} bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden shadow-sm hover:z-40`}
 							style={{ zIndex: 20 - idx }}
-							title={`Assignee: ${assignee.firstName || assignee.name || 'Agent'}`}
+							title={`Assignee: ${typeof assignee === 'object' ? (assignee.firstName || assignee.name) : 'Agent'}`}
 						>
-							{assignee.avatar ? (
+							{typeof assignee === 'object' && assignee.avatar ? (
 								<Image src={assignee.avatar} alt="A" width={32} height={32} className="w-full h-full object-cover" />
 							) : (
 								<span className={`text-[10px] font-bold ${assigneeColor.text}`}>

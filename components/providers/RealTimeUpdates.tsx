@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { updateUser as updateReduxUser } from '@/store/slices/authSlice';
 import { usePathname } from 'next/navigation';
+import { TicketMessage } from '@/store/services/supportApi';
 
 export const RealTimeUpdates: React.FC = () => {
   const pathname = usePathname();
@@ -75,7 +76,7 @@ export const RealTimeUpdates: React.FC = () => {
     };
 
     // Handle Global Message Notifications
-    const handleGlobalMessage = (message: any) => {
+    const handleGlobalMessage = (message: TicketMessage) => {
       // Don't notify if it's from me
       const senderId = typeof message.senderId === 'object' ? (message.senderId?._id || message.senderId?.id) : message.senderId;
       const currentUserId = user?.id || user?._id;
@@ -87,7 +88,9 @@ export const RealTimeUpdates: React.FC = () => {
       if (isOnTicketPage) return;
 
       // Play sound and show toast
+      const savedSound = localStorage.getItem('notification_sound_url') || 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3';
       if (audioRef.current) {
+        audioRef.current.src = savedSound;
         audioRef.current.play().catch(err => console.log('Audio playback failed:', err));
       }
 

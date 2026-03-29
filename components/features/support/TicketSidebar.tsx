@@ -21,41 +21,35 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 	const [updateTicket, { isLoading: isUpdating }] = useUpdateTicketMutation();
 
 
-	const getRoleLabel = (role: any): string => {
+	const getRoleLabel = (role: PopulatedRole | string | undefined): string => {
 		if (!role) return 'Agent';
 		if (typeof role === 'string') return role;
 		if (typeof role === 'object') return role.roleName || role.name || 'Agent';
 		return 'Agent';
 	};
 
-	const getMemberName = (member: any): string => {
-		if (!member) return 'Unknown';
-		if (member.firstName || member.lastName) {
-			return `${member.firstName || ''} ${member.lastName || ''}`.trim();
-		}
-		return member.name || member.fullName || 'Teammate';
-	};
 
-	const getNameLabel = (p: any): string => {
+	const getNameLabel = (p: PopulatedMember | string | null | undefined): string => {
 		if (!p || p === null) return ticket?.creatorName || 'Unknown';
 		if (typeof p === 'string') return ticket?.creatorName || p;
 		
+		const member = p as PopulatedMember;
 		// If it's a TeamMember, it has 'name'
-		if (p.name) return p.name;
+		if (member.name) return member.name;
 		
 		// If it's a User, it has 'firstName' and 'lastName'
-		if (p.firstName || p.lastName) {
-			const fullName = `${p.firstName || ''} ${p.lastName || ''}`.trim();
+		if (member.firstName || member.lastName) {
+			const fullName = `${member.firstName || ''} ${member.lastName || ''}`.trim();
 			return fullName || ticket?.creatorName || 'User';
 		}
 		
-		if (p.fullName) return p.fullName;
+		if ((member as any).fullName) return (member as any).fullName;
 		return ticket?.creatorName || 'Unknown';
 	};
 
 
 
-	const handleRemoveMember = (member: any) => {
+	const handleRemoveMember = (member: PopulatedMember) => {
 		setMemberToRemove({
 			id: member._id,
 			name: getNameLabel(member)
@@ -148,9 +142,9 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 								<div key={assignee?._id} className="flex items-center justify-between group">
 									<div className="flex items-center gap-3">
 										<div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden shadow-sm relative">
-											{assignee?.avatar ? (
+											{typeof assignee === 'object' && assignee?.avatar ? (
 												<Image
-													src={assignee?.avatar}
+													src={assignee.avatar}
 													alt={getNameLabel(assignee)}
 													width={32}
 													height={32}

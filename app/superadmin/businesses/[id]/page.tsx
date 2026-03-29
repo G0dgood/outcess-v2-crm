@@ -76,7 +76,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 
 		return members?.map((member: TeamMemberResponse) => ({
 			_id: member?._id || member.id || '',
-			name: member?.name || (member.firstName && member.lastName ? `${member.firstName} ${member.lastName}` : 'Unknown User'),
+			name: member?.name || (member.firstName && member.lastName ? `${member?.firstName} ${member?.lastName}` : 'Unknown User'),
 			email: member?.email || 'No Email',
 			phone: member?.phone || '-',
 			role: member?.role || { roleName: 'User', _id: 'temp' },
@@ -132,8 +132,8 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 		setIsDeactivateModalOpen(true);
 	};
 
-	const handleConfirmDeactivate = (_reason: string) => {
-		// TODO: Implement deactivate business logic with reason
+	const handleConfirmDeactivate = () => {
+		// TODO: Implement deactivate business logic
 	};
 
 	if (isLoadingCompanyDetails) {

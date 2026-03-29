@@ -62,7 +62,7 @@ interface CombinedDispositionItem {
 
 const DashboardContent: React.FC = () => {
 	const { lineOfBusinessData, isLoading: isLobLoading } = useLineOfBusiness();
-	const { setupData, addChart: addChartLocal, removeChart: removeChartLocal, updateChart: updateChartLocal, updateChartsOrder: updateChartsOrderLocal, updateDashboardSettings: updateDashboardSettingsLocal } = useSetup();
+	const { setupData, addChart: addChartLocal, updateChart: updateChartLocal, updateChartsOrder: updateChartsOrderLocal, updateDashboardSettings: updateDashboardSettingsLocal } = useSetup();
 	const [updateLineOfBusiness] = useUpdateLineOfBusinessMutation();
 	const isLoading = isLobLoading;
 	const { isOnline, isConnected, isOffline, send } = useSocket();
@@ -491,7 +491,7 @@ const DashboardContent: React.FC = () => {
 
 	const handleDeleteWidget = useCallback((widgetId: string) => {
 		if (!canDelete) return;
-		const widget = (dashboardSettings.widgets as Widget[]).find((w: Widget) => w.id === widgetId);
+		const widget = (dashboardSettings.widgets as Widget[]).find((w: Widget) => w?.id === widgetId);
 		if (widget) {
 			setDeletingWidget(widget);
 			setIsDeleteWidgetModalOpen(true);
@@ -500,12 +500,13 @@ const DashboardContent: React.FC = () => {
 
 	const handleRemoveChart = useCallback((chartId: string) => {
 		if (!canDelete) return;
-		const chart = dashboardSettings.dispositionSettings.charts.find((c: Chart) => c.id === chartId);
+		const chart = dashboardSettings.dispositionSettings.charts.find((c: Chart) => c?.id === chartId);
 		if (chart) {
 			setDeletingChart(chart);
 			setIsDeleteChartModalOpen(true);
 		}
 	}, [canDelete, dashboardSettings.dispositionSettings.charts]);
+
 
 	const handleConfirmDeleteChart = useCallback(() => {
 		if (!canDelete || !deletingChart) return;

@@ -41,7 +41,8 @@ export interface SupportTicket {
 export interface TicketMessage {
     _id: string;
     ticketId: string;
-    senderId: any;
+    ticketDisplayId?: string;
+    senderId: string | PopulatedMember;
     senderType: 'User' | 'TeamMember';
     senderName?: string;
     message: string;

@@ -110,7 +110,8 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 				? `${user.firstName} ${user.lastName}`
 				: user?.name || user?.username || 'Unknown User';
 
-			const supervisorId = user?.supervisorId || (user?.supervisor as any)?._id || (user?.supervisor as any)?.id;
+			const supervisor = user?.supervisor as { _id?: string; id?: string } | undefined;
+			const supervisorId = user?.supervisorId || supervisor?._id || supervisor?.id;
 
 			const ticketData = {
 				title,
