@@ -32,17 +32,17 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 	const getNameLabel = (p: PopulatedMember | string | null | undefined): string => {
 		if (!p || p === null) return ticket?.creatorName || 'Unknown';
 		if (typeof p === 'string') return ticket?.creatorName || p;
-		
+
 		const member = p as PopulatedMember;
 		// If it's a TeamMember, it has 'name'
 		if (member.name) return member.name;
-		
+
 		// If it's a User, it has 'firstName' and 'lastName'
 		if (member.firstName || member.lastName) {
 			const fullName = `${member.firstName || ''} ${member.lastName || ''}`.trim();
 			return fullName || ticket?.creatorName || 'User';
 		}
-		
+
 		const fallbackName = (member as { fullName?: string }).fullName;
 		if (fallbackName) return fallbackName;
 		return ticket?.creatorName || 'Unknown';
@@ -89,11 +89,14 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 							className="px-3 py-1 text-[10px] uppercase font-extrabold text-white shadow-sm"
 							style={{
 								backgroundColor:
-									ticket?.status === 'New' ? '#3B82F6' : // Blue
-										ticket?.status === 'In Progress' ? '#F59E0B' : // Amber-500
-											ticket?.status === 'Resolved' ? '#10B981' : // Green
-												ticket?.status === 'Closed' ? '#EF4444' : // Red
-													ticket?.status === 'Reopened' ? '#8B5CF6' : '#6B7280' // Purple/Gray
+									ticket?.status === 'Open' ? '#9CA3AF' : // Gray
+										ticket?.status === 'Pending' ? '#F59E0B' : // Amber
+											ticket?.status === 'In Progress' ? '#10B981' : // Emerald
+												ticket?.status === 'Completed' ? '#3B82F6' : // Blue
+													ticket?.status === 'In Review' ? '#EA580C' : // Orange
+														ticket?.status === 'Accepted' ? '#DC2626' : // Red
+															ticket?.status === 'Rejected' ? '#7C3AED' : // Purple
+																ticket?.status === 'Closed' ? '#059669' : '#6B7280'
 							}}
 						>
 							{ticket?.status}

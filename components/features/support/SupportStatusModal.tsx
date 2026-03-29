@@ -9,6 +9,7 @@ interface SupportStatusModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onConfirm: (status: string) => void;
+	ticket?: { status: string };
 	type: 'Resolve' | 'Close' | 'Reopen' | 'Done';
 	lineOfBusinessData?: {
 		primaryColor?: string;
@@ -19,6 +20,7 @@ export const SupportStatusModal: React.FC<SupportStatusModalProps> = ({
 	isOpen,
 	onClose,
 	onConfirm,
+	ticket,
 	type,
 	lineOfBusinessData,
 }) => {
@@ -26,10 +28,10 @@ export const SupportStatusModal: React.FC<SupportStatusModalProps> = ({
 		Resolve: {
 			title: 'Resolve Ticket',
 			confirmText: 'Yes, Resolve',
-			description: 'Are you sure you want to mark this ticket as resolved? This action will notify the customer.',
+			description: 'Are you sure you want to mark this ticket as completed? This action will notify the customer.',
 			icon: <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />,
 			iconBg: 'bg-green-100 dark:bg-green-900/20',
-			status: 'Resolved',
+			status: 'Completed',
 		},
 		Close: {
 			title: 'Close Ticket',
@@ -48,12 +50,12 @@ export const SupportStatusModal: React.FC<SupportStatusModalProps> = ({
 			status: 'In Progress',
 		},
 		Done: {
-			title: 'Mark as Done',
-			confirmText: 'Yes, Done',
-			description: 'Are you sure you want to mark this ticket as Done? This is a final action and the ticket cannot be reopened.',
+			title: 'Mark as Completed',
+			confirmText: 'Yes, Complete',
+			description: 'Are you sure you want to mark this ticket as Completed? This is a final action for this stage.',
 			icon: <CheckCircle className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />,
 			iconBg: 'bg-indigo-100 dark:bg-indigo-900/20',
-			status: 'Done',
+			status: 'Completed',
 		},
 	};
 
@@ -76,7 +78,7 @@ export const SupportStatusModal: React.FC<SupportStatusModalProps> = ({
 				<p className="text-sm text-center mb-6" style={{ color: 'var(--text-tertiary)' }}>
 					{current.description}
 				</p>
-				<div className="flex items-center gap-3">
+				<div className="hidden sm:flex items-center gap-3">
 					<Button
 						variant="outline"
 						className="flex-1"
@@ -87,7 +89,14 @@ export const SupportStatusModal: React.FC<SupportStatusModalProps> = ({
 					<Button
 						variant="primary"
 						className="flex-1 text-white"
-						style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
+						style={{
+								backgroundColor:
+									ticket?.status === 'Open' ? '#3B82F6' : // Blue
+										ticket?.status === 'In Progress' ? '#F59E0B' : // Amber-500
+											ticket?.status === 'Completed' ? '#10B981' : // Green
+												ticket?.status === 'Closed' ? '#EF4444' : // Red
+													ticket?.status === 'Pending' ? '#8B5CF6' : '#6B7280' // Purple/Gray
+							}}
 						onClick={() => onConfirm(current.status)}
 					>
 						{current.confirmText}

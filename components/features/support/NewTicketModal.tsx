@@ -127,7 +127,7 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 				assignedToType: roleId,
 				escalationLevel: roleId,
 				supervisorId,
-				status: 'New',
+				status: 'Open',
 			};
 
 			await createTicket(ticketData).unwrap();

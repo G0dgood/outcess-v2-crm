@@ -255,7 +255,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 					</Button>
 
 					<div className="hidden sm:flex items-center gap-3">
-						{ticket?.status !== 'Resolved' && ticket?.status !== 'Closed' && (
+						{ticket?.status !== 'Completed' && ticket?.status !== 'Closed' && (
 							<Button
 								variant="outline"
 								size="md"
@@ -283,21 +283,21 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 								Close Ticket
 							</Button>
 						)}
-						{(ticket?.status === 'Resolved' || ticket?.status === 'Closed') && (
-							<Button
-								variant="outline"
-								size="md"
-								onClick={() => {
-									setStatusModalType('Reopen');
-									setIsStatusModalOpen(true);
-								}}
-								className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900/50 dark:hover:bg-green-900/20 shadow-sm"
-							>
-								<RefreshCw className="w-4 h-4 mr-2" />
-								Reopen Ticket
-							</Button>
-						)}
-						{ticket?.status !== 'Done' && isSupervisorOrAdmin && (
+						{(ticket?.status === 'Completed' || ticket?.status === 'Closed') && (
+								<Button
+									variant="outline"
+									size="md"
+									onClick={() => {
+										setStatusModalType('Reopen');
+										setIsStatusModalOpen(true);
+									}}
+									className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900/50 dark:hover:bg-green-900/20 shadow-sm"
+								>
+									<RefreshCw className="w-4 h-4 mr-2" />
+									Reopen Ticket
+								</Button>
+							)}
+						{ticket?.status !== 'Completed' && ticket?.status !== 'Closed' && isSupervisorOrAdmin && (
 							<Button
 								variant="primary"
 								size="md"
@@ -309,7 +309,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 								style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
 							>
 								<CheckCircle className="w-4 h-4 mr-2" />
-								Mark as Done
+								Mark as Completed
 							</Button>
 						)}
 						{(user?.role === 'supervisor' || user?.role === 'admin') && 
@@ -332,7 +332,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 
 					{/* Mobile Status Actions (Icon only to save space) */}
 					<div className="flex sm:hidden items-center gap-1">
-						{(ticket?.status === 'Resolved' || ticket?.status === 'Closed') && (
+						{(ticket?.status === 'Completed' || ticket?.status === 'Closed') && (
 							<button
 								onClick={() => { setStatusModalType('Reopen'); setIsStatusModalOpen(true); }}
 								className="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-full"
@@ -340,7 +340,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 								<RefreshCw className="w-5 h-5" />
 							</button>
 						)}
-						{ticket?.status !== 'Done' && (
+						{ticket?.status !== 'Completed' && ticket?.status !== 'Closed' && (
 							<button
 								onClick={() => { setStatusModalType('Done'); setIsStatusModalOpen(true); }}
 								className="p-2 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-900/20 rounded-full"

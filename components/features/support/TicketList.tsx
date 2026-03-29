@@ -7,6 +7,7 @@ import { useState } from 'react';
 import ParticipantAvatars from './ParticipantAvatars';
 import { AddTicketMemberModal } from './AddTicketMemberModal';
 import { DeleteTicketModal } from './DeleteTicketModal';
+import { SupportStatusDropdown } from './SupportStatusDropdown';
 
 interface TicketListProps {
 	tickets: SupportTicket[];
@@ -65,26 +66,26 @@ const TicketList: React.FC<TicketListProps> = ({
 
 	const getStatusColors = (status: string) => {
 		const normalized = status.toLowerCase();
-		if (normalized === 'resolved') {
-			return { border: 'border-green-500', bg: 'bg-green-500', badgeBg: 'bg-green-600' };
+		switch (normalized) {
+			case 'open':
+				return { border: 'border-blue-500', bg: 'bg-blue-500', badgeBg: 'bg-blue-600' };
+			case 'pending':
+				return { border: 'border-amber-500', bg: 'bg-amber-500', badgeBg: 'bg-amber-600' };
+			case 'in progress':
+				return { border: 'border-emerald-500', bg: 'bg-emerald-500', badgeBg: 'bg-emerald-600' };
+			case 'completed':
+				return { border: 'border-green-500', bg: 'bg-green-500', badgeBg: 'bg-green-600' };
+			case 'in review':
+				return { border: 'border-orange-500', bg: 'bg-orange-500', badgeBg: 'bg-orange-600' };
+			case 'accepted':
+				return { border: 'border-red-600', bg: 'bg-red-600', badgeBg: 'bg-red-700' };
+			case 'rejected':
+				return { border: 'border-purple-600', bg: 'bg-purple-600', badgeBg: 'bg-purple-700' };
+			case 'closed':
+				return { border: 'border-indigo-600', bg: 'bg-indigo-600', badgeBg: 'bg-indigo-700' };
+			default:
+				return { border: 'border-gray-400', bg: 'bg-gray-400', badgeBg: 'bg-gray-500' };
 		}
-		if (normalized === 'new') {
-			return { border: 'border-blue-500', bg: 'bg-blue-500', badgeBg: 'bg-blue-600' };
-		}
-		if (normalized === 'in progress') {
-			return { border: 'border-yellow-500', bg: 'bg-yellow-500', badgeBg: 'bg-yellow-600' };
-		}
-		if (normalized === 'reopened') {
-			return { border: 'border-purple-500', bg: 'bg-purple-500', badgeBg: 'bg-purple-600' };
-		}
-		if (normalized === 'closed') {
-			return { border: 'border-indigo-500', bg: 'bg-indigo-500', badgeBg: 'bg-indigo-600' };
-		}
-		if (normalized === 'done') {
-			return { border: 'border-emerald-600', bg: 'bg-emerald-600', badgeBg: 'bg-emerald-700' };
-		}
-		// Default to orange for other statuses
-		return { border: 'border-[#F97316]', bg: 'bg-[#F97316]', badgeBg: 'bg-[#F97316]' };
 	};
 
 	if (isLoading) {
@@ -121,7 +122,7 @@ const TicketList: React.FC<TicketListProps> = ({
 	}
 
 	return (
-		<div className="flex flex-col border overflow-hidden dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+		<div className="flex flex-col border overflow-visible dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
 			{/* Grid Header */}
 			<div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b dark:border-gray-700">
 				<div className="col-span-4 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
@@ -213,16 +214,9 @@ const TicketList: React.FC<TicketListProps> = ({
 
 						{/* Status & Actions Section: col-span-2 */}
 						<div className="col-span-1 md:col-span-2 flex items-center justify-end gap-3 ml-auto">
-							<div className={`flex items-center gap-2 px-2.5 py-1 min-w-[90px] justify-between shadow-sm  ${colors.badgeBg} bg-opacity-90`}>
-								<div className="w-3 h-3 rounded-full border border-white/30 flex items-center justify-center">
-									<div className="w-1 h-1 rounded-full bg-white" />
-								</div>
-								<span className="text-[9px] font-black text-white tracking-widest whitespace-nowrap uppercase">
-									{getDisplayStatus(ticket.status)}
-								</span>
-							</div>
+							<SupportStatusDropdown ticket={ticket} />
 
-							{ticket.status === 'New' && (
+							{ticket.status === 'Open' && (
 								<button
 									onClick={(e) => handleDeleteClick(e, ticket)}
 									disabled={isDeleting}

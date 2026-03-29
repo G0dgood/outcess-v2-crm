@@ -22,7 +22,7 @@ export interface SupportTicket {
     ticketId: string;
     title: string;
     description: string;
-    status: 'New' | 'In Progress' | 'Resolved' | 'Closed' | 'Reopened' | 'Done';
+    status: 'Open' | 'Pending' | 'In Progress' | 'Completed' | 'In Review' | 'Accepted' | 'Rejected' | 'Closed';
     priority: 'Low' | 'Medium' | 'High';
     creatorId: string | PopulatedMember;
     creatorType: 'User' | 'TeamMember';
