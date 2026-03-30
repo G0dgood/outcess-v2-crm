@@ -60,6 +60,7 @@ const EditUserPage: React.FC = () => {
 		role: '',
 		status: true,
 		supervisorId: '',
+		userId: '',
 	});
 
 	const companyId =
@@ -98,6 +99,7 @@ const EditUserPage: React.FC = () => {
 					user?.isActive === true ||
 					user?.status === true,
 				supervisorId: user?.supervisorId || '',
+				userId: user?.userId || '',
 			});
 		}
 	}, [userResponse]);
@@ -191,7 +193,8 @@ const EditUserPage: React.FC = () => {
 					phone: formData?.phone,
 					role: formData?.role,
 					status: formData?.status ? 'Active' : 'Inactive',
-					supervisorId: formData?.supervisorId || null
+					supervisorId: formData?.supervisorId || null,
+					userId: formData?.userId
 				}
 			}).unwrap();
 			toast.success('User updated successfully');
@@ -383,6 +386,14 @@ const EditUserPage: React.FC = () => {
 							value={formData.lastName}
 							onChange={handleInputChange('lastName')}
 							placeholder="Enter Last Name"
+						/>
+
+						<Input
+							label="User ID"
+							value={formData.userId}
+							onChange={handleInputChange('userId')}
+							placeholder="Enter User ID (e.g. EMP001)"
+							required
 						/>
 
 						<div style={{ backgroundColor: 'var(--bg-primary)' }} className="dark:bg-gray-700">

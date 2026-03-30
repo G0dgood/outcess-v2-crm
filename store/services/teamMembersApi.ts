@@ -13,6 +13,7 @@ export interface TeamMember {
   lastLogin?: string;
   companyId?: string;
   supervisorId?: string | null;
+  userId?: string;
 }
 
 export interface StatusPayload {

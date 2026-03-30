@@ -294,7 +294,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 							variant="primary"
 							size="md"
 							onClick={handleSave}
-							disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.role || !formData.status || !formData.password || isLoading}
+							disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.role || !formData.userId || !formData.password || isLoading}
 							loading={isLoading}
 						>
 							Save
