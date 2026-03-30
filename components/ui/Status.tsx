@@ -156,8 +156,8 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 					roleSelection: newStatus.roleSelection || 'all',
 					selectedRoles: (newStatus.selectedRoles || []).map(r => typeof r === 'string' ? r : (r._id || r.id || '')),
 					color: newStatus.color || '#6C8B7D',
-					isHibernate: (newStatus as any).isHibernate || false,
-					duration: (newStatus as any).duration || 0,
+					isHibernate: newStatus.isHibernate || false,
+					duration: newStatus.duration || 0,
 				};
 				return [...prev, formattedStatus];
 			});
@@ -185,8 +185,8 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 						id: statusId || '',
 						role: roleDisplay,
 						selectedRoles: (updatedStatus.selectedRoles || []).map(r => typeof r === 'string' ? r : (r._id || r.id || '')),
-						isHibernate: (updatedStatus as any).isHibernate !== undefined ? (updatedStatus as any).isHibernate : status.isHibernate,
-						duration: (updatedStatus as any).duration !== undefined ? (updatedStatus as any).duration : status.duration,
+						isHibernate: updatedStatus.isHibernate !== undefined ? updatedStatus.isHibernate : status.isHibernate,
+						duration: updatedStatus.duration !== undefined ? updatedStatus.duration : status.duration,
 					};
 				}
 				return status;
