@@ -27,6 +27,7 @@ import { statusApi } from '@/store/services/statusApi';
 import { useGetNotificationsByLineOfBusinessIdQuery, useMarkNotificationAsReadMutation } from '@/store/services/notificationApi';
 import { useGetStickyNotesQuery } from '@/store/services/stickyNoteApi';
 import { useAuth } from '@/contexts/AuthContext';
+import HibernateOverlay from './HibernateOverlay';
 
 interface DashboardHeaderProps {
 	name?: string;
@@ -509,6 +510,18 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				status={reduxUser?.status?.status || (isOnline ? 'Online' : 'Offline')}
 				statusColor={reduxUser?.status?.color || (isOnline ? '#22C55E' : '#94A3B8')}
 			/>
+
+			{/* Hibernate Overlay Enforcement */}
+			{reduxUser?.status && typeof reduxUser.status !== 'string' && (reduxUser.status as any).isHibernate && (
+				<HibernateOverlay
+					userId={reduxUser.id}
+					userName={safeUserName}
+					statusName={(reduxUser.status as any).status || 'Hibernate'}
+					statusColor={(reduxUser.status as any).color || '#6366f1'}
+					duration={(reduxUser.status as any).duration}
+					statusUpdatedAt={(reduxUser.status as any).statusUpdatedAt}
+				/>
+			)}
 		</header>
 	);
 };

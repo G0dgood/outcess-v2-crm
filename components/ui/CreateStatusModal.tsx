@@ -20,6 +20,8 @@ interface StatusFormData {
 	roleSelection: 'all' | 'selected';
 	selectedRoles: string[];
 	color: string;
+	isHibernate: boolean;
+	duration: number;
 }
 
 interface RoleOption {
@@ -48,6 +50,8 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 		roleSelection: 'all',
 		selectedRoles: [],
 		color: '#6C8B7D',
+		isHibernate: false,
+		duration: 0,
 	});
 	const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
@@ -90,6 +94,8 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 				roleSelection: initialData.roleSelection || 'all',
 				selectedRoles: initialData.selectedRoles || [],
 				color: initialData.color || '#6C8B7D',
+				isHibernate: initialData.isHibernate || false,
+				duration: initialData.duration || 0,
 			});
 		} else if (isOpen && !initialData) {
 			setFormData({
@@ -98,6 +104,8 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 				roleSelection: 'all',
 				selectedRoles: [],
 				color: '#6C8B7D',
+				isHibernate: false,
+				duration: 0,
 			});
 		}
 	}, [isOpen, initialData]);
@@ -200,7 +208,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
 			<div
-				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+				className="dark:bg-gray-800 shadow-lg w-full max-w-lg mx-4 h-[85vh] overflow-hidden flex flex-col"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
@@ -256,6 +264,31 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 						label="Status Color"
 						value={formData.color}
 						onChange={(color) => setFormData(prev => ({ ...prev, color }))}
+					/>
+
+					<div className="flex items-center justify-between gap-4 p-4 border dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+						<div className="flex-1">
+							<label className="text-[12px] font-medium text-gray-900 dark:text-gray-100 block mb-1">
+								Hibernate Status
+							</label>
+							<p className="text-[10px] text-gray-500 dark:text-gray-400">
+								Locks the platform entirely when this status is active.
+							</p>
+						</div>
+						<Checkbox
+							checked={formData.isHibernate}
+							onChange={(checked) => setFormData(prev => ({ ...prev, isHibernate: checked }))}
+							size="medium"
+						/>
+					</div>
+
+					<Input
+						label="Duration (minutes)"
+						type="number"
+						placeholder="E.g., 15"
+						value={formData.duration.toString()}
+						onChange={(value) => setFormData(prev => ({ ...prev, duration: parseInt(value) || 0 }))}
+						description="Maximum time allowed in this status before notifying supervisors. Set to 0 for unlimited."
 					/>
 
 					{/* Role Selection */}

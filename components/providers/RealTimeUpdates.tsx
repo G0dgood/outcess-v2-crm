@@ -10,6 +10,7 @@ import { updateUser as updateReduxUser } from '@/store/slices/authSlice';
 import { usePathname } from 'next/navigation';
 import { TicketMessage } from '@/store/services/supportApi';
 import { teamMembersApi, TeamMemberStatusUpdatePayload } from '@/store/services/teamMembersApi';
+import { playNotificationSound } from '@/utils/soundEffects';
 
 export const RealTimeUpdates: React.FC = () => {
   const pathname = usePathname();
@@ -72,14 +73,14 @@ export const RealTimeUpdates: React.FC = () => {
     const handleTeamMemberStatusUpdate = (payload: TeamMemberStatusUpdatePayload) => {
       const newStatus = typeof payload.status === 'object' ? payload.status.status : payload.status;
       const memberName = payload.name || 'A team member';
-      
+
       // Only notify if it's not the current user themselves (already handled by updateStatus mutation normally)
       const currentUserId = user?.id || user?._id;
       if (payload.teamMemberId === currentUserId) return;
 
       // Show global notification
       toastSuccess(`${memberName} is now ${newStatus}`);
-      
+
       // Invalidate cache to refresh any active lists (including TeamMembersPage)
       dispatch(teamMembersApi.util.invalidateTags(['TeamMembers']));
     };
@@ -89,7 +90,7 @@ export const RealTimeUpdates: React.FC = () => {
       // Don't notify if it's from me
       const senderId = typeof message.senderId === 'object' ? (message.senderId?._id || message.senderId?.id) : message.senderId;
       const currentUserId = user?.id || user?._id;
-      
+
       if (senderId && currentUserId && senderId.toString() === currentUserId.toString()) return;
 
       // Don't notify if we are already on that specific ticket page
@@ -106,13 +107,23 @@ export const RealTimeUpdates: React.FC = () => {
       });
     };
 
+    // Handle Status Expiration for Supervisors
+    const handleStatusExpired = (data: { name: string; status: string; elapsedMinutes: number; allowedMinutes: number }) => {
+      toastInfo(`${data.name} has been in ${data.status} for ${data.elapsedMinutes}m (Allowed: ${data.allowedMinutes}m)`, {
+        icon: '⚠️',
+      });
+      playNotificationSound('error', 'notifications');
+    };
+
     on('roleUpdated', handleRoleUpdated);
     on('teamMemberStatusUpdate', handleTeamMemberStatusUpdate);
+    on('statusExpired', handleStatusExpired);
     on('newTicketMessage', handleGlobalMessage);
 
     return () => {
       off('roleUpdated', handleRoleUpdated);
       off('teamMemberStatusUpdate', handleTeamMemberStatusUpdate);
+      off('statusExpired', handleStatusExpired);
       off('newTicketMessage', handleGlobalMessage);
     };
   }, [socket, on, off, updateUser, dispatch, user?.id, user?._id, pathname]);

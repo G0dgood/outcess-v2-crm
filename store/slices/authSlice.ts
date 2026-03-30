@@ -21,6 +21,9 @@ export interface User {
         status: string;
         reason?: string;
         color?: string;
+        isHibernate?: boolean;
+        duration?: number;
+        statusUpdatedAt?: string | Date;
     };
     createdAt?: string;
     updatedAt?: string;

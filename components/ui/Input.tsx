@@ -17,6 +17,7 @@ interface InputProps {
 	inputClassName?: string;
 	onKeyPress?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 	autoComplete?: string;
+	description?: string;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -34,6 +35,7 @@ export const Input: React.FC<InputProps> = ({
 	inputClassName = '',
 	onKeyPress,
 	autoComplete,
+	description,
 }) => {
 	const [showPassword, setShowPassword] = useState(false);
 	const isPassword = type === 'password';
@@ -55,6 +57,11 @@ export const Input: React.FC<InputProps> = ({
 					{label}
 					{required && <span className="required-asterisk">*</span>}
 				</label>
+			)}
+			{description && (
+				<p className="mb-2 text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed italic">
+					{description}
+				</p>
 			)}
 			<div className="relative">
 				<input

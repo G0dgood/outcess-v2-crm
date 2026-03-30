@@ -26,6 +26,8 @@ interface RawStatus {
 	roleSelection?: 'all' | 'selected';
 	selectedRoles?: (string | Role)[];
 	color?: string;
+	isHibernate?: boolean;
+	duration?: number;
 }
 
 interface StatusItem {
@@ -37,6 +39,8 @@ interface StatusItem {
 	selectedRoles?: string[];
 	icon?: string;
 	color: string;
+	isHibernate?: boolean;
+	duration?: number;
 }
 
 interface StatusProps {
@@ -109,6 +113,8 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 					roleSelection: status.roleSelection || 'all',
 					selectedRoles: (status.selectedRoles || []).map(r => typeof r === 'string' ? r : (r._id || r.id || '')),
 					color: status.color || '#6C8B7D',
+					isHibernate: status.isHibernate || false,
+					duration: status.duration || 0,
 				};
 			});
 			setStatuses(mappedStatuses as StatusItem[]);
@@ -150,6 +156,8 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 					roleSelection: newStatus.roleSelection || 'all',
 					selectedRoles: (newStatus.selectedRoles || []).map(r => typeof r === 'string' ? r : (r._id || r.id || '')),
 					color: newStatus.color || '#6C8B7D',
+					isHibernate: (newStatus as any).isHibernate || false,
+					duration: (newStatus as any).duration || 0,
 				};
 				return [...prev, formattedStatus];
 			});
@@ -177,6 +185,8 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 						id: statusId || '',
 						role: roleDisplay,
 						selectedRoles: (updatedStatus.selectedRoles || []).map(r => typeof r === 'string' ? r : (r._id || r.id || '')),
+						isHibernate: (updatedStatus as any).isHibernate !== undefined ? (updatedStatus as any).isHibernate : status.isHibernate,
+						duration: (updatedStatus as any).duration !== undefined ? (updatedStatus as any).duration : status.duration,
 					};
 				}
 				return status;
@@ -448,6 +458,8 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 					roleSelection: editingStatus.roleSelection || 'all',
 					selectedRoles: editingStatus.selectedRoles || [],
 					color: editingStatus.color,
+					isHibernate: editingStatus.isHibernate,
+					duration: editingStatus.duration,
 				} : null}
 				statusId={editingStatus?.id}
 			/>

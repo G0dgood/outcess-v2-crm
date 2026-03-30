@@ -7,6 +7,8 @@ export interface Status {
     roleSelection: 'all' | 'selected';
     selectedRoles: string[];
     color: string;
+    isHibernate?: boolean;
+    duration?: number;
     companyId: string;
     lineOfBusinessId?: string;
 }
@@ -17,6 +19,8 @@ export interface CreateStatusRequest {
     roleSelection: 'all' | 'selected';
     selectedRoles: string[];
     color: string;
+    isHibernate?: boolean;
+    duration?: number;
     companyId: string;
     lineOfBusinessId?: string;
 }
