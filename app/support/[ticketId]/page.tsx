@@ -236,7 +236,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 								router.push('/support');
 							}
 						}}
-						className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors !rounded-none"
+						className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
 					>
 						<ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
 					</Button>
@@ -356,7 +356,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 			<div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
 
 				{/* Left Column: Real-time Chat Area */}
-				<div className="flex flex-col flex-1 border dark:border-gray-700 overflow-hidden shadow-md" style={{ backgroundColor: 'var(--accent-white)' }}>
+				<div className="flex flex-col flex-1 border dark:border-gray-700 overflow-hidden shadow-md rounded-[var(--radius)]" style={{ backgroundColor: 'var(--accent-white)' }}>
 					{/* Header for Chat */}
 					<div className="p-4 border-b dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
 						<h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{ticket?.title}</h3>
@@ -516,7 +516,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 									}}
 									disabled={ticket?.status === 'Closed'}
 									className="!gap-0 transition-all"
-									inputClassName={`!h-[50px] !py-3 resize-none shadow-none border-gray-200 dark:border-gray-700 focus:border-gray-300 transition-all ${ticket?.status === 'Closed' ? 'bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed opacity-60' : ''}`}
+									inputClassName={`!h-[50px] !py-3 resize-none shadow-none border-gray-200 dark:border-gray-700 focus:border-gray-300 transition-all rounded-[var(--radius)] ${ticket?.status === 'Closed' ? 'bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed opacity-60' : ''}`}
 									onKeyDown={(e) => {
 										if (e.key === 'Enter' && !e.shiftKey && ticket?.status !== 'Closed') {
 											e.preventDefault();

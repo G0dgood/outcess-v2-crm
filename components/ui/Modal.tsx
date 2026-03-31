@@ -145,7 +145,7 @@ export const Modal: React.FC<ModalProps> = ({
 
 			{/* Modal */}
 			<div
-				className={`fixed ${getPositionClasses()} ${getSizeClasses()} dark:bg-gray-800 shadow-xl z-50 transition-all duration-300 ease-in-out ${getAnimationClasses()} overflow-x-hidden ${className}`}
+				className={`fixed ${getPositionClasses()} ${getSizeClasses()} dark:bg-gray-800 shadow-xl z-50 transition-all duration-300 ease-in-out ${getAnimationClasses()} overflow-x-hidden ${className} rounded-[var(--radius)]`}
 				style={hasCustomBackground ? undefined : {
 					backgroundColor: 'var(--accent-white)'
 				}}
@@ -170,7 +170,7 @@ export const Modal: React.FC<ModalProps> = ({
 									variant="ghost"
 									size="sm"
 									onClick={onClose}
-									className="dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors !p-1"
+									className="dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors !p-1 rounded-[var(--radius)]"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

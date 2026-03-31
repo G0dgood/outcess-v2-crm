@@ -223,7 +223,7 @@ const BusinessHours = () => {
 
 				{businessHourData.businessDays ? (
 					<div
-						className="dark:bg-gray-800 border dark:border-gray-700 p-6 space-y-4"
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6 space-y-4 rounded-[var(--radius)]"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
@@ -320,7 +320,7 @@ const BusinessHours = () => {
 					</div>
 				) : (
 					<div
-						className="dark:bg-gray-800 border dark:border-gray-700 p-6 min-h-[200px] flex items-center justify-center"
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6 min-h-[200px] flex items-center justify-center rounded-[var(--radius)]"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
@@ -379,7 +379,7 @@ const BusinessHours = () => {
 								return (
 									<div
 										key={index}
-										className="dark:bg-gray-800 border dark:border-gray-700 p-4"
+										className="dark:bg-gray-800 border dark:border-gray-700 p-4 rounded-[var(--radius)]"
 										style={{
 											backgroundColor: 'var(--accent-white)',
 											borderColor: 'var(--light-gray)'

@@ -27,7 +27,7 @@ export const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 			<div
-				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4"
+				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				<div className="p-6">
@@ -41,7 +41,7 @@ export const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
 
 					{/* Warning Message */}
 					<div
-						className="mb-6 p-4 dark:bg-orange-900/30 border dark:border-orange-800 flex items-start gap-3"
+						className="mb-6 p-4 dark:bg-orange-900/30 border dark:border-orange-800 flex items-start gap-3 rounded-lg"
 						style={{
 							backgroundColor: 'rgba(251, 146, 60, 0.1)',
 							borderColor: 'rgba(251, 146, 60, 0.3)'

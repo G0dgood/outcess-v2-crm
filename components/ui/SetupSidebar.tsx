@@ -110,7 +110,7 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 					return (
 						<div
 							key={step.id}
-							className={`flex p-3 cursor-pointer transition-all duration-200 gap-3 ${step.active
+							className={`flex p-3 cursor-pointer transition-all duration-200 gap-3 rounded-[var(--radius)] ${step.active
 								? 'dark:bg-[#6C8B7D]/20 border dark:border-[#6C8B7D]'
 								: 'dark:hover:bg-gray-800'
 								}`}

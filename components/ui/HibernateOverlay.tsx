@@ -90,14 +90,14 @@ const HibernateOverlay: React.FC<HibernateOverlayProps> = ({
         {/* Status Metrics */}
         <div className="grid grid-cols-1 gap-4 py-4">
             {duration ? (
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                <div className="bg-white/5 border border-white/10 rounded-[var(--radius)] p-6">
                     <p className="text-sm text-gray-500 uppercase tracking-widest mb-1">Time Remaining</p>
                     <p className="text-4xl font-mono font-bold text-blue-400 tabular-nums">
                         {timeLeft || '--:--'}
                     </p>
                 </div>
             ) : (
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                <div className="bg-white/5 border border-white/10 rounded-[var(--radius)] p-6">
                    <p className="text-sm text-gray-500 uppercase tracking-widest mb-1">Mode</p>
                    <p className="text-xl font-bold text-white">Infinite Hibernate</p>
                 </div>
@@ -110,7 +110,7 @@ const HibernateOverlay: React.FC<HibernateOverlayProps> = ({
                 size="lg"
                 onClick={handleResume}
                 loading={isUpdating}
-                className="w-full !rounded-2xl py-6 text-lg font-bold shadow-2xl shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="w-full rounded-[var(--radius)] py-6 text-lg font-bold shadow-2xl shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
                 Exit Hibernate & Resume
             </Button>

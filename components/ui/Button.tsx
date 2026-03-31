@@ -41,7 +41,7 @@ export const Button: React.FC<ButtonProps> = ({
 	onPointerDown,
 	title,
 }) => {
-	const baseClasses = 'inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none whitespace-nowrap';
+	const baseClasses = 'inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none whitespace-nowrap rounded-[var(--radius)]';
 
 	const sizeClasses = {
 		sm: 'px-3 py-2 text-[10px] md:text-[12px]',
@@ -148,7 +148,7 @@ export const Button: React.FC<ButtonProps> = ({
 			e.currentTarget.style.backgroundColor = 'var(--text-primary)';
 			e.currentTarget.style.color = 'var(--accent-white)';
 		} else if (variant === 'ghost') {
-			e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+			e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
 		}
 	};
 

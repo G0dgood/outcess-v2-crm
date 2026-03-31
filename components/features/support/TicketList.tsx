@@ -114,7 +114,7 @@ const TicketList: React.FC<TicketListProps> = ({
 
 	if (tickets.length === 0) {
 		return (
-			<div className="text-center py-16 border-2 border-dashed  dark:border-gray-700">
+			<div className="text-center py-16 border-2 border-dashed dark:border-gray-700 rounded-[var(--radius)]">
 				<p className="text-gray-500 dark:text-gray-400 font-medium text-lg">No active support tickets found.</p>
 				<p className="text-sm text-gray-400 dark:text-gray-500 mt-1">New tickets will appear here when created.</p>
 			</div>
@@ -122,7 +122,7 @@ const TicketList: React.FC<TicketListProps> = ({
 	}
 
 	return (
-		<div className="flex flex-col border overflow-visible dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+		<div className="flex flex-col border overflow-visible dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm rounded-[var(--radius)] overflow-hidden">
 			{/* Grid Header */}
 			<div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b dark:border-gray-700">
 				<div className="col-span-4 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">

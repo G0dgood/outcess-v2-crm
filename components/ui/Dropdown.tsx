@@ -135,7 +135,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
 			>
 				<button
 					type="button"
-					className={`dropdown-trigger ${inputClassName}`}
+					className={`dropdown-trigger ${inputClassName} rounded-[var(--radius)]`}
 					onClick={handleToggle}
 					onKeyDown={handleKeyDown}
 					disabled={disabled}
@@ -170,7 +170,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
 				</button>
 
 				{isOpen && (
-					<div className="dropdown-menu">
+					<div className="dropdown-menu rounded-[var(--radius)]">
 						<div className="dropdown-options">
 							{options.length === 0 ? (
 								<div className="dropdown-empty-state">

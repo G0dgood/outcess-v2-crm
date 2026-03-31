@@ -179,7 +179,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
 			<div
-				className="dark:bg-gray-800 shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+				className="dark:bg-gray-800 shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
@@ -197,7 +197,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 						variant="ghost"
 						size="sm"
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors !rounded-none"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -262,7 +262,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 									type="text"
 									value={name}
 									onChange={(e) => setName(e.target.value)}
-									className="w-full px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+									className="w-full px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 rounded-[var(--radius)]"
 									style={{
 										borderColor: 'var(--light-gray)',
 										color: 'var(--text-primary)',
@@ -291,7 +291,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 												type="time"
 												value={sameStartTime}
 												onChange={(e) => setSameStartTime(e.target.value)}
-												className="px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+														className="px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed rounded-[var(--radius)]"
 												style={{
 													borderColor: 'var(--light-gray)',
 													color: 'var(--text-primary)',
@@ -308,7 +308,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 												type="time"
 												value={sameEndTime}
 												onChange={(e) => setSameEndTime(e.target.value)}
-												className="px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+														className="px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed rounded-[var(--radius)]"
 												style={{
 													borderColor: 'var(--light-gray)',
 													color: 'var(--text-primary)',
@@ -349,7 +349,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 														value={differentHours[day.key].startTime}
 														onChange={(e) => handleDifferentHourChange(day.key, 'startTime', e.target.value)}
 														disabled={!differentHours[day.key].enabled}
-														className="px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed"
+														className="px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed rounded-[var(--radius)]"
 														style={{
 															borderColor: 'var(--light-gray)',
 															color: 'var(--text-primary)',
@@ -367,7 +367,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 														value={differentHours[day.key].endTime}
 														onChange={(e) => handleDifferentHourChange(day.key, 'endTime', e.target.value)}
 														disabled={!differentHours[day.key].enabled}
-														className="px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed"
+														className="px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed rounded-[var(--radius)]"
 														style={{
 															borderColor: 'var(--light-gray)',
 															color: 'var(--text-primary)',

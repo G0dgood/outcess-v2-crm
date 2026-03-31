@@ -119,7 +119,7 @@ export const SupportStatusDropdown: React.FC<SupportStatusDropdownProps> = ({ ti
     ref={buttonRef}
     type="button"
     onClick={() => setIsOpen(!isOpen)}
-    className="flex items-center gap-2 px-2.5 py-1 min-w-[110px] justify-between shadow-sm rounded-md transition-all hover:brightness-95 active:scale-95"
+    className="flex items-center gap-2 px-2.5 py-1 min-w-[110px] justify-between shadow-sm rounded-[var(--radius)] transition-all hover:brightness-95 active:scale-95"
     style={{ backgroundColor: currentOption.color }}
    >
     <div className="flex items-center gap-2">
@@ -128,7 +128,7 @@ export const SupportStatusDropdown: React.FC<SupportStatusDropdownProps> = ({ ti
       {currentOption.label}
      </span>
     </div>
-    <div className="w-4 h-4 rounded-md bg-white/20 flex items-center justify-center">
+    <div className="w-4 h-4 rounded-[var(--radius)] bg-white/20 flex items-center justify-center">
      <Check className={`w-2.5 h-2.5 text-white transition-transform ${isOpen ? 'rotate-180' : ''}`} />
     </div>
    </button>
@@ -140,7 +140,7 @@ export const SupportStatusDropdown: React.FC<SupportStatusDropdownProps> = ({ ti
       onClick={() => setIsOpen(false)}
      />
      <div
-      className="fixed z-[9999] w-64 origin-top-right bg-white dark:bg-gray-900 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden border dark:border-gray-800"
+      className="fixed z-[9999] w-64 origin-top-right bg-white dark:bg-gray-900 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden border dark:border-gray-800 rounded-[var(--radius)]"
       style={{
        top: `${coords.top + 4}px`,
        left: `${coords.left + coords.width - 256}px`,

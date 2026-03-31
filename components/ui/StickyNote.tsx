@@ -214,7 +214,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 		<div
 			ref={noteRef}
 			data-note-id={note.id}
-			className={`fixed border border-gray-300  shadow-lg w-[280px] select-none hover:shadow-xl transition-all ${isHidden ? '' : isDragging ? 'cursor-grabbing opacity-90 scale-105' : 'cursor-grab'
+			className={`fixed border border-gray-300 shadow-lg w-[280px] select-none hover:shadow-xl transition-all rounded-[var(--radius)] ${isHidden ? '' : isDragging ? 'cursor-grabbing opacity-90 scale-105' : 'cursor-grab'
 				}`}
 			style={{
 				left: `${position.x}px`,

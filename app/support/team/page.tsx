@@ -159,7 +159,7 @@ const TeamSupportPage = () => {
       triggerClassName="!px-2 !py-2 !text-[8px] md:!text-[10px] sm:!px-4 sm:!py-2"
      >
       {({ close }) => (
-       <div className="dark:bg-gray-800 shadow-lg overflow-hidden w-40 cursor-default">
+       <div className="dark:bg-gray-800 shadow-lg overflow-hidden w-40 cursor-default rounded-[var(--radius)]">
         {['High', 'Medium', 'Low', 'Clear'].map((p) => (
          <div
           key={p}

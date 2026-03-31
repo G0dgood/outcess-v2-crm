@@ -77,7 +77,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 			<div
-				className="dark:bg-gray-800 w-full max-w-lg mx-4 overflow-hidden shadow-xl"
+				className="dark:bg-gray-800 w-full max-w-lg mx-4 overflow-hidden shadow-xl rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Modal Header */}
@@ -113,7 +113,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 							</p>
 
 							<div
-								className="border-2 border-dashed p-10 flex flex-col items-center justify-center space-y-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+								className="border-2 border-dashed p-10 flex flex-col items-center justify-center space-y-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors rounded-xl"
 								style={{ borderColor: 'var(--light-gray)' }}
 								onClick={() => fileInputRef.current?.click()}
 							>
@@ -137,7 +137,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 								</div>
 							</div>
 
-							<div className="bg-blue-50 dark:bg-blue-900/20 p-4  flex gap-3">
+							<div className="bg-blue-50 dark:bg-blue-900/20 p-4 flex gap-3 rounded-lg">
 								<FileTextIcon className="w-5 h-5 text-blue-600 shrink-0" />
 								<div className="text-[12px] text-blue-800 dark:text-blue-300">
 									<p className="font-semibold mb-1">Important Note</p>
@@ -147,7 +147,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 						</div>
 					) : (
 						<div className="space-y-6">
-							<div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 border dark:border-gray-600">
+							<div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 border dark:border-gray-600 rounded-lg">
 								<div className="flex-1 text-center border-r dark:border-gray-600">
 									<p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Total</p>
 									<p className="text-[20px] font-bold dark:text-white">{result.total}</p>
@@ -168,7 +168,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 										<ExclamationTriangleIcon className="w-4 h-4" />
 										Errors Found
 									</h3>
-									<div className="max-h-[200px] overflow-y-auto border  divide-y dark:border-gray-700 dark:divide-gray-700">
+									<div className="max-h-[200px] overflow-y-auto border divide-y dark:border-gray-700 dark:divide-gray-700 rounded-lg">
 										{result.errors.map((err, idx) => (
 											<div key={idx} className="p-3 text-[11px] flex gap-3 items-start">
 												<span className="font-mono text-gray-500 shrink-0">Row {err.row}</span>

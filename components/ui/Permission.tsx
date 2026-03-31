@@ -234,7 +234,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 					return (
 						<div
 							key={roleId}
-							className="border dark:border-gray-700 overflow-hidden"
+							className="border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
 							style={{ borderColor: 'var(--light-gray)' }}
 						>
 							<div

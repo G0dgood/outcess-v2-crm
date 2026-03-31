@@ -107,7 +107,7 @@ const PlatformGrowthChart: React.FC = () => {
 								width={barWidth}
 								height={businessesHeight}
 								fill="#EC4899"
-								rx="4"
+								rx="6"
 							/>
 							{/* Users bar (light blue) */}
 							<rect
@@ -116,7 +116,7 @@ const PlatformGrowthChart: React.FC = () => {
 								width={barWidth}
 								height={usersHeight}
 								fill="#60A5FA"
-								rx="4"
+								rx="6"
 							/>
 							{/* Month label */}
 							<text

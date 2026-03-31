@@ -113,7 +113,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 
 	return (
 		<div
-			className="dark:bg-gray-800 shadow-lg dark:shadow-xl p-6 w-full md:w-[283px] whitespace-nowrap"
+			className="dark:bg-gray-800 shadow-lg dark:shadow-xl p-6 w-full md:w-[283px] whitespace-nowrap rounded-[var(--radius)]"
 			style={{
 				backgroundColor: 'var(--accent-white)'
 			}}
@@ -301,7 +301,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 				<div className="flex justify-end pt-2">
 					<button
 						onClick={handleApply}
-						className="px-4 py-2 text-white font-medium transition-all duration-200 hover-bg-custom w-full md:w-auto"
+						className="px-4 py-2 text-white font-medium transition-all duration-200 hover-bg-custom w-full md:w-auto rounded-[var(--radius)]"
 						style={{
 							backgroundColor: lineOfBusinessData?.primaryColor || '#050711',
 							'--hover-bg': lineOfBusinessData?.secondaryColor || '#6C8B7D'

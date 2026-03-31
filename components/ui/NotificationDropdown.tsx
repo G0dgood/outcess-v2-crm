@@ -149,7 +149,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			{/* Dropdown */}
 			{isOpen && (
 				<div
-					className={`absolute top-full right-0 mt-2 w-90 dark:bg-gray-800 border dark:border-gray-700 shadow-xl z-50 overflow-hidden ${className}`}
+					className={`absolute top-full right-0 mt-2 w-90 dark:bg-gray-800 border dark:border-gray-700 shadow-xl z-50 overflow-hidden rounded-[var(--radius)] ${className}`}
 					style={{
 						backgroundColor: 'var(--accent-white)',
 						borderColor: 'var(--light-gray)'
@@ -173,7 +173,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 							variant="ghost"
 							size="sm"
 							onClick={onClose}
-							className="dark:text-gray-300 dark:hover:text-gray-100 transition-colors !rounded-none"
+							className="dark:text-gray-300 dark:hover:text-gray-100 transition-colors rounded-[var(--radius)]"
 							style={{ color: 'var(--text-primary)' }}
 							onMouseEnter={(e) => {
 								e.currentTarget.style.color = 'var(--text-primary)';
@@ -252,7 +252,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 											<Button
 												variant="ghost"
 												size="sm"
-												className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors ml-2 !rounded-none"
+												className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors ml-2 rounded-[var(--radius)]"
 												style={{ color: 'var(--text-tertiary)' }}
 												onMouseEnter={(e) => {
 													e.currentTarget.style.color = 'var(--text-secondary)';
@@ -293,7 +293,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 									onClose();
 								}
 							}}
-							className="text-[10px] md:text-[12px] dark:text-gray-300 dark:hover:text-gray-100 font-medium transition-colors font-inter not-italic leading-[145%] font-features cursor-pointer !rounded-none"
+							className="text-[10px] md:text-[12px] dark:text-gray-300 dark:hover:text-gray-100 font-medium transition-colors font-inter not-italic leading-[145%] font-features cursor-pointer rounded-[var(--radius)]"
 							style={{ color: 'var(--text-primary)' }}
 							onMouseEnter={(e) => {
 								e.currentTarget.style.color = 'var(--text-primary)';

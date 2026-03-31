@@ -367,7 +367,7 @@ const UsersPage: React.FC = () => {
 
 			{/* Users Table */}
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
@@ -467,7 +467,7 @@ const UsersPage: React.FC = () => {
 													variant="ghost"
 													size="sm"
 													onClick={() => router.push(`/users/${user.id}/edit`)}
-													className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer !rounded-none"
+													className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
 													style={{ color: 'var(--text-secondary)' }}
 													onMouseEnter={(e) => {
 														e.currentTarget.style.color = '#2563EB';
@@ -487,7 +487,7 @@ const UsersPage: React.FC = () => {
 													variant="ghost"
 													size="sm"
 													onClick={() => handleDeleteClick(user)}
-													className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer !rounded-none"
+													className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
 													style={{ color: 'var(--text-secondary)' }}
 													onMouseEnter={(e) => {
 														e.currentTarget.style.color = '#DC2626';

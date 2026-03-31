@@ -52,7 +52,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
 			{displayCards.map((card, index) => (
 				<div
 					key={index}
-					className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+					className="dark:bg-gray-800 border dark:border-gray-700 p-6 rounded-[var(--radius)]"
 					style={{
 						backgroundColor: 'var(--accent-white)',
 						borderColor: 'var(--light-gray)'
@@ -74,7 +74,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
 							</p>
 						</div>
 						<div
-							className={`p-3 rounded-lg ${card.iconBgColor || 'dark:bg-blue-900/30'
+							className={`p-3 rounded-[var(--radius)] ${card.iconBgColor || 'dark:bg-blue-900/30'
 								} ${card.iconBgColor === 'bg-blue-50' ? 'dark:bg-blue-900/30' : ''} ${card.iconBgColor === 'bg-green-50' ? 'dark:bg-green-900/30' : ''} ${card.iconBgColor === 'bg-purple-50' ? 'dark:bg-purple-900/30' : ''}`}
 							style={card.iconBgColor === 'bg-blue-50' ? {
 								backgroundColor: 'rgba(59, 130, 246, 0.1)'

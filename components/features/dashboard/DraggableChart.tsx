@@ -105,7 +105,7 @@ const DraggableChart: React.FC<DraggableChartProps> = React.memo(({
 	return (
 		<div
 			ref={chartRef}
-			className={`absolute bg-white border border-gray-200 shadow-lg transition-shadow duration-200 ${isDragging ? 'shadow-xl z-50' : 'hover:shadow-lg'
+			className={`absolute bg-white border border-gray-200 shadow-lg transition-shadow duration-200 rounded-[var(--radius)] overflow-hidden ${isDragging ? 'shadow-xl z-50' : 'hover:shadow-lg'
 				}`}
 			style={{
 				left: chart.position.x,

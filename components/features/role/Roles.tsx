@@ -113,7 +113,7 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 					{roles.map((role) => (
 						<div
 							key={role?.id}
-							className="dark:bg-gray-800 border dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow group"
+							className="dark:bg-gray-800 border dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow group rounded-[var(--radius)]"
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)',
@@ -177,7 +177,7 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 					))}
 				</div>
 			) : (
-				<div className="flex flex-col items-center justify-center h-64 border  dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
+				<div className="flex flex-col items-center justify-center h-64 border  dark:border-gray-700 rounded-[var(--radius)]" style={{ borderColor: 'var(--light-gray)' }}>
 					<ExclamationTriangleIcon className="w-16 h-16 mb-4" style={{ color: 'var(--text-tertiary)' }} />
 					<p className="text-[12px] md:text-[14px] font-medium" style={{ color: 'var(--text-primary)' }}>
 						No roles found

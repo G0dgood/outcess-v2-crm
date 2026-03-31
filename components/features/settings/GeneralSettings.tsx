@@ -39,7 +39,7 @@ const GeneralSettings: React.FC = () => {
 			<div className="space-y-6">
 				{/* Tooltip Length Setting */}
 				<div
-					className="flex items-center justify-between p-4 dark:bg-gray-800 border dark:border-gray-700"
+					className="flex items-center justify-between p-4 dark:bg-gray-800 border dark:border-gray-700 rounded-[var(--radius)]"
 					style={{
 						backgroundColor: 'var(--accent-white)',
 						borderColor: 'var(--light-gray)'

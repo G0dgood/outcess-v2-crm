@@ -45,7 +45,7 @@ export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
 			<div
-				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 overflow-hidden flex flex-col"
+				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 overflow-hidden flex flex-col rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
@@ -63,7 +63,7 @@ export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
 						variant="ghost"
 						size="sm"
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors !rounded-none"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';

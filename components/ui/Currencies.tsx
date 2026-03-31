@@ -49,7 +49,7 @@ const Currencies = () => {
 
 			{/* Currencies Content */}
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 p-6 min-h-[400px]"
+				className="dark:bg-gray-800 border dark:border-gray-700 p-6 min-h-[400px] rounded-[var(--radius)]"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
@@ -69,7 +69,7 @@ const Currencies = () => {
 						{currencies.map((currency, index) => (
 							<div
 								key={index}
-								className="border dark:border-gray-700 p-4"
+								className="border dark:border-gray-700 p-4 rounded-[var(--radius)]"
 								style={{
 									borderColor: 'var(--light-gray)',
 									backgroundColor: 'var(--accent-white)'

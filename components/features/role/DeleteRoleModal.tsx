@@ -23,7 +23,7 @@ const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({
 			onClick={onClose}
 		>
 			<div
-				className="dark:bg-gray-800 w-full max-w-md mx-4 shadow-lg"
+				className="dark:bg-gray-800 w-full max-w-md mx-4 shadow-lg rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 				onClick={(e) => e.stopPropagation()}
 			>

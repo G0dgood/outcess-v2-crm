@@ -35,7 +35,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 
 	return (
 		<div
-			className="absolute right-0 top-full mt-2 w-80 dark:bg-gray-800 border dark:border-gray-700 shadow-lg z-50 overflow-hidden"
+			className="absolute right-0 top-full mt-2 w-80 dark:bg-gray-800 border dark:border-gray-700 shadow-lg z-50 overflow-hidden rounded-[var(--radius)]"
 			style={{
 				backgroundColor: 'var(--accent-white)',
 				borderColor: 'var(--light-gray)'
@@ -88,7 +88,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 							</h3>
 							{currentStatus && (
 								<span
-									className="text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider shrink-0"
+									className="text-[9px] px-1.5 py-0.5 rounded-[var(--radius)] font-bold uppercase tracking-wider shrink-0"
 									style={{
 										backgroundColor: `${(currentStatus.color && currentStatus.color.startsWith('#')) ? currentStatus.color : '#22C55E'}15`,
 										color: (currentStatus.color && currentStatus.color.startsWith('#')) ? currentStatus.color : '#22C55E',

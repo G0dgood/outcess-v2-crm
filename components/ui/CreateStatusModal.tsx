@@ -208,7 +208,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
 			<div
-				className="dark:bg-gray-800 shadow-lg w-full max-w-lg mx-4 h-[85vh] overflow-hidden flex flex-col"
+				className="dark:bg-gray-800 shadow-lg w-full max-w-lg mx-4 h-[85vh] overflow-hidden flex flex-col rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
@@ -226,7 +226,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 						variant="ghost"
 						size="sm"
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors !rounded-none"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -266,7 +266,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 						onChange={(color) => setFormData(prev => ({ ...prev, color }))}
 					/>
 
-					<div className="flex items-center justify-between gap-4 p-4 border dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+					<div className="flex items-center justify-between gap-4 p-4 border dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 rounded-[var(--radius)]">
 						<div className="flex-1">
 							<label className="text-[12px] font-medium text-gray-900 dark:text-gray-100 block mb-1">
 								Hibernate Status
@@ -324,7 +324,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 													size="md"
 													type="button"
 													onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-													className="dropdown-trigger w-full !rounded-none justify-between"
+													className="dropdown-trigger w-full justify-between"
 												>
 													<span className={`dropdown-text ${formData.selectedRoles.length === 0 ? 'placeholder' : ''}`}>
 														{getRoleSelectionDisplay()}

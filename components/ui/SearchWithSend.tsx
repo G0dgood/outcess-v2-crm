@@ -37,7 +37,7 @@ const SearchWithSend: React.FC<SearchWithSendProps> = ({
 			className={`flex items-center ${className}`}
 		>
 			<div
-				className="relative flex-1 flex items-center pl-[14px] pr-1 py-[4px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors h-[40px]"
+				className="relative flex-1 flex items-center pl-[14px] pr-1 py-[4px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors h-[40px] rounded-[var(--radius)]"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
@@ -56,7 +56,7 @@ const SearchWithSend: React.FC<SearchWithSendProps> = ({
 				<button
 					onClick={handleSearchClick}
 					disabled={disabled}
-					className="h-[32px] w-[32px] flex items-center justify-center transition-colors !rounded-none"
+					className="h-[32px] w-[32px] flex items-center justify-center transition-colors rounded-[var(--radius)]"
 					style={{
 						backgroundColor: buttonColor || '#000000',
 						color: 'white'

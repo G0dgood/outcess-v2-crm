@@ -376,7 +376,7 @@ const TeamMembersPage: React.FC = () => {
 
 			{/* Table */}
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700"
+				className="dark:bg-gray-800 border dark:border-gray-700 rounded-[var(--radius)] overflow-hidden"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)',

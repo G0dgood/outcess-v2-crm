@@ -230,7 +230,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 			<div
-				className="dark:bg-gray-800 w-full max-w-md mx-4 shadow-lg flex flex-col max-h-[85vh]"
+				className="dark:bg-gray-800 w-full max-w-md mx-4 shadow-lg flex flex-col max-h-[85vh] rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Modal Header */}

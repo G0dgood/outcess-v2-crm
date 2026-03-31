@@ -117,7 +117,7 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-[#0b0d1293]/50 dark:bg-black/50 bg-opacity-50 flex items-center justify-center z-50">
 			<div
-				className="dark:bg-gray-800 w-full max-w-md mx-4"
+				className="dark:bg-gray-800 w-full max-w-md mx-4 rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Modal Header */}

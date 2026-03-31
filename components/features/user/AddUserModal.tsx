@@ -169,7 +169,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 			<div
-				className="dark:bg-gray-800 w-full max-w-md mx-4 overflow-hidden"
+				className="dark:bg-gray-800 w-full max-w-md mx-4 overflow-hidden rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Modal Header */}

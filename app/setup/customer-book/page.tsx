@@ -449,7 +449,7 @@ export default function CustomerBookPage() {
 
 			{/* Configured Fields Table */}
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 mb-8"
+				className="dark:bg-gray-800 border dark:border-gray-700 mb-8 rounded-[var(--radius)]"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
@@ -530,7 +530,7 @@ export default function CustomerBookPage() {
 					{availableFieldTypes.map((fieldType) => (
 						<div
 							key={fieldType.id}
-							className="dark:bg-gray-800 border dark:border-gray-700 p-4 cursor-pointer dark:hover:border-gray-600 dark:hover:bg-gray-700 transition-colors"
+							className="dark:bg-gray-800 border dark:border-gray-700 p-4 cursor-pointer dark:hover:border-gray-600 dark:hover:bg-gray-700 transition-colors rounded-[var(--radius)]"
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)'
@@ -558,7 +558,7 @@ export default function CustomerBookPage() {
 								{fieldType.description}
 							</p>
 							<div
-								className="dark:bg-gray-700 border dark:border-gray-600 p-2 pointer-events-none"
+								className="dark:bg-gray-700 border dark:border-gray-600 p-2 pointer-events-none rounded-[var(--radius)]"
 								style={{
 									backgroundColor: 'var(--bg-primary)',
 									borderColor: 'var(--light-gray)'

@@ -197,7 +197,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 			<div className="flex items-center gap-3">
 				<div
 					ref={triggerRef}
-					className="w-8 h-8 border border-gray-300 cursor-pointer  shadow-sm"
+					className="w-8 h-8 border border-gray-300 cursor-pointer shadow-sm rounded-[var(--radius)]"
 					style={{ backgroundColor: currentColor }}
 					onClick={() => setIsOpen(!isOpen)}
 					title={currentColor}
@@ -216,7 +216,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 			</div>
 
 			{isOpen && (
-				<div className={`absolute left-0 bg-white border border-gray-200 shadow-lg p-3 z-50 min-w-[220px] ${positionAbove
+				<div className={`absolute left-0 bg-white border border-gray-200 shadow-lg p-3 z-50 min-w-[220px] rounded-[var(--radius)] ${positionAbove
 					? 'bottom-full mb-2'
 					: 'top-full mt-2'
 					}`}>

@@ -41,7 +41,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
 			<div className="relative">
 				<button
 					onClick={handleNotificationClick}
-					className="p-1 w-7 h-7 flex justify-center items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors cursor-pointer relative !rounded-none"
+					className="p-1 w-8 h-8 flex justify-center items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors cursor-pointer relative rounded-[var(--radius)] hover:bg-gray-100"
 					title="Notifications"
 				>
 					<Icon name="Bell_light" size="3xl" />

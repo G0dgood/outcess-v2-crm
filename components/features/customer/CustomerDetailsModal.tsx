@@ -290,7 +290,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 						{/* Personal Information Section */}
 						<div className="mb-8">
 							<div
-								className="dark:bg-gray-800 border dark:border-gray-700 shadow-sm"
+								className="dark:bg-gray-800 border dark:border-gray-700 shadow-sm rounded-[var(--radius)]"
 								style={{
 									backgroundColor: 'var(--accent-white)',
 									borderColor: 'var(--light-gray)'
@@ -351,7 +351,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 
 						{/* Disposition History table */}
 						<div
-							className="dark:bg-gray-800 border dark:border-gray-700"
+							className="dark:bg-gray-800 border dark:border-gray-700 rounded-[var(--radius)] overflow-hidden"
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)'

@@ -89,7 +89,7 @@ const Pagination: React.FC<PaginationProps> = ({
 					size="sm"
 					onClick={handlePrevious}
 					disabled={currentPage === 1}
-					className="py-2 text-[10px] md:text-[12px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer !rounded-none"
+					className="py-2 text-[10px] md:text-[12px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-[var(--radius)]"
 				>
 					Previous
 				</Button>
@@ -115,7 +115,7 @@ const Pagination: React.FC<PaginationProps> = ({
 							variant={isCurrentPage ? 'primary' : 'ghost'}
 							size="sm"
 							onClick={() => onPageChange(pageNumber)}
-							className={`cursor-pointer font-inter font-medium leading-[150%] px-3 py-1 text-[10px] md:text-[12px] transition-colors !rounded-none ${isCurrentPage
+							className={`cursor-pointer font-inter font-medium leading-[150%] px-3 py-1 text-[10px] md:text-[12px] transition-colors rounded-[var(--radius)] ${isCurrentPage
 								? 'text-white shadow-sm'
 								: 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
 								}`}
@@ -134,7 +134,7 @@ const Pagination: React.FC<PaginationProps> = ({
 					size="sm"
 					onClick={handleNext}
 					disabled={currentPage === totalPages}
-					className="py-2 text-[10px] md:text-[12px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer !rounded-none"
+					className="py-2 text-[10px] md:text-[12px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-[var(--radius)]"
 				>
 					Next
 				</Button>

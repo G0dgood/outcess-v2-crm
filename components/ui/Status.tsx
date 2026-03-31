@@ -291,7 +291,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 
 			{/* Status Table */}
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
@@ -400,7 +400,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 														variant="ghost"
 														size="sm"
 														onClick={() => handleEdit(status.id)}
-														className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors !rounded-none"
+														className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
 														style={{ color: 'var(--text-tertiary)' }}
 														onMouseEnter={(e) => {
 															e.currentTarget.style.color = 'var(--text-secondary)';
@@ -420,7 +420,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 														variant="ghost"
 														size="sm"
 														onClick={() => handleDelete(status.id)}
-														className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-700 transition-colors !rounded-none"
+														className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-700 transition-colors"
 														style={{ color: 'var(--text-tertiary)' }}
 														onMouseEnter={(e) => {
 															e.currentTarget.style.color = '#DC2626';

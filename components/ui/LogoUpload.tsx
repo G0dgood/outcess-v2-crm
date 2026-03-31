@@ -144,7 +144,7 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 			)}
 
 			<label
-				className={`border-2 border-dashed transition-colors cursor-pointer block ${isDragOver
+				className={`border-2 border-dashed transition-colors cursor-pointer block rounded-[var(--radius)] ${isDragOver
 					? 'border-blue-400 bg-blue-50'
 					: error
 						? 'border-red-300 bg-red-50'

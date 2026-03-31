@@ -49,7 +49,7 @@ const SMSMessageModal: React.FC<SMSMessageModalProps> = ({ isOpen, sms, onClose 
 			onClick={onClose}
 		>
 			<div
-				className="dark:bg-gray-800 w-full max-w-2xl mx-4 shadow-lg animate-in fade-in zoom-in duration-200"
+				className="dark:bg-gray-800 w-full max-w-2xl mx-4 shadow-lg animate-in fade-in zoom-in duration-200 rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 				onClick={(e) => e.stopPropagation()}
 			>

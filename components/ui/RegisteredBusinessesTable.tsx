@@ -141,7 +141,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 									variant="ghost"
 									size="sm"
 									onClick={() => handleView(business.id)}
-									className="dark:text-blue-400 dark:hover:text-blue-300 text-[10px] md:text-[12px] font-medium transition-colors !rounded-none"
+									className="dark:text-blue-400 dark:hover:text-blue-300 text-[10px] md:text-[12px] font-medium transition-colors"
 									style={{ color: '#2563EB' }}
 									onMouseEnter={(e) => {
 										e.currentTarget.style.color = '#1D4ED8';

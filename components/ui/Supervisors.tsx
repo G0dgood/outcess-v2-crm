@@ -122,7 +122,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
             return (
               <div
                 key={roleId || role.roleName}
-                className="dark:bg-gray-800 border dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow group"
+                className="dark:bg-gray-800 border dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow group rounded-[var(--radius)]"
                 style={{
                   backgroundColor: 'var(--accent-white)',
                   borderColor: 'var(--light-gray)',
@@ -161,7 +161,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
                         e.stopPropagation();
                         handleCopyId(roleId);
                       }}
-                      className="p-1.5 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700 h-auto !rounded-none"
+                      className="p-1.5 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700 h-auto"
                       title="Copy Supervisor ID"
                     >
                       <CopyIcon className="w-4 h-4 text-blue-500" />
@@ -174,7 +174,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
                           e.stopPropagation();
                           handleDeleteRoleClick(roleId, role.roleName || '');
                         }}
-                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700 h-auto !rounded-none"
+                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700 h-auto"
                         title="Delete Supervisor Role"
                       >
                         <TrashIcon className="w-4 h-4 text-red-500" />
@@ -193,7 +193,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
         </div>
       ) : (
         <div
-          className="flex flex-col items-center justify-center h-64 border dark:border-gray-700"
+          className="flex flex-col items-center justify-center h-64 border dark:border-gray-700 rounded-[var(--radius)]"
           style={{ borderColor: 'var(--light-gray)' }}
         >
           <ExclamationTriangleIcon

@@ -373,7 +373,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					variant="ghost"
 					size="sm"
 					onClick={onMobileMenuToggle}
-					className="md:hidden p-2 text-black dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors cursor-pointer !rounded-none"
+					className="md:hidden p-2 text-black dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors cursor-pointer rounded-[var(--radius)]"
 					title="Menu"
 				>
 					<div className={`transition-all duration-300 ease-in-out transform ${isMobileMenuOpen ? 'rotate-90 scale-110' : 'rotate-0 scale-100'}`}>
@@ -444,7 +444,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					{hasStickyNotes && (
 						<button
 							onClick={handleNoteIconClick}
-							className="hidden md:inline-flex p-2 dark:text-gray-300 dark:hover:text-gray-100 transition-colors cursor-pointer relative !rounded-none "
+							className="hidden md:inline-flex p-2 dark:text-gray-300 dark:hover:text-gray-100 transition-colors cursor-pointer relative rounded-[var(--radius)] "
 							style={{
 								color: 'var(--text-tertiary)',
 								backgroundColor: 'transparent'

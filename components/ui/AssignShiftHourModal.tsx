@@ -142,7 +142,7 @@ const AssignShiftHourModal: React.FC<AssignShiftHourModalProps> = ({
 					Select team members to assign to this shift hour.
 				</p>
 
-				<div className="border dark:border-gray-700 max-h-[320px] overflow-y-auto">
+				<div className="border dark:border-gray-700 max-h-[320px] overflow-y-auto rounded-[var(--radius)]">
 					<table className="min-w-full text-[12px]">
 						<thead className="bg-gray-50 dark:bg-gray-800">
 							<tr>

@@ -1,68 +1,39 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import PageHeading from '@/components/ui/PageHeading';
 import { Modal } from '@/components/ui/Modal';
-import { Link2Icon, Cross2Icon } from '@radix-ui/react-icons';
+import { Link2Icon } from '@radix-ui/react-icons';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-
-interface Integration {
-	id: string;
-	name: string;
-	description: string;
-	icon: string;
-	status: 'connected' | 'disconnected';
-	connectedAt?: string;
-	config?: {
-		workspaceUrl?: string;
-		apiToken?: string;
-		webhookUrl?: string;
-		channel?: string;
-		email?: string;
-	};
-}
+import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { useGetIntegrationsByLobIdQuery, useUpdateIntegrationMutation, Integration } from '@/store/services/integrationsApi';
+import { toast } from 'sonner';
+import { SVGLoaderFetch } from '@/components/Options';
+import IntegrationCard from '@/components/features/integrations/IntegrationCard';
 
 const IntegrationsPage: React.FC = () => {
 	const { canAccess } = usePrivilege();
+	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { user } = useUserInfo();
+	
 	const canAccessModule = canAccess('systemSetting');
 	const canEdit = canAccess('systemSetting', 'edit');
 
-	const [integrations, setIntegrations] = useState<Integration[]>([
-		{
-			id: 'slack',
-			name: 'Slack',
-			description: 'Connect with Slack to receive notifications and updates in your workspace channels.',
-			icon: 'slack',
-			status: 'disconnected',
-		},
-		{
-			id: 'zapier',
-			name: 'Zapier',
-			description: 'Automate workflows and connect Peoplely with 5000+ apps through Zapier.',
-			icon: 'zapier',
-			status: 'disconnected',
-		},
-		{
-			id: 'webhook',
-			name: 'Webhooks',
-			description: 'Set up custom webhooks to send data to your own applications.',
-			icon: 'webhook',
-			status: 'disconnected',
-		},
-		{
-			id: 'email',
-			name: 'Email Integration',
-			description: 'Connect your email service to send and receive emails directly from Peoplely.',
-			icon: 'email',
-			status: 'disconnected',
-		},
-	]);
+	const companyId = user?.companyId || (user?.company as any)?._id || '';
+
+	const { data: integrationsData, isLoading: isFetching } = useGetIntegrationsByLobIdQuery(
+		{ lineOfBusinessId: selectedLineOfBusinessId || '', companyId },
+		{ skip: !selectedLineOfBusinessId || !companyId }
+	);
+
+	const [updateIntegration, { isLoading: isUpdating }] = useUpdateIntegrationMutation();
 
 	const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
 	const [connectingIntegration, setConnectingIntegration] = useState<Integration | null>(null);
-	const [connectionForm, setConnectionForm] = useState({
+	const [connectionForm, setConnectionForm] = useState<any>({
 		workspaceUrl: '',
 		apiToken: '',
 		webhookUrl: '',
@@ -82,57 +53,44 @@ const IntegrationsPage: React.FC = () => {
 		setIsConnectModalOpen(true);
 	};
 
-	const handleConnect = () => {
+	const handleConnect = async () => {
 		if (!connectingIntegration || !canEdit) return;
 
-		setIntegrations(prev =>
-			prev.map(integration =>
-				integration.id === connectingIntegration.id
-					? {
-						...integration,
-						status: 'connected' as const,
-						connectedAt: new Date().toISOString(),
-						config: {
-							workspaceUrl: connectionForm.workspaceUrl,
-							apiToken: connectionForm.apiToken,
-							webhookUrl: connectionForm.webhookUrl,
-							channel: connectionForm.channel,
-							email: connectionForm.email,
-						},
-					}
-					: integration
-			)
-		);
-
-		setIsConnectModalOpen(false);
-		setConnectingIntegration(null);
-		setConnectionForm({
-			workspaceUrl: '',
-			apiToken: '',
-			webhookUrl: '',
-			channel: '',
-			email: '',
-		});
+		try {
+			await updateIntegration({
+				id: connectingIntegration._id,
+				status: 'connected',
+				config: connectionForm
+			}).unwrap();
+			
+			toast.success(`${connectingIntegration.name} connected successfully`);
+			setIsConnectModalOpen(false);
+			setConnectingIntegration(null);
+		} catch (error) {
+			console.error('Connection failed:', error);
+			toast.error('Failed to connect integration');
+		}
 	};
 
-	const handleDisconnect = (integrationId: string) => {
+	const handleDisconnect = async (integration: Integration) => {
 		if (!canEdit) return;
-		setIntegrations(prev =>
-			prev.map(integration =>
-				integration.id === integrationId
-					? {
-						...integration,
-						status: 'disconnected' as const,
-						connectedAt: undefined,
-						config: undefined,
-					}
-					: integration
-			)
-		);
+		
+		try {
+			await updateIntegration({
+				id: integration._id,
+				status: 'disconnected',
+				config: {}
+			}).unwrap();
+			
+			toast.success(`${integration.name} disconnected`);
+		} catch (error) {
+			console.error('Disconnection failed:', error);
+			toast.error('Failed to disconnect');
+		}
 	};
 
-	const getIntegrationFields = (integrationId: string) => {
-		switch (integrationId) {
+	const getIntegrationFields = (type: string) => {
+		switch (type) {
 			case 'slack':
 				return [
 					{ key: 'workspaceUrl', label: 'Workspace URL', placeholder: 'e.g., yourworkspace.slack.com', required: true },
@@ -145,7 +103,12 @@ const IntegrationsPage: React.FC = () => {
 				];
 			case 'email':
 				return [
-					{ key: 'email', label: 'Email Address', placeholder: 'your-email@example.com', required: true, type: 'email' },
+					{ key: 'email', label: 'Support Email Address', placeholder: 'support@yourdomain.com', required: true, type: 'email' },
+					{ key: 'smtpHost', label: 'SMTP Host', placeholder: 'e.g., smtp.gmail.com', required: true },
+					{ key: 'smtpPort', label: 'SMTP Port', placeholder: 'e.g., 465 (SSL) or 587 (TLS)', required: true },
+					{ key: 'smtpUser', label: 'SMTP User', placeholder: 'Your email/username', required: true },
+					{ key: 'smtpPass', label: 'SMTP Password', placeholder: 'App password or token', required: true, type: 'password' },
+					{ key: 'senderName', label: 'Sender Name', placeholder: 'e.g., Peoplely Support', required: false },
 				];
 			case 'zapier':
 				return [
@@ -178,106 +141,39 @@ const IntegrationsPage: React.FC = () => {
 			</div>
 
 			{/* Integrations Grid */}
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-				{integrations?.map((integration) => (
-					<div
-						key={integration.id}
-						className="p-6 dark:bg-gray-800 border dark:border-gray-700"
-						style={{
-							backgroundColor: 'var(--accent-white)',
-							borderColor: 'var(--light-gray)'
-						}}
-					>
-						{/* Integration Header */}
-						<div className="flex items-start justify-between mb-4">
-							<div className="flex items-center gap-3">
-								<div
-									className="w-12 h-12 flex items-center justify-center rounded-lg dark:bg-gray-700"
-									style={{ backgroundColor: 'var(--bg-primary)' }}
-								>
-									<Link2Icon
-										className="w-6 h-6 dark:text-gray-300"
-										style={{ color: 'var(--text-primary)' }}
-									/>
-								</div>
-								<div>
-									<h3
-										className="font-inter font-semibold text-base dark:text-gray-100 mb-1"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{integration.name}
-									</h3>
-									{integration.status === 'connected' && (
-										<div className="flex items-center gap-1">
-											<div
-												className="w-2 h-2 rounded-full"
-												style={{ backgroundColor: '#22C55E' }}
-											/>
-											<span
-												className="text-[8px] md:text-[10px] dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												Connected
-											</span>
-										</div>
-									)}
+			{isFetching ? (
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+					{[1, 2, 3, 4].map(i => (
+						<div 
+							key={i} 
+							className="h-48 animate-pulse bg-gray-100 dark:bg-gray-800 rounded-lg p-6 flex flex-col gap-4"
+						>
+							<div className="flex gap-3">
+								<div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+								<div className="flex flex-col gap-2">
+									<div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
+									<div className="w-16 h-3 bg-gray-200 dark:bg-gray-700 rounded" />
 								</div>
 							</div>
-							{integration.status === 'connected' && canEdit && (
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => handleDisconnect(integration.id)}
-									className="p-1 transition-colors h-auto"
-									style={{ color: 'var(--text-tertiary)' }}
-									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-										e.currentTarget.style.color = '#DC2626';
-									}}
-									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-										e.currentTarget.style.color = 'var(--text-tertiary)';
-									}}
-									title="Disconnect"
-								>
-									<Cross2Icon className="w-4 h-4" />
-								</Button>
-							)}
+							<div className="w-full h-12 bg-gray-200 dark:bg-gray-700 rounded" />
+							<div className="w-full h-10 bg-gray-200 dark:bg-gray-700 rounded mt-auto" />
 						</div>
-
-						{/* Integration Description */}
-						<p
-							className="text-[10px] md:text-[12px] dark:text-gray-400 mb-4"
-							style={{ color: 'var(--text-tertiary)' }}
-						>
-							{integration.description}
-						</p>
-
-						{/* Connect/Disconnect Button */}
-						{integration.status === 'disconnected' ? (
-							canEdit && (
-								<Button
-									variant="primary"
-									size="md"
-									onClick={() => handleConnectClick(integration)}
-									className="w-full"
-								>
-									Connect
-								</Button>
-							)
-						) : (
-							canEdit && (
-								<Button
-									variant="outline"
-									size="md"
-									onClick={() => handleDisconnect(integration.id)}
-									className="w-full"
-								>
-									Disconnect
-								</Button>
-							)
-						)}
-					</div>
-				))}
-			</div>
+					))}
+				</div>
+			) : (
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+					{integrationsData?.integrations?.map((integration) => (
+						<IntegrationCard
+							key={integration._id}
+							integration={integration}
+							canEdit={canEdit}
+							isUpdating={isUpdating}
+							onConnect={handleConnectClick}
+							onDisconnect={handleDisconnect}
+						/>
+					))}
+				</div>
+			)}
 
 			{/* Connect Integration Modal */}
 			<Modal
@@ -300,14 +196,14 @@ const IntegrationsPage: React.FC = () => {
 							</p>
 
 							<div className="space-y-4">
-								{getIntegrationFields(connectingIntegration.id).map((field) => (
+								{getIntegrationFields(connectingIntegration.type).map((field) => (
 									<Input
 										key={field.key}
 										label={field.label}
 										placeholder={field.placeholder}
 										value={connectionForm[field.key as keyof typeof connectionForm]}
 										onChange={(value) =>
-											setConnectionForm(prev => ({
+											setConnectionForm((prev: any) => ({
 												...prev,
 												[field.key]: value,
 											}))
@@ -318,7 +214,7 @@ const IntegrationsPage: React.FC = () => {
 								))}
 							</div>
 
-							{connectingIntegration.id === 'slack' && (
+							{connectingIntegration.type === 'slack' && (
 								<div className="mt-4 p-3 dark:bg-gray-700 rounded-lg" style={{ backgroundColor: 'var(--bg-primary)' }}>
 									<p
 										className="text-[8px] md:text-[10px] dark:text-gray-400"
@@ -365,9 +261,10 @@ const IntegrationsPage: React.FC = () => {
 						variant="primary"
 						size="md"
 						onClick={handleConnect}
+						loading={isUpdating}
 						disabled={
 							!connectingIntegration ||
-							getIntegrationFields(connectingIntegration.id).some(
+							getIntegrationFields(connectingIntegration.type).some(
 								field => field.required && !connectionForm[field.key as keyof typeof connectionForm]
 							)
 						}

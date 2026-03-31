@@ -146,7 +146,7 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
 			<div
-				className="dark:bg-gray-800 shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+				className="dark:bg-gray-800 shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
@@ -164,7 +164,7 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 						variant="ghost"
 						size="sm"
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors !rounded-none"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -205,7 +205,7 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 							placeholder="HH:MM"
 							value={formData.shiftStartTime}
 							onChange={(value) => handleInputChange('shiftStartTime')(value)}
-							inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+							inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-[var(--radius)]"
 							required
 						/>
 						<TimeInput
@@ -213,7 +213,7 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 							placeholder="HH:MM"
 							value={formData.shiftEndTime}
 							onChange={(value) => handleInputChange('shiftEndTime')(value)}
-							inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+							inputClassName="border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-[var(--radius)]"
 							required
 						/>
 					</div>

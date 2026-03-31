@@ -102,7 +102,7 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 				{configurationCards?.map((card) => (
 					<div
 						key={card.id}
-						className="dark:bg-gray-800 border dark:border-gray-700"
+						className="dark:bg-gray-800 border dark:border-gray-700 rounded-[var(--radius)]"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
