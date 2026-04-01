@@ -80,7 +80,7 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 	return (
 		<div
 			ref={setNodeRef}
-			className="select-none"
+			className="select-none rounded-[var(--radius)] overflow-hidden"
 			style={{
 				...sortableStyle,
 				backgroundColor: 'var(--accent-white)',
@@ -88,7 +88,7 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 			}}
 		>
 			<div
-				className="flex justify-between items-center p-4 cursor-move"
+				className="flex justify-between items-center p-4 cursor-move rounded-t-[var(--radius)]"
 				{...attributes}
 				{...listeners}
 				suppressHydrationWarning

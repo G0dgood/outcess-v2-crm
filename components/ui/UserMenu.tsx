@@ -202,7 +202,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 					}}
 				>
 					<Icon name="Sign_out_squre_light" size="lg" color="red" className="dark:invert-0! dark:opacity-100!" />
-					Log out
+					Sign Out
 				</button>
 			</div>
 		</div>

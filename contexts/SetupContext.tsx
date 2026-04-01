@@ -31,6 +31,7 @@ export interface Widget {
 	color: string;
 	callOutcome?: string;
 	subKey?: string;
+	dataSourceName?: string;
 }
 
 export interface CallOutcome {

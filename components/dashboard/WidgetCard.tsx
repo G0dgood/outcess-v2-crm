@@ -47,7 +47,7 @@ export const WidgetCard: React.FC<WidgetCardProps> = React.memo(({ title, value,
 
 	return (
 		<div
-			className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative"
+			className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative rounded-[var(--radius)]"
 			style={{
 				backgroundColor: 'var(--accent-white)',
 				borderColor: 'var(--light-gray)'
@@ -84,7 +84,7 @@ export const WidgetCard: React.FC<WidgetCardProps> = React.memo(({ title, value,
 					)}
 					{isDropdownOpen && (canEdit || canDelete) && (
 						<div
-							className="absolute right-0 top-6 z-50 dark:bg-gray-800 border dark:border-gray-700 shadow-lg min-w-[120px]"
+							className="absolute right-0 top-10 z-50 dark:bg-gray-800 border dark:border-gray-700 shadow-xl min-w-[140px] rounded-[var(--radius)] overflow-hidden"
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)'
@@ -96,7 +96,7 @@ export const WidgetCard: React.FC<WidgetCardProps> = React.memo(({ title, value,
 									size="md"
 									onClick={handleEdit}
 									fullWidth
-									className="justify-start px-4 py-2 h-auto text-[10px] md:text-[12px] transition-colors first:rounded-t-lg cursor-pointer"
+									className="justify-start px-4 py-2.5 h-auto text-[10px] md:text-[12px] transition-all cursor-pointer"
 									style={{
 										color: 'var(--text-secondary)',
 										backgroundColor: 'transparent'
@@ -108,6 +108,7 @@ export const WidgetCard: React.FC<WidgetCardProps> = React.memo(({ title, value,
 										e.currentTarget.style.backgroundColor = 'transparent';
 									}}
 								>
+									<Icon name="Edit_duotone_line" size="sm" className="mr-2" />
 									Edit
 								</Button>
 							)}
@@ -117,18 +118,21 @@ export const WidgetCard: React.FC<WidgetCardProps> = React.memo(({ title, value,
 									size="md"
 									onClick={handleDelete}
 									fullWidth
-									className="justify-start px-4 py-2 h-auto text-[10px] md:text-[12px] transition-colors last:rounded-b-lg cursor-pointer"
+									className="justify-start px-4 py-2.5 h-auto text-[10px] md:text-[12px] transition-all cursor-pointer text-red-500 hover:text-red-600"
 									style={{
 										color: 'var(--text-secondary)',
 										backgroundColor: 'transparent'
 									}}
 									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+										e.currentTarget.style.color = '#ef4444'; // Red
 									}}
 									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.backgroundColor = 'transparent';
+										e.currentTarget.style.color = 'var(--text-secondary)';
 									}}
 								>
+									<Icon name="Trash_light" size="sm" className="mr-2" />
 									Delete
 								</Button>
 							)}

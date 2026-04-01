@@ -375,6 +375,7 @@ const DashboardContent: React.FC = () => {
 		};
 
 		return dashboardSettings?.widgets?.map((widget: Widget) => {
+			const sourceKey = widget.dataSourceName || widget.title;
 			// Check report data first
 			if (reportData?.data?.breakdown) {
 				const breakdown = reportData.data.breakdown;
@@ -394,8 +395,8 @@ const DashboardContent: React.FC = () => {
 				}
 
 				// 1. Direct Lookup (Title = Category)
-				if (breakdown[widget.title] !== undefined) {
-					const reportValue = breakdown[widget.title];
+				if (breakdown[sourceKey] !== undefined) {
+					const reportValue = breakdown[sourceKey];
 					if (typeof reportValue === 'object' && reportValue !== null) {
 						if (widget.subKey && reportValue[widget.subKey] !== undefined) {
 							return { ...widget, value: reportValue[widget.subKey] };
@@ -419,7 +420,7 @@ const DashboardContent: React.FC = () => {
 				Object.values(breakdown).some((categoryValue) => {
 					if (typeof categoryValue === 'object' && categoryValue !== null) {
 						// Use type assertion or check for property existence safely
-						const val = (categoryValue as Record<string, unknown>)[widget.title];
+						const val = (categoryValue as Record<string, unknown>)[sourceKey];
 						if (val !== undefined) {
 							deepMatchValue = Number(val);
 							return true; // Stop searching
@@ -440,35 +441,35 @@ const DashboardContent: React.FC = () => {
 			}
 
 			// Update pending dispositions widget value
-			if (widget.title === 'Pending Dispositions') {
+			if (sourceKey === 'Pending Dispositions') {
 				return { ...widget, value: pendingDispositionsCount };
 			}
 
 			// Update total dispositions widget value
-			if (widget.title === 'Total Dispositions' || widget.title === 'Total Calls') {
+			if (sourceKey === 'Total Dispositions' || sourceKey === 'Total Calls') {
 				return { ...widget, value: filteredDispositions.length };
 			}
 
 			// Check if widget title corresponds to a disposition field
 			// We check if the widget title matches any disposition name in the settings
 			const isDispositionField = dashboardSettings.dispositions?.some(
-				(d: DispositionCategory) => d.name === widget.title
+				(d: DispositionCategory) => d.name === sourceKey
 			);
 
 			if (isDispositionField) {
-				return { ...widget, value: calculateDispositionFieldCount(widget.title) };
+				return { ...widget, value: calculateDispositionFieldCount(sourceKey) };
 			}
 
 			// Check if widget title corresponds to a call outcome
 			const isCallOutcome = dashboardSettings.callOutcomes?.some(
-				(o: CallOutcome) => o.name.toLowerCase() === widget.title.toLowerCase()
+				(o: CallOutcome) => o.name.toLowerCase() === sourceKey.toLowerCase()
 			);
 
 			if (isCallOutcome) {
 				const count = filteredDispositions.filter(disp => {
 					if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
 						return disp.dispositionData.some((f: DispositionFieldEntry) =>
-							f.fieldValue && f.fieldValue.toString().toLowerCase() === widget.title.toLowerCase()
+							f.fieldValue && f.fieldValue.toString().toLowerCase() === sourceKey.toLowerCase()
 						);
 					}
 					return false;
@@ -775,7 +776,7 @@ const DashboardContent: React.FC = () => {
 						onDragEnd={handleDragEnd}
 					>
 						<div
-							className="dark:bg-gray-800 border dark:border-gray-700 p-4"
+							className="dark:bg-gray-800 border dark:border-gray-700 p-4 rounded-[var(--radius)]"
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)'

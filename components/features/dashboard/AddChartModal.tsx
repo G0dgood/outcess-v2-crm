@@ -235,8 +235,8 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 			>
 				{/* Modal Header */}
 				<div
-					className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6"
-					style={{ borderColor: 'var(--light-gray)' }}
+				className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6 rounded-t-[var(--radius)]"
+				style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<div className="flex items-center gap-3">
 						<h2
@@ -362,7 +362,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 
 				{/* Modal Footer */}
 				<div
-					className="flex items-center gap-3 p-6 border-t dark:border-gray-700"
+					className="flex items-center gap-3 p-6 border-t dark:border-gray-700 rounded-b-[var(--radius)]"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					{isOffline && (

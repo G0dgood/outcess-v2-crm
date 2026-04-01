@@ -3,7 +3,7 @@ import { EyeOpenIcon, EyeNoneIcon } from '@radix-ui/react-icons';
 import Button from '@/components/ui/Button';
 
 interface InputProps {
-	label: string;
+	label?: string;
 	name?: string;
 	id?: string;
 	placeholder?: string;
@@ -44,7 +44,7 @@ export const Input: React.FC<InputProps> = ({
 		onChange?.(e.target.value);
 	};
 
-	const inputId = id || name || `input-${label.replace(/\s+/g, '-').toLowerCase()}`;
+	const inputId = id || name || `input-${(label || 'field').replace(/\s+/g, '-').toLowerCase()}`;
 
 	const togglePasswordVisibility = () => {
 		setShowPassword(!showPassword);

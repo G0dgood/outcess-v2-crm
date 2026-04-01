@@ -37,9 +37,11 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		value: 0,
 		color: primaryColor,
 		subKey: '',
+		dataSourceName: '',
 	});
 	const [selectedSubKey, setSelectedSubKey] = useState<string>('');
 	const [selectedCategory, setSelectedCategory] = useState<string>('');
+	const [isTitleManual, setIsTitleManual] = useState(false);
 
 	// API Data Fetching
 	const agentId = user?.id || user?._id || '';
@@ -64,86 +66,74 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 	// Calculate value based on selected disposition field
 	useEffect(() => {
 		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
-		const disposition = dashboardSettings?.dispositions?.find((d: { name: string }) => d.name === formData.title);
-		const outcome = dashboardSettings?.callOutcomes?.find((o: { name: string }) => o.name === formData.title);
+		const disposition = dashboardSettings?.dispositions?.find((d: { name: string }) => d.name === (selectedCategory || formData.dataSourceName));
+		const outcome = dashboardSettings?.callOutcomes?.find((o: { name: string }) => o.name === (selectedCategory || formData.dataSourceName));
 
 		// Check if it's from API report
 		if (reportData?.data?.breakdown) {
 			const breakdown = reportData.data.breakdown;
 
-			// Use selectedCategory for lookup if available, otherwise fallback to title
-			const lookupKey = selectedCategory || formData.title;
+			// Use selectedCategory for lookup if available, otherwise fallback to dataSourceName
+			const lookupKey = selectedCategory || formData.dataSourceName;
 
-			// 1. Direct Lookup
-			if (breakdown[lookupKey] !== undefined) {
+			if (lookupKey && breakdown[lookupKey] !== undefined) {
 				const reportValue = breakdown[lookupKey];
 				if (typeof reportValue === 'object' && reportValue !== null) {
-					// It's a nested object, check if subKey is selected
 					if (selectedSubKey && reportValue[selectedSubKey] !== undefined) {
-						// Construct composite key: Category:::Key
 						const compositeSubKey = `${lookupKey}:::${selectedSubKey}`;
 						setFormData(prev => ({
 							...prev,
-							title: selectedSubKey, // Rename title to sub-option for better UX
+							title: isTitleManual ? prev.title : selectedSubKey,
 							value: Number(reportValue[selectedSubKey]),
 							subKey: compositeSubKey,
+							dataSourceName: lookupKey,
 						}));
 					} else {
-						// If no subKey selected, sum all values
 						const total = Object.values(reportValue).reduce((acc: number, val) => acc + (Number(val) || 0), 0);
-						setFormData(prev => ({ ...prev, value: total, subKey: '' }));
+						setFormData(prev => ({
+							...prev,
+							title: isTitleManual ? prev.title : lookupKey,
+							value: total,
+							subKey: '',
+							dataSourceName: lookupKey,
+						}));
 					}
 				} else {
-					setFormData(prev => ({ ...prev, value: Number(reportValue), subKey: '' }));
+					setFormData(prev => ({
+						...prev,
+						title: isTitleManual ? prev.title : lookupKey,
+						value: Number(reportValue),
+						subKey: '',
+						dataSourceName: lookupKey,
+					}));
 				}
-				return;
-			}
-
-
-			// 2. Deep Lookup (Search for Title in all nested objects)
-			// This is needed if the Title was already updated to the subKey name (e.g. "Connected")
-			let deepMatchValue: number | undefined;
-			Object.values(breakdown).some((categoryValue) => {
-				if (typeof categoryValue === 'object' && categoryValue !== null) {
-					const val = (categoryValue as Record<string, unknown>)[formData.title];
-					if (val !== undefined) {
-						deepMatchValue = Number(val);
-						return true;
-					}
-				}
-				return false;
-			});
-
-			if (deepMatchValue !== undefined) {
-				const finalValue = Number(deepMatchValue);
-				setFormData(prev => ({ ...prev, value: finalValue, subKey: '' }));
 				return;
 			}
 		}
 
 		if (disposition) {
-			// Get all dispositions (offline + synced)
 			const offlineDispositions = getOfflineDispositions();
 			const syncedDispositions = getSyncedDispositions();
 			const allDispositions = [...offlineDispositions, ...syncedDispositions];
 
-			// Count dispositions with this category
 			const count = allDispositions.filter(disp => {
 				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
 					const field = disp.dispositionData.find((f: DispositionFieldEntry) => f.fieldName === disposition.name);
 					if (field) {
-						const value = field.fieldValue;
-						return value && value.toString().trim() !== '' && value !== '-';
+						return field.fieldValue && field.fieldValue.toString().trim() !== '' && field.fieldValue !== '-';
 					}
 				}
-				// Fallback for direct property access
 				const fieldValue = disp[disposition.name as keyof typeof disp];
 				return fieldValue && fieldValue.toString().trim() !== '' && fieldValue !== '-';
 			}).length;
 
-			setFormData(prev => ({ ...prev, value: count }));
+			setFormData(prev => ({
+				...prev,
+				title: isTitleManual ? prev.title : disposition.name,
+				value: count,
+				dataSourceName: disposition.name,
+			}));
 		} else if (outcome) {
-			// Count call outcomes
 			const offlineDispositions = getOfflineDispositions();
 			const syncedDispositions = getSyncedDispositions();
 			const allDispositions = [...offlineDispositions, ...syncedDispositions];
@@ -157,50 +147,46 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 				return false;
 			}).length;
 
-			setFormData(prev => ({ ...prev, value: count }));
-		} else {
-			// For other titles, keep the manual value or set to 0
-			if (formData?.value === 0 && formData?.title) {
-				// Don't reset if user manually set a value
-			}
+			setFormData(prev => ({
+				...prev,
+				title: isTitleManual ? prev.title : outcome.name,
+				value: count,
+				dataSourceName: outcome.name,
+			}));
 		}
-	}, [formData?.title, formData?.value, lineOfBusinessData?.lineOfBusiness?.dashboardSettings, reportData, selectedSubKey, selectedCategory]);
+	}, [formData.dataSourceName, lineOfBusinessData?.lineOfBusiness?.dashboardSettings, reportData, selectedSubKey, selectedCategory, isTitleManual]);
 
 	// Build dropdown options from available data
 	const widgetTitleOptions = useMemo(() => {
 		const optionsMap = new Map<string, { value: string; label: string }>();
 
-		// Add API report keys
 		if (reportData?.data?.breakdown) {
 			Object.keys(reportData.data.breakdown).forEach(key => {
 				optionsMap.set(key, { value: key, label: key });
 			});
 		}
 
-		// Add call outcomes if available
-		if (lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes && lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes.length > 0) {
-			lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes.forEach((outcome: { name: string }) => {
+		if (lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes) {
+			lineOfBusinessData.lineOfBusiness.dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
 				if (outcome?.name) {
 					optionsMap.set(outcome.name, { value: outcome.name, label: outcome.name });
 				}
 			});
 		}
 
-		// Add disposition categories if available
-		if (lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions && lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions?.length > 0) {
-			lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions?.forEach((disposition: { name: unknown }) => {
-				const name = disposition?.name as string;
-				if (name) {
-					optionsMap.set(name, { value: name, label: name });
+		if (lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions) {
+			lineOfBusinessData.lineOfBusiness.dashboardSettings.dispositions.forEach((disposition: { name: string }) => {
+				if (disposition?.name) {
+					optionsMap.set(disposition.name, { value: disposition.name, label: disposition.name });
 				}
 			});
 		}
 
 		return Array.from(optionsMap.values());
-	}, [lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes, lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions, reportData]);
+	}, [lineOfBusinessData?.lineOfBusiness?.dashboardSettings, reportData]);
 
 	const subKeyOptions = useMemo(() => {
-		const lookupKey = selectedCategory || formData.title;
+		const lookupKey = selectedCategory || formData.dataSourceName;
 		if (!reportData?.data?.breakdown || !lookupKey) return [];
 		const reportValue = reportData.data.breakdown[lookupKey];
 		if (typeof reportValue === 'object' && reportValue !== null) {
@@ -210,48 +196,60 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 			}));
 		}
 		return [];
-	}, [reportData, formData.title, selectedCategory]);
+	}, [reportData, formData.dataSourceName, selectedCategory]);
 
-	const handleInputChange = (field: string) => (value: string | number) => {
-		if (field === 'title') {
-			setSelectedCategory(value as string);
-			setSelectedSubKey(''); // Reset subKey when category changes
-		}
-		setFormData(prev => ({ ...prev, [field]: value }));
+	const handleDataSourceChange = (value: string) => {
+		setSelectedCategory(value);
+		setSelectedSubKey('');
+		setFormData(prev => ({
+			...prev,
+			dataSourceName: value,
+			title: isTitleManual ? prev.title : value,
+		}));
+	};
+
+	const handleTitleChange = (value: string) => {
+		setIsTitleManual(true);
+		setFormData(prev => ({ ...prev, title: value }));
 	};
 
 	const isValueAutoCalculated = useMemo(() => {
 		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
-		const isDisposition = dashboardSettings?.dispositions?.some((d: { name: string }) => d.name === formData.title);
-		const isOutcome = dashboardSettings?.callOutcomes?.some((o: { name: string }) => o.name === formData.title);
+		const source = formData.dataSourceName;
+		const isDisposition = dashboardSettings?.dispositions?.some((d: { name: string }) => d.name === source);
+		const isOutcome = dashboardSettings?.callOutcomes?.some((o: { name: string }) => o.name === source);
 
-		return isDisposition || isOutcome;
-	}, [formData?.title, lineOfBusinessData]);
+		return isDisposition || isOutcome || (reportData?.data?.breakdown && reportData.data.breakdown[source!] !== undefined);
+	}, [formData.dataSourceName, lineOfBusinessData, reportData]);
 
 	const handleSave = () => {
-		if (formData?.title.trim()) {
+		if (formData.title.trim()) {
 			onSave(formData);
-			// Reset form
 			setFormData({
 				title: '',
 				value: 0,
-				color: '#050711',
+				color: primaryColor,
 				subKey: '',
+				dataSourceName: '',
 			});
 			setSelectedSubKey('');
+			setSelectedCategory('');
+			setIsTitleManual(false);
 			onClose();
 		}
 	};
 
 	const handleCancel = () => {
-		// Reset form
 		setFormData({
 			title: '',
 			value: 0,
-			color: '#050711',
+			color: primaryColor,
 			subKey: '',
+			dataSourceName: '',
 		});
 		setSelectedSubKey('');
+		setSelectedCategory('');
+		setIsTitleManual(false);
 		onClose();
 	};
 
@@ -264,48 +262,61 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		>
 			<div className="p-6 space-y-4">
 				<Dropdown
-					label="Widget Title"
-					value={selectedCategory || formData.title}
-					onChange={(value) => handleInputChange('title')(Array.isArray(value) ? value[0] : value)}
+					label="Data Source"
+					value={selectedCategory || formData.dataSourceName}
+					onChange={(value) => handleDataSourceChange(Array.isArray(value) ? value[0] : value)}
 					options={widgetTitleOptions}
-					placeholder="Select widget title"
+					placeholder="Select data source"
 				/>
 
 				{subKeyOptions.length > 0 && (
 					<Dropdown
-						label="Select Option"
+						label="Aggregation Option"
 						value={selectedSubKey}
-						onChange={(value) => setSelectedSubKey(Array.isArray(value) ? value[0] : value)}
+						onChange={(value) => {
+							const val = Array.isArray(value) ? value[0] : value;
+							setSelectedSubKey(val);
+							if (!isTitleManual) {
+								setFormData(prev => ({ ...prev, title: val }));
+							}
+						}}
 						options={subKeyOptions}
 						placeholder="Select specific option"
 					/>
 				)}
 
 				<Input
+					label="Display Title"
+					value={formData.title}
+					onChange={handleTitleChange}
+					placeholder="Enter widget title"
+				/>
+
+				<Input
 					label="Widget Value"
 					type="number"
 					value={formData.value.toString()}
-					onChange={(value) => handleInputChange('value')(Number(value))}
+					onChange={(value) => setFormData(prev => ({ ...prev, value: Number(value) }))}
 					placeholder="Enter widget value"
 					disabled={isValueAutoCalculated}
 					className={isValueAutoCalculated ? 'opacity-60 cursor-not-allowed' : ''}
 				/>
 				{isValueAutoCalculated && (
 					<p className="text-[8px] md:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
-						Value is automatically calculated from disposition data
+						Value is automatically calculated from data source
 					</p>
 				)}
 
 				<ColorPicker
 					label="Widget Color"
 					value={formData.color}
-					onChange={handleInputChange('color')}
+					onChange={(color) => setFormData(prev => ({ ...prev, color }))}
 				/>
 			</div>
 
 			{/* Footer */}
 			<div
-				className="flex justify-end gap-3 p-6 border-t dark:border-gray-700"
+				className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 rounded-b-[var(--radius)]"
 				style={{ borderColor: 'var(--light-gray)' }}
 			>
 				<Button

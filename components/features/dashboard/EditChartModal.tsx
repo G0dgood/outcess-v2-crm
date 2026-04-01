@@ -331,7 +331,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 
 			{/* Footer */}
 			<div
-				className="flex items-center gap-3 p-6 border-t dark:border-gray-700"
+				className="flex items-center gap-3 p-6 border-t dark:border-gray-700 rounded-b-[var(--radius)]"
 				style={{ borderColor: 'var(--light-gray)' }}
 			>
 				{isOffline && (

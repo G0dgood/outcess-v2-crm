@@ -70,7 +70,7 @@ const LogoutConfirmationModal: React.FC<LogoutConfirmationModalProps> = ({
 						fullWidth
 						onClick={onConfirm}
 						loading={isLoading}
-						className="!rounded-none h-12 text-[14px] font-semibold"
+						className="rounded-[var(--radius)] h-12 text-[14px] font-semibold"
 					>
 						Yes, Sign Out
 					</Button>
@@ -79,7 +79,7 @@ const LogoutConfirmationModal: React.FC<LogoutConfirmationModalProps> = ({
 						fullWidth
 						onClick={onClose}
 						disabled={isLoading}
-						className="!rounded-none h-12 text-[14px] font-medium"
+						className="rounded-[var(--radius)] h-12 text-[14px] font-medium"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
 						No, Stay Logged In
