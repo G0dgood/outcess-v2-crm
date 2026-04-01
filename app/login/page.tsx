@@ -49,10 +49,19 @@ export default function LoginPage() {
 
 	// Redirect authenticated users back to dashboard
 	React.useEffect(() => {
-		if (authContext.isAuthenticated && !authContext.isLoading) {
-			router.push('/dashboard');
+		if (authContext.isAuthenticated && !authContext.isLoading && authContext.user) {
+			const role = authContext.user.role;
+			const roleName = (typeof role === 'object' && role !== null && 'roleName' in role)
+				? (role as { roleName: string }).roleName
+				: (typeof role === 'string' ? role : '');
+
+			if (roleName.toLowerCase() === 'super admin' || roleName.toLowerCase() === 'superadmin') {
+				router.push('/superadmin/dashboard');
+			} else {
+				router.push('/dashboard');
+			}
 		}
-	}, [authContext.isAuthenticated, authContext.isLoading, router]);
+	}, [authContext.isAuthenticated, authContext.isLoading, authContext.user, router]);
 
 	const handleInputChange = (field: string) => (value: string) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
@@ -136,10 +145,12 @@ export default function LoginPage() {
 					toast.success('Login successful!');
 
 					// Check for Super Admin role
-					const roleName = normalizedUser.role?.roleName ||
-						(typeof normalizedUser.role === 'string' ? normalizedUser.role : '');
+					const role = normalizedUser.role;
+					const roleName = (typeof role === 'object' && role !== null && 'roleName' in role)
+						? (role as { roleName: string }).roleName
+						: (typeof role === 'string' ? role : '');
 
-					if (roleName.toLowerCase() === 'super admin') {
+					if (roleName.toLowerCase() === 'super admin' || roleName.toLowerCase() === 'superadmin') {
 						router.push('/superadmin/dashboard');
 					} else {
 						router.push('/dashboard');
