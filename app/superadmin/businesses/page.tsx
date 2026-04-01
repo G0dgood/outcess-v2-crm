@@ -122,7 +122,7 @@ const BusinessesManagementPage: React.FC = () => {
 
 			{/* Businesses Table */}
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'

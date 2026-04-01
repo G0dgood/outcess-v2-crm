@@ -65,8 +65,8 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     <div className={`relative ${className}`} ref={dropdownRef}>
       <div
         onClick={toggleOpen}
-        className={`dark:bg-gray-800 px-3 py-2 text-[10px] md:text-[12px] flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap rounded-[var(--radius)] ${triggerClassName}`}
-        style={{ backgroundColor: 'var(--accent-white)', color: 'var(--text-secondary)' }}
+        className={`dark:bg-gray-800 px-3 py-2 text-[10px] md:text-[12px] flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap rounded-[var(--radius)] bg-white dark:bg-gray-800 ${triggerClassName}`}
+        style={{ color: 'var(--text-secondary)' }}
       >
         {label}
         <MoreHorizontal className="w-4 h-4 rotate-90" />

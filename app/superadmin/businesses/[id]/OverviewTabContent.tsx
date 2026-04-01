@@ -25,7 +25,7 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
    {/* Basic Information Card */}
    <div
-    className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+    className="dark:bg-gray-800 border dark:border-gray-700 p-6 rounded-[var(--radius)]"
     style={{
      backgroundColor: 'var(--accent-white)',
      borderColor: 'var(--light-gray)'
@@ -104,7 +104,7 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
 
    {/* Contact Information Card */}
    <div
-    className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+    className="dark:bg-gray-800 border dark:border-gray-700 p-6 rounded-[var(--radius)]"
     style={{
      backgroundColor: 'var(--accent-white)',
      borderColor: 'var(--light-gray)'
@@ -178,7 +178,7 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
 
    {/* Subscription Details Card */}
    <div
-    className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+    className="dark:bg-gray-800 border dark:border-gray-700 p-6 rounded-[var(--radius)]"
     style={{
      backgroundColor: 'var(--accent-white)',
      borderColor: 'var(--light-gray)'
@@ -224,7 +224,7 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
 
    {/* Active Module Card */}
    <div
-    className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+    className="dark:bg-gray-800 border dark:border-gray-700 p-6 rounded-[var(--radius)]"
     style={{
      backgroundColor: 'var(--accent-white)',
      borderColor: 'var(--light-gray)'

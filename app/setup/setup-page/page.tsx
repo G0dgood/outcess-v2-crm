@@ -67,7 +67,7 @@ export default function SetupPage() {
 			</div>
 
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 w-full h-full"
+				className="dark:bg-gray-800 border dark:border-gray-700 w-full h-full rounded-[var(--radius)] overflow-hidden"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'

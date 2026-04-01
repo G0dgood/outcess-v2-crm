@@ -102,7 +102,7 @@ const SupportPage = () => {
 				<div className="flex items-center gap-3">
 					<FilterDropdown
 						label={priorityFilter || "Select Priority"}
-						triggerClassName="!px-2 !py-2 !text-[8px] md:!text-[10px] sm:!px-4 sm:!py-2"
+						triggerClassName="!px-2 !py-2 !text-[8px] md:!text-[10px] sm:!px-4 sm:!py-2 !bg-[#F8F9FA]"
 					>
 						{({ close }) => (
 							<div className="dark:bg-gray-800 shadow-lg overflow-hidden w-40 cursor-default rounded-[var(--radius)]">
@@ -124,7 +124,7 @@ const SupportPage = () => {
 					</FilterDropdown>
 					<FilterDropdown
 						label={dateFilter?.filterType ? (dateFilter.filterType === 'all' ? 'All Time' : dateFilter.filterType) : "This Week"}
-						triggerClassName="!px-2 !py-2 !text-[8px] md:!text-[10px] sm:!px-4 sm:!py-2"
+						triggerClassName="!px-2 !py-2 !text-[8px] md:!text-[10px] sm:!px-4 sm:!py-2 !bg-[#F8F9FA]"
 					>
 						{({ close }) => (
 							<DateFilter

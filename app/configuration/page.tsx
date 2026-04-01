@@ -129,7 +129,7 @@ export default function ConfigurationPage() {
 
 			{/* Line of Business Table */}
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
@@ -146,13 +146,19 @@ export default function ConfigurationPage() {
 				/>
 				<div className="overflow-x-auto">
 					<table className="min-w-full">
-						<thead>
+						<thead
+							className="dark:bg-gray-700 border-b dark:border-gray-700"
+							style={{
+								backgroundColor: 'var(--bg-primary)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
 							<tr>
-								<th>Name</th>
-								<th>Progress</th>
-								<th>Status</th>
-								<th>Created At</th>
-								<th>Action</th>
+								<th className="px-4 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Name</th>
+								<th className="px-4 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Progress</th>
+								<th className="px-4 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Status</th>
+								<th className="px-4 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Created At</th>
+								<th className="px-4 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Action</th>
 							</tr>
 						</thead>
 						<tbody className="divide-y dark:divide-gray-700">
@@ -162,16 +168,17 @@ export default function ConfigurationPage() {
 								<NoRecordFound colSpan={5} />
 							) : (
 								lineOfBusinesses?.map((lob: LineOfBusiness) => (
-									<tr
-										key={lob._id}
-										onMouseEnter={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-										}}
-										onMouseLeave={(e) => {
-											e.currentTarget.style.backgroundColor = 'transparent';
-										}}
-										className="dark:hover:bg-gray-700/50"
-									>
+										<tr
+											key={lob._id}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.backgroundColor = 'transparent';
+											}}
+											className="dark:hover:bg-gray-700/50 transition-colors border-b dark:border-gray-700 last:border-0"
+											style={{ borderColor: 'var(--light-gray)' }}
+										>
 										<td className="px-4 py-3">{lob.lineOfBusinessName}</td>
 										<td className="px-4 py-3">
 											<ProgressBar progress={typeof lob.progress === 'number' ? lob.progress : 0} />

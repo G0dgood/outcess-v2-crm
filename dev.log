@@ -537,3 +537,101 @@ TypeError: __webpack_require__.C is not a function
  GET /configuration 200 in 150ms
  GET /configuration 200 in 84ms
  GET /configuration 200 in 22663ms
+ GET /support 200 in 4850ms
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /favicon.ico in 8.6s (872 modules)
+ GET /favicon.ico 200 in 11278ms
+ GET /settings?tab=company-details 200 in 11426ms
+ GET /favicon.ico 200 in 353ms
+ GET /support 200 in 1030ms
+ GET /support 200 in 95ms
+ GET /settings?tab=company-details 200 in 7463ms
+ ✓ Compiled in 32.1s (1614 modules)
+ GET /settings?tab=company-details 200 in 13627ms
+ GET /settings?tab=permission 200 in 4016ms
+ GET /support 200 in 1097ms
+ GET /configuration 200 in 890ms
+ ○ Compiling /setup ...
+ ✓ Compiled /setup in 43.9s (1683 modules)
+ GET /setup 200 in 43278ms
+ GET /setup 200 in 66ms
+ ○ Compiling /leaderboard ...
+ ✓ Compiled /leaderboard in 11.7s (878 modules)
+ GET /leaderboard 200 in 14492ms
+ GET /leaderboard 200 in 41ms
+ ○ Compiling /report ...
+ ✓ Compiled /report in 3.7s (889 modules)
+ GET /report 200 in 4102ms
+ GET /report 200 in 43ms
+ ✓ Compiled in 8.8s (797 modules)
+ GET /report 200 in 90ms
+ ✓ Compiled in 8.2s (1660 modules)
+ ○ Compiling /setup-book ...
+ ✓ Compiled /setup-book in 7.5s (879 modules)
+ GET /setup-book 200 in 8397ms
+ GET /setup-book 200 in 86ms
+ ✓ Compiled in 8.6s (797 modules)
+ GET /setup-book 200 in 57ms
+ ○ Compiling /configuration ...
+ ✓ Compiled /configuration in 2.1s (861 modules)
+ GET /configuration 200 in 2939ms
+ ✓ Compiled in 1836ms (797 modules)
+ GET /configuration 200 in 55ms
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /favicon.ico in 10.7s (1636 modules)
+ GET /favicon.ico 200 in 13364ms
+ GET /configuration 200 in 3168ms
+ ✓ Compiled in 9.1s (1636 modules)
+ GET /configuration 200 in 458ms
+ ✓ Compiled in 1032ms (797 modules)
+ GET /configuration 200 in 61ms
+ GET /configuration 200 in 927ms
+ GET /favicon.ico 200 in 41ms
+ ✓ Compiled in 638ms (797 modules)
+ GET /configuration 200 in 61ms
+ GET /report 200 in 222ms
+ GET /configuration 200 in 58ms
+ ✓ Compiled in 1107ms (797 modules)
+ GET /configuration 200 in 84ms
+ ✓ Compiled in 1413ms (797 modules)
+ GET /configuration 200 in 61ms
+ ✓ Compiled in 2s (797 modules)
+ GET /configuration 200 in 161ms
+ ○ Compiling /support ...
+ ✓ Compiled /support in 54.9s (866 modules)
+ GET /support 200 in 60180ms
+ GET /support 200 in 12334ms
+ GET /support 200 in 119ms
+ ○ Compiling /support/team ...
+ ✓ Compiled /support/team in 26.1s (1608 modules)
+ GET /support/team 200 in 30151ms
+ GET /support 200 in 188ms
+ GET /configuration 200 in 514ms
+ GET /configuration 200 in 6087ms
+ GET /leaderboard 200 in 198ms
+ GET /configuration 200 in 78ms
+ GET /configuration 200 in 2403ms
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /favicon.ico in 2.9s (830 modules)
+ GET /favicon.ico 200 in 3622ms
+ ○ Compiling /report ...
+ ✓ Compiled /report in 26.1s (840 modules)
+ GET /report 200 in 28661ms
+ GET /configuration 200 in 817ms
+ GET /support 200 in 1458ms
+ ○ Compiling /superadmin/businesses ...
+ ✓ Compiled /superadmin/businesses in 56.2s (1613 modules)
+ ○ Compiling /settings ...
+ ✓ Compiled /settings in 32.4s (863 modules)
+ GET /superadmin/businesses 200 in 94746ms
+ GET /settings?tab=settings 200 in 39948ms
+ GET /support 200 in 475ms
+ GET /configuration 200 in 561ms
+ GET /leaderboard 200 in 883ms
+ GET /report 200 in 416ms
+ ○ Compiling /setup-book ...
+ ✓ Compiled /setup-book in 6.9s (829 modules)
+ GET /setup-book 200 in 7707ms
+ ✓ Compiled in 12.2s (1593 modules)
+ GET /setup-book 200 in 3958ms
+ GET /configuration 200 in 16223ms

@@ -109,7 +109,7 @@ export const SupportTicketForm: React.FC<SupportTicketFormProps> = ({
 									key={p}
 									type="button"
 									onClick={() => setPriority(p)}
-									className={`px-4 py-2 text-[10px] md:text-[12px] font-medium border transition-all duration-200 ${isSelected ? 'shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+									className={`px-4 py-2 text-[10px] md:text-[12px] font-medium border transition-all duration-200 rounded-[var(--radius)] ${isSelected ? 'shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700'
 										}`}
 									style={isSelected ? {
 										backgroundColor: activeColor + '1A', // 10% opacity

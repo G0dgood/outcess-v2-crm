@@ -123,7 +123,7 @@ const UsersTabContent: React.FC<UsersTabContentProps> = ({ users, isLoading }) =
 
       {/* Users Table */}
       <div
-        className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden mb-6"
+        className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden mb-6 rounded-[var(--radius)]"
         style={{
           backgroundColor: 'var(--accent-white)',
           borderColor: 'var(--light-gray)'

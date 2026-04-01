@@ -1,18 +1,29 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import PageHeading from '@/components/ui/PageHeading';
 import { Modal } from '@/components/ui/Modal';
-import { Link2Icon } from '@radix-ui/react-icons';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetIntegrationsByLobIdQuery, useUpdateIntegrationMutation, Integration } from '@/store/services/integrationsApi';
 import { toast } from 'sonner';
-import { SVGLoaderFetch } from '@/components/Options';
 import IntegrationCard from '@/components/features/integrations/IntegrationCard';
+
+interface ConnectionForm {
+	workspaceUrl?: string;
+	apiToken?: string;
+	webhookUrl?: string;
+	channel?: string;
+	email?: string;
+	smtpHost?: string;
+	smtpPort?: string;
+	smtpUser?: string;
+	smtpPass?: string;
+	senderName?: string;
+}
 
 const IntegrationsPage: React.FC = () => {
 	const { canAccess } = usePrivilege();
@@ -22,7 +33,7 @@ const IntegrationsPage: React.FC = () => {
 	const canAccessModule = canAccess('systemSetting');
 	const canEdit = canAccess('systemSetting', 'edit');
 
-	const companyId = user?.companyId || (user?.company as any)?._id || '';
+	const companyId = user?.companyId || user?.company?._id || '';
 
 	const { data: integrationsData, isLoading: isFetching } = useGetIntegrationsByLobIdQuery(
 		{ lineOfBusinessId: selectedLineOfBusinessId || '', companyId },
@@ -33,7 +44,7 @@ const IntegrationsPage: React.FC = () => {
 
 	const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
 	const [connectingIntegration, setConnectingIntegration] = useState<Integration | null>(null);
-	const [connectionForm, setConnectionForm] = useState<any>({
+	const [connectionForm, setConnectionForm] = useState<ConnectionForm>({
 		workspaceUrl: '',
 		apiToken: '',
 		webhookUrl: '',
@@ -203,7 +214,7 @@ const IntegrationsPage: React.FC = () => {
 										placeholder={field.placeholder}
 										value={connectionForm[field.key as keyof typeof connectionForm]}
 										onChange={(value) =>
-											setConnectionForm((prev: any) => ({
+											setConnectionForm((prev) => ({
 												...prev,
 												[field.key]: value,
 											}))
