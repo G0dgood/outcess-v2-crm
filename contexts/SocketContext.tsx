@@ -295,39 +295,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 	}, []);
 
 	// Auto-Sync for Offline Dispositions when both online and connected and authenticated
-	const { user: authUser } = useAuth();
-
-	// Join personal and business notification channels
-	useEffect(() => {
-		if (socketRef.current?.connected && authUser) {
-			const userId = authUser.id;
-			const businessId = authUser.companyId;
-
-			if (userId) {
-				socketRef.current.emit("join", userId);
-				console.log(`[Socket] Joined personal channel: ${userId}`);
-			}
-
-			if (businessId) {
-				socketRef.current.emit("join:business", businessId);
-				console.log(`[Socket] Joined business channel: ${businessId}`);
-			}
-
-			// Global listener for notifications
-			const handleNotification = (payload: any) => {
-				// { type, title, message, data, timestamp }
-				console.log('[Socket] Received notification:', payload);
-				toastSuccess(payload.message || payload.title || 'New notification received!');
-			};
-
-			socketRef.current.on("notification", handleNotification);
-
-			return () => {
-				socketRef.current?.off("notification", handleNotification);
-			};
-		}
-	}, [status, authUser]);
-
 	useEffect(() => {
 		const attemptSync = async () => {
 			if (isOnline && status === 'connected' && isAuthenticated && !isSyncingDispositionsRef.current) {
