@@ -185,7 +185,7 @@ export default function SignUpPage() {
 			toast.success('Company profile created successfully!');
 			setSelectedLineOfBusinessId('new');
 			localStorage.removeItem('peoplely-setup-data');
-			router.push('/setup');
+			router.push('/signup/success');
 		} catch (err: unknown) {
 			toast.error((err as { data?: { message?: string } })?.data?.message || 'Failed to create company profile');
 		} finally {
@@ -200,7 +200,7 @@ export default function SignUpPage() {
 	};
 
 	return (
-		<div className="login-container">
+		<div className="login-container h-screen">
 			{/* Left Side - Image */}
 			<div className="login-image-section w-full md:w-1/2">
 				<ArtworkCarousel autoPlayInterval={300000} />
@@ -208,7 +208,7 @@ export default function SignUpPage() {
 
 			{/* Right Side - Sign Up Form */}
 			<div className="login-form-section w-full md:w-1/2">
-				<div className="login-form-container">
+				<div className="login-form-container max-h-[520px] overflow-y-auto no-scrollbar pr-2">
 					<div className="login-header">
 						<h1 className="welcome-title font-lato not-italic" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>
 							{step === 3 ? 'Company Details' : 'Create Account'}
@@ -220,7 +220,7 @@ export default function SignUpPage() {
 
 					<form onSubmit={getSubmitHandler} className="login-form" noValidate>
 						{step === 1 && (
-							<>
+							<div className="space-y-4 ">
 								<Input
 									label="First Name"
 									name="firstname"
@@ -255,11 +255,11 @@ export default function SignUpPage() {
 									error={errors.username}
 									autoComplete="username"
 								/>
-							</>
+							</div>
 						)}
 
 						{step === 2 && (
-							<>
+							<div className="space-y-4">
 								<Input
 									label="Email Address"
 									name="email"
@@ -313,7 +313,7 @@ export default function SignUpPage() {
 									showHelpIcon={false}
 									autoComplete="new-password"
 								/>
-							</>
+							</div>
 						)}
 
 						{step === 2 && (
