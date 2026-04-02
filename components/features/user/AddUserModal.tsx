@@ -5,9 +5,9 @@ import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
 import Button from '@/components/ui/Button';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { useCreateTeamMemberMutation, useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
-import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCreateTeamMemberMutation, useGetSupervisorsByCampaignIdQuery } from '@/store/services/teamMembersApi';
+import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
 
@@ -22,8 +22,8 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 
 }) => {
 	const { user } = useUserInfo();
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const lineOfBusinessId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
+	const { campaignData } = useCampaign();
+	const campaignId = campaignData?.campaign?._id || campaignData?._id || '';
 	const companyId = user?.companyId || user?.company?._id || '';
 
 	const [formData, setFormData] = useState({
@@ -39,10 +39,10 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 	});
 
 	// API Hooks
-	const { data: rolesResponse } = useGetRolesByLineOfBusinessIdQuery(lineOfBusinessId, { skip: !lineOfBusinessId });
-	const { data: supervisorsResponse } = useGetSupervisorsByLineOfBusinessIdQuery(
-		{ companyId, lineOfBusinessId },
-		{ skip: !companyId || !lineOfBusinessId }
+	const { data: rolesResponse } = useGetRolesByCampaignIdQuery(campaignId, { skip: !campaignId });
+	const { data: supervisorsResponse } = useGetSupervisorsByCampaignIdQuery(
+		{ companyId, campaignId },
+		{ skip: !companyId || !campaignId }
 	);
 	const [createTeamMember, { isLoading }] = useCreateTeamMemberMutation();
 
@@ -138,7 +138,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 				phone: formData.phone,
 				role: formData.role,
 				companyId: companyId,
-				lineOfBusinessId: lineOfBusinessId || undefined,
+				campaignId: campaignId || undefined,
 				supervisorId: formData.supervisorId || undefined,
 				password: formData.password,
 				userId: formData.userId || undefined,

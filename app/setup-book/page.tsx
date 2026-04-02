@@ -11,11 +11,11 @@ import { UploadIcon, Pencil1Icon, TrashIcon, PlusIcon } from '@radix-ui/react-ic
 import UploadBaseSetupBook from '@/components/ui/UploadBaseSetupBook';
 import CreateRecordModal from '@/components/ui/CreateRecordModal';
 import SelectedRecordsDrawerContent from './SelectedRecordsDrawerContent';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import SampleCsvDownloader from '@/components/ui/SampleCsvDownloader';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
 import EditRecordModal from '@/components/ui/EditRecordModal';
-import { useGetSetupBookByLineOfBusinessIdQuery, useDeleteSetupBookRecordsMutation, useGetSetupBookBySearchIdQuery, useDeleteManySetupBookRecordsMutation } from '@/store/services/setupBookApi';
+import { useGetSetupBookByCampaignIdQuery, useDeleteSetupBookRecordsMutation, useGetSetupBookBySearchIdQuery, useDeleteManySetupBookRecordsMutation } from '@/store/services/setupBookApi';
 import { toast } from 'sonner';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -46,17 +46,17 @@ const SetupBookPage: React.FC = () => {
 	const canEdit = canAccess('setupBook', 'edit');
 	const canDelete = canAccess('setupBook', 'delete');
 
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
-	// Assuming searchId is available in lineOfBusinessData.lineOfBusiness.customerBookSettings or similar
+	const { campaignData } = useCampaign();
+	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
+	// Assuming searchId is available in campaignData.campaign.customerBookSettings or similar
 	// Based on user request, we need to make sure searchId is included. 
 	// I'll check where searchId might come from. If not in context, I'll assume it needs to be passed or is part of settings.
-	// For now, let's assume it's part of the lineOfBusinessData or we need to extract it.
+	// For now, let's assume it's part of the campaignData or we need to extract it.
 	// Let's look at the console log from line 39: 
-	// The user mentioned "searchId". Let's check if it's in lineOfBusinessData.
-	const searchId = lineOfBusinessData?.lineOfBusiness?.customerBookSettings?.searchId;
+	// The user mentioned "searchId". Let's check if it's in campaignData.
+	const searchId = campaignData?.campaign?.customerBookSettings?.searchId;
 
-	const setupBookHeaderFields = lineOfBusinessData?.lineOfBusiness?.customerBookSettings?.configuredFields
+	const setupBookHeaderFields = campaignData?.campaign?.customerBookSettings?.configuredFields
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
@@ -73,28 +73,28 @@ const SetupBookPage: React.FC = () => {
 
 	// Determine which query to use based on searchId presence
 	// If searchId is available, use useGetSetupBookBySearchIdQuery
-	// Otherwise, fallback to useGetSetupBookByLineOfBusinessIdQuery (or keep existing logic)
+	// Otherwise, fallback to useGetSetupBookByCampaignIdQuery (or keep existing logic)
 	// Assuming if searchId exists, we should prioritize it as per user instruction "add getSetupBookBySearchId"
 
 	const { data: recordsBySearchId, isLoading: isFetchingBySearchId } = useGetSetupBookBySearchIdQuery(
 		{
-			lineOfBusinessId: lobId || '',
+			campaignId: campaignId || '',
 			searchId: searchId || '',
 			search: searchTerm,
 			page: currentPage,
 			limit: itemsPerPage
 		},
-		{ skip: !searchId || !lobId }
+		{ skip: !searchId || !campaignId }
 	);
 
-	const { data: recordsByLobId, isLoading: isFetchingByLobId } = useGetSetupBookByLineOfBusinessIdQuery(
+	const { data: recordsByLobId, isLoading: isFetchingByLobId } = useGetSetupBookByCampaignIdQuery(
 		{
-			id: lobId,
+			id: campaignId,
 			search: searchTerm,
 			page: currentPage,
 			limit: itemsPerPage
 		},
-		{ skip: !!searchId || !lobId } // Skip if searchId is present (since we use the other query) or lobId is missing
+		{ skip: !!searchId || !campaignId } // Skip if searchId is present (since we use the other query) or campaignId is missing
 	);
 
 	const apiRecords = searchId ? recordsBySearchId : recordsByLobId;
@@ -164,10 +164,10 @@ const SetupBookPage: React.FC = () => {
 	};
 
 	const handleConfirmDelete = async () => {
-		if (deleteRecord?.id === 'BULK_DELETE' && lobId) {
+		if (deleteRecord?.id === 'BULK_DELETE' && campaignId) {
 			try {
 				await deleteManySetupBookRecords({
-					lineOfBusinessId: lobId,
+					campaignId: campaignId,
 					ids: Array.from(selectedRecords)
 				}).unwrap();
 
@@ -185,10 +185,10 @@ const SetupBookPage: React.FC = () => {
 			return;
 		}
 
-		if (deleteRecord && lobId) {
+		if (deleteRecord && campaignId) {
 			try {
 				await deleteSetupBookRecords({
-					lineOfBusinessId: lobId,
+					campaignId: campaignId,
 					id: deleteRecord.id
 				}).unwrap();
 
@@ -210,8 +210,8 @@ const SetupBookPage: React.FC = () => {
 					description: apiError?.data?.message || "An error occurred while deleting the record"
 				});
 			}
-		} else if (!lobId) {
-			toast.error("Missing Line of Business ID");
+		} else if (!campaignId) {
+			toast.error("Missing Campaign ID");
 		}
 	};
 
@@ -453,8 +453,8 @@ const SetupBookPage: React.FC = () => {
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
-					secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
+					primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
 

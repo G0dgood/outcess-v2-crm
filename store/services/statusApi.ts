@@ -10,7 +10,7 @@ export interface Status {
     isHibernate?: boolean;
     duration?: number;
     companyId: string;
-    lineOfBusinessId?: string;
+    campaignId?: string;
 }
 
 export interface CreateStatusRequest {
@@ -22,7 +22,7 @@ export interface CreateStatusRequest {
     isHibernate?: boolean;
     duration?: number;
     companyId: string;
-    lineOfBusinessId?: string;
+    campaignId?: string;
 }
 
 export interface CreateStatusResponse {
@@ -48,8 +48,8 @@ export const statusApi = baseApi.injectEndpoints({
              query: (companyId) => `api/v1/statuses/company/${companyId}`,
              providesTags: ['Statuses'],
         }),
-        getStatusesByLineOfBusinessId: builder.query<Status[], string>({
-            query: (lineOfBusinessId) => `api/v1/statuses/line-of-business/${lineOfBusinessId}`,
+        getStatusesByCampaignId: builder.query<Status[], string>({
+            query: (campaignId) => `api/v1/statuses/campaign/${campaignId}`,
             providesTags: ['Statuses'],
         }),
         updateStatus: builder.mutation<any, { id: string; statusData: Partial<CreateStatusRequest> }>({
@@ -74,7 +74,7 @@ export const {
     useCreateStatusMutation, 
     useGetStatusesQuery, 
     useGetStatusesByCompanyIdQuery, 
-    useGetStatusesByLineOfBusinessIdQuery,
+    useGetStatusesByCampaignIdQuery,
     useUpdateStatusMutation, 
     useDeleteStatusMutation 
 } = statusApi;

@@ -7,13 +7,13 @@ import Search from '@/components/ui/Search';
 import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import Checkbox from '@/components/ui/Checkbox';
-import { useGetTeamMembersByLineOfBusinessIdQuery, useDeleteTeamMemberMutation } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByCampaignIdQuery, useDeleteTeamMemberMutation } from '@/store/services/teamMembersApi';
 import PageHeading from '@/components/ui/PageHeading';
 import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import AddUserModal from '@/components/features/user/AddUserModal';
 import DeleteUserModal from '@/components/features/user/DeleteUserModal';
 import BulkUploadModal from '@/components/features/user/BulkUploadModal';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { toast } from 'sonner';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -80,13 +80,13 @@ interface ApiTeamMember {
 
 const UsersPage: React.FC = () => {
 	const router = useRouter();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
-	const lineOfBusinessId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
-	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersByLineOfBusinessIdQuery(
-		{ lineOfBusinessId, page: currentPage, limit: itemsPerPage },
-		{ skip: !lineOfBusinessId }
+	const campaignId = campaignData?.campaign?._id || campaignData?._id || '';
+	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersByCampaignIdQuery(
+		{ campaignId, page: currentPage, limit: itemsPerPage },
+		{ skip: !campaignId }
 	);
 	const [deleteTeamMember] = useDeleteTeamMemberMutation();
 	const { canAccess } = usePrivilege();
@@ -519,8 +519,8 @@ const UsersPage: React.FC = () => {
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
-					secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
+					primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
 

@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import Button from './Button';
 import Checkbox from './Checkbox';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetTeamMembersByLineOfBusinessIdQuery, useAssignShiftHourMutation } from '@/store/services/teamMembersApi';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { useGetTeamMembersByCampaignIdQuery, useAssignShiftHourMutation } from '@/store/services/teamMembersApi';
 import { toastError, toastSuccess } from '@/utils/toastWithSound';
 import { Skeleton } from './skeleton';
 
@@ -36,13 +36,13 @@ const AssignShiftHourModal: React.FC<AssignShiftHourModalProps> = ({
 	shiftHourId,
 	shiftName,
 }) => {
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const lineOfBusinessId =
-		lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
+	const { campaignData } = useCampaign();
+	const campaignId =
+		campaignData?.campaign?._id || campaignData?._id || '';
 
 	const { data: teamMembersResponse, isLoading, refetch } =
-		useGetTeamMembersByLineOfBusinessIdQuery(lineOfBusinessId, {
-			skip: !lineOfBusinessId || !isOpen,
+		useGetTeamMembersByCampaignIdQuery(campaignId, {
+			skip: !campaignId || !isOpen,
 		});
 
 	const [assignShiftHour, { isLoading: isAssigning }] = useAssignShiftHourMutation();

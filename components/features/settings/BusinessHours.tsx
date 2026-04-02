@@ -8,12 +8,12 @@ import SubPageHeading from '@/components/ui/SubPageHeading';
 import AddBusinessHourModal, { BusinessHourData } from '@/components/ui/AddBusinessHourModal';
 import ShiftHours from './ShiftHours';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { BusinessHourPayload, useUpdateBusinessHoursMutation } from '@/store/services/lineOfBusinessApi';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { BusinessHourPayload, useUpdateBusinessHoursMutation } from '@/store/services/campaignApi';
 import { toastError, toastSuccess } from '@/utils/toastWithSound';
 
 const BusinessHours = () => {
-	const { selectedLineOfBusinessId, lineOfBusinessData } = useLineOfBusiness();
+	const { selectedCampaignId, campaignData } = useCampaign();
 	const [updateBusinessHours] = useUpdateBusinessHoursMutation();
 
 	const [isBusinessHourEditMode, setIsBusinessHourEditMode] = useState(false);
@@ -39,7 +39,7 @@ const BusinessHours = () => {
 	};
 
 	useEffect(() => {
-		const existing = lineOfBusinessData?.lineOfBusiness?.businessHours as BusinessHourData[] | BusinessHourData | undefined;
+		const existing = campaignData?.campaign?.businessHours as BusinessHourData[] | BusinessHourData | undefined;
 		if (!existing) {
 			return;
 		}
@@ -93,10 +93,10 @@ const BusinessHours = () => {
 			businessHours: displayHours,
 		});
 		setBusinessHours(list);
-	}, [lineOfBusinessData]);
+	}, [campaignData]);
 
 	const appendBusinessHourToServer = async (item: BusinessHourData) => {
-		if (!selectedLineOfBusinessId) {
+		if (!selectedCampaignId) {
 			return;
 		}
 
@@ -112,7 +112,7 @@ const BusinessHours = () => {
 
 		try {
 			await updateBusinessHours({
-				id: selectedLineOfBusinessId,
+				id: selectedCampaignId,
 				data: payload,
 			}).unwrap();
 			toastSuccess('Business hours updated successfully');
@@ -133,7 +133,7 @@ const BusinessHours = () => {
 	};
 
 	const replaceBusinessHoursOnServer = async (list: BusinessHourData[]) => {
-		if (!selectedLineOfBusinessId) {
+		if (!selectedCampaignId) {
 			return;
 		}
 
@@ -149,7 +149,7 @@ const BusinessHours = () => {
 
 		try {
 			await updateBusinessHours({
-				id: selectedLineOfBusinessId,
+				id: selectedCampaignId,
 				data: payload,
 			}).unwrap();
 			toastSuccess('Business hours updated successfully');

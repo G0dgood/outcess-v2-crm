@@ -116,7 +116,7 @@ const clearAuthFromStorage = () => {
 		localStorage.removeItem('synced_dispositions');
 		localStorage.removeItem('stickyNotes');
 		localStorage.removeItem('userPrivileges');
-		localStorage.removeItem('selectedLineOfBusinessId');
+		localStorage.removeItem('selectedCampaignId');
 		localStorage.removeItem('peoplely-setup-data');
 	} catch (error) {
 		console.error('Error clearing auth data from storage:', error);

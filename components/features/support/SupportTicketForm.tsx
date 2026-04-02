@@ -29,7 +29,7 @@ interface SupportTicketFormProps {
 	assignedToIds: string[];
 	setAssignedToIds: (val: string[]) => void;
 	teamMembers: TeamMember[];
-	lineOfBusinessData: {
+	campaignData: {
 		primaryColor?: string;
 	};
 	onSubmit?: (e: React.FormEvent) => void;
@@ -45,10 +45,10 @@ export const SupportTicketForm: React.FC<SupportTicketFormProps> = ({
 	assignedToIds,
 	setAssignedToIds,
 	teamMembers,
-	lineOfBusinessData,
+	campaignData,
 	onSubmit,
 }) => {
-	const activeColor = lineOfBusinessData?.primaryColor || 'var(--primary)';
+	const activeColor = campaignData?.primaryColor || 'var(--primary)';
 
 	const getRoleName = (role: string | Role | undefined): string => {
 		if (!role) return 'Agent';

@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react';
 import Button from '@/components/ui/Button';
 import { Cross2Icon, UploadIcon, FileTextIcon, CheckCircledIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { useBulkUploadTeamMembersMutation } from '@/store/services/teamMembersApi';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
 
@@ -25,8 +25,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 	onClose,
 }) => {
 	const { user } = useUserInfo();
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const lineOfBusinessId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
+	const { campaignData } = useCampaign();
+	const campaignId = campaignData?.campaign?._id || campaignData?._id || '';
 	const companyId = user?.companyId || user?.company?._id || '';
 
 	const [file, setFile] = useState<File | null>(null);
@@ -51,7 +51,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 
 		const formData = new FormData();
 		formData.append('file', file);
-		formData.append('lineOfBusinessId', lineOfBusinessId);
+		formData.append('campaignId', campaignId);
 		formData.append('companyId', companyId);
 
 		try {

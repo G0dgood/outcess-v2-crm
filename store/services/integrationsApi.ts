@@ -8,7 +8,7 @@ export interface Integration {
   status: "connected" | "disconnected";
   connectedAt?: string;
   config?: any;
-  lineOfBusinessId: string;
+  campaignId: string;
   companyId: string;
 }
 
@@ -16,10 +16,10 @@ export const integrationsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getIntegrationsByLobId: builder.query<
       { message: string; integrations: Integration[] },
-      { lineOfBusinessId: string; companyId: string }
+      { campaignId: string; companyId: string }
     >({
-      query: ({ lineOfBusinessId, companyId }) =>
-        `api/v1/integrations/line-of-business/${lineOfBusinessId}?companyId=${companyId}`,
+      query: ({ campaignId, companyId }) =>
+        `api/v1/integrations/campaign/${campaignId}?companyId=${companyId}`,
       providesTags: ["Integrations"],
     }),
     updateIntegration: builder.mutation<

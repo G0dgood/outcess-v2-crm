@@ -11,7 +11,7 @@ import {
 	GearIcon,
 } from '@radix-ui/react-icons';
 import Button from '@/components/ui/Button';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import {
 	Tooltip,
 	TooltipContent,
@@ -45,8 +45,8 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 }) => {
 	const router = useRouter();
 	const pathname = usePathname();
-	const { lineOfBusinessData } = useLineOfBusiness();
-	// const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const { campaignData } = useCampaign();
+	// const primaryColor = campaignData?.primaryColor || '#050711';
 	const navRef = useRef<HTMLElement>(null);
 	const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -137,13 +137,13 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 										: 'dark:text-gray-300 hover:text-white dark:hover:text-white'
 										}`}
 									style={{
-										backgroundColor: isActive ? lineOfBusinessData?.primaryColor || '#050711' : 'transparent',
+										backgroundColor: isActive ? campaignData?.primaryColor || '#050711' : 'transparent',
 										color: isActive ? 'white' : 'var(--text-secondary)',
-										'--hover-bg': lineOfBusinessData?.secondaryColor || '#6C8B7D'
+										'--hover-bg': campaignData?.secondaryColor || '#6C8B7D'
 									} as React.CSSProperties}
 									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 										if (!isActive) {
-											e.currentTarget.style.backgroundColor = lineOfBusinessData?.secondaryColor || '#6C8B7D';
+											e.currentTarget.style.backgroundColor = campaignData?.secondaryColor || '#6C8B7D';
 											// Update icon and text colors to white on hover
 											const icon = e.currentTarget.querySelector('.shrink-0') as HTMLElement;
 											const text = e.currentTarget.querySelector('.font-medium') as HTMLElement;

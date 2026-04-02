@@ -9,10 +9,10 @@ import IndividualRadio from './IndividualRadio';
 import ColorPicker from './ColorPicker';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useCreateStatusMutation, useUpdateStatusMutation } from '@/store/services/statusApi';
-import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
+import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface StatusFormData {
 	name: string;
@@ -57,11 +57,11 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	const { user } = useUserInfo();
-	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { selectedCampaignId } = useCampaign();
 	const companyId = user?.companyId || user?.company?._id;
 
-	const { data: rolesData } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
-		skip: !selectedLineOfBusinessId
+	const { data: rolesData } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', {
+		skip: !selectedCampaignId
 	});
 
 	const roleOptions: RoleOption[] = React.useMemo(() => {
@@ -175,7 +175,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 						await createStatus({
 							...formData,
 							companyId,
-							lineOfBusinessId: selectedLineOfBusinessId || undefined
+							campaignId: selectedCampaignId || undefined
 						}).unwrap();
 						toastSuccess('Status created successfully');
 					} else {

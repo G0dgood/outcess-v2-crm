@@ -4,8 +4,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { StatusConfirmationModal } from './StatusConfirmationModal';
 import { StatusSubmenu, StatusOption } from './StatusSubmenu';
 import { UserMenu } from './UserMenu';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetStatusesByLineOfBusinessIdQuery } from '@/store/services/statusApi';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { useGetStatusesByCampaignIdQuery } from '@/store/services/statusApi';
 import { useUpdateTeamMemberStatusMutation } from '@/store/services/teamMembersApi';
 import { useUpdateUserMutation } from '@/store/services/authApi';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -60,7 +60,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 	const [statusReason, setStatusReason] = useState('');
 	const [mounted, setMounted] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
-	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { selectedCampaignId } = useCampaign();
 	const { isAdmin } = usePrivilege();
 
 	const [updateStatus, { isLoading: isUpdatingTeamMemberStatus }] = useUpdateTeamMemberStatusMutation();
@@ -68,8 +68,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 
 	const isUpdatingStatus = isUpdatingTeamMemberStatus || isUpdatingUserStatus;
 
-	const { data: fetchedStatuses, isLoading } = useGetStatusesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
-		skip: !selectedLineOfBusinessId
+	const { data: fetchedStatuses, isLoading } = useGetStatusesByCampaignIdQuery(selectedCampaignId || '', {
+		skip: !selectedCampaignId
 	});
 
 	const [statusOptions, setStatusOptions] = useState<StatusOption[]>([]);
@@ -94,11 +94,11 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 				// Fallback to default options if no dynamic statuses found
 				setStatusOptions([]);
 			}
-		} else if (!isLoading && !selectedLineOfBusinessId) {
+		} else if (!isLoading && !selectedCampaignId) {
 			// Fallback if no LOB selected
 			setStatusOptions([]);
 		}
-	}, [fetchedStatuses, isLoading, selectedLineOfBusinessId]);
+	}, [fetchedStatuses, isLoading, selectedCampaignId]);
 
 	useEffect(() => {
 		setMounted(true);

@@ -7,7 +7,7 @@ import Textarea from '@/components/ui/Textarea';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useCreateRoleMutation, RolePermission } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useSetup } from '@/contexts/SetupContext';
 import { toast } from 'sonner';
 
@@ -33,7 +33,7 @@ const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 	const [roleDescription, setRoleDescription] = useState('');
 	const [createRole] = useCreateRoleMutation();
 	const { user } = useUserInfo();
-	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { selectedCampaignId } = useCampaign();
 	const { setupData } = useSetup();
 
 	useEffect(() => {
@@ -89,7 +89,7 @@ const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 					roleName: roleName.toLowerCase(),
 					description: roleDescription,
 					companyId: companyId,
-					lineOfBusinessId: selectedLineOfBusinessId || undefined,
+					campaignId: selectedCampaignId || undefined,
 					permissions: defaultPermissions
 				}).unwrap();
 

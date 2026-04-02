@@ -5,7 +5,7 @@ import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import Button from './Button';
 import Modal from './Modal';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface DeactivateBusinessModalProps {
 	isOpen: boolean;
@@ -20,9 +20,9 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 	onConfirm,
 	businessName = 'Business',
 }) => {
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const { isDarkMode } = useTheme();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const primaryColor = campaignData?.primaryColor || '#050711';
 	const [selectedReason, setSelectedReason] = useState<string>('');
 	const [showConfirmation, setShowConfirmation] = useState(false);
 

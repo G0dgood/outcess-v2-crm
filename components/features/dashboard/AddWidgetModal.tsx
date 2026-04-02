@@ -8,11 +8,11 @@ import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
 import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from '@/utils/offlineDispositions';
 import type { Widget } from '@/contexts/SetupContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useGetDashboardDispositionsByLineOfBusinessAndAgentIdReportQuery, useGetAllDashboardDispositionsByLineOfBusinessReportQuery } from '@/store/services/dispositionApi';
+import { useGetDashboardDispositionsByCampaignAndAgentIdReportQuery, useGetAllDashboardDispositionsByCampaignReportQuery } from '@/store/services/dispositionApi';
 
 interface AddWidgetModalProps {
 	isOpen: boolean;
@@ -29,9 +29,9 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 	onSave,
 }) => {
 	const { isOffline } = useSocket();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const { user } = useUserInfo();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const primaryColor = campaignData?.primaryColor || '#050711';
 	const [formData, setFormData] = useState<Omit<Widget, 'id'>>({
 		title: '',
 		value: 0,
@@ -45,27 +45,27 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 
 	// API Data Fetching
 	const agentId = user?.id || user?._id || '';
-	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
+	const campaignId = campaignData?.campaign?._id || campaignData?._id || '';
 	const startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
 	const endDate = new Date().toISOString().split('T')[0];
 
 	const { isAdmin } = usePrivilege();
 
-	const { data: reportDataAgent } = useGetDashboardDispositionsByLineOfBusinessAndAgentIdReportQuery(
-		{ lineOfBusinessId: lobId, agentId, startDate, endDate },
-		{ skip: !lobId || !agentId || !isOpen || isAdmin }
+	const { data: reportDataAgent } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
+		{ campaignId: campaignId, agentId, startDate, endDate },
+		{ skip: !campaignId || !agentId || !isOpen || isAdmin }
 	);
 
-	const { data: reportDataAdmin } = useGetAllDashboardDispositionsByLineOfBusinessReportQuery(
-		{ lineOfBusinessId: lobId, startDate, endDate },
-		{ skip: !lobId || !isOpen || !isAdmin }
+	const { data: reportDataAdmin } = useGetAllDashboardDispositionsByCampaignReportQuery(
+		{ campaignId: campaignId, startDate, endDate },
+		{ skip: !campaignId || !isOpen || !isAdmin }
 	);
 
 	const reportData = isAdmin ? reportDataAdmin : reportDataAgent;
 
 	// Calculate value based on selected disposition field
 	useEffect(() => {
-		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
+		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
 		const disposition = dashboardSettings?.dispositions?.find((d: { name: string }) => d.name === (selectedCategory || formData.dataSourceName));
 		const outcome = dashboardSettings?.callOutcomes?.find((o: { name: string }) => o.name === (selectedCategory || formData.dataSourceName));
 
@@ -154,7 +154,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 				dataSourceName: outcome.name,
 			}));
 		}
-	}, [formData.dataSourceName, lineOfBusinessData?.lineOfBusiness?.dashboardSettings, reportData, selectedSubKey, selectedCategory, isTitleManual]);
+	}, [formData.dataSourceName, campaignData?.campaign?.dashboardSettings, reportData, selectedSubKey, selectedCategory, isTitleManual]);
 
 	// Build dropdown options from available data
 	const widgetTitleOptions = useMemo(() => {
@@ -166,16 +166,16 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 			});
 		}
 
-		if (lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.callOutcomes) {
-			lineOfBusinessData.lineOfBusiness.dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
+		if (campaignData?.campaign?.dashboardSettings?.callOutcomes) {
+			campaignData.campaign.dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
 				if (outcome?.name) {
 					optionsMap.set(outcome.name, { value: outcome.name, label: outcome.name });
 				}
 			});
 		}
 
-		if (lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions) {
-			lineOfBusinessData.lineOfBusiness.dashboardSettings.dispositions.forEach((disposition: { name: string }) => {
+		if (campaignData?.campaign?.dashboardSettings?.dispositions) {
+			campaignData.campaign.dashboardSettings.dispositions.forEach((disposition: { name: string }) => {
 				if (disposition?.name) {
 					optionsMap.set(disposition.name, { value: disposition.name, label: disposition.name });
 				}
@@ -183,7 +183,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		}
 
 		return Array.from(optionsMap.values());
-	}, [lineOfBusinessData?.lineOfBusiness?.dashboardSettings, reportData]);
+	}, [campaignData?.campaign?.dashboardSettings, reportData]);
 
 	const subKeyOptions = useMemo(() => {
 		const lookupKey = selectedCategory || formData.dataSourceName;
@@ -214,13 +214,13 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 	};
 
 	const isValueAutoCalculated = useMemo(() => {
-		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
+		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
 		const source = formData.dataSourceName;
 		const isDisposition = dashboardSettings?.dispositions?.some((d: { name: string }) => d.name === source);
 		const isOutcome = dashboardSettings?.callOutcomes?.some((o: { name: string }) => o.name === source);
 
 		return isDisposition || isOutcome || (reportData?.data?.breakdown && reportData.data.breakdown[source!] !== undefined);
-	}, [formData.dataSourceName, lineOfBusinessData, reportData]);
+	}, [formData.dataSourceName, campaignData, reportData]);
 
 	const handleSave = () => {
 		if (formData.title.trim()) {

@@ -87,7 +87,7 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 					className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
 					style={{ color: 'var(--text-secondary)' }}
 				>
-					Review Your LOB Plan
+					Review Your Campaign Plan
 				</h1>
 				<p
 					className="font-lato not-italic font-normal text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"

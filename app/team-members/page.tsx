@@ -5,8 +5,8 @@ import Search from '@/components/ui/Search';
 import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByCampaignIdQuery } from '@/store/services/teamMembersApi';
 import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
 import { useSocket } from '@/contexts/SocketContext';
 import { toastSuccess } from '@/utils/toastWithSound';
@@ -20,7 +20,7 @@ import {
 	useUpdateTeamMemberMutation,
 	useDeleteTeamMemberMutation
 } from '@/store/services/teamMembersApi';
-import { useGetRolesByLineOfBusinessIdQuery } from '@/store/services/roleApi';
+import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
 import Icon from '@/components/ui/Icon';
 import { toastError } from '@/utils/toastWithSound';
 import Button from '@/components/ui/Button';
@@ -84,9 +84,9 @@ interface SupervisorOption {
 }
 
 const TeamMembersPage: React.FC = () => {
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const { user } = useUserInfo();
-	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
+	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
 	const [supervisorFilter, setSupervisorFilter] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -125,10 +125,10 @@ const TeamMembersPage: React.FC = () => {
 		user?.companyId ||
 		'';
 
-	const { data: supervisorsData } = useGetSupervisorsByLineOfBusinessIdQuery(
-		{ companyId, lineOfBusinessId: lobId || '' },
+	const { data: supervisorsData } = useGetSupervisorsByCampaignIdQuery(
+		{ companyId, campaignId: campaignId || '' },
 		{
-			skip: !companyId || !lobId
+			skip: !companyId || !campaignId
 		}
 	);
 	const { socket } = useSocket();
@@ -139,7 +139,7 @@ const TeamMembersPage: React.FC = () => {
 	const [updateTeamMember] = useUpdateTeamMemberMutation();
 	const [deleteTeamMember] = useDeleteTeamMemberMutation();
 
-	const { data: rolesData } = useGetRolesByLineOfBusinessIdQuery(lobId || '', { skip: !lobId });
+	const { data: rolesData } = useGetRolesByCampaignIdQuery(campaignId || '', { skip: !campaignId });
 
 	const supervisorId = supervisorFilter;
 
@@ -301,7 +301,7 @@ const TeamMembersPage: React.FC = () => {
 	}, [supervisors, supervisorFilter]);
 
 	const shiftHourOptions = useMemo(() => {
-		const lobShiftHours = lineOfBusinessData?.lineOfBusiness?.shiftHours as
+		const lobShiftHours = campaignData?.campaign?.shiftHours as
 			| { title?: string; shiftName?: string }[]
 			| { title?: string; shiftName?: string }
 			| undefined;
@@ -321,7 +321,7 @@ const TeamMembersPage: React.FC = () => {
 		const allTitles = Array.from(new Set([...fromLob, ...fromMembers]));
 
 		return allTitles.map((t) => ({ label: t, value: t }));
-	}, [lineOfBusinessData, teamMembersData]);
+	}, [campaignData, teamMembersData]);
 
 	const filteredMembers = useMemo(() => {
 		return teamMembersData.filter(member => {
@@ -350,7 +350,7 @@ const TeamMembersPage: React.FC = () => {
 				phone: data.phone,
 				role: data.role,
 				companyId,
-				lineOfBusinessId: lobId,
+				campaignId: campaignId,
 				supervisorId: data.supervisorId || null,
 				password: data.password || 'Peoplely@123',
 			};
@@ -594,8 +594,8 @@ const TeamMembersPage: React.FC = () => {
 								currentPage={currentPage}
 								totalPages={totalPages}
 								onPageChange={setCurrentPage}
-								primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
-								secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
+								primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+								secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 							/>
 						)}
 					</div>
@@ -632,8 +632,8 @@ const TeamMembersPage: React.FC = () => {
 										currentPage={currentPage}
 										totalPages={totalPages}
 										onPageChange={setCurrentPage}
-										primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
-										secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
+										primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+										secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 									/>
 								</div>
 							)}

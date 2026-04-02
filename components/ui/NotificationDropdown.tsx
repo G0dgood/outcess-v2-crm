@@ -6,7 +6,7 @@ import { PersonIcon } from '@radix-ui/react-icons';
 import { usePathname } from 'next/navigation';
 import { playNotificationSound } from '@/utils/soundEffects';
 import { setNavigating } from '@/utils/navigationState';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { Notification, NotificationUser } from '@/store/services/notificationApi';
 
 interface NotificationDropdownProps {
@@ -26,15 +26,15 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	onShowMore,
 	onMarkAsRead
 }) => {
-	const { lineOfBusinessData, isLoading: isLobLoading } = useLineOfBusiness();
+	const { campaignData, isLoading: isLobLoading } = useCampaign();
 	const pathname = usePathname();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const primaryColor = campaignData?.primaryColor || '#050711';
 	const hasPlayedOpenSound = useRef(false);
 	const playedNotificationIds = useRef<Set<string>>(new Set());
 	const previousPathname = useRef(pathname);
 	const isNavigating = useRef(false);
-	const { selectedLineOfBusinessId } = useLineOfBusiness();
-	const previousLobId = useRef(selectedLineOfBusinessId);
+	const { selectedCampaignId } = useCampaign();
+	const previousLobId = useRef(selectedCampaignId);
 	const isInitialOpen = useRef(true);
 
 	// Track navigation to prevent sounds during page switches
@@ -101,8 +101,8 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 		}
 
 		// If LOB has changed, mark all current unread notifications as "played" to skip sounds
-		if (previousLobId.current !== selectedLineOfBusinessId) {
-			previousLobId.current = selectedLineOfBusinessId;
+		if (previousLobId.current !== selectedCampaignId) {
+			previousLobId.current = selectedCampaignId;
 			notifications.forEach(n => {
 				if (!n.isRead) playedNotificationIds.current.add(n.id);
 			});
@@ -128,7 +128,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 				}, 100 * playedNotificationIds.current.size);
 			}
 		});
-	}, [notifications, isOpen, pathname, selectedLineOfBusinessId, isLobLoading]);
+	}, [notifications, isOpen, pathname, selectedCampaignId, isLobLoading]);
 
 	// Clean up played notification IDs when panel closes
 	useEffect(() => {

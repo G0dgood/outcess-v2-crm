@@ -9,7 +9,7 @@ import Modal from '@/components/ui/Modal';
 import { Cross2Icon, ChatBubbleIcon, ClipboardIcon, PersonIcon, EnvelopeClosedIcon, HomeIcon, MobileIcon } from '@radix-ui/react-icons';
 import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, DispositionHistoryItem } from '@/utils/offlineDispositions';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useGetDispositionsByCustomerQuery } from '@/store/services/dispositionApi';
 
 interface CustomerDetailsModalProps {
@@ -52,16 +52,16 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 	const [isAnimating, setIsAnimating] = useState(false);
 	const [shouldRender, setShouldRender] = useState(false);
 	const [offlineDispositions, setOfflineDispositions] = useState<OfflineDisposition[]>([]);
-	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { selectedCampaignId } = useCampaign();
 
 	const { data: apiData, isLoading: isApiLoading } = useGetDispositionsByCustomerQuery(
 		{
-			lineOfBusinessId: selectedLineOfBusinessId || '',
+			campaignId: selectedCampaignId || '',
 			customerId: customer?.id || '',
 			page: 1,
 			limit: 50
 		},
-		{ skip: !isOpen || !customer?.id || !selectedLineOfBusinessId }
+		{ skip: !isOpen || !customer?.id || !selectedCampaignId }
 	);
 
 	// Load offline dispositions for this customer
@@ -311,7 +311,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 								<div className="p-6">
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 										{Object.entries(customer)
-											.filter(([key]) => !['id', '_id', 'companyId', 'lineOfBusinessId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid')
+											.filter(([key]) => !['id', '_id', 'companyId', 'campaignId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid')
 											.map(([key, value]) => {
 												let IconComponent = PersonIcon;
 												const lowerKey = key.toLowerCase();

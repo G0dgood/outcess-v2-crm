@@ -3,7 +3,7 @@ import Button from '@/components/ui/Button';
 import Icon from '@/components/ui/Icon';
 import Input from '@/components/ui/Input';
 import { useCreateSetupBookMutation } from '@/store/services/setupBookApi';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { toast } from 'sonner';
 
 interface FieldDefinition {
@@ -33,9 +33,9 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 	searchId,
 }) => {
 	const [formData, setFormData] = useState<Record<string, string | number | boolean>>({});
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
-	const companyIdRaw = lineOfBusinessData?.lineOfBusiness?.companyId;
+	const { campaignData } = useCampaign();
+	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
+	const companyIdRaw = campaignData?.campaign?.companyId;
 	const companyId = typeof companyIdRaw === 'object' && companyIdRaw !== null
 		? (companyIdRaw as { _id?: string; id?: string })._id || (companyIdRaw as { _id?: string; id?: string }).id
 		: companyIdRaw as string | undefined;
@@ -73,7 +73,7 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 			return;
 		}
 
-		if (lobId && companyId) {
+		if (campaignId && companyId) {
 			try {
 				// Construct CSV content
 				const headers = [...fieldDefinitions.map(f => f.name), 'searchId'].join(',');
@@ -92,7 +92,7 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 
 				const uploadFormData = new FormData();
 				uploadFormData.append('companyId', companyId);
-				uploadFormData.append('lineOfBusinessId', lobId);
+				uploadFormData.append('campaignId', campaignId);
 				uploadFormData.append('searchId', manualSearchId);
 				uploadFormData.append('file', file);
 
@@ -108,7 +108,7 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 			}
 		} else {
 			toast.error("Missing required IDs", {
-				description: "Company ID or Line of Business ID is missing"
+				description: "Company ID or Campaign ID is missing"
 			});
 		}
 	};

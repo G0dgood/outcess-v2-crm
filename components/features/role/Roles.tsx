@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetRolesByLineOfBusinessIdQuery, useDeleteRoleMutation } from '@/store/services/roleApi';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { useGetRolesByCampaignIdQuery, useDeleteRoleMutation } from '@/store/services/roleApi';
 import RolesSkeleton from '@/components/skeletons/RolesSkeleton';
 import Button from '@/components/ui/Button';
 import CreateCustomRoleModal from '@/components/ui/CreateCustomRoleModal';
@@ -24,8 +24,8 @@ interface RolesProps {
 }
 
 const Roles: React.FC<RolesProps> = ({ className = '' }) => {
-	const { selectedLineOfBusinessId } = useLineOfBusiness();
-	const { data: rolesData, isLoading } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', { skip: !selectedLineOfBusinessId });
+	const { selectedCampaignId } = useCampaign();
+	const { data: rolesData, isLoading } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', { skip: !selectedCampaignId });
 	const { canAccess } = usePrivilege();
 	const canDelete = canAccess('userManagement', 'delete');
 	const [deleteRole] = useDeleteRoleMutation();

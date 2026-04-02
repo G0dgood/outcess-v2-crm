@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useGetLineOfBusinessByCompanyIdQuery, useGetLineOfBusinessQuery } from '@/store/services/lineOfBusinessApi';
-import { useLineOfBusiness } from './LineOfBusinessContext';
+import { useGetCampaignByCompanyIdQuery, useGetCampaignQuery } from '@/store/services/campaignApi';
+import { useCampaign } from './CampaignContext';
 
 interface SetupStep {
 	id: string;
@@ -71,10 +71,10 @@ interface CustomerField {
 }
 
 export interface SetupData {
-	lineOfBusinessId?: string;
+	campaignId?: string;
 	companyName: string;
 	companyId: string;
-	lineOfBusinessName: string;
+	campaignName: string;
 	timeZone: string;
 	industry: string;
 	businessSize: string;
@@ -158,7 +158,7 @@ interface SetupContextType {
 	onStepComplete: () => void;
 	onStepBack: () => void;
 	isLoading: boolean;
-	isFetchingLineOfBusiness: boolean;
+	isFetchingCampaign: boolean;
 	setIsLoading: (loading: boolean) => void;
 	setupData: SetupData;
 	updateSetupData: (data: Partial<SetupData>) => void;
@@ -203,7 +203,7 @@ interface SetupProviderProps {
 
 export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const { user } = useUserInfo();
-	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { selectedCampaignId } = useCampaign();
 
 	// Initialize state first so we can use setupData in the query logic
 	const [currentStep, setCurrentStep] = useState(1);
@@ -217,10 +217,10 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		setOnPersist(() => fn);
 	}, []);
 	const [setupData, setSetupData] = useState<SetupData>({
-		lineOfBusinessId: '',
+		campaignId: '',
 		companyName: '',
 		companyId: '',
-		lineOfBusinessName: '',
+		campaignName: '',
 		timeZone: '',
 		industry: '',
 		businessSize: '',
@@ -298,7 +298,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				{ name: 'systemSetting' },
 				{ name: 'auditLog' },
 				{ name: 'teamMembers' },
-				{ name: 'lobPlan' },
+				{ name: 'campaignPlan' },
 				{ name: 'pendingrequest' },
 			]
 		},
@@ -309,24 +309,24 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const companyObj = user?.company as { _id?: string; id?: string } | undefined;
 	const companyIdToUse: string | undefined = companyObj?._id ?? companyObj?.id ?? (setupData.companyId || undefined);
 
-	const { data: specificLineOfBusiness, isLoading: isFetchingSpecificLOB } = useGetLineOfBusinessQuery(
-		selectedLineOfBusinessId || '',
-		{ skip: !selectedLineOfBusinessId || selectedLineOfBusinessId === 'new' }
+	const { data: specificCampaign, isLoading: isFetchingSpecificLOB } = useGetCampaignQuery(
+		selectedCampaignId || '',
+		{ skip: !selectedCampaignId || selectedCampaignId === 'new' }
 	);
 
-	const { data: companyLineOfBusiness, isLoading: isFetchingCompanyLOB } = useGetLineOfBusinessByCompanyIdQuery(
+	const { data: companyCampaign, isLoading: isFetchingCompanyLOB } = useGetCampaignByCompanyIdQuery(
 		companyIdToUse ?? '',
-		{ skip: !!selectedLineOfBusinessId || !companyIdToUse }
+		{ skip: !!selectedCampaignId || !companyIdToUse }
 	);
 
-	const existingLineOfBusiness = selectedLineOfBusinessId ? specificLineOfBusiness : companyLineOfBusiness;
-	const isFetchingLineOfBusiness = selectedLineOfBusinessId ? isFetchingSpecificLOB : isFetchingCompanyLOB;
+	const existingCampaign = selectedCampaignId ? specificCampaign : companyCampaign;
+	const isFetchingCampaign = selectedCampaignId ? isFetchingSpecificLOB : isFetchingCompanyLOB;
 
 	const populateData = useCallback((data: any) => {
 		if (!data) return;
 
-		const source = data as { lineOfBusiness?: unknown } | undefined;
-		const dataToUse = (source?.lineOfBusiness as any) || (data as any);
+		const source = data as { campaign?: unknown } | undefined;
+		const dataToUse = (source?.campaign as any) || (data as any);
 
 		const safeParse = <T,>(data: unknown): Partial<T> => {
 			if (!data) return {};
@@ -365,10 +365,10 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 
 			setSetupData(prev => ({
 				...prev,
-				lineOfBusinessId: dataToUse._id,
+				campaignId: dataToUse._id,
 				companyName: dataToUse.companyName || prev.companyName,
 				companyId: dataToUse.companyId || prev.companyId,
-				lineOfBusinessName: dataToUse.lineOfBusinessName || dataToUse.name || prev.lineOfBusinessName,
+				campaignName: dataToUse.campaignName || dataToUse.name || prev.campaignName,
 				timeZone: dataToUse.timeZone || prev.timeZone,
 				industry: dataToUse.industry || prev.industry,
 				businessSize: dataToUse.businessSize || prev.businessSize,
@@ -416,17 +416,17 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	}, []);
 
 	const discardChanges = useCallback(() => {
-		if (existingLineOfBusiness) {
-			populateData(existingLineOfBusiness);
+		if (existingCampaign) {
+			populateData(existingCampaign);
 		}
 		setIsDirty(false);
-	}, [existingLineOfBusiness, populateData]);
+	}, [existingCampaign, populateData]);
 
 	useEffect(() => {
-		if (existingLineOfBusiness) {
-			populateData(existingLineOfBusiness);
+		if (existingCampaign) {
+			populateData(existingCampaign);
 		}
-	}, [existingLineOfBusiness, populateData]);
+	}, [existingCampaign, populateData]);
 
 	// Load from localStorage on mount
 	useEffect(() => {
@@ -830,7 +830,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		},
 		{
 			id: 'review',
-			title: 'Review LOB Plan',
+			title: 'Review Campaign Plan',
 			description: 'Review and submit your LOB plan configuration',
 			icon: <div className="text-base w-5 text-center">✓</div>,
 			active: currentStep === 5,
@@ -864,7 +864,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		updateDispositionInBucket,
 		deleteDispositionFromBucket,
 		setupSteps,
-		isFetchingLineOfBusiness,
+		isFetchingCampaign,
 		setDashboardStep,
 		dashboardStep,
 		validateStep,
@@ -895,7 +895,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		updateDispositionInBucket,
 		deleteDispositionFromBucket,
 		setupSteps,
-		isFetchingLineOfBusiness,
+		isFetchingCampaign,
 		dashboardStep,
 		validateStep,
 		isDirty,

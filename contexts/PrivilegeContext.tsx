@@ -1,11 +1,11 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSocket } from '@/contexts/SocketContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toastInfo } from '@/utils/toastWithSound';
-import { useGetRolesByLineOfBusinessIdQuery } from '@/store/services/roleApi';
+import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
 
 // Permission/Module types
 export type ModuleId =
@@ -21,7 +21,7 @@ export type ModuleId =
 	| 'roles'
 	| 'permission'
 	| 'teamMembers'
-	| 'lobPlan'
+	| 'campaignPlan'
 	| 'support'
 	| 'teamMemberSupport'
 	| 'allSupport';
@@ -104,12 +104,12 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 	const isSuperAdmin = useSelector(selectIsSuperAdmin);
 
 	const { socket } = useSocket();
-	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { selectedCampaignId } = useCampaign();
 	const { user, updateUser } = useAuth();
 
-	// Add reactive query for roles in this LOB
-	const { data: rolesData } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
-		skip: !selectedLineOfBusinessId
+	// Add reactive query for roles in this Campaign
+	const { data: rolesData } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', {
+		skip: !selectedCampaignId
 	});
 
 	// Reactively update user privileges when roles data changes
@@ -170,9 +170,9 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 
 	// Socket integration for real-time role updates
 	useEffect(() => {
-		if (!socket || !selectedLineOfBusinessId) return;
+		if (!socket || !selectedCampaignId) return;
 
-		socket.emit("joinLineOfBusiness", selectedLineOfBusinessId);
+		socket.emit("joinCampaign", selectedCampaignId);
 
 		const handleUpdateRole = (data: any) => {
 			if (!userPrivileges || !userPrivileges.role) return;
@@ -211,7 +211,7 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		return () => {
 			socket.off("updateRole", handleUpdateRole);
 		};
-	}, [socket, selectedLineOfBusinessId, userPrivileges, user, updateUser, dispatch]);
+	}, [socket, selectedCampaignId, userPrivileges, user, updateUser, dispatch]);
 
 	const findModulePermission = (moduleId: string): RoleModulePermission | undefined => {
 		if (!userPrivileges?.role?.permissions) return undefined;

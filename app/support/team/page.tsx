@@ -5,8 +5,8 @@ import Search from '@/components/ui/Search';
 import Dropdown from '@/components/ui/Dropdown';
 import { useGetTicketsBySupervisorIdQuery } from '@/store/services/supportApi';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { useGetSupervisorsByCampaignIdQuery } from '@/store/services/teamMembersApi';
 import PageHeading from '@/components/ui/PageHeading';
 import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
@@ -26,7 +26,7 @@ const TeamSupportPage = () => {
  const { user } = useAuth();
  const { user: userInfo } = useUserInfo();
  const { canAccess, isAdmin } = usePrivilege();
- const { lineOfBusinessData } = useLineOfBusiness();
+ const { campaignData } = useCampaign();
 
  const [searchQuery, setSearchQuery] = useState('');
  const [activeTab, setActiveTab] = useState<'All Tickets' | 'New' | 'In Progress' | 'Resolved' | 'Closed' | 'Done'>('All Tickets');
@@ -48,12 +48,12 @@ const TeamSupportPage = () => {
   user?.companyId ||
   '';
 
- const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
+ const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
 
- const { data: supervisorsData } = useGetSupervisorsByLineOfBusinessIdQuery({
+ const { data: supervisorsData } = useGetSupervisorsByCampaignIdQuery({
   companyId,
-  lineOfBusinessId: lobId || ''
- }, { skip: !companyId || !lobId || !hasAccess });
+  campaignId: campaignId || ''
+ }, { skip: !companyId || !campaignId || !hasAccess });
 
  const supervisors = useMemo(() => {
   if (!supervisorsData || !Array.isArray(supervisorsData.roles)) return [];
@@ -215,7 +215,7 @@ const TeamSupportPage = () => {
      setActiveTab(tabId as typeof activeTab);
      setPage(1);
     }}
-    activeColor={lineOfBusinessData?.primaryColor}
+    activeColor={campaignData?.primaryColor}
    />
 
    <div className="mt-4">
@@ -235,7 +235,7 @@ const TeamSupportPage = () => {
     <TicketList
      tickets={tickets}
      isLoading={isLoading}
-     lineOfBusinessData={lineOfBusinessData}
+     campaignData={campaignData}
      onOpenTicket={(id) => router.push(`/support/${id}`)}
     />
    </div>
@@ -248,8 +248,8 @@ const TeamSupportPage = () => {
      onPageChange={setPage}
      showEllipsis={true}
      maxVisiblePages={5}
-     primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
-     secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
+     primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+     secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
     />
    )}
   </div>

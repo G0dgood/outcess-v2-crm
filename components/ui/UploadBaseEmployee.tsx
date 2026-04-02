@@ -2,7 +2,7 @@
 import React, { useState, useRef } from "react";
 import { Cross2Icon, UploadIcon } from "@radix-ui/react-icons";
 import { toast } from "sonner";
-import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
+import { useCampaign } from "@/contexts/CampaignContext";
 
 interface UploadBaseProps {
   isOpen?: boolean;
@@ -66,8 +66,8 @@ const UploadBase: React.FC<UploadBaseProps> = ({
   showButton = true,
   onUploadComplete,
 }) => {
-  const { lineOfBusinessData } = useLineOfBusiness();
-  const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+  const { campaignData } = useCampaign();
+  const primaryColor = campaignData?.primaryColor || '#050711';
   const [progress, setProgress] = useState(0);
   const [show, setShow] = useState(false);
   const [jsonData, setJSONData] = useState<CsvRow[]>([]);

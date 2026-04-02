@@ -5,7 +5,7 @@ import Button from './Button';
 import Input from './Input';
 import Dropdown from './Dropdown';
 import TimeInput from './TimeInput';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { Cross2Icon } from '@radix-ui/react-icons';
 
 export interface ShiftHour {
@@ -30,7 +30,7 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 	onSave,
 	initialData,
 }) => {
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 
 	const [formData, setFormData] = useState<ShiftHour>({
 		shiftName: '',
@@ -122,7 +122,7 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 	};
 
 	const dayOptions = (() => {
-		const businessHours = lineOfBusinessData?.lineOfBusiness?.businessHours as
+		const businessHours = campaignData?.campaign?.businessHours as
 			| { name?: string; businessDays?: string[] }[]
 			| { name?: string; businessDays?: string[] }
 			| undefined;

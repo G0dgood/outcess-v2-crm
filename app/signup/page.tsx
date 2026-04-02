@@ -14,11 +14,11 @@ import { useCreateCompanyMutation } from '@/store/services/companyApi';
 
 import { useDispatch } from 'react-redux';
 import { setUser, register as registerAction } from '@/store/slices/authSlice';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { Button } from '@/components/ui/Button';
 
 export default function SignUpPage() {
-	const { setSelectedLineOfBusinessId } = useLineOfBusiness();
+	const { setSelectedCampaignId } = useCampaign();
 	const router = useRouter();
 	const dispatch = useDispatch();
 	const { isDarkMode } = useTheme();
@@ -183,7 +183,7 @@ export default function SignUpPage() {
 
 			await createCompany(payload).unwrap();
 			toast.success('Company profile created successfully!');
-			setSelectedLineOfBusinessId('new');
+			setSelectedCampaignId('new');
 			localStorage.removeItem('peoplely-setup-data');
 			router.push('/signup/success');
 		} catch (err: unknown) {

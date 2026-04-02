@@ -8,12 +8,12 @@ import { TrashIcon, Pencil1Icon } from '@radix-ui/react-icons';
 import SubPageHeading from './SubPageHeading';
 import PageHeading from './PageHeading';
 import { useSocket } from '@/contexts/SocketContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import {
-	useGetStatusesByLineOfBusinessIdQuery,
+	useGetStatusesByCampaignIdQuery,
 	useDeleteStatusMutation
 } from '@/store/services/statusApi';
-import { useGetRolesByLineOfBusinessIdQuery, Role } from '@/store/services/roleApi';
+import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
 import { NoRecordFound } from '../Options';
 import StatusSkeleton from '@/components/skeletons/StatusSkeleton';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -51,15 +51,15 @@ interface StatusProps {
 
 const Status: React.FC<StatusProps> = ({ className = '' }) => {
 	const [statuses, setStatuses] = useState<StatusItem[]>([]);
-	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { selectedCampaignId } = useCampaign();
 	const { canAccess } = usePrivilege();
 	const canView = canAccess('systemSetting', 'view');
 	const canCreate = canAccess('systemSetting', 'create');
 	const canEdit = canAccess('systemSetting', 'edit');
 	const canDelete = canAccess('systemSetting', 'delete');
 
-	const { data: rolesData } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
-		skip: !selectedLineOfBusinessId
+	const { data: rolesData } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', {
+		skip: !selectedCampaignId
 	});
 
 	const roleLabels = React.useMemo(() => {
@@ -81,8 +81,8 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 		}, {} as { [key: string]: string });
 	}, [rolesData]);
 
-	const { data: fetchedStatuses, isLoading } = useGetStatusesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
-		skip: !selectedLineOfBusinessId
+	const { data: fetchedStatuses, isLoading } = useGetStatusesByCampaignIdQuery(selectedCampaignId || '', {
+		skip: !selectedCampaignId
 	});
 
 	useEffect(() => {
@@ -259,7 +259,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 		return null;
 	}
 
-	if (isLoading || !selectedLineOfBusinessId) {
+	if (isLoading || !selectedCampaignId) {
 		return <StatusSkeleton className={className} />;
 	}
 

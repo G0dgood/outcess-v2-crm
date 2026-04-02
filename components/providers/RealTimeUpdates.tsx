@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { useSocket } from '@/contexts/SocketContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { toastInfo, toastSuccess } from '@/utils/toastWithSound';
 import { useDispatch } from 'react-redux';
 import { updateUser as updateReduxUser } from '@/store/slices/authSlice';
@@ -16,7 +16,7 @@ export const RealTimeUpdates: React.FC = () => {
   const pathname = usePathname();
   const { socket, isConnected, emit, on, off } = useSocket();
   const { user, updateUser } = useAuth();
-  const { selectedLineOfBusinessId } = useLineOfBusiness();
+  const { selectedCampaignId } = useCampaign();
   const dispatch = useDispatch();
 
   // Socket Connection and Room Joining
@@ -35,10 +35,10 @@ export const RealTimeUpdates: React.FC = () => {
         emit('joinCompany', companyId);
       }
 
-      // Join LineOfBusiness Room
-      const lobId = selectedLineOfBusinessId || user.lineOfBusinessId;
-      if (lobId) {
-        emit('joinLineOfBusiness', lobId);
+      // Join Campaign Room
+      const campaignId = selectedCampaignId || user.campaignId;
+      if (campaignId) {
+        emit('joinCampaign', campaignId);
       }
 
       // Join Role Room
@@ -47,7 +47,7 @@ export const RealTimeUpdates: React.FC = () => {
         emit('joinRole', roleId);
       }
     }
-  }, [isConnected, user, selectedLineOfBusinessId, emit]);
+  }, [isConnected, user, selectedCampaignId, emit]);
 
   // Handle Real-time Events
   useEffect(() => {

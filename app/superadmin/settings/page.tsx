@@ -20,7 +20,7 @@ import {
 import PageHeading from "@/components/ui/PageHeading";
 import SubPageHeading from "@/components/ui/SubPageHeading";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
+import { useCampaign } from "@/contexts/CampaignContext";
 
 interface ExtendedUser {
 	firstName?: string;
@@ -50,10 +50,10 @@ export default function SettingsPage() {
 	const [updateUserApi] = useUpdateUserMutation();
 	const [changePasswordApi] = useChangePasswordMutation();
 
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const { isDarkMode, toggleTheme } = useTheme();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
-	const secondaryColor = lineOfBusinessData?.secondaryColor || '#6C8B7D';
+	const primaryColor = campaignData?.primaryColor || '#050711';
+	const secondaryColor = campaignData?.secondaryColor || '#6C8B7D';
 
 	const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'email' | 'payment' | 'preferences'>('profile');
 

@@ -4,7 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon } from '@radix-ui/react-icons';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface BackButtonProps {
 	onClick?: () => void;
@@ -20,9 +20,9 @@ const BackButton: React.FC<BackButtonProps> = ({
 	useCustomColor = true,
 }) => {
 	const router = useRouter();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const { isDarkMode } = useTheme();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const primaryColor = campaignData?.primaryColor || '#050711';
 
 	const handleClick = () => {
 		if (onClick) {

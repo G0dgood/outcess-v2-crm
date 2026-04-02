@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useRouter } from '@bprogress/next/app';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePrivilege, ModuleId } from '@/contexts/PrivilegeContext';
 import Icon from './Icon';
@@ -71,13 +71,13 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
  const router = useRouter();
  const pathname = usePathname();
  const searchParams = useSearchParams();
- const { lineOfBusinessData } = useLineOfBusiness();
+ const { campaignData } = useCampaign();
  useAuth();
  const { canAccess, isAdmin } = usePrivilege();
 
- const currentLOB = lineOfBusinessData?.lineOfBusiness;
- const headerLogo = currentLOB?.logo;
- const headerName = currentLOB?.companyName || 'Peoplely';
+ const currentCampaign = campaignData?.campaign;
+ const headerLogo = currentCampaign?.logo;
+ const headerName = currentCampaign?.companyName || 'Peoplely';
 
  const navRef = useRef<HTMLElement>(null);
  const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
@@ -174,7 +174,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
   { id: 'setup-book', label: 'Setup Book', icon: 'settings-book', path: '/setup-book' },
   { id: 'report', label: 'Report', icon: 'chart', path: '/report' },
   { id: 'leaderboard', label: 'Leaderboard', icon: 'star', path: '/leaderboard' },
-  { id: 'configuration', label: 'LOB Plan', icon: 'configuration', path: '/configuration' },
+  { id: 'configuration', label: 'Campaign Plan', icon: 'configuration', path: '/configuration' },
   { id: 'support', label: 'Support', icon: 'support', path: '/support' },
   { id: 'settings', label: 'Settings', icon: 'settings', path: '/settings' }
  ];
@@ -189,7 +189,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
   'setup-book': 'setupBook',
   'report': 'report',
   'leaderboard': 'report',
-  'configuration': 'lobPlan',
+  'configuration': 'campaignPlan',
   'support': 'support',
   'settings': 'systemSetting',
  };

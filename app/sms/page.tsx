@@ -10,7 +10,7 @@ import PageHeading from '@/components/ui/PageHeading';
 import { ChatBubbleIcon } from '@radix-ui/react-icons';
 import Icon from '@/components/ui/Icon';
 import StatusBadge from '@/components/ui/StatusBadge';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import SMSMessageModal, { SMS } from '@/components/features/sms/SMSMessageModal';
 import SMSMessagePreview from '@/components/features/sms/SMSMessagePreview';
@@ -21,7 +21,7 @@ import SMSMessagePreview from '@/components/features/sms/SMSMessagePreview';
 
 
 const SMSPage: React.FC = () => {
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const { canAccess } = usePrivilege();
 	const canAccessModule = canAccess('customerSMS', 'view');
 	const canCreate = canAccess('customerSMS', 'create');
@@ -284,7 +284,7 @@ const SMSPage: React.FC = () => {
 											title={sms.message}
 											onClick={() => setViewingSMS(sms)}
 											onMouseEnter={(e) => {
-												e.currentTarget.style.color = lineOfBusinessData.primaryColor || '#050711';
+												e.currentTarget.style.color = campaignData.primaryColor || '#050711';
 											}}
 											onMouseLeave={(e) => {
 												e.currentTarget.style.color = 'var(--text-primary)';
@@ -329,8 +329,8 @@ const SMSPage: React.FC = () => {
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
-					secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
+					primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
 

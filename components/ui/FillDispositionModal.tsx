@@ -15,7 +15,7 @@ import { useSocket } from '@/contexts/SocketContext';
 import { saveOfflineDisposition, saveSyncedDisposition, DispositionFieldEntry } from '@/utils/offlineDispositions';
 import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useCreateDispositionMutation } from '@/store/services/dispositionApi';
 
 interface FillDispositionModalProps {
@@ -68,7 +68,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 }) => {
 	const { isConnected, isOffline, send } = useSocket();
 	const { user: authUser } = useAuth();
-	const { lineOfBusinessData, selectedLineOfBusinessId } = useLineOfBusiness();
+	const { campaignData, selectedCampaignId } = useCampaign();
 	const [createDisposition] = useCreateDispositionMutation();
 	const [isSaving, setIsSaving] = useState(false);
 	const [formData, setFormData] = useState<DispositionFormState>({});
@@ -76,8 +76,8 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 	// Get dispositions from context
 	const dispositions = useMemo(() => {
-		return (lineOfBusinessData?.lineOfBusiness?.dashboardSettings?.dispositions || []) as DispositionField[];
-	}, [lineOfBusinessData]);
+		return (campaignData?.campaign?.dashboardSettings?.dispositions || []) as DispositionField[];
+	}, [campaignData]);
 
 	// Reset or update form when modal opens/closes
 	useEffect(() => {
@@ -197,7 +197,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 						fillDisposition: dispositionData,
 						customerId,
 						agentId: (authUser?.userId as string) || authUser?.id,
-						lineOfBusinessId: selectedLineOfBusinessId || undefined,
+						campaignId: selectedCampaignId || undefined,
 						timestamp: new Date().toISOString(),
 					}).unwrap();
 
@@ -209,7 +209,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 								fillDisposition: dispositionData,
 								customerId,
 								agentId: (authUser?.userId as string) || authUser?.id,
-								lineOfBusinessId: selectedLineOfBusinessId || undefined,
+								campaignId: selectedCampaignId || undefined,
 								timestamp: new Date().toISOString(),
 							},
 						});
@@ -222,7 +222,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 						customerName,
 						authUser?.name,
 						(authUser?.userId as string) || authUser?.id,
-						selectedLineOfBusinessId || undefined
+						selectedCampaignId || undefined
 					);
 
 					// Call the onSave callback
@@ -246,7 +246,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 			// If we're here, either we are offline OR the API call failed due to network issues or validation errors
 			// Save to offline storage
-			saveOfflineDisposition(dispositionData, customerId, customerName, selectedLineOfBusinessId || undefined);
+			saveOfflineDisposition(dispositionData, customerId, customerName, selectedCampaignId || undefined);
 
 			if (isOffline) {
 				toastInfo('Disposition saved offline. It will sync when you\'re back online.');
@@ -603,7 +603,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 							</h3>
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 								{Object.entries(customer)
-									.filter(([key]) => !['id', '_id', 'companyId', 'lineOfBusinessId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid')
+									.filter(([key]) => !['id', '_id', 'companyId', 'campaignId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid')
 									.map(([key, value]) => {
 										let IconComponent = PersonIcon;
 										const lowerKey = key.toLowerCase();

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { toast } from 'sonner';
 import Input from '@/components/ui/Input';
 import { GearIcon } from '@radix-ui/react-icons';
@@ -9,8 +9,8 @@ import SubPageHeading from '@/components/ui/SubPageHeading';
 import PageHeading from '@/components/ui/PageHeading';
 
 const GeneralSettings: React.FC = () => {
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const { campaignData } = useCampaign();
+	const primaryColor = campaignData?.primaryColor || '#050711';
 	const [tooltipLength, setTooltipLength] = useState<number>(10);
 
 	useEffect(() => {

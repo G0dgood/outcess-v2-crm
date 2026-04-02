@@ -8,12 +8,12 @@ import Dropdown from '@/components/ui/Dropdown';
 import Checkbox from '@/components/ui/Checkbox';
 import { SetupProvider } from '@/contexts/SetupContext';
 import { ChevronDownIcon } from '@radix-ui/react-icons';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 function PaymentPageContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 
 	const planName = searchParams.get('plan') || 'Pro';
 	const planPrice = searchParams.get('price') || '$50000/month';
@@ -44,7 +44,7 @@ function PaymentPageContent() {
 	// Calculate price based on order billing cycle
 	const orderPrice = orderBillingCycle === 'annual' ? Math.round(baseMonthlyPrice * 12 * 0.83) : baseMonthlyPrice;
 
-	const primaryColor = lineOfBusinessData?.primaryColor || '#6C8B7D';
+	const primaryColor = campaignData?.primaryColor || '#6C8B7D';
 
 	const countries = [
 		{ value: 'US', label: 'United States' },
@@ -320,7 +320,7 @@ function PaymentPageContent() {
 										<h4 className="text-[18px] md:text-[20px] font-bold" style={{ color: 'var(--text-primary)' }}>{planName}</h4>
 										<ChevronDownIcon className="w-5 h-5" style={{ color: 'var(--text-tertiary)' }} />
 									</div>
-									<p className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-tertiary)' }}>{lineOfBusinessData?.companyName || ''} workspace</p>
+									<p className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-tertiary)' }}>{campaignData?.companyName || ''} workspace</p>
 								</div>
 
 								{/* Billing Cycle */}

@@ -13,14 +13,14 @@ import { extractErrorMessage, ApiError } from '@/utils/apiError';
 interface CreateSupervisorRoleModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	lineOfBusinessId?: string;
+	campaignId?: string;
 	onSuccess?: () => void;
 }
 
 const CreateSupervisorRoleModal: React.FC<CreateSupervisorRoleModalProps> = ({
 	isOpen,
 	onClose,
-	lineOfBusinessId,
+	campaignId,
 	onSuccess,
 }) => {
 	const { user } = useUserInfo();
@@ -58,7 +58,7 @@ const CreateSupervisorRoleModal: React.FC<CreateSupervisorRoleModalProps> = ({
 				description: description.trim(),
 				isSupervisor: true,
 				companyId,
-				lineOfBusinessId: lineOfBusinessId || undefined,
+				campaignId: campaignId || undefined,
 			}).unwrap();
 
 			toast.success('Supervisor role created successfully');

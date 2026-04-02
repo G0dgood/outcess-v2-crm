@@ -8,10 +8,10 @@ import DateFilter from '@/components/ui/DateFilter';
 import { MixerHorizontalIcon } from '@radix-ui/react-icons';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import PageHeading from '@/components/ui/PageHeading';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useGetDispositionsByLineOfBusinessReportQuery, useGetDispositionsByAgentReportQuery } from '@/store/services/dispositionApi';
+import { useGetDispositionsByCampaignReportQuery, useGetDispositionsByAgentReportQuery } from '@/store/services/dispositionApi';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
 
@@ -44,7 +44,7 @@ interface ReportApiResponse {
 }
 
 const ReportPage: React.FC = () => {
-	const { lineOfBusinessData, selectedLineOfBusinessId } = useLineOfBusiness();
+	const { campaignData, selectedCampaignId } = useCampaign();
 	const { user } = useUserInfo();
 	const { canAccess, isAdmin, isLoading: isPrivilegeLoading } = usePrivilege();
 	const canView = canAccess('report', 'view');
@@ -67,21 +67,21 @@ const ReportPage: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-	const { data: lobApiData, isLoading: isLobLoading } = useGetDispositionsByLineOfBusinessReportQuery(
+	const { data: lobApiData, isLoading: isLobLoading } = useGetDispositionsByCampaignReportQuery(
 		{
-			lineOfBusinessId: selectedLineOfBusinessId || '',
+			campaignId: selectedCampaignId || '',
 			startDate: dateRange.startDate,
 			endDate: dateRange.endDate,
 			page: currentPage,
 			limit: itemsPerPage,
 			search: searchTerm
 		},
-		{ skip: !selectedLineOfBusinessId || isAgent || isPrivilegeLoading }
+		{ skip: !selectedCampaignId || isAgent || isPrivilegeLoading }
 	);
 
 	const { data: agentApiData, isLoading: isAgentLoading } = useGetDispositionsByAgentReportQuery(
 		{
-			lineOfBusinessId: selectedLineOfBusinessId || '',
+			campaignId: selectedCampaignId || '',
 			agentId: user?._id || user?.id || '',
 			page: currentPage,
 			limit: itemsPerPage,
@@ -89,7 +89,7 @@ const ReportPage: React.FC = () => {
 			endDate: dateRange.endDate,
 			search: searchTerm
 		},
-		{ skip: !selectedLineOfBusinessId || !isAgent || !(user?._id || user?.id) || isPrivilegeLoading }
+		{ skip: !selectedCampaignId || !isAgent || !(user?._id || user?.id) || isPrivilegeLoading }
 	);
 
 	const apiData = (isAgent ? agentApiData : lobApiData) as ReportApiResponse | ReportItem[] | undefined;
@@ -406,8 +406,8 @@ const ReportPage: React.FC = () => {
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
-					secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
+					primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
 		</div>

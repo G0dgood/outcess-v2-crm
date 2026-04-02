@@ -5,7 +5,7 @@ import Search from '@/components/ui/Search';
 import Button from '@/components/ui/Button';
 import { useGetTicketsQuery } from '@/store/services/supportApi';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import PageHeading from '@/components/ui/PageHeading';
 import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
@@ -24,7 +24,7 @@ const SupportPage = () => {
 	const router = useRouter();
 	const { user } = useAuth();
 	const { canAccess } = usePrivilege();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 
 	const [searchQuery, setSearchQuery] = useState('');
 	const [activeTab, setActiveTab] = useState<'All Tickets' | 'New' | 'In Progress' | 'Resolved' | 'Closed' | 'Done'>('All Tickets');
@@ -35,12 +35,12 @@ const SupportPage = () => {
 	const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
 
 	const hasAccess = canAccess('support', 'view');
-	const lineOfBusinessId = (user as { lineOfBusinessId?: string })?.lineOfBusinessId || '';
+	const campaignId = (user as { campaignId?: string })?.campaignId || '';
 
 	const { data: ticketsData, isLoading } = useGetTicketsQuery({
 		status: activeTab === 'All Tickets' ? undefined : activeTab,
 		companyId: (user as { companyId?: string })?.companyId || '',
-		lineOfBusinessId,
+		campaignId,
 		userId: user?.id,
 		role: user?.role,
 		page,
@@ -155,7 +155,7 @@ const SupportPage = () => {
 				tabs={supportTabs}
 				activeTab={activeTab}
 				onTabChange={(tabId) => setActiveTab(tabId as typeof activeTab)}
-				activeColor={lineOfBusinessData?.primaryColor}
+				activeColor={campaignData?.primaryColor}
 			/>
 
 			<div className="mt-4">
@@ -175,7 +175,7 @@ const SupportPage = () => {
 				<TicketList
 					tickets={tickets}
 					isLoading={isLoading}
-					lineOfBusinessData={lineOfBusinessData}
+					campaignData={campaignData}
 					onOpenTicket={(id) => router.push(`/support/${id}`)}
 				/>
 			</div>
@@ -188,8 +188,8 @@ const SupportPage = () => {
 					onPageChange={setPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
-					secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
+					primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
 

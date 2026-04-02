@@ -8,7 +8,7 @@ import CreateRecordModal from '@/components/ui/CreateRecordModal';
 import CustomerDetailsModal from '@/components/features/customer/CustomerDetailsModal';
 import { ArrowRightIcon } from '@radix-ui/react-icons';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useGetSetupBookBySearchIdQuery } from '@/store/services/setupBookApi';
 import { toastError } from '@/utils/toastWithSound';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -21,8 +21,8 @@ interface Customer {
 }
 
 const CustomerBookPage: React.FC = () => {
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
+	const { campaignData } = useCampaign();
+	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
 	const [searchTerm, setSearchTerm] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
 	// const [currentPage, setCurrentPage] = useState(1);
@@ -33,8 +33,8 @@ const CustomerBookPage: React.FC = () => {
 	const canView = canAccess('customerBook', 'view');
 	const canCreate = canAccess('customerBook', 'create');
 
-	const searchId = lineOfBusinessData?.lineOfBusiness?.customerBookSettings?.searchId;
-	const configuredFields = lineOfBusinessData?.lineOfBusiness?.customerBookSettings?.configuredFields || [];
+	const searchId = campaignData?.campaign?.customerBookSettings?.searchId;
+	const configuredFields = campaignData?.campaign?.customerBookSettings?.configuredFields || [];
 
 	const mapFieldType = (type: string): 'text' | 'phone' | 'email' | 'number' | 'date' => {
 		if (type === 'phone') return 'phone';
@@ -53,8 +53,8 @@ const CustomerBookPage: React.FC = () => {
 
 	// Fetch customer by SearchId
 	const { data: searchResult, isLoading, isError, error } = useGetSetupBookBySearchIdQuery(
-		{ lineOfBusinessId: lobId || '', searchId: searchQuery },
-		{ skip: !searchQuery || !lobId }
+		{ campaignId: campaignId || '', searchId: searchQuery },
+		{ skip: !searchQuery || !campaignId }
 	);
 
 
@@ -68,7 +68,7 @@ const CustomerBookPage: React.FC = () => {
 			if (Array.isArray(data) && data.length > 0) {
 				// Dynamically extract headers from the first item, excluding internal fields like _id, id, __v
 				const firstItem = data[0] as Record<string, unknown>;
-				const headers = Object.keys(firstItem).filter(key => !['_id', 'id', '__v', 'companyId', 'lineOfBusinessId'].includes(key) && key.toLowerCase() !== 'searchid');
+				const headers = Object.keys(firstItem).filter(key => !['_id', 'id', '__v', 'companyId', 'campaignId'].includes(key) && key.toLowerCase() !== 'searchid');
 				setTableHeaders(headers);
 
 				const mappedCustomers: Customer[] = data.map((item) => {
@@ -129,7 +129,7 @@ const CustomerBookPage: React.FC = () => {
 								onChange={(value) => setSearchTerm(value)}
 								onSearch={handleSearch}
 								className="w-full sm:w-auto min-w-[300px]"
-								buttonColor={lineOfBusinessData?.primaryColor}
+								buttonColor={campaignData?.primaryColor}
 							/>
 						)}
 						<div className="flex   items-center justify-end sm:justify-start gap-2 sm:gap-3 whitespace-nowrap">

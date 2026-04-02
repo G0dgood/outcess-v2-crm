@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { GearIcon, TrashIcon } from '@radix-ui/react-icons';
 import Pagination from '@/components/ui/Pagination';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useGetLineOfBusinessByCompanyIdForheaderQuery, useDeleteLineOfBusinessMutation } from '@/store/services/lineOfBusinessApi';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { useGetCampaignByCompanyIdForheaderQuery, useDeleteCampaignMutation } from '@/store/services/campaignApi';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
@@ -17,9 +17,9 @@ import ProgressBar from '@/components/ui/ProgressBar';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 
-interface LineOfBusiness {
+interface Campaign {
 	_id: string;
-	lineOfBusinessName: string;
+	campaignName: string;
 	progress?: number;
 	status?: string;
 	createdAt?: string;
@@ -29,11 +29,11 @@ export default function ConfigurationPage() {
 	const router = useRouter();
 	const { user } = useUserInfo();
 	const { canAccess } = usePrivilege();
-	const canAccessModule = canAccess('lobPlan');
-	const canCreate = canAccess('lobPlan', 'create');
-	const canEdit = canAccess('lobPlan', 'edit');
+	const canAccessModule = canAccess('campaignPlan');
+	const canCreate = canAccess('campaignPlan', 'create');
+	const canEdit = canAccess('campaignPlan', 'edit');
 
-	const { setSelectedLineOfBusinessId } = useLineOfBusiness();
+	const { setSelectedCampaignId } = useCampaign();
 	const companyId = user?.companyId || user?.company?._id || '';
 	const [searchTerm, setSearchTerm] = useState('');
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -41,22 +41,22 @@ export default function ConfigurationPage() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 
-	const { data: lineOfBusinessData, isLoading } = useGetLineOfBusinessByCompanyIdForheaderQuery(
+	const { data: campaignData, isLoading } = useGetCampaignByCompanyIdForheaderQuery(
 		{ companyId, page: currentPage, limit: itemsPerPage },
 		{
 			skip: !companyId,
 		}
 	);
 
-	const [deleteLineOfBusiness] = useDeleteLineOfBusinessMutation();
+	const [deleteCampaign] = useDeleteCampaignMutation();
 
-	const lineOfBusinesses = useMemo(() => {
-		const data = lineOfBusinessData as { lineOfBusinesses?: LineOfBusiness[] } | undefined;
-		return data?.lineOfBusinesses || [];
-	}, [lineOfBusinessData]);
+	const campaignes = useMemo(() => {
+		const data = campaignData as { campaignes?: Campaign[] } | undefined;
+		return data?.campaignes || [];
+	}, [campaignData]);
 
-	const totalPages = (lineOfBusinessData as { pagination?: { totalPages?: number } })?.pagination?.totalPages || 1;
-	const totalItems = (lineOfBusinessData as { pagination?: { total?: number } })?.pagination?.total || 0;
+	const totalPages = (campaignData as { pagination?: { totalPages?: number } })?.pagination?.totalPages || 1;
+	const totalItems = (campaignData as { pagination?: { total?: number } })?.pagination?.total || 0;
 
 	const handleDeleteClick = (id: string, name: string) => {
 		setRecordToDelete({ id, name });
@@ -67,13 +67,13 @@ export default function ConfigurationPage() {
 		if (!recordToDelete) return;
 
 		try {
-			await deleteLineOfBusiness(recordToDelete.id).unwrap();
-			toast.success('Line of Business deleted successfully');
+			await deleteCampaign(recordToDelete.id).unwrap();
+			toast.success('Campaign deleted successfully');
 			setDeleteModalOpen(false);
 			setRecordToDelete(null);
 		} catch (error) {
 			console.error('Failed to delete line of business:', error);
-			toast.error('Failed to delete Line of Business');
+			toast.error('Failed to delete Campaign');
 		}
 	};
 
@@ -89,7 +89,7 @@ export default function ConfigurationPage() {
 					className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100 mb-2"
 					style={{ color: 'var(--text-primary)' }}
 				>
-					LOB Plan
+					Campaign Plan
 				</h1>
 				<p
 					className="text-[10px] md:text-[12px] dark:text-gray-400"
@@ -115,19 +115,19 @@ export default function ConfigurationPage() {
 							variant="primary"
 							size="md"
 							onClick={() => {
-								setSelectedLineOfBusinessId('new');
+								setSelectedCampaignId('new');
 								localStorage.removeItem('peoplely-setup-data');
 								router.push('/setup');
 							}}
 							className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
 						>
-							Line of Businesses
+							Campaignes
 						</Button>
 					)}
 				</div>
 			</div>
 
-			{/* Line of Business Table */}
+			{/* Campaign Table */}
 			<div
 				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
 				style={{
@@ -142,7 +142,7 @@ export default function ConfigurationPage() {
 						setItemsPerPage(value);
 						setCurrentPage(1);
 					}}
-					label="Line of Businesses"
+					label="Campaignes"
 				/>
 				<div className="overflow-x-auto">
 					<table className="min-w-full">
@@ -164,10 +164,10 @@ export default function ConfigurationPage() {
 						<tbody className="divide-y dark:divide-gray-700">
 							{isLoading ? (
 								<SVGLoaderFetch colSpan={5} text={''} />
-							) : lineOfBusinesses?.length === 0 ? (
+							) : campaignes?.length === 0 ? (
 								<NoRecordFound colSpan={5} />
 							) : (
-								lineOfBusinesses?.map((lob: LineOfBusiness) => (
+								campaignes?.map((lob: Campaign) => (
 										<tr
 											key={lob._id}
 											onMouseEnter={(e) => {
@@ -179,7 +179,7 @@ export default function ConfigurationPage() {
 											className="dark:hover:bg-gray-700/50 transition-colors border-b dark:border-gray-700 last:border-0"
 											style={{ borderColor: 'var(--light-gray)' }}
 										>
-										<td className="px-4 py-3">{lob.lineOfBusinessName}</td>
+										<td className="px-4 py-3">{lob.campaignName}</td>
 										<td className="px-4 py-3">
 											<ProgressBar progress={typeof lob.progress === 'number' ? lob.progress : 0} />
 										</td>
@@ -196,7 +196,7 @@ export default function ConfigurationPage() {
 														variant="ghost"
 														size="sm"
 														onClick={() => {
-															setSelectedLineOfBusinessId(lob._id);
+															setSelectedCampaignId(lob._id);
 															router.push('/setup');
 														}}
 														className="p-2 transition-colors h-auto rounded-full"
@@ -209,7 +209,7 @@ export default function ConfigurationPage() {
 													<Button
 														variant="ghost"
 														size="sm"
-														onClick={() => handleDeleteClick(lob._id, lob.lineOfBusinessName)}
+														onClick={() => handleDeleteClick(lob._id, lob.campaignName)}
 														className="p-2 hover:bg-red-50 rounded-full transition-colors dark:hover:bg-red-900/20 group h-auto"
 														title="Delete"
 													>
@@ -229,7 +229,7 @@ export default function ConfigurationPage() {
 					</table>
 				</div>
 			</div>
-			{lineOfBusinesses.length > 0 && (
+			{campaignes.length > 0 && (
 				<Pagination
 					currentPage={currentPage}
 					totalPages={totalPages}

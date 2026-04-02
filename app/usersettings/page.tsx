@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
+import { useCampaign } from "@/contexts/CampaignContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGetUserByIdQuery } from "@/store/services/authApi";
 import { useEffect } from "react";
@@ -28,8 +28,8 @@ import { toast } from "sonner";
 
 export default function SettingsPage() {
 	const { isDarkMode, toggleTheme } = useTheme();
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const { campaignData } = useCampaign();
+	const primaryColor = campaignData?.primaryColor || '#050711';
 
 	const { user } = useAuth();
 	const { data: userData, isLoading: isUserLoading } = useGetUserByIdQuery(user?.id || '', {

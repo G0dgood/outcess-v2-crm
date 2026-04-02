@@ -6,13 +6,13 @@ import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Textarea from '@/components/ui/Textarea';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import Tabs from '@/components/ui/Tabs';
 
 function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
 	usePromise(params);
 	const router = useRouter();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const { isDarkMode } = useTheme();
 	const [activeTab, setActiveTab] = useState('basic-setup');
 	const [reviewNotes, setReviewNotes] = useState('');
@@ -71,7 +71,7 @@ function PendingRequestDetailPage({ params }: { params: Promise<{ id: string }> 
 		router.push('/admin/pending-request');
 	};
 
-	const activeColor = isDarkMode ? '#F3F4F6' : (lineOfBusinessData?.primaryColor || '#050711');
+	const activeColor = isDarkMode ? '#F3F4F6' : (campaignData?.primaryColor || '#050711');
 
 	return (
 		<div>

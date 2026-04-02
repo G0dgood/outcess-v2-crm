@@ -29,7 +29,7 @@ export interface SupportTicket {
     assignedToIds?: (string | PopulatedMember)[];
     assignedToType?: string | PopulatedRole;
     companyId: string;
-    lineOfBusinessId: string;
+    campaignId: string;
     creatorName?: string;
     supervisorId?: string;
     escalationLevel?: string | PopulatedRole;
@@ -59,9 +59,9 @@ export const supportApi = baseApi.injectEndpoints({
             }),
             providesTags: ['SupportTicket'],
         }),
-        getTicketsByLineOfBusinessId: builder.query<{ tickets: SupportTicket[]; total: number; totalPages: number }, { lineOfBusinessId: string; status?: string; priority?: string; page?: number; limit?: number }>({
-            query: ({ lineOfBusinessId, ...params }) => ({
-                url: `api/v1/support-tickets/line-of-business/${lineOfBusinessId}`,
+        getTicketsByCampaignId: builder.query<{ tickets: SupportTicket[]; total: number; totalPages: number }, { campaignId: string; status?: string; priority?: string; page?: number; limit?: number }>({
+            query: ({ campaignId, ...params }) => ({
+                url: `api/v1/support-tickets/campaign/${campaignId}`,
                 params,
             }),
             providesTags: ['SupportTicket'],
@@ -123,7 +123,7 @@ export const supportApi = baseApi.injectEndpoints({
 
 export const {
     useGetTicketsQuery,
-    useGetTicketsByLineOfBusinessIdQuery,
+    useGetTicketsByCampaignIdQuery,
     useGetTicketsBySupervisorIdQuery,
     useGetTicketByIdQuery,
     useCreateTicketMutation,

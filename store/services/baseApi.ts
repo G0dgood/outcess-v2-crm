@@ -15,7 +15,7 @@ export const baseApi = createApi({
     tagTypes: [
         'User', 
         'Disposition', 
-        'LineOfBusiness', 
+        'Campaign', 
         'Notification', 
         'Roles', 
         'PermissionTemplates', 

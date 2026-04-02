@@ -5,10 +5,10 @@ import { SetupProvider } from '@/contexts/SetupContext';
 import DashboardHeader from '@/components/ui/DashboardHeader';
 import DashboardSideNav from '@/components/ui/DashboardSideNav';
 import OfflineBanner from '@/components/ui/OfflineBanner';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
 	const toggleMobileMenu = () => {
@@ -19,7 +19,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 		<div id="page-wrapper" className={isMobileMenuOpen ? 'mobile-nav-open' : ''}>
 			<OfflineBanner />
 			<DashboardHeader
-				companyName={lineOfBusinessData?.companyName || ''}
+				companyName={campaignData?.companyName || ''}
 				onMobileMenuToggle={toggleMobileMenu}
 				isMobileMenuOpen={isMobileMenuOpen}
 			/>

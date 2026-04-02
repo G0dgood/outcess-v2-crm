@@ -16,7 +16,7 @@ import {
 	TicketMessage
 } from '@/store/services/supportApi';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { Send, ChevronUp, CheckCircle, ArrowLeft, RefreshCw, XCircle, PanelRightOpen, X } from 'lucide-react';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
@@ -29,7 +29,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 	const router = useRouter();
 	const { ticketId } = use(params);
 	const { user } = useAuth();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const { socket, isConnected } = useSocket();
 	const [newMessage, setNewMessage] = useState('');
 	const [messages, setMessages] = useState<TicketMessage[]>([]);
@@ -306,7 +306,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 									setIsStatusModalOpen(true);
 								}}
 								className="text-white shadow-sm"
-								style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
+								style={{ backgroundColor: campaignData?.primaryColor || 'var(--primary)' }}
 							>
 								<CheckCircle className="w-4 h-4 mr-2" />
 								Mark as Completed
@@ -397,8 +397,8 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 													<div
 														className="w-full h-full flex items-center justify-center text-[10px] font-bold transition-colors"
 														style={{
-															backgroundColor: (lineOfBusinessData?.primaryColor || 'var(--primary)') + '1A',
-															color: lineOfBusinessData?.primaryColor || 'var(--primary)'
+															backgroundColor: (campaignData?.primaryColor || 'var(--primary)') + '1A',
+															color: campaignData?.primaryColor || 'var(--primary)'
 														}}
 													>
 														{(() => {
@@ -430,7 +430,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 													? 'text-white dark:text-black rounded-tr-none'
 													: 'bg-white dark:bg-gray-800 border dark:border-gray-700 text-gray-800 dark:text-gray-100 rounded-tl-none'
 													}`}
-													style={isOwn ? { backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' } : {}}
+													style={isOwn ? { backgroundColor: campaignData?.primaryColor || 'var(--primary)' } : {}}
 												>
 													{msg.message}
 												</div>
@@ -529,7 +529,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 								type="submit"
 								disabled={!newMessage.trim() || ticket?.status === 'Closed'}
 								className="text-white h-[50px] px-8 shadow-md hover:shadow-lg transition-shadow"
-								style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
+								style={{ backgroundColor: campaignData?.primaryColor || 'var(--primary)' }}
 							>
 								<Send className="w-5 h-5" />
 							</Button>
@@ -556,7 +556,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 						</button>
 					</div>
 					<div className="flex-1 overflow-y-auto no-scrollbar p-1 lg:p-0">
-						<TicketSidebar ticket={ticket as SupportTicket} lineOfBusinessData={lineOfBusinessData} />
+						<TicketSidebar ticket={ticket as SupportTicket} campaignData={campaignData} />
 					</div>
 				</div>
 

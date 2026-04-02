@@ -8,10 +8,10 @@ import Icon from '@/components/ui/Icon';
 import { ColorPicker } from '@/components/ui/ColorPicker';
 import { useSocket } from '@/contexts/SocketContext';
 // import { useSetup } from '@/contexts/SetupContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useGetDashboardDispositionsByLineOfBusinessAndAgentIdReportQuery, useGetAllDashboardDispositionsByLineOfBusinessReportQuery } from '@/store/services/dispositionApi';
+import { useGetDashboardDispositionsByCampaignAndAgentIdReportQuery, useGetAllDashboardDispositionsByCampaignReportQuery } from '@/store/services/dispositionApi';
 
 interface AddChartModalProps {
 	isOpen: boolean;
@@ -55,24 +55,24 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 	onSave,
 }) => {
 	const { isOffline } = useSocket();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const { user } = useUserInfo();
 
 	const agentId = user?.id || user?._id || '';
-	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?._id || '';
+	const campaignId = campaignData?.campaign?._id || campaignData?._id || '';
 	const startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
 	const endDate = new Date().toISOString().split('T')[0];
 
 	const { isAdmin } = usePrivilege();
 
-	const { data: reportDataAgent } = useGetDashboardDispositionsByLineOfBusinessAndAgentIdReportQuery(
-		{ lineOfBusinessId: lobId, agentId, startDate, endDate },
-		{ skip: !lobId || !agentId || !isOpen || isAdmin }
+	const { data: reportDataAgent } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
+		{ campaignId: campaignId, agentId, startDate, endDate },
+		{ skip: !campaignId || !agentId || !isOpen || isAdmin }
 	);
 
-	const { data: reportDataAdmin } = useGetAllDashboardDispositionsByLineOfBusinessReportQuery(
-		{ lineOfBusinessId: lobId, startDate, endDate },
-		{ skip: !lobId || !isOpen || !isAdmin }
+	const { data: reportDataAdmin } = useGetAllDashboardDispositionsByCampaignReportQuery(
+		{ campaignId: campaignId, startDate, endDate },
+		{ skip: !campaignId || !isOpen || !isAdmin }
 	);
 
 	const reportData = isAdmin ? reportDataAdmin : reportDataAgent;
@@ -104,7 +104,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 			});
 		}
 
-		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
+		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
 
 		// Add disposition categories if available
 		if (dashboardSettings?.dispositions && dashboardSettings.dispositions.length > 0) {
@@ -125,7 +125,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		}
 
 		return Array.from(optionsMap.values());
-	}, [lineOfBusinessData, reportData]);
+	}, [campaignData, reportData]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
 		// For non-multiple fields, ensure we only use string values

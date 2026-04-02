@@ -110,10 +110,10 @@ export default function SetupPage() {
 							<Input
 								label="Line of business name"
 								placeholder="Enter line of business name"
-								value={setupData.lineOfBusinessName}
-								onChange={handleInputChange('lineOfBusinessName')}
+								value={setupData.campaignName}
+								onChange={handleInputChange('campaignName')}
 								required
-								error={errors.lineOfBusinessName}
+								error={errors.campaignName}
 							/>
 
 							<Dropdown

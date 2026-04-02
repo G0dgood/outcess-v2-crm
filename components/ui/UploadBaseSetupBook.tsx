@@ -2,7 +2,7 @@
 import React, { useState, useRef } from "react";
 import { Cross2Icon, UploadIcon } from "@radix-ui/react-icons";
 import { toast } from "sonner";
-import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
+import { useCampaign } from "@/contexts/CampaignContext";
 import { useCreateSetupBookMutation } from "@/store/services/setupBookApi";
 import UploadAlert from "@/components/ui/UploadAlert";
 
@@ -76,14 +76,14 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
   onUploadComplete,
   searchId,
 }) => {
-  const { lineOfBusinessData } = useLineOfBusiness();
-  const lobId = lineOfBusinessData?.lineOfBusiness?._id;
-  const companyId = lineOfBusinessData?.lineOfBusiness
+  const { campaignData } = useCampaign();
+  const campaignId = campaignData?.campaign?._id;
+  const companyId = campaignData?.campaign
     ?.companyId;
 
 
 
-  const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+  const primaryColor = campaignData?.primaryColor || '#050711';
   const [progress, setProgress] = useState(0);
   const [show, setShow] = useState(false);
   const [jsonData, setJSONData] = useState<CsvRow[]>([]);
@@ -245,9 +245,9 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
       //   companyId = companyId._id || companyId.id;
       // }
 
-      if (!companyId || !lobId) {
+      if (!companyId || !campaignId) {
         toast.error("Missing required information", {
-          description: "Line of Business ID, Company ID, or Search ID is missing.",
+          description: "Campaign ID, Company ID, or Search ID is missing.",
           duration: 5000,
         });
         setProgress(0);
@@ -255,7 +255,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
       }
 
       formData.append('companyId', companyId);
-      formData.append('lineOfBusinessId', lobId);
+      formData.append('campaignId', campaignId);
       if (searchId) {
         formData.append('searchId', searchId);
       }

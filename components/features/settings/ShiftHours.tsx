@@ -4,12 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import AddShiftHourModal, { ShiftHour } from '@/components/ui/AddShiftHourModal';
 import AssignShiftHourModal from '@/components/ui/AssignShiftHourModal';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
-import { useUpsertShiftHourMutation } from '@/store/services/lineOfBusinessApi';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { useUpsertShiftHourMutation } from '@/store/services/campaignApi';
 import { toastError, toastSuccess } from '@/utils/toastWithSound';
 
 const ShiftHours = () => {
-	const { selectedLineOfBusinessId, lineOfBusinessData } = useLineOfBusiness();
+	const { selectedCampaignId, campaignData } = useCampaign();
 
 	const [shiftHours, setShiftHours] = useState<ShiftHour[]>([]);
 	const [isAddShiftHourModalOpen, setIsAddShiftHourModalOpen] = useState(false);
@@ -32,7 +32,7 @@ const ShiftHours = () => {
 	const [upsertShiftHour] = useUpsertShiftHourMutation();
 
 	useEffect(() => {
-		const businessHours = lineOfBusinessData?.lineOfBusiness?.businessHours as
+		const businessHours = campaignData?.campaign?.businessHours as
 			| { name?: string; businessDays?: string[] }[]
 			| { name?: string; businessDays?: string[] }
 			| undefined;
@@ -54,10 +54,10 @@ const ShiftHours = () => {
 		});
 
 		setShiftDayLabels(labels);
-	}, [lineOfBusinessData]);
+	}, [campaignData]);
 
 	useEffect(() => {
-		const existing = lineOfBusinessData?.lineOfBusiness?.shiftHours as
+		const existing = campaignData?.campaign?.shiftHours as
 			| {
 				id?: string;
 				shiftName: string;
@@ -85,7 +85,7 @@ const ShiftHours = () => {
 		}));
 
 		setShiftHours(mapped);
-	}, [lineOfBusinessData]);
+	}, [campaignData]);
 
 	return (
 		<div>
@@ -262,7 +262,7 @@ const ShiftHours = () => {
 					setSelectedShiftHour(null);
 				}}
 				onSave={async (data) => {
-					if (!selectedLineOfBusinessId) {
+					if (!selectedCampaignId) {
 						toastError('No line of business selected');
 						setIsAddShiftHourModalOpen(false);
 						setSelectedShiftHour(null);
@@ -280,7 +280,7 @@ const ShiftHours = () => {
 
 					try {
 						const result = await upsertShiftHour({
-							id: selectedLineOfBusinessId,
+							id: selectedCampaignId,
 							data: payload,
 						}).unwrap();
 

@@ -10,13 +10,13 @@ import EditWidgetModal from '@/components/features/dashboard/EditWidgetModal';
 import DeleteWidgetModal from '@/components/ui/DeleteWidgetModal';
 import { PlusIcon, Pencil1Icon, ReloadIcon } from '@radix-ui/react-icons';
 import AccessRestricted from '@/components/ui/AccessRestricted';
-import { useUpdateLineOfBusinessMutation } from '@/store/services/lineOfBusinessApi';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useUpdateCampaignMutation } from '@/store/services/campaignApi';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import {
-	useGetDashboardDispositionsByLineOfBusinessAndAgentIdReportQuery,
-	useGetAllDashboardDispositionsByLineOfBusinessReportQuery,
-	useGetDispositionsByLineOfBusinessReportQuery,
+	useGetDashboardDispositionsByCampaignAndAgentIdReportQuery,
+	useGetAllDashboardDispositionsByCampaignReportQuery,
+	useGetDispositionsByCampaignReportQuery,
 	useGetDispositionsByAgentReportQuery
 } from '@/store/services/dispositionApi';
 import { filterDispositionsByTimeRange, getDateRangeFromTimeRange } from '@/utils/filterUtils';
@@ -61,9 +61,9 @@ interface CombinedDispositionItem {
 }
 
 const DashboardContent: React.FC = () => {
-	const { lineOfBusinessData, isLoading: isLobLoading } = useLineOfBusiness();
+	const { campaignData, isLoading: isLobLoading } = useCampaign();
 	const { setupData, addChart: addChartLocal, updateChart: updateChartLocal, updateChartsOrder: updateChartsOrderLocal, updateDashboardSettings: updateDashboardSettingsLocal } = useSetup();
-	const [updateLineOfBusiness] = useUpdateLineOfBusinessMutation();
+	const [updateCampaign] = useUpdateCampaignMutation();
 	const isLoading = isLobLoading;
 	const { isOnline, isConnected, isOffline, send } = useSocket();
 	const { canAccess, isAdmin, userPrivileges } = usePrivilege();
@@ -78,7 +78,7 @@ const DashboardContent: React.FC = () => {
 	const showAddButtons = canCreate && !isAgent;
 
 	const dashboardSettings: DashboardSettings = useMemo(() => {
-		const source = setupData?.dashboardSettings || lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
+		const source = setupData?.dashboardSettings || campaignData?.campaign?.dashboardSettings;
 		return source || {
 			dashboardName: 'Dashboard',
 			dashboardVisibility: 'all',
@@ -94,53 +94,53 @@ const DashboardContent: React.FC = () => {
 				charts: [],
 			},
 		};
-	}, [lineOfBusinessData, setupData]);
+	}, [campaignData, setupData]);
 
 	// Fetch Report Data
-	const lobId = lineOfBusinessData?._id || lineOfBusinessData?.lineOfBusiness?._id || setupData?.lineOfBusinessId;
+	const campaignId = campaignData?._id || campaignData?.campaign?._id || setupData?.campaignId;
 	const timeRange = dashboardSettings.dispositionSettings?.timeRangeView || 'daily';
 	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange]);
 
-	const { data: reportDataAgent, refetch: refetchAgentReport, isFetching: isFetchingAgentReport } = useGetDashboardDispositionsByLineOfBusinessAndAgentIdReportQuery(
+	const { data: reportDataAgent, refetch: refetchAgentReport, isFetching: isFetchingAgentReport } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
 		{
-			lineOfBusinessId: lobId || '',
+			campaignId: campaignId || '',
 			agentId: user?.id || user?._id || '',
 			startDate: dateRange.startDate || '',
 			endDate: dateRange.endDate || ''
 		},
-		{ skip: !lobId || !user || !dateRange.startDate || isAdmin }
+		{ skip: !campaignId || !user || !dateRange.startDate || isAdmin }
 	);
 
-	const { data: reportDataAdmin, refetch: refetchAdminReport, isFetching: isFetchingAdminReport } = useGetAllDashboardDispositionsByLineOfBusinessReportQuery(
+	const { data: reportDataAdmin, refetch: refetchAdminReport, isFetching: isFetchingAdminReport } = useGetAllDashboardDispositionsByCampaignReportQuery(
 		{
-			lineOfBusinessId: lobId || '',
+			campaignId: campaignId || '',
 			startDate: dateRange.startDate || '',
 			endDate: dateRange.endDate || ''
 		},
-		{ skip: !lobId || !dateRange.startDate || !isAdmin }
+		{ skip: !campaignId || !dateRange.startDate || !isAdmin }
 	);
 
 	const reportData = isAdmin ? reportDataAdmin : reportDataAgent;
 
-	const { data: lobReportData, refetch: refetchLobReport, isFetching: isFetchingLobReport } = useGetDispositionsByLineOfBusinessReportQuery(
+	const { data: lobReportData, refetch: refetchLobReport, isFetching: isFetchingLobReport } = useGetDispositionsByCampaignReportQuery(
 		{
-			lineOfBusinessId: lobId || '',
+			campaignId: campaignId || '',
 			startDate: dateRange.startDate || '',
 			endDate: dateRange.endDate || '',
 		},
-		{ skip: !lobId || !isAdmin || !dateRange.startDate }
+		{ skip: !campaignId || !isAdmin || !dateRange.startDate }
 	);
 
 	const { data: agentReportData, refetch: refetchAgentDispositions, isFetching: isFetchingAgentDispositions } = useGetDispositionsByAgentReportQuery(
 		{
-			lineOfBusinessId: lobId || '',
+			campaignId: campaignId || '',
 			agentId: user?._id || '',
 			startDate: dateRange.startDate || '',
 			endDate: dateRange.endDate || '',
 			page: 1,
 			limit: 10000,
 		},
-		{ skip: !lobId || isAdmin || !user?._id || !dateRange.startDate }
+		{ skip: !campaignId || isAdmin || !user?._id || !dateRange.startDate }
 	);
 
 	const apiDispositions = useMemo(() => {
@@ -168,11 +168,11 @@ const DashboardContent: React.FC = () => {
 		updateDashboardSettingsLocal(newSettings);
 		// If offline, skip server
 		if (isOffline) return;
-		const lobId = lineOfBusinessData?._id || lineOfBusinessData?.lineOfBusiness?._id || setupData?.lineOfBusinessId;
-		if (!lobId) return;
+		const campaignId = campaignData?._id || campaignData?.campaign?._id || setupData?.campaignId;
+		if (!campaignId) return;
 
-		await updateLineOfBusiness({
-			id: lobId,
+		await updateCampaign({
+			id: campaignId,
 			data: {
 				dashboardSettings: {
 					...dashboardSettings,
@@ -180,7 +180,7 @@ const DashboardContent: React.FC = () => {
 				}
 			}
 		});
-	}, [updateDashboardSettingsLocal, isOffline, lineOfBusinessData, setupData, updateLineOfBusiness, dashboardSettings]);
+	}, [updateDashboardSettingsLocal, isOffline, campaignData, setupData, updateCampaign, dashboardSettings]);
 
 	const addChart = useCallback(async (chart: Omit<Chart, 'id'>) => {
 		if (!canCreate) return;

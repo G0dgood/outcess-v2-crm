@@ -5,7 +5,7 @@ import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
 import Search from '@/components/ui/Search';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useGetAllCompaniesQuery } from '@/store/services/companyApi';
 import { useRouter } from 'next/navigation';
 import React, { useMemo, useState } from 'react';
@@ -33,7 +33,7 @@ interface CompaniesData {
 
 const BusinessesManagementPage: React.FC = () => {
 	const router = useRouter();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [statusFilter, setStatusFilter] = useState<string>('all');
 	const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -260,8 +260,8 @@ const BusinessesManagementPage: React.FC = () => {
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
-					secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
+					primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
 		</div>

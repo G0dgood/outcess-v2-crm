@@ -16,7 +16,7 @@ import { toastSuccess, toastError } from '@/utils/toastWithSound';
 
 interface SupportStatusDropdownProps {
  ticket: SupportTicket;
- lineOfBusinessData?: {
+ campaignData?: {
   primaryColor?: string;
  };
 }

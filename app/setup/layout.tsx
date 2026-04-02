@@ -8,15 +8,15 @@ import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
 import { useUserInfo } from "@/contexts/UserInfoContext";
-import { useLineOfBusiness } from "@/contexts/LineOfBusinessContext";
-import { useCreateLineOfBusinessMutation, useUpdateLineOfBusinessMutation } from "@/store/services/lineOfBusinessApi";
+import { useCampaign } from "@/contexts/CampaignContext";
+import { useCreateCampaignMutation, useUpdateCampaignMutation } from "@/store/services/campaignApi";
 import { ApiError, extractErrorMessage } from "@/utils/apiError";
 
-type LineOfBusinessLike = {
+type CampaignLike = {
   _id?: string;
   companyName?: string;
   companyId?: string;
-  lineOfBusinessName?: string;
+  campaignName?: string;
   name?: string;
   timeZone?: string;
   industry?: string;
@@ -50,7 +50,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     setupData,
     updateSetupData,
     updateDashboardSettings,
-    isFetchingLineOfBusiness,
+    isFetchingCampaign,
     dashboardStep,
     setDashboardStep,
     validateStep,
@@ -61,9 +61,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     onPersist
   } = useSetup();
   const { user } = useUserInfo();
-  const { setSelectedLineOfBusinessId } = useLineOfBusiness();
-  const [createLineOfBusiness] = useCreateLineOfBusinessMutation();
-  const [updateLineOfBusiness] = useUpdateLineOfBusinessMutation();
+  const { setSelectedCampaignId } = useCampaign();
+  const [createCampaign] = useCreateCampaignMutation();
+  const [updateCampaign] = useUpdateCampaignMutation();
 
   const rawRole = (user as { role?: RoleValue } | null | undefined)?.role;
   const creatorRoleName =
@@ -160,9 +160,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   };
 
   const handleSubmitForApproval = useCallback(async () => {
-    if (!setupData.lineOfBusinessId) {
+    if (!setupData.campaignId) {
       toast.error("Error", {
-        description: "Line of Business ID is missing. Please restart the setup.",
+        description: "Campaign ID is missing. Please restart the setup.",
       });
       return;
     }
@@ -171,7 +171,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
     const status = isSupervisorCreator ? "In Review" : "Approved";
     const loadingMessage = isSupervisorCreator ? "Submitting for approval..." : "Approving LOB plan...";
-    const successTitle = isSupervisorCreator ? "LOB Plan submitted successfully!" : "LOB Plan approved successfully!";
+    const successTitle = isSupervisorCreator ? "Campaign Plan submitted successfully!" : "Campaign Plan approved successfully!";
     const successDescription = isSupervisorCreator
       ? "Your CRM setup is now under review."
       : "Your CRM setup has been approved.";
@@ -181,8 +181,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     });
 
     try {
-      await updateLineOfBusiness({
-        id: setupData.lineOfBusinessId,
+      await updateCampaign({
+        id: setupData.campaignId,
         data: {
           status,
           progress: 100,
@@ -212,7 +212,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         description: errorMessage,
       });
     }
-  }, [setupData.lineOfBusinessId, isSupervisorCreator, updateLineOfBusiness, setIsLoading]);
+  }, [setupData.campaignId, isSupervisorCreator, updateCampaign, setIsLoading]);
 
   const handlePersist = useCallback(async (shouldAdvance: boolean = false) => {
     if (currentStep === 5) {
@@ -234,18 +234,18 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
     try {
       if (currentStep === 1) {
-        if (setupData.lineOfBusinessId) {
+        if (setupData.campaignId) {
           try {
             // If we already have an ID, update instead of create
-            await updateLineOfBusiness({
-              id: setupData.lineOfBusinessId,
+            await updateCampaign({
+              id: setupData.campaignId,
               data: {
-                name: setupData?.lineOfBusinessName || '',
+                name: setupData?.campaignName || '',
                 timeZone: setupData?.timeZone || '',
                 industry: setupData?.industry || '',
                 businessSize: setupData?.businessSize || '',
                 companyId: user?.company?.id || setupData?.companyId || '',
-                lineOfBusinessName: setupData?.lineOfBusinessName || '',
+                campaignName: setupData?.campaignName || '',
                 primaryColor: setupData.primaryColor,
                 secondaryColor: setupData.secondaryColor,
                 textColor: setupData.textColor,
@@ -280,19 +280,19 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
             // If update fails because it's not found, fall back to create
             if (isNotFoundError) {
-              console.warn("Line of Business not found (caught via error check), creating new one...");
+              console.warn("Campaign not found (caught via error check), creating new one...");
 
-              // Create new Line of Business
+              // Create new Campaign
               const targetCompanyId = user?.company?.id || setupData.companyId;
-              const response = await createLineOfBusiness({
-                name: setupData.lineOfBusinessName,
+              const response = await createCampaign({
+                name: setupData.campaignName,
                 timeZone: setupData.timeZone,
                 industry: setupData.industry,
                 businessSize: setupData.businessSize,
                 userId: user?.id,
                 companyName: setupData.companyName,
                 companyId: targetCompanyId,
-                lineOfBusinessName: setupData.lineOfBusinessName,
+                campaignName: setupData.campaignName,
                 primaryColor: setupData.primaryColor,
                 secondaryColor: setupData.secondaryColor,
                 textColor: setupData.textColor,
@@ -310,24 +310,24 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                 progress,
               }).unwrap();
 
-              const createdLineOfBusiness = (response as { lineOfBusiness?: LineOfBusinessLike }).lineOfBusiness;
+              const createdCampaign = (response as { campaign?: CampaignLike }).campaign;
 
-              if (createdLineOfBusiness?._id) {
-                setSelectedLineOfBusinessId(createdLineOfBusiness._id);
+              if (createdCampaign?._id) {
+                setSelectedCampaignId(createdCampaign._id);
                 updateSetupData({
-                  lineOfBusinessId: createdLineOfBusiness._id,
-                  companyName: createdLineOfBusiness.companyName || setupData.companyName,
-                  companyId: createdLineOfBusiness.companyId || setupData.companyId,
-                  lineOfBusinessName: createdLineOfBusiness.lineOfBusinessName || createdLineOfBusiness.name || setupData.lineOfBusinessName,
-                  timeZone: createdLineOfBusiness.timeZone || setupData.timeZone,
-                  industry: createdLineOfBusiness.industry || setupData.industry,
-                  businessSize: createdLineOfBusiness.businessSize || setupData.businessSize,
+                  campaignId: createdCampaign._id,
+                  companyName: createdCampaign.companyName || setupData.companyName,
+                  companyId: createdCampaign.companyId || setupData.companyId,
+                  campaignName: createdCampaign.campaignName || createdCampaign.name || setupData.campaignName,
+                  timeZone: createdCampaign.timeZone || setupData.timeZone,
+                  industry: createdCampaign.industry || setupData.industry,
+                  businessSize: createdCampaign.businessSize || setupData.businessSize,
                 });
               }
 
               if (!shouldAdvance) {
                 toast.success("Progress saved!", {
-                  description: "New Line of Business created and saved.",
+                  description: "New Campaign created and saved.",
                   duration: 2000,
                 });
                 resetDirty();
@@ -337,17 +337,17 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             }
           }
         } else {
-          // Create new Line of Business
+          // Create new Campaign
           const targetCompanyId = user?.company?.id || setupData.companyId;
-          const response = await createLineOfBusiness({
-            name: setupData.lineOfBusinessName,
+          const response = await createCampaign({
+            name: setupData.campaignName,
             timeZone: setupData.timeZone,
             industry: setupData.industry,
             businessSize: setupData.businessSize,
             userId: user?.id,
             companyName: setupData.companyName,
             companyId: targetCompanyId,
-            lineOfBusinessName: setupData.lineOfBusinessName,
+            campaignName: setupData.campaignName,
             primaryColor: setupData.primaryColor,
             secondaryColor: setupData.secondaryColor,
             textColor: setupData.textColor,
@@ -365,32 +365,32 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             progress,
           }).unwrap();
 
-          const createdLineOfBusiness = (response as { lineOfBusiness?: LineOfBusinessLike }).lineOfBusiness;
+          const createdCampaign = (response as { campaign?: CampaignLike }).campaign;
 
-          if (createdLineOfBusiness?._id) {
-            setSelectedLineOfBusinessId(createdLineOfBusiness._id);
+          if (createdCampaign?._id) {
+            setSelectedCampaignId(createdCampaign._id);
             updateSetupData({
-              lineOfBusinessId: createdLineOfBusiness._id,
-              companyName: createdLineOfBusiness.companyName || setupData.companyName,
-              companyId: createdLineOfBusiness.companyId || setupData.companyId,
-              lineOfBusinessName: createdLineOfBusiness.lineOfBusinessName || createdLineOfBusiness.name || setupData.lineOfBusinessName,
-              timeZone: createdLineOfBusiness.timeZone || setupData.timeZone,
-              industry: createdLineOfBusiness.industry || setupData.industry,
-              businessSize: createdLineOfBusiness.businessSize || setupData.businessSize,
+              campaignId: createdCampaign._id,
+              companyName: createdCampaign.companyName || setupData.companyName,
+              companyId: createdCampaign.companyId || setupData.companyId,
+              campaignName: createdCampaign.campaignName || createdCampaign.name || setupData.campaignName,
+              timeZone: createdCampaign.timeZone || setupData.timeZone,
+              industry: createdCampaign.industry || setupData.industry,
+              businessSize: createdCampaign.businessSize || setupData.businessSize,
             });
           }
 
           if (!shouldAdvance) {
             toast.success("Progress saved!", {
-              description: "Line of Business created.",
+              description: "Campaign created.",
               duration: 2000,
             });
             resetDirty();
           }
         }
       } else {
-        if (!setupData.lineOfBusinessId) {
-          throw new Error("Line of Business ID is missing. Please restart the setup.");
+        if (!setupData.campaignId) {
+          throw new Error("Campaign ID is missing. Please restart the setup.");
         }
 
         let updateData: FormData | Record<string, unknown> = {};
@@ -445,8 +445,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             break;
         }
 
-        await updateLineOfBusiness({
-          id: setupData.lineOfBusinessId,
+        await updateCampaign({
+          id: setupData.campaignId,
           data: updateData,
         }).unwrap();
 
@@ -485,7 +485,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [currentStep, handleSubmitForApproval, validateStep, setIsLoading, setupData, updateLineOfBusiness, user, createLineOfBusiness, setSelectedLineOfBusinessId, updateSetupData, resetDirty, onStepComplete]);
+  }, [currentStep, handleSubmitForApproval, validateStep, setIsLoading, setupData, updateCampaign, user, createCampaign, setSelectedCampaignId, updateSetupData, resetDirty, onStepComplete]);
 
   const handleSave = () => handlePersist(true);
 
@@ -553,14 +553,14 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         currentStep={currentStep}
         onSave={handleSave}
         onBack={handleBackStep}
-        isLoading={mounted && (isLoading || isFetchingLineOfBusiness)}
-        disabled={mounted && (isLoading || isFetchingLineOfBusiness)}
+        isLoading={mounted && (isLoading || isFetchingCampaign)}
+        disabled={mounted && (isLoading || isFetchingCampaign)}
         buttonText={
           (mounted && isLoading)
             ? (currentStep === 5
               ? (isSupervisorCreator ? 'Submitting...' : 'Approving...')
               : 'Saving...')
-            : (mounted && isFetchingLineOfBusiness)
+            : (mounted && isFetchingCampaign)
               ? 'Checking...'
               : (currentStep === 5
                 ? (isSupervisorCreator ? 'Send for Approval' : 'Approve')

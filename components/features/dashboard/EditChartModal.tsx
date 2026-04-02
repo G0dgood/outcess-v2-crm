@@ -9,7 +9,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useSocket } from '@/contexts/SocketContext';
 import type { Chart } from '@/contexts/SetupContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface EditChartModalProps {
 	isOpen: boolean;
@@ -42,7 +42,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 	chart,
 }) => {
 	const { isOffline } = useSocket();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const [formData, setFormData] = useState<Omit<Chart, 'id'>>({
 		title: '',
 		type: 'pie',
@@ -98,7 +98,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 	// Build data source options
 	const dataSourceOptions = useMemo(() => {
 		const optionsMap = new Map<string, { value: string; label: string }>();
-		const dashboardSettings = lineOfBusinessData?.lineOfBusiness?.dashboardSettings;
+		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
 
 		// Add disposition categories if available
 		if (dashboardSettings?.dispositions && dashboardSettings.dispositions.length > 0) {
@@ -122,7 +122,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		optionsMap.set('custom', { value: 'custom', label: 'Custom Data' });
 
 		return Array.from(optionsMap.values());
-	}, [lineOfBusinessData]);
+	}, [campaignData]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
 		// For non-multiple fields, ensure we only use string values

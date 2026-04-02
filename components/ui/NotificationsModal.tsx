@@ -6,7 +6,7 @@ import { PersonIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { Notification } from '@/store/services/notificationApi';
 import Pagination from './Pagination';
 import Search from './Search';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface NotificationsModalProps {
 	isOpen: boolean;
@@ -21,8 +21,8 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 	notifications,
 	onMarkAsRead
 }) => {
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const { campaignData } = useCampaign();
+	const primaryColor = campaignData?.primaryColor || '#050711';
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');

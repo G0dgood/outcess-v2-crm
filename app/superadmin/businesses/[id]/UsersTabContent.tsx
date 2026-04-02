@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Pagination from '@/components/ui/Pagination';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 
 export interface User {
@@ -88,7 +88,7 @@ const formatValue = (key: string, value: unknown): React.ReactNode => {
 };
 
 const UsersTabContent: React.FC<UsersTabContentProps> = ({ users, isLoading }) => {
-  const { lineOfBusinessData } = useLineOfBusiness();
+  const { campaignData } = useCampaign();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
@@ -197,8 +197,8 @@ const UsersTabContent: React.FC<UsersTabContentProps> = ({ users, isLoading }) =
           onPageChange={setCurrentPage}
           showEllipsis={true}
           maxVisiblePages={5}
-          primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
-          secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
+          primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+          secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
           className="mt-0"
         />
       </div>

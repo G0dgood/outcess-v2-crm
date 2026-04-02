@@ -7,7 +7,7 @@ import { ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons';
 import PageHeading from './PageHeading';
 import SubPageHeading from './SubPageHeading';
 import Button from './Button';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useGetPermissionWithPrivilegeQuery, useUpdateRoleMutation, RolePermission, Role as ApiRole, Role } from '@/store/services/roleApi';
 import { toastError, toastSuccess } from '@/utils/toastWithSound';
 import PermissionSkeleton from '@/components/skeletons/PermissionSkeleton';
@@ -42,12 +42,12 @@ const mapRolePermissionToItem = (p: RolePermission): PermissionItem => {
 
 interface PermissionProps {
 	className?: string;
-	lineOfBusinessId?: string;
+	campaignId?: string;
 }
 
-const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessId }) => {
-	const { selectedLineOfBusinessId } = useLineOfBusiness();
-	const targetId = lineOfBusinessId || selectedLineOfBusinessId;
+const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) => {
+	const { selectedCampaignId } = useCampaign();
+	const targetId = campaignId || selectedCampaignId;
 
 	// Note: API returns { roles: Role[] } now
 	const { data: permissionData, isLoading } = useGetPermissionWithPrivilegeQuery(targetId || '', {
@@ -84,7 +84,7 @@ const Permission: React.FC<PermissionProps> = ({ className = '', lineOfBusinessI
 				roleName: role?.roleName,
 				description: role?.description,
 				companyId: role?.companyId,
-				lineOfBusinessId: role?.lineOfBusinessId,
+				campaignId: role?.campaignId,
 				permissions: role?.permissions || []
 			};
 			await updateRole({ id: roleId, roleData }).unwrap();

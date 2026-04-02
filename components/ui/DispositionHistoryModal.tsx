@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, DispositionHistoryItem, OFFLINE_DISPOSITIONS_EVENT } from '@/utils/offlineDispositions';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useGetDispositionsByCustomerQuery, useGetDispositionsByAgentIdQuery } from '@/store/services/dispositionApi';
 import moment from 'moment';
 
@@ -48,27 +48,27 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 	customerId,
 	agentId,
 }) => {
-	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { selectedCampaignId } = useCampaign();
 	const [offlineDispositions, setOfflineDispositions] = useState<OfflineDisposition[]>([]);
 
 	const { data: customerData } = useGetDispositionsByCustomerQuery(
 		{
-			lineOfBusinessId: selectedLineOfBusinessId || '',
+			campaignId: selectedCampaignId || '',
 			customerId: customerId || '',
 			page: 1,
 			limit: 50
 		},
-		{ skip: !isOpen || !customerId || !selectedLineOfBusinessId }
+		{ skip: !isOpen || !customerId || !selectedCampaignId }
 	);
 
 	const { data: agentData } = useGetDispositionsByAgentIdQuery(
 		{
-			lineOfBusinessId: selectedLineOfBusinessId || '',
+			campaignId: selectedCampaignId || '',
 			agentId: agentId || '',
 			page: 1,
 			limit: 50
 		},
-		{ skip: !isOpen || !agentId || !selectedLineOfBusinessId }
+		{ skip: !isOpen || !agentId || !selectedCampaignId }
 	);
 
 	const apiData = customerId ? customerData : agentData;

@@ -20,7 +20,7 @@ export interface Role {
     description: string;
     isSupervisor?: boolean;
     companyId: string;
-    lineOfBusinessId?: string;
+    campaignId?: string;
     permissions: RolePermission[];
     userCount?: number;
     teamMemberCount?: number;
@@ -32,7 +32,7 @@ export interface CreateRoleRequest {
     roleName: string;
     description: string;
     companyId: string;
-    lineOfBusinessId?: string;
+    campaignId?: string;
     permissions: RolePermission[];
 }
 
@@ -52,7 +52,7 @@ export interface CreateSupervisorRoleRequest {
     description: string;
     isSupervisor: boolean;
     companyId: string;
-    lineOfBusinessId?: string;
+    campaignId?: string;
 }
 
 export interface PermissionTemplate {
@@ -86,12 +86,12 @@ export const roleApi = baseApi.injectEndpoints({
              query: (companyId) => `api/v1/roles/company/${companyId}`,
              providesTags: ['Roles'],
         }),
-        getRolesByLineOfBusinessId: builder.query<GetRolesResponse, string>({
-             query: (lineOfBusinessId) => `api/v1/roles/line-of-business/${lineOfBusinessId}`,
+        getRolesByCampaignId: builder.query<GetRolesResponse, string>({
+             query: (campaignId) => `api/v1/roles/campaign/${campaignId}`,
              providesTags: ['Roles'],
         }),
         getPermissionWithPrivilege: builder.query<GetPermissionTemplatesResponse, string>({
-             query: (lineOfBusinessId) => `api/v1/roles/permissions/keys?lineOfBusinessId=${lineOfBusinessId}`,
+             query: (campaignId) => `api/v1/roles/permissions/keys?campaignId=${campaignId}`,
              providesTags: ['PermissionTemplates'],
         }),
         updateRole: builder.mutation<Role, { id: string; roleData: Partial<CreateRoleRequest> }>({
@@ -109,9 +109,9 @@ export const roleApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Roles'],
         }),
-        deleteRolesByLineOfBusiness: builder.mutation<any, string>({
+        deleteRolesByCampaign: builder.mutation<any, string>({
             query: (id) => ({
-                url: `api/v1/roles/line-of-business/${id}`,
+                url: `api/v1/roles/campaign/${id}`,
                 method: 'DELETE',
             }),
             invalidatesTags: ['Roles'],
@@ -130,10 +130,10 @@ export const roleApi = baseApi.injectEndpoints({
 export const { 
     useCreateRoleMutation, 
     useGetRolesByCompanyIdQuery, 
-    useGetRolesByLineOfBusinessIdQuery, 
+    useGetRolesByCampaignIdQuery, 
     useGetPermissionWithPrivilegeQuery,
     useUpdateRoleMutation, 
     useDeleteRoleMutation,
-    useDeleteRolesByLineOfBusinessMutation,
+    useDeleteRolesByCampaignMutation,
     useCreateSupervisorRoleMutation
 } = roleApi;

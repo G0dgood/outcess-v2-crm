@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useCreateTicketMutation } from '@/store/services/supportApi';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { toast } from 'sonner';
 import { SupportTicketForm } from './SupportTicketForm';
-import { useGetTeamMembersByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
 import { Cross2Icon } from '@radix-ui/react-icons';
 
 interface NewTicketModalProps {
@@ -27,7 +27,7 @@ interface TeamMember {
 
 const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 	const { user } = useAuth();
-	const { lineOfBusinessData, selectedLineOfBusinessId } = useLineOfBusiness();
+	const { campaignData, selectedCampaignId } = useCampaign();
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
 	const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Low');
@@ -35,7 +35,7 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 
 	const [createTicket, { isLoading }] = useCreateTicketMutation();
 
-	const { data: teamMembers } = useGetTeamMembersByLineOfBusinessIdQuery({ lineOfBusinessId: selectedLineOfBusinessId || '', limit: 1000 });
+	const { data: teamMembers } = useGetTeamMembersByCampaignIdQuery({ campaignId: selectedCampaignId || '', limit: 1000 });
 
 	const resetForm = () => {
 		setTitle('');
@@ -81,7 +81,7 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 		}
 
 		const creatorId = user?.id || user?._id;
-		const companyId = user?.companyId || lineOfBusinessData?.companyId || lineOfBusinessData?.lineOfBusiness?.companyId;
+		const companyId = user?.companyId || campaignData?.companyId || campaignData?.campaign?.companyId;
 
 		if (!creatorId) {
 			toast.error('User information is missing. Please log in again.');
@@ -93,8 +93,8 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 			return;
 		}
 
-		if (!selectedLineOfBusinessId) {
-			toast.error('Please select an active Line of Business first.');
+		if (!selectedCampaignId) {
+			toast.error('Please select an active Campaign first.');
 			return;
 		}
 
@@ -121,8 +121,8 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 				creatorType: user?.isTeamMember ? 'TeamMember' : 'User',
 				creatorName,
 				companyId,
-				lineOfBusinessId: selectedLineOfBusinessId,
-				lobid: selectedLineOfBusinessId,
+				campaignId: selectedCampaignId,
+				lobid: selectedCampaignId,
 				assignedToIds,
 				assignedToType: roleId,
 				escalationLevel: roleId,
@@ -190,7 +190,7 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 						assignedToIds={assignedToIds}
 						setAssignedToIds={setAssignedToIds}
 						teamMembers={membersList}
-						lineOfBusinessData={lineOfBusinessData || {}}
+						campaignData={campaignData || {}}
 						onSubmit={handleSubmit}
 					/>
 				</div>
@@ -207,7 +207,7 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 						onClick={() => { handleSubmit(); }}
 						disabled={isLoading}
 						className="text-white"
-						style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
+						style={{ backgroundColor: campaignData?.primaryColor || 'var(--primary)' }}
 					>
 						{isLoading ? 'Creating...' : 'Create Ticket'}
 					</Button>

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Pagination from '@/components/ui/Pagination';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface BillingRecord {
     id: string;
@@ -14,7 +14,7 @@ interface BillingTabContentProps {
 }
 
 const BillingTabContent: React.FC<BillingTabContentProps> = ({ billingHistory }) => {
-    const { lineOfBusinessData } = useLineOfBusiness();
+    const { campaignData } = useCampaign();
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
 
@@ -140,8 +140,8 @@ const BillingTabContent: React.FC<BillingTabContentProps> = ({ billingHistory })
                     onPageChange={setCurrentPage}
                     showEllipsis={true}
                     maxVisiblePages={5}
-                    primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
-                    secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
+                    primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+                    secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
                     className="mt-0"
                 />
             </div>

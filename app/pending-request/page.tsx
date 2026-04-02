@@ -6,7 +6,7 @@ import Search from '@/components/ui/Search';
 import Pagination from '@/components/ui/Pagination';
 import Button from '@/components/ui/Button';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 
@@ -47,7 +47,7 @@ const businesses: PendingBusiness[] = [
 
 const PendingRequestPage: React.FC = () => {
 	const router = useRouter();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const { isAdmin } = usePrivilege();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(10);
@@ -254,8 +254,8 @@ const PendingRequestPage: React.FC = () => {
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
-					secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
+					primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 				/>
 			</div>
 		</div>

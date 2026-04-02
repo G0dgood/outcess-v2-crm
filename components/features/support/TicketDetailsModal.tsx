@@ -11,7 +11,7 @@ import {
 	PopulatedRole,
 } from '@/store/services/supportApi';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { Send, ChevronUp, CheckCircle } from 'lucide-react';
 import { Cross2Icon } from '@radix-ui/react-icons';
@@ -43,7 +43,7 @@ interface TicketDetailsModalProps {
 
 const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({ isOpen, onClose, ticketId }) => {
 	const { user } = useAuth();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const { socket } = useSocket();
 	const [messages, setMessages] = useState<TicketMessage[]>([]);
 	const [newMessage, setNewMessage] = useState('');
@@ -216,7 +216,7 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({ isOpen, onClose
 									{ticket?.status}
 								</span>
 								<span className="text-[10px] md:text-[12px] dark:text-gray-400" style={{ color: 'var(--text-tertiary)' }}>
-									Escalation: <span className="font-semibold" style={{ color: lineOfBusinessData?.primaryColor || 'var(--primary)' }}>
+									Escalation: <span className="font-semibold" style={{ color: campaignData?.primaryColor || 'var(--primary)' }}>
 										{typeof ticket?.escalationLevel === 'object' ? (ticket?.escalationLevel as PopulatedRole)?.roleName || (ticket?.escalationLevel as PopulatedRole)?.name : ticket?.escalationLevel}
 									</span>
 								</span>
@@ -283,8 +283,8 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({ isOpen, onClose
 												<div
 													className="w-full h-full flex items-center justify-center text-[8px] md:text-[10px] font-bold transition-colors"
 													style={{
-														backgroundColor: (lineOfBusinessData?.primaryColor || 'var(--primary)') + '1A',
-														color: lineOfBusinessData?.primaryColor || 'var(--primary)'
+														backgroundColor: (campaignData?.primaryColor || 'var(--primary)') + '1A',
+														color: campaignData?.primaryColor || 'var(--primary)'
 													}}
 												>
 													{typeof msg.senderId === 'object' ? (msg.senderId?.firstName?.[0] || msg.senderId?.name?.[0] || '?').toUpperCase() : '?'}
@@ -296,7 +296,7 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({ isOpen, onClose
 													? 'text-white rounded-tr-none'
 													: 'bg-white dark:bg-gray-800 border dark:border-gray-700 text-gray-800 dark:text-gray-100 rounded-tl-none shadow-sm'
 												}`}
-												style={isOwn ? { backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' } : {}}
+												style={isOwn ? { backgroundColor: campaignData?.primaryColor || 'var(--primary)' } : {}}
 											>
 												{msg.message}
 											</div>
@@ -339,7 +339,7 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({ isOpen, onClose
 								disabled={!newMessage.trim()}
 								loading={isSending}
 								className="text-white h-11 px-6"
-								style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
+								style={{ backgroundColor: campaignData?.primaryColor || 'var(--primary)' }}
 							>
 								<Send className="w-4 h-4" />
 							</Button>

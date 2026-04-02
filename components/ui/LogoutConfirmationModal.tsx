@@ -3,7 +3,7 @@
 import React from 'react';
 import Modal from './Modal';
 import Button from './Button';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface LogoutConfirmationModalProps {
 	isOpen: boolean;
@@ -24,9 +24,9 @@ const LogoutConfirmationModal: React.FC<LogoutConfirmationModalProps> = ({
 	status = 'Online',
 	statusColor = '#22C55E',
 }) => {
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const primaryColor = lineOfBusinessData?.primaryColor || lineOfBusinessData?.lineOfBusiness?.primaryColor || '#050711';
-	const mainForegroundColor = lineOfBusinessData?.mainForegroundColor || lineOfBusinessData?.lineOfBusiness?.mainForegroundColor || '#FFFFFF';
+	const { campaignData } = useCampaign();
+	const primaryColor = campaignData?.primaryColor || campaignData?.campaign?.primaryColor || '#050711';
+	const mainForegroundColor = campaignData?.mainForegroundColor || campaignData?.campaign?.mainForegroundColor || '#FFFFFF';
 
 	return (
 		<Modal

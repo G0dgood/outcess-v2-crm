@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Modal } from '../../ui/Modal';
 import { Dropdown } from '../../ui/Dropdown';
 import { Button } from '../../ui/Button';
-import { useGetTeamMembersByLineOfBusinessIdQuery } from '../../../store/services/teamMembersApi';
+import { useGetTeamMembersByCampaignIdQuery } from '../../../store/services/teamMembersApi';
 import { useUpdateTicketMutation, SupportTicket, PopulatedMember } from '../../../store/services/supportApi';
 
 interface AddTicketMemberModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	ticket: SupportTicket;
-	lineOfBusinessData: {
+	campaignData: {
 		primaryColor?: string;
 		_id?: string;
 	};
@@ -19,13 +19,13 @@ export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({
 	isOpen,
 	onClose,
 	ticket,
-	lineOfBusinessData
+	campaignData
 }) => {
 	const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
 	const [updateTicket] = useUpdateTicketMutation();
 
-	const { data: teamMembersData } = useGetTeamMembersByLineOfBusinessIdQuery({
-		lineOfBusinessId: ticket?.lineOfBusinessId,
+	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery({
+		campaignId: ticket?.campaignId,
 		limit: 100,
 	}, { skip: !isOpen });
 
@@ -102,7 +102,7 @@ export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({
 					<Button
 						variant="primary"
 						className="flex-1 text-white"
-						style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
+						style={{ backgroundColor: campaignData?.primaryColor || 'var(--primary)' }}
 						onClick={handleAddMembers}
 						disabled={selectedMemberIds.length === 0}
 					>

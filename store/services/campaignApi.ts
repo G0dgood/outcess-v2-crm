@@ -1,6 +1,6 @@
 import { baseApi } from "./baseApi";
 
-export interface CreateLineOfBusinessRequest {
+export interface CreateCampaignRequest {
   name: string;
   description?: string;
   userId?: string;
@@ -10,9 +10,9 @@ export interface CreateLineOfBusinessRequest {
   [key: string]: unknown;
 }
 
-export interface CreateLineOfBusinessResponse {
+export interface CreateCampaignResponse {
   message: string;
-  lineOfBusiness?: unknown;
+  campaign?: unknown;
 }
 
 export interface BusinessHourPayload {
@@ -51,86 +51,86 @@ export interface ShiftHourResponse {
   }[];
 }
 
-export const lineOfBusinessApi = baseApi.injectEndpoints({
+export const campaignApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    createLineOfBusiness: builder.mutation<
-      CreateLineOfBusinessResponse,
-      CreateLineOfBusinessRequest
+    createCampaign: builder.mutation<
+      CreateCampaignResponse,
+      CreateCampaignRequest
     >({
       query: (data) => ({
-        url: "api/v1/line-of-business",
+        url: "api/v1/campaign",
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["LineOfBusiness"],
+      invalidatesTags: ["Campaign"],
     }),
-    getLineOfBusiness: builder.query<unknown, string>({
-      query: (id) => `api/v1/line-of-business/${id}`,
-      providesTags: ["LineOfBusiness"],
+    getCampaign: builder.query<unknown, string>({
+      query: (id) => `api/v1/campaign/${id}`,
+      providesTags: ["Campaign"],
     }),
-    getLineOfBusinessByCompanyId: builder.query<unknown, string>({
-      query: (companyId) => `api/v1/line-of-business/company/${companyId}`,
-      providesTags: ["LineOfBusiness"],
+    getCampaignByCompanyId: builder.query<unknown, string>({
+      query: (companyId) => `api/v1/campaign/company/${companyId}`,
+      providesTags: ["Campaign"],
     }),
-    getLineOfBusinessByCompanyIdForheader: builder.query<
+    getCampaignByCompanyIdForheader: builder.query<
       unknown,
       { companyId: string; page?: number; limit?: number }
     >({
       query: ({ companyId, page = 1, limit = 10 }) =>
-        `api/v1/line-of-business/company/${companyId}/header?page=${page}&limit=${limit}`,
-      providesTags: ["LineOfBusiness"],
+        `api/v1/campaign/company/${companyId}/header?page=${page}&limit=${limit}`,
+      providesTags: ["Campaign"],
     }),
-    updateLineOfBusiness: builder.mutation<
+    updateCampaign: builder.mutation<
       unknown,
       { id: string; data: unknown }
     >({
       query: ({ id, data }) => ({
-        url: `api/v1/line-of-business/${id}`,
+        url: `api/v1/campaign/${id}`,
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: ["LineOfBusiness"],
+      invalidatesTags: ["Campaign"],
     }),
     updateBusinessHours: builder.mutation<
       unknown,
       { id: string; data: BusinessHourPayload | BusinessHourPayload[] }
     >({
       query: ({ id, data }) => ({
-        url: `api/v1/line-of-business/${id}/business-hours`,
+        url: `api/v1/campaign/${id}/business-hours`,
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: ["LineOfBusiness"],
+      invalidatesTags: ["Campaign"],
     }),
     upsertShiftHour: builder.mutation<
       ShiftHourResponse,
       { id: string; data: ShiftHourPayload }
     >({
       query: ({ id, data }) => ({
-        url: `api/v1/line-of-business/${id}/shift-hours`,
+        url: `api/v1/campaign/${id}/shift-hours`,
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["LineOfBusiness"],
+      invalidatesTags: ["Campaign"],
     }),
-    deleteLineOfBusiness: builder.mutation<unknown, string>({
+    deleteCampaign: builder.mutation<unknown, string>({
       query: (id) => ({
-        url: `api/v1/line-of-business/${id}`,
+        url: `api/v1/campaign/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["LineOfBusiness"],
+      invalidatesTags: ["Campaign"],
     }),
   }),
 });
 
 export const {
-  useCreateLineOfBusinessMutation,
-  useGetLineOfBusinessQuery,
-  useUpdateLineOfBusinessMutation,
+  useCreateCampaignMutation,
+  useGetCampaignQuery,
+  useUpdateCampaignMutation,
   useUpdateBusinessHoursMutation,
   useUpsertShiftHourMutation,
-  useDeleteLineOfBusinessMutation,
-  useGetLineOfBusinessByCompanyIdQuery,
-  useLazyGetLineOfBusinessByCompanyIdQuery,
-  useGetLineOfBusinessByCompanyIdForheaderQuery,
-} = lineOfBusinessApi;
+  useDeleteCampaignMutation,
+  useGetCampaignByCompanyIdQuery,
+  useLazyGetCampaignByCompanyIdQuery,
+  useGetCampaignByCompanyIdForheaderQuery,
+} = campaignApi;

@@ -7,13 +7,13 @@ import { RemoveTicketMemberModal } from './RemoveTicketMemberModal';
 
 interface TicketSidebarProps {
 	ticket: SupportTicket;
-	lineOfBusinessData: {
+	campaignData: {
 		primaryColor?: string;
 		_id?: string;
 	};
 }
 
-export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusinessData }) => {
+export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, campaignData }) => {
 	const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
 	const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
 	const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
@@ -110,7 +110,7 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 					</div>
 					<div className="flex justify-between items-center border-b dark:border-gray-700 pb-3">
 						<span className="text-xs text-gray-500 font-medium">Escalation</span>
-						<span className="text-xs font-bold uppercase rounded-[var(--radius)]" style={{ color: lineOfBusinessData?.primaryColor || 'var(--primary)' }}>
+						<span className="text-xs font-bold uppercase rounded-[var(--radius)]" style={{ color: campaignData?.primaryColor || 'var(--primary)' }}>
 							{getRoleLabel(ticket?.escalationLevel as PopulatedRole)}
 						</span>
 					</div>
@@ -157,7 +157,7 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 											) : (
 												<div
 													className="w-full h-full flex items-center justify-center text-[10px] font-bold text-white uppercase"
-													style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
+													style={{ backgroundColor: campaignData?.primaryColor || 'var(--primary)' }}
 												>
 													{(assignee?.firstName?.[0] || (typeof assignee?.name === 'string' ? assignee?.name?.[0] : '') || '?')}
 												</div>
@@ -198,7 +198,7 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 						) : (
 							<div
 								className="w-full h-full flex items-center justify-center text-[12px] font-bold text-white transition-colors"
-								style={{ backgroundColor: lineOfBusinessData?.primaryColor || 'var(--primary)' }}
+								style={{ backgroundColor: campaignData?.primaryColor || 'var(--primary)' }}
 							>
 								{(ticket?.creatorId && typeof ticket.creatorId === 'object' ? (ticket?.creatorId?.firstName?.[0] || ticket?.creatorId?.name?.[0] || '?') : '?').toUpperCase()}
 							</div>
@@ -219,7 +219,7 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 				isOpen={isAddUserModalOpen}
 				onClose={() => setIsAddUserModalOpen(false)}
 				ticket={ticket}
-				lineOfBusinessData={lineOfBusinessData}
+				campaignData={campaignData}
 			/>
 
 			<RemoveTicketMemberModal

@@ -5,7 +5,7 @@ import BusinessDetailSkeleton from '@/components/skeletons/BusinessDetailSkeleto
 import BackButton from '@/components/ui/BackButton';
 import Button from '@/components/ui/Button';
 import DeactivateBusinessModal from '@/components/ui/DeactivateBusinessModal';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useSuperAdminGetActivityLogsByCompanyIdQuery, useSuperAdminGetCompanyDetailsQuery, useSuperAdminGetTeamMembersByCompanyIdQuery } from '@/store/services/companyApi';
 import React, { use as usePromise, useMemo, useState } from 'react';
 import { ActivityLogItem } from './ActivityLogTabContent';
@@ -55,7 +55,7 @@ interface ActivityLogsData {
 
 export default function BusinessDetailPage({ params }: { params: Promise<{ id: string }> }) {
 	const { id } = usePromise(params);
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const [activeTab, setActiveTab] = useState('overview');
 	const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
 
@@ -172,7 +172,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 					tabs={tabs}
 					activeTab={activeTab}
 					onTabChange={(id) => setActiveTab(id)}
-					activeColor={lineOfBusinessData?.primaryColor || '#2563EB'}
+					activeColor={campaignData?.primaryColor || '#2563EB'}
 					className="border-b-0"
 				/>
 				<Button

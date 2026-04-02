@@ -7,7 +7,7 @@ export interface SetupBook {
 
 export interface CreateSetupBookRequest {
     companyId: string;
-    lineOfBusinessId: string;
+    campaignId: string;
     file: File;
 }
 
@@ -30,18 +30,18 @@ export interface SetupBookResponse {
 }
 
 export interface UpdateSetupBookRecordsRequest {
-    lineOfBusinessId: string;
+    campaignId: string;
     data: any;
 }
 
 
 export interface DeleteSetupBookRecordsRequest {
-    lineOfBusinessId: string;
+    campaignId: string;
     id: string;
 }
 
 export interface DeleteManySetupBookRecordsRequest {
-    lineOfBusinessId: string;
+    campaignId: string;
     ids: string[];
 }
 
@@ -65,7 +65,7 @@ export const setupBookApi = baseApi.injectEndpoints({
             query: (id) => `api/v1/setup-books/${id}`,
             providesTags: (result, error, id) => [{ type: 'SetupBook', id }],
         }),
-        getSetupBookByLineOfBusinessId: builder.query<SetupBookResponse, { id: string; page?: number; limit?: number; search?: string }>({
+        getSetupBookByCampaignId: builder.query<SetupBookResponse, { id: string; page?: number; limit?: number; search?: string }>({
             query: ({ id, page, limit, search }) => {
                 const params = new URLSearchParams();
                 if (page) params.append('page', page.toString());
@@ -77,15 +77,15 @@ export const setupBookApi = baseApi.injectEndpoints({
             },
             providesTags: ['SetupBook'],
         }),
-        getSetupBookBySearchId: builder.query<SetupBookResponse, { lineOfBusinessId: string; searchId: string; page?: number; limit?: number; search?: string }>({
-            query: ({ lineOfBusinessId, searchId, page, limit, search }) => {
+        getSetupBookBySearchId: builder.query<SetupBookResponse, { campaignId: string; searchId: string; page?: number; limit?: number; search?: string }>({
+            query: ({ campaignId, searchId, page, limit, search }) => {
                 const params = new URLSearchParams();
                 if (page) params.append('page', page.toString());
                 if (limit) params.append('limit', limit.toString());
                 if (search) params.append('search', search);
                 
                 const queryString = params.toString();
-                return `api/v1/setup-books/${lineOfBusinessId}/record/${searchId}${queryString ? `?${queryString}` : ''}`;
+                return `api/v1/setup-books/${campaignId}/record/${searchId}${queryString ? `?${queryString}` : ''}`;
             },
             providesTags: ['SetupBook'],
         }),
@@ -106,24 +106,24 @@ export const setupBookApi = baseApi.injectEndpoints({
             invalidatesTags: (result, error, { id }) => [{ type: 'SetupBook', id }, 'SetupBook'],
         }),
         updateSetupBookRecords: builder.mutation<any, UpdateSetupBookRecordsRequest>({
-            query: ({ lineOfBusinessId, data }) => ({
-                url: `api/v1/setup-books/${lineOfBusinessId}/records`,
+            query: ({ campaignId, data }) => ({
+                url: `api/v1/setup-books/${campaignId}/records`,
                 method: 'PUT',
                 body: data,
             }),
             invalidatesTags: ['SetupBook'],
         }),
         deleteSetupBookRecords: builder.mutation<any, DeleteSetupBookRecordsRequest>({
-            query: ({ lineOfBusinessId, id }) => ({
-                url: `api/v1/setup-books/${lineOfBusinessId}/records`,
+            query: ({ campaignId, id }) => ({
+                url: `api/v1/setup-books/${campaignId}/records`,
                 method: 'DELETE',
                 body: { id },
             }),
             invalidatesTags: ['SetupBook'],
         }),
         deleteManySetupBookRecords: builder.mutation<any, DeleteManySetupBookRecordsRequest>({
-            query: ({ lineOfBusinessId, ids }) => ({
-                url: `api/v1/setup-books/${lineOfBusinessId}/records/many`,
+            query: ({ campaignId, ids }) => ({
+                url: `api/v1/setup-books/${campaignId}/records/many`,
                 method: 'DELETE',
                 body: { ids },
             }),
@@ -142,7 +142,7 @@ export const setupBookApi = baseApi.injectEndpoints({
 export const {
     useGetSetupBooksQuery,
     useGetSetupBookByIdQuery,
-    useGetSetupBookByLineOfBusinessIdQuery,
+    useGetSetupBookByCampaignIdQuery,
     useGetSetupBookBySearchIdQuery,
     useCreateSetupBookMutation,
     useUpdateSetupBookMutation,

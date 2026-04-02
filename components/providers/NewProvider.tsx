@@ -8,7 +8,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { UserInfoProvider } from '@/contexts/UserInfoContext';
 import { PrivilegeProvider } from '@/contexts/PrivilegeContext';
-import { LineOfBusinessProvider } from '@/contexts/LineOfBusinessContext';
+import { CampaignProvider } from '@/contexts/CampaignContext';
 import { SetupProvider } from '@/contexts/SetupContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import { NavigationProvider } from '@/components/providers/NavigationProvider';
@@ -31,7 +31,7 @@ const NewProvider: React.FC<NewProviderProps> = ({ children }) => {
           <AuthProvider>
             <SocketProvider config={{ autoConnect: true }}>
               <UserInfoProvider>
-                <LineOfBusinessProvider>
+                <CampaignProvider>
                   <SetupProvider>
                     <PrivilegeProvider>
                       <NavigationProvider>
@@ -49,7 +49,7 @@ const NewProvider: React.FC<NewProviderProps> = ({ children }) => {
                       </NavigationProvider>
                     </PrivilegeProvider>
                   </SetupProvider>
-                </LineOfBusinessProvider>
+                </CampaignProvider>
               </UserInfoProvider>
             </SocketProvider>
           </AuthProvider>

@@ -36,7 +36,7 @@ export interface CreateTeamMemberRequest {
   phone: string;
   role: string;
   companyId: string;
-  lineOfBusinessId?: string;
+  campaignId?: string;
   password?: string;
   supervisorId?: string | null;
   status?: string;
@@ -87,20 +87,20 @@ export const teamMembersApi = baseApi.injectEndpoints({
       query: (companyId) => `api/v1/team-members/company/${companyId}`,
       providesTags: ["TeamMembers"],
     }),
-    getTeamMembersByLineOfBusinessId: builder.query<
+    getTeamMembersByCampaignId: builder.query<
       PaginatedTeamMembersResponse,
-      { lineOfBusinessId: string; page?: number; limit?: number; search?: string }
+      { campaignId: string; page?: number; limit?: number; search?: string }
     >({
-      query: ({ lineOfBusinessId, page = 1, limit = 10, search = "" }) =>
-        `api/v1/team-members/line-of-business/${lineOfBusinessId}?page=${page}&limit=${limit}${search ? `&search=${encodeURIComponent(search)}` : ""}`,
+      query: ({ campaignId, page = 1, limit = 10, search = "" }) =>
+        `api/v1/team-members/campaign/${campaignId}?page=${page}&limit=${limit}${search ? `&search=${encodeURIComponent(search)}` : ""}`,
       providesTags: ["TeamMembers"],
     }),
-    getTeamMembersByLineOfBusinessIdAndRoleId: builder.query<
+    getTeamMembersByCampaignIdAndRoleId: builder.query<
       any,
-      { lineOfBusinessId: string; roleId: string }
+      { campaignId: string; roleId: string }
     >({
-      query: ({ lineOfBusinessId, roleId }) =>
-        `api/v1/team-members/line-of-business/${lineOfBusinessId}/role/${roleId}`,
+      query: ({ campaignId, roleId }) =>
+        `api/v1/team-members/campaign/${campaignId}/role/${roleId}`,
       providesTags: ["TeamMembers"],
     }),
     getTeamMembersBySupervisorId: builder.query<
@@ -111,12 +111,12 @@ export const teamMembersApi = baseApi.injectEndpoints({
         `api/v1/team-members/supervisor/${supervisorId}?page=${page}&limit=${limit}${search ? `&search=${encodeURIComponent(search)}` : ""}`,
       providesTags: ["TeamMembers"],
     }),
-    getSupervisorsByLineOfBusinessId: builder.query<
+    getSupervisorsByCampaignId: builder.query<
       any,
-      { companyId: string; lineOfBusinessId: string }
+      { companyId: string; campaignId: string }
     >({
-      query: ({ companyId, lineOfBusinessId }) =>
-        `api/v1/roles/supervisors?companyId=${companyId}&lineOfBusinessId=${lineOfBusinessId}`,
+      query: ({ companyId, campaignId }) =>
+        `api/v1/roles/supervisors?companyId=${companyId}&campaignId=${campaignId}`,
       providesTags: ["TeamMembers"],
     }),
     getTeamMemberById: builder.query<any, string>({
@@ -238,10 +238,10 @@ export const {
   useCreateTeamMemberMutation,
   useGetTeamMembersQuery,
   useGetTeamMembersByCompanyIdQuery,
-  useGetTeamMembersByLineOfBusinessIdQuery,
-  useGetTeamMembersByLineOfBusinessIdAndRoleIdQuery,
+  useGetTeamMembersByCampaignIdQuery,
+  useGetTeamMembersByCampaignIdAndRoleIdQuery,
   useGetTeamMembersBySupervisorIdQuery,
-  useGetSupervisorsByLineOfBusinessIdQuery,
+  useGetSupervisorsByCampaignIdQuery,
   useGetTeamMemberByIdQuery,
   useUpdateTeamMemberMutation,
   useUpdateTeamMemberStatusMutation,

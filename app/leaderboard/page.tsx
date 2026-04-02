@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Trophy, Medal, Search, ArrowUp, ArrowDown, User } from 'lucide-react';
 import PageHeading from '@/components/ui/PageHeading';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { plusJakartaStyle, NoRecordFound } from '@/components/Options';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 
@@ -31,13 +31,13 @@ const MOCK_LEADERS: AgentPerformance[] = [
 ];
 
 export default function LeaderboardPage() {
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const [timeFilter, setTimeFilter] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
 	const [searchTerm, setSearchTerm] = useState('');
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
-	const secondaryColor = lineOfBusinessData?.secondaryColor || '#6C8B7D';
+	const primaryColor = campaignData?.primaryColor || '#050711';
+	const secondaryColor = campaignData?.secondaryColor || '#6C8B7D';
 
 	const filteredLeaders = useMemo(() => {
 		return MOCK_LEADERS.filter(agent => 

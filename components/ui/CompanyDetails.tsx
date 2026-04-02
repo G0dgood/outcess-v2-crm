@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import PageHeading from './PageHeading';
 import { useGetCompanyByIdQuery, useUpdateCompanyMutation } from '@/store/services/companyApi';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import CompanyDetailsSkeleton from '@/components/skeletons/CompanyDetailsSkeleton';
 import CompanyProfile from './CompanyProfile';
@@ -18,7 +18,7 @@ interface CompanyDetailsProps {
 }
 
 const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const [updateCompany, { isLoading: isUpdating }] = useUpdateCompanyMutation();
 
 	const [activeTab, setActiveTab] = useState<'company-detail' | 'business-hour' | 'currencies' | 'organization'>('company-detail');
@@ -37,7 +37,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 	const [logoFile, setLogoFile] = useState<File | null>(null);
 
 	// Fetch company details
-	const { data: companyData, isLoading } = useGetCompanyByIdQuery(lineOfBusinessData?.lineOfBusiness?.companyId);
+	const { data: companyData, isLoading } = useGetCompanyByIdQuery(campaignData?.campaign?.companyId);
 
 	useEffect(() => {
 		if (companyData?.company) {
@@ -76,7 +76,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 			}
 
 			await updateCompany({
-				id: lineOfBusinessData?.lineOfBusiness?.companyId,
+				id: campaignData?.campaign?.companyId,
 				data: payload
 			}).unwrap();
 

@@ -16,15 +16,15 @@ import { useSocket } from '@/contexts/SocketContext';
 import { playNotificationSound } from '@/utils/soundEffects';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { setNavigating } from '@/utils/navigationState';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useGetLineOfBusinessByCompanyIdForheaderQuery } from '@/store/services/lineOfBusinessApi';
+import { useGetCampaignByCompanyIdForheaderQuery } from '@/store/services/campaignApi';
 import { useLogoutMutation, useTeamMemberLogoutMutation, useUpdateUserMutation } from '@/store/services/authApi';
 import { useUpdateTeamMemberStatusMutation } from '@/store/services/teamMembersApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout as logoutAction, User } from '@/store/slices/authSlice';
 import { statusApi } from '@/store/services/statusApi';
-import { useGetNotificationsByLineOfBusinessIdQuery, useMarkNotificationAsReadMutation } from '@/store/services/notificationApi';
+import { useGetNotificationsByCampaignIdQuery, useMarkNotificationAsReadMutation } from '@/store/services/notificationApi';
 import { useGetStickyNotesQuery } from '@/store/services/stickyNoteApi';
 import { useAuth } from '@/contexts/AuthContext';
 import HibernateOverlay from './HibernateOverlay';
@@ -100,17 +100,17 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const previousUnreadCount = useRef(0);
 	const previousPathname = useRef(pathname);
 	const isNavigating = useRef(false);
-	const { setSelectedLineOfBusinessId, isLoading: isLobLoading, lineOfBusinessData: selectedLOBData, selectedLineOfBusinessId } = useLineOfBusiness();
-	const previousLobId = useRef(selectedLineOfBusinessId);
+	const { setSelectedCampaignId, isLoading: isLobLoading, campaignData: selectedLOBData, selectedCampaignId } = useCampaign();
+	const previousLobId = useRef(selectedCampaignId);
 	const companyId = selectedLOBData?.companyId || displayUser?.companyId || (reduxUser?.company as { _id?: string })?._id || '';
 
-	const { data: lineOfBusinessData } = useGetLineOfBusinessByCompanyIdForheaderQuery({ companyId }, {
+	const { data: campaignData } = useGetCampaignByCompanyIdForheaderQuery({ companyId }, {
 		skip: !companyId
 	});
 
 	// Notifications integration
-	const { data: notificationsData, refetch: refetchNotifications } = useGetNotificationsByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
-		skip: !selectedLineOfBusinessId,
+	const { data: notificationsData, refetch: refetchNotifications } = useGetNotificationsByCampaignIdQuery(selectedCampaignId || '', {
+		skip: !selectedCampaignId,
 		// pollingInterval: 30000 // Poll every 30 seconds as fallback
 	});
 
@@ -124,28 +124,28 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 
 	useEffect(() => {
-		const data = lineOfBusinessData as { lineOfBusinesses?: { _id: string; lineOfBusinessName: string; status?: string }[] } | undefined;
-		if (data && Array.isArray(data.lineOfBusinesses)) {
-			const options = data.lineOfBusinesses.map((lob) => ({
+		const data = campaignData as { campaignes?: { _id: string; campaignName: string; status?: string }[] } | undefined;
+		if (data && Array.isArray(data.campaignes)) {
+			const options = data.campaignes.map((lob) => ({
 				value: lob?._id,
-				label: lob?.lineOfBusinessName,
+				label: lob?.campaignName,
 				status: lob?.status,
 			}));
 			setLobOptions(options);
 
 			// Auto-select first LOB if none selected
-			if (options.length > 0 && !selectedLineOfBusinessId) {
-				setSelectedLineOfBusinessId(options[0].value);
+			if (options.length > 0 && !selectedCampaignId) {
+				setSelectedCampaignId(options[0].value);
 			}
 		}
-	}, [lineOfBusinessData, selectedLineOfBusinessId, setSelectedLineOfBusinessId]);
+	}, [campaignData, selectedCampaignId, setSelectedCampaignId]);
 
-	// Socket integration for Line of Business updates
+	// Socket integration for Campaign updates
 	useEffect(() => {
-		if (!socket || !selectedLineOfBusinessId) return;
+		if (!socket || !selectedCampaignId) return;
 
-		// Join the Line of Business room
-		socket.emit("joinLineOfBusiness", selectedLineOfBusinessId);
+		// Join the Campaign room
+		socket.emit("joinCampaign", selectedCampaignId);
 
 
 		// Listen for status list updates
@@ -167,7 +167,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 			socket.off("statusListUpdated", handleStatusListUpdate);
 			socket.off("notificationUpdated", handleNotificationUpdate);
 		};
-	}, [socket, selectedLineOfBusinessId, dispatch, refetchNotifications]);
+	}, [socket, selectedCampaignId, dispatch, refetchNotifications]);
 
 	// Track navigation to prevent sounds during page switches
 	useEffect(() => {
@@ -196,8 +196,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		}
 
 		// Don't play sounds if the LOB has just changed
-		if (previousLobId.current !== selectedLineOfBusinessId) {
-			previousLobId.current = selectedLineOfBusinessId;
+		if (previousLobId.current !== selectedCampaignId) {
+			previousLobId.current = selectedCampaignId;
 			const unreadNotifications = notifications.filter(n => !n.isRead);
 			previousUnreadCount.current = unreadNotifications.length;
 			// Also reset the navigation flag to be safe
@@ -227,7 +227,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		}
 
 		previousUnreadCount.current = unreadCount;
-	}, [pathname, notifications, selectedLineOfBusinessId, isLobLoading]);
+	}, [pathname, notifications, selectedCampaignId, isLobLoading]);
 
 	const handleNotificationToggle = (isOpen: boolean) => {
 		if (isOpen) setIsUserDropdownOpen(false);
@@ -388,7 +388,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					{(isAdmin || canAccess('dashboard', 'edit')) && (
 						<Dropdown
 							label=""
-							value={selectedLOBData?.lineOfBusiness?._id || selectedLOBData?._id || ''}
+							value={selectedLOBData?.campaign?._id || selectedLOBData?._id || ''}
 							onChange={(value) => {
 								const stringValue = Array.isArray(value) ? value[0] : value;
 								if (!stringValue) return;
@@ -400,7 +400,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 								// Set navigating state to suppress sounds during LOB switch
 								isNavigating.current = true;
 								setNavigating(true);
-								setSelectedLineOfBusinessId(stringValue);
+								setSelectedCampaignId(stringValue);
 								// Reset navigation flag after a delay
 								setTimeout(() => {
 									isNavigating.current = false;

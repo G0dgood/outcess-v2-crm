@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react';
 import DateInput from './DateInput';
 import { CalendarIcon } from '@radix-ui/react-icons';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface DateFilterProps {
 	initialFilter?: 'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange';
@@ -26,8 +26,8 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 	initialFromDate = '',
 	initialToDate = ''
 }) => {
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const { campaignData } = useCampaign();
+	const primaryColor = campaignData?.primaryColor || '#050711';
 	const [selectedFilter, setSelectedFilter] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange'>(initialFilter);
 	const [fromDate, setFromDate] = useState(initialFromDate);
 	const [toDate, setToDate] = useState(initialToDate);
@@ -303,8 +303,8 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 						onClick={handleApply}
 						className="px-4 py-2 text-white font-medium transition-all duration-200 hover-bg-custom w-full md:w-auto rounded-[var(--radius)]"
 						style={{
-							backgroundColor: lineOfBusinessData?.primaryColor || '#050711',
-							'--hover-bg': lineOfBusinessData?.secondaryColor || '#6C8B7D'
+							backgroundColor: campaignData?.primaryColor || '#050711',
+							'--hover-bg': campaignData?.secondaryColor || '#6C8B7D'
 						} as React.CSSProperties}
 					>
 						Apply

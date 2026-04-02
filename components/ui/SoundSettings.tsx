@@ -14,12 +14,12 @@ import {
 import { playNotificationSound, type SoundType } from '@/utils/soundEffects';
 import { SpeakerLoudIcon, SpeakerOffIcon } from '@radix-ui/react-icons';
 import Toggle from './Toggle';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 const SoundSettings: React.FC = () => {
 	const pathname = usePathname();
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#6C8B7D';
+	const { campaignData } = useCampaign();
+	const primaryColor = campaignData?.primaryColor || '#6C8B7D';
 	const [preferences, setPreferences] = useState<SoundPreferences>(loadSoundPreferences());
 	const [hasChanges, setHasChanges] = useState(false);
 

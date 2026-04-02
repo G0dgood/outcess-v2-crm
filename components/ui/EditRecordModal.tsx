@@ -3,7 +3,7 @@ import Button from '@/components/ui/Button';
 import Icon from '@/components/ui/Icon';
 import Input from '@/components/ui/Input';
 import { useUpdateSetupBookRecordsMutation } from '@/store/services/setupBookApi';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { toast } from 'sonner';
 
 interface FieldDefinition {
@@ -35,8 +35,8 @@ const EditRecordModal: React.FC<EditRecordModalProps> = ({
 	onSave,
 }) => {
 	const [formData, setFormData] = useState<Record<string, string | number | boolean | null> | null>(null);
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const lobId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
+	const { campaignData } = useCampaign();
+	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
 	const [updateSetupBookRecords, { isLoading }] = useUpdateSetupBookRecordsMutation();
 
 	useEffect(() => {
@@ -52,11 +52,11 @@ const EditRecordModal: React.FC<EditRecordModalProps> = ({
 	};
 
 	const handleSave = async () => {
-		if (formData && lobId) {
+		if (formData && campaignId) {
 			try {
 				const { id, ...updateData } = formData;
 				await updateSetupBookRecords({
-					lineOfBusinessId: lobId,
+					campaignId: campaignId,
 					data: {
 						id: id,
 						update: updateData
@@ -72,8 +72,8 @@ const EditRecordModal: React.FC<EditRecordModalProps> = ({
 					description: apiError?.data?.message || "An error occurred while updating the record"
 				});
 			}
-		} else if (!lobId) {
-			toast.error("Missing Line of Business ID");
+		} else if (!campaignId) {
+			toast.error("Missing Campaign ID");
 		}
 	};
 

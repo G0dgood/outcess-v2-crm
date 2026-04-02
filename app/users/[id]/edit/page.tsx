@@ -9,10 +9,10 @@ import PageHeading from '@/components/ui/PageHeading';
 import BackButton from '@/components/ui/BackButton';
 import { ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
-import { useGetRolesByLineOfBusinessIdQuery } from '@/store/services/roleApi';
+import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetSupervisorsByCampaignIdQuery } from '@/store/services/teamMembersApi';
+import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
 import { Skeleton } from '@/components/ui/skeleton';
 import Tabs from '@/components/ui/Tabs';
 
@@ -34,13 +34,13 @@ const EditUserPage: React.FC = () => {
 	const router = useRouter();
 	const params = useParams();
 	const userId = params.id as string;
-	const { lineOfBusinessData, selectedLineOfBusinessId } = useLineOfBusiness();
+	const { campaignData, selectedCampaignId } = useCampaign();
 	const { user } = useUserInfo();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const primaryColor = campaignData?.primaryColor || '#050711';
 
 	const { data: userResponse, isLoading: isUserLoading } = useGetTeamMemberByIdQuery(userId);
-	const { data: rolesData } = useGetRolesByLineOfBusinessIdQuery(selectedLineOfBusinessId || '', {
-		skip: !selectedLineOfBusinessId
+	const { data: rolesData } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', {
+		skip: !selectedCampaignId
 	});
 
 	const [updateTeamMember] = useUpdateTeamMemberMutation();
@@ -69,9 +69,9 @@ const EditUserPage: React.FC = () => {
 		user?.companyId ||
 		'';
 
-	const { data: supervisorsResponse } = useGetSupervisorsByLineOfBusinessIdQuery(
-		{ companyId, lineOfBusinessId: selectedLineOfBusinessId || '' },
-		{ skip: !companyId || !selectedLineOfBusinessId }
+	const { data: supervisorsResponse } = useGetSupervisorsByCampaignIdQuery(
+		{ companyId, campaignId: selectedCampaignId || '' },
+		{ skip: !companyId || !selectedCampaignId }
 	);
 
 	useEffect(() => {

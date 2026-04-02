@@ -12,7 +12,7 @@ import { SupportStatusDropdown } from './SupportStatusDropdown';
 interface TicketListProps {
 	tickets: SupportTicket[];
 	isLoading: boolean;
-	lineOfBusinessData: {
+	campaignData: {
 		primaryColor?: string;
 		_id?: string;
 	};
@@ -22,7 +22,7 @@ interface TicketListProps {
 const TicketList: React.FC<TicketListProps> = ({
 	tickets,
 	isLoading,
-	lineOfBusinessData,
+	campaignData,
 	onOpenTicket
 }) => {
 	useAuth(); // Removed unused 'user' assignment
@@ -243,7 +243,7 @@ const TicketList: React.FC<TicketListProps> = ({
 				isOpen={!!assigningTicket}
 				onClose={() => setAssigningTicket(null)}
 				ticket={assigningTicket as SupportTicket}
-				lineOfBusinessData={lineOfBusinessData}
+				campaignData={campaignData}
 			/>
 		</div>
 	);

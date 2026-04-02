@@ -1,18 +1,18 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { usePathname } from 'next/navigation';
 
 /**
  * ThemeColorApplier
- * Dynamically synchronizes theme colors from SetupContext or LineOfBusinessContext
+ * Dynamically synchronizes theme colors from SetupContext or CampaignContext
  * to global CSS variables on the document root.
  */
 export const ThemeColorApplier: React.FC = () => {
-    const { lineOfBusinessData } = useLineOfBusiness();
+    const { campaignData } = useCampaign();
     const { setupData } = useSetup();
     const { isDarkMode } = useTheme();
     const pathname = usePathname();
@@ -35,56 +35,56 @@ export const ThemeColorApplier: React.FC = () => {
         const currentPrimary = isSetup
             ? getModeColor(setupData.primaryColor, setupData.primaryColorDark, '#050711')
             : getModeColor(
-                lineOfBusinessData?.primaryColor || lineOfBusinessData?.lineOfBusiness?.primaryColor,
-                lineOfBusinessData?.primaryColorDark || lineOfBusinessData?.lineOfBusiness?.primaryColorDark,
+                campaignData?.primaryColor || campaignData?.campaign?.primaryColor,
+                campaignData?.primaryColorDark || campaignData?.campaign?.primaryColorDark,
                 '#050711'
             );
 
         const currentSecondary = isSetup
             ? getModeColor(setupData.secondaryColor, setupData.secondaryColorDark, '#6C8B7D')
             : getModeColor(
-                lineOfBusinessData?.secondaryColor || lineOfBusinessData?.lineOfBusiness?.secondaryColor,
-                lineOfBusinessData?.secondaryColorDark || lineOfBusinessData?.lineOfBusiness?.secondaryColorDark,
+                campaignData?.secondaryColor || campaignData?.campaign?.secondaryColor,
+                campaignData?.secondaryColorDark || campaignData?.campaign?.secondaryColorDark,
                 '#6C8B7D'
             );
 
         const currentText = isSetup
             ? getModeColor(setupData.textColor, setupData.textColorDark, isDarkMode ? '#F3F4F6' : '#050711')
             : getModeColor(
-                lineOfBusinessData?.textColor || lineOfBusinessData?.lineOfBusiness?.textColor,
-                lineOfBusinessData?.textColorDark || lineOfBusinessData?.lineOfBusiness?.textColorDark,
+                campaignData?.textColor || campaignData?.campaign?.textColor,
+                campaignData?.textColorDark || campaignData?.campaign?.textColorDark,
                 isDarkMode ? '#F3F4F6' : '#050711'
             );
 
         const currentBackground = isSetup
             ? getModeColor(setupData.backgroundColor, setupData.backgroundColorDark, isDarkMode ? '#0F172A' : '#ffffff')
             : getModeColor(
-                lineOfBusinessData?.backgroundColor || lineOfBusinessData?.lineOfBusiness?.backgroundColor,
-                lineOfBusinessData?.backgroundColorDark || lineOfBusinessData?.lineOfBusiness?.backgroundColorDark,
+                campaignData?.backgroundColor || campaignData?.campaign?.backgroundColor,
+                campaignData?.backgroundColorDark || campaignData?.campaign?.backgroundColorDark,
                 isDarkMode ? '#0F172A' : '#F8F9FA'
             );
 
         const currentTable = isSetup
             ? getModeColor(setupData.tableColor, setupData.tableColorDark, isDarkMode ? '#1E293B' : '#F8F9FA')
             : getModeColor(
-                lineOfBusinessData?.tableColor || lineOfBusinessData?.lineOfBusiness?.tableColor,
-                lineOfBusinessData?.tableColorDark || lineOfBusinessData?.lineOfBusiness?.tableColorDark,
+                campaignData?.tableColor || campaignData?.campaign?.tableColor,
+                campaignData?.tableColorDark || campaignData?.campaign?.tableColorDark,
                 isDarkMode ? '#1E293B' : '#F8F9FA'
             );
 
         const currentAccent = isSetup
             ? getModeColor(setupData.accentColor, setupData.accentColorDark, '#6C8B7D')
             : getModeColor(
-                lineOfBusinessData?.accentColor || lineOfBusinessData?.lineOfBusiness?.accentColor,
-                lineOfBusinessData?.accentColorDark || lineOfBusinessData?.lineOfBusiness?.accentColorDark,
+                campaignData?.accentColor || campaignData?.campaign?.accentColor,
+                campaignData?.accentColorDark || campaignData?.campaign?.accentColorDark,
                 '#6C8B7D'
             );
 
         const currentMainForeground = isSetup
             ? getModeColor(setupData.mainForegroundColor, setupData.mainForegroundColorDark, isDarkMode ? '#0F172A' : '#FFFFFF')
             : getModeColor(
-                lineOfBusinessData?.mainForegroundColor || lineOfBusinessData?.lineOfBusiness?.mainForegroundColor,
-                lineOfBusinessData?.mainForegroundColorDark || lineOfBusinessData?.lineOfBusiness?.mainForegroundColorDark,
+                campaignData?.mainForegroundColor || campaignData?.campaign?.mainForegroundColor,
+                campaignData?.mainForegroundColorDark || campaignData?.campaign?.mainForegroundColorDark,
                 isDarkMode ? '#0F172A' : '#FFFFFF'
             );
 
@@ -134,7 +134,7 @@ export const ThemeColorApplier: React.FC = () => {
             }
         };
 
-    }, [lineOfBusinessData, setupData, isSetup, pathname, isDarkMode]);
+    }, [campaignData, setupData, isSetup, pathname, isDarkMode]);
 
     return null;
 };

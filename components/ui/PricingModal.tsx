@@ -6,7 +6,7 @@ import Modal from './Modal';
 import Button from './Button';
 import BillingToggle from './BillingToggle';
 import { CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface PricingModalProps {
 	isOpen: boolean;
@@ -31,11 +31,11 @@ const PricingModal: React.FC<PricingModalProps> = ({
 	onSelectPlan,
 }) => {
 	const router = useRouter();
-	const { lineOfBusinessData } = useLineOfBusiness();
+	const { campaignData } = useCampaign();
 	const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
-	const secondaryColor = lineOfBusinessData?.secondaryColor || '#6C8B7D';
+	const primaryColor = campaignData?.primaryColor || '#050711';
+	const secondaryColor = campaignData?.secondaryColor || '#6C8B7D';
 
 	const plans: PricingPlan[] = [
 		{

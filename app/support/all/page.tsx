@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import Search from '@/components/ui/Search';
-import { useGetTicketsByLineOfBusinessIdQuery } from '@/store/services/supportApi';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useGetTicketsByCampaignIdQuery } from '@/store/services/supportApi';
+import { useCampaign } from '@/contexts/CampaignContext';
 import PageHeading from '@/components/ui/PageHeading';
 import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
@@ -20,8 +20,8 @@ import { CheckCircle2, Clock, Inbox, XCircle } from 'lucide-react';
 const AllSupportPage = () => {
 	const router = useRouter();
 	const { canAccess } = usePrivilege();
-	const { lineOfBusinessData } = useLineOfBusiness();
-	const lineOfBusinessId = lineOfBusinessData?.lineOfBusiness?._id || lineOfBusinessData?.lineOfBusiness?.id;
+	const { campaignData } = useCampaign();
+	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
 
 	const [searchQuery, setSearchQuery] = useState('');
 	const [activeTab, setActiveTab] = useState<'All Tickets' | 'New' | 'In Progress' | 'Resolved' | 'Closed' | 'Done'>('All Tickets');
@@ -34,16 +34,16 @@ const AllSupportPage = () => {
 	const hasAccess = canAccess('allSupport', 'view');
 
 
-	const { data: ticketsData, isLoading } = useGetTicketsByLineOfBusinessIdQuery({
-		lineOfBusinessId,
+	const { data: ticketsData, isLoading } = useGetTicketsByCampaignIdQuery({
+		campaignId,
 		status: activeTab === 'All Tickets' ? undefined : activeTab,
 		page,
 		limit: itemsPerPage,
 		priority: priorityFilter || undefined,
-	}, { skip: !lineOfBusinessId || !hasAccess });
+	}, { skip: !campaignId || !hasAccess });
 
 
-	console.log("lineOfBusinessId----->", lineOfBusinessId)
+	console.log("campaignId----->", campaignId)
 
 
 
@@ -142,7 +142,7 @@ const AllSupportPage = () => {
 				tabs={supportTabs}
 				activeTab={activeTab}
 				onTabChange={(tabId) => setActiveTab(tabId as typeof activeTab)}
-				activeColor={lineOfBusinessData?.primaryColor}
+				activeColor={campaignData?.primaryColor}
 			/>
 
 			<div className="mt-4">
@@ -162,7 +162,7 @@ const AllSupportPage = () => {
 				<TicketList
 					tickets={tickets}
 					isLoading={isLoading}
-					lineOfBusinessData={lineOfBusinessData}
+					campaignData={campaignData}
 					onOpenTicket={(id) => router.push(`/support/${id}`)}
 				/>
 			</div>
@@ -175,8 +175,8 @@ const AllSupportPage = () => {
 					onPageChange={setPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={lineOfBusinessData?.primaryColor || 'var(--primary)'}
-					secondaryColor={lineOfBusinessData?.secondaryColor || 'var(--primary)'}
+					primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
 

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useGetSupervisorsByLineOfBusinessIdQuery } from '@/store/services/teamMembersApi';
+import { useGetSupervisorsByCampaignIdQuery } from '@/store/services/teamMembersApi';
 import { useDeleteRoleMutation } from '@/store/services/roleApi';
 import RolesSkeleton from '@/components/skeletons/RolesSkeleton';
 import PageHeading from './PageHeading';
@@ -28,11 +28,11 @@ interface SupervisorsProps {
 }
 
 const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
-  const { selectedLineOfBusinessId } = useLineOfBusiness();
+  const { selectedCampaignId } = useCampaign();
   const { user } = useUserInfo();
   const { canAccess } = usePrivilege();
 
-  const lineOfBusinessId = selectedLineOfBusinessId || '';
+  const campaignId = selectedCampaignId || '';
   const companyId =
     (user?.company as { _id?: string; id?: string } | undefined)?._id ||
     (user?.company as { _id?: string; id?: string } | undefined)?.id ||
@@ -43,10 +43,10 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
     data: supervisorsResponse,
     isLoading,
     refetch,
-  } = useGetSupervisorsByLineOfBusinessIdQuery(
-    { companyId, lineOfBusinessId },
+  } = useGetSupervisorsByCampaignIdQuery(
+    { companyId, campaignId },
     {
-      skip: !companyId || !lineOfBusinessId,
+      skip: !companyId || !campaignId,
     }
   );
 
@@ -218,7 +218,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
       <CreateSupervisorRoleModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        lineOfBusinessId={lineOfBusinessId}
+        campaignId={campaignId}
       />
 
       <DeleteRoleModal

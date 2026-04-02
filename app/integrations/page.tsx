@@ -6,7 +6,7 @@ import Input from '@/components/ui/Input';
 import PageHeading from '@/components/ui/PageHeading';
 import { Modal } from '@/components/ui/Modal';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetIntegrationsByLobIdQuery, useUpdateIntegrationMutation, Integration } from '@/store/services/integrationsApi';
 import { toast } from 'sonner';
@@ -27,7 +27,7 @@ interface ConnectionForm {
 
 const IntegrationsPage: React.FC = () => {
 	const { canAccess } = usePrivilege();
-	const { selectedLineOfBusinessId } = useLineOfBusiness();
+	const { selectedCampaignId } = useCampaign();
 	const { user } = useUserInfo();
 	
 	const canAccessModule = canAccess('systemSetting');
@@ -36,8 +36,8 @@ const IntegrationsPage: React.FC = () => {
 	const companyId = user?.companyId || user?.company?._id || '';
 
 	const { data: integrationsData, isLoading: isFetching } = useGetIntegrationsByLobIdQuery(
-		{ lineOfBusinessId: selectedLineOfBusinessId || '', companyId },
-		{ skip: !selectedLineOfBusinessId || !companyId }
+		{ campaignId: selectedCampaignId || '', companyId },
+		{ skip: !selectedCampaignId || !companyId }
 	);
 
 	const [updateIntegration, { isLoading: isUpdating }] = useUpdateIntegrationMutation();

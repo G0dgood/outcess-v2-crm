@@ -31,7 +31,7 @@ export interface OfflineDisposition {
 	id: string;
 	customerId?: string;
 	customerName?: string;
-	lineOfBusinessId?: string;
+	campaignId?: string;
 	status: 'pending' | 'synced' | 'failed';
 	createdAt: string;
 	updatedAt: string;
@@ -73,14 +73,14 @@ export const saveOfflineDisposition = (
 	dispositionData: DispositionFieldEntry[],
 	customerId?: string,
 	customerName?: string,
-	lineOfBusinessId?: string
+	campaignId?: string
 ): OfflineDisposition => {
 	const offlineDisposition: OfflineDisposition = {
 		dispositionData,
 		id: `offline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
 		customerId,
 		customerName,
-		lineOfBusinessId,
+		campaignId,
 		status: 'pending',
 		createdAt: new Date().toISOString(),
 		updatedAt: new Date().toISOString(),
@@ -175,7 +175,7 @@ export const syncPendingDispositions = async (
 						fillDisposition: disposition.dispositionData,
 						customerId: disposition.customerId,
 						customerName: disposition.customerName,
-						lineOfBusinessId: disposition.lineOfBusinessId,
+						campaignId: disposition.campaignId,
 						timestamp: disposition.createdAt, // Use original creation time
 					},
 				});
@@ -204,7 +204,7 @@ export interface SyncedDisposition {
 	id: string;
 	customerId?: string;
 	customerName?: string;
-	lineOfBusinessId?: string;
+	campaignId?: string;
 	syncedAt: string;
 	agent?: string;
 	agentId?: string;
@@ -217,14 +217,14 @@ export const saveSyncedDisposition = (
 	customerName?: string,
 	agent?: string,
 	agentId?: string,
-	lineOfBusinessId?: string
+	campaignId?: string
 ): SyncedDisposition => {
 	const syncedDisposition: SyncedDisposition = {
 		dispositionData,
 		id: `synced-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
 		customerId,
 		customerName,
-		lineOfBusinessId,
+		campaignId,
 		agent: agent ,
 		agentId: agentId,
 		syncedAt: new Date().toISOString(),
