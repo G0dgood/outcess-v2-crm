@@ -782,13 +782,13 @@ const DashboardContent: React.FC = () => {
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							{canView && dashboardSettings.dispositionSettings.charts.length > 0 ? (
+							{canView && dashboardSettings?.dispositionSettings.charts.length > 0 ? (
 								<SortableContext
-									items={dashboardSettings.dispositionSettings.charts.map((chart: Chart) => chart.id)}
+									items={dashboardSettings?.dispositionSettings.charts.map((chart: Chart) => chart.id)}
 									strategy={verticalListSortingStrategy}
 								>
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-										{dashboardSettings.dispositionSettings.charts.map((chart: Chart) => (
+										{dashboardSettings?.dispositionSettings.charts.map((chart: Chart) => (
 											<SortableChart
 												key={chart.id}
 												chart={chart}

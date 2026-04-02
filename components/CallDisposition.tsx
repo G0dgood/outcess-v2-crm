@@ -1,12 +1,21 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import Icon from '@/components/ui/Icon';
 import AddDispositionModal from './AddDispositionModal';
-import { useSetup } from '@/contexts/SetupContext';
+import AddBucketModal from './AddBucketModal';
+import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
+import { useSetup, Bucket, DispositionCategory } from '@/contexts/SetupContext';
 import Image from 'next/image';
+import {
+	ArchiveIcon,
+	PlusIcon,
+	Pencil1Icon,
+	TrashIcon,
+	PieChartIcon
+} from '@radix-ui/react-icons';
 import {
 	Chart as ChartJS,
 	CategoryScale,
@@ -21,32 +30,42 @@ import {
 	Legend,
 } from 'chart.js';
 import type { ChartData, ChartOptions, ChartTypeRegistry } from 'chart.js';
+
 type ChartComponentType = React.ComponentType<{
 	data: ChartData<keyof ChartTypeRegistry>;
 	options: ChartOptions<keyof ChartTypeRegistry>;
 }>;
 
-interface DispositionCategory {
-	id: string;
-	name: string;
-	color: string;
-	fieldType: string;
-	dropdownOptions?: string[];
-	sortOrder?: string;
-	isRequired?: boolean;
-}
-
-interface CallDispositionProps {
-	dispositions: DispositionCategory[];
-	onDispositionsChange: (dispositions: DispositionCategory[]) => void;
-}
-
-export default function CallDisposition({ dispositions, onDispositionsChange }: CallDispositionProps) {
-	const { setupData, updateDashboardSettings } = useSetup();
-	const { dispositionSettings } = setupData.dashboardSettings;
+export default function CallDisposition() {
+	const { 
+		setupData, 
+		updateDashboardSettings, 
+		addBucket, 
+		updateBucket, 
+		deleteBucket,
+		addDispositionToBucket,
+		updateDispositionInBucket,
+		deleteDispositionFromBucket
+	} = useSetup();
+	const { dispositionSettings, buckets } = setupData.dashboardSettings;
+	
+	const [activeBucketId, setActiveBucketId] = useState<string | null>(null);
 	const [isAddDispositionModalOpen, setIsAddDispositionModalOpen] = useState(false);
 	const [isEditDispositionModalOpen, setIsEditDispositionModalOpen] = useState(false);
 	const [editingDisposition, setEditingDisposition] = useState<DispositionCategory | null>(null);
+	
+	const [isAddBucketModalOpen, setIsAddBucketModalOpen] = useState(false);
+	const [isEditBucketModalOpen, setIsEditBucketModalOpen] = useState(false);
+	const [editingBucket, setEditingBucket] = useState<Bucket | null>(null);
+
+	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+	const [itemToDelete, setItemToDelete] = useState<{ id: string, name: string, type: 'bucket' | 'disposition' } | null>(null);
+
+	const [bucketForm, setBucketForm] = useState({
+		name: '',
+		description: ''
+	});
+
 	const [dispositionForm, setDispositionForm] = useState({
 		fieldType: 'dropdown',
 		fieldLabel: '',
@@ -55,8 +74,22 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 		isRequired: false,
 		color: '#050711'
 	});
+
 	const [isChartReady, setIsChartReady] = useState(false);
 	const [ChartComp, setChartComp] = useState<ChartComponentType | null>(null);
+
+	// Set initial active bucket
+	useEffect(() => {
+		if (buckets?.length > 0 && !activeBucketId) {
+			setActiveBucketId(buckets[0].id);
+		}
+	}, [buckets, activeBucketId]);
+
+	const activeBucket = useMemo(() => 
+		buckets?.find(b => b.id === activeBucketId), 
+	[buckets, activeBucketId]);
+
+	const dispositions = activeBucket?.dispositions || [];
 
 	useEffect(() => {
 		const chartType = dispositionSettings.chartType || 'pie';
@@ -128,8 +161,6 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 		loadComponent();
 	}, [dispositionSettings.chartType]);
 
-
-
 	const chartTypeOptions = [
 		{ value: 'bar', label: 'Bar Chart' },
 		{ value: 'line', label: 'Line Chart' },
@@ -156,345 +187,343 @@ export default function CallDisposition({ dispositions, onDispositionsChange }: 
 		{ value: 'date-time', label: 'Date/Time' }
 	];
 
-	// Generate chart data from call outcomes
-	const isLineOrRadar = ['line', 'radar'].includes(dispositionSettings.chartType || 'pie');
-
 	const chartData = {
-		labels: dispositions.length > 0 ? dispositions?.map(d => d.name) : ['No dispositions configured'],
+		labels: dispositions.length > 0 ? dispositions.map(d => d.name) : ['No dispositions'],
 		datasets: [
 			{
 				label: 'Count',
-				data: dispositions.length > 0 ? dispositions?.map(() => Math.floor(Math.random() * 100) + 10) : [0],
-				backgroundColor: dispositions.length > 0 ? dispositions?.map(d => d.color) : ['#E5E7EB'],
-				borderColor: dispositions.length > 0 ? dispositions?.map(d => d.color) : ['#E5E7EB'],
-				borderWidth: isLineOrRadar ? 2 : 0,
+				data: dispositions.length > 0 ? dispositions.map(() => Math.floor(Math.random() * 100) + 10) : [0],
+				backgroundColor: dispositions.length > 0 ? dispositions.map(d => d.color) : ['#E5E7EB'],
+				borderColor: dispositions.length > 0 ? dispositions.map(d => d.color) : ['#E5E7EB'],
+				borderWidth: ['line', 'radar'].includes(dispositionSettings.chartType || 'pie') ? 2 : 0,
 			},
 		],
 	};
 
 	const renderChart = () => {
-		if (!isChartReady) {
-			return <div className="h-64 flex items-center justify-center text-sm">Preparing chart...</div>;
-		}
+		if (!isChartReady) return <div className="h-64 flex items-center justify-center text-sm">Preparing chart...</div>;
 		if (dispositions.length === 0) {
 			return (
-				<div className="h-64 flex flex-col items-center justify-center text-center">
-					<Image
-						src="/illustrations/Pie-Chart-1--Streamline-Ux.png"
-						alt="No chart data"
-						className="w-32 h-32 mb-4 opacity-60 "
-						width={100}
-						height={100}
-					/>
-					<h3
-						className="font-inter text-base font-medium dark:text-gray-100 mb-2"
-						style={{ color: 'var(--text-primary)' }}
-					>
-						No Dispositions Configured
-					</h3>
-					<p
-						className="font-lato text-[10px] md:text-[12px] dark:text-gray-400"
-						style={{ color: 'var(--text-tertiary)' }}
-					>
-						Add disposition categories to see them visualized in your chart
-					</p>
+				<div className="h-64 flex flex-col items-center justify-center text-center p-6">
+					<Image src="/illustrations/Pie-Chart-1--Streamline-Ux.png" alt="No data" className="w-24 h-24 mb-4 opacity-40 shrink-0" width={96} height={96} />
+					<h3 className="font-inter text-sm font-medium dark:text-gray-200 mb-1">No Dispositions in this Bucket</h3>
+					<p className="text-[11px] text-gray-500 max-w-[200px]">Add categories to see them visualized here.</p>
 				</div>
 			);
 		}
 
-		const commonOptions = {
-			responsive: true,
-			maintainAspectRatio: false,
-			plugins: {
-				legend: {
-					display: false,
-				},
-				title: {
-					display: false,
-				},
-			},
-		};
+		if (!ChartComp) return <div className="h-full flex items-center justify-center text-sm">Loading chart...</div>;
 
-		switch (dispositionSettings.chartType) {
-			default:
-				if (!ChartComp) {
-					return <div className="h-full flex items-center justify-center text-sm">Loading chart...</div>;
-				}
-				return <ChartComp data={chartData} options={commonOptions} />;
-		}
+		return (
+			<ChartComp 
+				data={chartData} 
+				options={{
+					responsive: true,
+					maintainAspectRatio: false,
+					plugins: { legend: { display: false }, title: { display: false } }
+				}} 
+			/>
+		);
 	};
 
+	// Bucket Actions
+	const handleAddBucket = () => {
+		setBucketForm({ name: '', description: '' });
+		setIsAddBucketModalOpen(true);
+	};
+
+	const handleEditBucket = (bucket: Bucket) => {
+		setEditingBucket(bucket);
+		setBucketForm({ name: bucket.name, description: bucket.description || '' });
+		setIsEditBucketModalOpen(true);
+	};
+
+	const handleSaveBucket = () => {
+		if (editingBucket) {
+			updateBucket(editingBucket.id, { name: bucketForm.name, description: bucketForm.description });
+			setIsEditBucketModalOpen(false);
+		} else {
+			addBucket({ name: bucketForm.name, description: bucketForm.description });
+			setIsAddBucketModalOpen(false);
+		}
+		setEditingBucket(null);
+	};
+
+	const handleDeleteBucketClick = (bucket: Bucket) => {
+		setItemToDelete({ id: bucket.id, name: bucket.name, type: 'bucket' });
+		setIsDeleteModalOpen(true);
+	};
+
+	// Disposition Actions
 	const handleAddDisposition = () => {
+		if (!activeBucketId) return;
+		setDispositionForm({ fieldType: 'dropdown', fieldLabel: '', dropdownOptions: [''], sortOrder: 'entered', isRequired: false, color: '#EF4444' });
 		setIsAddDispositionModalOpen(true);
-		setDispositionForm({
-			fieldType: 'dropdown',
-			fieldLabel: '',
-			dropdownOptions: [''],
-			sortOrder: 'entered',
-			isRequired: false,
-			color: '#EF4444'
-		});
 	};
 
-	const handleEditDisposition = (id: string) => {
-		const disposition = dispositions.find(d => d.id === id);
-		if (disposition) {
-			setEditingDisposition(disposition);
-			setDispositionForm({
-				fieldType: disposition.fieldType || 'dropdown',
-				fieldLabel: disposition.name,
-				dropdownOptions: disposition.dropdownOptions || [''],
-				sortOrder: disposition.sortOrder || 'entered',
-				isRequired: disposition.isRequired || false,
-				color: disposition.color
-			});
-			setIsEditDispositionModalOpen(true);
+	const handleEditDisposition = (d: DispositionCategory) => {
+		setEditingDisposition(d);
+		setDispositionForm({ fieldType: d.fieldType, fieldLabel: d.name, dropdownOptions: d.dropdownOptions || [''], sortOrder: d.sortOrder || 'entered', isRequired: d.isRequired || false, color: d.color });
+		setIsEditDispositionModalOpen(true);
+	};
+
+	const handleDeleteDispositionClick = (d: DispositionCategory) => {
+		setItemToDelete({ id: d.id, name: d.name, type: 'disposition' });
+		setIsDeleteModalOpen(true);
+	};
+
+	const handleConfirmDelete = () => {
+		if (!itemToDelete) return;
+		if (itemToDelete.type === 'bucket') {
+			deleteBucket(itemToDelete.id);
+		} else {
+			if (activeBucketId) {
+				deleteDispositionFromBucket(activeBucketId, itemToDelete.id);
+			}
 		}
-	};
-
-	const handleDeleteDisposition = (id: string) => {
-		const updatedDispositions = dispositions.filter(d => d.id !== id);
-		onDispositionsChange(updatedDispositions);
-	};
-
-	const handleAddDropdownOption = () => {
-		setDispositionForm(prev => ({
-			...prev,
-			dropdownOptions: [...prev.dropdownOptions, '']
-		}));
-	};
-
-	const handleDropdownOptionChange = (index: number, value: string) => {
-		setDispositionForm(prev => ({
-			...prev,
-			dropdownOptions: prev.dropdownOptions.map((option, i) => i === index ? value : option)
-		}));
+		setIsDeleteModalOpen(false);
+		setItemToDelete(null);
 	};
 
 	const handleSaveDisposition = () => {
+		if (!activeBucketId) return;
 		if (editingDisposition) {
-			// Edit existing disposition
-			const updatedDisposition: DispositionCategory = {
-				id: editingDisposition.id,
+			updateDispositionInBucket(activeBucketId, editingDisposition.id, {
 				name: dispositionForm.fieldLabel,
 				color: dispositionForm.color,
 				fieldType: dispositionForm.fieldType,
 				dropdownOptions: dispositionForm.dropdownOptions,
 				sortOrder: dispositionForm.sortOrder,
 				isRequired: dispositionForm.isRequired
-			};
-			const updatedDispositions = dispositions.map(d =>
-				d.id === editingDisposition.id ? updatedDisposition : d
-			);
-			onDispositionsChange(updatedDispositions);
+			});
 			setIsEditDispositionModalOpen(false);
-			setEditingDisposition(null);
 		} else {
-			// Add new disposition
-			const newDisposition: DispositionCategory = {
-				id: Date.now().toString(),
+			addDispositionToBucket(activeBucketId, {
 				name: dispositionForm.fieldLabel,
 				color: dispositionForm.color,
 				fieldType: dispositionForm.fieldType,
 				dropdownOptions: dispositionForm.dropdownOptions,
 				sortOrder: dispositionForm.sortOrder,
 				isRequired: dispositionForm.isRequired
-			};
-			const updatedDispositions = [...dispositions, newDisposition];
-			onDispositionsChange(updatedDispositions);
+			});
 			setIsAddDispositionModalOpen(false);
 		}
+		setEditingDisposition(null);
 	};
 
-
 	return (
-		<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-			{/* Manage Disposition Categories */}
-			<div
-				className="dark:bg-gray-800 border dark:border-gray-700"
-				style={{
-					backgroundColor: 'var(--accent-white)',
-					borderColor: 'var(--light-gray)'
-				}}
+		<div className="flex flex-col lg:flex-row gap-6 min-h-[600px]">
+			{/* Left: Buckets Sidebar */}
+			<div 
+				className="w-full lg:w-72 shrink-0 dark:bg-gray-800 border dark:border-gray-700 flex flex-col rounded-[var(--radius)]"
+				style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
 			>
-				<div
-					className="p-6 border-b dark:border-gray-700"
-					style={{ borderColor: 'var(--light-gray)' }}
+				<div className="p-5 border-b dark:border-gray-700 flex items-center justify-between" style={{ borderColor: 'var(--light-gray)' }}>
+					<div className="flex items-center gap-2">
+						<ArchiveIcon className="w-3.5 h-3.5 text-gray-400" />
+						<h3 className="font-inter text-xs font-semibold uppercase tracking-wider text-gray-500">Buckets</h3>
+					</div>
+					<Button variant="ghost" size="sm" onClick={handleAddBucket} className="p-1 h-auto text-primary hover:bg-primary/10 rounded-full">
+						<PlusIcon className="w-4 h-4" />
+					</Button>
+				</div>
+				
+				<div className="flex-1 overflow-y-auto p-2 space-y-1">
+					{buckets?.length > 0 ? (
+						buckets.map(bucket => (
+							<div 
+								key={bucket.id}
+								onClick={() => setActiveBucketId(bucket.id)}
+								className={`group p-3 rounded-[var(--radius)] cursor-pointer transition-all flex items-center justify-between ${
+									activeBucketId === bucket.id 
+										? 'bg-primary/5 border-primary/20 border' 
+										: 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border border-transparent'
+								}`}
+							>
+								<div className="flex flex-col min-w-0">
+									<span className={`text-[12px] font-medium truncate ${activeBucketId === bucket.id ? 'text-primary' : 'text-gray-700 dark:text-gray-200'}`}>
+										{bucket.name}
+									</span>
+									<span className="text-[10px] text-gray-400 truncate">{bucket.dispositions.length} dispositions</span>
+								</div>
+								<div className={`flex items-center gap-1 transition-opacity ${activeBucketId === bucket.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+									<button onClick={(e) => { e.stopPropagation(); handleEditBucket(bucket); }} className="p-1 hover:text-primary text-gray-400">
+										<Pencil1Icon className="w-3.5 h-3.5" />
+									</button>
+									{buckets.length > 1 && (
+										<button onClick={(e) => { e.stopPropagation(); handleDeleteBucketClick(bucket); }} className="p-1 hover:text-red-500 text-gray-400">
+											<TrashIcon className="w-3.5 h-3.5" />
+										</button>
+									)}
+								</div>
+							</div>
+						))
+					) : (
+						<div className="p-8 text-center">
+							<p className="text-[11px] text-gray-400">No buckets found. Create one to begin.</p>
+						</div>
+					)}
+				</div>
+			</div>
+
+			{/* Center: Dispositions for active bucket */}
+			<div className="flex-1 flex flex-col gap-6">
+				<div 
+					className="flex-1 dark:bg-gray-800 border dark:border-gray-700 rounded-[var(--radius)] overflow-hidden flex flex-col"
+					style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
 				>
-					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-						<h2
-							className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
-							style={{ color: 'var(--text-primary)' }}
-						>
-							Manage Disposition Categories
-						</h2>
-						<Button
-							variant="primary"
-							size="sm"
-							onClick={handleAddDisposition}
-							className="w-full sm:w-auto justify-center"
-						>
+					<div className="p-6 border-b dark:border-gray-700 flex items-center justify-between bg-gray-50/50 dark:bg-gray-900/10" style={{ borderColor: 'var(--light-gray)' }}>
+						<div>
+							<h2 className="font-inter text-sm font-semibold text-gray-900 dark:text-gray-100">
+								{activeBucket?.name || 'Select a Bucket'}
+							</h2>
+							<p className="text-[11px] text-gray-500 mt-0.5">{activeBucket?.description || 'Bucket details and dispositions'}</p>
+						</div>
+						<Button variant="primary" size="sm" onClick={handleAddDisposition} disabled={!activeBucketId}>
 							Add Disposition
 						</Button>
 					</div>
-				</div>
 
-				<div className="p-6 space-y-4">
-					{dispositions.map((disposition) => (
-						<div key={disposition.id} className="flex items-center justify-between">
-							<div className="flex items-center gap-3">
-								<div
-									className="w-3 h-3 rounded-sm"
-									style={{ backgroundColor: disposition.color }}
-								></div>
-								<span
-									className="font-lato text-[10px] md:text-[12px] dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									{disposition.name}
-								</span>
-							</div>
-							<div className="flex items-center gap-2">
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => handleEditDisposition(disposition.id)}
-									className="p-1 h-auto transition-colors"
-									style={{ color: 'var(--text-tertiary)' }}
-									onMouseEnter={(e) => {
-										e.currentTarget.style.color = 'var(--text-secondary)';
-									}}
-									onMouseLeave={(e) => {
-										e.currentTarget.style.color = 'var(--text-tertiary)';
-									}}
-									title="Edit Disposition"
-								>
-									<Icon name="Edit_duotone_line" size="sm" />
-								</Button>
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => handleDeleteDisposition(disposition.id)}
-									className="p-1 h-auto transition-colors"
-									style={{ color: 'var(--text-tertiary)' }}
-									onMouseEnter={(e) => {
-										e.currentTarget.style.color = '#DC2626';
-									}}
-									onMouseLeave={(e) => {
-										e.currentTarget.style.color = 'var(--text-tertiary)';
-									}}
-									title="Delete Disposition"
-								>
-									<Icon name="Trash_light" size="sm" />
-								</Button>
-							</div>
-						</div>
-					))}
-				</div>
-
-			</div>
-
-			{/* Chart Area */}
-			<div
-				className="dark:bg-gray-800 border dark:border-gray-700"
-				style={{
-					backgroundColor: 'var(--accent-white)',
-					borderColor: 'var(--light-gray)'
-				}}
-			>
-				<div
-					className="p-6 border-b dark:border-gray-700"
-					style={{ borderColor: 'var(--light-gray)' }}
-				>
-					<div className="flex items-center justify-between">
-						<h2
-							className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
-							style={{ color: 'var(--text-primary)' }}
-						>
-							review
-						</h2>
-						<Dropdown
-							label=""
-							value={dispositionSettings.chartType || 'pie'}
-							onChange={(value) => updateDashboardSettings({
-								dispositionSettings: {
-									...dispositionSettings,
-									chartType: value as 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble'
-								}
-							})}
-							options={chartTypeOptions}
-							className="min-w-[150px]"
-							inputClassName="h-10 ml-4"
-						/>
-					</div>
-				</div>
-
-				<div className="p-6">
-					{/* Dynamic Chart Rendering */}
-					<div className="h-64 mb-4">
-						{renderChart()}
-					</div>
-
-					{/* Legend */}
-					<div className="space-y-2">
+					<div className="p-6 overflow-y-auto">
 						{dispositions.length > 0 ? (
-							dispositions.map((disposition) => (
-								<div key={disposition.id} className="flex items-center gap-2">
-									<div
-										className="w-3 h-3 rounded-sm"
-										style={{ backgroundColor: disposition?.color }}
-									></div>
-									<span
-										className="font-lato text-[10px] md:text-[12px] dark:text-gray-400"
-										style={{ color: 'var(--text-tertiary)' }}
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								{dispositions.map(d => (
+									<div 
+										key={d.id} 
+										className="p-4 border dark:border-gray-700 rounded-[var(--radius)] hover:shadow-sm transition-all bg-white dark:bg-gray-900/50 group"
+										style={{ borderColor: 'var(--light-gray)' }}
 									>
-										{disposition?.name}
-									</span>
-								</div>
-							))
+										<div className="flex items-center justify-between mb-3">
+											<div className="flex items-center gap-2">
+												<div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: d.color }} />
+												<span className="text-[12px] font-medium text-gray-700 dark:text-gray-200">{d.name}</span>
+											</div>
+											<div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+												<button onClick={() => handleEditDisposition(d)} className="p-1 hover:text-primary text-gray-400">
+													<Pencil1Icon className="w-3.5 h-3.5" />
+												</button>
+												<button onClick={() => handleDeleteDispositionClick(d)} className="p-1 hover:text-red-500 text-gray-400">
+													<TrashIcon className="w-3.5 h-3.5" />
+												</button>
+											</div>
+										</div>
+										<div className="flex items-center gap-3">
+											<span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 uppercase font-semibold">
+												{d.fieldType}
+											</span>
+											{d.isRequired && (
+												<span className="text-[10px] text-red-500 font-medium">* Required</span>
+											)}
+										</div>
+									</div>
+								))}
+							</div>
 						) : (
-							<div className="flex items-center gap-2">
-								<div
-									className="w-3 h-3 dark:bg-gray-600"
-									style={{ backgroundColor: '#D1D5DB' }}
-								></div>
-								<span
-									className="font-lato text-[10px] md:text-[12px] dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								>
-									No dispositions configured
-								</span>
+							<div className="py-20 text-center flex flex-col items-center">
+								<div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-900 flex items-center justify-center mb-4">
+									<PieChartIcon className="w-8 h-8 text-gray-300" />
+								</div>
+								<h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">No Dispositions Found</h3>
+								<p className="text-[11px] text-gray-500">Kickstart this bucket by adding its first category.</p>
 							</div>
 						)}
 					</div>
 				</div>
 			</div>
 
-			{/* Modals */}
+			{/* Right: Review/Preview Chart */}
+			<div 
+				className="w-full lg:w-80 shrink-0 dark:bg-gray-800 border dark:border-gray-700 rounded-[var(--radius)] overflow-hidden flex flex-col"
+				style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
+			>
+				<div className="p-6 border-b dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
+					<h2 className="font-inter text-xs font-semibold uppercase tracking-wider text-gray-500 mb-4">Live Preview</h2>
+					<Dropdown
+						label=""
+						value={dispositionSettings.chartType || 'pie'}
+						onChange={(val) => {
+							const stringValue = Array.isArray(val) ? val[0] : val;
+							updateDashboardSettings({
+								dispositionSettings: {
+									...dispositionSettings,
+									chartType: stringValue as any
+								}
+							});
+						}}
+						options={chartTypeOptions}
+						className="w-full"
+					/>
+				</div>
+
+				<div className="p-6 flex-1 flex flex-col">
+					<div className="h-48 mb-6">
+						{renderChart()}
+					</div>
+					
+					{dispositions.length > 0 && (
+						<div className="space-y-4 overflow-y-auto max-h-[250px] custom-scrollbar pr-2">
+							{dispositions.map(d => (
+								<div key={d.id} className="flex items-center justify-between">
+									<div className="flex items-center gap-2 min-w-0">
+										<div className="w-2.5 h-2.5 rounded-[2px] shrink-0" style={{ backgroundColor: d.color }} />
+										<span className="text-[11px] text-gray-600 dark:text-gray-400 truncate">{d.name}</span>
+									</div>
+									<span className="text-[11px] font-semibold text-gray-900 dark:text-gray-100">
+										{Math.floor(Math.random() * 40)}%
+									</span>
+								</div>
+							))}
+						</div>
+					)}
+				</div>
+			</div>
+
+			<AddBucketModal
+				isOpen={isAddBucketModalOpen}
+				onClose={() => setIsAddBucketModalOpen(false)}
+				bucketForm={bucketForm}
+				setBucketForm={setBucketForm}
+				onSave={handleSaveBucket}
+			/>
+			<AddBucketModal
+				isOpen={isEditBucketModalOpen}
+				onClose={() => setIsEditBucketModalOpen(false)}
+				title="Edit Bucket"
+				bucketForm={bucketForm}
+				setBucketForm={setBucketForm}
+				onSave={handleSaveBucket}
+			/>
+
 			<AddDispositionModal
 				isOpen={isAddDispositionModalOpen}
 				onClose={() => setIsAddDispositionModalOpen(false)}
+				title={activeBucket ? `New Disposition in ${activeBucket.name}` : "New Disposition"}
 				dispositionForm={dispositionForm}
 				setDispositionForm={setDispositionForm}
 				fieldTypeOptions={fieldTypeOptions}
 				onSave={handleSaveDisposition}
-				onAddDropdownOption={handleAddDropdownOption}
-				onDropdownOptionChange={handleDropdownOptionChange}
+				onAddDropdownOption={() => setDispositionForm(prev => ({ ...prev, dropdownOptions: [...prev.dropdownOptions, ''] }))}
+				onDropdownOptionChange={(idx, val) => setDispositionForm(prev => ({ ...prev, dropdownOptions: prev.dropdownOptions.map((o, i) => i === idx ? val : o) }))}
 			/>
 			<AddDispositionModal
 				isOpen={isEditDispositionModalOpen}
-				onClose={() => {
-					setIsEditDispositionModalOpen(false);
-					setEditingDisposition(null);
-				}}
+				onClose={() => setIsEditDispositionModalOpen(false)}
 				title="Edit Disposition"
 				dispositionForm={dispositionForm}
 				setDispositionForm={setDispositionForm}
 				fieldTypeOptions={fieldTypeOptions}
 				onSave={handleSaveDisposition}
-				onAddDropdownOption={handleAddDropdownOption}
-				onDropdownOptionChange={handleDropdownOptionChange}
+				onAddDropdownOption={() => setDispositionForm(prev => ({ ...prev, dropdownOptions: [...prev.dropdownOptions, ''] }))}
+				onDropdownOptionChange={(idx, val) => setDispositionForm(prev => ({ ...prev, dropdownOptions: prev.dropdownOptions.map((o, i) => i === idx ? val : o) }))}
+			/>
+
+			<DeleteRecordModal 
+				isOpen={isDeleteModalOpen}
+				onClose={() => { setIsDeleteModalOpen(false); setItemToDelete(null); }}
+				onConfirm={handleConfirmDelete}
+				recordName={itemToDelete?.name || ''}
 			/>
 		</div>
 	);
 }
+

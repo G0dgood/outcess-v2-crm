@@ -78,15 +78,15 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 
 
 	return (
-		<>
+		<div className="flex flex-col gap-6">
 			{/* Overview Card */}
-			<div className="border dark:border-gray-700 p-6 shadow-sm space-y-5" style={{ backgroundColor: 'var(--accent-white)' }}>
+			<div className="border dark:border-gray-700 p-6 shadow-sm space-y-5 rounded-[var(--radius)]" style={{ backgroundColor: 'var(--accent-white)' }}>
 				<h3 className="font-bold text-sm uppercase tracking-widest text-gray-400">Overview</h3>
 				<div className="space-y-4">
 					<div className="flex justify-between items-center border-b dark:border-gray-700 pb-3">
 						<span className="text-xs text-gray-500 font-medium">Status</span>
 						<span
-							className="px-3 py-1 text-[10px] uppercase font-extrabold text-white shadow-sm"
+							className="px-3 py-1 text-[10px] uppercase font-extrabold text-white shadow-sm rounded-[var(--radius)]"
 							style={{
 								backgroundColor:
 									ticket?.status === 'Open' ? '#9CA3AF' : // Gray
@@ -104,13 +104,13 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 					</div>
 					<div className="flex justify-between items-center border-b dark:border-gray-700 pb-3">
 						<span className="text-xs text-gray-500 font-medium">Priority</span>
-						<span className={`text-xs font-bold px-2 py-0.5 ${ticket?.priority === 'High' ? 'bg-red-50 text-red-600 dark:bg-red-900/30' : 'bg-gray-100 text-gray-600 dark:bg-gray-800'}`}>
+						<span className={`text-xs font-bold px-2 py-0.5 rounded-[var(--radius)] ${ticket?.priority === 'High' ? 'bg-red-50 text-red-600 dark:bg-red-900/30' : 'bg-gray-100 text-gray-600 dark:bg-gray-800'}`}>
 							{ticket?.priority || 'Normal'}
 						</span>
 					</div>
 					<div className="flex justify-between items-center border-b dark:border-gray-700 pb-3">
 						<span className="text-xs text-gray-500 font-medium">Escalation</span>
-						<span className="text-xs font-bold uppercase" style={{ color: lineOfBusinessData?.primaryColor || 'var(--primary)' }}>
+						<span className="text-xs font-bold uppercase rounded-[var(--radius)]" style={{ color: lineOfBusinessData?.primaryColor || 'var(--primary)' }}>
 							{getRoleLabel(ticket?.escalationLevel as PopulatedRole)}
 						</span>
 					</div>
@@ -124,7 +124,7 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 			</div>
 
 			{/* Assignees Card */}
-			<div className="border dark:border-gray-700 p-6 shadow-sm space-y-4" style={{ backgroundColor: 'var(--accent-white)' }}>
+			<div className="border dark:border-gray-700 p-6 shadow-sm space-y-4 rounded-[var(--radius)]" style={{ backgroundColor: 'var(--accent-white)' }}>
 				<div className="flex justify-between items-center">
 					<h3 className="font-bold text-sm uppercase tracking-widest text-gray-400">Assignees</h3>
 					{ticket?.status !== 'Closed' && (
@@ -183,9 +183,9 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 			</div>
 
 			{/* Requester Info */}
-			<div className="border dark:border-gray-700 p-6 shadow-sm space-y-4 " style={{ backgroundColor: 'var(--accent-white)' }}>
+			<div className="border dark:border-gray-700 p-6 shadow-sm space-y-4 rounded-[var(--radius)]" style={{ backgroundColor: 'var(--accent-white)' }}>
 				<h3 className="font-bold text-sm uppercase tracking-widest text-gray-400">Requester</h3>
-				<div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800/50 p-3 border dark:border-gray-700">
+				<div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800/50 p-3 border dark:border-gray-700 rounded-[var(--radius)]">
 					<div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0 overflow-hidden shadow-sm relative">
 						{ticket?.creatorId && typeof ticket.creatorId === 'object' && ticket?.creatorId?.avatar ? (
 							<Image
@@ -229,6 +229,6 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, lineOfBusi
 				memberName={memberToRemove?.name || ''}
 				isLoading={isUpdating}
 			/>
-		</>
+		</div>
 	);
 };

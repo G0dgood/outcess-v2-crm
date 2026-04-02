@@ -36,6 +36,7 @@ const PaginationSummary: React.FC<PaginationSummaryProps> = ({
 				options={itemsPerPageOptions}
 				className="min-w-[80px]"
 				inputClassName="h-8"
+				direction="down"
 			/>
 			<span className="text-[10px] md:text-[12px] text-gray-600 dark:text-gray-400 whitespace-nowrap">
 				of {totalItems}

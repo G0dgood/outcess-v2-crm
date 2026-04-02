@@ -21,7 +21,7 @@ const PermissionSkeleton: React.FC<PermissionSkeletonProps> = ({ className = '' 
 				{[1, 2, 3, 4, 5].map((i) => (
 					<div
 						key={i}
-						className="border dark:border-gray-700 overflow-hidden rounded-lg"
+						className="border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
 						style={{ borderColor: 'var(--light-gray)' }}
 					>
 						<div
@@ -33,7 +33,7 @@ const PermissionSkeleton: React.FC<PermissionSkeletonProps> = ({ className = '' 
 							</div>
 
 							<div className="flex items-center gap-4">
-								<Skeleton className="h-9 w-20 rounded-md" />
+								<Skeleton className="h-9 w-20 rounded-[var(--radius)]" />
 								<Skeleton className="h-5 w-5 rounded-full" />
 							</div>
 						</div>

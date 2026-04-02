@@ -1,7 +1,6 @@
-'use client';
-
 import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useRouter } from '@bprogress/next/app';
 import { useLineOfBusiness } from '@/contexts/LineOfBusinessContext';
@@ -316,7 +315,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
       key={subItem?.id}
       onClick={(e) => { e.stopPropagation(); handleSubItemClick(subItem?.path); onClose(); }}
       className={`cursor-pointer w-full flex items-center gap-3 px-4 py-2 hover-bg-custom rounded-[var(--radius)]`}
-      style={{ color: 'var(--text-secondary)', '--hover-bg': lineOfBusinessData?.secondaryColor || '#6C8B7D' } as React.CSSProperties}
+      style={{ color: 'var(--text-secondary)', '--hover-bg': 'var(--secondary)' } as React.CSSProperties}
      >
       <div className="shrink-0" style={{ color: 'var(--text-tertiary)' }}>{getIconComponent(subItem?.icon)}</div>
       <span className="font-inter font-medium text-[13px]">{subItem.label}</span>
@@ -356,9 +355,9 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
          onClick={(e) => handleItemClick(item, e)}
          className={`cursor-pointer w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 transition-all duration-200 rounded-[var(--radius)] ${isActive || isExpanded ? 'text-white' : 'dark:text-gray-300 hover:text-white'} hover-bg-custom`}
          style={{
-          backgroundColor: (isActive || isExpanded) ? lineOfBusinessData?.primaryColor || '#050711' : 'transparent',
+          backgroundColor: (isActive || isExpanded) ? 'var(--primary)' : 'transparent',
           color: (isActive || isExpanded) ? 'white' : 'var(--text-secondary)',
-          '--hover-bg': lineOfBusinessData?.secondaryColor || '#6C8B7D'
+          '--hover-bg': 'var(--secondary)'
          } as React.CSSProperties}
         >
          <div className={`shrink-0 transition-colors duration-200 ${isActive || isExpanded ? 'text-white' : 'dark:text-gray-400'}`} style={!(isActive || isExpanded) ? { color: 'var(--text-tertiary)' } : {}}>{getIconComponent(item.icon)}</div>
@@ -376,29 +375,38 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
          {isCollapsed ? <Tooltip delayDuration={0}><TooltipTrigger asChild>{itemContent}</TooltipTrigger>
           <TooltipContent side="right">{item.label}</TooltipContent>
          </Tooltip> : itemContent}
-         {isExpanded && !isCollapsed && (
-          <div className="ml-4 mt-1 space-y-1 border-l-2 dark:border-gray-600 pl-2" style={{ borderColor: 'var(--light-gray)' }}>
-           {(isSettings ? visibleSettingsSubItems : visibleSupportSubItems).map((subItem) => {
-            const pathTab = subItem.path.split('tab=')[1] || subItem?.path.split('view=')[1];
-            const currentVal = isSettings ? searchParams?.get('tab') : searchParams?.get('view');
-            const isSubActive = isSettings
-             ? (currentVal === pathTab || (!currentVal && pathTab === 'settings'))
-             : (pathname === subItem?.path);
+         <AnimatePresence>
+          {isExpanded && !isCollapsed && (
+           <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="ml-4 mt-1 space-y-1 border-l-2 dark:border-gray-600 pl-2 overflow-hidden"
+            style={{ borderColor: 'var(--light-gray)' }}
+           >
+            {(isSettings ? visibleSettingsSubItems : visibleSupportSubItems).map((subItem) => {
+             const pathTab = subItem.path.split('tab=')[1] || subItem?.path.split('view=')[1];
+             const currentVal = isSettings ? searchParams?.get('tab') : searchParams?.get('view');
+             const isSubActive = isSettings
+              ? (currentVal === pathTab || (!currentVal && pathTab === 'settings'))
+              : (pathname === subItem?.path);
 
-            return (
-             <button
-              key={subItem?.id}
-              onClick={(e) => { e.stopPropagation(); handleSubItemClick(subItem?.path); }}
-              className={`cursor-pointer w-full flex items-center gap-3 px-4 py-2 transition-all duration-200 rounded-[var(--radius)] ${isSubActive ? 'text-white bg-opacity-80' : 'dark:text-gray-400 hover:text-white'} hover-bg-custom`}
-              style={{ backgroundColor: isSubActive ? lineOfBusinessData?.primaryColor || '#050711' : 'transparent', color: isSubActive ? 'white' : 'var(--text-tertiary)', '--hover-bg': lineOfBusinessData?.secondaryColor || '#6C8B7D' } as React.CSSProperties}
-             >
-              <div className={`shrink-0 transition-colors duration-200 ${isSubActive ? 'text-white' : 'dark:text-gray-400'}`} style={!isSubActive ? { color: 'var(--text-tertiary)' } : {}}>{getIconComponent(subItem.icon)}</div>
-              <span className={`font-inter font-medium text-[13px] leading-5 tracking-[-0.5px] transition-colors duration-200 ${isSubActive ? 'text-white' : 'dark:text-gray-300'}`} style={!isSubActive ? { color: 'var(--text-tertiary)' } : {}}>{subItem.label}</span>
-             </button>
-            );
-           })}
-          </div>
-         )}
+             return (
+              <button
+               key={subItem?.id}
+               onClick={(e) => { e.stopPropagation(); handleSubItemClick(subItem?.path); }}
+               className={`cursor-pointer w-full flex items-center gap-3 px-4 py-2 transition-all duration-200 rounded-[var(--radius)] ${isSubActive ? 'text-white bg-opacity-80' : 'dark:text-gray-400 hover:text-white'} hover-bg-custom`}
+               style={{ backgroundColor: isSubActive ? 'var(--primary)' : 'transparent', color: isSubActive ? 'white' : 'var(--text-tertiary)', '--hover-bg': 'var(--secondary)' } as React.CSSProperties}
+              >
+               <div className={`shrink-0 transition-colors duration-200 ${isSubActive ? 'text-white' : 'dark:text-gray-400'}`} style={!isSubActive ? { color: 'var(--text-tertiary)' } : {}}>{getIconComponent(subItem.icon)}</div>
+               <span className={`font-inter font-medium text-[13px] leading-5 tracking-[-0.5px] transition-colors duration-200 ${isSubActive ? 'text-white' : 'dark:text-gray-300'}`} style={!isSubActive ? { color: 'var(--text-tertiary)' } : {}}>{subItem.label}</span>
+              </button>
+             );
+            })}
+           </motion.div>
+          )}
+         </AnimatePresence>
         </div>
        );
       })}

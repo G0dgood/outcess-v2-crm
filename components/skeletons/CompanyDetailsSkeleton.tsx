@@ -15,7 +15,7 @@ const CompanyDetailsSkeleton: React.FC<CompanyDetailsSkeletonProps> = ({ classNa
             </div>
 
             <div
-                className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+                className="dark:bg-gray-800 border dark:border-gray-700 p-6 rounded-[var(--radius)]"
                 style={{
                     backgroundColor: 'var(--accent-white)',
                     borderColor: 'var(--light-gray)'

@@ -34,11 +34,6 @@ export default function Setup() {
 				} catch (error) {
 					const apiError = error as ApiError;
 					const message = extractErrorMessage(apiError, 'Failed to fetch user data');
-					console.error('Failed to fetch user data:', {
-						status: apiError.status,
-						data: apiError.data,
-						message,
-					});
 				}
 			}
 		};

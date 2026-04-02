@@ -3,10 +3,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Input from './Input';
 import Button from './Button';
+import { Trash2 } from 'lucide-react';
 
 interface ColorPickerProps {
 	value: string;
 	onChange: (color: string) => void;
+	onRemove?: () => void;
 	label?: string;
 	className?: string;
 }
@@ -14,6 +16,7 @@ interface ColorPickerProps {
 export const ColorPicker: React.FC<ColorPickerProps> = ({
 	value,
 	onChange,
+	onRemove,
 	label,
 	className = '',
 }) => {
@@ -203,15 +206,25 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 					title={currentColor}
 				/>
 
-				<div className="flex-1">
+				<div className="flex-1 flex items-center gap-2">
 					<Input
 						label=""
 						value={value}
 						onChange={onChange}
 						placeholder="#000000"
-						className="font-mono"
+						className="font-mono flex-1"
 						inputClassName="h-8"
 					/>
+					{onRemove && (
+						<button
+							type="button"
+							onClick={onRemove}
+							className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+							title="Remove custom color"
+						>
+							<Trash2 size={16} />
+						</button>
+					)}
 				</div>
 			</div>
 

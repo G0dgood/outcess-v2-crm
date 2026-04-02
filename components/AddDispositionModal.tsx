@@ -73,7 +73,7 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 			}}
 		>
 			<div
-				className="dark:bg-gray-800 w-full max-w-lg mx-4 max-h-[90vh] flex flex-col"
+				className="dark:bg-gray-800 w-full max-w-lg mx-4 max-h-[90vh] flex flex-col rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 				onClick={(e) => e.stopPropagation()}
 			>

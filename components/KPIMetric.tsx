@@ -421,12 +421,17 @@ export default function KPIMetric({
 				{widgets.map((widget) => (
 					<div
 						key={widget.id}
-						className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative rounded-[var(--radius)]"
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative rounded-[var(--radius)] overflow-hidden"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
 						}}
 					>
+						{/* Widget Color Accent */}
+						<div
+							className="absolute top-0 left-0 w-full h-1"
+							style={{ backgroundColor: widget.color }}
+						/>
 						<div className="flex items-center justify-between mb-4">
 							<h3
 								className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"

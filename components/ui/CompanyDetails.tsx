@@ -11,6 +11,7 @@ import CompanyProfile from './CompanyProfile';
 import BusinessHours from '@/components/features/settings/BusinessHours';
 import Currencies from './Currencies';
 import OrganizationSettings from '@/components/features/settings/OrganizationSettings';
+import Tabs from './Tabs';
 
 interface CompanyDetailsProps {
 	className?: string;
@@ -119,117 +120,18 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 				}}
 			>
 				{/* Tabs */}
-				<div
-					className="mb-6 border-b dark:border-gray-700"
-					style={{ borderColor: 'var(--light-gray)' }}
-				>
-					<div className="flex gap-8">
-						<button
-							onClick={() => setActiveTab('company-detail')}
-							className={`pb-2 px-1 font-inter text-[10px] md:text-[12px] font-medium transition-colors border-b-2 ${activeTab === 'company-detail'
-								? 'dark:text-gray-100 dark:border-gray-100'
-								: 'dark:text-gray-400 border-transparent dark:hover:text-gray-200'
-								}`}
-							style={activeTab === 'company-detail' ? {
-								color: 'var(--text-primary)',
-								borderBottomColor: 'var(--text-primary)'
-							} : {
-								color: 'var(--text-tertiary)',
-								borderBottomColor: 'transparent'
-							}}
-							onMouseEnter={(e) => {
-								if (activeTab !== 'company-detail') {
-									e.currentTarget.style.color = 'var(--text-primary)';
-								}
-							}}
-							onMouseLeave={(e) => {
-								if (activeTab !== 'company-detail') {
-									e.currentTarget.style.color = 'var(--text-tertiary)';
-								}
-							}}
-						>
-							Company Details
-						</button>
-						<button
-							onClick={() => setActiveTab('business-hour')}
-							className={`pb-2 px-1 font-inter text-[10px] md:text-[12px] font-medium transition-colors border-b-2 ${activeTab === 'business-hour'
-								? 'dark:text-gray-100 dark:border-gray-100'
-								: 'dark:text-gray-400 border-transparent dark:hover:text-gray-200'
-								}`}
-							style={activeTab === 'business-hour' ? {
-								color: 'var(--text-primary)',
-								borderBottomColor: 'var(--text-primary)'
-							} : {
-								color: 'var(--text-tertiary)',
-								borderBottomColor: 'transparent'
-							}}
-							onMouseEnter={(e) => {
-								if (activeTab !== 'business-hour') {
-									e.currentTarget.style.color = 'var(--text-primary)';
-								}
-							}}
-							onMouseLeave={(e) => {
-								if (activeTab !== 'business-hour') {
-									e.currentTarget.style.color = 'var(--text-tertiary)';
-								}
-							}}
-						>
-							Business Hour
-						</button>
-						<button
-							onClick={() => setActiveTab('currencies')}
-							className={`pb-2 px-1 font-inter text-[10px] md:text-[12px] font-medium transition-colors border-b-2 ${activeTab === 'currencies'
-								? 'dark:text-gray-100 dark:border-gray-100'
-								: 'dark:text-gray-400 border-transparent dark:hover:text-gray-200'
-								}`}
-							style={activeTab === 'currencies' ? {
-								color: 'var(--text-primary)',
-								borderBottomColor: 'var(--text-primary)'
-							} : {
-								color: 'var(--text-tertiary)',
-								borderBottomColor: 'transparent'
-							}}
-							onMouseEnter={(e) => {
-								if (activeTab !== 'currencies') {
-									e.currentTarget.style.color = 'var(--text-primary)';
-								}
-							}}
-							onMouseLeave={(e) => {
-								if (activeTab !== 'currencies') {
-									e.currentTarget.style.color = 'var(--text-tertiary)';
-								}
-							}}
-						>
-							Currencies
-						</button>
-						<button
-							onClick={() => setActiveTab('organization')}
-							className={`pb-2 px-1 font-inter text-[10px] md:text-[12px] font-medium transition-colors border-b-2 ${activeTab === 'organization'
-								? 'dark:text-gray-100 dark:border-gray-100'
-								: 'dark:text-gray-400 border-transparent dark:hover:text-gray-200'
-								}`}
-							style={activeTab === 'organization' ? {
-								color: 'var(--text-primary)',
-								borderBottomColor: 'var(--text-primary)'
-							} : {
-								color: 'var(--text-tertiary)',
-								borderBottomColor: 'transparent'
-							}}
-							onMouseEnter={(e) => {
-								if (activeTab !== 'organization') {
-									e.currentTarget.style.color = 'var(--text-primary)';
-								}
-							}}
-							onMouseLeave={(e) => {
-								if (activeTab !== 'organization') {
-									e.currentTarget.style.color = 'var(--text-tertiary)';
-								}
-							}}
-						>
-							Organization
-						</button>
-					</div>
-				</div>
+				<Tabs
+					tabs={[
+						{ id: 'company-detail', label: 'Company Details' },
+						{ id: 'business-hour', label: 'Business Hour' },
+						{ id: 'currencies', label: 'Currencies' },
+						{ id: 'organization', label: 'Organization' },
+					]}
+					activeTab={activeTab}
+					onTabChange={(id) => setActiveTab(id as typeof activeTab)}
+					activeColor="var(--text-primary)"
+					className="mb-6"
+				/>
 
 				{/* Tab Content */}
 				{activeTab === 'company-detail' && (

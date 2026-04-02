@@ -1,6 +1,5 @@
-'use client';
-
 import React from 'react';
+import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 
 export interface TabItem {
@@ -25,7 +24,7 @@ const Tabs: React.FC<TabsProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`border-b flex items-center gap-8 overflow-x-auto no-scrollbar ${className}`}>
+    <div className={`border-b flex items-center gap-8 overflow-x-auto no-scrollbar relative ${className}`}>
       {tabs.map((tab) => {
         const tabId = typeof tab === 'string' ? tab : tab.id;
         const tabLabel = typeof tab === 'string' ? tab : tab.label;
@@ -38,15 +37,9 @@ const Tabs: React.FC<TabsProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => onTabChange(tabId)}
-            className={`pb-4 px-1 font-medium text-[10px] md:text-[12px] transition-colors relative !rounded-none ${isActive
-              ? 'border-b-2'
-              : 'hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
-            style={isActive ? {
-              color: activeColor,
-              borderBottomColor: activeColor
-            } : {
-              color: 'var(--text-tertiary)'
+            className={`pb-4 px-1 font-medium text-[10px] md:text-[12px] transition-colors relative !rounded-none min-w-fit`}
+            style={{
+              color: isActive ? activeColor : 'var(--text-tertiary)'
             }}
             onMouseEnter={(e) => {
               if (!isActive) {
@@ -59,10 +52,18 @@ const Tabs: React.FC<TabsProps> = ({
               }
             }}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 relative z-10">
               {tabIcon}
               {tabLabel}
             </div>
+            {isActive && (
+              <motion.div
+                layoutId="activeTabUnderline"
+                className="absolute bottom-0 left-0 right-0 h-0.5 z-20"
+                style={{ backgroundColor: activeColor }}
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+              />
+            )}
           </Button>
         );
       })}

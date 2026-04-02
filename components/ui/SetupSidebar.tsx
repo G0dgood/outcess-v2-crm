@@ -30,9 +30,7 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 	isMobile = false,
 }) => {
 	const { isDarkMode } = useTheme();
-	const { setCurrentStep } = useSetup();
-	const secondaryColor = '#6C8B7D';
-
+	const { setCurrentStep, validateStep } = useSetup();
 	const setupSteps: SetupStep[] = [
 		{
 			id: 'basic',
@@ -63,6 +61,7 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 			active: currentStep === 4,
 		},
 	];
+
 	return (
 		<aside
 			id={isMobile ? 'side-nav-mobile' : 'side-nav'}
@@ -96,7 +95,7 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 						className="absolute h-[8px] left-0 top-0 rounded-lg transition-all duration-300"
 						style={{
 							width: `${((currentStep || 1) / setupSteps.length) * 100}%`,
-							backgroundColor: secondaryColor
+							backgroundColor: 'var(--secondary)'
 						}}
 					></div>
 				</div>
@@ -106,20 +105,17 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 				{setupSteps.map((step: SetupStep) => {
 					const IconComponent = step.icon;
 					const stepIndex = ['basic', 'header', 'dashboard', 'customer'].indexOf(step.id) + 1;
-					const isClickable = (currentStep || 1) >= stepIndex;
+					// Can always go back, or move to next step if current one is valid
+					const isClickable = stepIndex <= (currentStep || 1) || validateStep(currentStep || 1);
+					
 					return (
 						<div
 							key={step.id}
-							className={`flex p-3 cursor-pointer transition-all duration-200 gap-3 rounded-[var(--radius)] ${step.active
-								? 'dark:bg-[#6C8B7D]/20 border dark:border-[#6C8B7D]'
-								: 'dark:hover:bg-gray-800'
-								}`}
-							style={step.active ? {
-								backgroundColor: 'rgba(108, 139, 125, 0.1)',
-								borderColor: '#6C8B7D'
-							} : {
-								borderColor: 'transparent'
-							}}
+							className={`group flex p-3 cursor-pointer transition-all duration-200 gap-3 rounded-[var(--radius)] border ${
+								step.active 
+									? 'border-[var(--secondary)] bg-[color-mix(in_srgb,var(--secondary),transparent_90%)]' 
+									: 'border-transparent hover:bg-[var(--secondary)]'
+							}`}
 							onClick={() => {
 								if (isClickable) {
 									setCurrentStep(stepIndex);
@@ -131,44 +127,38 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 									});
 								}
 							}}
-							onMouseEnter={(e) => {
-								if (!step.active) {
-									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-								}
-							}}
-							onMouseLeave={(e) => {
-								if (!step.active) {
-									e.currentTarget.style.backgroundColor = 'transparent';
-								}
-							}}
 						>
 							<div className="text-base w-5 h-5 text-center flex items-center justify-center">
 								<IconComponent
-									className="w-5 h-5"
-									style={step.active ? { color: secondaryColor } : isDarkMode ? { color: '#FFFFFF' } : { color: 'var(--text-tertiary)' }}
+									className="w-5 h-5 transition-colors duration-200"
+									style={{ 
+										color: step.active 
+											? 'var(--secondary)' 
+											: 'inherit' 
+									}}
 								/>
 							</div>
 							<div className="flex-1">
 								<div
-									className="font-lato not-italic font-medium text-[12px] md:text-[14px] leading-[150%]"
-									style={step.active ? { color: secondaryColor } : isDarkMode ? { color: '#FFFFFF' } : { color: 'var(--text-secondary)' }}
+									className={`font-lato not-italic font-medium text-[12px] md:text-[14px] leading-[150%] transition-colors duration-200 ${
+										step.active ? 'text-[var(--secondary)]' : 'text-[var(--text-secondary)] group-hover:text-white'
+									}`}
 								>
 									{step.title}
 								</div>
 								<div
-									className="font-lato not-italic font-medium text-[10px] md:text-[12px] leading-[150%] w-[165px]"
-									style={step.active ? { color: isDarkMode ? '#9CA3AF' : 'var(--text-tertiary)' } : isDarkMode ? { color: '#FFFFFF' } : { color: 'var(--text-tertiary)' }}
+									className={`font-lato not-italic font-medium text-[10px] md:text-[12px] leading-[150%] w-[165px] transition-colors duration-200 ${
+										step.active ? 'text-[var(--text-tertiary)]' : 'text-[var(--text-tertiary)] group-hover:text-white opacity-80'
+									}`}
 								>
 									{step.description}
 								</div>
 							</div>
-							<div
-								className="text-[10px] md:text-[12px]"
-								style={{ color: step.active ? (isDarkMode ? '#9CA3AF' : 'var(--text-tertiary)') : (isDarkMode ? '#FFFFFF' : 'var(--text-tertiary)') }}
-							>
+							<div className="flex items-center">
 								<ChevronRightIcon
-									className="w-5 h-5"
-									style={step.active ? { color: secondaryColor } : isDarkMode ? { color: '#FFFFFF' } : { color: 'var(--text-tertiary)' }}
+									className={`w-5 h-5 transition-colors duration-200 ${
+										step.active ? 'text-[var(--secondary)]' : 'text-[var(--text-tertiary)] group-hover:text-white'
+									}`}
 								/>
 							</div>
 						</div>

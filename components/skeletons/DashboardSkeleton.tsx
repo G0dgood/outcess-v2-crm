@@ -19,7 +19,7 @@ const DashboardSkeleton = () => {
 				{[1, 2, 3].map((i) => (
 					<div 
 						key={i} 
-						className="p-6 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+						className="p-6 rounded-[var(--radius)] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
@@ -40,7 +40,7 @@ const DashboardSkeleton = () => {
 
 			{/* Charts Skeleton */}
 			<div 
-				className="dark:bg-slate-800 border dark:border-slate-700 p-6 bg-white rounded-lg border-gray-200"
+				className="dark:bg-slate-800 border dark:border-slate-700 p-6 bg-white rounded-[var(--radius)] border-gray-200"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
@@ -50,7 +50,7 @@ const DashboardSkeleton = () => {
 					{[1, 2].map((i) => (
 						<div 
 							key={i} 
-							className="p-4 border border-gray-200 dark:border-slate-700 rounded-lg"
+							className="p-4 border border-gray-200 dark:border-slate-700 rounded-[var(--radius)]"
 							style={{ borderColor: 'var(--light-gray)' }}
 						>
 							<div className="flex justify-between items-center mb-6">

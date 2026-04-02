@@ -25,7 +25,8 @@ const LogoutConfirmationModal: React.FC<LogoutConfirmationModalProps> = ({
 	statusColor = '#22C55E',
 }) => {
 	const { lineOfBusinessData } = useLineOfBusiness();
-	const primaryColor = lineOfBusinessData?.primaryColor || '#050711';
+	const primaryColor = lineOfBusinessData?.primaryColor || lineOfBusinessData?.lineOfBusiness?.primaryColor || '#050711';
+	const mainForegroundColor = lineOfBusinessData?.mainForegroundColor || lineOfBusinessData?.lineOfBusiness?.mainForegroundColor || '#FFFFFF';
 
 	return (
 		<Modal
@@ -37,9 +38,10 @@ const LogoutConfirmationModal: React.FC<LogoutConfirmationModalProps> = ({
 			<div className="p-8 text-center">
 				<div className="relative inline-block mb-6">
 					<div 
-						className="w-20 h-20 rounded-full flex items-center justify-center text-[24px] font-bold text-white shadow-lg"
+						className="w-20 h-20 rounded-full flex items-center justify-center text-[24px] font-bold shadow-lg"
 						style={{ 
-							background: `linear-gradient(135deg, ${primaryColor} 0%, #4ECDC4 100%)`,
+							backgroundColor: primaryColor,
+							color: mainForegroundColor,
 						}}
 					>
 						{initials}

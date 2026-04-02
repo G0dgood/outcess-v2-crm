@@ -153,19 +153,19 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 			</div>
 
 			<div className="p-6 h-80">
-				<div className="flex items-center justify-center h-full">
+				<div className="flex flex-col items-center justify-center h-full">
 					{renderChart()}
 
 					{showLegend && (
-						<div className="space-y-4 ml-8">
+						<div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 mt-6 w-full px-4 mb-5">
 							{chartData?.map((item, index) => (
-								<div key={index} className="flex items-center gap-3">
+								<div key={index} className="flex items-center gap-2">
 									<div
-										className="w-4 h-4 rounded-full"
+										className="w-3 h-3 rounded-full shrink-0"
 										style={{ backgroundColor: item.color }}
 									></div>
 									<span
-										className="font-inter text-[10px] md:text-[12px] whitespace-nowrap"
+										className="font-inter text-[10px] md:text-[11px] whitespace-nowrap"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										{item?.label}

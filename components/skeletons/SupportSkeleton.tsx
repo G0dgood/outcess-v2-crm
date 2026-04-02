@@ -12,12 +12,12 @@ const SupportSkeleton = () => {
       {/* Filters & Search Skeleton */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="w-full max-w-md">
-          <Skeleton className="h-10 w-full rounded-lg" />
+          <Skeleton className="h-10 w-full rounded-[var(--radius)]" />
         </div>
         <div className="flex items-center gap-3">
-          <Skeleton className="h-10 w-32 rounded-lg" />
-          <Skeleton className="h-10 w-32 rounded-lg hidden sm:block" />
-          <Skeleton className="h-10 w-32 rounded-lg" />
+          <Skeleton className="h-10 w-32 rounded-[var(--radius)]" />
+          <Skeleton className="h-10 w-32 rounded-[var(--radius)] hidden sm:block" />
+          <Skeleton className="h-10 w-32 rounded-[var(--radius)]" />
         </div>
       </div>
 
@@ -29,7 +29,7 @@ const SupportSkeleton = () => {
       </div>
 
       {/* Ticket List Skeleton (Row Style) */}
-      <div className="flex flex-col border rounded-xl overflow-hidden dark:border-gray-700 bg-white/50 dark:bg-gray-900/50">
+      <div className="flex flex-col border rounded-[var(--radius)] overflow-hidden dark:border-gray-700 bg-white/50 dark:bg-gray-900/50">
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex items-center justify-between p-4 border-b last:border-b-0 dark:border-gray-700">
             {/* Left section skeleton */}

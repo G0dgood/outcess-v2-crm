@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetLineOfBusinessByCompanyIdQuery, useGetLineOfBusinessQuery } from '@/store/services/lineOfBusinessApi';
 import { useLineOfBusiness } from './LineOfBusinessContext';
@@ -22,6 +22,13 @@ export interface DispositionCategory {
 	dropdownOptions?: string[];
 	sortOrder?: string;
 	isRequired?: boolean;
+}
+
+export interface Bucket {
+	id: string;
+	name: string;
+	description?: string;
+	dispositions: DispositionCategory[];
 }
 
 export interface Widget {
@@ -74,12 +81,35 @@ export interface SetupData {
 	selectedLayout: 'layout' | 'compact';
 	primaryColor: string;
 	secondaryColor: string;
+	textColor: string;
+	tableColor: string;
+	backgroundColor: string;
+	accentColor: string;
+	primaryColorDark: string;
+	secondaryColorDark: string;
+	textColorDark: string;
+	tableColorDark: string;
+	backgroundColorDark: string;
+	accentColorDark: string;
+	mainForegroundColor: string;
+	mainForegroundColorDark: string;
 	navigationSettings: {
 		menuStyle: 'layout' | 'compact';
 		themeColors: {
 			primary: string;
 			secondary: string;
 			accent: string;
+			text: string;
+			table: string;
+			background: string;
+			primaryDark: string;
+			secondaryDark: string;
+			accentDark: string;
+			textDark: string;
+			tableDark: string;
+			backgroundDark: string;
+			mainForeground: string;
+			mainForegroundDark: string;
 		};
 		logo: {
 			url: string;
@@ -94,6 +124,7 @@ export interface SetupData {
 		activeTab: 'kpi' | 'disposition';
 		widgets: Widget[];
 		dispositions: DispositionCategory[];
+		buckets: Bucket[];
 		callOutcomes: CallOutcome[];
 		dispositionSettings: {
 			timeRangeView:
@@ -141,7 +172,19 @@ interface SetupContextType {
 	updateChartPosition: (chartId: string, position: { x: number; y: number; width: number; height: number }) => void;
 	updateChartsOrder: (newCharts: Chart[]) => void;
 	updateCustomerBookSettings: (data: Partial<SetupData['customerBookSettings']>) => void;
+	addBucket: (bucket: Omit<Bucket, 'id' | 'dispositions'>) => void;
+	updateBucket: (bucketId: string, updates: Partial<Bucket>) => void;
+	deleteBucket: (bucketId: string) => void;
+	addDispositionToBucket: (bucketId: string, disposition: Omit<DispositionCategory, 'id'>) => void;
+	updateDispositionInBucket: (bucketId: string, dispositionId: string, updates: Partial<DispositionCategory>) => void;
+	deleteDispositionFromBucket: (bucketId: string, dispositionId: string) => void;
 	setupSteps: SetupStep[];
+	validateStep: (stepIndex: number) => boolean;
+	isDirty: boolean;
+	resetDirty: () => void;
+	discardChanges: () => void;
+	onPersist: ((shouldAdvance: boolean) => Promise<void>) | null;
+	registerPersist: (fn: ((shouldAdvance: boolean) => Promise<void>) | null) => void;
 }
 
 const SetupContext = createContext<SetupContextType | undefined>(undefined);
@@ -167,6 +210,12 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const [dashboardStep, setDashboardStep] = useState<'KPI Metric' | 'Call Disposition'>('KPI Metric');
 	const [isLoading, setIsLoading] = useState(false);
 	const [isInitialized, setIsInitialized] = useState(false);
+	const [isDirty, setIsDirty] = useState(false);
+	const [onPersist, setOnPersist] = useState<((shouldAdvance: boolean) => Promise<void>) | null>(null);
+
+	const registerPersist = useCallback((fn: ((shouldAdvance: boolean) => Promise<void>) | null) => {
+		setOnPersist(() => fn);
+	}, []);
 	const [setupData, setSetupData] = useState<SetupData>({
 		lineOfBusinessId: '',
 		companyName: '',
@@ -178,12 +227,35 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		selectedLayout: 'layout',
 		primaryColor: '#050711',
 		secondaryColor: '#6C8B7D',
+		textColor: '#050711',
+		tableColor: '#F8F9FA',
+		backgroundColor: '#FFFFFF',
+		accentColor: '#6C8B7D',
+		primaryColorDark: '#F3F4F6',
+		secondaryColorDark: '#6C8B7D',
+		textColorDark: '#F3F4F6',
+		tableColorDark: '#1E293B',
+		backgroundColorDark: '#0F172A',
+		accentColorDark: '#6C8B7D',
+		mainForegroundColor: '#FFFFFF',
+		mainForegroundColorDark: '#0F172A',
 		navigationSettings: {
 			menuStyle: 'layout',
 			themeColors: {
 				primary: '',
 				secondary: '',
 				accent: '',
+				text: '',
+				table: '',
+				background: '',
+				primaryDark: '#F3F4F6',
+				secondaryDark: '#6C8B7D',
+				accentDark: '#6C8B7D',
+				textDark: '#F3F4F6',
+				tableDark: '#1E293B',
+				backgroundDark: '#0F172A',
+				mainForeground: '#FFFFFF',
+				mainForegroundDark: '#0F172A',
 			},
 			logo: {
 				url: '',
@@ -200,6 +272,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				{ id: '1', title: 'Total Calls', value: 0, color: '#050711' }
 			],
 			dispositions: [],
+			buckets: [],
 			callOutcomes: [],
 			dispositionSettings: {
 				timeRangeView: 'daily',
@@ -249,67 +322,111 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const existingLineOfBusiness = selectedLineOfBusinessId ? specificLineOfBusiness : companyLineOfBusiness;
 	const isFetchingLineOfBusiness = selectedLineOfBusinessId ? isFetchingSpecificLOB : isFetchingCompanyLOB;
 
+	const populateData = useCallback((data: any) => {
+		if (!data) return;
+
+		const source = data as { lineOfBusiness?: unknown } | undefined;
+		const dataToUse = (source?.lineOfBusiness as any) || (data as any);
+
+		const safeParse = <T,>(data: unknown): Partial<T> => {
+			if (!data) return {};
+			if (typeof data === 'string') {
+				try {
+					return JSON.parse(data) as Partial<T>;
+				} catch {
+					return {};
+				}
+			}
+			return typeof data === 'object' && data !== null ? (data as Partial<T>) : {};
+		};
+
+		if (dataToUse) {
+			const navigationSettings = safeParse<SetupData['navigationSettings']>(dataToUse.navigationSettings);
+			const dashboardSettings = safeParse<SetupData['dashboardSettings']>(dataToUse.dashboardSettings);
+			const customerBookSettings = safeParse<SetupData['customerBookSettings']>(dataToUse.customerBookSettings);
+			const roleManagementSettings = safeParse<SetupData['roleManagementSettings']>(dataToUse.roleManagementSettings);
+
+			const currentDispositions = Array.isArray(dataToUse.dashboardSettings?.dispositions)
+				? dataToUse.dashboardSettings.dispositions
+				: [];
+
+			let finalBuckets = Array.isArray(dashboardSettings?.buckets)
+				? dashboardSettings.buckets
+				: ([]);
+
+			if (currentDispositions.length > 0 && finalBuckets.length === 0) {
+				finalBuckets = [{
+					id: 'bucket-general',
+					name: 'General Dispositions',
+					description: 'Default bucket for existing dispositions',
+					dispositions: currentDispositions
+				}];
+			}
+
+			setSetupData(prev => ({
+				...prev,
+				lineOfBusinessId: dataToUse._id,
+				companyName: dataToUse.companyName || prev.companyName,
+				companyId: dataToUse.companyId || prev.companyId,
+				lineOfBusinessName: dataToUse.lineOfBusinessName || dataToUse.name || prev.lineOfBusinessName,
+				timeZone: dataToUse.timeZone || prev.timeZone,
+				industry: dataToUse.industry || prev.industry,
+				businessSize: dataToUse.businessSize || prev.businessSize,
+				selectedLayout: dataToUse.selectedLayout || prev.selectedLayout,
+				primaryColor: dataToUse.primaryColor || prev.primaryColor,
+				secondaryColor: dataToUse.secondaryColor || prev.secondaryColor,
+				textColor: dataToUse.textColor || prev.textColor,
+				tableColor: dataToUse.tableColor || prev.tableColor,
+				backgroundColor: dataToUse.backgroundColor || prev.backgroundColor,
+				accentColor: dataToUse.accentColor || prev.accentColor,
+				primaryColorDark: dataToUse.primaryColorDark || prev.primaryColorDark,
+				secondaryColorDark: dataToUse.secondaryColorDark || prev.secondaryColorDark,
+				textColorDark: dataToUse.textColorDark || prev.textColorDark,
+				tableColorDark: dataToUse.tableColorDark || prev.tableColorDark,
+				backgroundColorDark: dataToUse.backgroundColorDark || prev.backgroundColorDark,
+				accentColorDark: dataToUse.accentColorDark || prev.accentColorDark,
+				mainForegroundColor: dataToUse.mainForegroundColor || prev.mainForegroundColor,
+				mainForegroundColorDark: dataToUse.mainForegroundColorDark || prev.mainForegroundColorDark,
+				navigationSettings: {
+					...prev.navigationSettings,
+					...navigationSettings,
+				},
+				dashboardSettings: {
+					...prev.dashboardSettings,
+					...dashboardSettings,
+					buckets: finalBuckets,
+					dispositions: []
+				},
+				customerBookSettings: {
+					...prev.customerBookSettings,
+					...customerBookSettings,
+					configuredFields: Array.isArray(customerBookSettings?.configuredFields)
+						? customerBookSettings.configuredFields
+						: (prev.customerBookSettings.configuredFields || [])
+				},
+				roleManagementSettings: {
+					...prev.roleManagementSettings,
+					...roleManagementSettings,
+					modules: Array.isArray(roleManagementSettings?.modules)
+						? roleManagementSettings.modules
+						: (prev.roleManagementSettings.modules || [])
+				}
+			}));
+		}
+	}, []);
+
+	const discardChanges = useCallback(() => {
+		if (existingLineOfBusiness) {
+			populateData(existingLineOfBusiness);
+		}
+		setIsDirty(false);
+	}, [existingLineOfBusiness, populateData]);
+
 	useEffect(() => {
 		if (existingLineOfBusiness) {
-			const source = existingLineOfBusiness as { lineOfBusiness?: unknown } | undefined;
-			const dataToUse = (source?.lineOfBusiness as any) || (existingLineOfBusiness as any);
-
-			const safeParse = <T,>(data: unknown): Partial<T> => {
-				if (!data) return {};
-				if (typeof data === 'string') {
-					try {
-						return JSON.parse(data) as Partial<T>;
-					} catch {
-						return {};
-					}
-				}
-				return typeof data === 'object' && data !== null ? (data as Partial<T>) : {};
-			};
-
-			if (dataToUse) {
-				const navigationSettings = safeParse<SetupData['navigationSettings']>(dataToUse.navigationSettings);
-				const dashboardSettings = safeParse<SetupData['dashboardSettings']>(dataToUse.dashboardSettings);
-				const customerBookSettings = safeParse<SetupData['customerBookSettings']>(dataToUse.customerBookSettings);
-				const roleManagementSettings = safeParse<SetupData['roleManagementSettings']>(dataToUse.roleManagementSettings);
-
-				setSetupData(prev => ({
-					...prev,
-					lineOfBusinessId: dataToUse._id,
-					companyName: dataToUse.companyName || prev.companyName,
-					companyId: dataToUse.companyId || prev.companyId,
-					lineOfBusinessName: dataToUse.lineOfBusinessName || dataToUse.name || prev.lineOfBusinessName,
-					timeZone: dataToUse.timeZone || prev.timeZone,
-					industry: dataToUse.industry || prev.industry,
-					businessSize: dataToUse.businessSize || prev.businessSize,
-					selectedLayout: dataToUse.selectedLayout || prev.selectedLayout,
-					primaryColor: dataToUse.primaryColor || prev.primaryColor,
-					secondaryColor: dataToUse.secondaryColor || prev.secondaryColor,
-					navigationSettings: {
-						...prev.navigationSettings,
-						...navigationSettings,
-					},
-					dashboardSettings: {
-						...prev.dashboardSettings,
-						...dashboardSettings,
-					},
-					customerBookSettings: {
-						...prev.customerBookSettings,
-						...customerBookSettings,
-						configuredFields: Array.isArray(customerBookSettings?.configuredFields)
-							? customerBookSettings.configuredFields
-							: (prev.customerBookSettings.configuredFields || [])
-					},
-					roleManagementSettings: {
-						...prev.roleManagementSettings,
-						...roleManagementSettings,
-						modules: Array.isArray(roleManagementSettings?.modules)
-							? roleManagementSettings.modules
-							: (prev.roleManagementSettings.modules || [])
-					}
-				}));
-			}
+			populateData(existingLineOfBusiness);
 		}
-	}, [existingLineOfBusiness]);
+	}, [existingLineOfBusiness, populateData]);
 
 	// Load from localStorage on mount
 	useEffect(() => {
@@ -330,6 +447,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 							callOutcomes: parsedData.dashboardSettings?.callOutcomes || prev?.dashboardSettings?.callOutcomes,
 							widgets: parsedData.dashboardSettings?.widgets || prev?.dashboardSettings?.widgets,
 							dispositions: parsedData.dashboardSettings?.dispositions || prev?.dashboardSettings?.dispositions,
+							buckets: parsedData.dashboardSettings?.buckets || prev?.dashboardSettings?.buckets,
 						}
 					}));
 				} catch {
@@ -363,11 +481,12 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		}
 	}, [user, setupData.companyId]);
 
-	const updateSetupData = (data: Partial<SetupData>) => {
+	const updateSetupData = useCallback((data: Partial<SetupData>) => {
 		setSetupData(prev => ({ ...prev, ...data }));
-	};
+		setIsDirty(true);
+	}, []);
 
-	const updateNavigationSettings = (data: Partial<SetupData['navigationSettings']>) => {
+	const updateNavigationSettings = useCallback((data: Partial<SetupData['navigationSettings']>) => {
 		setSetupData(prev => ({
 			...prev,
 			navigationSettings: {
@@ -375,9 +494,10 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				...data
 			}
 		}));
-	};
+		setIsDirty(true);
+	}, []);
 
-	const updateDashboardSettings = (data: Partial<SetupData['dashboardSettings']>) => {
+	const updateDashboardSettings = useCallback((data: Partial<SetupData['dashboardSettings']>) => {
 		setSetupData(prev => ({
 			...prev,
 			dashboardSettings: {
@@ -385,9 +505,10 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				...data
 			}
 		}));
-	};
+		setIsDirty(true);
+	}, []);
 
-	const addChart = (chart: Omit<Chart, 'id'>) => {
+	const addChart = useCallback((chart: Omit<Chart, 'id'>) => {
 		const newChart: Chart = {
 			...chart,
 			id: `chart-${Date.now()}`
@@ -449,9 +570,10 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				}
 			};
 		});
-	};
+		setIsDirty(true);
+	}, []);
 
-	const removeChart = (chartId: string) => {
+	const removeChart = useCallback((chartId: string) => {
 		setSetupData(prev => ({
 			...prev,
 			dashboardSettings: {
@@ -462,9 +584,10 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				}
 			}
 		}));
-	};
+		setIsDirty(true);
+	}, []);
 
-	const updateChart = (chartId: string, updates: Partial<Chart>) => {
+	const updateChart = useCallback((chartId: string, updates: Partial<Chart>) => {
 		setSetupData(prev => ({
 			...prev,
 			dashboardSettings: {
@@ -477,9 +600,10 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				}
 			}
 		}));
-	};
+		setIsDirty(true);
+	}, []);
 
-	const updateChartPosition = (chartId: string, position: { x: number; y: number; width: number; height: number }) => {
+	const updateChartPosition = useCallback((chartId: string, position: { x: number; y: number; width: number; height: number }) => {
 		setSetupData(prev => ({
 			...prev,
 			dashboardSettings: {
@@ -492,9 +616,10 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				}
 			}
 		}));
-	};
+		setIsDirty(true);
+	}, []);
 
-	const updateChartsOrder = (newCharts: Chart[]) => {
+	const updateChartsOrder = useCallback((newCharts: Chart[]) => {
 		setSetupData(prev => ({
 			...prev,
 			dashboardSettings: {
@@ -505,9 +630,10 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				}
 			}
 		}));
-	};
+		setIsDirty(true);
+	}, []);
 
-	const updateCustomerBookSettings = (data: Partial<SetupData['customerBookSettings']>) => {
+	const updateCustomerBookSettings = useCallback((data: Partial<SetupData['customerBookSettings']>) => {
 		setSetupData(prev => ({
 			...prev,
 			customerBookSettings: {
@@ -515,9 +641,10 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				...data
 			}
 		}));
-	};
+		setIsDirty(true);
+	}, []);
 
-	const onStepComplete = () => {
+	const onStepComplete = useCallback(() => {
 		if (currentStep < 5) {
 			// When moving to step 2 (Header & Navigation), sync colors to navigationSettings
 			if (currentStep === 1) {
@@ -528,22 +655,147 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 						themeColors: {
 							primary: prev.primaryColor,
 							secondary: prev.secondaryColor,
-							accent: prev.secondaryColor, // Using secondary as accent for now
+							accent: prev.accentColor,
+							text: prev.textColor,
+							table: prev.tableColor,
+							background: prev.backgroundColor,
+							primaryDark: prev.primaryColorDark,
+							secondaryDark: prev.secondaryColorDark,
+							accentDark: prev.accentColorDark,
+							textDark: prev.textColorDark,
+							tableDark: prev.tableColorDark,
+							backgroundDark: prev.backgroundColorDark,
+							mainForeground: prev.mainForegroundColor,
+							mainForegroundDark: prev.mainForegroundColorDark,
 						}
 					}
 				}));
 			}
-			setCurrentStep(currentStep + 1);
+			setCurrentStep(prev => prev + 1);
 		}
-	};
+	}, [currentStep]);
 
-	const onStepBack = () => {
+	const onStepBack = useCallback(() => {
 		if (currentStep > 1) {
-			setCurrentStep(currentStep - 1);
+			setCurrentStep(prev => prev - 1);
 		}
-	};
+	}, [currentStep]);
 
-	const setupSteps: SetupStep[] = [
+	const addBucket = useCallback((bucket: Omit<Bucket, 'id' | 'dispositions'>) => {
+		const newBucket: Bucket = {
+			...bucket,
+			id: `bucket-${Date.now()}`,
+			dispositions: [],
+		};
+		setSetupData(prev => ({
+			...prev,
+			dashboardSettings: {
+				...prev.dashboardSettings,
+				buckets: [...(prev.dashboardSettings.buckets || []), newBucket]
+			}
+		}));
+		setIsDirty(true);
+	}, []);
+
+	const updateBucket = useCallback((bucketId: string, updates: Partial<Bucket>) => {
+		setSetupData(prev => ({
+			...prev,
+			dashboardSettings: {
+				...prev.dashboardSettings,
+				buckets: prev.dashboardSettings.buckets.map(b =>
+					b.id === bucketId ? { ...b, ...updates } : b
+				)
+			}
+		}));
+		setIsDirty(true);
+	}, []);
+
+	const deleteBucket = useCallback((bucketId: string) => {
+		setSetupData(prev => ({
+			...prev,
+			dashboardSettings: {
+				...prev.dashboardSettings,
+				buckets: prev.dashboardSettings.buckets.filter(b => b.id !== bucketId)
+			}
+		}));
+		setIsDirty(true);
+	}, []);
+
+	const addDispositionToBucket = useCallback((bucketId: string, disposition: Omit<DispositionCategory, 'id'>) => {
+		const newDisposition: DispositionCategory = {
+			...disposition,
+			id: `dsp-${Date.now()}`,
+		};
+		setSetupData(prev => ({
+			...prev,
+			dashboardSettings: {
+				...prev.dashboardSettings,
+				buckets: prev.dashboardSettings.buckets.map(b =>
+					b.id === bucketId
+						? { ...b, dispositions: [...b.dispositions, newDisposition] }
+						: b
+				)
+			}
+		}));
+		setIsDirty(true);
+	}, []);
+
+	const updateDispositionInBucket = useCallback((bucketId: string, dispositionId: string, updates: Partial<DispositionCategory>) => {
+		setSetupData(prev => ({
+			...prev,
+			dashboardSettings: {
+				...prev.dashboardSettings,
+				buckets: prev.dashboardSettings.buckets.map(b =>
+					b.id === bucketId
+						? {
+							...b,
+							dispositions: b.dispositions.map(d =>
+								d.id === dispositionId ? { ...d, ...updates } : d
+							)
+						}
+						: b
+				)
+			}
+		}));
+		setIsDirty(true);
+	}, []);
+
+	const deleteDispositionFromBucket = useCallback((bucketId: string, dispositionId: string) => {
+		setSetupData(prev => ({
+			...prev,
+			dashboardSettings: {
+				...prev.dashboardSettings,
+				buckets: prev.dashboardSettings.buckets.map(b =>
+					b.id === bucketId
+						? { ...b, dispositions: b.dispositions.filter(d => d.id !== dispositionId) }
+						: b
+				)
+			}
+		}));
+		setIsDirty(true);
+	}, []);
+
+	const validateStep = useCallback((stepIndex: number): boolean => {
+		switch (stepIndex) {
+			case 1:
+				return !!(
+					setupData.companyName.trim() &&
+					setupData.timeZone &&
+					setupData.industry &&
+					setupData.businessSize
+				);
+			case 2:
+				return true; // Defaults are always provided
+			case 3:
+				return !!setupData.dashboardSettings.dashboardName.trim();
+			case 4:
+				return setupData.customerBookSettings.configuredFields.length > 0;
+			default:
+				return true;
+		}
+	}, [setupData]);
+
+	const setupSteps: SetupStep[] = useMemo(() => [
 		{
 			id: 'basic',
 			title: 'Basic Setup',
@@ -584,9 +836,11 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			active: currentStep === 5,
 			completed: false,
 		},
-	];
+	], [currentStep]);
 
-	const contextValue: SetupContextType = {
+	const resetDirty = useCallback(() => setIsDirty(false), []);
+
+	const contextValue: SetupContextType = useMemo(() => ({
 		currentStep,
 		setCurrentStep,
 		onStepComplete,
@@ -603,11 +857,52 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		updateChartPosition,
 		updateChartsOrder,
 		updateCustomerBookSettings,
+		addBucket,
+		updateBucket,
+		deleteBucket,
+		addDispositionToBucket,
+		updateDispositionInBucket,
+		deleteDispositionFromBucket,
 		setupSteps,
 		isFetchingLineOfBusiness,
 		setDashboardStep,
 		dashboardStep,
-	};
+		validateStep,
+		isDirty,
+		resetDirty,
+		discardChanges,
+		onPersist,
+		registerPersist,
+	}), [
+		currentStep,
+		onStepComplete,
+		onStepBack,
+		isLoading,
+		setupData,
+		updateSetupData,
+		updateNavigationSettings,
+		updateDashboardSettings,
+		addChart,
+		removeChart,
+		updateChart,
+		updateChartPosition,
+		updateChartsOrder,
+		updateCustomerBookSettings,
+		addBucket,
+		updateBucket,
+		deleteBucket,
+		addDispositionToBucket,
+		updateDispositionInBucket,
+		deleteDispositionFromBucket,
+		setupSteps,
+		isFetchingLineOfBusiness,
+		dashboardStep,
+		validateStep,
+		isDirty,
+		discardChanges,
+		onPersist,
+		registerPersist,
+	]);
 
 	return (
 		<SetupContext.Provider value={contextValue}>

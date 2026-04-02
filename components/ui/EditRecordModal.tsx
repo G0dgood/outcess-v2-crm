@@ -83,7 +83,7 @@ const EditRecordModal: React.FC<EditRecordModalProps> = ({
 			onClick={onClose}
 		>
 			<div
-				className="dark:bg-gray-800 w-full max-w-2xl mx-4 shadow-lg"
+				className="dark:bg-gray-800 w-full max-w-2xl mx-4 shadow-lg rounded-[var(--radius)] overflow-hidden"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 				onClick={(e) => e.stopPropagation()}
 			>

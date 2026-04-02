@@ -1,8 +1,10 @@
 "use client";
+import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import BottomNav from "@/components/ui/BottomNav";
 import SetupHeader from "@/components/ui/SetupHeader";
 import SetupSidebar from "@/components/ui/SetupSidebar";
-import React, { useState, useEffect } from "react";
+import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
 import { useUserInfo } from "@/contexts/UserInfoContext";
@@ -39,7 +41,25 @@ const getProgressForStep = (step: number): number => {
 };
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-  const { currentStep, isLoading, setIsLoading, onStepComplete, onStepBack, setupData, updateSetupData, updateDashboardSettings, isFetchingLineOfBusiness, dashboardStep, setDashboardStep } = useSetup();
+  const {
+    currentStep,
+    isLoading,
+    setIsLoading,
+    onStepComplete,
+    onStepBack,
+    setupData,
+    updateSetupData,
+    updateDashboardSettings,
+    isFetchingLineOfBusiness,
+    dashboardStep,
+    setDashboardStep,
+    validateStep,
+    registerPersist,
+    resetDirty,
+    discardChanges,
+    isDirty,
+    onPersist
+  } = useSetup();
   const { user } = useUserInfo();
   const { setSelectedLineOfBusinessId } = useLineOfBusiness();
   const [createLineOfBusiness] = useCreateLineOfBusinessMutation();
@@ -53,7 +73,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [modalAction, setModalAction] = useState<'exit' | 'back' | null>(null);
   const drawerRef = React.useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -66,23 +89,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
 
 
-  const validateCurrentStep = () => {
-    if (currentStep === 1) {
-      // Validate Basic Setup
-      if (
-        !setupData?.companyName.trim() ||
-        !setupData?.timeZone ||
-        !setupData?.industry ||
-        !setupData?.businessSize
-      ) {
-        return false;
-      }
-    }
-    // Add validation for other steps as needed
-    return true;
-  };
 
-  const handleBack = () => {
+  const performBackNavigation = useCallback(() => {
     if (currentStep === 3 && setupData.dashboardSettings.activeTab === 'disposition') {
       setDashboardStep('KPI Metric');
       updateDashboardSettings({ activeTab: 'kpi' });
@@ -98,7 +106,48 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         duration: 2000,
       });
     }
-  };
+  }, [currentStep, setupData.dashboardSettings.activeTab, setDashboardStep, updateDashboardSettings, onStepBack]);
+
+  const handleBackStep = useCallback(() => {
+    if (isDirty) {
+      setModalAction('back');
+      setShowUnsavedModal(true);
+    } else {
+      performBackNavigation();
+    }
+  }, [isDirty, performBackNavigation]);
+
+  const handleExitToDashboard = useCallback(() => {
+    if (isDirty) {
+      setModalAction('exit');
+      setShowUnsavedModal(true);
+    } else {
+      router.push('/dashboard');
+    }
+  }, [isDirty, router]);
+
+  const handleBackWithoutSaving = useCallback(() => {
+    discardChanges();
+    setShowUnsavedModal(false);
+    if (modalAction === 'exit') {
+      router.push('/dashboard');
+    } else {
+      performBackNavigation();
+    }
+  }, [discardChanges, modalAction, router, performBackNavigation]);
+
+  const handleSaveAndExit = useCallback(async () => {
+    if (onPersist) {
+      await onPersist(false);
+      resetDirty();
+    }
+    setShowUnsavedModal(false);
+    if (modalAction === 'exit') {
+      router.push('/dashboard');
+    } else {
+      performBackNavigation();
+    }
+  }, [onPersist, resetDirty, modalAction, router, performBackNavigation]);
 
   const getBackButtonText = () => {
     switch (currentStep) {
@@ -110,209 +159,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleSave = async () => {
-    if (currentStep === 5) {
-      // Final step - submit for approval
-      handleSubmitForApproval();
-      return;
-    }
-
-    if (!validateCurrentStep()) {
-      toast.error("Please fill in all required fields before continuing.", {
-        description: "Complete all marked fields to proceed to the next step.",
-        duration: 4000,
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
-    const progress = getProgressForStep(currentStep);
-
-    try {
-      if (currentStep === 1) {
-        if (setupData.lineOfBusinessId) {
-          try {
-            // If we already have an ID, update instead of create
-            await updateLineOfBusiness({
-              id: setupData.lineOfBusinessId,
-              data: {
-                name: setupData?.lineOfBusinessName || '',
-                timeZone: setupData?.timeZone || '',
-                industry: setupData?.industry || '',
-                businessSize: setupData?.businessSize || '',
-                companyName: setupData?.companyName || '',
-                companyId: user?.company?.id || setupData?.companyId || '',
-                lineOfBusinessName: setupData?.lineOfBusinessName || '',
-                progress,
-              },
-            }).unwrap();
-
-            toast.success("Step completed successfully!", {
-              description: "Line of Business updated. Moving to the next step...",
-              duration: 2000,
-            });
-          } catch (err: unknown) {
-            const updateError = err as ApiError;
-            // Check for various forms of "Not Found" error
-            const isNotFoundError =
-              updateError?.status === 404 ||
-              !!extractErrorMessage(updateError, "");
-
-            // If update fails because it's not found, fall back to create
-            if (isNotFoundError) {
-              console.warn("Line of Business not found (caught via error check), creating new one...");
-
-              // Create new Line of Business
-              const targetCompanyId = user?.company?.id || setupData.companyId;
-              const response = await createLineOfBusiness({
-                name: setupData.lineOfBusinessName,
-                timeZone: setupData.timeZone,
-                industry: setupData.industry,
-                businessSize: setupData.businessSize,
-                userId: user?.id,
-                companyName: setupData.companyName,
-                companyId: targetCompanyId,
-                lineOfBusinessName: setupData.lineOfBusinessName,
-                progress,
-              }).unwrap();
-
-              const createdLineOfBusiness = (response as { lineOfBusiness?: LineOfBusinessLike }).lineOfBusiness;
-
-              if (createdLineOfBusiness?._id) {
-                setSelectedLineOfBusinessId(createdLineOfBusiness._id);
-                updateSetupData({
-                  lineOfBusinessId: createdLineOfBusiness._id,
-                  companyName: createdLineOfBusiness.companyName || setupData.companyName,
-                  companyId: createdLineOfBusiness.companyId || setupData.companyId,
-                  lineOfBusinessName: createdLineOfBusiness.lineOfBusinessName || createdLineOfBusiness.name || setupData.lineOfBusinessName,
-                  timeZone: createdLineOfBusiness.timeZone || setupData.timeZone,
-                  industry: createdLineOfBusiness.industry || setupData.industry,
-                  businessSize: createdLineOfBusiness.businessSize || setupData.businessSize,
-                });
-              }
-
-              toast.success("Step completed successfully!", {
-                description: "Line of Business created. Moving to the next step...",
-                duration: 2000,
-              });
-            } else {
-              throw updateError;
-            }
-          }
-        } else {
-          // Create new Line of Business
-          const targetCompanyId = user?.company?.id || setupData.companyId;
-          const response = await createLineOfBusiness({
-            name: setupData.lineOfBusinessName,
-            timeZone: setupData.timeZone,
-            industry: setupData.industry,
-            businessSize: setupData.businessSize,
-            userId: user?.id,
-            companyName: setupData.companyName,
-            companyId: targetCompanyId,
-            lineOfBusinessName: setupData.lineOfBusinessName,
-            progress,
-          }).unwrap();
-
-          const createdLineOfBusiness = (response as { lineOfBusiness?: LineOfBusinessLike }).lineOfBusiness;
-
-          if (createdLineOfBusiness?._id) {
-            setSelectedLineOfBusinessId(createdLineOfBusiness._id);
-            updateSetupData({
-              lineOfBusinessId: createdLineOfBusiness._id,
-              companyName: createdLineOfBusiness.companyName || setupData.companyName,
-              companyId: createdLineOfBusiness.companyId || setupData.companyId,
-              lineOfBusinessName: createdLineOfBusiness.lineOfBusinessName || createdLineOfBusiness.name || setupData.lineOfBusinessName,
-              timeZone: createdLineOfBusiness.timeZone || setupData.timeZone,
-              industry: createdLineOfBusiness.industry || setupData.industry,
-              businessSize: createdLineOfBusiness.businessSize || setupData.businessSize,
-            });
-          }
-
-          toast.success("Step completed successfully!", {
-            description: "Line of Business created. Moving to the next step...",
-            duration: 2000,
-          });
-        }
-      } else {
-        if (!setupData.lineOfBusinessId) {
-          throw new Error("Line of Business ID is missing. Please restart the setup.");
-        }
-
-        let updateData: FormData | Record<string, unknown> = {};
-        switch (currentStep) {
-          case 2:
-            const formData = new FormData();
-            if (setupData.logoFile) {
-              formData.append('logo', setupData.logoFile);
-            }
-            formData.append('selectedLayout', setupData.selectedLayout);
-            formData.append('primaryColor', setupData.primaryColor);
-            formData.append('secondaryColor', setupData.secondaryColor);
-            formData.append('navigationSettings', JSON.stringify(setupData.navigationSettings));
-            formData.append('progress', String(progress));
-
-            updateData = formData;
-            break;
-          case 3:
-            updateData = {
-              dashboardSettings: setupData.dashboardSettings,
-              progress,
-            };
-            break;
-          case 4:
-            // Ensure configuredFields is a clean array before sending
-            const cleanConfiguredFields = setupData.customerBookSettings.configuredFields.map(field => ({
-              id: field.id,
-              name: field.name,
-              type: field.type,
-              required: field.required
-            }));
-
-            updateData = {
-              customerBookSettings: {
-                ...setupData.customerBookSettings,
-                configuredFields: cleanConfiguredFields
-              },
-              progress,
-            };
-            break;
-        }
-
-        await updateLineOfBusiness({
-          id: setupData.lineOfBusinessId,
-          data: updateData,
-        }).unwrap();
-
-        toast.success("Step completed successfully!", {
-          description: "Changes saved. Moving to the next step...",
-          duration: 2000,
-        });
-      }
-
-      if (currentStep === 3) {
-        onStepComplete();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        onStepComplete();
-      }
-    } catch (err: unknown) {
-      const error = err as ApiError;
-      console.error("Failed to save changes:", error);
-
-      const errorMessage = extractErrorMessage(error, "An unexpected error occurred. Please try again.");
-
-      toast.error("Failed to save changes", {
-        description: errorMessage,
-        duration: 4000,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSubmitForApproval = async () => {
+  const handleSubmitForApproval = useCallback(async () => {
     if (!setupData.lineOfBusinessId) {
       toast.error("Error", {
         description: "Line of Business ID is missing. Please restart the setup.",
@@ -365,7 +212,290 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         description: errorMessage,
       });
     }
-  };
+  }, [setupData.lineOfBusinessId, isSupervisorCreator, updateLineOfBusiness, setIsLoading]);
+
+  const handlePersist = useCallback(async (shouldAdvance: boolean = false) => {
+    if (currentStep === 5) {
+      handleSubmitForApproval();
+      return;
+    }
+
+    if (shouldAdvance && !validateStep(currentStep)) {
+      toast.error("Please fill in all required fields before continuing.", {
+        description: "Complete all marked fields to proceed to the next step.",
+        duration: 4000,
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    const progress = getProgressForStep(currentStep);
+
+    try {
+      if (currentStep === 1) {
+        if (setupData.lineOfBusinessId) {
+          try {
+            // If we already have an ID, update instead of create
+            await updateLineOfBusiness({
+              id: setupData.lineOfBusinessId,
+              data: {
+                name: setupData?.lineOfBusinessName || '',
+                timeZone: setupData?.timeZone || '',
+                industry: setupData?.industry || '',
+                businessSize: setupData?.businessSize || '',
+                companyId: user?.company?.id || setupData?.companyId || '',
+                lineOfBusinessName: setupData?.lineOfBusinessName || '',
+                primaryColor: setupData.primaryColor,
+                secondaryColor: setupData.secondaryColor,
+                textColor: setupData.textColor,
+                tableColor: setupData.tableColor,
+                backgroundColor: setupData.backgroundColor,
+                accentColor: setupData.accentColor,
+                primaryColorDark: setupData.primaryColorDark,
+                secondaryColorDark: setupData.secondaryColorDark,
+                textColorDark: setupData.textColorDark,
+                tableColorDark: setupData.tableColorDark,
+                backgroundColorDark: setupData.backgroundColorDark,
+                accentColorDark: setupData.accentColorDark,
+                mainForegroundColor: setupData.mainForegroundColor || '',
+                mainForegroundColorDark: setupData.mainForegroundColorDark || '',
+                progress,
+              },
+            }).unwrap();
+
+            if (!shouldAdvance) {
+              toast.success("Progress saved!", {
+                description: "Your changes have been persisted.",
+                duration: 2000,
+              });
+              resetDirty();
+            }
+          } catch (err: unknown) {
+            const updateError = err as ApiError;
+            // Check for various forms of "Not Found" error
+            const isNotFoundError =
+              updateError?.status === 404 ||
+              !!extractErrorMessage(updateError, "");
+
+            // If update fails because it's not found, fall back to create
+            if (isNotFoundError) {
+              console.warn("Line of Business not found (caught via error check), creating new one...");
+
+              // Create new Line of Business
+              const targetCompanyId = user?.company?.id || setupData.companyId;
+              const response = await createLineOfBusiness({
+                name: setupData.lineOfBusinessName,
+                timeZone: setupData.timeZone,
+                industry: setupData.industry,
+                businessSize: setupData.businessSize,
+                userId: user?.id,
+                companyName: setupData.companyName,
+                companyId: targetCompanyId,
+                lineOfBusinessName: setupData.lineOfBusinessName,
+                primaryColor: setupData.primaryColor,
+                secondaryColor: setupData.secondaryColor,
+                textColor: setupData.textColor,
+                tableColor: setupData.tableColor,
+                backgroundColor: setupData.backgroundColor,
+                accentColor: setupData.accentColor,
+                primaryColorDark: setupData.primaryColorDark,
+                secondaryColorDark: setupData.secondaryColorDark,
+                textColorDark: setupData.textColorDark,
+                tableColorDark: setupData.tableColorDark,
+                backgroundColorDark: setupData.backgroundColorDark,
+                accentColorDark: setupData.accentColorDark,
+                mainForegroundColor: setupData.mainForegroundColor || '',
+                mainForegroundColorDark: setupData.mainForegroundColorDark || '',
+                progress,
+              }).unwrap();
+
+              const createdLineOfBusiness = (response as { lineOfBusiness?: LineOfBusinessLike }).lineOfBusiness;
+
+              if (createdLineOfBusiness?._id) {
+                setSelectedLineOfBusinessId(createdLineOfBusiness._id);
+                updateSetupData({
+                  lineOfBusinessId: createdLineOfBusiness._id,
+                  companyName: createdLineOfBusiness.companyName || setupData.companyName,
+                  companyId: createdLineOfBusiness.companyId || setupData.companyId,
+                  lineOfBusinessName: createdLineOfBusiness.lineOfBusinessName || createdLineOfBusiness.name || setupData.lineOfBusinessName,
+                  timeZone: createdLineOfBusiness.timeZone || setupData.timeZone,
+                  industry: createdLineOfBusiness.industry || setupData.industry,
+                  businessSize: createdLineOfBusiness.businessSize || setupData.businessSize,
+                });
+              }
+
+              if (!shouldAdvance) {
+                toast.success("Progress saved!", {
+                  description: "New Line of Business created and saved.",
+                  duration: 2000,
+                });
+                resetDirty();
+              }
+            } else {
+              throw updateError;
+            }
+          }
+        } else {
+          // Create new Line of Business
+          const targetCompanyId = user?.company?.id || setupData.companyId;
+          const response = await createLineOfBusiness({
+            name: setupData.lineOfBusinessName,
+            timeZone: setupData.timeZone,
+            industry: setupData.industry,
+            businessSize: setupData.businessSize,
+            userId: user?.id,
+            companyName: setupData.companyName,
+            companyId: targetCompanyId,
+            lineOfBusinessName: setupData.lineOfBusinessName,
+            primaryColor: setupData.primaryColor,
+            secondaryColor: setupData.secondaryColor,
+            textColor: setupData.textColor,
+            tableColor: setupData.tableColor,
+            backgroundColor: setupData.backgroundColor,
+            accentColor: setupData.accentColor,
+            primaryColorDark: setupData.primaryColorDark,
+            secondaryColorDark: setupData.secondaryColorDark,
+            textColorDark: setupData.textColorDark,
+            tableColorDark: setupData.tableColorDark,
+            backgroundColorDark: setupData.backgroundColorDark,
+            accentColorDark: setupData.accentColorDark,
+            mainForegroundColor: setupData.mainForegroundColor || '',
+            mainForegroundColorDark: setupData.mainForegroundColorDark || '',
+            progress,
+          }).unwrap();
+
+          const createdLineOfBusiness = (response as { lineOfBusiness?: LineOfBusinessLike }).lineOfBusiness;
+
+          if (createdLineOfBusiness?._id) {
+            setSelectedLineOfBusinessId(createdLineOfBusiness._id);
+            updateSetupData({
+              lineOfBusinessId: createdLineOfBusiness._id,
+              companyName: createdLineOfBusiness.companyName || setupData.companyName,
+              companyId: createdLineOfBusiness.companyId || setupData.companyId,
+              lineOfBusinessName: createdLineOfBusiness.lineOfBusinessName || createdLineOfBusiness.name || setupData.lineOfBusinessName,
+              timeZone: createdLineOfBusiness.timeZone || setupData.timeZone,
+              industry: createdLineOfBusiness.industry || setupData.industry,
+              businessSize: createdLineOfBusiness.businessSize || setupData.businessSize,
+            });
+          }
+
+          if (!shouldAdvance) {
+            toast.success("Progress saved!", {
+              description: "Line of Business created.",
+              duration: 2000,
+            });
+            resetDirty();
+          }
+        }
+      } else {
+        if (!setupData.lineOfBusinessId) {
+          throw new Error("Line of Business ID is missing. Please restart the setup.");
+        }
+
+        let updateData: FormData | Record<string, unknown> = {};
+        switch (currentStep) {
+          case 2:
+            const formData = new FormData();
+            if (setupData.logoFile) {
+              formData.append('logo', setupData.logoFile);
+            }
+            formData.append('selectedLayout', setupData.selectedLayout);
+            formData.append('primaryColor', setupData.primaryColor || '');
+            formData.append('secondaryColor', setupData.secondaryColor || '');
+            formData.append('textColor', setupData.textColor || '');
+            formData.append('tableColor', setupData.tableColor || '');
+            formData.append('backgroundColor', setupData.backgroundColor || '');
+            formData.append('accentColor', setupData.accentColor || '');
+            formData.append('primaryColorDark', setupData.primaryColorDark || '');
+            formData.append('secondaryColorDark', setupData.secondaryColorDark || '');
+            formData.append('textColorDark', setupData.textColorDark || '');
+            formData.append('tableColorDark', setupData.tableColorDark || '');
+            formData.append('backgroundColorDark', setupData.backgroundColorDark || '');
+            formData.append('accentColorDark', setupData.accentColorDark || '');
+            formData.append('mainForegroundColor', setupData.mainForegroundColor || '');
+            formData.append('mainForegroundColorDark', setupData.mainForegroundColorDark || '');
+            formData.append('navigationSettings', JSON.stringify(setupData.navigationSettings));
+            formData.append('progress', String(progress));
+
+            updateData = formData;
+            break;
+          case 3:
+            updateData = {
+              dashboardSettings: setupData.dashboardSettings,
+              progress,
+            };
+            break;
+          case 4:
+            // Ensure configuredFields is a clean array before sending
+            const cleanConfiguredFields = setupData.customerBookSettings.configuredFields.map(field => ({
+              id: field.id,
+              name: field.name,
+              type: field.type,
+              required: field.required
+            }));
+
+            updateData = {
+              customerBookSettings: {
+                ...setupData.customerBookSettings,
+                configuredFields: cleanConfiguredFields
+              },
+              progress,
+            };
+            break;
+        }
+
+        await updateLineOfBusiness({
+          id: setupData.lineOfBusinessId,
+          data: updateData,
+        }).unwrap();
+
+        if (!shouldAdvance) {
+          toast.success("Progress saved!", {
+            description: "Step data persisted successfully.",
+            duration: 2000,
+          });
+          resetDirty();
+        }
+      }
+
+      if (shouldAdvance) {
+        toast.success("Step completed successfully!", {
+          description: "Moving to the next step...",
+          duration: 2000,
+        });
+        resetDirty();
+        if (currentStep === 3) {
+          onStepComplete();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          onStepComplete();
+        }
+      }
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      console.error("Failed to persist changes:", error);
+
+      const errorMessage = extractErrorMessage(error, "An unexpected error occurred. Please try again.");
+
+      toast.error("Failed to save changes", {
+        description: errorMessage,
+        duration: 4000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentStep, handleSubmitForApproval, validateStep, setIsLoading, setupData, updateLineOfBusiness, user, createLineOfBusiness, setSelectedLineOfBusinessId, updateSetupData, resetDirty, onStepComplete]);
+
+  const handleSave = () => handlePersist(true);
+
+  useEffect(() => {
+    registerPersist(handlePersist);
+    return () => registerPersist(null);
+  }, [currentStep, setupData, user, registerPersist, validateStep, handlePersist]);
+
+
+
 
   const headerUser = user
     ? (() => {
@@ -406,6 +536,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         title="CRM Setup Configurator"
         user={headerUser}
         onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
+        onBack={handleExitToDashboard}
       />
       {currentStep !== 5 ? <SetupSidebar currentStep={currentStep} className="hidden md:block" /> : <div id="side-nav" />}
       {isMobileMenuOpen && isMobileView && (
@@ -421,7 +552,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         setDashboardStep={setDashboardStep}
         currentStep={currentStep}
         onSave={handleSave}
-        onBack={handleBack}
+        onBack={handleBackStep}
         isLoading={mounted && (isLoading || isFetchingLineOfBusiness)}
         disabled={mounted && (isLoading || isFetchingLineOfBusiness)}
         buttonText={
@@ -439,6 +570,13 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         showBack={currentStep > 1}
       />
       <main>{children}</main>
+      <UnsavedChangesModal
+        isOpen={showUnsavedModal}
+        onClose={() => setShowUnsavedModal(false)}
+        onSaveAndExit={handleSaveAndExit}
+        onBackWithoutSaving={handleBackWithoutSaving}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 interface DropdownOption {
 	value: string;
@@ -20,6 +21,7 @@ interface DropdownProps {
 	multiple?: boolean;
 	rightElement?: React.ReactNode;
 	renderOptionRight?: (option: DropdownOption) => React.ReactNode;
+	direction?: 'up' | 'down';
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -36,14 +38,40 @@ export const Dropdown: React.FC<DropdownProps> = ({
 	multiple = false,
 	rightElement,
 	renderOptionRight,
+	direction = 'down',
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [mounted, setMounted] = useState(false);
+	const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, bottom: 0 });
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		setMounted(true);
 	}, []);
+
+	const updateCoords = useCallback(() => {
+		if (dropdownRef.current) {
+			const rect = dropdownRef.current.getBoundingClientRect();
+			setCoords({
+				top: rect.top,
+				left: rect.left,
+				width: rect.width,
+				bottom: rect.bottom
+			});
+		}
+	}, []);
+
+	useEffect(() => {
+		if (isOpen) {
+			updateCoords();
+			window.addEventListener('resize', updateCoords);
+			window.addEventListener('scroll', updateCoords, true);
+		}
+		return () => {
+			window.removeEventListener('resize', updateCoords);
+			window.removeEventListener('scroll', updateCoords, true);
+		};
+	}, [isOpen, updateCoords]);
 
 	const isMultiple = multiple;
 	const selectedValues: string[] = isMultiple
@@ -112,25 +140,32 @@ export const Dropdown: React.FC<DropdownProps> = ({
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-				setIsOpen(false);
+				// We also need to check if the click target is within the portal menu
+				// But since the menu is inside the portal, we should check if the click was on document.body or similar
+				// Actually, simpler: check if the click was on anything with a data-dropdown-menu attribute
+				const target = event.target as HTMLElement;
+				if (!target.closest('.dropdown-menu')) {
+					setIsOpen(false);
+				}
 			}
 		};
 
-		document.addEventListener('mousedown', handleClickOutside);
+		if (isOpen) {
+			document.addEventListener('mousedown', handleClickOutside);
+		}
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, []);
+	}, [isOpen]);
 
 	return (
-		<div className={`dropdown-container ${className}`}>
+		<div className={`dropdown-container ${className}`} ref={dropdownRef}>
 			<label className="dropdown-label">
 				{label}
 				{required && <span className="required-asterisk">*</span>}
 			</label>
 
 			<div
-				ref={dropdownRef}
 				className={`dropdown-wrapper ${isOpen ? 'open' : ''} ${error ? 'error' : ''} ${disabled ? 'disabled' : ''}`}
 			>
 				<button
@@ -169,8 +204,18 @@ export const Dropdown: React.FC<DropdownProps> = ({
 					</span>
 				</button>
 
-				{isOpen && (
-					<div className="dropdown-menu rounded-[var(--radius)]">
+				{isOpen && typeof document !== 'undefined' && createPortal(
+					<div
+						className={`dropdown-menu ${direction === 'up' ? 'dropdown-menu-up' : ''} rounded-[var(--radius)]`}
+						style={{
+							position: 'fixed',
+							top: direction === 'up' ? 'auto' : `${coords.bottom + 4}px`,
+							bottom: direction === 'up' ? `${window.innerHeight - coords.top + 4}px` : 'auto',
+							left: `${coords.left}px`,
+							width: `${coords.width}px`,
+							zIndex: 10000,
+						}}
+					>
 						<div className="dropdown-options">
 							{options.length === 0 ? (
 								<div className="dropdown-empty-state">
@@ -228,7 +273,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
 								))
 							)}
 						</div>
-					</div>
+					</div>,
+					document.body
 				)}
 			</div>
 

@@ -95,14 +95,20 @@ td {
 /* md:text-[12px] */
 @media (min-width: 768px) {
   td {
-    font-size: 12px;
+    font-size: 10px;
   }
 }
 
 /* dark:text-gray-100 */
 .dark td {
   color: #f3f4f6;
-  /* gray-100 */
+  font-size: 12px;
+}
+
+@media (min-width: 768px) {
+  .dark td {
+    font-size: 10px;
+  }
 }
 
 th {
@@ -120,14 +126,20 @@ th {
 /* md:text-[10px] */
 @media (min-width: 768px) {
   th {
-    font-size: 12px;
+    font-size: 10px;
   }
 }
 
 /* dark:text-gray-100 */
 .dark th {
   color: #f3f4f6;
-  /* gray-100 */
+  font-size: 12px;
+}
+
+@media (min-width: 768px) {
+  .dark th {
+    font-size: 10px;
+  }
 }
 
 table {

@@ -6,9 +6,10 @@ import { businessSizeOptions, industryOptions, timeZoneOptions } from '@/compone
 import { useSetup } from '@/contexts/SetupContext';
 import { SetupSkeleton } from '@/components/ui/SetupSkeleton';
 import { useUserInfo } from '@/contexts/UserInfoContext';
+import Button from '@/components/ui/Button';
 
 export default function SetupPage() {
-	const { setupData, updateSetupData } = useSetup();
+	const { setupData, updateSetupData, isDirty, onPersist } = useSetup();
 	const { user } = useUserInfo();
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isLoading, setIsLoading] = useState(true);
@@ -51,19 +52,31 @@ export default function SetupPage() {
 
 	return (
 		<div className="w-full h-[70vh]">
-			<div className="mb-8">
-				<h1
-					className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
-					style={{ color: 'var(--text-secondary)' }}
-				>
-					Basic Setup
-				</h1>
-				<p
-					className="font-lato not-italic font-normal text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"
-					style={{ color: 'var(--text-tertiary)' }}
-				>
-					Configure your organization details and preferences
-				</p>
+			<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+				<div>
+					<h1
+						className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
+						style={{ color: 'var(--text-secondary)' }}
+					>
+						Basic Setup
+					</h1>
+					<p
+						className="font-lato not-italic font-normal text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"
+						style={{ color: 'var(--text-tertiary)' }}
+					>
+						Configure your organization details and preferences
+					</p>
+				</div>
+				{isDirty && onPersist && (
+					<Button
+						variant="outline"
+						size="md"
+						onClick={() => onPersist?.(false)}
+						className="w-full sm:w-auto"
+					>
+						Save
+					</Button>
+				)}
 			</div>
 
 			<div

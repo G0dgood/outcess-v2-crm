@@ -156,7 +156,7 @@ const SortableRow = ({ field, handleEditField, handleDeleteField, isLast }: Sort
 };
 
 export default function CustomerBookPage() {
-	const { setupData, updateCustomerBookSettings } = useSetup();
+	const { setupData, updateCustomerBookSettings, isDirty, onPersist } = useSetup();
 	const { customerBookSettings } = setupData;
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [selectedFieldType, setSelectedFieldType] = useState<string>('single-line-text');
@@ -431,19 +431,31 @@ export default function CustomerBookPage() {
 							Configure the fields that you&apos;ll use to store customer information. Add custom fields to match your business needs.
 						</p>
 					</div>
-					<Button
-						variant="primary"
-						size="md"
-						onClick={() => {
-							setEditingField(null);
-							setSelectedFieldType('single-line-text');
-							setIsModalOpen(true);
-						}}
-						className="flex items-center gap-2 w-full sm:w-auto justify-center"
-					>
-						<Plus size={16} />
-						Add New Field
-					</Button>
+					<div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+						{isDirty && onPersist && (
+							<Button
+								variant="outline"
+								size="md"
+								onClick={() => onPersist?.(false)}
+								className="flex items-center gap-2 justify-center"
+							>
+								Save
+							</Button>
+						)}
+						<Button
+							variant="primary"
+							size="md"
+							onClick={() => {
+								setEditingField(null);
+								setSelectedFieldType('single-line-text');
+								setIsModalOpen(true);
+							}}
+							className="flex items-center gap-2 justify-center"
+						>
+							<Plus size={16} />
+							Add New Field
+						</Button>
+					</div>
 				</div>
 			</div>
 

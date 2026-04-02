@@ -258,7 +258,6 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 			onSave?.(formData);
 			onClose();
 		} catch (error) {
-			console.error('Error saving disposition:', error);
 			toastError('Failed to save disposition');
 			onSave?.(formData);
 			onClose();
@@ -526,7 +525,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
 			<div
-				className="dark:bg-gray-800 shadow-lg w-full max-w-4xl mx-4 max-h-[80vh] overflow-hidden flex flex-col"
+				className="dark:bg-gray-800 shadow-lg w-full max-w-4xl mx-4 max-h-[80vh] overflow-hidden flex flex-col rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}

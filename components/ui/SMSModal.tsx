@@ -82,8 +82,9 @@ export const SMSModal: React.FC<SMSModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
 			<div
-				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4"
+				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 rounded-[var(--radius)] overflow-hidden"
 				style={{ backgroundColor: 'var(--accent-white)' }}
+				onClick={(e) => e.stopPropagation()}
 			>
 				{/* Header */}
 				<div

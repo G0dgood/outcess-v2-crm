@@ -10,7 +10,7 @@ interface LoginStatusInfoBannerProps {
 const LoginStatusInfoBanner: React.FC<LoginStatusInfoBannerProps> = ({ onClose, className }) => {
   return (
     <div
-      className={`mb-4 p-3 dark:bg-gray-800 border dark:border-gray-700 flex items-center gap-3 ${className || ''}`}
+      className={`mb-4 p-3 dark:bg-gray-800 border rounded-[var(--radius)] dark:border-gray-700 flex items-center gap-3 ${className || ''}`}
       style={{
         backgroundColor: 'var(--bg-primary)',
         borderColor: 'var(--light-gray)',

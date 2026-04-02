@@ -28,7 +28,7 @@ const CallDisposition = dynamic(() => import('@/components/CallDisposition'), {
 });
 
 export default function DashboardPage(): React.JSX.Element {
-	const { setupData, updateDashboardSettings, dashboardStep, setDashboardStep } = useSetup();
+	const { setupData, updateDashboardSettings, dashboardStep, setDashboardStep, isDirty, onPersist } = useSetup();
 	const { dashboardSettings } = setupData;
 
 	const toActiveTab = (step: 'KPI Metric' | 'Call Disposition'): 'kpi' | 'disposition' =>
@@ -36,29 +36,41 @@ export default function DashboardPage(): React.JSX.Element {
 
 	return (
 		<div className="w-full h-full">
-			<div className="mb-8">
-				<h1
-					className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
-					style={{ color: 'var(--text-secondary)' }}
-				>
-					Dashboard
-				</h1>
-				<p
-					className="font-lato not-italic font-normal text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"
-					style={{ color: 'var(--text-tertiary)' }}
-				>
-					Set up your dashboard widgets and reports
-				</p>
+			<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+				<div>
+					<h1
+						className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
+						style={{ color: 'var(--text-secondary)' }}
+					>
+						Dashboard
+					</h1>
+					<p
+						className="font-lato not-italic font-normal text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"
+						style={{ color: 'var(--text-tertiary)' }}
+					>
+						Set up your dashboard widgets and reports
+					</p>
+				</div>
+				{isDirty && onPersist && (
+					<Button
+						variant="outline"
+						size="md"
+						onClick={() => onPersist(false)}
+						className="w-full sm:w-auto"
+					>
+						Save
+					</Button>
+				)}
 			</div>
 
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6"
+				className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6 rounded-[var(--radius)]"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
 				}}
 			>
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 ">
 					<div>
 						<Input
 							label="Dashboard Name"
@@ -152,10 +164,7 @@ export default function DashboardPage(): React.JSX.Element {
 			)}
 
 			{dashboardStep === 'Call Disposition' && (
-				<CallDisposition
-					dispositions={dashboardSettings.dispositions}
-					onDispositionsChange={(dispositions) => updateDashboardSettings({ dispositions })}
-				/>
+				<CallDisposition />
 			)}
 
 		</div>
