@@ -7,6 +7,8 @@ import AssignShiftHourModal from '@/components/ui/AssignShiftHourModal';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUpsertShiftHourMutation } from '@/store/services/campaignApi';
 import { toastError, toastSuccess } from '@/utils/toastWithSound';
+import { ClockIcon } from '@radix-ui/react-icons';
+import EmptyState from '@/components/ui/EmptyState';
 
 const ShiftHours = () => {
 	const { selectedCampaignId, campaignData } = useCampaign();
@@ -179,11 +181,20 @@ const ShiftHours = () => {
 							{shiftHours.length === 0 ? (
 								<tr>
 									<td
-										colSpan={4}
-										className="px-6 py-12 text-center dark:text-gray-400"
-										style={{ color: 'var(--text-tertiary)' }}
+										colSpan={5}
+										className="px-6 py-4"
 									>
-										No shift hours configured yet.
+										<EmptyState
+											icon={ClockIcon}
+											title="No Shift Hours Found"
+											description="No shift hours have been configured for this campaign yet. Create shift hours to manage employee schedules."
+											actionLabel="New Shift Hour"
+											onAction={() => {
+												setSelectedShiftHour(null);
+												setIsAddShiftHourModalOpen(true);
+											}}
+											className="py-12"
+										/>
 									</td>
 								</tr>
 							) : (

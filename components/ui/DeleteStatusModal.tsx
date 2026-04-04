@@ -9,6 +9,7 @@ interface DeleteStatusModalProps {
 	onClose: () => void;
 	onConfirm: () => void;
 	statusName: string;
+	isLoading?: boolean;
 }
 
 export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
@@ -16,6 +17,7 @@ export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
 	onClose,
 	onConfirm,
 	statusName,
+	isLoading,
 }) => {
 	useEffect(() => {
 		if (isOpen) {
@@ -108,6 +110,8 @@ export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
 						variant="primary"
 						size="md"
 						onClick={onConfirm}
+						loading={isLoading}
+						disabled={isLoading}
 					>
 						Delete Status
 					</Button>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/Button';
 
 interface ModalProps {
@@ -28,6 +29,12 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
 	const [isAnimating, setIsAnimating] = useState(false);
 	const [shouldRender, setShouldRender] = useState(false);
+	const [mounted, setMounted] = useState(false);
+
+	// Handle mounting for Portal (SSR check)
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	// Handle opening animation
 	useEffect(() => {
@@ -47,6 +54,7 @@ export const Modal: React.FC<ModalProps> = ({
 			return () => clearTimeout(timer);
 		}
 	}, [isOpen]);
+
 
 	// Close modal when pressing Escape key
 	useEffect(() => {
@@ -130,12 +138,13 @@ export const Modal: React.FC<ModalProps> = ({
 		return 'opacity-100';
 	};
 
-	if (!shouldRender) return null;
+	if (!shouldRender || !mounted) return null;
+	if (typeof document === 'undefined') return null;
 
 	// Check if className contains a custom background override
 	const hasCustomBackground = className.includes('bg-[') || className.includes('!bg-');
 
-	return (
+	return createPortal(
 		<>
 			{/* Backdrop */}
 			<div
@@ -170,7 +179,7 @@ export const Modal: React.FC<ModalProps> = ({
 									variant="ghost"
 									size="sm"
 									onClick={onClose}
-									className="dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors !p-1 rounded-[var(--radius)]"
+									className="dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors !p-1 rounded-full"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -187,7 +196,8 @@ export const Modal: React.FC<ModalProps> = ({
 					</div>
 				</div>
 			</div>
-		</>
+		</>,
+		document.body
 	);
 };
 

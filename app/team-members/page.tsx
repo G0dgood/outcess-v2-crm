@@ -4,17 +4,15 @@ import React, { useMemo, useState, useEffect } from 'react';
 import Search from '@/components/ui/Search';
 import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
-import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByCampaignIdQuery } from '@/store/services/teamMembersApi';
-import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
 import { useSocket } from '@/contexts/SocketContext';
+import TeamMembersTable from '@/components/features/team-members/TeamMembersTable';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
 import TeamMemberCard from '@/components/TeamMemberCard';
-import AddTeamMemberModal from '@/components/AddTeamMemberModal';
 import {
 	useCreateTeamMemberMutation,
 	useUpdateTeamMemberMutation,
@@ -22,9 +20,14 @@ import {
 } from '@/store/services/teamMembersApi';
 import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
 import Icon from '@/components/ui/Icon';
+import TeamMembersCards from '@/components/features/team-members/TeamMembersCards';
 import { toastError } from '@/utils/toastWithSound';
+import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
 import ViewToggle from '@/components/ui/ViewToggle';
+import AddTeamMemberModal from '@/components/AddTeamMemberModal';
+import { PersonIcon, IdCardIcon } from '@radix-ui/react-icons';
+import ManageMembersModal from '@/components/features/team-members/ManageMembersModal';
 
 interface TeamMember {
 	_id: string;
@@ -32,7 +35,7 @@ interface TeamMember {
 	fullName: string;
 	email: string;
 	phone: string;
-	role: 'agent' | 'supervisor' | 'qa' | 'admin';
+	role: string | { roleName?: string; name?: string };
 	supervisor: string;
 	status: string;
 	statusColor?: string;
@@ -97,7 +100,8 @@ const TeamMembersPage: React.FC = () => {
 	const [shiftFilter, setShiftFilter] = useState<string>('');
 	const [viewType, setViewType] = useState<'table' | 'card'>('card');
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-	const [editingMember, setEditingMember] = useState<any>(null);
+	const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+	const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
 
 	// Handle search debouncing
 	useEffect(() => {
@@ -396,28 +400,28 @@ const TeamMembersPage: React.FC = () => {
 	}
 
 	return (
-		<div className="space-y-6">
-			{/* Header */}
+		<div>
 			<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-				<div>
-					<h1
-						className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100"
-						style={{ color: 'var(--text-primary)' }}
-					>
-						Team Members
-					</h1>
-					<p
-						className="text-[10px] md:text-[12px] mt-1 dark:text-gray-400"
-						style={{ color: 'var(--text-tertiary)' }}
-					>
-						Monitor agent login activity and supervisor assignments.
-					</p>
-				</div>
+				<PageHeader
+					title="Team Members"
+					description="Monitor agent login activity and supervisor assignments."
+					icon={PersonIcon}
+					className="mb-0"
+				/>
 				<div className="flex items-center gap-3">
 					<ViewToggle
 						view={viewType}
 						onChange={setViewType}
 					/>
+					<Button 
+						variant="outline" 
+						size="md" 
+						onClick={() => setIsManageModalOpen(true)}
+						className="flex items-center gap-2"
+					>
+						<IdCardIcon className="w-4 h-4" />
+						Manage Members
+					</Button>
 					<Button variant="primary" size="md" onClick={() => { setEditingMember(null); setIsAddModalOpen(true); }}>
 						Add Team Member
 					</Button>
@@ -425,7 +429,7 @@ const TeamMembersPage: React.FC = () => {
 			</div>
 
 			{/* Controls */}
-			<div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+			<div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-5">
 				<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
 					<Search
 						placeholder="Search Agent ID"
@@ -460,186 +464,31 @@ const TeamMembersPage: React.FC = () => {
 
 			{/* Content Area */}
 			{viewType === 'table' ? (
-				<div
-					className="dark:bg-gray-800 border dark:border-gray-700 rounded-[var(--radius)] overflow-hidden"
-					style={{
-						backgroundColor: 'var(--accent-white)',
-						borderColor: 'var(--light-gray)',
-					}}
-				>
-					<TablePaginationHeader
-						totalItems={teamMembersResponse?.pagination?.total || 0}
-						itemsPerPage={itemsPerPage}
-						onItemsPerPageChange={(value) => {
-							setItemsPerPage(value);
-							setCurrentPage(1);
-						}}
-						label="Team Members"
-					/>
-
-					<div className="overflow-x-auto">
-						<table
-							className="min-w-full divide-y dark:divide-gray-700"
-							style={{ borderColor: 'var(--light-gray)' }}
-						>
-							<thead
-								className="dark:bg-gray-700"
-								style={{
-									backgroundColor: 'var(--bg-primary)',
-									borderColor: 'var(--light-gray)',
-								}}
-							>
-								<tr>
-									{['User ID', 'Full Name', 'Email', 'Phone No', 'Role', 'Supervisor', 'Shift Hour', 'Logged In Status'].map((heading) => (
-										<th
-											key={heading}
-											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-300"
-											style={{ color: 'var(--text-primary)' }}
-										>
-											{heading}
-										</th>
-									))}
-								</tr>
-							</thead>
-							<tbody
-								className="divide-y dark:divide-gray-700"
-								style={{
-									backgroundColor: 'var(--accent-white)',
-									borderColor: 'var(--light-gray)',
-								}}
-							>
-								{isLoading ? (
-									<SVGLoaderFetch colSpan={8} text={''} />
-								) : currentMembers?.length === 0 ? (
-									<NoRecordFound colSpan={8} />
-								) : (
-									currentMembers?.map((member, index) => (
-										<tr
-											key={`${member.agentId}-${index}`}
-											className="dark:hover:bg-gray-700 transition-colors"
-											style={{ borderColor: 'var(--light-gray)' }}
-											onMouseEnter={(e) => {
-												e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-											}}
-											onMouseLeave={(e) => {
-												e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-											}}
-										>
-											<td
-												className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-100"
-												style={{ color: 'var(--text-primary)' }}
-											>
-												{member?.agentId}
-											</td>
-											<td
-												className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-100"
-												style={{ color: 'var(--text-primary)' }}
-											>
-												{member?.fullName}
-											</td>
-											<td
-												className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{member.email}
-											</td>
-											<td
-												className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{member.phone}
-											</td>
-											<td
-												className="px-6 py-4 text-[10px] md:text-[12px] capitalize dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{member.role}
-											</td>
-											<td
-												className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{member.supervisor}
-											</td>
-											<td
-												className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{member.shiftHourTitle || 'No shift assigned'}
-											</td>
-											<td
-												className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-100 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
-												style={{ color: 'var(--text-primary)' }}
-												onClick={() => setStatusModalMember(member)}
-											>
-												<div className="flex items-center">
-													{(member.statusColor || member.status === 'Logged In') && (
-														<span
-															className="w-2.5 h-2.5 rounded-full inline-block mr-2"
-															style={{ backgroundColor: member.statusColor || '#15803D' }}
-														/>
-													)}
-													{member.status}
-												</div>
-											</td>
-										</tr>
-									))
-								)}
-							</tbody>
-						</table>
-					</div>
-					<div className="p-4 px-6">
-						{currentMembers.length > 0 && (
-							<Pagination
-								currentPage={currentPage}
-								totalPages={totalPages}
-								onPageChange={setCurrentPage}
-								primaryColor={campaignData?.primaryColor || 'var(--primary)'}
-								secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
-							/>
-						)}
-					</div>
-				</div>
+				<TeamMembersTable
+					teamMembersResponse={teamMembersResponse}
+					currentMembers={currentMembers}
+					itemsPerPage={itemsPerPage}
+					setItemsPerPage={setItemsPerPage}
+					currentPage={currentPage}
+					setCurrentPage={setCurrentPage}
+					totalPages={totalPages}
+					isLoading={isLoading}
+					campaignData={campaignData}
+					setStatusModalMember={setStatusModalMember}
+				/>
 			) : (
-				<div className="space-y-6">
-					{isLoading ? (
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-							{[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-								<div key={i} className="h-64 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-[var(--radius)]" />
-							))}
-						</div>
-					) : filteredMembers.length === 0 ? (
-						<div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-800/50 rounded-[var(--radius)] border dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
-							<Icon name="Users_light" size="lg" className="text-gray-300 mb-4" />
-							<p className="text-gray-500 font-medium">No team members found</p>
-						</div>
-					) : (
-						<>
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-								{filteredMembers.map(member => (
-									<TeamMemberCard
-										key={member._id}
-										member={member}
-										onEdit={handleEditMemberClick}
-										onDelete={handleDeleteMember}
-										onStatusClick={setStatusModalMember}
-									/>
-								))}
-							</div>
-							{currentMembers.length > 0 && (
-								<div className=" pt-4">
-									<Pagination
-										currentPage={currentPage}
-										totalPages={totalPages}
-										onPageChange={setCurrentPage}
-										primaryColor={campaignData?.primaryColor || 'var(--primary)'}
-										secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
-									/>
-								</div>
-							)}
-						</>
-					)}
-				</div>
+				<TeamMembersCards
+					isLoading={isLoading}
+					filteredMembers={filteredMembers}
+					currentMembers={currentMembers}
+					currentPage={currentPage}
+					totalPages={totalPages}
+					setCurrentPage={setCurrentPage}
+					campaignData={campaignData}
+					handleEditMemberClick={handleEditMemberClick}
+					handleDeleteMember={handleDeleteMember}
+					setStatusModalMember={setStatusModalMember}
+				/>
 			)}
 
 			<StatusDetailsModal
@@ -665,6 +514,12 @@ const TeamMembersPage: React.FC = () => {
 				roles={roleOptions}
 				supervisors={supervisorOptions}
 				shiftHours={shiftHourOptions}
+			/>
+
+			<ManageMembersModal 
+				isOpen={isManageModalOpen}
+				onClose={() => setIsManageModalOpen(false)}
+				campaignData={campaignData}
 			/>
 		</div>
 	);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
 	DndContext,
 	closestCenter,
@@ -18,7 +18,9 @@ import {
 	useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Plus, Pencil, Trash2 } from 'lucide-react';
+import { GripVertical, Plus, Pencil, Trash2, X, ChevronRight } from 'lucide-react';
+import { RowsIcon } from '@radix-ui/react-icons';
+import EmptyState from '@/components/ui/EmptyState';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
@@ -29,12 +31,15 @@ import CheckboxSelect from '@/components/ui/CheckboxSelect';
 import Dropdown from '@/components/ui/Dropdown';
 import FieldPropertiesModal from '@/components/ui/FieldPropertiesModal';
 import { useSetup } from '@/contexts/SetupContext';
+import SelectBucketModalPrompt from '@/components/ui/SelectBucketModalPrompt';
+import { SelectBucketModal } from '@/components/ui/SelectBucketModal';
 
 interface CustomerField {
 	id: string;
 	name: string;
 	type: string;
 	required: boolean;
+	options?: string[];
 }
 
 interface FieldType {
@@ -63,7 +68,7 @@ const SortableRow = ({ field, handleEditField, handleDeleteField, isLast }: Sort
 	const style: React.CSSProperties = {
 		transform: CSS.Transform.toString(transform),
 		transition,
-		zIndex: isDragging ? 1000 : 'auto',
+		zIndex: isDragging ? 20 : 'auto',
 		position: isDragging ? 'relative' : undefined,
 	};
 
@@ -85,12 +90,6 @@ const SortableRow = ({ field, handleEditField, handleDeleteField, isLast }: Sort
 					{...listeners}
 					className="cursor-grab active:cursor-grabbing p-2 transition-colors h-auto"
 					style={{ color: 'var(--text-tertiary)' }}
-					onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-						e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-					}}
-					onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-						e.currentTarget.style.backgroundColor = 'transparent';
-					}}
 					title="Drag to reorder"
 				>
 					<GripVertical size={16} />
@@ -106,7 +105,21 @@ const SortableRow = ({ field, handleEditField, handleDeleteField, isLast }: Sort
 				className="py-4 px-6 font-inter text-[10px] md:text-[12px] dark:text-gray-400"
 				style={{ color: 'var(--text-tertiary)' }}
 			>
-				{field.type}
+				{(() => {
+					switch (field.type) {
+						case 'single-line-text': return 'Text';
+						case 'multi-line-text': return 'Long Text';
+						case 'email': return 'Email';
+						case 'phone': return 'Phone';
+						case 'number': return 'Number';
+						case 'date': return 'Date';
+						case 'date-time': return 'Date/Time';
+						case 'dropdown': return 'Dropdown';
+						case 'radio-select': return 'Radio Select';
+						case 'checkbox': return 'Checkbox';
+						default: return field.type;
+					}
+				})()}
 			</td>
 			<td className="py-4 px-6">
 				{field.required ? (
@@ -156,11 +169,31 @@ const SortableRow = ({ field, handleEditField, handleDeleteField, isLast }: Sort
 };
 
 export default function CustomerBookPage() {
-	const { setupData, updateCustomerBookSettings, isDirty, onPersist } = useSetup();
-	const { customerBookSettings } = setupData;
-	const [isModalOpen, setIsModalOpen] = useState(false);
+	const { setupData, updateBucketCustomerFields, isDirty, onPersist, setCurrentStep } = useSetup();
+
+	useEffect(() => {
+		setCurrentStep(3);
+	}, [setCurrentStep]);
+
+	const buckets = setupData?.dashboardSettings?.buckets || [];
+	const [selectedBucketId, setSelectedBucketId] = useState<string | null>(null);
+	const selectedBucket = useMemo(() => {
+		return buckets.find(b => b.id === selectedBucketId);
+	}, [buckets, selectedBucketId]);
+	const [isBucketModalOpen, setIsBucketModalOpen] = useState(false);
+	const [isFieldModalOpen, setIsFieldModalOpen] = useState(false);
 	const [selectedFieldType, setSelectedFieldType] = useState<string>('single-line-text');
 	const [editingField, setEditingField] = useState<CustomerField | null>(null);
+
+	const configuredFields = useMemo(() => {
+		if (!selectedBucketId) return [];
+		const bucketConfig = setupData.customerBookSettings.configuredFields.find(cf => cf && cf.bucketId === selectedBucketId);
+		if (bucketConfig?.fields) return bucketConfig.fields;
+
+		// Fallback to bucket's own customerFields for and newly created buckets or older versions
+		const bucket = buckets.find(b => b.id === selectedBucketId);
+		return bucket?.customerFields || [];
+	}, [setupData.customerBookSettings.configuredFields, selectedBucketId, buckets]);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -172,13 +205,11 @@ export default function CustomerBookPage() {
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
 
-		if (over && active.id !== over.id) {
-			const oldIndex = customerBookSettings.configuredFields.findIndex((field) => field.id === active.id);
-			const newIndex = customerBookSettings.configuredFields.findIndex((field) => field.id === over.id);
+		if (over && active.id !== over.id && selectedBucketId) {
+			const oldIndex = configuredFields.findIndex((field) => field.id === active.id);
+			const newIndex = configuredFields.findIndex((field) => field.id === over.id);
 
-			updateCustomerBookSettings({
-				configuredFields: arrayMove(customerBookSettings.configuredFields, oldIndex, newIndex)
-			});
+			updateBucketCustomerFields(selectedBucketId, arrayMove(configuredFields, oldIndex, newIndex));
 		}
 	};
 
@@ -236,48 +267,41 @@ export default function CustomerBookPage() {
 	];
 
 	const handleDeleteField = (fieldId: string) => {
-		updateCustomerBookSettings({
-			configuredFields: customerBookSettings.configuredFields.filter(field => field.id !== fieldId)
-		});
+		if (selectedBucketId) {
+			const updatedFields = configuredFields.filter(f => f.id !== fieldId);
+			updateBucketCustomerFields(selectedBucketId, updatedFields);
+		}
 	};
 
 	const handleAddField = (fieldType: FieldType) => {
 		setEditingField(null);
 		setSelectedFieldType(fieldType.id);
-		setIsModalOpen(true);
+		setIsFieldModalOpen(true);
 	};
 
 	const handleEditField = (field: CustomerField) => {
 		setEditingField(field);
 		setSelectedFieldType(field.type);
-		setIsModalOpen(true);
+		setIsFieldModalOpen(true);
 	};
 
-	const handleAddFieldFromModal = (fieldData: { name: string; type: string; required: boolean }) => {
+	const handleAddFieldFromModal = (fieldData: { name: string; type: string; required: boolean; options?: string[] }) => {
+		if (!selectedBucketId) return;
+
 		if (editingField) {
-			const updatedField: CustomerField = {
-				...editingField,
-				name: fieldData.name,
-				type: fieldData.type,
-				required: fieldData.required,
-			};
-			updateCustomerBookSettings({
-				configuredFields: customerBookSettings.configuredFields.map(field =>
-					field.id === editingField.id ? updatedField : field
-				)
-			});
+			const updatedFields = configuredFields.map(f =>
+				f.id === editingField.id ? { ...f, ...fieldData } : f
+			);
+			updateBucketCustomerFields(selectedBucketId, updatedFields);
 			setEditingField(null);
 		} else {
 			const newField: CustomerField = {
-				id: Date.now().toString(),
-				name: fieldData.name,
-				type: fieldData.type,
-				required: fieldData.required,
+				id: Math.random().toString(36).substr(2, 9),
+				...fieldData
 			};
-			updateCustomerBookSettings({
-				configuredFields: [...customerBookSettings.configuredFields, newField]
-			});
+			updateBucketCustomerFields(selectedBucketId, [...configuredFields, newField]);
 		}
+		setIsFieldModalOpen(false);
 	};
 
 	const renderFieldPreview = (fieldType: FieldType) => {
@@ -414,8 +438,9 @@ export default function CustomerBookPage() {
 	};
 
 	return (
-		<div className="w-full h-full">
-			<div className="mb-8">
+		<div className="relative w-full h-full min-h-[600px]">
+			{/* Header Section */}
+			<div className="mb-0">
 				<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 					<div>
 						<h1
@@ -428,10 +453,32 @@ export default function CustomerBookPage() {
 							className="font-lato not-italic font-normal text-[10px] md:text-[12px] sm:text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
-							Configure the fields that you&apos;ll use to store customer information. Add custom fields to match your business needs.
+							Configure unique customer data fields for each bucket to keep your data organized and relevant.
 						</p>
 					</div>
 					<div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+						{selectedBucket && (
+							<div
+								className="flex items-center gap-3 px-4 py-2 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800"
+								style={{ borderColor: 'var(--light-gray)' }}
+							>
+								<div
+									className="w-3 h-3 rounded-full"
+									style={{ backgroundColor: selectedBucket.color }}
+								/>
+								<span className="text-sm font-medium dark:text-gray-200" style={{ color: 'var(--text-primary)' }}>
+									{selectedBucket.name}
+								</span>
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => setIsBucketModalOpen(true)}
+									className="text-xs font-semibold text-blue-500 hover:text-blue-600 dark:text-blue-400 p-1 h-auto"
+								>
+									Change
+								</Button>
+							</div>
+						)}
 						{isDirty && onPersist && (
 							<Button
 								variant="outline"
@@ -442,151 +489,189 @@ export default function CustomerBookPage() {
 								Save
 							</Button>
 						)}
-						<Button
-							variant="primary"
-							size="md"
-							onClick={() => {
-								setEditingField(null);
-								setSelectedFieldType('single-line-text');
-								setIsModalOpen(true);
-							}}
-							className="flex items-center gap-2 justify-center"
-						>
-							<Plus size={16} />
-							Add New Field
-						</Button>
 					</div>
 				</div>
 			</div>
 
-			{/* Configured Fields Table */}
-			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 mb-8 rounded-[var(--radius)]"
-				style={{
-					backgroundColor: 'var(--accent-white)',
-					borderColor: 'var(--light-gray)'
-				}}
-			>
-				<div className="overflow-x-auto">
-					<DndContext
-						sensors={sensors}
-						collisionDetection={closestCenter}
-						onDragEnd={handleDragEnd}
+			{/* Main Content Area */}
+			<div className="mt-8">
+				{!selectedBucketId ? (
+					<div
+						className="flex flex-col items-center justify-center min-h-[400px] rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/10 cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-900/20 group"
+						onClick={() => setIsBucketModalOpen(true)}
 					>
-						<table className="w-full">
-							<thead>
-								<tr
-									className="border-b dark:border-gray-700"
-									style={{
-										borderColor: 'var(--light-gray)',
-										borderBottom: '1px solid'
-									}}
-								>
-									<th className="w-10 py-4 px-2"></th>
-									<th
-										className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										Field Name
-									</th>
-									<th
-										className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										Type
-									</th>
-									<th
-										className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										Required
-									</th>
-									<th
-										className="text-left py-4 px-6 font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										Action
-									</th>
-								</tr>
-							</thead>
-							<SortableContext
-								items={customerBookSettings.configuredFields.map(f => f.id)}
-								strategy={verticalListSortingStrategy}
-							>
-								<tbody>
-									{customerBookSettings.configuredFields.map((field, index) => (
-										<SortableRow
-											key={field.id}
-											field={field}
-											handleEditField={handleEditField}
-											handleDeleteField={handleDeleteField}
-											isLast={index === customerBookSettings.configuredFields.length - 1}
-										/>
-									))}
-								</tbody>
-							</SortableContext>
-						</table>
-					</DndContext>
-				</div>
-			</div>
-
-			{/* Available Field Types */}
-			<div>
-				<h3
-					className="font-inter text-base font-medium dark:text-gray-100 mb-4"
-					style={{ color: 'var(--text-primary)' }}
-				>
-					Available Field Types
-				</h3>
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-					{availableFieldTypes.map((fieldType) => (
 						<div
-							key={fieldType.id}
-							className="dark:bg-gray-800 border dark:border-gray-700 p-4 cursor-pointer dark:hover:border-gray-600 dark:hover:bg-gray-700 transition-colors rounded-[var(--radius)]"
+							className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500 mb-6 group-hover:scale-110 transition-transform"
+						>
+							<Plus size={32} />
+						</div>
+						<h3 className="text-xl font-bold dark:text-white mb-2" style={{ color: 'var(--text-primary)' }}>
+							Start by Selecting a Bucket
+						</h3>
+						<p className="text-sm dark:text-gray-400 max-w-sm text-center mb-6" style={{ color: 'var(--text-tertiary)' }}>
+							Configure unique customer data fields for each segment. Choose a bucket to begin.
+						</p>
+						<Button
+							variant="primary"
+							onClick={(e) => {
+								e.stopPropagation();
+								setIsBucketModalOpen(true);
+							}}
+						>
+							Select a Bucket
+						</Button>
+					</div>
+				) : (
+					<div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+						{/* Configured Fields Table */}
+						<div
+							className="dark:bg-gray-800 border dark:border-gray-700 mb-8 rounded-[var(--radius)] overflow-hidden"
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)'
 							}}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.borderColor = '#94A3B8';
-								e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.borderColor = 'var(--light-gray)';
-								e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-							}}
-							onClick={() => handleAddField(fieldType)}
 						>
-							<h4
-								className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 mb-2"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								{fieldType.name}
-							</h4>
-							<p
-								className="font-lato text-[8px] md:text-[10px] dark:text-gray-400 mb-3"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								{fieldType.description}
-							</p>
-							<div
-								className="dark:bg-gray-700 border dark:border-gray-600 p-2 pointer-events-none rounded-[var(--radius)]"
-								style={{
-									backgroundColor: 'var(--bg-primary)',
-									borderColor: 'var(--light-gray)'
-								}}
-							>
-								{renderFieldPreview(fieldType)}
+							<div className="overflow-x-auto">
+								<DndContext
+									sensors={sensors}
+									collisionDetection={closestCenter}
+									onDragEnd={handleDragEnd}
+								>
+									<table className="w-full">
+										<thead>
+											<tr>
+												<th className="w-10"></th>
+												<th>Field Name</th>
+												<th>Type</th>
+												<th>Required</th>
+												<th>Action</th>
+											</tr>
+										</thead>
+										<tbody>
+											{configuredFields?.length === 0 ? (
+												<tr>
+													<td colSpan={5} className="py-4 px-6 text-center">
+														<EmptyState
+															icon={RowsIcon}
+															title="No Fields Found"
+															description="No custom fields have been configured for this bucket yet."
+															actionLabel="Add New Field"
+															onAction={() => {
+																setEditingField(null);
+																setSelectedFieldType('single-line-text');
+																setIsFieldModalOpen(true);
+															}}
+															className="py-12"
+														/>
+													</td>
+												</tr>
+											) : (
+												<SortableContext
+													items={configuredFields.map(f => f.id)}
+													strategy={verticalListSortingStrategy}
+												>
+													{configuredFields.map((field, index) => (
+														<SortableRow
+															key={field.id}
+															field={field}
+															handleEditField={handleEditField}
+															handleDeleteField={handleDeleteField}
+															isLast={index === configuredFields.length - 1}
+														/>
+													))}
+												</SortableContext>
+											)}
+										</tbody>
+									</table>
+								</DndContext>
 							</div>
 						</div>
-					))}
-				</div>
+
+						{/* Available Field Types */}
+						<div>
+							<div className="flex items-center justify-between mb-4">
+								<h3
+									className="font-inter text-base font-medium dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Available Field Types
+								</h3>
+								<Button
+									variant="primary"
+									size="sm"
+									onClick={() => {
+										setEditingField(null);
+										setSelectedFieldType('single-line-text');
+										setIsFieldModalOpen(true);
+									}}
+									className="flex items-center gap-2"
+								>
+									<Plus size={14} />
+									Add Field
+								</Button>
+							</div>
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+								{availableFieldTypes.map((fieldType) => (
+									<div
+										key={fieldType.id}
+										className="dark:bg-gray-800 border dark:border-gray-700 p-4 cursor-pointer hover:shadow-md transition-all rounded-[var(--radius)] hover:bg-[var(--bg-hover)] dark:hover:bg-[var(--bg-hover)]"
+										style={{
+											backgroundColor: 'var(--accent-white)',
+											borderColor: 'var(--light-gray)'
+										}}
+										onClick={() => handleAddField(fieldType)}
+									>
+										<h4
+											className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 mb-2"
+											style={{ color: 'var(--text-primary)' }}
+										>
+											{fieldType.name}
+										</h4>
+										<p
+											className="font-lato text-[8px] md:text-[10px] dark:text-gray-400 mb-3"
+											style={{ color: 'var(--text-tertiary)' }}
+										>
+											{fieldType.description}
+										</p>
+										<div
+											className="dark:bg-gray-700 border dark:border-gray-600 p-2 pointer-events-none rounded-[var(--radius)]"
+											style={{
+												backgroundColor: 'var(--bg-primary)',
+												borderColor: 'var(--light-gray)'
+											}}
+										>
+											{renderFieldPreview(fieldType)}
+										</div>
+									</div>
+								))}
+							</div>
+						</div>
+					</div>
+				)}
 			</div>
 
-			{/* Field Properties Modal */}
+			{/* Bucket Selection Modal */}
+			<SelectBucketModal
+				isOpen={isBucketModalOpen}
+				onClose={() => setIsBucketModalOpen(false)}
+				buckets={buckets}
+				selectedBucketId={selectedBucketId}
+				onSelect={(bucketId: string) => {
+					setSelectedBucketId(bucketId);
+					setIsBucketModalOpen(false);
+				}}
+				onNavigateToDashboard={() => setCurrentStep(2)}
+				getFieldCount={(bucketId) => {
+					const configCount = setupData.customerBookSettings.configuredFields.find(cf => cf && cf.bucketId === bucketId)?.fields?.length;
+					if (configCount !== undefined) return configCount;
+
+					return buckets.find(b => b.id === bucketId)?.customerFields?.length || 0;
+				}}
+			/>
+
 			<FieldPropertiesModal
-				isOpen={isModalOpen}
-				onClose={() => setIsModalOpen(false)}
+				isOpen={isFieldModalOpen}
+				onClose={() => setIsFieldModalOpen(false)}
 				onAddField={handleAddFieldFromModal}
 				fieldType={selectedFieldType}
 				initialData={editingField}

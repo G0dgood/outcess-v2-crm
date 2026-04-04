@@ -10,7 +10,8 @@ import SingleRadio from './SingleRadio';
 import RadioGroup from './RadioGroup';
 import SingleCheckbox from './SingleCheckbox';
 import MultipleCheckbox from './MultipleCheckbox';
-import { Cross2Icon, CalendarIcon, ClockIcon, PersonIcon, MobileIcon, EnvelopeClosedIcon, HomeIcon } from '@radix-ui/react-icons';
+import { Cross2Icon, CalendarIcon, ClockIcon, PersonIcon, MobileIcon, EnvelopeClosedIcon, HomeIcon, FileTextIcon } from '@radix-ui/react-icons';
+import EmptyState from './EmptyState';
 import { useSocket } from '@/contexts/SocketContext';
 import { saveOfflineDisposition, saveSyncedDisposition, DispositionFieldEntry } from '@/utils/offlineDispositions';
 import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
@@ -568,7 +569,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					</div>
 					<button
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors !rounded-none"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -639,8 +640,13 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 						{dispositions?.length > 0 ? (
 							dispositions?.map((field) => renderField(field))
 						) : (
-							<div className="col-span-2 text-center py-8 text-gray-500">
-								No disposition fields configured.
+							<div className="col-span-2">
+								<EmptyState
+									icon={FileTextIcon}
+									title="No Dispositions Found"
+									description="There are no disposition fields configured for this campaign. Please contact your administrator."
+									className="py-10"
+								/>
 							</div>
 						)}
 					</div>

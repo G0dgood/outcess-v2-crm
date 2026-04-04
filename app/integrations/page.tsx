@@ -10,7 +10,7 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetIntegrationsByLobIdQuery, useUpdateIntegrationMutation, Integration } from '@/store/services/integrationsApi';
 import { toast } from 'sonner';
-import IntegrationCard from '@/components/features/integrations/IntegrationCard';
+import IntegrationsGrid from '@/components/features/integrations/IntegrationsGrid';
 
 interface ConnectionForm {
 	workspaceUrl?: string;
@@ -151,40 +151,14 @@ const IntegrationsPage: React.FC = () => {
 				</p>
 			</div>
 
-			{/* Integrations Grid */}
-			{isFetching ? (
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-					{[1, 2, 3, 4].map(i => (
-						<div 
-							key={i} 
-							className="h-48 animate-pulse bg-gray-100 dark:bg-gray-800 rounded-lg p-6 flex flex-col gap-4"
-						>
-							<div className="flex gap-3">
-								<div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-								<div className="flex flex-col gap-2">
-									<div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
-									<div className="w-16 h-3 bg-gray-200 dark:bg-gray-700 rounded" />
-								</div>
-							</div>
-							<div className="w-full h-12 bg-gray-200 dark:bg-gray-700 rounded" />
-							<div className="w-full h-10 bg-gray-200 dark:bg-gray-700 rounded mt-auto" />
-						</div>
-					))}
-				</div>
-			) : (
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-					{integrationsData?.integrations?.map((integration) => (
-						<IntegrationCard
-							key={integration._id}
-							integration={integration}
-							canEdit={canEdit}
-							isUpdating={isUpdating}
-							onConnect={handleConnectClick}
-							onDisconnect={handleDisconnect}
-						/>
-					))}
-				</div>
-			)}
+			<IntegrationsGrid
+				isFetching={isFetching}
+				integrations={integrationsData?.integrations}
+				canEdit={canEdit}
+				isUpdating={isUpdating}
+				onConnect={handleConnectClick}
+				onDisconnect={handleDisconnect}
+			/>
 
 			{/* Connect Integration Modal */}
 			<Modal

@@ -102,8 +102,8 @@ const SelectedRecordsDrawerContent: React.FC<SelectedRecordsDrawerContentProps> 
                         {record['searchId'] ? String(record['searchId']) : '-'}
                       </span>
                     </div>
-                    {fieldDefinitions.map((field) => (
-                      <div key={field.id} className="flex items-start justify-between text-[8px] md:text-[10px]">
+                    {fieldDefinitions.map((field, index) => (
+                      <div key={field.id || `field-${index}`} className="flex items-start justify-between text-[8px] md:text-[10px]">
                         <span className="font-medium dark:text-gray-400 mr-2" style={{ color: 'var(--text-tertiary)' }}>
                           {field.name}:
                         </span>

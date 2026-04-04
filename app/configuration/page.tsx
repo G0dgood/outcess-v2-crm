@@ -11,6 +11,7 @@ import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
+import PageHeader from '@/components/ui/PageHeader';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
 import { toast } from 'sonner';
 import ProgressBar from '@/components/ui/ProgressBar';
@@ -50,9 +51,9 @@ export default function ConfigurationPage() {
 
 	const [deleteCampaign] = useDeleteCampaignMutation();
 
-	const campaignes = useMemo(() => {
-		const data = campaignData as { campaignes?: Campaign[] } | undefined;
-		return data?.campaignes || [];
+	const campaigns = useMemo(() => {
+		const data = campaignData as { campaigns?: Campaign[] } | undefined;
+		return data?.campaigns || [];
 	}, [campaignData]);
 
 	const totalPages = (campaignData as { pagination?: { totalPages?: number } })?.pagination?.totalPages || 1;
@@ -83,21 +84,10 @@ export default function ConfigurationPage() {
 
 	return (
 		<div>
-			{/* Header Section */}
-			<div className="mb-6">
-				<h1
-					className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100 mb-2"
-					style={{ color: 'var(--text-primary)' }}
-				>
-					Campaign Plan
-				</h1>
-				<p
-					className="text-[10px] md:text-[12px] dark:text-gray-400"
-					style={{ color: 'var(--text-tertiary)' }}
-				>
-					Manage your line of businesses and other settings.
-				</p>
-			</div>
+			<PageHeader
+				title="Campaigns"
+				description="Manage your line of businesses and other settings."
+			/>
 
 			<div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 				<Search
@@ -121,7 +111,7 @@ export default function ConfigurationPage() {
 							}}
 							className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
 						>
-							Campaignes
+							Campaigns
 						</Button>
 					)}
 				</div>
@@ -142,7 +132,7 @@ export default function ConfigurationPage() {
 						setItemsPerPage(value);
 						setCurrentPage(1);
 					}}
-					label="Campaignes"
+					label="Campaigns"
 				/>
 				<div className="overflow-x-auto">
 					<table className="min-w-full">
@@ -164,21 +154,21 @@ export default function ConfigurationPage() {
 						<tbody className="divide-y dark:divide-gray-700">
 							{isLoading ? (
 								<SVGLoaderFetch colSpan={5} text={''} />
-							) : campaignes?.length === 0 ? (
+							) : campaigns?.length === 0 ? (
 								<NoRecordFound colSpan={5} />
 							) : (
-								campaignes?.map((lob: Campaign) => (
-										<tr
-											key={lob._id}
-											onMouseEnter={(e) => {
-												e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-											}}
-											onMouseLeave={(e) => {
-												e.currentTarget.style.backgroundColor = 'transparent';
-											}}
-											className="dark:hover:bg-gray-700/50 transition-colors border-b dark:border-gray-700 last:border-0"
-											style={{ borderColor: 'var(--light-gray)' }}
-										>
+								campaigns?.map((lob: Campaign) => (
+									<tr
+										key={lob._id}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.backgroundColor = 'transparent';
+										}}
+										className="dark:hover:bg-gray-700/50 transition-colors border-b dark:border-gray-700 last:border-0"
+										style={{ borderColor: 'var(--light-gray)' }}
+									>
 										<td className="px-4 py-3">{lob.campaignName}</td>
 										<td className="px-4 py-3">
 											<ProgressBar progress={typeof lob.progress === 'number' ? lob.progress : 0} />
@@ -229,7 +219,7 @@ export default function ConfigurationPage() {
 					</table>
 				</div>
 			</div>
-			{campaignes.length > 0 && (
+			{campaigns.length > 0 && (
 				<Pagination
 					currentPage={currentPage}
 					totalPages={totalPages}

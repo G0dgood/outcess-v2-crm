@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useCa
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetCampaignByCompanyIdQuery, useGetCampaignQuery } from '@/store/services/campaignApi';
 import { useCampaign } from './CampaignContext';
+import Icon from '@/components/ui/Icon';
 
 interface SetupStep {
 	id: string;
@@ -24,11 +25,20 @@ export interface DispositionCategory {
 	isRequired?: boolean;
 }
 
+export interface AssignedMember {
+	memberId: string;
+	memberName?: string;
+	duration?: number;
+}
+
 export interface Bucket {
+	color: string;
+	assignedMembers?: AssignedMember[];
 	id: string;
 	name: string;
 	description?: string;
 	dispositions: DispositionCategory[];
+	customerFields?: CustomerField[];
 }
 
 export interface Widget {
@@ -78,46 +88,6 @@ export interface SetupData {
 	timeZone: string;
 	industry: string;
 	businessSize: string;
-	selectedLayout: 'layout' | 'compact';
-	primaryColor: string;
-	secondaryColor: string;
-	textColor: string;
-	tableColor: string;
-	backgroundColor: string;
-	accentColor: string;
-	primaryColorDark: string;
-	secondaryColorDark: string;
-	textColorDark: string;
-	tableColorDark: string;
-	backgroundColorDark: string;
-	accentColorDark: string;
-	mainForegroundColor: string;
-	mainForegroundColorDark: string;
-	navigationSettings: {
-		menuStyle: 'layout' | 'compact';
-		themeColors: {
-			primary: string;
-			secondary: string;
-			accent: string;
-			text: string;
-			table: string;
-			background: string;
-			primaryDark: string;
-			secondaryDark: string;
-			accentDark: string;
-			textDark: string;
-			tableDark: string;
-			backgroundDark: string;
-			mainForeground: string;
-			mainForegroundDark: string;
-		};
-		logo: {
-			url: string;
-			alt: string;
-			width: number;
-			height: number;
-		};
-	};
 	dashboardSettings: {
 		dashboardName: string;
 		dashboardVisibility: 'all' | 'admin' | 'admin-supervisor' | 'custom';
@@ -127,28 +97,18 @@ export interface SetupData {
 		buckets: Bucket[];
 		callOutcomes: CallOutcome[];
 		dispositionSettings: {
-			timeRangeView:
-			'daily' |
-			'weekly' |
-			'monthly';
-			chartType:
-			'bar' |
-			'line' |
-			'pie' |
-			'doughnut' |
-			'polarArea' |
-			'radar' |
-			'scatter' |
-			'bubble';
+			timeRangeView: 'daily' | 'weekly' | 'monthly';
+			chartType: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
 			charts: Chart[];
 		};
 	};
 	customerBookSettings: {
-		configuredFields: CustomerField[];
+		configuredFields: { bucketId: string; fields: CustomerField[] }[];
 	};
 	roleManagementSettings: {
 		modules: { name: string }[];
 	};
+	logo: string;
 	logoFile?: File | null;
 }
 
@@ -164,7 +124,6 @@ interface SetupContextType {
 	updateSetupData: (data: Partial<SetupData>) => void;
 	setDashboardStep: React.Dispatch<React.SetStateAction<'KPI Metric' | 'Call Disposition'>>;
 	dashboardStep: 'KPI Metric' | 'Call Disposition';
-	updateNavigationSettings: (data: Partial<SetupData['navigationSettings']>) => void;
 	updateDashboardSettings: (data: Partial<SetupData['dashboardSettings']>) => void;
 	addChart: (chart: Omit<Chart, 'id'>) => void;
 	removeChart: (chartId: string) => void;
@@ -178,6 +137,7 @@ interface SetupContextType {
 	addDispositionToBucket: (bucketId: string, disposition: Omit<DispositionCategory, 'id'>) => void;
 	updateDispositionInBucket: (bucketId: string, dispositionId: string, updates: Partial<DispositionCategory>) => void;
 	deleteDispositionFromBucket: (bucketId: string, dispositionId: string) => void;
+	updateBucketCustomerFields: (bucketId: string, fields: CustomerField[]) => void;
 	setupSteps: SetupStep[];
 	validateStep: (stepIndex: number) => boolean;
 	isDirty: boolean;
@@ -205,7 +165,6 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const { user } = useUserInfo();
 	const { selectedCampaignId } = useCampaign();
 
-	// Initialize state first so we can use setupData in the query logic
 	const [currentStep, setCurrentStep] = useState(1);
 	const [dashboardStep, setDashboardStep] = useState<'KPI Metric' | 'Call Disposition'>('KPI Metric');
 	const [isLoading, setIsLoading] = useState(false);
@@ -216,6 +175,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const registerPersist = useCallback((fn: ((shouldAdvance: boolean) => Promise<void>) | null) => {
 		setOnPersist(() => fn);
 	}, []);
+
 	const [setupData, setSetupData] = useState<SetupData>({
 		campaignId: '',
 		companyName: '',
@@ -224,46 +184,6 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		timeZone: '',
 		industry: '',
 		businessSize: '',
-		selectedLayout: 'layout',
-		primaryColor: '#050711',
-		secondaryColor: '#6C8B7D',
-		textColor: '#050711',
-		tableColor: '#F8F9FA',
-		backgroundColor: '#FFFFFF',
-		accentColor: '#6C8B7D',
-		primaryColorDark: '#F3F4F6',
-		secondaryColorDark: '#6C8B7D',
-		textColorDark: '#F3F4F6',
-		tableColorDark: '#1E293B',
-		backgroundColorDark: '#0F172A',
-		accentColorDark: '#6C8B7D',
-		mainForegroundColor: '#FFFFFF',
-		mainForegroundColorDark: '#0F172A',
-		navigationSettings: {
-			menuStyle: 'layout',
-			themeColors: {
-				primary: '',
-				secondary: '',
-				accent: '',
-				text: '',
-				table: '',
-				background: '',
-				primaryDark: '#F3F4F6',
-				secondaryDark: '#6C8B7D',
-				accentDark: '#6C8B7D',
-				textDark: '#F3F4F6',
-				tableDark: '#1E293B',
-				backgroundDark: '#0F172A',
-				mainForeground: '#FFFFFF',
-				mainForegroundDark: '#0F172A',
-			},
-			logo: {
-				url: '',
-				alt: 'Company Logo',
-				width: 120,
-				height: 40,
-			},
-		},
 		dashboardSettings: {
 			dashboardName: '',
 			dashboardVisibility: 'all',
@@ -281,11 +201,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			},
 		},
 		customerBookSettings: {
-			configuredFields: [
-				{ id: '1', name: 'Full Name', type: 'Text', required: true },
-				{ id: '2', name: 'Email', type: 'Email', required: true },
-				{ id: '3', name: 'Phone Number', type: 'Phone', required: true },
-			],
+			configuredFields: [],
 		},
 		roleManagementSettings: {
 			modules: [
@@ -302,10 +218,10 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				{ name: 'pendingrequest' },
 			]
 		},
+		logo: '',
 		logoFile: null,
 	});
 
-	// Use either user's company ID or the one from setupData (e.g., from localStorage)
 	const companyObj = user?.company as { _id?: string; id?: string } | undefined;
 	const companyIdToUse: string | undefined = companyObj?._id ?? companyObj?.id ?? (setupData.companyId || undefined);
 
@@ -341,7 +257,6 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		};
 
 		if (dataToUse) {
-			const navigationSettings = safeParse<SetupData['navigationSettings']>(dataToUse.navigationSettings);
 			const dashboardSettings = safeParse<SetupData['dashboardSettings']>(dataToUse.dashboardSettings);
 			const customerBookSettings = safeParse<SetupData['customerBookSettings']>(dataToUse.customerBookSettings);
 			const roleManagementSettings = safeParse<SetupData['roleManagementSettings']>(dataToUse.roleManagementSettings);
@@ -359,7 +274,9 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 					id: 'bucket-general',
 					name: 'General Dispositions',
 					description: 'Default bucket for existing dispositions',
-					dispositions: currentDispositions
+					dispositions: currentDispositions,
+					assignedMembers: [],
+					color: '#6B7280'
 				}];
 			}
 
@@ -372,25 +289,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				timeZone: dataToUse.timeZone || prev.timeZone,
 				industry: dataToUse.industry || prev.industry,
 				businessSize: dataToUse.businessSize || prev.businessSize,
-				selectedLayout: dataToUse.selectedLayout || prev.selectedLayout,
-				primaryColor: dataToUse.primaryColor || prev.primaryColor,
-				secondaryColor: dataToUse.secondaryColor || prev.secondaryColor,
-				textColor: dataToUse.textColor || prev.textColor,
-				tableColor: dataToUse.tableColor || prev.tableColor,
-				backgroundColor: dataToUse.backgroundColor || prev.backgroundColor,
-				accentColor: dataToUse.accentColor || prev.accentColor,
-				primaryColorDark: dataToUse.primaryColorDark || prev.primaryColorDark,
-				secondaryColorDark: dataToUse.secondaryColorDark || prev.secondaryColorDark,
-				textColorDark: dataToUse.textColorDark || prev.textColorDark,
-				tableColorDark: dataToUse.tableColorDark || prev.tableColorDark,
-				backgroundColorDark: dataToUse.backgroundColorDark || prev.backgroundColorDark,
-				accentColorDark: dataToUse.accentColorDark || prev.accentColorDark,
-				mainForegroundColor: dataToUse.mainForegroundColor || prev.mainForegroundColor,
-				mainForegroundColorDark: dataToUse.mainForegroundColorDark || prev.mainForegroundColorDark,
-				navigationSettings: {
-					...prev.navigationSettings,
-					...navigationSettings,
-				},
+				logo: dataToUse.logo || prev.logo,
 				dashboardSettings: {
 					...prev.dashboardSettings,
 					...dashboardSettings,
@@ -423,12 +322,11 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	}, [existingCampaign, populateData]);
 
 	useEffect(() => {
-		if (existingCampaign) {
+		if (existingCampaign && !isDirty) {
 			populateData(existingCampaign);
 		}
-	}, [existingCampaign, populateData]);
+	}, [existingCampaign, populateData, isDirty]);
 
-	// Load from localStorage on mount
 	useEffect(() => {
 		if (typeof window !== 'undefined') {
 			const savedData = localStorage.getItem('peoplely-setup-data');
@@ -438,11 +336,9 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 					setSetupData(prev => ({
 						...prev,
 						...parsedData,
-						// Ensure nested objects are merged correctly
 						dashboardSettings: {
 							...prev?.dashboardSettings,
 							...(parsedData.dashboardSettings || {}),
-							// Ensure specific fields are preserved/merged correctly
 							dashboardName: parsedData.dashboardSettings?.dashboardName || prev?.dashboardSettings?.dashboardName,
 							callOutcomes: parsedData.dashboardSettings?.callOutcomes || prev?.dashboardSettings?.callOutcomes,
 							widgets: parsedData.dashboardSettings?.widgets || prev?.dashboardSettings?.widgets,
@@ -486,17 +382,6 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		setIsDirty(true);
 	}, []);
 
-	const updateNavigationSettings = useCallback((data: Partial<SetupData['navigationSettings']>) => {
-		setSetupData(prev => ({
-			...prev,
-			navigationSettings: {
-				...prev.navigationSettings,
-				...data
-			}
-		}));
-		setIsDirty(true);
-	}, []);
-
 	const updateDashboardSettings = useCallback((data: Partial<SetupData['dashboardSettings']>) => {
 		setSetupData(prev => ({
 			...prev,
@@ -514,20 +399,16 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			id: `chart-${Date.now()}`
 		};
 
-		// Calculate position to avoid overlap
 		const calculatePosition = (existingCharts: Chart[]) => {
 			const chartWidth = chart.position.width;
 			const chartHeight = chart.position.height;
 			const padding = 20;
 			const maxColumns = 2;
 
-			// Try to find an empty spot
 			for (let row = 0; row < 10; row++) {
 				for (let col = 0; col < maxColumns; col++) {
 					const x = col * (chartWidth + padding) + padding;
 					const y = row * (chartHeight + padding) + padding;
-
-					// Check if this position overlaps with existing charts
 					const overlaps = existingCharts.some(existingChart => {
 						const existing = existingChart.position;
 						return !(x >= existing.x + existing.width + padding ||
@@ -542,7 +423,6 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				}
 			}
 
-			// Fallback: stack vertically
 			const maxY = Math.max(...existingCharts.map(c => c.position.y + c.position.height), 0);
 			return { x: padding, y: maxY + padding };
 		};
@@ -645,32 +525,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	}, []);
 
 	const onStepComplete = useCallback(() => {
-		if (currentStep < 5) {
-			// When moving to step 2 (Header & Navigation), sync colors to navigationSettings
-			if (currentStep === 1) {
-				setSetupData(prev => ({
-					...prev,
-					navigationSettings: {
-						...prev.navigationSettings,
-						themeColors: {
-							primary: prev.primaryColor,
-							secondary: prev.secondaryColor,
-							accent: prev.accentColor,
-							text: prev.textColor,
-							table: prev.tableColor,
-							background: prev.backgroundColor,
-							primaryDark: prev.primaryColorDark,
-							secondaryDark: prev.secondaryColorDark,
-							accentDark: prev.accentColorDark,
-							textDark: prev.textColorDark,
-							tableDark: prev.tableColorDark,
-							backgroundDark: prev.backgroundColorDark,
-							mainForeground: prev.mainForegroundColor,
-							mainForegroundDark: prev.mainForegroundColorDark,
-						}
-					}
-				}));
-			}
+		if (currentStep < 4) {
 			setCurrentStep(prev => prev + 1);
 		}
 	}, [currentStep]);
@@ -681,17 +536,33 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		}
 	}, [currentStep]);
 
-	const addBucket = useCallback((bucket: Omit<Bucket, 'id' | 'dispositions'>) => {
+	const addBucket = useCallback((bucket: Omit<Bucket, 'id' | 'dispositions' | 'customerFields'>) => {
+		const bucketId = `bucket-${Date.now()}`;
+		const defaultFields: CustomerField[] = [
+			{ id: '1', name: 'Full Name', type: 'single-line-text', required: true },
+			{ id: '2', name: 'Email', type: 'email', required: true },
+			{ id: '3', name: 'Phone Number', type: 'phone', required: true },
+		];
+
 		const newBucket: Bucket = {
 			...bucket,
-			id: `bucket-${Date.now()}`,
+			id: bucketId,
 			dispositions: [],
+			customerFields: defaultFields,
 		};
+
 		setSetupData(prev => ({
 			...prev,
 			dashboardSettings: {
 				...prev.dashboardSettings,
 				buckets: [...(prev.dashboardSettings.buckets || []), newBucket]
+			},
+			customerBookSettings: {
+				...prev.customerBookSettings,
+				configuredFields: [
+					...(prev.customerBookSettings.configuredFields || []),
+					{ bucketId, fields: defaultFields }
+				]
 			}
 		}));
 		setIsDirty(true);
@@ -701,8 +572,8 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		setSetupData(prev => ({
 			...prev,
 			dashboardSettings: {
-				...prev.dashboardSettings,
-				buckets: prev.dashboardSettings.buckets.map(b =>
+				...prev?.dashboardSettings,
+				buckets: (prev?.dashboardSettings?.buckets || []).map(b =>
 					b.id === bucketId ? { ...b, ...updates } : b
 				)
 			}
@@ -714,8 +585,8 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		setSetupData(prev => ({
 			...prev,
 			dashboardSettings: {
-				...prev.dashboardSettings,
-				buckets: prev.dashboardSettings.buckets.filter(b => b.id !== bucketId)
+				...prev?.dashboardSettings,
+				buckets: (prev?.dashboardSettings?.buckets || []).filter(b => b.id !== bucketId)
 			}
 		}));
 		setIsDirty(true);
@@ -730,9 +601,9 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			...prev,
 			dashboardSettings: {
 				...prev.dashboardSettings,
-				buckets: prev.dashboardSettings.buckets.map(b =>
+				buckets: (prev?.dashboardSettings?.buckets || []).map(b =>
 					b.id === bucketId
-						? { ...b, dispositions: [...b.dispositions, newDisposition] }
+						? { ...b, dispositions: [...(b?.dispositions || []), newDisposition] }
 						: b
 				)
 			}
@@ -745,11 +616,11 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			...prev,
 			dashboardSettings: {
 				...prev.dashboardSettings,
-				buckets: prev.dashboardSettings.buckets.map(b =>
+				buckets: (prev?.dashboardSettings?.buckets || []).map(b =>
 					b.id === bucketId
 						? {
 							...b,
-							dispositions: b.dispositions.map(d =>
+							dispositions: (b?.dispositions || []).map(d =>
 								d.id === dispositionId ? { ...d, ...updates } : d
 							)
 						}
@@ -765,13 +636,47 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			...prev,
 			dashboardSettings: {
 				...prev.dashboardSettings,
-				buckets: prev.dashboardSettings.buckets.map(b =>
+				buckets: (prev?.dashboardSettings?.buckets || []).map(b =>
 					b.id === bucketId
-						? { ...b, dispositions: b.dispositions.filter(d => d.id !== dispositionId) }
+						? { ...b, dispositions: (b?.dispositions || []).filter(d => d.id !== dispositionId) }
 						: b
 				)
 			}
 		}));
+		setIsDirty(true);
+	}, []);
+
+	const updateBucketCustomerFields = useCallback((bucketId: string, fields: CustomerField[]) => {
+		setSetupData(prev => {
+			const configuredFields = prev.customerBookSettings.configuredFields || [];
+			const index = configuredFields.findIndex(cf => cf && cf.bucketId === bucketId);
+
+			let newConfiguredFields;
+			if (index !== -1) {
+				newConfiguredFields = configuredFields.map((cf, i) =>
+					i === index ? { ...cf, fields } : cf
+				);
+			} else {
+				newConfiguredFields = [...configuredFields, { bucketId, fields }];
+			}
+
+			// Also update the bucket's own customerFields for and direct synchronization
+			const updatedBuckets = (prev.dashboardSettings.buckets || []).map(b =>
+				b.id === bucketId ? { ...b, customerFields: fields } : b
+			);
+
+			return {
+				...prev,
+				dashboardSettings: {
+					...prev.dashboardSettings,
+					buckets: updatedBuckets
+				},
+				customerBookSettings: {
+					...prev.customerBookSettings,
+					configuredFields: newConfiguredFields
+				}
+			};
+		});
 		setIsDirty(true);
 	}, []);
 
@@ -785,10 +690,8 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 					setupData.businessSize
 				);
 			case 2:
-				return true; // Defaults are always provided
-			case 3:
 				return !!setupData.dashboardSettings.dashboardName.trim();
-			case 4:
+			case 3:
 				return setupData.customerBookSettings.configuredFields.length > 0;
 			default:
 				return true;
@@ -800,40 +703,32 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			id: 'basic',
 			title: 'Basic Setup',
 			description: 'Configure your organization details and preferences',
-			icon: <div className="text-base w-5 text-center">✓</div>,
+			icon: <Icon name="Setting_line_light" size="md" />,
 			active: currentStep === 1,
 			completed: currentStep > 1,
-		},
-		{
-			id: 'header',
-			title: 'Header & Navigation',
-			description: 'Customize your CRM navigation and layout',
-			icon: <div className="text-base w-5 text-center">☰</div>,
-			active: currentStep === 2,
-			completed: currentStep > 2,
 		},
 		{
 			id: 'dashboard',
 			title: 'Dashboard',
 			description: 'Set up your dashboard widgets and reports',
-			icon: <div className="text-base w-5 text-center">⊞</div>,
-			active: currentStep === 3,
-			completed: currentStep > 3,
+			icon: <Icon name="darhboard" size="md" />,
+			active: currentStep === 2,
+			completed: currentStep > 2,
 		},
 		{
 			id: 'customer',
 			title: 'Customer Book',
 			description: 'Configure customer data fields and views',
-			icon: <div className="text-base w-5 text-center">👥</div>,
-			active: currentStep === 4,
-			completed: currentStep > 4,
+			icon: <Icon name="Group_light" size="lg" />,
+			active: currentStep === 3,
+			completed: currentStep > 3,
 		},
 		{
 			id: 'review',
 			title: 'Review Campaign Plan',
 			description: 'Review and submit your LOB plan configuration',
-			icon: <div className="text-base w-5 text-center">✓</div>,
-			active: currentStep === 5,
+			icon: <Icon name="mark" size="md" />,
+			active: currentStep === 4,
 			completed: false,
 		},
 	], [currentStep]);
@@ -849,7 +744,6 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		setIsLoading,
 		setupData,
 		updateSetupData,
-		updateNavigationSettings,
 		updateDashboardSettings,
 		addChart,
 		removeChart,
@@ -863,6 +757,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		addDispositionToBucket,
 		updateDispositionInBucket,
 		deleteDispositionFromBucket,
+		updateBucketCustomerFields,
 		setupSteps,
 		isFetchingCampaign,
 		setDashboardStep,
@@ -880,7 +775,6 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		isLoading,
 		setupData,
 		updateSetupData,
-		updateNavigationSettings,
 		updateDashboardSettings,
 		addChart,
 		removeChart,
@@ -894,6 +788,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		addDispositionToBucket,
 		updateDispositionInBucket,
 		deleteDispositionFromBucket,
+		updateBucketCustomerFields,
 		setupSteps,
 		isFetchingCampaign,
 		dashboardStep,

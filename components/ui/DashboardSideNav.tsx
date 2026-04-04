@@ -7,6 +7,7 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePrivilege, ModuleId } from '@/contexts/PrivilegeContext';
 import Icon from './Icon';
+import { useTheme } from '@/contexts/ThemeContext';
 import { plusJakartaStyle } from '../Options';
 import {
  DashboardIcon,
@@ -74,6 +75,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
  const { campaignData } = useCampaign();
  useAuth();
  const { canAccess, isAdmin } = usePrivilege();
+ const { isDarkMode } = useTheme();
 
  const currentCampaign = campaignData?.campaign;
  const headerLogo = currentCampaign?.logo;
@@ -174,7 +176,8 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
   { id: 'setup-book', label: 'Setup Book', icon: 'settings-book', path: '/setup-book' },
   { id: 'report', label: 'Report', icon: 'chart', path: '/report' },
   { id: 'leaderboard', label: 'Leaderboard', icon: 'star', path: '/leaderboard' },
-  { id: 'configuration', label: 'Campaign Plan', icon: 'configuration', path: '/configuration' },
+  { id: 'buckets', label: 'Buckets', icon: 'grid', path: '/buckets' },
+  { id: 'configuration', label: 'Campaigns', icon: 'configuration', path: '/configuration' },
   { id: 'support', label: 'Support', icon: 'support', path: '/support' },
   { id: 'settings', label: 'Settings', icon: 'settings', path: '/settings' }
  ];
@@ -188,7 +191,8 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
   'integrations': 'systemSetting',
   'setup-book': 'setupBook',
   'report': 'report',
-  'leaderboard': 'report',
+  'leaderboard': 'leaderboard',
+  'buckets': 'buckets',
   'configuration': 'campaignPlan',
   'support': 'support',
   'settings': 'systemSetting',
@@ -353,17 +357,17 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
        const itemContent = (
         <button
          onClick={(e) => handleItemClick(item, e)}
-         className={`cursor-pointer w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 transition-all duration-200 rounded-[var(--radius)] ${isActive || isExpanded ? 'text-white' : 'dark:text-gray-300 hover:text-white'} hover-bg-custom`}
+         className={`cursor-pointer w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 transition-all duration-200 rounded-[var(--radius)] ${isActive || isExpanded ? (isDarkMode ? 'text-black' : 'text-white') : 'dark:text-gray-300 hover:text-white'} hover-bg-custom`}
          style={{
           backgroundColor: (isActive || isExpanded) ? 'var(--primary)' : 'transparent',
-          color: (isActive || isExpanded) ? 'white' : 'var(--text-secondary)',
+          color: (isActive || isExpanded) ? (isDarkMode ? '#000000' : 'white') : 'var(--text-secondary)',
           '--hover-bg': 'var(--secondary)'
          } as React.CSSProperties}
         >
-         <div className={`shrink-0 transition-colors duration-200 ${isActive || isExpanded ? 'text-white' : 'dark:text-gray-400'}`} style={!(isActive || isExpanded) ? { color: 'var(--text-tertiary)' } : {}}>{getIconComponent(item.icon)}</div>
-         {!isCollapsed && <span className={`font-inter font-medium text-[10px] md:text-[12px] leading-5 tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive || isExpanded ? 'text-white' : 'dark:text-gray-300'}`} style={!(isActive || isExpanded) ? { color: 'var(--text-secondary)' } : {}}>{item.label}</span>}
+         <div className={`shrink-0 transition-colors duration-200 ${(isActive || isExpanded) ? (isDarkMode ? 'text-black' : 'text-white') : 'dark:text-gray-400'}`} style={!(isActive || isExpanded) ? { color: 'var(--text-tertiary)' } : {}}>{getIconComponent(item.icon)}</div>
+         {!isCollapsed && <span className={`font-inter font-medium text-[10px] md:text-[12px] leading-5 tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${(isActive || isExpanded) ? (isDarkMode ? 'text-black' : 'text-white') : 'dark:text-gray-300'}`} style={!(isActive || isExpanded) ? { color: 'var(--text-secondary)' } : {}}>{item.label}</span>}
          {!isCollapsed && (isSettings || isSupport) && (
-          <div className={`shrink-0 transition-colors duration-200 ${isExpanded ? 'text-white' : 'dark:text-gray-400'}`} style={!isExpanded ? { color: 'var(--text-tertiary)' } : {}}>
+          <div className={`shrink-0 transition-colors duration-200 ${isExpanded ? (isDarkMode ? 'text-black' : 'text-white') : 'dark:text-gray-400'}`} style={!isExpanded ? { color: 'var(--text-tertiary)' } : {}}>
            {isExpanded ? <ChevronDownIcon className="w-4 h-4" /> : <ChevronRightIcon className="w-4 h-4" />}
           </div>
          )}
@@ -396,11 +400,11 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
               <button
                key={subItem?.id}
                onClick={(e) => { e.stopPropagation(); handleSubItemClick(subItem?.path); }}
-               className={`cursor-pointer w-full flex items-center gap-3 px-4 py-2 transition-all duration-200 rounded-[var(--radius)] ${isSubActive ? 'text-white bg-opacity-80' : 'dark:text-gray-400 hover:text-white'} hover-bg-custom`}
-               style={{ backgroundColor: isSubActive ? 'var(--primary)' : 'transparent', color: isSubActive ? 'white' : 'var(--text-tertiary)', '--hover-bg': 'var(--secondary)' } as React.CSSProperties}
+               className={`cursor-pointer w-full flex items-center gap-3 px-4 py-2 transition-all duration-200 rounded-[var(--radius)] ${isSubActive ? (isDarkMode ? 'text-black bg-opacity-80' : 'text-white bg-opacity-80') : 'dark:text-gray-400 hover:text-white'} hover-bg-custom`}
+               style={{ backgroundColor: isSubActive ? 'var(--primary)' : 'transparent', color: isSubActive ? (isDarkMode ? '#000000' : 'white') : 'var(--text-tertiary)', '--hover-bg': 'var(--secondary)' } as React.CSSProperties}
               >
-               <div className={`shrink-0 transition-colors duration-200 ${isSubActive ? 'text-white' : 'dark:text-gray-400'}`} style={!isSubActive ? { color: 'var(--text-tertiary)' } : {}}>{getIconComponent(subItem.icon)}</div>
-               <span className={`font-inter font-medium text-[13px] leading-5 tracking-[-0.5px] transition-colors duration-200 ${isSubActive ? 'text-white' : 'dark:text-gray-300'}`} style={!isSubActive ? { color: 'var(--text-tertiary)' } : {}}>{subItem.label}</span>
+               <div className={`shrink-0 transition-colors duration-200 ${isSubActive ? (isDarkMode ? 'text-black' : 'text-white') : 'dark:text-gray-400'}`} style={!isSubActive ? { color: 'var(--text-tertiary)' } : {}}>{getIconComponent(subItem.icon)}</div>
+               <span className={`font-inter font-medium text-[13px] leading-5 tracking-[-0.5px] transition-colors duration-200 ${isSubActive ? (isDarkMode ? 'text-black' : 'text-white') : 'dark:text-gray-300'}`} style={!isSubActive ? { color: 'var(--text-tertiary)' } : {}}>{subItem.label}</span>
               </button>
              );
             })}

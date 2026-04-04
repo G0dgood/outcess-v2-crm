@@ -17,6 +17,7 @@ import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
 import { NoRecordFound } from '../Options';
 import StatusSkeleton from '@/components/skeletons/StatusSkeleton';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { toastInfo } from '@/utils/toastWithSound';
 
 interface RawStatus {
 	id?: string;
@@ -130,7 +131,8 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 	useEffect(() => {
 		if (!socket || !isConnected) return;
 
-		const handleStatusCreated = (newStatus: RawStatus) => {
+		const handleStatusCreated = (newStatus: RawStatus & { campaignId?: string }) => {
+			if (newStatus.campaignId !== selectedCampaignId) return;
 			const statusId = newStatus.id || newStatus._id;
 
 			setStatuses((prev) => {
@@ -161,9 +163,11 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 				};
 				return [...prev, formattedStatus];
 			});
+			toastInfo(`New status '${newStatus.name}' created.`);
 		};
 
-		const handleStatusUpdated = (updatedStatus: RawStatus) => {
+		const handleStatusUpdated = (updatedStatus: RawStatus & { campaignId?: string }) => {
+			if (updatedStatus.campaignId !== selectedCampaignId) return;
 			const statusId = updatedStatus.id || updatedStatus._id;
 
 			setStatuses((prev) => prev.map((status) => {
@@ -191,10 +195,13 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 				}
 				return status;
 			}));
+			toastInfo(`Status '${updatedStatus.name}' updated.`);
 		};
 
-		const handleStatusDeleted = (statusId: string) => {
-			setStatuses((prev) => prev.filter((status) => status.id !== statusId));
+		const handleStatusDeleted = (payload: { id: string; campaignId: string }) => {
+			if (payload.campaignId !== selectedCampaignId) return;
+			setStatuses((prev) => prev.filter((status) => status.id !== payload.id));
+			toastInfo("A status was deleted.");
 		};
 
 		socket.on("statusCreated", handleStatusCreated);
@@ -241,12 +248,13 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 		}
 	};
 
-	const [deleteStatus] = useDeleteStatusMutation();
+	const [deleteStatus, { isLoading: isDeleting }] = useDeleteStatusMutation();
 
 	const handleConfirmDelete = async () => {
 		if (deletingStatus) {
 			try {
 				await deleteStatus(deletingStatus.id).unwrap();
+
 				setIsDeleteModalOpen(false);
 				setDeletingStatus(null);
 			} catch (error) {
@@ -473,6 +481,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 				}}
 				onConfirm={handleConfirmDelete}
 				statusName={deletingStatus?.name || ''}
+				isLoading={isDeleting}
 			/>
 		</div>
 	);

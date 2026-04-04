@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import Button from './Button';
 import AddCurrencyModal, { Currency } from './AddCurrencyModal';
+import { SymbolIcon } from '@radix-ui/react-icons';
+import EmptyState from '@/components/ui/EmptyState';
 
 const Currencies = () => {
 	const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -56,14 +58,14 @@ const Currencies = () => {
 				}}
 			>
 				{currencies.length === 0 ? (
-					<div className="flex items-center justify-center h-full">
-						<p
-							className="dark:text-gray-400"
-							style={{ color: 'var(--text-tertiary)' }}
-						>
-							No currencies configured yet.
-						</p>
-					</div>
+					<EmptyState
+						icon={SymbolIcon}
+						title="No Currencies Found"
+						description="No currencies have been configured for your organization yet. Add a currency to get started."
+						actionLabel="Add Currency"
+						onAction={() => setIsAddCurrencyModalOpen(true)}
+						className="h-full justify-center"
+					/>
 				) : (
 					<div className="space-y-4">
 						{currencies.map((currency, index) => (

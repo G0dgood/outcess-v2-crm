@@ -290,7 +290,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
       {showButton && (
         <button
           onClick={handleShow}
-          className="cursor-pointer flex flex-col md:flex-row justify-center items-center px-2 py-8px gap-2 md:w-[150px] h-40px font-normal text-[10px] md:text-[12px] leading-[150%] text-[#FFFFFF]"
+          className="cursor-pointer flex flex-col md:flex-row justify-center items-center px-2 py-8px gap-2 md:w-[150px] h-40px font-normal text-[10px] md:text-[12px] leading-[150%] text-[#FFFFFF] rounded-[var(--radius)]"
           style={{ backgroundColor: primaryColor }}
         >
           Upload
@@ -300,7 +300,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
       {isOpen && (
         <div className="fixed flex items-center justify-center inset-0 bg-[#00000051] bg-opacity-50 z-40">
           <div
-            className="dark:bg-gray-800 w-full max-w-2xl shadow-lg p-6"
+            className="dark:bg-gray-800 w-full max-w-2xl shadow-lg p-6 rounded-[var(--radius)]"
             style={{ backgroundColor: 'var(--accent-white)' }}
           >
             <div
@@ -349,7 +349,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
               )}
 
               <div
-                className={`flex flex-col items-center justify-center border-2 border-dashed p-8 transition-all cursor-pointer ${isDragOver
+                className={`flex flex-col items-center justify-center border-2 border-dashed p-8 transition-all cursor-pointer rounded-[var(--radius)] ${isDragOver
                   ? ""
                   : progress > 0
                     ? "dark:bg-green-900/20 dark:border-green-500"
@@ -435,7 +435,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
                 <button
                   type="reset"
                   onClick={onClickReset}
-                  className="px-4 py-2 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 transition-colors"
+                  className="px-4 py-2 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 transition-colors rounded-[var(--radius)]"
                   style={{
                     backgroundColor: 'var(--bg-primary)',
                     color: 'var(--text-secondary)'
@@ -452,7 +452,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading || jsonData.length === 0}
-                  className={`px-4 py-2 text-white transition-opacity ${isLoading || jsonData.length === 0
+                  className={`px-4 py-2 text-white transition-opacity rounded-[var(--radius)] ${isLoading || jsonData.length === 0
                     ? "dark:bg-gray-600 cursor-not-allowed"
                     : ""
                     }`}

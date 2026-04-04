@@ -9,6 +9,8 @@ import { AddTicketMemberModal } from './AddTicketMemberModal';
 import { DeleteTicketModal } from './DeleteTicketModal';
 import { SupportStatusDropdown } from './SupportStatusDropdown';
 
+import EmptyState from '@/components/ui/EmptyState';
+
 interface TicketListProps {
 	tickets: SupportTicket[];
 	isLoading: boolean;
@@ -114,10 +116,11 @@ const TicketList: React.FC<TicketListProps> = ({
 
 	if (tickets.length === 0) {
 		return (
-			<div className="text-center py-16 border-2 border-dashed dark:border-gray-700 rounded-[var(--radius)]">
-				<p className="text-gray-500 dark:text-gray-400 font-medium text-lg">No active support tickets found.</p>
-				<p className="text-sm text-gray-400 dark:text-gray-500 mt-1">New tickets will appear here when created.</p>
-			</div>
+			<EmptyState
+				iconName="user"
+				title="No Tickets Found"
+				description="No active support tickets were found for the current selection. New tickets will appear here when they are created."
+			/>
 		);
 	}
 

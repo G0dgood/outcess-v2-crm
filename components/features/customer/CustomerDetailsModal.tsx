@@ -224,7 +224,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 								variant="ghost"
 								size="sm"
 								onClick={onClose}
-								className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors h-auto"
+								className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full h-auto"
 								style={{ color: 'var(--text-tertiary)' }}
 								onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 									e.currentTarget.style.color = 'var(--text-secondary)';
@@ -597,7 +597,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 					title="Full Comment"
 				>
 					<div className="p-6">
-						<p 
+						<p
 							className="text-base leading-relaxed dark:text-gray-300 whitespace-pre-wrap"
 							style={{ color: 'var(--text-primary)' }}
 						>

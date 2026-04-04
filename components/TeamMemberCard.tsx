@@ -6,7 +6,8 @@ import {
 	TrashIcon, 
 	PersonIcon, 
 	ClockIcon, 
-	EnvelopeClosedIcon 
+	EnvelopeClosedIcon,
+	PlusIcon
 } from '@radix-ui/react-icons';
 
 interface TeamMember {
@@ -15,7 +16,7 @@ interface TeamMember {
 	fullName: string;
 	email: string;
 	phone: string;
-	role: 'agent' | 'supervisor' | 'qa' | 'admin';
+	role: string | { roleName?: string; name?: string };
 	supervisor: string;
 	status: string;
 	statusColor?: string;
@@ -29,9 +30,10 @@ interface TeamMemberCardProps {
 	onEdit: (member: TeamMember) => void;
 	onDelete: (id: string) => void;
 	onStatusClick: (member: TeamMember) => void;
+	onAssignBucket: (member: TeamMember) => void;
 }
 
-const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member, onEdit, onDelete, onStatusClick }) => {
+const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member, onEdit, onDelete, onStatusClick, onAssignBucket }) => {
 	return (
 		<div 
 			className="group relative bg-white dark:bg-gray-800 border dark:border-gray-700 p-5 transition-all hover:shadow-md rounded-[var(--radius)]"
@@ -43,7 +45,9 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member, onEdit, onDelet
 					<span 
 						className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary self-start"
 					>
-						{member.role}
+						{typeof member.role === 'object' 
+							? (member.role?.roleName || member.role?.name || 'Member') 
+							: (member.role || 'Member')}
 					</span>
 				</div>
 				<div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -53,6 +57,13 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member, onEdit, onDelet
 						title="Edit Member"
 					>
 						<Pencil1Icon className="w-4 h-4" />
+					</button>
+					<button 
+						onClick={() => onAssignBucket(member)}
+						className="p-1.5 hover:bg-primary/10 rounded-lg text-gray-400 hover:text-primary transition-colors"
+						title="Assign to Bucket"
+					>
+						<PlusIcon className="w-4 h-4" />
 					</button>
 					<button 
 						onClick={() => onDelete(member._id)}

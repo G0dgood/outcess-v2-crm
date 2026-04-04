@@ -74,8 +74,7 @@ const DashboardContent: React.FC = () => {
 	const canEdit = canAccess('dashboard', 'edit');
 	const canDelete = canAccess('dashboard', 'delete');
 
-	const isAgent = userPrivileges?.role?.roleName?.toLowerCase() === 'agent';
-	const showAddButtons = canCreate && !isAgent;
+	const showAddButtons = canCreate;
 
 	const dashboardSettings: DashboardSettings = useMemo(() => {
 		const source = setupData?.dashboardSettings || campaignData?.campaign?.dashboardSettings;
@@ -805,65 +804,14 @@ const DashboardContent: React.FC = () => {
 								<EmptyState
 									iconName="NOProduct"
 									title="No Charts Configured"
-									description="Add your first chart to visualize your disposition data and track important metrics."
-									linkLabel="Add Chart"
-									onClick={() => setIsAddChartModalOpen(true)}
+									description={canCreate
+										? "Add your first chart to visualize your disposition data and track important metrics."
+										: "No charts have been configured for this dashboard yet. Please contact an administrator to set up visualizations."
+									}
+									linkLabel={canCreate ? "Add Chart" : undefined}
+									onClick={canCreate ? () => setIsAddChartModalOpen(true) : undefined}
 								/>
-								// <div className="p-12 flex flex-col items-center justify-center">
-								// 	<svg
-								// 		width="120"
-								// 		height="120"
-								// 		viewBox="0 0 24 24"
-								// 		fill="none"
-								// 		stroke="currentColor"
-								// 		strokeWidth="1.5"
-								// 		className="mb-6"
-								// 		style={{ color: 'var(--text-tertiary)' }}
-								// 	>
-								// 		<path
-								// 			d="M3 3V21H21"
-								// 			strokeLinecap="round"
-								// 			strokeLinejoin="round"
-								// 		/>
-								// 		<path
-								// 			d="M7 16L12 11L16 15L21 10"
-								// 			strokeLinecap="round"
-								// 			strokeLinejoin="round"
-								// 		/>
-								// 		<path
-								// 			d="M21 10V3H14"
-								// 			strokeLinecap="round"
-								// 			strokeLinejoin="round"
-								// 		/>
-								// 		<circle cx="7" cy="16" r="1.5" fill="currentColor" />
-								// 		<circle cx="12" cy="11" r="1.5" fill="currentColor" />
-								// 		<circle cx="16" cy="15" r="1.5" fill="currentColor" />
-								// 		<circle cx="21" cy="10" r="1.5" fill="currentColor" />
-								// 	</svg>
-								// 	<h3
-								// 		className="font-inter text-[12px] md:text-[14px] font-semibold mb-2"
-								// 		style={{ color: 'var(--text-primary)' }}
-								// 	>
-								// 		No Charts Configured
-								// 	</h3>
-								// 	<p
-								// 		className="font-inter text-[10px] md:text-[12px] text-center mb-6 max-w-md"
-								// 		style={{ color: 'var(--text-tertiary)' }}
-								// 	>
-								// 		Add your first chart to visualize your disposition data and track important metrics.
-								// 	</p>
-								// 	{showAddButtons && (
-								// 		<Button
-								// 			variant="primary"
-								// 			size="md"
-								// 			onClick={() => setIsAddChartModalOpen(true)}
-								// 			className="flex items-center gap-2 px-2 py-1 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
-								// 		>
-								// 			<PlusIcon className="w-4 h-4" />
-								// 			<span className="hidden sm:inline">Add Chart</span>
-								// 		</Button>
-								// 	)}
-								// </div>
+
 							)}
 						</div>
 					</DndContext>

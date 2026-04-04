@@ -51,6 +51,11 @@ const CreateSupervisorRoleModal: React.FC<CreateSupervisorRoleModalProps> = ({
 			return;
 		}
 
+		if (!campaignId || campaignId === 'new') {
+			toast.error('Please select a campaign first');
+			return;
+		}
+
 		try {
 			await createSupervisorRole({
 				roleName: 'Supervisor',

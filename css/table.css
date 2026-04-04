@@ -68,6 +68,7 @@ td {
   font-size: 10px;
   font-weight: 500;
   color: var(--text-primary);
+  transition: background-color 0.2s ease;
 }
 
 /* md:text-[12px] (768px and above) */
@@ -90,6 +91,7 @@ td {
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
+  transition: background-color 0.2s ease;
 }
 
 /* md:text-[12px] */
@@ -130,18 +132,6 @@ th {
   }
 }
 
-/* dark:text-gray-100 */
-.dark th {
-  color: #f3f4f6;
-  font-size: 12px;
-}
-
-@media (min-width: 768px) {
-  .dark th {
-    font-size: 10px;
-  }
-}
-
 table {
   width: 100%;
   /* min-w-full */
@@ -160,6 +150,30 @@ table td {
 .dark table td {
   border-color: #374151;
   /* gray-700 */
+}
+
+tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+  background-color: var(--bg-hover) !important;
+  position: relative;
+  z-index: 1;
+}
+
+tbody tr:hover td {
+  background-color: transparent !important;
+}
+
+.dark tbody tr:hover {
+  background-color: var(--bg-hover) !important;
+  position: relative;
+  z-index: 1;
+}
+
+.dark tbody tr:hover td {
+  background-color: transparent !important;
 }
 
 thead {

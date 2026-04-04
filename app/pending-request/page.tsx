@@ -9,6 +9,7 @@ import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import PageHeader from '@/components/ui/PageHeader';
 
 interface PendingBusiness {
 	id: string;
@@ -78,15 +79,9 @@ const PendingRequestPage: React.FC = () => {
 
 	return (
 		<div>
-			{/* Header Section */}
-			<div className="mb-6">
-				<h1
-					className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100 mb-2"
-					style={{ color: 'var(--text-primary)' }}
-				>
-					Pending Request
-				</h1>
-			</div>
+			<PageHeader
+				title="Pending Request"
+			/>
 
 			{/* Search Section */}
 			<div className="mb-6">
@@ -176,14 +171,8 @@ const PendingRequestPage: React.FC = () => {
 								paginatedBusinesses?.map((business) => (
 									<tr
 										key={business.id}
-										className="dark:hover:bg-gray-700 transition-colors"
+										className="transition-colors"
 										style={{ borderColor: 'var(--light-gray)' }}
-										onMouseEnter={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-										}}
-										onMouseLeave={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-										}}
 									>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<span

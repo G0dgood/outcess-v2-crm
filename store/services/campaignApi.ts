@@ -55,7 +55,7 @@ export const campaignApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createCampaign: builder.mutation<
       CreateCampaignResponse,
-      CreateCampaignRequest
+      CreateCampaignRequest | FormData
     >({
       query: (data) => ({
         url: "api/v1/campaign",
@@ -82,7 +82,7 @@ export const campaignApi = baseApi.injectEndpoints({
     }),
     updateCampaign: builder.mutation<
       unknown,
-      { id: string; data: unknown }
+      { id: string; data: unknown | FormData }
     >({
       query: ({ id, data }) => ({
         url: `api/v1/campaign/${id}`,
@@ -120,6 +120,44 @@ export const campaignApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Campaign"],
     }),
+    assignMemberToBucket: builder.mutation<
+      any,
+      {
+        id: string;
+        bucketId: string;
+        memberId: string;
+        memberName: string;
+        duration?: number;
+      }
+    >({
+      query: ({ id, bucketId, ...body }) => ({
+        url: `api/v1/campaign/${id}/buckets/${bucketId}/assign`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Campaign"],
+    }),
+    removeMemberFromBucket: builder.mutation<
+      any,
+      { id: string; bucketId: string; memberId: string }
+    >({
+      query: ({ id, bucketId, memberId }) => ({
+        url: `api/v1/campaign/${id}/buckets/${bucketId}/assign/${memberId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Campaign"],
+    }),
+    updateBucketCustomerFields: builder.mutation<
+      any,
+      { id: string; bucketId: string; customerFields: any[] }
+    >({
+      query: ({ id, bucketId, customerFields }) => ({
+        url: `api/v1/campaign/${id}/buckets/${bucketId}/customer-fields`,
+        method: "PATCH",
+        body: { customerFields },
+      }),
+      invalidatesTags: ["Campaign"],
+    }),
   }),
 });
 
@@ -133,4 +171,7 @@ export const {
   useGetCampaignByCompanyIdQuery,
   useLazyGetCampaignByCompanyIdQuery,
   useGetCampaignByCompanyIdForheaderQuery,
+  useAssignMemberToBucketMutation,
+  useRemoveMemberFromBucketMutation,
+  useUpdateBucketCustomerFieldsMutation,
 } = campaignApi;

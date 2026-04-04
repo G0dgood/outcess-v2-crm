@@ -9,7 +9,8 @@ import { useGetStatusesByCampaignIdQuery } from '@/store/services/statusApi';
 import { useUpdateTeamMemberStatusMutation } from '@/store/services/teamMembersApi';
 import { useUpdateUserMutation } from '@/store/services/authApi';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { toastSuccess, toastError } from '@/utils/toastWithSound';
+import { useSocket } from '@/contexts/SocketContext';
+import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { User } from '@/store/slices/authSlice';
 import Image from 'next/image';
 
@@ -61,7 +62,10 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 	const [mounted, setMounted] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const { selectedCampaignId } = useCampaign();
-	const { isAdmin } = usePrivilege();
+	const { isAdmin, isSuperAdmin } = usePrivilege();
+	const { socket, isConnected } = useSocket();
+
+	const showStatusFeature = !isAdmin && !isSuperAdmin;
 
 	const [updateStatus, { isLoading: isUpdatingTeamMemberStatus }] = useUpdateTeamMemberStatusMutation();
 	const [updateUser, { isLoading: isUpdatingUserStatus }] = useUpdateUserMutation();
@@ -99,6 +103,60 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 			setStatusOptions([]);
 		}
 	}, [fetchedStatuses, isLoading, selectedCampaignId]);
+
+	useEffect(() => {
+		if (!socket || !isConnected || !selectedCampaignId) return;
+
+		const handleStatusCreated = (newStatus: any) => {
+			if (newStatus.campaignId !== selectedCampaignId) return;
+			setStatusOptions((prev) => {
+				const statusId = newStatus.id || newStatus._id;
+				if (prev.find(s => s.value === statusId)) return prev;
+				return [...prev, {
+					value: statusId,
+					label: newStatus.name,
+					color: newStatus.color || '#6C8B7D'
+				}];
+			});
+			if (newStatus.name) {
+				toastInfo(`New status '${newStatus.name}' is now available.`);
+			}
+		};
+
+		const handleStatusUpdated = (updatedStatus: any) => {
+			if (updatedStatus.campaignId !== selectedCampaignId) return;
+			setStatusOptions((prev) => prev.map((s) => {
+				const statusId = updatedStatus.id || updatedStatus._id;
+				if (s.value === statusId) {
+					return {
+						...s,
+						label: updatedStatus.name,
+						color: updatedStatus.color || '#6C8B7D'
+					};
+				}
+				return s;
+			}));
+			if (updatedStatus.name) {
+				toastInfo(`Status '${updatedStatus.name}' has been updated.`);
+			}
+		};
+
+		const handleStatusDeleted = (payload: any) => {
+			if (payload.campaignId !== selectedCampaignId) return;
+			setStatusOptions((prev) => prev.filter((s) => s.value !== payload.id));
+			toastInfo("A campaign status was removed.");
+		};
+
+		socket.on("statusCreated", handleStatusCreated);
+		socket.on("statusUpdated", handleStatusUpdated);
+		socket.on("statusDeleted", handleStatusDeleted);
+
+		return () => {
+			socket.off("statusCreated", handleStatusCreated);
+			socket.off("statusUpdated", handleStatusUpdated);
+			socket.off("statusDeleted", handleStatusDeleted);
+		};
+	}, [socket, isConnected, selectedCampaignId]);
 
 	useEffect(() => {
 		setMounted(true);
@@ -230,7 +288,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 						</div>
 					)}
 					{/* Status Indicator */}
-					{mounted && currentStatus ? (
+					{showStatusFeature && mounted && currentStatus ? (
 						<div
 							className="absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 rounded-full"
 							style={{
@@ -239,7 +297,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 							}}
 							title={currentStatus.status}
 						></div>
-					) : isOnline && (
+					) : showStatusFeature && isOnline && (
 						<div
 							className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 rounded-full"
 							style={{ borderColor: 'var(--accent-white)' }}
@@ -258,7 +316,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 				onClose={() => setIsOpen(false)}
 				onLogoutClick={onLogoutClick}
 				currentStatus={currentStatus}
-				showStatus={isAdmin || !!((user as unknown as { role?: { roleName?: string } })?.role?.roleName === "supervisor" || (user as unknown as { supervisorId?: string })?.supervisorId)}
+				showStatus={showStatusFeature}
 			/>
 
 			{/* Status Submenu */}

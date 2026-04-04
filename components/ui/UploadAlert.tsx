@@ -20,7 +20,7 @@ const UploadAlert: React.FC<UploadAlertProps> = ({ type, message, onClose }) => 
 
   return (
     <div
-      className={`px-4 py-2 relative flex justify-between items-center ${isSuccess
+      className={`px-4 py-2 relative flex justify-between items-center rounded-[var(--radius)] ${isSuccess
         ? "dark:bg-green-900/30 dark:text-green-400"
         : "dark:bg-red-900/30 dark:text-red-400"
         }`}

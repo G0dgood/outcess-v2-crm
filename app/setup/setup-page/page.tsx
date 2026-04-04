@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
+import LogoUpload from '@/components/ui/LogoUpload';
 import { businessSizeOptions, industryOptions, timeZoneOptions } from '@/components/Options';
 import { useSetup } from '@/contexts/SetupContext';
 import { SetupSkeleton } from '@/components/ui/SetupSkeleton';
@@ -9,10 +10,15 @@ import { useUserInfo } from '@/contexts/UserInfoContext';
 import Button from '@/components/ui/Button';
 
 export default function SetupPage() {
-	const { setupData, updateSetupData, isDirty, onPersist } = useSetup();
+	const { setupData, updateSetupData, isDirty, onPersist, setCurrentStep } = useSetup();
 	const { user } = useUserInfo();
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isLoading, setIsLoading] = useState(true);
+	const [logoFile, setLogoFile] = useState<File | null>(setupData.logoFile || null);
+
+	useEffect(() => {
+		setCurrentStep(1);
+	}, [setCurrentStep]);
 
 	useEffect(() => {
 		// Pre-populate company name from user profile if available
@@ -44,6 +50,21 @@ export default function SetupPage() {
 		if (errors[field]) {
 			setErrors(prev => ({ ...prev, [field]: '' }));
 		}
+	};
+
+	const handleLogoSelect = (file: File | null): void => {
+		if (!file) {
+			setLogoFile(null);
+			updateSetupData({ logoFile: null, logo: '' });
+			return;
+		}
+
+		setLogoFile(file);
+		const logoUrl: string = URL.createObjectURL(file);
+		updateSetupData({ 
+			logoFile: file,
+			logo: logoUrl
+		});
 	};
 
 	if (isLoading) {
@@ -148,6 +169,17 @@ export default function SetupPage() {
 								error={errors.businessSize}
 							/>
 						</div>
+					</div>
+
+					<div className="pt-4">
+						<LogoUpload
+							label="Logo"
+							value={logoFile || setupData.logo}
+							onFileSelect={handleLogoSelect}
+							acceptedTypes={['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg']}
+							maxSize={5}
+							minDimensions={{ width: 174, height: 28 }}
+						/>
 					</div>
 
 				</form>

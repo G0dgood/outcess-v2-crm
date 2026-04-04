@@ -131,6 +131,11 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 			return;
 		}
 
+		if (!campaignId || campaignId === 'new') {
+			toast.error('Please select a campaign first');
+			return;
+		}
+
 		try {
 			const payload = {
 				name: `${formData.firstName} ${formData.lastName}`,

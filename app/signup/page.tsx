@@ -54,9 +54,23 @@ export default function SignUpPage() {
 
 	const validateStep1 = () => {
 		const newErrors: Record<string, string> = {};
-		if (!formData.firstname.trim()) newErrors.firstname = 'First name is required';
-		if (!formData.lastname.trim()) newErrors.lastname = 'Last name is required';
-		if (!formData.username.trim()) newErrors.username = 'Username is required';
+		if (!formData.firstname.trim()) {
+			newErrors.firstname = 'First name is required';
+		} else if (formData.firstname.trim().length < 2) {
+			newErrors.firstname = 'First name must be at least 2 characters';
+		}
+
+		if (!formData.lastname.trim()) {
+			newErrors.lastname = 'Last name is required';
+		} else if (formData.lastname.trim().length < 2) {
+			newErrors.lastname = 'Last name must be at least 2 characters';
+		}
+
+		if (!formData.username.trim()) {
+			newErrors.username = 'Username is required';
+		} else if (formData.username.trim().length < 3) {
+			newErrors.username = 'Username must be at least 3 characters';
+		}
 
 		setErrors(newErrors);
 		return Object.keys(newErrors).length === 0;
@@ -208,7 +222,7 @@ export default function SignUpPage() {
 
 			{/* Right Side - Sign Up Form */}
 			<div className="login-form-section w-full md:w-1/2">
-				<div className="login-form-container max-h-[520px] overflow-y-auto no-scrollbar pr-2">
+				<div className="login-form-container max-h-[720px] overflow-y-auto no-scrollbar pr-2">
 					<div className="login-header">
 						<h1 className="welcome-title font-lato not-italic" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>
 							{step === 3 ? 'Company Details' : 'Create Account'}

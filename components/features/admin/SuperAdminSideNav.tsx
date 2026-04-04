@@ -12,6 +12,7 @@ import {
 } from '@radix-ui/react-icons';
 import Button from '@/components/ui/Button';
 import { useCampaign } from '@/contexts/CampaignContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import {
 	Tooltip,
 	TooltipContent,
@@ -46,6 +47,7 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 	const router = useRouter();
 	const pathname = usePathname();
 	const { campaignData } = useCampaign();
+	const { isDarkMode } = useTheme();
 	// const primaryColor = campaignData?.primaryColor || '#050711';
 	const navRef = useRef<HTMLElement>(null);
 	const [isCollapsed, setIsCollapsed] = useState(false);
@@ -133,12 +135,12 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 									fullWidth
 									onClick={() => handleItemClick(item)}
 									className={`cursor-pointer w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 transition-all duration-200 !rounded-none ${isActive
-										? 'text-white'
+										? (isDarkMode ? 'text-black' : 'text-white')
 										: 'dark:text-gray-300 hover:text-white dark:hover:text-white'
 										}`}
 									style={{
 										backgroundColor: isActive ? campaignData?.primaryColor || '#050711' : 'transparent',
-										color: isActive ? 'white' : 'var(--text-secondary)',
+										color: isActive ? (isDarkMode ? '#000000' : 'white') : 'var(--text-secondary)',
 										'--hover-bg': campaignData?.secondaryColor || '#6C8B7D'
 									} as React.CSSProperties}
 									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
@@ -164,14 +166,14 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 									title={item.label}
 								>
 									<div
-										className={`shrink-0 transition-colors duration-200 ${isActive ? 'text-white' : 'dark:text-gray-400'}`}
+										className={`shrink-0 transition-colors duration-200 ${isActive ? (isDarkMode ? 'text-black' : 'text-white') : 'dark:text-gray-400'}`}
 										style={!isActive ? { color: 'var(--text-tertiary)' } : {}}
 									>
 										{item.icon}
 									</div>
 									{!isCollapsed && (
 										<span
-											className={`font-inter whitespace-nowrap font-medium text-[10px] md:text-[12px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive ? 'text-white' : 'dark:text-gray-300'}`}
+											className={`font-inter whitespace-nowrap font-medium text-[10px] md:text-[12px] leading-[20px] tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${isActive ? (isDarkMode ? 'text-black' : 'text-white') : 'dark:text-gray-300'}`}
 											style={!isActive ? { color: 'var(--text-secondary)' } : {}}
 										>
 											{item.label}

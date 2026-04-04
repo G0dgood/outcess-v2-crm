@@ -52,7 +52,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 			)}
 			{!showBack && <div />}
 
-			{dashboardStep === "KPI Metric" && currentStep === 3 ? <Button
+			{dashboardStep === "KPI Metric" && currentStep === 2 ? <Button
 				variant="primary"
 				size="md"
 				onClick={() => setDashboardStep?.("Call Disposition")}

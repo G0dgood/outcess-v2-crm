@@ -3,7 +3,6 @@
 import React from 'react';
 import Modal from './Modal';
 import Button from './Button';
-import { useCampaign } from '@/contexts/CampaignContext';
 
 interface LogoutConfirmationModalProps {
 	isOpen: boolean;
@@ -24,10 +23,6 @@ const LogoutConfirmationModal: React.FC<LogoutConfirmationModalProps> = ({
 	status = 'Online',
 	statusColor = '#22C55E',
 }) => {
-	const { campaignData } = useCampaign();
-	const primaryColor = campaignData?.primaryColor || campaignData?.campaign?.primaryColor || '#050711';
-	const mainForegroundColor = campaignData?.mainForegroundColor || campaignData?.campaign?.mainForegroundColor || '#FFFFFF';
-
 	return (
 		<Modal
 			isOpen={isOpen}
@@ -37,29 +32,29 @@ const LogoutConfirmationModal: React.FC<LogoutConfirmationModalProps> = ({
 		>
 			<div className="p-8 text-center">
 				<div className="relative inline-block mb-6">
-					<div 
+					<div
 						className="w-20 h-20 rounded-full flex items-center justify-center text-[24px] font-bold shadow-lg"
-						style={{ 
-							backgroundColor: primaryColor,
-							color: mainForegroundColor,
+						style={{
+							backgroundColor: 'var(--primary)',
+							color: 'var(--primary-foreground)',
 						}}
 					>
 						{initials}
 					</div>
-					<div 
+					<div
 						className="absolute bottom-1 right-1 w-5 h-5 rounded-full border-2 border-white dark:border-gray-800 shadow-sm"
 						style={{ backgroundColor: statusColor }}
 						title={status}
 					/>
 				</div>
 
-				<h3 
+				<h3
 					className="text-[18px] md:text-[20px] font-semibold mb-2"
 					style={{ color: 'var(--text-primary)' }}
 				>
 					Sign Out
 				</h3>
-				<p 
+				<p
 					className="text-[14px] md:text-[15px] mb-8"
 					style={{ color: 'var(--text-secondary)' }}
 				>

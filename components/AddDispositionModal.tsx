@@ -73,7 +73,7 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 			}}
 		>
 			<div
-				className="dark:bg-gray-800 w-full max-w-lg mx-4 max-h-[90vh] flex flex-col rounded-[var(--radius)]"
+				className="dark:bg-gray-800 w-full max-w-lg mx-4 max-h-[80vh] flex flex-col rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 				onClick={(e) => e.stopPropagation()}
 			>
@@ -92,7 +92,7 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 						variant="ghost"
 						size="sm"
 						onClick={onClose}
-						className="dark:text-gray-500 dark:hover:text-gray-300 p-1 h-auto"
+						className="dark:text-gray-500 dark:hover:text-gray-300 p-1 h-auto rounded-full"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -153,7 +153,7 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 												const newOptions = dispositionForm.dropdownOptions.filter((_, i) => i !== index);
 												setDispositionForm(prev => ({ ...prev, dropdownOptions: newOptions }));
 											}}
-											className="dark:text-red-400 dark:hover:text-red-300 p-2 h-auto"
+											className="dark:text-red-400 dark:hover:text-red-300 p-2 h-auto rounded-full"
 											style={{ color: '#DC2626' }}
 											onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 												e.currentTarget.style.color = '#B91C1C';
@@ -224,6 +224,7 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 							className="flex  gap-0"
 						/>
 					</div>
+
 
 					{/* Colour Picker */}
 					<ColorPicker

@@ -316,28 +316,20 @@ const ReportPage: React.FC = () => {
 						className="min-w-full divide-y dark:divide-gray-700"
 						style={{ borderColor: 'var(--light-gray)' }}
 					>
-						<thead
-							className="dark:bg-gray-700 border-b dark:border-gray-700"
-							style={{
-								backgroundColor: 'var(--bg-primary)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
+						<thead>
 							<tr>
 								{dynamicHeaders.length > 0 ? (
 									dynamicHeaders.map(header => (
 										<th
 											key={header}
-											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-100 whitespace-nowrap"
-											style={{ color: 'var(--text-primary)' }}
+											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider whitespace-nowrap"
 										>
 											{header}
 										</th>
 									))
 								) : (
 									<th
-										className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-100 whitespace-nowrap"
-										style={{ color: 'var(--text-primary)' }}
+										className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider whitespace-nowrap"
 									>
 										{isLoading ? 'Loading...' : 'No Data'}
 									</th>
@@ -345,9 +337,8 @@ const ReportPage: React.FC = () => {
 							</tr>
 						</thead>
 						<tbody
-							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+							className="divide-y dark:divide-gray-700"
 							style={{
-								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)'
 							}}
 						>
@@ -359,14 +350,7 @@ const ReportPage: React.FC = () => {
 								(paginatedReports?.map((report) => (
 									<tr
 										key={report.id}
-										className="dark:hover:bg-gray-700"
 										style={{ borderColor: 'var(--light-gray)' }}
-										onMouseEnter={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-										}}
-										onMouseLeave={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-										}}
 									>
 										{dynamicHeaders.map(header => (
 											<td

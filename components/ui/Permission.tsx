@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Checkbox from './Checkbox';
 import Toggle from './Toggle';
-import { ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons';
+import { ChevronDownIcon, ChevronUpIcon, LockClosedIcon } from '@radix-ui/react-icons';
 import PageHeading from './PageHeading';
 import SubPageHeading from './SubPageHeading';
 import Button from './Button';
@@ -11,6 +11,7 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import { useGetPermissionWithPrivilegeQuery, useUpdateRoleMutation, RolePermission, Role as ApiRole, Role } from '@/store/services/roleApi';
 import { toastError, toastSuccess } from '@/utils/toastWithSound';
 import PermissionSkeleton from '@/components/skeletons/PermissionSkeleton';
+import EmptyState from '@/components/ui/EmptyState';
 
 type PermissionRole = ApiRole & {
 	supervisorTitle?: string;
@@ -224,9 +225,19 @@ const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) =
 			{/* Content: List of Role Accordions */}
 			<div className="space-y-4 pb-20">
 				{!isLoading && rolesPermissions.length === 0 && (
-					<div className="text-center py-10 text-gray-500">
-						No roles found or permissions data is missing.
-					</div>
+					<EmptyState
+						icon={LockClosedIcon}
+						title="No Roles Found"
+						description={
+							<>
+								No roles or permission data has been set up yet for this campaign. Create roles in the{' '}
+								<span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+									Setup Book
+								</span>{' '}
+								to manage team member permissions here.
+							</>
+						}
+					/>
 				)}
 				{rolesPermissions?.map(role => {
 					const roleId = role._id || role.id || 'unknown';

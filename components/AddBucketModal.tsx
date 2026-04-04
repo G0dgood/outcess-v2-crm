@@ -10,10 +10,12 @@ interface AddBucketModalProps {
 	bucketForm: {
 		name: string;
 		description: string;
+		color: string;
 	};
 	setBucketForm: React.Dispatch<React.SetStateAction<{
 		name: string;
 		description: string;
+		color: string;
 	}>>;
 	onSave: () => void;
 }
@@ -56,7 +58,7 @@ const AddBucketModal: React.FC<AddBucketModalProps> = ({
 						variant="ghost"
 						size="sm"
 						onClick={onClose}
-						className="p-1 h-auto"
+						className="p-1 h-auto rounded-full"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -92,6 +94,32 @@ const AddBucketModal: React.FC<AddBucketModalProps> = ({
 							value={bucketForm.description}
 							onChange={(e) => setBucketForm(prev => ({ ...prev, description: e.target.value }))}
 						/>
+					</div>
+					<div className="space-y-1.5">
+						<label className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-primary)' }}>
+							Bucket Color
+						</label>
+						<div className="flex flex-wrap gap-2 pt-1">
+							{['#050711', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#6B7280'].map((c) => (
+								<button
+									key={c}
+									type="button"
+									onClick={() => setBucketForm(prev => ({ ...prev, color: c }))}
+									className={`w-8 h-8 rounded-full border-2 transition-all ${bucketForm.color === c ? 'border-primary scale-110' : 'border-transparent hover:scale-105'}`}
+									style={{ backgroundColor: c }}
+									title={c}
+								/>
+							))}
+							<div className="flex items-center gap-2 ml-2">
+								<input
+									type="color"
+									value={bucketForm.color}
+									onInput={(e) => setBucketForm(prev => ({ ...prev, color: e.currentTarget.value }))}
+									className="w-8 h-8 rounded-full border-none p-0 bg-transparent cursor-pointer"
+								/>
+								<span className="text-[10px] text-gray-500 font-mono uppercase">{bucketForm.color}</span>
+							</div>
+						</div>
 					</div>
 				</div>
 				<div

@@ -138,7 +138,8 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 	return (
 		<div className={`logo-upload-container ${className}`}>
 			{label && (
-				<label className="font-inter text-base font-medium text-[#050711] mb-4 block">
+				<label className="font-inter text-base font-medium text-[#050711] mb-4 block"
+					style={{ color: 'var(--text-secondary)' }}>
 					{label}
 				</label>
 			)}
@@ -178,7 +179,8 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 								</Button>
 							)}
 						</div>
-						<p className="font-inter text-[10px] md:text-[12px] text-gray-600 mt-2">Click to change logo</p>
+						<p className="font-inter text-[10px] md:text-[12px] text-gray-600 mt-2"
+							style={{ color: 'var(--text-secondary)' }}>Click to change logo</p>
 					</div>
 				) : (
 					<div className="p-8 text-center">
@@ -186,10 +188,12 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 							<div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
 								<Icon name="upload-cloud" />
 							</div>
-							<p className="font-inter text-[10px] md:text-[12px] font-medium text-[#050711] mb-2">
+							<p className="font-inter text-[10px] md:text-[12px] font-medium text-[#050711] mb-2"
+								style={{ color: 'var(--text-secondary)' }}>
 								Drag and Drop or Upload Organization Logo
 							</p>
-							<p className="font-lato text-[8px] md:text-[10px] text-gray-600">
+							<p className="font-lato text-[8px] md:text-[10px] text-gray-600"
+								style={{ color: 'var(--text-secondary)' }}>
 								We recommend you to upload a jpg / jpeg / png file with a minimum dimension of {minDimensions.width}w x {minDimensions.height}h and less than {maxSize}MB
 							</p>
 						</div>

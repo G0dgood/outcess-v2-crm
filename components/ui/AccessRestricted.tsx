@@ -19,7 +19,7 @@ const AccessRestricted: React.FC<AccessRestrictedProps> = ({
 
 	return (
 		<div
-			className={`dark:bg-gray-800 border dark:border-gray-700 p-6 ${className}`}
+			className={`dark:bg-gray-800 border dark:border-gray-700 p-6 rounded-[var(--radius)] ${className}`}
 			style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
 		>
 			<TitleTag className={titleStyles} style={{ color: 'var(--text-primary)' }}>

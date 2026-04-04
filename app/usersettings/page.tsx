@@ -23,6 +23,8 @@ import SubPageHeading from "@/components/ui/SubPageHeading";
 import BackButton from "@/components/ui/BackButton";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
 
 
 
@@ -30,8 +32,10 @@ export default function SettingsPage() {
 	const { isDarkMode, toggleTheme } = useTheme();
 	const { campaignData } = useCampaign();
 	const primaryColor = campaignData?.primaryColor || '#050711';
+	const router = useRouter();
 
 	const { user } = useAuth();
+
 	const { data: userData, isLoading: isUserLoading } = useGetUserByIdQuery(user?.id || '', {
 		skip: !user?.id
 	});
@@ -39,11 +43,13 @@ export default function SettingsPage() {
 
 	const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'email' | 'preferences' | 'sound'>('profile');
 
+
 	// Loading states
 	const [isProfileLoading, setIsProfileLoading] = useState(false);
 	const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 
 	// Profile section
+
 	const [isEditingProfile, setIsEditingProfile] = useState(false);
 	const [profileData, setProfileData] = useState({
 		fullName: '',
@@ -89,10 +95,11 @@ export default function SettingsPage() {
 		setIsProfileLoading(true);
 		try {
 
-			const response = await fetch('/api/user/profile', {
-				method: 'POST',
+			const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL as string) || 'http://localhost:5000/api/v1'}/api/v1/users/user/${user?.id}`, {
+				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 				},
 				body: JSON.stringify(profileData),
 			});
@@ -142,10 +149,11 @@ export default function SettingsPage() {
 
 
 
-			const response = await fetch('/api/user/password', {
-				method: 'POST',
+			const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL as string) || 'http://localhost:5000/api/v1'}/api/v1/users/user/${user?.id}/password`, {
+				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 				},
 				body: JSON.stringify(passwordData),
 			});
@@ -175,6 +183,10 @@ export default function SettingsPage() {
 			setIsPasswordLoading(false);
 		}
 	};
+
+
+
+
 
 
 	// Skeleton loader component for profile section
@@ -272,7 +284,7 @@ export default function SettingsPage() {
 			</div>
 
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 w-full h-full p-6"
+				className="dark:bg-gray-800 border dark:border-gray-700 w-full h-full p-6 rounded-[var(--radius)]"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
@@ -589,7 +601,7 @@ export default function SettingsPage() {
 											variant="ghost"
 											size="sm"
 											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors !rounded-none"
+											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors rounded-full"
 											style={{ color: 'var(--text-tertiary)' }}
 											onMouseEnter={(e) => {
 												e.currentTarget.style.color = 'var(--text-secondary)';
@@ -623,7 +635,7 @@ export default function SettingsPage() {
 											variant="ghost"
 											size="sm"
 											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors !rounded-none"
+											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors rounded-full"
 											style={{ color: 'var(--text-tertiary)' }}
 											onMouseEnter={(e) => {
 												e.currentTarget.style.color = 'var(--text-secondary)';
@@ -657,7 +669,7 @@ export default function SettingsPage() {
 											variant="ghost"
 											size="sm"
 											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors !rounded-none"
+											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors rounded-full"
 											style={{ color: 'var(--text-tertiary)' }}
 											onMouseEnter={(e) => {
 												e.currentTarget.style.color = 'var(--text-secondary)';
@@ -711,7 +723,7 @@ export default function SettingsPage() {
 						<div className="space-y-6">
 							{/* Dark Mode Toggle */}
 							<div
-								className="flex items-center justify-between p-4 dark:bg-gray-800 border dark:border-gray-700"
+								className="flex items-center justify-between p-4 dark:bg-gray-800 border dark:border-gray-700 rounded-[var(--radius)]"
 								style={{
 									backgroundColor: 'var(--bg-primary)',
 									borderColor: 'var(--light-gray)'
@@ -786,6 +798,7 @@ export default function SettingsPage() {
 				)}
 
 			</div>
+
 		</div>
 	);
 }

@@ -40,7 +40,7 @@ export default function LeaderboardPage() {
 	const secondaryColor = campaignData?.secondaryColor || '#6C8B7D';
 
 	const filteredLeaders = useMemo(() => {
-		return MOCK_LEADERS.filter(agent => 
+		return MOCK_LEADERS.filter(agent =>
 			agent.name.toLowerCase().includes(searchTerm.toLowerCase())
 		);
 	}, [searchTerm]);
@@ -58,11 +58,10 @@ export default function LeaderboardPage() {
 						<button
 							key={filter}
 							onClick={() => setTimeFilter(filter)}
-							className={`px-4 py-1.5 rounded-[calc(var(--radius)/2+2px)] text-[12px] font-medium transition-all duration-200 capitalize ${
-								timeFilter === filter 
-								? 'text-white shadow-md' 
+							className={`px-4 py-1.5 rounded-[calc(var(--radius)/2+2px)] text-[12px] font-medium transition-all duration-200 capitalize ${timeFilter === filter
+								? 'text-white shadow-md'
 								: 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
-							}`}
+								}`}
 							style={timeFilter === filter ? { backgroundColor: primaryColor } : {}}
 						>
 							{filter}
@@ -75,20 +74,20 @@ export default function LeaderboardPage() {
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end pt-8 mb-6">
 				{/* 2nd Place */}
 				<div className="order-2 md:order-1">
-					<PodiumCard 
-						agent={topThree[1]} 
-						rank={2} 
-						primaryColor={primaryColor} 
+					<PodiumCard
+						agent={topThree[1]}
+						rank={2}
+						primaryColor={primaryColor}
 						secondaryColor={secondaryColor}
 					/>
 				</div>
-				
+
 				{/* 1st Place */}
 				<div className="order-1 md:order-2 transform md:-translate-y-6 scale-105 md:scale-110 z-10">
-					<PodiumCard 
-						agent={topThree[0]} 
-						rank={1} 
-						primaryColor={primaryColor} 
+					<PodiumCard
+						agent={topThree[0]}
+						rank={1}
+						primaryColor={primaryColor}
 						secondaryColor={secondaryColor}
 						isMain
 					/>
@@ -96,10 +95,10 @@ export default function LeaderboardPage() {
 
 				{/* 3rd Place */}
 				<div className="order-3 md:order-3">
-					<PodiumCard 
-						agent={topThree[2]} 
-						rank={3} 
-						primaryColor={primaryColor} 
+					<PodiumCard
+						agent={topThree[2]}
+						rank={3}
+						primaryColor={primaryColor}
 						secondaryColor={secondaryColor}
 					/>
 				</div>
@@ -111,9 +110,9 @@ export default function LeaderboardPage() {
 					<h3 className="text-[14px] font-semibold text-gray-800 dark:text-gray-100" style={{ ...plusJakartaStyle }}>Agent Rankings</h3>
 					<div className="relative max-w-sm w-full">
 						<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-						<input 
-							type="text" 
-							placeholder="Search agent name..." 
+						<input
+							type="text"
+							placeholder="Search agent name..."
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 							className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 text-[13px] rounded-[var(--radius)] focus:ring-1 placeholder:text-gray-400 outline-none"
@@ -122,7 +121,7 @@ export default function LeaderboardPage() {
 					</div>
 				</div>
 
-				<div 
+				<div
 					className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
 					style={{
 						backgroundColor: 'var(--accent-white)',
@@ -135,50 +134,37 @@ export default function LeaderboardPage() {
 						onItemsPerPageChange={setItemsPerPage}
 						label="Agents"
 					/>
-					
+
 					<div className="overflow-x-auto">
 						<table
 							className="min-w-full divide-y dark:divide-gray-700"
 							style={{ borderColor: 'var(--light-gray)' }}
 						>
-							<thead
-								className="dark:bg-gray-700 border-b dark:border-gray-700"
-								style={{
-									backgroundColor: 'var(--bg-primary)',
-									borderColor: 'var(--light-gray)'
-								}}
-							>
+							<thead>
 								<tr>
 									<th
-										className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
-										style={{ color: 'var(--text-primary)' }}
+										className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider"
 									>Rank</th>
 									<th
-										className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
-										style={{ color: 'var(--text-primary)' }}
+										className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider"
 									>Agent</th>
 									<th
-										className="px-6 py-3 text-center text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
-										style={{ color: 'var(--text-primary)' }}
+										className="px-6 py-3 text-center text-[8px] md:text-[10px] font-medium uppercase tracking-wider"
 									>Calls</th>
 									<th
-										className="px-6 py-3 text-center text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
-										style={{ color: 'var(--text-primary)' }}
+										className="px-6 py-3 text-center text-[8px] md:text-[10px] font-medium uppercase tracking-wider"
 									>Conversions</th>
 									<th
-										className="px-6 py-3 text-right text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
-										style={{ color: 'var(--text-primary)' }}
+										className="px-6 py-3 text-right text-[8px] md:text-[10px] font-medium uppercase tracking-wider"
 									>Total Points</th>
 									<th
-										className="px-6 py-3 text-center text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
-										style={{ color: 'var(--text-primary)' }}
+										className="px-6 py-3 text-center text-[8px] md:text-[10px] font-medium uppercase tracking-wider"
 									>Trend</th>
 								</tr>
 							</thead>
 							<tbody
 								className="dark:bg-gray-800 divide-y dark:divide-gray-700"
 								style={{
-									backgroundColor: 'var(--accent-white)',
 									borderColor: 'var(--light-gray)'
 								}}
 							>
@@ -186,15 +172,9 @@ export default function LeaderboardPage() {
 									<NoRecordFound colSpan={6} />
 								) : (
 									remainingLeaders.map((agent) => (
-										<tr key={agent.id} 
-											className="dark:hover:bg-gray-700 transition-colors"
+										<tr key={agent.id}
+											className="transition-colors"
 											style={{ borderColor: 'var(--light-gray)' }}
-											onMouseEnter={(e) => {
-												e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-											}}
-											onMouseLeave={(e) => {
-												e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-											}}
 										>
 											<td className="px-6 py-4 whitespace-nowrap">
 												<span className="font-bold text-gray-400 dark:text-gray-500 text-[13px]">#{agent.rank}</span>
@@ -233,16 +213,16 @@ export default function LeaderboardPage() {
 	);
 }
 
-function PodiumCard({ 
-	agent, 
-	rank, 
-	primaryColor, 
-	secondaryColor, 
-	isMain = false 
-}: { 
-	agent?: AgentPerformance; 
-	rank: number; 
-	primaryColor: string; 
+function PodiumCard({
+	agent,
+	rank,
+	primaryColor,
+	secondaryColor,
+	isMain = false
+}: {
+	agent?: AgentPerformance;
+	rank: number;
+	primaryColor: string;
 	secondaryColor: string;
 	isMain?: boolean;
 }) {

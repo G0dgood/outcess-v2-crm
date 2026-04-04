@@ -9,7 +9,7 @@ import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
 import { useUserInfo } from "@/contexts/UserInfoContext";
 import { useCampaign } from "@/contexts/CampaignContext";
-import { useCreateCampaignMutation, useUpdateCampaignMutation } from "@/store/services/campaignApi";
+import { useCreateCampaignMutation, useUpdateCampaignMutation, useUpdateBucketCustomerFieldsMutation } from "@/store/services/campaignApi";
 import { ApiError, extractErrorMessage } from "@/utils/apiError";
 
 type CampaignLike = {
@@ -28,13 +28,13 @@ type RoleValue = string | { roleName?: string };
 const getProgressForStep = (step: number): number => {
   switch (step) {
     case 1:
-      return 20;
+      return 25;
     case 2:
-      return 40;
+      return 50;
     case 3:
-      return 60;
+      return 75;
     case 4:
-      return 80;
+      return 100;
     default:
       return 0;
   }
@@ -64,6 +64,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const { setSelectedCampaignId } = useCampaign();
   const [createCampaign] = useCreateCampaignMutation();
   const [updateCampaign] = useUpdateCampaignMutation();
+  const [updateBucketCustomerFields] = useUpdateBucketCustomerFieldsMutation();
 
   const rawRole = (user as { role?: RoleValue } | null | undefined)?.role;
   const creatorRoleName =
@@ -91,7 +92,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
 
   const performBackNavigation = useCallback(() => {
-    if (currentStep === 3 && setupData.dashboardSettings.activeTab === 'disposition') {
+    if (currentStep === 2 && setupData.dashboardSettings.activeTab === 'disposition') {
       setDashboardStep('KPI Metric');
       updateDashboardSettings({ activeTab: 'kpi' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -152,9 +153,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const getBackButtonText = () => {
     switch (currentStep) {
       case 2: return "Back to Basic Setup";
-      case 3: return "Back to Header & Navigation";
-      case 4: return "Back to Dashboard";
-      case 5: return "Back to Customer Book";
+      case 3: return "Back to Dashboard";
+      case 4: return "Back to Customer Book";
       default: return "Back";
     }
   };
@@ -171,7 +171,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
     const status = isSupervisorCreator ? "In Review" : "Approved";
     const loadingMessage = isSupervisorCreator ? "Submitting for approval..." : "Approving LOB plan...";
-    const successTitle = isSupervisorCreator ? "Campaign Plan submitted successfully!" : "Campaign Plan approved successfully!";
+    const successTitle = isSupervisorCreator ? "Campaign submitted successfully!" : "Campaign approved successfully!";
     const successDescription = isSupervisorCreator
       ? "Your CRM setup is now under review."
       : "Your CRM setup has been approved.";
@@ -215,7 +215,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   }, [setupData.campaignId, isSupervisorCreator, updateCampaign, setIsLoading]);
 
   const handlePersist = useCallback(async (shouldAdvance: boolean = false) => {
-    if (currentStep === 5) {
+    if (currentStep === 4) {
       handleSubmitForApproval();
       return;
     }
@@ -234,34 +234,35 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
     try {
       if (currentStep === 1) {
+        // Construct basic data object
+        const baseData = {
+          name: setupData?.campaignName || '',
+          timeZone: setupData?.timeZone || '',
+          industry: setupData?.industry || '',
+          businessSize: setupData?.businessSize || '',
+          companyId: user?.company?.id || setupData?.companyId || '',
+          campaignName: setupData?.campaignName || '',
+          progress,
+        };
+
+        // Prepare final data (FormData if file exists, otherwise plain object)
+        let finalData: any = { ...baseData, logo: setupData.logo || '' };
+        
+        if (setupData.logoFile) {
+          const formData = new FormData();
+          Object.entries(baseData).forEach(([key, value]) => {
+            formData.append(key, String(value));
+          });
+          formData.append('logo', setupData.logoFile);
+          finalData = formData;
+        }
+
         if (setupData.campaignId) {
           try {
             // If we already have an ID, update instead of create
             await updateCampaign({
               id: setupData.campaignId,
-              data: {
-                name: setupData?.campaignName || '',
-                timeZone: setupData?.timeZone || '',
-                industry: setupData?.industry || '',
-                businessSize: setupData?.businessSize || '',
-                companyId: user?.company?.id || setupData?.companyId || '',
-                campaignName: setupData?.campaignName || '',
-                primaryColor: setupData.primaryColor,
-                secondaryColor: setupData.secondaryColor,
-                textColor: setupData.textColor,
-                tableColor: setupData.tableColor,
-                backgroundColor: setupData.backgroundColor,
-                accentColor: setupData.accentColor,
-                primaryColorDark: setupData.primaryColorDark,
-                secondaryColorDark: setupData.secondaryColorDark,
-                textColorDark: setupData.textColorDark,
-                tableColorDark: setupData.tableColorDark,
-                backgroundColorDark: setupData.backgroundColorDark,
-                accentColorDark: setupData.accentColorDark,
-                mainForegroundColor: setupData.mainForegroundColor || '',
-                mainForegroundColorDark: setupData.mainForegroundColorDark || '',
-                progress,
-              },
+              data: finalData,
             }).unwrap();
 
             if (!shouldAdvance) {
@@ -284,31 +285,19 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
               // Create new Campaign
               const targetCompanyId = user?.company?.id || setupData.companyId;
-              const response = await createCampaign({
-                name: setupData.campaignName,
-                timeZone: setupData.timeZone,
-                industry: setupData.industry,
-                businessSize: setupData.businessSize,
-                userId: user?.id,
-                companyName: setupData.companyName,
-                companyId: targetCompanyId,
-                campaignName: setupData.campaignName,
-                primaryColor: setupData.primaryColor,
-                secondaryColor: setupData.secondaryColor,
-                textColor: setupData.textColor,
-                tableColor: setupData.tableColor,
-                backgroundColor: setupData.backgroundColor,
-                accentColor: setupData.accentColor,
-                primaryColorDark: setupData.primaryColorDark,
-                secondaryColorDark: setupData.secondaryColorDark,
-                textColorDark: setupData.textColorDark,
-                tableColorDark: setupData.tableColorDark,
-                backgroundColorDark: setupData.backgroundColorDark,
-                accentColorDark: setupData.accentColorDark,
-                mainForegroundColor: setupData.mainForegroundColor || '',
-                mainForegroundColorDark: setupData.mainForegroundColorDark || '',
-                progress,
-              }).unwrap();
+              
+              // Prepare for create
+              let createData: any = { ...baseData, userId: user?.id, companyName: setupData.companyName, companyId: targetCompanyId, logo: setupData.logo || '' };
+              if (setupData.logoFile) {
+                const formData = new FormData();
+                Object.entries(createData).forEach(([key, value]) => {
+                  if (key !== 'logo') formData.append(key, String(value));
+                });
+                formData.append('logo', setupData.logoFile);
+                createData = formData;
+              }
+
+              const response = await createCampaign(createData).unwrap();
 
               const createdCampaign = (response as { campaign?: CampaignLike }).campaign;
 
@@ -339,31 +328,18 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         } else {
           // Create new Campaign
           const targetCompanyId = user?.company?.id || setupData.companyId;
-          const response = await createCampaign({
-            name: setupData.campaignName,
-            timeZone: setupData.timeZone,
-            industry: setupData.industry,
-            businessSize: setupData.businessSize,
-            userId: user?.id,
-            companyName: setupData.companyName,
-            companyId: targetCompanyId,
-            campaignName: setupData.campaignName,
-            primaryColor: setupData.primaryColor,
-            secondaryColor: setupData.secondaryColor,
-            textColor: setupData.textColor,
-            tableColor: setupData.tableColor,
-            backgroundColor: setupData.backgroundColor,
-            accentColor: setupData.accentColor,
-            primaryColorDark: setupData.primaryColorDark,
-            secondaryColorDark: setupData.secondaryColorDark,
-            textColorDark: setupData.textColorDark,
-            tableColorDark: setupData.tableColorDark,
-            backgroundColorDark: setupData.backgroundColorDark,
-            accentColorDark: setupData.accentColorDark,
-            mainForegroundColor: setupData.mainForegroundColor || '',
-            mainForegroundColorDark: setupData.mainForegroundColorDark || '',
-            progress,
-          }).unwrap();
+          
+          let createData: any = { ...baseData, userId: user?.id, companyName: setupData.companyName, companyId: targetCompanyId, logo: setupData.logo || '' };
+          if (setupData.logoFile) {
+            const formData = new FormData();
+            Object.entries(createData).forEach(([key, value]) => {
+              if (key !== 'logo') formData.append(key, String(value));
+            });
+            formData.append('logo', setupData.logoFile);
+            createData = formData;
+          }
+
+          const response = await createCampaign(createData).unwrap();
 
           const createdCampaign = (response as { campaign?: CampaignLike }).campaign;
 
@@ -396,50 +372,28 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         let updateData: FormData | Record<string, unknown> = {};
         switch (currentStep) {
           case 2:
-            const formData = new FormData();
-            if (setupData.logoFile) {
-              formData.append('logo', setupData.logoFile);
-            }
-            formData.append('selectedLayout', setupData.selectedLayout);
-            formData.append('primaryColor', setupData.primaryColor || '');
-            formData.append('secondaryColor', setupData.secondaryColor || '');
-            formData.append('textColor', setupData.textColor || '');
-            formData.append('tableColor', setupData.tableColor || '');
-            formData.append('backgroundColor', setupData.backgroundColor || '');
-            formData.append('accentColor', setupData.accentColor || '');
-            formData.append('primaryColorDark', setupData.primaryColorDark || '');
-            formData.append('secondaryColorDark', setupData.secondaryColorDark || '');
-            formData.append('textColorDark', setupData.textColorDark || '');
-            formData.append('tableColorDark', setupData.tableColorDark || '');
-            formData.append('backgroundColorDark', setupData.backgroundColorDark || '');
-            formData.append('accentColorDark', setupData.accentColorDark || '');
-            formData.append('mainForegroundColor', setupData.mainForegroundColor || '');
-            formData.append('mainForegroundColorDark', setupData.mainForegroundColorDark || '');
-            formData.append('navigationSettings', JSON.stringify(setupData.navigationSettings));
-            formData.append('progress', String(progress));
-
-            updateData = formData;
-            break;
-          case 3:
             updateData = {
               dashboardSettings: setupData.dashboardSettings,
               progress,
             };
             break;
-          case 4:
-            // Ensure configuredFields is a clean array before sending
-            const cleanConfiguredFields = setupData.customerBookSettings.configuredFields.map(field => ({
-              id: field.id,
-              name: field.name,
-              type: field.type,
-              required: field.required
-            }));
+          case 3:
+            // Sync all bucket-specific customer fields individually
+            const buckets = setupData.dashboardSettings.buckets || [];
+            if (buckets.length > 0) {
+              await Promise.all(
+                buckets.map((bucket) =>
+                  updateBucketCustomerFields({
+                    id: setupData.campaignId!,
+                    bucketId: bucket.id,
+                    customerFields: bucket.customerFields || [],
+                  }).unwrap()
+                )
+              );
+            }
 
             updateData = {
-              customerBookSettings: {
-                ...setupData.customerBookSettings,
-                configuredFields: cleanConfiguredFields
-              },
+              customerBookSettings: setupData.customerBookSettings,
               progress,
             };
             break;
@@ -465,7 +419,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           duration: 2000,
         });
         resetDirty();
-        if (currentStep === 3) {
+        if (currentStep === 2) {
           onStepComplete();
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
@@ -538,7 +492,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
         onBack={handleExitToDashboard}
       />
-      {currentStep !== 5 ? <SetupSidebar currentStep={currentStep} className="hidden md:block" /> : <div id="side-nav" />}
+      {currentStep !== 4 ? <SetupSidebar currentStep={currentStep} className="hidden md:block" /> : <div id="side-nav" />}
       {isMobileMenuOpen && isMobileView && (
         <div className="fixed inset-0 z-50">
           <div className="fixed inset-0 bg-black/10" onClick={() => setIsMobileMenuOpen(false)}></div>
@@ -557,12 +511,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         disabled={mounted && (isLoading || isFetchingCampaign)}
         buttonText={
           (mounted && isLoading)
-            ? (currentStep === 5
+            ? (currentStep === 4
               ? (isSupervisorCreator ? 'Submitting...' : 'Approving...')
               : 'Saving...')
             : (mounted && isFetchingCampaign)
               ? 'Checking...'
-              : (currentStep === 5
+              : (currentStep === 4
                 ? (isSupervisorCreator ? 'Send for Approval' : 'Approve')
                 : 'Save & Continue')
         }

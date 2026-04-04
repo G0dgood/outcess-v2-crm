@@ -9,9 +9,11 @@ import CreateCustomRoleModal from '@/components/ui/CreateCustomRoleModal';
 import DeleteRoleModal from './DeleteRoleModal';
 import SubPageHeading from '@/components/ui/SubPageHeading';
 import PageHeading from '@/components/ui/PageHeading';
-import { ExclamationTriangleIcon, TrashIcon, CopyIcon } from '@radix-ui/react-icons';
+import { ExclamationTriangleIcon, TrashIcon, CopyIcon, Component1Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+
+import EmptyState from '@/components/ui/EmptyState';
 
 interface Role {
 	id: string;
@@ -25,7 +27,7 @@ interface RolesProps {
 
 const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 	const { selectedCampaignId } = useCampaign();
-	const { data: rolesData, isLoading } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', { skip: !selectedCampaignId });
+	const { data: rolesData, isLoading, refetch } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', { skip: !selectedCampaignId });
 	const { canAccess } = usePrivilege();
 	const canDelete = canAccess('userManagement', 'delete');
 	const [deleteRole] = useDeleteRoleMutation();
@@ -177,21 +179,20 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 					))}
 				</div>
 			) : (
-				<div className="flex flex-col items-center justify-center h-64 border  dark:border-gray-700 rounded-[var(--radius)]" style={{ borderColor: 'var(--light-gray)' }}>
-					<ExclamationTriangleIcon className="w-16 h-16 mb-4" style={{ color: 'var(--text-tertiary)' }} />
-					<p className="text-[12px] md:text-[14px] font-medium" style={{ color: 'var(--text-primary)' }}>
-						No roles found
-					</p>
-					<p className="text-[10px] md:text-[12px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
-						Create a new role to get started
-					</p>
-				</div>
+				<EmptyState
+					icon={Component1Icon}
+					title="No Roles Found"
+					description="There are currently no custom roles defined for this campaign. You can create custom roles to manage granular permissions for your team."
+					actionLabel="Create Custom Role"
+					onAction={handleCreateCustomRole}
+				/>
 			)}
 
 			{/* Create Custom Role Modal */}
 			<CreateCustomRoleModal
 				isOpen={isCreateModalOpen}
 				onClose={() => setIsCreateModalOpen(false)}
+				onSuccess={refetch}
 			/>
 
 			{/* Delete Role Modal */}

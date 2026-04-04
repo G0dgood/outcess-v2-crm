@@ -30,19 +30,42 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 	const companyId = user?.companyId || user?.company?._id || '';
 
 	const [file, setFile] = useState<File | null>(null);
+	const [isDragging, setIsDragging] = useState(false);
 	const [result, setResult] = useState<UploadResult | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [bulkUpload, { isLoading }] = useBulkUploadTeamMembersMutation();
 
+	const validateAndSetFile = (selectedFile: File) => {
+		if (selectedFile.type !== 'text/csv' && !selectedFile.name.endsWith('.csv')) {
+			toast.error('Please upload a CSV file');
+			return;
+		}
+		setFile(selectedFile);
+		setResult(null);
+	};
+
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const selectedFile = e.target.files?.[0];
 		if (selectedFile) {
-			if (selectedFile.type !== 'text/csv' && !selectedFile.name.endsWith('.csv')) {
-				toast.error(' Please upload a CSV file');
-				return;
-			}
-			setFile(selectedFile);
-			setResult(null);
+			validateAndSetFile(selectedFile);
+		}
+	};
+
+	const handleDragOver = (e: React.DragEvent) => {
+		e.preventDefault();
+		setIsDragging(true);
+	};
+
+	const handleDragLeave = () => {
+		setIsDragging(false);
+	};
+
+	const handleDrop = (e: React.DragEvent) => {
+		e.preventDefault();
+		setIsDragging(false);
+		const droppedFile = e.dataTransfer.files?.[0];
+		if (droppedFile) {
+			validateAndSetFile(droppedFile);
 		}
 	};
 
@@ -113,9 +136,14 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 							</p>
 
 							<div
-								className="border-2 border-dashed p-10 flex flex-col items-center justify-center space-y-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors rounded-xl"
-								style={{ borderColor: 'var(--light-gray)' }}
+								className={`border-2 border-dashed p-10 flex flex-col items-center justify-center space-y-4 cursor-pointer transition-all duration-200 rounded-[var(--radius)] ${isDragging
+										? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 scale-[1.01]'
+										: 'border-[var(--light-gray)] hover:bg-gray-50 dark:hover:bg-gray-700/50'
+									}`}
 								onClick={() => fileInputRef.current?.click()}
+								onDragOver={handleDragOver}
+								onDragLeave={handleDragLeave}
+								onDrop={handleDrop}
 							>
 								<input
 									type="file"
@@ -124,12 +152,13 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 									accept=".csv"
 									onChange={handleFileChange}
 								/>
-								<div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+								<div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-200 ${isDragging ? 'bg-blue-200 text-blue-700' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600'
+									}`}>
 									<UploadIcon className="w-6 h-6" />
 								</div>
 								<div className="text-center">
 									<p className="text-[14px] font-medium dark:text-gray-200">
-										{file ? file.name : 'Click to select or drag and drop'}
+										{file ? file.name : (isDragging ? 'Drop file here' : 'Click to select or drag and drop')}
 									</p>
 									<p className="text-[12px] dark:text-gray-400" style={{ color: 'var(--text-tertiary)' }}>
 										Supported format: .csv
@@ -137,7 +166,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 								</div>
 							</div>
 
-							<div className="bg-blue-50 dark:bg-blue-900/20 p-4 flex gap-3 rounded-lg">
+							<div className="bg-blue-50 dark:bg-blue-900/20 p-4 flex gap-3 rounded-[var(--radius)]">
 								<FileTextIcon className="w-5 h-5 text-blue-600 shrink-0" />
 								<div className="text-[12px] text-blue-800 dark:text-blue-300">
 									<p className="font-semibold mb-1">Important Note</p>
@@ -147,7 +176,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 						</div>
 					) : (
 						<div className="space-y-6">
-							<div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 border dark:border-gray-600 rounded-lg">
+							<div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 border dark:border-gray-600 rounded-[var(--radius)]">
 								<div className="flex-1 text-center border-r dark:border-gray-600">
 									<p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Total</p>
 									<p className="text-[20px] font-bold dark:text-white">{result.total}</p>
@@ -168,7 +197,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 										<ExclamationTriangleIcon className="w-4 h-4" />
 										Errors Found
 									</h3>
-									<div className="max-h-[200px] overflow-y-auto border divide-y dark:border-gray-700 dark:divide-gray-700 rounded-lg">
+									<div className="max-h-[200px] overflow-y-auto border divide-y dark:border-gray-700 dark:divide-gray-700 rounded-[var(--radius)]">
 										{result.errors.map((err, idx) => (
 											<div key={idx} className="p-3 text-[11px] flex gap-3 items-start">
 												<span className="font-mono text-gray-500 shrink-0">Row {err.row}</span>
@@ -180,7 +209,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 							)}
 
 							{result.success > 0 && (
-								<div className="flex items-center gap-2 text-[12px] text-green-600 bg-green-50 dark:bg-green-900/20 p-3 rounded">
+								<div className="flex items-center gap-2 text-[12px] text-green-600 bg-green-50 dark:bg-green-900/20 p-3 rounded-[var(--radius)]">
 									<CheckCircledIcon className="w-4 h-4" />
 									Users created successfully. Refresh the list to see changes.
 								</div>

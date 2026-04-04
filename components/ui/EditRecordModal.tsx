@@ -111,9 +111,9 @@ const EditRecordModal: React.FC<EditRecordModalProps> = ({
 
 				{/* Modal Form */}
 				<div className="p-6 space-y-4">
-					{fieldDefinitions.map((field) => (
+					{fieldDefinitions.map((field, index) => (
 						<Input
-							key={field.id}
+							key={field.id || `field-${index}`}
 							label={field.name}
 							placeholder={`Enter ${field.name}`}
 							value={String(formData[field.name] || '')}

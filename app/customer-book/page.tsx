@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import PageHeading from '@/components/ui/PageHeading';
 import SearchWithSend from '@/components/ui/SearchWithSend';
@@ -44,12 +44,21 @@ const CustomerBookPage: React.FC = () => {
 		return 'text';
 	};
 
-	const fieldDefinitions = configuredFields.map((field: SetupData['customerBookSettings']['configuredFields'][number]) => ({
-		id: field.id,
-		name: field.name,
-		type: mapFieldType(field.type),
-		required: field.required
-	}));
+	const fieldDefinitions = useMemo(() => {
+		const allFields = configuredFields.flatMap((config: any) => config?.fields || []);
+		// Deduplicate by ID just in case
+		const uniqueFieldsMap = new Map();
+		allFields.forEach((field: any) => {
+			if (field && field.id) uniqueFieldsMap.set(field.id, field);
+		});
+
+		return Array.from(uniqueFieldsMap.values()).map((field: any) => ({
+			id: field.id,
+			name: field.name,
+			type: mapFieldType(field.type),
+			required: field.required
+		}));
+	}, [configuredFields]);
 
 	// Fetch customer by SearchId
 	const { data: searchResult, isLoading, isError, error } = useGetSetupBookBySearchIdQuery(
@@ -71,10 +80,10 @@ const CustomerBookPage: React.FC = () => {
 				const headers = Object.keys(firstItem).filter(key => !['_id', 'id', '__v', 'companyId', 'campaignId'].includes(key) && key.toLowerCase() !== 'searchid');
 				setTableHeaders(headers);
 
-				const mappedCustomers: Customer[] = data.map((item) => {
+				const mappedCustomers: Customer[] = data?.map((item) => {
 					const record = item as Record<string, unknown>;
 					return {
-						id: (record.id as string) || (record._id as string),
+						id: (record?.id as string) || (record?._id as string),
 						...(record as Record<string, string | number | boolean | null | undefined>)
 					};
 				});
@@ -156,35 +165,26 @@ const CustomerBookPage: React.FC = () => {
 								className="min-w-full divide-y dark:divide-gray-700"
 								style={{ borderColor: 'var(--light-gray)' }}
 							>
-								<thead
-									className="dark:bg-gray-700 border-b dark:border-gray-700"
-									style={{
-										backgroundColor: 'var(--bg-primary)',
-										borderColor: 'var(--light-gray)'
-									}}
-								>
+								<thead>
 									<tr>
 										{tableHeaders.map((header) => (
 											<th
 												key={header}
-												className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
-												style={{ color: 'var(--text-primary)' }}
+												className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider"
 											>
 												{header}
 											</th>
 										))}
 										<th
-											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium dark:text-gray-100 uppercase tracking-wider"
-											style={{ color: 'var(--text-primary)' }}
+											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider"
 										>
 											Actions
 										</th>
 									</tr>
 								</thead>
 								<tbody
-									className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+									className="divide-y dark:divide-gray-700"
 									style={{
-										backgroundColor: 'var(--accent-white)',
 										borderColor: 'var(--light-gray)'
 									}}
 								>
@@ -195,14 +195,7 @@ const CustomerBookPage: React.FC = () => {
 									) : filteredCustomers?.map((customer) => (
 										<tr
 											key={customer.id}
-											className="dark:hover:bg-gray-700"
 											style={{ borderColor: 'var(--light-gray)' }}
-											onMouseEnter={(e) => {
-												e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-											}}
-											onMouseLeave={(e) => {
-												e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-											}}
 										>
 											{tableHeaders?.map((header) => (
 												<td

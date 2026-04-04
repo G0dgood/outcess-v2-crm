@@ -361,7 +361,7 @@ const SMSPage: React.FC = () => {
 							variant="ghost"
 							size="sm"
 							onClick={() => setIsDrawerOpen(false)}
-							className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors !rounded-none"
+							className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-full"
 							style={{ color: 'var(--text-tertiary)' }}
 							onMouseEnter={(e) => {
 								e.currentTarget.style.color = 'var(--text-secondary)';

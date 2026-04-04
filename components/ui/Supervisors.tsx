@@ -10,10 +10,12 @@ import PageHeading from './PageHeading';
 import SubPageHeading from './SubPageHeading';
 import Button from './Button';
 import DeleteRoleModal from '@/components/features/role/DeleteRoleModal';
-import { ExclamationTriangleIcon, TrashIcon, CopyIcon } from '@radix-ui/react-icons';
+import { ExclamationTriangleIcon, TrashIcon, CopyIcon, PersonIcon } from '@radix-ui/react-icons';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { toast } from 'sonner';
 import CreateSupervisorRoleModal from './CreateSupervisorRoleModal';
+
+import EmptyState from '@/components/ui/EmptyState';
 
 interface SupervisorRole {
   _id?: string;
@@ -192,33 +194,20 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
           })}
         </div>
       ) : (
-        <div
-          className="flex flex-col items-center justify-center h-64 border dark:border-gray-700 rounded-[var(--radius)]"
-          style={{ borderColor: 'var(--light-gray)' }}
-        >
-          <ExclamationTriangleIcon
-            className="w-16 h-16 mb-4"
-            style={{ color: 'var(--text-tertiary)' }}
-          />
-          <p
-            className="text-[12px] md:text-[14px] font-medium"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            No supervisors found
-          </p>
-          <p
-            className="text-[10px] md:text-[12px] mt-1"
-            style={{ color: 'var(--text-tertiary)' }}
-          >
-            Create a supervisor role to get started
-          </p>
-        </div>
+        <EmptyState
+          icon={PersonIcon}
+          title="No Supervisors Found"
+          description="There are currently no supervisor roles defined for this campaign. You can create supervisor roles to organize your team management."
+          actionLabel="Create Supervisor Role"
+          onAction={handleOpenCreateModal}
+        />
       )}
 
       <CreateSupervisorRoleModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         campaignId={campaignId}
+        onSuccess={refetch}
       />
 
       <DeleteRoleModal

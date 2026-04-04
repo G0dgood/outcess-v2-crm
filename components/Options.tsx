@@ -57,34 +57,52 @@ const businessSizeOptions = [
 const plusJakartaStyle = { fontFamily: 'var(--font-plus-jakarta)' };
 
 // NoRecordFound
-const NoRecordFound = ({ colSpan }: { colSpan: number }) => {
+const NoRecordFound = ({ colSpan, asTable = true }: { colSpan?: number; asTable?: boolean }) => {
+	const content = (
+		<div className="center-content flex flex-col justify-center items-center h-full">
+			<FaceIcon className="w-16 h-16" color={'var(--text-primary)'} />
+			<p
+				id="mt-3 !underline-none"
+				style={{ color: 'var(--text-primary)' }}>
+				No record found
+			</p>
+		</div>
+	);
+
+	if (!asTable) {
+		return <div className="h-[300px] p-0 m-auto">{content}</div>;
+	}
+
 	return (
 		<tr>
 			<td colSpan={colSpan} className="h-[300px] p-0 m-auto border-b-0">
-				<div className="center-content flex flex-col justify-center items-center h-full">
-					<FaceIcon className="w-16 h-16" color={'var(--text-primary)'} />
-					<p
-						id="mt-3 !underline-none"
-						style={{ color: 'var(--text-primary)' }}>
-						No record found
-					</p>
-				</div>
+				{content}
 			</td>
 		</tr>
 	);
 };
 
 // SVGLoader Fetch
-const SVGLoaderFetch = ({ colSpan, text }: { colSpan: number; text: string }) => (
-	<tr>
-		<td colSpan={colSpan} className="h-[300px] p-0 m-auto">
-			<div className="center-content flex flex-col justify-center items-center h-full">
-				<SVGLoader width={"40px"} height={"40px"} color={"var(--text-primary)"} />
-				<p className="mt-3">{text}</p>
-			</div>
-		</td>
-	</tr>
-);
+const SVGLoaderFetch = ({ colSpan, text, asTable = true }: { colSpan?: number; text: string; asTable?: boolean }) => {
+	const content = (
+		<div className="center-content flex flex-col justify-center items-center h-full">
+			<SVGLoader width={"40px"} height={"40px"} color={"var(--text-primary)"} />
+			<p className="mt-3">{text}</p>
+		</div>
+	);
+
+	if (!asTable) {
+		return <div className="h-[300px] p-0 m-auto">{content}</div>;
+	}
+
+	return (
+		<tr>
+			<td colSpan={colSpan} className="h-[300px] p-0 m-auto">
+				{content}
+			</td>
+		</tr>
+	);
+};
 
 
 const tabs = [

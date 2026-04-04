@@ -22,7 +22,8 @@ import { Send, ChevronUp, CheckCircle, ArrowLeft, RefreshCw, XCircle, PanelRight
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import { TicketSidebar } from '@/components/features/support/TicketSidebar';
 import SupportDetailsSkeleton from '@/components/skeletons/SupportDetailsSkeleton';
-import { SupportStatusModal } from '@/components/features/support/SupportStatusModal';
+import EmptyState from '@/components/ui/EmptyState';
+import SupportStatusModal from '@/components/features/support/SupportStatusModal';
 
 
 export default function TicketDetailsPage({ params }: { params: Promise<{ ticketId: string }> }) {
@@ -218,7 +219,15 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 	}
 
 	if (!ticket) {
-		return <div className="p-8 text-center text-gray-500">Ticket not found</div>;
+		return (
+			<EmptyState
+				iconName="user"
+				title="Ticket Not Found"
+				description="The support ticket you are looking for does not exist or has been removed."
+				actionLabel="Back to Tickets"
+				onAction={() => router.push('/support')}
+			/>
+		);
 	}
 
 	return (

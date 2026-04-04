@@ -10,6 +10,8 @@ export type ModuleId =
 	| 'systemSetting'
 	| 'auditLog'
 	| 'teamMembers'
+	| 'leaderboard'
+	| 'buckets'
 	| 'campaignPlan';
 
 export type PermissionAction = 'view' | 'create' | 'edit' | 'delete';

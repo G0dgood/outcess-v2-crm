@@ -1,30 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Roboto, Lato, Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Work_Sans } from "next/font/google";
 import "./globals.css";
 import NewProvider from "@/components/providers/NewProvider";
+import BucketNotificationHandler from "@/components/BucketNotificationHandler";
 
-const roboto = Roboto({
-  variable: "--font-roboto",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
-
-const lato = Lato({
-  variable: "--font-lato",
-  subsets: ["latin"],
-  weight: ["300", "400", "700", "900"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
+const workSans = Work_Sans({
+  variable: "--font-work-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800", "900"],
-});
-
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -67,9 +50,10 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${roboto.variable} ${lato.variable} ${inter.variable} ${plusJakarta.variable} antialiased`}
+        className={`${workSans.variable} antialiased`}
       >
         <NewProvider>
+          <BucketNotificationHandler />
           {children}
         </NewProvider>
       </body>

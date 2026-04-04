@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Pencil1Icon } from '@radix-ui/react-icons';
+import { Pencil1Icon, ClockIcon } from '@radix-ui/react-icons';
+import EmptyState from '@/components/ui/EmptyState';
 import SubPageHeading from '@/components/ui/SubPageHeading';
 import AddBusinessHourModal, { BusinessHourData } from '@/components/ui/AddBusinessHourModal';
 import ShiftHours from './ShiftHours';
@@ -319,20 +320,18 @@ const BusinessHours = () => {
 						)}
 					</div>
 				) : (
-					<div
-						className="dark:bg-gray-800 border dark:border-gray-700 p-6 min-h-[200px] flex items-center justify-center rounded-[var(--radius)]"
-						style={{
-							backgroundColor: 'var(--accent-white)',
-							borderColor: 'var(--light-gray)'
+					<EmptyState
+						icon={ClockIcon}
+						title="No Business Hours Found"
+						description="Establish your organization's business hours to guide employees in scheduling and completing work activities."
+						actionLabel="Add Business Hour"
+						onAction={() => {
+							setEditingBusinessHourIndex(null);
+							setEditingBusinessHour(null);
+							setIsAddBusinessHourModalOpen(true);
 						}}
-					>
-						<p
-							className="dark:text-gray-400"
-							style={{ color: 'var(--text-tertiary)' }}
-						>
-							No business hours configured yet.
-						</p>
-					</div>
+						className="py-12 border dark:border-gray-700 rounded-[var(--radius)]"
+					/>
 				)}
 
 				{businessHours.length > 0 && (

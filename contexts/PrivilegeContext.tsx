@@ -24,7 +24,9 @@ export type ModuleId =
 	| 'campaignPlan'
 	| 'support'
 	| 'teamMemberSupport'
-	| 'allSupport';
+	| 'allSupport'
+	| 'leaderboard'
+	| 'buckets';
 
 export type PermissionAction =
 	| 'view'

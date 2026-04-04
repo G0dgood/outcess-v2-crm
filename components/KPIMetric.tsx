@@ -7,6 +7,8 @@ import Input from '@/components/ui/Input';
 import Icon from '@/components/ui/Icon';
 import ColorPicker from '@/components/ui/ColorPicker';
 import NextImage from 'next/image';
+import EmptyState from '@/components/ui/EmptyState';
+import { MixIcon } from '@radix-ui/react-icons';
 
 interface Widget {
 	id: string;
@@ -236,27 +238,12 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 
 					{/* Empty State */}
 					{callOutcomes.length === 0 ? (
-						<div className="flex flex-col items-center justify-center py-8 text-center">
-							<NextImage
-								src="/illustrations/Call-Block--Streamline-Ux.png"
-								alt="No call outcomes"
-								width={128}
-								height={128}
-								className="mb-4 opacity-60"
-							/>
-							<h3
-								className="font-inter text-base font-medium dark:text-gray-100 mb-2"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								No Call Outcomes Yet
-							</h3>
-							<p
-								className="font-lato text-[10px] md:text-[12px] dark:text-gray-400 mb-4"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								Add your first call outcome above to get started
-							</p>
-						</div>
+						<EmptyState
+							icon={MixIcon}
+							title="No Call Outcomes Yet"
+							description="Add your first call outcome above to get started"
+							className="py-10"
+						/>
 					) : (
 						<div className="space-y-2">
 							{callOutcomes.map((outcome) => (

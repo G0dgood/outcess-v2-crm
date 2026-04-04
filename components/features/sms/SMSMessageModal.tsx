@@ -74,7 +74,7 @@ const SMSMessageModal: React.FC<SMSMessageModalProps> = ({ isOpen, sms, onClose 
 						variant="ghost"
 						size="sm"
 						onClick={onClose}
-						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1 h-auto"
+						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-full p-1 h-auto"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';

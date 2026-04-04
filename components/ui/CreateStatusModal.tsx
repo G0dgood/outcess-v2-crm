@@ -81,8 +81,10 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 			}));
 	}, [rolesData]);
 
-	const [createStatus] = useCreateStatusMutation();
-	const [updateStatus] = useUpdateStatusMutation();
+	const [createStatus, { isLoading: isCreating }] = useCreateStatusMutation();
+	const [updateStatus, { isLoading: isUpdating }] = useUpdateStatusMutation();
+
+	const isSaving = isCreating || isUpdating;
 
 	const isEditMode = !!statusId;
 
@@ -164,22 +166,28 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 			try {
 				if (isEditMode && statusId) {
 					// Update existing status
-					await updateStatus({
+					const result = await updateStatus({
 						id: statusId,
 						statusData: formData
 					}).unwrap();
+
 					toastSuccess('Status updated successfully');
 				} else {
 					// Create new status
+					if (!selectedCampaignId || selectedCampaignId === 'new') {
+						toastError('Please select a campaign first');
+						return;
+					}
+
 					if (companyId) {
 						await createStatus({
 							...formData,
 							companyId,
-							campaignId: selectedCampaignId || undefined
+							campaignId: selectedCampaignId
 						}).unwrap();
+
 						toastSuccess('Status created successfully');
 					} else {
-						console.error("Company ID missing, cannot create status");
 						toastError('Company ID missing, cannot create status');
 						return;
 					}
@@ -226,7 +234,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 						variant="ghost"
 						size="sm"
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -394,7 +402,8 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 						variant="primary"
 						size="md"
 						onClick={handleCreate}
-						disabled={!formData.name.trim()}
+						disabled={!formData.name.trim() || isSaving}
+						loading={isSaving}
 					>
 						{isEditMode ? 'Save' : 'Create Status'}
 					</Button>

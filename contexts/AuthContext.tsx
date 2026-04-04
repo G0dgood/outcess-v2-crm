@@ -7,8 +7,12 @@ export interface User {
 	id: string;
 	email: string;
 	name: string;
+	username?: string;
+	firstName?: string;
+	lastName?: string;
+	status?: string;
 	avatar?: string;
-	role?: string;
+	role?: string | { roleName: string; permissions: any[] };
 	isTeamMember?: boolean;
 	companyId?: string;
 	companyName?: string;

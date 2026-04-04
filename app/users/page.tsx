@@ -119,7 +119,7 @@ const UsersPage: React.FC = () => {
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
 	const [showInfoBanner, setShowInfoBanner] = useState(true);
 	const [users, setUsers] = useState<User[]>([]);
-	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Shift Hour', 'Login Status', 'Actions'];
+	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Shift Hour', 'Bucket', 'Login Status', 'Actions'];
 	const totalColumns = tableHeaders.length + 1;
 
 	useEffect(() => {
@@ -396,8 +396,6 @@ const UsersPage: React.FC = () => {
 								{tableHeaders.map((label) => (
 									<th
 										key={label}
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
 									>
 										{label}
 									</th>
@@ -405,10 +403,9 @@ const UsersPage: React.FC = () => {
 							</tr>
 						</thead>
 						<tbody
-							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+							className="divide-y dark:divide-gray-700"
 							style={{
-								backgroundColor: 'var(--accent-white)',
-								borderColor: 'var(--light-gray)'
+								borderColor: 'var(--light-gray)',
 							}}
 						>
 							{isLoading ? (
@@ -418,14 +415,7 @@ const UsersPage: React.FC = () => {
 							) : currentUsers?.map((user) => (
 								<tr
 									key={user.id}
-									className="dark:hover:bg-gray-700"
 									style={{ borderColor: 'var(--light-gray)' }}
-									onMouseEnter={(e) => {
-										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-									}}
-									onMouseLeave={(e) => {
-										e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-									}}
 								>
 									<td>
 										<Checkbox
@@ -443,6 +433,33 @@ const UsersPage: React.FC = () => {
 									<td
 									>
 										{user.shiftHour?.title ? user.shiftHour.title : 'No shift assigned'}
+									</td>
+									<td
+										className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-400"
+										style={{ color: 'var(--text-tertiary)' }}
+									>
+										<div className="flex flex-wrap gap-1">
+											{campaignData?.dashboardSettings?.buckets
+												?.filter((b: any) =>
+													b.assignedMembers?.some((m: any) => m.memberId === user.id)
+												)
+												.map((b: any) => (
+													<span
+														key={b.id}
+														className="text-[9px] px-1.5 py-0.5 rounded-full text-white font-medium shadow-sm"
+														style={{ backgroundColor: b.color || '#6B7280' }}
+														title={b.name}
+													>
+														{b.name}
+													</span>
+												))
+											}
+											{(!campaignData?.dashboardSettings?.buckets?.some((b: any) =>
+												b.assignedMembers?.some((m: any) => m.memberId === user.id)
+											)) && (
+													<span className="text-[10px] text-gray-300 italic font-inter font-normal">Unassigned</span>
+												)}
+										</div>
 									</td>
 									<td
 										className="dark:text-gray-100 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"

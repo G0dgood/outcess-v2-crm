@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, Suspense } from 'react';
-import { SetupProvider } from '@/contexts/SetupContext';
 import DashboardHeader from '@/components/ui/DashboardHeader';
 import DashboardSideNav from '@/components/ui/DashboardSideNav';
 import GlobalStickyNotes from '@/components/ui/GlobalStickyNotes';
@@ -37,8 +36,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
 	return (
-		<SetupProvider>
+		<Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
 			<LayoutContent>{children}</LayoutContent>
-		</SetupProvider>
+		</Suspense>
 	);
 }

@@ -138,7 +138,7 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 						variant="ghost"
 						size="sm"
 						onClick={onClose}
-						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors !p-1"
+						className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors !p-1  rounded-full"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
 						<Icon name="Close_round_light" size="lg" />
@@ -154,14 +154,14 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 						onChange={setManualSearchId}
 						required
 					/>
-					{fieldDefinitions.map((field) => (
+					{fieldDefinitions.map((field, index) => (
 						<Input
-							key={field.id}
-							label={field.name}
-							placeholder={`Enter ${field.name}`}
-							value={String(formData[field.name] || '')}
-							onChange={(value) => handleInputChange(field.name, value)}
-							type={field.type === 'phone' ? 'tel' : field.type === 'email' ? 'email' : field.type === 'number' ? 'number' : 'text'}
+							key={`${field.id}-${index}`}
+							label={field?.name}
+							placeholder={`Enter ${field?.name}`}
+							value={String(formData[field?.name] || '')}
+							onChange={(value) => handleInputChange(field?.name, value)}
+							type={field?.type === 'phone' ? 'tel' : field?.type === 'email' ? 'email' : field?.type === 'number' ? 'number' : 'text'}
 							required={field.required}
 						/>
 					))}

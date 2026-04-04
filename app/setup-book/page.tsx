@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import Checkbox from '@/components/ui/Checkbox';
 import PageHeading from '@/components/ui/PageHeading';
-import { UploadIcon, Pencil1Icon, TrashIcon, PlusIcon } from '@radix-ui/react-icons';
+import { UploadIcon, Pencil1Icon, TrashIcon, PlusIcon, GridIcon } from '@radix-ui/react-icons';
 import UploadBaseSetupBook from '@/components/ui/UploadBaseSetupBook';
 import CreateRecordModal from '@/components/ui/CreateRecordModal';
 import SelectedRecordsDrawerContent from './SelectedRecordsDrawerContent';
@@ -19,6 +19,10 @@ import { useGetSetupBookByCampaignIdQuery, useDeleteSetupBookRecordsMutation, us
 import { toast } from 'sonner';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+
+import { SelectBucketModal } from '@/components/ui/SelectBucketModal';
+import Icon from '@/components/ui/Icon';
+import { useRouter } from 'next/navigation';
 
 interface FieldDefinition {
 	id: string;
@@ -40,6 +44,7 @@ interface ApiError {
 }
 
 const SetupBookPage: React.FC = () => {
+	const router = useRouter();
 	const { canAccess } = usePrivilege();
 	const canAccessModule = canAccess('setupBook');
 	const canCreate = canAccess('setupBook', 'create');
@@ -48,15 +53,24 @@ const SetupBookPage: React.FC = () => {
 
 	const { campaignData } = useCampaign();
 	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
-	// Assuming searchId is available in campaignData.campaign.customerBookSettings or similar
-	// Based on user request, we need to make sure searchId is included. 
-	// I'll check where searchId might come from. If not in context, I'll assume it needs to be passed or is part of settings.
-	// For now, let's assume it's part of the campaignData or we need to extract it.
-	// Let's look at the console log from line 39: 
-	// The user mentioned "searchId". Let's check if it's in campaignData.
-	const searchId = campaignData?.campaign?.customerBookSettings?.searchId;
 
-	const setupBookHeaderFields = campaignData?.campaign?.customerBookSettings?.configuredFields
+	const allConfiguredFieldsChunks = campaignData?.campaign?.customerBookSettings?.configuredFields || [];
+	const buckets = (campaignData?.campaign?.dashboardSettings?.buckets || []) as any[];
+
+	const [selectedBucketId, setSelectedBucketId] = useState<string>('');
+	const [isBucketModalOpen, setIsBucketModalOpen] = useState(false);
+
+	// Initialize selectedBucketId with the first bucket if not set
+	useEffect(() => {
+		if (!selectedBucketId && buckets.length > 0) {
+			setSelectedBucketId(buckets[0].id);
+		}
+	}, [buckets, selectedBucketId]);
+
+	// Find searchId and fields for selected bucket
+	const currentBucketConfig = allConfiguredFieldsChunks.find((c: any) => c && c.bucketId === selectedBucketId);
+	const searchId = currentBucketConfig?.searchId || (campaignData?.campaign?.customerBookSettings as any)?.searchId || '';
+	const setupBookHeaderFields = currentBucketConfig?.fields || [];
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
@@ -69,13 +83,12 @@ const SetupBookPage: React.FC = () => {
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
 	const [editingRecord, setEditingRecord] = useState<SetupBookRecord | null>(null);
 	const [deleteRecord, setDeleteRecord] = useState<{ id: string; name: string } | null>(null);
-	const [fieldDefinitions, setFieldDefinitions] = useState<FieldDefinition[]>(setupBookHeaderFields || []);
+	// Memoize field definitions to avoid infinite loops and unstable references
+	const fieldDefinitions: FieldDefinition[] = useMemo(() => setupBookHeaderFields, [setupBookHeaderFields]);
 
 	// Determine which query to use based on searchId presence
 	// If searchId is available, use useGetSetupBookBySearchIdQuery
-	// Otherwise, fallback to useGetSetupBookByCampaignIdQuery (or keep existing logic)
-	// Assuming if searchId exists, we should prioritize it as per user instruction "add getSetupBookBySearchId"
-
+	// Otherwise, fallback to useGetSetupBookByCampaignIdQuery
 	const { data: recordsBySearchId, isLoading: isFetchingBySearchId } = useGetSetupBookBySearchIdQuery(
 		{
 			campaignId: campaignId || '',
@@ -94,17 +107,11 @@ const SetupBookPage: React.FC = () => {
 			page: currentPage,
 			limit: itemsPerPage
 		},
-		{ skip: !!searchId || !campaignId } // Skip if searchId is present (since we use the other query) or campaignId is missing
+		{ skip: !!searchId || !campaignId }
 	);
 
 	const apiRecords = searchId ? recordsBySearchId : recordsByLobId;
 	const isLoading = searchId ? isFetchingBySearchId : isFetchingByLobId;
-
-	useEffect(() => {
-		if (setupBookHeaderFields) {
-			setFieldDefinitions(setupBookHeaderFields);
-		}
-	}, [setupBookHeaderFields]);
 
 	const [records, setRecords] = useState<SetupBookRecord[]>([]);
 
@@ -269,6 +276,10 @@ const SetupBookPage: React.FC = () => {
 		return null;
 	}
 
+	const handleNavigateToDashboard = () => {
+		router.push('/setup/dashboard');
+	};
+
 	return (
 		<div>
 			<PageHeading
@@ -276,15 +287,26 @@ const SetupBookPage: React.FC = () => {
 			/>
 
 			<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-				<Search
-					placeholder="Search"
-					value={searchTerm}
-					onChange={setSearchTerm}
-					className="w-full sm:w-auto"
-					maxWidth="w-full"
-					onSearch={(value) => console.log('Search triggered:', value)}
-					showClearButton={true}
-				/>
+				<div className="flex items-center gap-3 w-full sm:w-auto">
+					<Search
+						placeholder="Search"
+						value={searchTerm}
+						onChange={setSearchTerm}
+						className="flex-1 sm:w-auto"
+						maxWidth="w-full sm:max-w-xs"
+						onSearch={(value) => console.log('Search triggered:', value)}
+						showClearButton={true}
+					/>
+					<Button
+						variant="outline"
+						size="md"
+						onClick={() => setIsBucketModalOpen(true)}
+						className="flex items-center gap-2 whitespace-nowrap"
+					>
+						<GridIcon className="w-4 h-4" />
+						{buckets.find(b => b.id === selectedBucketId)?.name || 'Select Bucket'}
+					</Button>
+				</div>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
 					<SampleCsvDownloader
 						fields={setupBookHeaderFields || []}
@@ -348,8 +370,8 @@ const SetupBookPage: React.FC = () => {
 								<th>
 									Search ID
 								</th>
-								{fieldDefinitions?.map((field) => (
-									<th key={field?.id}>
+								{fieldDefinitions?.map((field: FieldDefinition, index: number) => (
+									<th key={field?.id ? `header-id-${field.id}` : `header-idx-${index}`}>
 										{field?.name}
 									</th>
 								))}
@@ -368,14 +390,7 @@ const SetupBookPage: React.FC = () => {
 							) : paginatedRecords.map((record) => (
 								<tr
 									key={record.id}
-									className="dark:hover:bg-gray-700"
 									style={{ borderColor: 'var(--light-gray)' }}
-									onMouseEnter={(e) => {
-										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-									}}
-									onMouseLeave={(e) => {
-										e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-									}}
 								>
 									<td className="px-6 py-4 whitespace-nowrap">
 										<Checkbox
@@ -387,9 +402,9 @@ const SetupBookPage: React.FC = () => {
 									<td>
 										{record['searchId'] || '-'}
 									</td>
-									{fieldDefinitions?.map((field) => (
+									{fieldDefinitions?.map((field: FieldDefinition, index: number) => (
 										<td
-											key={field.id}
+											key={`${record.id}-${field?.id ? `id-${field.id}` : `idx-${index}`}`}
 										>
 											{record[field.name] || '-'}
 										</td>
@@ -457,6 +472,20 @@ const SetupBookPage: React.FC = () => {
 					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
+
+			{/* Select Bucket Modal */}
+			<SelectBucketModal
+				isOpen={isBucketModalOpen}
+				onClose={() => setIsBucketModalOpen(false)}
+				buckets={buckets}
+				selectedBucketId={selectedBucketId}
+				onSelect={(bucketId) => {
+					setSelectedBucketId(bucketId);
+					setCurrentPage(1);
+					setIsBucketModalOpen(false);
+				}}
+				onNavigateToDashboard={handleNavigateToDashboard}
+			/>
 
 			{/* Upload Modal */}
 			<UploadBaseSetupBook

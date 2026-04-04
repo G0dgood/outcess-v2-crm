@@ -124,9 +124,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 
 	useEffect(() => {
-		const data = campaignData as { campaignes?: { _id: string; campaignName: string; status?: string }[] } | undefined;
-		if (data && Array.isArray(data.campaignes)) {
-			const options = data.campaignes.map((lob) => ({
+		const data = campaignData as { campaigns?: { _id: string; campaignName: string; status?: string }[] } | undefined;
+		if (data && Array.isArray(data.campaigns)) {
+			const options = data?.campaigns?.map((lob) => ({
 				value: lob?._id,
 				label: lob?.campaignName,
 				status: lob?.status,
@@ -407,7 +407,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 								}, 2000);
 							}}
 							options={lobOptions}
-							placeholder={isLobLoading ? "Loading..." : "Select Business"}
+							placeholder={isLobLoading ? "Loading..." : "Select Campaign"}
 							className="min-w-[200px]"
 							renderOptionRight={(option) => (
 								<StatusBadge status={option.status || 'In Review'} />

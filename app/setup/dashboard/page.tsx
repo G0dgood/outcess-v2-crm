@@ -28,8 +28,12 @@ const CallDisposition = dynamic(() => import('@/components/CallDisposition'), {
 });
 
 export default function DashboardPage(): React.JSX.Element {
-	const { setupData, updateDashboardSettings, dashboardStep, setDashboardStep, isDirty, onPersist } = useSetup();
+	const { setupData, updateDashboardSettings, dashboardStep, setDashboardStep, isDirty, onPersist, setCurrentStep } = useSetup();
 	const { dashboardSettings } = setupData;
+
+	React.useEffect(() => {
+		setCurrentStep(2);
+	}, [setCurrentStep]);
 
 	const toActiveTab = (step: 'KPI Metric' | 'Call Disposition'): 'kpi' | 'disposition' =>
 		step === 'KPI Metric' ? 'kpi' : 'disposition';

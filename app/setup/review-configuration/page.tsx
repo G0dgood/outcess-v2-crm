@@ -21,6 +21,10 @@ interface ConfigurationCard {
 export default function ReviewConfigurationPage(): React.JSX.Element {
 	const { setupData, setCurrentStep } = useSetup();
 
+	React.useEffect(() => {
+		setCurrentStep(4);
+	}, [setCurrentStep]);
+
 
 
 	const handleEditStep = (step: number) => {
@@ -38,26 +42,15 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 				{ label: 'Company Name', value: setupData.companyName || 'Not configured' },
 				{ label: 'Industry', value: setupData.industry || 'Not configured' },
 				{ label: 'Time Zone', value: setupData.timeZone || 'Not configured' },
-				{ label: 'Size', value: setupData.businessSize || 'Not configured' }
-			]
-		},
-		{
-			id: 'header-navigation',
-			title: 'Header & Navigation',
-			icon: 'darhboard',
-			step: 2,
-			details: [
-				{ label: 'Menu Layout', value: setupData.navigationSettings.menuStyle || 'Not configured' },
-				{ label: 'Primary Color', value: setupData.primaryColor || 'Not configured' },
-				{ label: 'Secondary Color', value: setupData.secondaryColor || 'Not configured' },
-				{ label: 'Logo', value: setupData.navigationSettings.logo ? 'Uploaded' : 'Not uploaded' }
+				{ label: 'Size', value: setupData.businessSize || 'Not configured' },
+				{ label: 'Logo', value: setupData.logo ? 'Uploaded' : 'Not uploaded' }
 			]
 		},
 		{
 			id: 'dashboard',
 			title: 'Dashboard',
 			icon: 'darhboard',
-			step: 3,
+			step: 2,
 			details: [
 				{ label: 'Dashboard Name', value: setupData.dashboardSettings.dashboardName || 'Not configured' },
 				{ label: 'Visibility', value: setupData.dashboardSettings.dashboardVisibility || 'Not configured' },
@@ -72,10 +65,10 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 			id: 'customer-book',
 			title: 'Customer Book',
 			icon: 'Group_light',
-			step: 4,
+			step: 3,
 			details: [
-				{ label: 'Custom Fields', value: `${setupData.customerBookSettings.configuredFields.length} added` },
-				{ label: 'Required Fields', value: `${setupData.customerBookSettings.configuredFields.filter(field => field.required).length} set` }
+				{ label: 'Custom Fields', value: `${setupData.customerBookSettings.configuredFields.reduce((acc, config) => acc + (config?.fields?.length || 0), 0)} added` },
+				{ label: 'Required Fields', value: `${setupData.customerBookSettings.configuredFields.reduce((acc, config) => acc + (config?.fields?.filter(f => f.required).length || 0), 0)} set` }
 			]
 		}
 	];
@@ -87,7 +80,7 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 					className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
 					style={{ color: 'var(--text-secondary)' }}
 				>
-					Review Your Campaign Plan
+					Review Your Campaign
 				</h1>
 				<p
 					className="font-lato not-italic font-normal text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"

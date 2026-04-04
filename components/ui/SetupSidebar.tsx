@@ -1,22 +1,11 @@
 import React from 'react';
 import {
-	GearIcon,
-	HamburgerMenuIcon,
-	DashboardIcon,
-	PersonIcon,
 	ChevronRightIcon
 } from '@radix-ui/react-icons';
-import { useTheme } from '@/contexts/ThemeContext';
 import { useSetup } from '@/contexts/SetupContext';
 import { toast } from 'sonner';
 
-interface SetupStep {
-	id: string;
-	title: string;
-	description: string;
-	icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
-	active: boolean;
-}
+
 
 interface SetupSidebarProps {
 	currentStep?: number;
@@ -29,38 +18,7 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 	className = '',
 	isMobile = false,
 }) => {
-	const { isDarkMode } = useTheme();
-	const { setCurrentStep, validateStep } = useSetup();
-	const setupSteps: SetupStep[] = [
-		{
-			id: 'basic',
-			title: 'Basic Setup',
-			description: 'Configure your organization details and preferences',
-			icon: GearIcon,
-			active: currentStep === 1,
-		},
-		{
-			id: 'header',
-			title: 'Header & Navigation',
-			description: 'Customize your CRM navigation and layout',
-			icon: HamburgerMenuIcon,
-			active: currentStep === 2,
-		},
-		{
-			id: 'dashboard',
-			title: 'Dashboard',
-			description: 'Set up your dashboard widgets and reports',
-			icon: DashboardIcon,
-			active: currentStep === 3,
-		},
-		{
-			id: 'customer',
-			title: 'Customer Book',
-			description: 'Configure customer data fields and views',
-			icon: PersonIcon,
-			active: currentStep === 4,
-		},
-	];
+	const { setCurrentStep, validateStep, setupSteps } = useSetup();
 
 	return (
 		<aside
@@ -102,20 +60,18 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 			</div>
 
 			<nav className="flex flex-col gap-2">
-				{setupSteps.map((step: SetupStep) => {
-					const IconComponent = step.icon;
-					const stepIndex = ['basic', 'header', 'dashboard', 'customer'].indexOf(step.id) + 1;
+				{setupSteps.map((step, index) => {
+					const stepIndex = index + 1;
 					// Can always go back, or move to next step if current one is valid
 					const isClickable = stepIndex <= (currentStep || 1) || validateStep(currentStep || 1);
-					
+
 					return (
 						<div
 							key={step.id}
-							className={`group flex p-3 cursor-pointer transition-all duration-200 gap-3 rounded-[var(--radius)] border ${
-								step.active 
-									? 'border-[var(--secondary)] bg-[color-mix(in_srgb,var(--secondary),transparent_90%)]' 
-									: 'border-transparent hover:bg-[var(--secondary)]'
-							}`}
+							className={`group flex p-3 cursor-pointer transition-all duration-200 gap-3 rounded-[var(--radius)] border ${step.active
+								? 'border-[var(--secondary)] bg-[color-mix(in_srgb,var(--secondary),transparent_90%)]'
+								: 'border-transparent hover:bg-[var(--secondary)]'
+								}`}
 							onClick={() => {
 								if (isClickable) {
 									setCurrentStep(stepIndex);
@@ -129,36 +85,29 @@ export const SetupSidebar: React.FC<SetupSidebarProps> = ({
 							}}
 						>
 							<div className="text-base w-5 h-5 text-center flex items-center justify-center">
-								<IconComponent
-									className="w-5 h-5 transition-colors duration-200"
-									style={{ 
-										color: step.active 
-											? 'var(--secondary)' 
-											: 'inherit' 
-									}}
-								/>
+								<div className="w-5 h-5 flex items-center justify-center transition-colors duration-200"
+								>
+									{step.icon}
+								</div>
 							</div>
 							<div className="flex-1">
 								<div
-									className={`font-lato not-italic font-medium text-[12px] md:text-[14px] leading-[150%] transition-colors duration-200 ${
-										step.active ? 'text-[var(--secondary)]' : 'text-[var(--text-secondary)] group-hover:text-white'
-									}`}
+									className={`font-lato not-italic font-medium text-[12px] md:text-[14px] leading-[150%] transition-colors duration-200 ${step.active ? 'text-[var(--secondary)]' : 'text-[var(--text-secondary)] group-hover:text-white'
+										}`}
 								>
 									{step.title}
 								</div>
 								<div
-									className={`font-lato not-italic font-medium text-[10px] md:text-[12px] leading-[150%] w-[165px] transition-colors duration-200 ${
-										step.active ? 'text-[var(--text-tertiary)]' : 'text-[var(--text-tertiary)] group-hover:text-white opacity-80'
-									}`}
+									className={`font-lato not-italic font-medium text-[10px] md:text-[12px] leading-[150%] w-[165px] transition-colors duration-200 ${step.active ? 'text-[var(--text-tertiary)]' : 'text-[var(--text-tertiary)] group-hover:text-white opacity-80'
+										}`}
 								>
 									{step.description}
 								</div>
 							</div>
 							<div className="flex items-center">
 								<ChevronRightIcon
-									className={`w-5 h-5 transition-colors duration-200 ${
-										step.active ? 'text-[var(--secondary)]' : 'text-[var(--text-tertiary)] group-hover:text-white'
-									}`}
+									className={`w-5 h-5 transition-colors duration-200 ${step.active ? 'text-[var(--secondary)]' : 'text-[var(--text-tertiary)] group-hover:text-white'
+										}`}
 								/>
 							</div>
 						</div>

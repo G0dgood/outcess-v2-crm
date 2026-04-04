@@ -2,7 +2,6 @@
 
 import React, { useEffect } from 'react';
 import SetupPage from './setup-page/page';
-import HeaderNavigationPage from './header-navigation/page';
 import DashboardPage from './dashboard/page';
 import CustomerBookPage from './customer-book/page';
 import ReviewConfigurationPage from './review-configuration/page';
@@ -44,10 +43,9 @@ export default function Setup() {
 	return (
 		<div className="w-full">
 			{currentStep === 1 && <SetupPage />}
-			{currentStep === 2 && <HeaderNavigationPage />}
-			{currentStep === 3 && <DashboardPage />}
-			{currentStep === 4 && <CustomerBookPage />}
-			{currentStep === 5 && <ReviewConfigurationPage />}
+			{currentStep === 2 && <DashboardPage />}
+			{currentStep === 3 && <CustomerBookPage />}
+			{currentStep === 4 && <ReviewConfigurationPage />}
 		</div>
 	);
 }

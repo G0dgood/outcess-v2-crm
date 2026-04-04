@@ -115,7 +115,7 @@ const SoundSettings: React.FC = () => {
 			)}
 
 			{/* Global Sound Toggle */}
-			<div className="bg-surface dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6 border-light transition-colors">
+			<div className="bg-surface dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6 border-light transition-colors rounded-[var(--radius)]">
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-4">
 						<div className={`p-3 rounded-full ${preferences.globalSoundEnabled ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-gray-900/20'}`}>
@@ -143,7 +143,7 @@ const SoundSettings: React.FC = () => {
 			</div>
 
 			{/* Component Sound Settings */}
-			<div className="bg-surface dark:bg-gray-800 border border-light dark:border-gray-700 p-6   transition-colors">
+			<div className="bg-surface dark:bg-gray-800 border border-light dark:border-gray-700 p-6   transition-colors rounded-[var(--radius)]">
 				<h3 className="text-primary font-inter text-base font-semibold dark:text-gray-100 mb-6">
 					Component Notifications
 				</h3>
@@ -151,7 +151,7 @@ const SoundSettings: React.FC = () => {
 					{(Object.keys(preferences.components) as Array<keyof SoundPreferences['components']>).map((component) => (
 						<div
 							key={component}
-							className={`p-5 border border-light dark:border-gray-700  transition-all duration-200 ${preferences.globalSoundEnabled && preferences.components[component].enabled
+							className={`p-5 border border-light dark:border-gray-700 rounded-[var(--radius)] transition-all duration-200 ${preferences.globalSoundEnabled && preferences.components[component].enabled
 								? 'bg-white dark:bg-gray-800/50  border-blue-100 dark:border-blue-900/30'
 								: 'bg-gray-50/50 dark:bg-gray-900/30 opacity-75'
 								}`}
