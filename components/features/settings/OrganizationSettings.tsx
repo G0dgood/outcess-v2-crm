@@ -88,25 +88,7 @@ const OrganizationSettings: React.FC = () => {
 
 			{/* Member Management Quick Actions */}
 			<div className="pt-6 border-t dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
-				<div className="flex items-center justify-between mb-4">
-					<div>
-						<h3 className="text-[12px] md:text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>
-							Member Management
-						</h3>
-						<p className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-tertiary)' }}>
-							Invite new members to collaborate in this workspace.
-						</p>
-					</div>
-					<Button
-						variant="primary"
-						size="sm"
-						onClick={() => setIsInviteModalOpen(true)}
-						className="flex items-center gap-2"
-					>
-						<PlusIcon className="w-4 h-4" />
-						Invite Member
-					</Button>
-				</div>
+
 			</div>
 
 			<AddUserModal

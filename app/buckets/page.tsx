@@ -61,10 +61,7 @@ const BucketsPage = () => {
 					</Button>
 				</div>
 			</div>
-			<div className="dark:bg-gray-800 border dark:border-gray-700  rounded-[var(--radius)]"
-				style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}>
-				<CallDisposition />
-			</div>
+			<CallDisposition />
 
 			<ManageMembersModal
 				isOpen={isManageModalOpen}

@@ -5,14 +5,7 @@ import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import Pagination from '@/components/ui/Pagination';
 import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
 import {
-	PersonIcon,
-	EnvelopeClosedIcon,
-	MobileIcon,
-	ClockIcon,
-	ArchiveIcon,
 	DotFilledIcon,
-	IdCardIcon,
-	ActivityLogIcon,
 	PlusIcon,
 	Cross2Icon
 } from '@radix-ui/react-icons';
@@ -100,22 +93,21 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
 					<thead>
 						<tr>
 							{[
-								{ label: 'User ID', icon: IdCardIcon },
-								{ label: 'Full Name', icon: PersonIcon },
-								{ label: 'Email', icon: EnvelopeClosedIcon },
-								{ label: 'Phone No', icon: MobileIcon },
-								{ label: 'Role', icon: ActivityLogIcon },
-								{ label: 'Supervisor', icon: PersonIcon },
-								{ label: 'Shift Hour', icon: ClockIcon },
-								{ label: 'Bucket', icon: ArchiveIcon },
-								{ label: 'Logged In Status', icon: DotFilledIcon }
-							].map(({ label, icon: Icon }) => (
+								{ label: 'User ID' },
+								{ label: 'Full Name' },
+								{ label: 'Email' },
+								{ label: 'Phone No' },
+								{ label: 'Role' },
+								{ label: 'Supervisor' },
+								{ label: 'Shift Hour' },
+								{ label: 'Bucket' },
+								{ label: 'Logged In Status' }
+							].map(({ label }) => (
 								<th
 									key={label}
 									className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider"
 								>
 									<div className="flex items-center gap-1.5">
-										<Icon className="w-3 h-3 opacity-60" />
 										{label}
 									</div>
 								</th>
@@ -129,9 +121,9 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
 						}}
 					>
 						{isLoading ? (
-							<SVGLoaderFetch colSpan={8} text={''} />
+							<SVGLoaderFetch colSpan={9} text={''} />
 						) : currentMembers?.length === 0 ? (
-							<NoRecordFound colSpan={8} />
+							<NoRecordFound colSpan={9} />
 						) : (
 							currentMembers?.map((member, index) => (
 								<tr
@@ -248,18 +240,15 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
 					</tbody>
 				</table>
 			</div>
-			<div className="p-4 px-6">
-				{currentMembers.length > 0 && (
-					<Pagination
-						currentPage={currentPage}
-						totalPages={totalPages}
-						onPageChange={setCurrentPage}
-						primaryColor={campaignData?.primaryColor || 'var(--primary)'}
-						secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
-					/>
-				)}
-			</div>
-
+			{currentMembers.length > 0 && (
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onPageChange={setCurrentPage}
+					primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
+				/>
+			)}
 			<AssignBucketModal
 				isOpen={!!selectedMemberForBucket}
 				onClose={() => setSelectedMemberForBucket(null)}
