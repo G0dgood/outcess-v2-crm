@@ -11,7 +11,7 @@ import { ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetSupervisorsByCampaignIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
 import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
 import { Skeleton } from '@/components/ui/skeleton';
 import Tabs from '@/components/ui/Tabs';
@@ -72,6 +72,11 @@ const EditUserPage: React.FC = () => {
 	const { data: supervisorsResponse } = useGetSupervisorsByCampaignIdQuery(
 		{ companyId, campaignId: selectedCampaignId || '' },
 		{ skip: !companyId || !selectedCampaignId }
+	);
+
+	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
+		{ campaignId: selectedCampaignId || '', limit: 1000 },
+		{ skip: !selectedCampaignId }
 	);
 
 	useEffect(() => {
@@ -155,20 +160,40 @@ const EditUserPage: React.FC = () => {
 	}, [rolesData, supervisorsResponse]);
 
 	const supervisorOptions = useMemo(() => {
-		if (!supervisorsResponse || !Array.isArray(supervisorsResponse.roles)) return [];
-		const rawRoles = supervisorsResponse.roles as {
-			_id?: string;
-			id?: string;
-			roleName?: string;
-			supervisorTitle?: string;
-		}[];
-		return rawRoles
-			.map((role) => ({
-				value: (role._id || role.id || '') as string,
-				label: (role.supervisorTitle || role.roleName || '') as string
-			}))
-			.filter((opt) => opt.value && opt.label);
-	}, [supervisorsResponse]);
+		if (!teamMembersData) return [];
+		const rawMembers = teamMembersData.teamMembers || (Array.isArray(teamMembersData) ? teamMembersData : []);
+
+		const supervisorRoleIds = new Set<string>();
+		if (supervisorsResponse && Array.isArray(supervisorsResponse.roles)) {
+			supervisorsResponse.roles.forEach((r: any) => {
+				if (r._id) supervisorRoleIds.add(r._id.toString());
+				if (r.id) supervisorRoleIds.add(r.id.toString());
+			});
+		}
+
+		return rawMembers
+			.filter((m: any) => {
+				const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
+				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
+				
+				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) || 
+					(roleName && roleName.toLowerCase().includes('supervisor'));
+				
+				const isSelf = (m._id || m.id) === userId;
+				
+				return isSupervisorRole && !isSelf;
+			})
+			.map((m: any) => {
+				const fullName = m.firstName && m.lastName 
+					? `${m.firstName} ${m.lastName}` 
+					: m.name || m.fullName || 'Unknown Member';
+				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : 'Supervisor';
+				return {
+					value: m._id || m.id || '',
+					label: `${fullName} (${roleName})`
+				};
+			});
+	}, [teamMembersData, supervisorsResponse, userId]);
 
 	const shouldShowSupervisor = useMemo(() => {
 		if (!formData?.role) return false;

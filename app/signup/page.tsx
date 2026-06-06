@@ -6,8 +6,9 @@ import Textarea from '@/components/ui/Textarea';
 import PasswordInput from '@/components/ui/PasswordInput';
 import Checkbox from '@/components/ui/Checkbox';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useTheme } from '@/contexts/ThemeContext';
-import ArtworkCarousel from '@/components/ui/ArtworkCarousel';
+import Image from 'next/image';
 import { toast } from 'sonner';
 import { useRegisterMutation } from '@/store/services/authApi';
 import { useCreateCompanyMutation } from '@/store/services/companyApi';
@@ -42,6 +43,13 @@ export default function SignUpPage() {
 	const [userId, setUserId] = useState<string | null>(null);
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isLoading, setIsLoading] = useState(false);
+
+	// Set browser tab title
+	React.useEffect(() => {
+		if (typeof document !== 'undefined') {
+			document.title = 'Sign Up | Outcess CRM';
+		}
+	}, []);
 	const [step, setStep] = useState(1);
 
 	const handleInputChange = (field: string) => (value: string) => {
@@ -150,12 +158,12 @@ export default function SignUpPage() {
 							user: normalizedUser,
 							tokens: { accessToken: response.token }
 						}));
-						localStorage.setItem('peoplely-token', response.token);
-						localStorage.setItem('peoplely-user', JSON.stringify(normalizedUser));
+						localStorage.setItem('outcess-token', response.token);
+						localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
 					} else {
 						// Fallback if no token (shouldn't happen for successful auth)
 						dispatch(setUser(normalizedUser));
-						localStorage.setItem('peoplely-user', JSON.stringify(normalizedUser));
+						localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
 					}
 
 					setUserId(normalizedUser.id);
@@ -198,7 +206,7 @@ export default function SignUpPage() {
 			await createCompany(payload).unwrap();
 			toast.success('Company profile created successfully!');
 			setSelectedCampaignId('new');
-			localStorage.removeItem('peoplely-setup-data');
+			localStorage.removeItem('outcess-setup-data');
 			router.push('/signup/success');
 		} catch (err: unknown) {
 			toast.error((err as { data?: { message?: string } })?.data?.message || 'Failed to create company profile');
@@ -215,9 +223,15 @@ export default function SignUpPage() {
 
 	return (
 		<div className="login-container h-screen">
-			{/* Left Side - Image */}
-			<div className="login-image-section w-full md:w-1/2">
-				<ArtworkCarousel autoPlayInterval={300000} />
+			{/* Left Side - Image Section */}
+			<div className="login-image-section w-full md:w-1/2 relative">
+				<Image
+					src="/image/signupImage.png"
+					alt="Outcess CRM"
+					fill
+					priority
+					style={{ objectFit: 'cover' }}
+				/>
 			</div>
 
 			{/* Right Side - Sign Up Form */}
@@ -228,7 +242,7 @@ export default function SignUpPage() {
 							{step === 3 ? 'Company Details' : 'Create Account'}
 						</h1>
 						<p className="font-lato not-italic font-normal text-base leading-[150%] text-[#6D7280] dark:text-gray-400">
-							{step === 3 ? 'Tell us more about your company.' : 'Join Peoplely CRM to get started.'}
+							{step === 3 ? 'Tell us more about your company.' : 'Join Outcess CRM to get started.'}
 						</p>
 					</div>
 
@@ -401,13 +415,13 @@ export default function SignUpPage() {
 						<div className="signup-footer" style={{ marginTop: '24px', textAlign: 'center' }}>
 							<p className="signup-text" style={{ color: '#6D7280', fontSize: '14px' }}>
 								Already have an account?{' '}
-								<a
-									href="/login"
+								<Link
+									href="/"
 									className={`font-lato not-italic font-semibold text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100 cursor-pointer `}
 									style={{ color: 'var(--text-primary)' }}
 								>
 									Login
-								</a>
+								</Link>
 							</p>
 						</div>
 					</form>

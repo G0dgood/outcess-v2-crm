@@ -174,8 +174,22 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 			});
 		}
 
-		if (campaignData?.campaign?.dashboardSettings?.dispositions) {
-			campaignData.campaign.dashboardSettings.dispositions.forEach((disposition: { name: string }) => {
+		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
+		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
+		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
+			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
+				if (bucket && Array.isArray(bucket.dispositions)) {
+					bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
+						if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
+							allDispositions.push(disp);
+						}
+					});
+				}
+			});
+		}
+
+		if (allDispositions.length > 0) {
+			allDispositions.forEach((disposition: { name: string }) => {
 				if (disposition?.name) {
 					optionsMap.set(disposition.name, { value: disposition.name, label: disposition.name });
 				}

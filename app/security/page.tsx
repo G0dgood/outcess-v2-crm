@@ -342,7 +342,7 @@ const SecurityPage: React.FC = () => {
 								If you discover a security vulnerability or have a security concern, please contact us immediately:
 							</p>
 							<ul className="list-none space-y-2 text-[#4A5565]">
-								<li style={plusJakartaStyle}><strong>Email:</strong> security@peoplely.com</li>
+								<li style={plusJakartaStyle}><strong>Email:</strong> security@outcess.com</li>
 								<li style={plusJakartaStyle}><strong>Security Team:</strong> We respond to all security reports within 24 hours</li>
 							</ul>
 							<p

@@ -44,13 +44,13 @@ const PrivacyPolicyPage: React.FC = () => {
 								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
-								At Peoplely, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our CRM platform and services.
+								At Outcess, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our CRM platform and services.
 							</p>
 							<p
 								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed"
 								style={plusJakartaStyle}
 							>
-								By using Peoplely, you agree to the collection and use of information in accordance with this policy. If you do not agree with our policies and practices, please do not use our services.
+								By using Outcess, you agree to the collection and use of information in accordance with this policy. If you do not agree with our policies and practices, please do not use our services.
 							</p>
 						</div>
 
@@ -204,7 +204,7 @@ const PrivacyPolicyPage: React.FC = () => {
 								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mt-4"
 								style={plusJakartaStyle}
 							>
-								To exercise these rights, please contact us at privacy@peoplely.com.
+								To exercise these rights, please contact us at privacy@outcess.com.
 							</p>
 						</div>
 
@@ -287,8 +287,8 @@ const PrivacyPolicyPage: React.FC = () => {
 								If you have any questions about this Privacy Policy, please contact us:
 							</p>
 							<ul className="list-none space-y-2 text-[#4A5565]">
-								<li style={plusJakartaStyle}><strong>Email:</strong> privacy@peoplely.com</li>
-								<li style={plusJakartaStyle}><strong>Address:</strong> Peoplely, Inc., [Your Address]</li>
+								<li style={plusJakartaStyle}><strong>Email:</strong> privacy@outcess.com</li>
+								<li style={plusJakartaStyle}><strong>Address:</strong> Outcess, Inc., [Your Address]</li>
 							</ul>
 						</div>
 					</div>

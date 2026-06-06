@@ -451,8 +451,21 @@ const DashboardContent: React.FC = () => {
 
 			// Check if widget title corresponds to a disposition field
 			// We check if the widget title matches any disposition name in the settings
-			const isDispositionField = dashboardSettings.dispositions?.some(
-				(d: DispositionCategory) => d.name === sourceKey
+			// Find in both direct and bucketed dispositions
+			const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
+			if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
+				dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
+					if (bucket && Array.isArray(bucket.dispositions)) {
+						bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
+							if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
+								allDispositions.push(disp);
+							}
+						});
+					}
+				});
+			}
+			const isDispositionField = allDispositions.some(
+				(d: { name: string; color?: string }) => d.name === sourceKey
 			);
 
 			if (isDispositionField) {

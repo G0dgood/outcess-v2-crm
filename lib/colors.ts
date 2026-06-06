@@ -1,5 +1,5 @@
 /**
- * Color Palette for Peoplely CRM
+ * Color Palette for Outcess CRM
  * Generated from COLORS.png image
  */
 

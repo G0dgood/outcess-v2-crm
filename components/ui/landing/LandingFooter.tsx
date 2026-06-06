@@ -9,7 +9,7 @@ const LandingFooter: React.FC = () => {
 		<footer className="border-t border-light bg-surface">
 			<div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-12 md:flex-row md:justify-between">
 				<div className="space-y-4">
-					<Image src="/logo/peoplely.svg" alt="Peoplely logo" width={140} height={40} className="w-[110px] h-auto md:w-[140px]" />
+					<Image src="/logo/outcess.svg" alt="Outcess logo" width={140} height={40} className="w-[110px] h-auto md:w-[140px]" />
 					<p className="text-[10px] md:text-[12px] text-tertiary">
 						Customizable CRM built to empower your support, sales, and success teams with intelligent tools.
 					</p>
@@ -83,7 +83,7 @@ const LandingFooter: React.FC = () => {
 
 			<div className="border-t border-light bg-surface">
 				<div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-6 text-[8px] md:text-[10px] text-tertiary sm:flex-row">
-					<p>© {new Date().getFullYear()} Peoplely. All rights reserved.</p>
+					<p>© {new Date().getFullYear()} Outcess. All rights reserved.</p>
 					<div className="flex items-center gap-4">
 						<Link href="/privacy" className="hover:text-accent">
 							Privacy Policy

@@ -68,7 +68,7 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 
 			// Redirect to login page
 			setTimeout(() => {
-				router.push('/login');
+				router.push('/');
 			}, 500);
 		} catch (error) {
 			console.error('Logout failed:', error);
@@ -77,7 +77,7 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 			dispatch(logoutAction());
 
 			// Even if there's an error, redirect to login
-			router.push('/login');
+			router.push('/');
 		}
 	};
 

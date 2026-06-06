@@ -71,7 +71,7 @@ const GeneralSettings: React.FC = () => {
 				toast.success('Account deactivated. Logging you out...');
 				setTimeout(() => {
 					logout();
-					router.push('/login');
+					router.push('/');
 				}, 2000);
 			} else {
 				toast.error(data.message || 'Failed to deactivate account');
@@ -103,7 +103,7 @@ const GeneralSettings: React.FC = () => {
 				toast.success('Account and all associated data deleted successfully.');
 				setTimeout(() => {
 					logout();
-					router.push('/login');
+					router.push('/');
 				}, 1500);
 			} else {
 				toast.error(data.message || 'Failed to delete account');

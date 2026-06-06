@@ -5,7 +5,7 @@ export const baseApi = createApi({
     baseQuery: fetchBaseQuery({ 
         baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
         prepareHeaders: (headers, { getState }) => {
-            const token = (getState() as any).auth?.tokens?.accessToken || (typeof window !== 'undefined' ? localStorage.getItem('peoplely-token') : null);
+            const token = (getState() as any).auth?.tokens?.accessToken || (typeof window !== 'undefined' ? localStorage.getItem('outcess-token') : null);
             if (token) {
                 headers.set('authorization', `Bearer ${token}`);
             }
@@ -24,8 +24,7 @@ export const baseApi = createApi({
         'TeamMembers',
         'Company',
         'StickyNote',
-        'SupportTicket',
-        'Integrations'
+        'SupportTicket'
     ],
     endpoints: () => ({}),
 });

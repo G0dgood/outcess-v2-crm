@@ -59,6 +59,7 @@ const Search: React.FC<SearchProps> = ({
 				onFocus={(e) => {
 					e.target.style.color = 'var(--text-secondary)';
 				}}
+				suppressHydrationWarning
 			/>
 			{showClearButton && value && (
 				<Button

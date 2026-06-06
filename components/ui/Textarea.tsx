@@ -60,6 +60,7 @@ export const Textarea: React.FC<TextareaProps> = ({
 				required={required}
 				onKeyDown={onKeyDown}
 				name={name}
+				suppressHydrationWarning
 			/>
 			{error && <span className="input-error">{error}</span>}
 		</div>

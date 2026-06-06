@@ -15,7 +15,7 @@ const CallToActionSection: React.FC = () => {
 		<section className="bg-textPrimary px-6 md:px-10 py-16 text-center text-white shadow-soft flex flex-col justify-center items-center">
 			<h2 className="text-3xl font-semibold sm:text-4xl">Ready to Transform Your Call Center?</h2>
 			<p className="mt-4 text-[10px] md:text-[12px] text-white/80 sm:text-base">
-				Join thousands of teams already using Peoplely CRM to deliver exceptional customer experiences.
+				Join thousands of teams already using Outcess CRM to deliver exceptional customer experiences.
 			</p>
 			<div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
 				<input

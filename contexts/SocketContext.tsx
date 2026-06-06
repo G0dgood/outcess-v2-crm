@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { syncPendingDispositions, getPendingDispositionsCount } from '@/utils/offlineDispositions';
 import { toastSuccess, toastInfo } from '@/utils/toastWithSound';
 import { useAuth } from './AuthContext';
 
@@ -295,32 +294,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 	}, []);
 
 	// Auto-Sync for Offline Dispositions when both online and connected and authenticated
-	useEffect(() => {
-		const attemptSync = async () => {
-			if (isOnline && status === 'connected' && isAuthenticated && !isSyncingDispositionsRef.current) {
-				const pendingCount = getPendingDispositionsCount();
-				if (pendingCount > 0) {
-					isSyncingDispositionsRef.current = true;
 
-					toastInfo(`Network restored. Syncing ${pendingCount} pending dispositions...`);
 
-					try {
-						const result = await syncPendingDispositions(send);
-						if (result.success > 0) {
-							toastSuccess(`Successfully synced ${result.success} dispositions!`);
-						}
 
-					} catch (error) {
-						console.error('[SocketContext] Error during automatic sync:', error);
-					} finally {
-						isSyncingDispositionsRef.current = false;
-					}
-				}
-			}
-		};
 
-		attemptSync();
-	}, [isOnline, status, send, isAuthenticated]);
+
 
 	// Auto-connect
 	useEffect(() => {

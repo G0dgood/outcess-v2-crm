@@ -20,6 +20,7 @@ interface TeamMember {
 }
 
 interface SupportTicketFormProps {
+	creatorName?: string;
 	title: string;
 	setTitle: (val: string) => void;
 	description: string;
@@ -36,6 +37,7 @@ interface SupportTicketFormProps {
 }
 
 export const SupportTicketForm: React.FC<SupportTicketFormProps> = ({
+	creatorName,
 	title,
 	setTitle,
 	description,
@@ -89,6 +91,12 @@ export const SupportTicketForm: React.FC<SupportTicketFormProps> = ({
 	return (
 		<div className="p-6 overflow-y-auto flex-1">
 			<form onSubmit={onSubmit} className="space-y-6">
+				<Input
+					label="Creator Name"
+					value={creatorName || ''}
+					disabled
+				/>
+
 				<Input
 					label="Subject"
 					placeholder="Enter ticket title"
@@ -146,17 +154,18 @@ export const SupportTicketForm: React.FC<SupportTicketFormProps> = ({
 
 				<Dropdown
 					label="Assign To"
-					placeholder="Select supervisor or agent"
+					placeholder="Select supervisor"
 					multiple={true}
-					options={sortedMembers.map((m) => {
-						const roleName = getRoleName(m.role);
-						const fullName = getFullName(m);
-						const isSupervisor = roleName.toLowerCase().includes('supervisor');
-						return {
-							value: m._id || m.id || '',
-							label: `${fullName} (${roleName})${isSupervisor ? ' ⭐' : ''}`
-						};
-					})}
+					options={teamMembers
+						.filter((m) => getRoleName(m.role).toLowerCase().includes('supervisor'))
+						.map((m) => {
+							const roleName = getRoleName(m.role);
+							const fullName = getFullName(m);
+							return {
+								value: m._id || m.id || '',
+								label: `${fullName} (${roleName})`
+							};
+						})}
 					value={assignedToIds}
 					onChange={(val) => setAssignedToIds(val as string[])}
 					required

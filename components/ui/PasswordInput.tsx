@@ -70,6 +70,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
 					className={`password-field ${error ? 'error' : ''}`}
 					required={required}
 					autoComplete={autoComplete}
+					suppressHydrationWarning
 				/>
 				<div className="password-icons">
 					{showHelpIcon && (

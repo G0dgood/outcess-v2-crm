@@ -284,7 +284,7 @@ const SMSPage: React.FC = () => {
 											title={sms.message}
 											onClick={() => setViewingSMS(sms)}
 											onMouseEnter={(e) => {
-												e.currentTarget.style.color = campaignData.primaryColor || '#050711';
+												e.currentTarget.style.color = campaignData?.primaryColor || '#050711';
 											}}
 											onMouseLeave={(e) => {
 												e.currentTarget.style.color = 'var(--text-primary)';

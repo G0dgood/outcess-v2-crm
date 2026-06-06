@@ -83,7 +83,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({
 	children,
 	apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '/api',
-	storageKey = 'peoplely_auth',
+	storageKey = 'outcess_auth',
 }) => {
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
@@ -98,10 +98,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 		if (sessionTimeout) clearTimeout(sessionTimeout);
 		if (typeof window !== 'undefined') {
 			localStorage.removeItem(storageKey);
-			localStorage.removeItem('peoplely-token');
-			localStorage.removeItem('peoplely-user');
+			localStorage.removeItem('outcess-token');
+			localStorage.removeItem('outcess-user');
 			localStorage.removeItem('userPrivileges');
-			localStorage.removeItem('peoplely_auth');
+			localStorage.removeItem('outcess_auth');
 		}
 	}, [storageKey, sessionTimeout]);
 
@@ -109,7 +109,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 		clearAuthData();
 		// Redirect to login if needed, or let components handle it
 		if (typeof window !== 'undefined') {
-			window.location.href = '/login';
+			window.location.href = '/';
 		}
 	}, [clearAuthData]);
 

@@ -325,7 +325,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 			// Redirect to login page
 			setTimeout(() => {
-				router.push('/login');
+				router.push('/');
 			}, 500);
 		} catch (error) {
 			console.warn('Logout API failed, proceeding with local logout:', error);
@@ -339,7 +339,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 			setIsLogoutModalOpen(false);
 
 			// Even if there's an error, redirect to login
-			router.push('/login');
+			router.push('/');
 		} finally {
 			setIsLoggingOut(false);
 		}

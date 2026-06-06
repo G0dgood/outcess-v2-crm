@@ -44,7 +44,7 @@ const TermsOfServicePage: React.FC = () => {
 								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
-								By accessing or using Peoplely&apos;s CRM platform and services, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this service.
+								By accessing or using Outcess&apos;s CRM platform and services, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this service.
 							</p>
 							<p
 								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed"
@@ -66,7 +66,7 @@ const TermsOfServicePage: React.FC = () => {
 								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
-								Permission is granted to temporarily access and use Peoplely&apos;s services for your business purposes. This is the grant of a license, not a transfer of title, and under this license you may not:
+								Permission is granted to temporarily access and use Outcess&apos;s services for your business purposes. This is the grant of a license, not a transfer of title, and under this license you may not:
 							</p>
 							<ul className="list-disc pl-6 space-y-2 text-[#4A5565]">
 								<li style={plusJakartaStyle}>Modify or copy the materials or services</li>
@@ -79,7 +79,7 @@ const TermsOfServicePage: React.FC = () => {
 								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mt-4"
 								style={plusJakartaStyle}
 							>
-								This license shall automatically terminate if you violate any of these restrictions and may be terminated by Peoplely at any time.
+								This license shall automatically terminate if you violate any of these restrictions and may be terminated by Outcess at any time.
 							</p>
 						</div>
 
@@ -214,7 +214,7 @@ const TermsOfServicePage: React.FC = () => {
 								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
-								The service and its original content, features, and functionality are owned by Peoplely and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.
+								The service and its original content, features, and functionality are owned by Outcess and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.
 							</p>
 							<p
 								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
@@ -286,7 +286,7 @@ const TermsOfServicePage: React.FC = () => {
 								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
-								The information on this service is provided on an &quot;as is&quot; basis. To the fullest extent permitted by law, Peoplely excludes all representations, warranties, conditions, and terms relating to our service and the use of this service.
+								The information on this service is provided on an &quot;as is&quot; basis. To the fullest extent permitted by law, Outcess excludes all representations, warranties, conditions, and terms relating to our service and the use of this service.
 							</p>
 							<p
 								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed"
@@ -308,7 +308,7 @@ const TermsOfServicePage: React.FC = () => {
 								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
-								In no event shall Peoplely, its directors, employees, partners, agents, suppliers, or affiliates be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the service.
+								In no event shall Outcess, its directors, employees, partners, agents, suppliers, or affiliates be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the service.
 							</p>
 							<p
 								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed"
@@ -371,8 +371,8 @@ const TermsOfServicePage: React.FC = () => {
 								If you have any questions about these Terms of Service, please contact us:
 							</p>
 							<ul className="list-none space-y-2 text-[#4A5565]">
-								<li style={plusJakartaStyle}><strong>Email:</strong> legal@peoplely.com</li>
-								<li style={plusJakartaStyle}><strong>Address:</strong> Peoplely, Inc., [Your Address]</li>
+								<li style={plusJakartaStyle}><strong>Email:</strong> legal@outcess.com</li>
+								<li style={plusJakartaStyle}><strong>Address:</strong> Outcess, Inc., [Your Address]</li>
 							</ul>
 						</div>
 					</div>

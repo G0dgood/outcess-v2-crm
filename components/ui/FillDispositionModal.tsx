@@ -69,6 +69,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 }) => {
 	const { isConnected, isOffline, send } = useSocket();
 	const { user: authUser } = useAuth();
+	const currentAgentId = (authUser?.id || authUser?._id || '') as string;
 	const { campaignData, selectedCampaignId } = useCampaign();
 	const [createDisposition] = useCreateDispositionMutation();
 	const [isSaving, setIsSaving] = useState(false);
@@ -77,8 +78,51 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 	// Get dispositions from context
 	const dispositions = useMemo(() => {
-		return (campaignData?.campaign?.dashboardSettings?.dispositions || []) as DispositionField[];
-	}, [campaignData]);
+		const settings = campaignData?.campaign?.dashboardSettings;
+		if (!settings) return [];
+
+		// 1. If direct dispositions exist, use them
+		if (settings.dispositions && settings.dispositions.length > 0) {
+			return settings.dispositions as DispositionField[];
+		}
+
+		// 2. If buckets exist, check if this agent is assigned to a specific bucket
+		const buckets = settings.buckets || [];
+		if (buckets.length > 0) {
+			const currentUserId = currentAgentId;
+			const assignedBucket = buckets.find((b: { assignedMembers?: Array<{ memberId: string | { _id?: string; id?: string } }>; dispositions?: DispositionField[] }) =>
+				b.assignedMembers?.some((m: { memberId: string | { _id?: string; id?: string } }) => {
+					const mId = typeof m.memberId === 'object' && m.memberId !== null
+						? (m.memberId._id || m.memberId.id)
+						: m.memberId;
+					return mId === currentUserId;
+				})
+			);
+
+			if (assignedBucket && assignedBucket.dispositions && assignedBucket.dispositions.length > 0) {
+				return assignedBucket.dispositions as DispositionField[];
+			}
+
+			// 3. Fallback: gather all unique dispositions across all buckets
+			const allDispositions: DispositionField[] = [];
+			const seenIds = new Set<string>();
+			buckets.forEach((b: { dispositions?: DispositionField[] }) => {
+				if (b.dispositions) {
+					b.dispositions.forEach((disp: DispositionField) => {
+						if (disp && disp.id && !seenIds.has(disp.id)) {
+							seenIds.add(disp.id);
+							allDispositions.push(disp);
+						}
+					});
+				}
+			});
+			if (allDispositions.length > 0) {
+				return allDispositions;
+			}
+		}
+
+		return [];
+	}, [campaignData, authUser]);
 
 	// Reset or update form when modal opens/closes
 	useEffect(() => {
@@ -197,7 +241,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					await createDisposition({
 						fillDisposition: dispositionData,
 						customerId,
-						agentId: (authUser?.userId as string) || authUser?.id,
+						agentId: currentAgentId,
 						campaignId: selectedCampaignId || undefined,
 						timestamp: new Date().toISOString(),
 					}).unwrap();
@@ -209,7 +253,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 							payload: {
 								fillDisposition: dispositionData,
 								customerId,
-								agentId: (authUser?.userId as string) || authUser?.id,
+								agentId: currentAgentId,
 								campaignId: selectedCampaignId || undefined,
 								timestamp: new Date().toISOString(),
 							},
@@ -222,7 +266,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 						customerId,
 						customerName,
 						authUser?.name,
-						(authUser?.userId as string) || authUser?.id,
+						currentAgentId,
 						selectedCampaignId || undefined
 					);
 

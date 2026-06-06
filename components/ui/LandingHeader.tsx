@@ -43,7 +43,7 @@ const LandingHeader: React.FC = () => {
 		>
 			<div className={`mx-auto flex h-[72px] items-center justify-between px-6 md:px-[180px] ${transitionTiming}`}>
 				<div className="flex items-center gap-9">
-					<Image src="/logo/peoplely.svg" alt="Peoplely logo" width={140} height={40} priority className="w-[110px] h-auto md:w-[140px]" />
+					<Image src="/logo/outcess.svg" alt="Outcess logo" width={140} height={40} priority className="w-[110px] h-auto md:w-[140px]" />
 					<nav className="font-inter font-normal text-[12px] md:text-[14px] leading-[24px] tracking-[-0.5px] text-[#4A5565] hidden items-center gap-8 text-[10px] md:text-[12px]  text-secondary md:flex">
 						{navLinks.map((link) => (
 							<Link key={link.href} href={link.href} className="transition-colors hover:text-primary" onClick={() => setIsMenuOpen(false)}>

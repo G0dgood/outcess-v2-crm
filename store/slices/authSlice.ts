@@ -48,7 +48,7 @@ interface AuthState {
 }
 
 // Storage key for localStorage
-const AUTH_STORAGE_KEY = 'peoplely-user';
+const AUTH_STORAGE_KEY = 'outcess-user';
 
 // Load initial state from localStorage
 const loadAuthFromStorage = (): Partial<AuthState> => {
@@ -63,8 +63,8 @@ const loadAuthFromStorage = (): Partial<AuthState> => {
 	}
 
 	try {
-		const storedUser = localStorage.getItem('peoplely-user');
-		const storedToken = localStorage.getItem('peoplely-token');
+		const storedUser = localStorage.getItem('outcess-user');
+		const storedToken = localStorage.getItem('outcess-token');
 		
 		if (storedUser && storedToken) {
 			const parsedUser = JSON.parse(storedUser);
@@ -95,11 +95,11 @@ const saveAuthToStorage = (state: AuthState) => {
 
 	try {
 		if (state.user && state.tokens) {
-			localStorage.setItem('peoplely-user', JSON.stringify(state.user));
-			localStorage.setItem('peoplely-token', state.tokens.accessToken);
+			localStorage.setItem('outcess-user', JSON.stringify(state.user));
+			localStorage.setItem('outcess-token', state.tokens.accessToken);
 		} else {
-			localStorage.removeItem('peoplely-user');
-			localStorage.removeItem('peoplely-token');
+			localStorage.removeItem('outcess-user');
+			localStorage.removeItem('outcess-token');
 		}
 	} catch (error) {
 		console.error('Error saving auth data to storage:', error);
@@ -110,14 +110,14 @@ const saveAuthToStorage = (state: AuthState) => {
 const clearAuthFromStorage = () => {
 	if (typeof window === 'undefined') return;
 	try {
-		localStorage.removeItem('peoplely_auth');
-		localStorage.removeItem('peoplely-user');
-		localStorage.removeItem('peoplely-token');
+		localStorage.removeItem('outcess_auth');
+		localStorage.removeItem('outcess-user');
+		localStorage.removeItem('outcess-token');
 		localStorage.removeItem('synced_dispositions');
 		localStorage.removeItem('stickyNotes');
 		localStorage.removeItem('userPrivileges');
 		localStorage.removeItem('selectedCampaignId');
-		localStorage.removeItem('peoplely-setup-data');
+		localStorage.removeItem('outcess-setup-data');
 	} catch (error) {
 		console.error('Error clearing auth data from storage:', error);
 	}

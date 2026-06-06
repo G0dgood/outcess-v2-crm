@@ -59,6 +59,11 @@ export interface GetDispositionsByAgentReportRequest {
     search?: string;
 }
 
+export interface GetLeaderboardRequest {
+    campaignId: string;
+    timeFilter?: 'daily' | 'weekly' | 'monthly';
+}
+
 export const dispositionApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         createDisposition: builder.mutation<CreateDispositionResponse, CreateDispositionRequest>({
@@ -104,6 +109,11 @@ export const dispositionApi = baseApi.injectEndpoints({
                 `api/v1/dispositions/${campaignId}/dashboard-report?startDate=${startDate}&endDate=${endDate}`,
             providesTags: ['Disposition'],
         }),
+        getLeaderboard: builder.query<any, GetLeaderboardRequest>({
+            query: ({ campaignId, timeFilter = 'weekly' }) => 
+                `api/v1/leaderboard/${campaignId}?timeFilter=${timeFilter}`,
+            providesTags: ['Disposition'],
+        }),
     }),
 });
 
@@ -116,4 +126,5 @@ export const {
     useGetDispositionsByAgentReportQuery,
     useGetDashboardDispositionsByCampaignAndAgentIdReportQuery,
     useGetAllDashboardDispositionsByCampaignReportQuery,
+    useGetLeaderboardQuery,
 } = dispositionApi;

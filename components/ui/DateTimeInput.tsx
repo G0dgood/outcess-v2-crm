@@ -43,6 +43,7 @@ export const DateTimeInput: React.FC<DateTimeInputProps> = ({
 				disabled={disabled}
 				className={`input-field ${error ? 'error' : ''} ${inputClassName}`}
 				required={required}
+				suppressHydrationWarning
 			/>
 			{error && <span className="input-error">{error}</span>}
 		</div>

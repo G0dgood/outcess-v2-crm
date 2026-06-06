@@ -11,8 +11,8 @@ const workSans = Work_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Peoplely",
-  description: "Peoplely is a CRM software for your business.",
+  title: "Outcess CRM",
+  description: "Outcess is a CRM software for your business.",
 };
 
 export const viewport: Viewport = {
@@ -36,7 +36,7 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  if (window.location.pathname === '/' || window.location.pathname.startsWith('/blog') || window.location.pathname.startsWith('/about') || window.location.pathname.startsWith('/careers')) {
+                  if (window.location.pathname.startsWith('/blog') || window.location.pathname.startsWith('/about') || window.location.pathname.startsWith('/careers')) {
                     return;
                   }
                   const darkMode = localStorage.getItem('darkMode');

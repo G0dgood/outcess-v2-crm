@@ -5,7 +5,7 @@ import Search from '@/components/ui/Search';
 import Dropdown from '@/components/ui/Dropdown';
 import Pagination from '@/components/ui/Pagination';
 import { useCampaign } from '@/contexts/CampaignContext';
-import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByCampaignIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
 import { useSocket } from '@/contexts/SocketContext';
 import TeamMembersTable from '@/components/features/team-members/TeamMembersTable';
 import { toastSuccess } from '@/utils/toastWithSound';
@@ -134,6 +134,10 @@ const TeamMembersPage: React.FC = () => {
 		{
 			skip: !companyId || !campaignId
 		}
+	);
+	const { data: campaignMembersResponse } = useGetTeamMembersByCampaignIdQuery(
+		{ campaignId: campaignId || '', limit: 1000 },
+		{ skip: !campaignId }
 	);
 	const { socket } = useSocket();
 	const { canAccess } = usePrivilege();
@@ -276,27 +280,38 @@ const TeamMembersPage: React.FC = () => {
 	}, [socket, supervisorId, refetch]);
 
 	const supervisors = useMemo(() => {
-		if (!supervisorsData || !Array.isArray(supervisorsData.roles)) return [];
+		if (!campaignMembersResponse) return [];
+		const rawMembers = campaignMembersResponse.teamMembers || (Array.isArray(campaignMembersResponse) ? campaignMembersResponse : []);
 
-		const rawRoles = supervisorsData.roles as {
-			_id?: string;
-			id?: string;
-			roleName?: string;
-			supervisorTitle?: string;
-		}[];
+		const supervisorRoleIds = new Set<string>();
+		if (supervisorsData && Array.isArray(supervisorsData.roles)) {
+			supervisorsData.roles.forEach((r: any) => {
+				if (r._id) supervisorRoleIds.add(r._id.toString());
+				if (r.id) supervisorRoleIds.add(r.id.toString());
+			});
+		}
 
-		const options: SupervisorOption[] = rawRoles
-			.map((role) => ({
-				label: (role.supervisorTitle || role.roleName || '').trim(),
-				value: role._id || role.id || ''
-			}))
-			.filter((s) => s.label && s.value);
-
-		const uniqueMap = new Map<string, SupervisorOption>();
-		options.forEach((s) => uniqueMap.set(s.value, s));
-
-		return Array.from(uniqueMap.values());
-	}, [supervisorsData]);
+		return rawMembers
+			.filter((m: any) => {
+				const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
+				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
+				
+				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) || 
+					(roleName && roleName.toLowerCase().includes('supervisor'));
+				
+				return isSupervisorRole;
+			})
+			.map((m: any) => {
+				const fullName = m.firstName && m.lastName 
+					? `${m.firstName} ${m.lastName}` 
+					: m.name || m.fullName || 'Unknown Member';
+				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : 'Supervisor';
+				return {
+					value: m._id || m.id || '',
+					label: `${fullName} (${roleName})`
+				};
+			});
+	}, [campaignMembersResponse, supervisorsData]);
 
 	useEffect(() => {
 		if (supervisors.length > 0 && !supervisorFilter) {
@@ -356,7 +371,7 @@ const TeamMembersPage: React.FC = () => {
 				companyId,
 				campaignId: campaignId,
 				supervisorId: data.supervisorId || null,
-				password: data.password || 'Peoplely@123',
+				password: data.password || 'Outcess@123',
 			};
 
 			if (editingMember) {

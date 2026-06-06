@@ -26,7 +26,7 @@ export interface DispositionCategory {
 }
 
 export interface AssignedMember {
-	memberId: string;
+	memberId: string | { _id?: string; id?: string };
 	memberName?: string;
 	duration?: number;
 }
@@ -329,7 +329,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 
 	useEffect(() => {
 		if (typeof window !== 'undefined') {
-			const savedData = localStorage.getItem('peoplely-setup-data');
+			const savedData = localStorage.getItem('outcess-setup-data');
 			if (savedData) {
 				try {
 					const parsedData = JSON.parse(savedData);
@@ -357,7 +357,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		if (typeof window !== 'undefined' && isInitialized) {
 			const save = () => {
 				try {
-					localStorage.setItem('peoplely-setup-data', JSON.stringify(setupData));
+					localStorage.setItem('outcess-setup-data', JSON.stringify(setupData));
 				} catch {
 				}
 			};

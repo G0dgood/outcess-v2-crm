@@ -28,7 +28,7 @@ const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
 
 	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
 	const buckets = useMemo(() => {
-		return campaignData?.dashboardSettings?.buckets || [];
+		return campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets || [];
 	}, [campaignData]);
 
 	const handleRemove = async (bucketId: string, memberId: string, memberName: string) => {
@@ -143,34 +143,39 @@ const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
 											</div>
 										) : (
 											<div className="space-y-2">
-												{bucket.assignedMembers.map((member: AssignedMember) => (
-													<div
-														key={member.memberId}
-														className="group flex items-center justify-between p-2.5 rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-all"
-													>
-														<div className="flex items-center gap-3">
-															<div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-[10px] font-bold text-gray-500">
-																{(member.memberName || 'U').charAt(0)}
-															</div>
-															<div className="flex flex-col">
-																<span className="text-[12px] font-medium text-gray-900 dark:text-gray-100">{member.memberName || 'Unknown'}</span>
-																{member.duration && (
-																	<div className="flex items-center gap-1 text-[9px] text-primary font-medium opacity-80">
-																		<ClockIcon className="w-2.5 h-2.5" />
-																		{member.duration}m remaining
-																	</div>
-																)}
-															</div>
-														</div>
-														<button
-															onClick={() => handleRemove(bucket?.id, member?.memberId, member?.memberName || 'Unknown')}
-															className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
-															title="Remove from Bucket"
+												{bucket.assignedMembers.map((member: AssignedMember) => {
+													const mId = typeof member.memberId === 'object' && member.memberId !== null
+														? (member.memberId._id || member.memberId.id || '')
+														: member.memberId;
+													return (
+														<div
+															key={mId}
+															className="group flex items-center justify-between p-2.5 rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-all"
 														>
-															<TrashIcon className="w-4 h-4" />
-														</button>
-													</div>
-												))}
+															<div className="flex items-center gap-3">
+																<div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-[10px] font-bold text-gray-500">
+																	{(member.memberName || 'U').charAt(0)}
+																</div>
+																<div className="flex flex-col">
+																	<span className="text-[12px] font-medium text-gray-900 dark:text-gray-100">{member.memberName || 'Unknown'}</span>
+																	{member.duration && (
+																		<div className="flex items-center gap-1 text-[9px] text-primary font-medium opacity-80">
+																			<ClockIcon className="w-2.5 h-2.5" />
+																			{member.duration}m remaining
+																		</div>
+																	)}
+																</div>
+															</div>
+															<button
+																onClick={() => handleRemove(bucket?.id, mId, member?.memberName || 'Unknown')}
+																className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+																title="Remove from Bucket"
+															>
+																<TrashIcon className="w-4 h-4" />
+															</button>
+														</div>
+													);
+												})}
 											</div>
 										)}
 									</div>

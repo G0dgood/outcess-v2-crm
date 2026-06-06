@@ -9,8 +9,6 @@ import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import CompanyDetailsSkeleton from '@/components/skeletons/CompanyDetailsSkeleton';
 import CompanyProfile from './CompanyProfile';
 import BusinessHours from '@/components/features/settings/BusinessHours';
-import Currencies from './Currencies';
-import OrganizationSettings from '@/components/features/settings/OrganizationSettings';
 import Tabs from './Tabs';
 
 interface CompanyDetailsProps {
@@ -21,7 +19,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 	const { campaignData } = useCampaign();
 	const [updateCompany, { isLoading: isUpdating }] = useUpdateCompanyMutation();
 
-	const [activeTab, setActiveTab] = useState<'company-detail' | 'business-hour' | 'currencies' | 'organization'>('company-detail');
+	const [activeTab, setActiveTab] = useState<'company-detail' | 'business-hour'>('company-detail');
 	const [isEditMode, setIsEditMode] = useState(false);
 
 	const [formData, setFormData] = useState({
@@ -124,8 +122,6 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 					tabs={[
 						{ id: 'company-detail', label: 'Company Details' },
 						{ id: 'business-hour', label: 'Business Hour' },
-						{ id: 'currencies', label: 'Currencies' },
-						{ id: 'organization', label: 'Organization' },
 					]}
 					activeTab={activeTab}
 					onTabChange={(id) => setActiveTab(id as typeof activeTab)}
@@ -151,13 +147,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 					<BusinessHours />
 				)}
 
-				{activeTab === 'currencies' && (
-					<Currencies />
-				)}
 
-				{activeTab === 'organization' && (
-					<OrganizationSettings />
-				)}
 
 			</div>
 		</div>

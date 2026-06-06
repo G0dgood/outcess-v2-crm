@@ -27,7 +27,7 @@ const CareersPage: React.FC = () => {
 			department: 'Customer Success',
 			location: 'Remote',
 			type: 'Full-time',
-			description: 'Help our customers achieve success with Peoplely CRM. Onboard new clients, provide training, and ensure high customer satisfaction.'
+			description: 'Help our customers achieve success with Outcess CRM. Onboard new clients, provide training, and ensure high customer satisfaction.'
 		},
 		{
 			title: 'DevOps Engineer',
@@ -90,7 +90,7 @@ const CareersPage: React.FC = () => {
 						className="text-[30px] md:text-[36px] lg:text-[48px] font-bold mb-6 text-[#050711] leading-tight"
 						style={plusJakartaStyle}
 					>
-						Join the Peoplely Team
+						Join the Outcess Team
 					</h1>
 					<p
 						className="text-[14px] md:text-[16px] text-[#4A5565] leading-relaxed"
@@ -108,7 +108,7 @@ const CareersPage: React.FC = () => {
 						className="text-[24px] md:text-[30px] font-bold mb-12 text-[#050711] text-center"
 						style={plusJakartaStyle}
 					>
-						Why Work at Peoplely?
+						Why Work at Outcess?
 					</h2>
 
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
@@ -301,7 +301,7 @@ const CareersPage: React.FC = () => {
 							Don&apos;t see a role that fits? We&apos;re always looking for great talent.
 						</p>
 						<Link
-							href="mailto:careers@peoplely.com"
+							href="mailto:careers@outcess.com"
 							className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border font-semibold text-[10px] md:text-[12px] transition-colors"
 							style={{
 								borderColor: 'var(--light-gray)',
@@ -339,7 +339,7 @@ const CareersPage: React.FC = () => {
 						Join us in transforming how call centers operate. We&apos;re building something special.
 					</p>
 					<Link
-						href="mailto:careers@peoplely.com"
+						href="mailto:careers@outcess.com"
 						className="inline-flex items-center gap-2 px-8 py-3 bg-white rounded-lg border border-white/20 text-[#050711] font-semibold transition-colors hover:bg-white/90"
 						style={plusJakartaStyle}
 					>

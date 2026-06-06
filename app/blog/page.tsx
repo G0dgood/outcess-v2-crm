@@ -90,7 +90,7 @@ const BlogPage: React.FC = () => {
 						className="text-[30px] md:text-[36px] lg:text-[48px] font-bold mb-6 text-[#050711] leading-tight"
 						style={plusJakartaStyle}
 					>
-						Peoplely Blog
+						Outcess Blog
 					</h1>
 					<p
 						className="text-[14px] md:text-[16px] text-[#4A5565] leading-relaxed"

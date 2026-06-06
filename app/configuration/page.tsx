@@ -106,7 +106,7 @@ export default function ConfigurationPage() {
 							size="md"
 							onClick={() => {
 								setSelectedCampaignId('new');
-								localStorage.removeItem('peoplely-setup-data');
+								localStorage.removeItem('outcess-setup-data');
 								router.push('/setup');
 							}}
 							className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2"

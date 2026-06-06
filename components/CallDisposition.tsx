@@ -496,26 +496,31 @@ export default function CallDisposition() {
 						{activeBucket?.assignedMembers && activeBucket.assignedMembers?.length > 0 && (
 							<div className="px-6 py-3 bg-gray-50/30 dark:bg-gray-900/5 border-b dark:border-gray-700 flex flex-wrap gap-2 items-center" style={{ borderColor: 'var(--light-gray)' }}>
 								<span className="text-[10px] font-semibold text-gray-400 uppercase mr-2">Assigned:</span>
-								{activeBucket.assignedMembers.map(member => (
-									<div
-										key={member.memberId}
-										className="flex items-center gap-2 px-2 py-1 rounded-full bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-xs group/member pr-1"
-										style={{ borderColor: 'var(--light-gray)' }}
-									>
-										<span className="text-[11px] font-medium text-gray-700 dark:text-gray-200">{member.memberName}</span>
-										{member?.duration && (
-											<span className="text-[9px] text-primary bg-primary/5 px-1 rounded-sm font-mono">
-												{member?.duration}m
-											</span>
-										)}
-										<button
-											onClick={() => handleRemoveMember(activeBucket.id, member?.memberId, member?.memberName || 'Member')}
-											className="p-0.5 hover:text-red-500 text-gray-400 transition-colors cursor-pointer"
+								{activeBucket.assignedMembers.map(member => {
+									const mId = typeof member.memberId === 'object' && member.memberId !== null
+										? (member.memberId._id || member.memberId.id || '')
+										: member.memberId;
+									return (
+										<div
+											key={mId}
+											className="flex items-center gap-2 px-2 py-1 rounded-full bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-xs group/member pr-1"
+											style={{ borderColor: 'var(--light-gray)' }}
 										>
-											<Icon name="Close_round_light" size="sm" />
-										</button>
-									</div>
-								))}
+											<span className="text-[11px] font-medium text-gray-700 dark:text-gray-200">{member.memberName}</span>
+											{member?.duration && (
+												<span className="text-[9px] text-primary bg-primary/5 px-1 rounded-sm font-mono">
+													{member?.duration}m
+												</span>
+											)}
+											<button
+												onClick={() => handleRemoveMember(activeBucket.id, mId, member?.memberName || 'Member')}
+												className="p-0.5 hover:text-red-500 text-gray-400 transition-colors cursor-pointer"
+											>
+												<Icon name="Close_round_light" size="sm" />
+											</button>
+										</div>
+									);
+								})}
 							</div>
 						)}
 

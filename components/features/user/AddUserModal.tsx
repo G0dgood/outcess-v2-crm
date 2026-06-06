@@ -5,7 +5,7 @@ import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
 import Button from '@/components/ui/Button';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { useCreateTeamMemberMutation, useGetSupervisorsByCampaignIdQuery } from '@/store/services/teamMembersApi';
+import { useCreateTeamMemberMutation, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
 import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
@@ -43,6 +43,10 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 	const { data: supervisorsResponse } = useGetSupervisorsByCampaignIdQuery(
 		{ companyId, campaignId },
 		{ skip: !companyId || !campaignId }
+	);
+	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
+		{ campaignId, limit: 1000 },
+		{ skip: !campaignId }
 	);
 	const [createTeamMember, { isLoading }] = useCreateTeamMemberMutation();
 
@@ -100,20 +104,38 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 	}, [rolesResponse, supervisorsResponse]);
 
 	const supervisorOptions = useMemo(() => {
-		if (!supervisorsResponse || !Array.isArray(supervisorsResponse.roles)) return [];
-		const rawRoles = supervisorsResponse.roles as {
-			_id?: string;
-			id?: string;
-			roleName?: string;
-			supervisorTitle?: string;
-		}[];
-		return rawRoles
-			.map((role) => ({
-				value: (role._id || role.id || '') as string,
-				label: (role.supervisorTitle || role.roleName || '') as string
-			}))
-			.filter((opt) => opt.value && opt.label);
-	}, [supervisorsResponse]);
+		if (!teamMembersData) return [];
+		const rawMembers = teamMembersData.teamMembers || (Array.isArray(teamMembersData) ? teamMembersData : []);
+
+		const supervisorRoleIds = new Set<string>();
+		if (supervisorsResponse && Array.isArray(supervisorsResponse.roles)) {
+			supervisorsResponse.roles.forEach((r: any) => {
+				if (r._id) supervisorRoleIds.add(r._id.toString());
+				if (r.id) supervisorRoleIds.add(r.id.toString());
+			});
+		}
+
+		return rawMembers
+			.filter((m: any) => {
+				const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
+				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
+				
+				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) || 
+					(roleName && roleName.toLowerCase().includes('supervisor'));
+				
+				return isSupervisorRole;
+			})
+			.map((m: any) => {
+				const fullName = m.firstName && m.lastName 
+					? `${m.firstName} ${m.lastName}` 
+					: m.name || m.fullName || 'Unknown Member';
+				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : 'Supervisor';
+				return {
+					value: m._id || m.id || '',
+					label: `${fullName} (${roleName})`
+				};
+			});
+	}, [teamMembersData, supervisorsResponse]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
 		const stringValue = Array.isArray(value) ? value[0] : value;

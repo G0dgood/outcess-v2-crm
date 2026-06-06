@@ -10,6 +10,7 @@ import type { ChartDataItem } from '@/components/dashboard/charts/types';
 interface SetupData {
 	dashboardSettings: {
 		dispositions?: Array<{ name: string; color?: string }>;
+		buckets?: Array<{ dispositions?: Array<{ name: string; color?: string }> }>;
 		callOutcomes?: Array<{ name: string }>;
 		dispositionSettings?: {
 			timeRangeView?: string;
@@ -222,8 +223,21 @@ const generateSingleSourceData = (
 	const dispositionsToCount = filteredDispositions;
 
 	// Handle disposition categories (Fields) - Aggregate values
-	if (setupData.dashboardSettings.dispositions) {
-		const disposition = setupData.dashboardSettings.dispositions.find((d: { name: string; color?: string }) => d.name === dataSource);
+	// Gather dispositions from both direct and bucketed sources
+	const configuredDispositions: any[] = [...(setupData.dashboardSettings.dispositions || [])];
+	if (setupData.dashboardSettings.buckets && Array.isArray(setupData.dashboardSettings.buckets)) {
+		setupData.dashboardSettings.buckets.forEach((bucket: any) => {
+			if (bucket && Array.isArray(bucket.dispositions)) {
+				bucket.dispositions.forEach((disp: any) => {
+					if (disp && disp.name && !configuredDispositions.some(d => d.name === disp.name)) {
+						configuredDispositions.push(disp);
+					}
+				});
+			}
+		});
+	}
+
+	const disposition = configuredDispositions.find((d: { name: string; color?: string }) => d.name === dataSource);
 		if (disposition) {
 			const counts: Record<string, number> = {};
 			
@@ -260,7 +274,6 @@ const generateSingleSourceData = (
 				color: fieldColors[index]
 			}));
 		}
-	}
 
 	// Handle call outcomes (Specific Values) - Count occurrences
 	if (setupData.dashboardSettings.callOutcomes) {

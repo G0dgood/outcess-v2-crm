@@ -439,9 +439,14 @@ const UsersPage: React.FC = () => {
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										<div className="flex flex-wrap gap-1">
-											{campaignData?.dashboardSettings?.buckets
+											{(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)
 												?.filter((b: any) =>
-													b.assignedMembers?.some((m: any) => m.memberId === user.id)
+													b.assignedMembers?.some((m: any) => {
+														const mId = typeof m.memberId === 'object' && m.memberId !== null
+															? (m.memberId._id || m.memberId.id)
+															: m.memberId;
+														return mId === user.id;
+													})
 												)
 												.map((b: any) => (
 													<span
@@ -454,8 +459,13 @@ const UsersPage: React.FC = () => {
 													</span>
 												))
 											}
-											{(!campaignData?.dashboardSettings?.buckets?.some((b: any) =>
-												b.assignedMembers?.some((m: any) => m.memberId === user.id)
+											{(!(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)?.some((b: any) =>
+												b.assignedMembers?.some((m: any) => {
+													const mId = typeof m.memberId === 'object' && m.memberId !== null
+														? (m.memberId._id || m.memberId.id)
+														: m.memberId;
+													return mId === user.id;
+												})
 											)) && (
 													<span className="text-[10px] text-gray-300 italic font-inter font-normal">Unassigned</span>
 												)}

@@ -29,13 +29,13 @@ export default function SignupSuccessPage() {
 							Account Created Successfully!
 						</h1>
 						<p className="font-lato not-italic font-normal text-base leading-[150%] text-[#6D7280] dark:text-gray-400 max-w-sm mx-auto">
-							Welcome to Peoplely CRM. Your account and company profile have been set up. You can now log in to start managing your business.
+							Welcome to Outcess CRM. Your account and company profile have been set up. You can now log in to start managing your business.
 						</p>
 					</div>
 
 					<div className="space-y-4 pt-4">
 						<Button
-							onClick={() => router.push('/login')}
+							onClick={() => router.push('/')}
 							size="sm"
 							fullWidth
 							className="flex items-center justify-center gap-2 px-6 !py-6 text-[14px] md:text-[16px] font-semibold transition-all rounded-[var(--radius)] h-12"

@@ -100,9 +100,22 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		const optionsMap = new Map<string, { value: string; label: string }>();
 		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
 
-		// Add disposition categories if available
-		if (dashboardSettings?.dispositions && dashboardSettings.dispositions.length > 0) {
-			dashboardSettings.dispositions.forEach((disposition: { name: string }) => {
+		// Add disposition categories if available (direct and bucketed)
+		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
+		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
+			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
+				if (bucket && Array.isArray(bucket.dispositions)) {
+					bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
+						if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
+							allDispositions.push(disp);
+						}
+					});
+				}
+			});
+		}
+
+		if (allDispositions.length > 0) {
+			allDispositions.forEach((disposition: { name: string }) => {
 				if (disposition?.name) {
 					optionsMap.set(disposition.name, { value: disposition.name, label: disposition.name });
 				}

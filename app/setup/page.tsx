@@ -28,7 +28,7 @@ export default function Setup() {
 							id: response.user.id || response.user._id
 						};
 						updateUser(normalizedUser);
-						localStorage.setItem('peoplely-user', JSON.stringify(normalizedUser));
+						localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
 					}
 				} catch (error) {
 					const apiError = error as ApiError;

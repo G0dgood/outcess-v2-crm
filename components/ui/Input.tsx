@@ -76,6 +76,7 @@ export const Input: React.FC<InputProps> = ({
 					className={`input-field ${error ? 'error' : ''} ${inputClassName} ${isPassword ? 'pr-10' : ''}`}
 					required={required}
 					autoComplete={autoComplete}
+					suppressHydrationWarning
 				/>
 				{isPassword && (
 					<Button

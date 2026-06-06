@@ -37,6 +37,10 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 
 	const { data: teamMembers } = useGetTeamMembersByCampaignIdQuery({ campaignId: selectedCampaignId || '', limit: 1000 });
 
+	const creatorName = user?.firstName && user?.lastName
+		? `${user.firstName} ${user.lastName}`
+		: user?.name || user?.username || 'Unknown User';
+
 	const resetForm = () => {
 		setTitle('');
 		setDescription('');
@@ -181,6 +185,7 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 				{/* Modal Form */}
 				<div className="p-6 overflow-y-auto flex-1">
 					<SupportTicketForm
+						creatorName={creatorName}
 						title={title}
 						setTitle={setTitle}
 						description={description}

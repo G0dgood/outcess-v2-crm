@@ -5,30 +5,18 @@ import Icon from './Icon';
 import { plusJakartaStyle } from '../Options';
 
 interface LoginTopHeaderProps {
-  plan: string;
   primaryColor: string;
-  onUpgradeClick: () => void;
 }
 
-const LoginTopHeader: React.FC<LoginTopHeaderProps> = ({ primaryColor, onUpgradeClick }) => {
-
-
+const LoginTopHeader: React.FC<LoginTopHeaderProps> = ({ primaryColor }) => {
   return (
     <div className="login-top-header">
       <div className="login-header-card">
-        <button className="upgrade-button" onClick={onUpgradeClick} style={{ color: primaryColor }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span
-            className={`font-lato not-italic font-semibold text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100 cursor-pointer `}>Upgrade</span>
-        </button>
-        <div className="header-separator"></div>
         <div className="flex-1 md:flex-none">
           <div className="hidden md:flex items-center gap-2">
-            <Icon name="peoplelyHalf" size="lg" />
+            <Icon name="outcessHalf" size="lg" />
             <span className="font-semibold text-[14px] md:text-[16px] leading-7 flex items-center text-[#050711]"
-              style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>Peoplely</span>
+              style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>Outcess</span>
           </div>
         </div>
       </div>

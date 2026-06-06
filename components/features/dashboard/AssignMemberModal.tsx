@@ -69,7 +69,12 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 		selectedMemberIds.forEach(id => {
 			setupData.dashboardSettings.buckets.forEach(b => {
 				if (b.id !== bucketId && Array.isArray(b.assignedMembers)) {
-					const isAssigned = b.assignedMembers.some((m: AssignedMember) => m.memberId === id);
+					const isAssigned = b.assignedMembers.some((m: AssignedMember) => {
+						const mId = typeof m.memberId === 'object' && m.memberId !== null
+							? (m.memberId._id || m.memberId.id)
+							: m.memberId;
+						return mId === id;
+					});
 					if (isAssigned && !conflicts.includes(b.name)) conflicts.push(b.name);
 				}
 			});
@@ -87,7 +92,12 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 
 	const getMemberBuckets = (memberId: string) => {
 		return setupData.dashboardSettings.buckets.filter(b =>
-			Array.isArray(b?.assignedMembers) && b?.assignedMembers.some((m: AssignedMember) => m.memberId === memberId)
+			Array.isArray(b?.assignedMembers) && b?.assignedMembers.some((m: AssignedMember) => {
+				const mId = typeof m.memberId === 'object' && m.memberId !== null
+					? (m.memberId._id || m.memberId.id)
+					: m.memberId;
+				return mId === memberId;
+			})
 		);
 	};
 
@@ -198,7 +208,12 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 																	key={b.id}
 																	onClick={(e) => {
 																		e.stopPropagation();
-																		const assignment = b?.assignedMembers?.find((m: any) => m?.memberId === member._id);
+																		const assignment = b?.assignedMembers?.find((m: any) => {
+																			const mId = typeof m.memberId === 'object' && m.memberId !== null
+																				? (m.memberId._id || m.memberId.id)
+																				: m.memberId;
+																			return mId === member._id;
+																		});
 																		setSelectedAssignment({
 																			memberId: member?._id,
 																			memberName: member?.name,

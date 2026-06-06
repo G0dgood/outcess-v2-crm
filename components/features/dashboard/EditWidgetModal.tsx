@@ -151,8 +151,22 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			});
 		}
 
-		if (campaignData?.campaign?.dashboardSettings?.dispositions) {
-			campaignData.campaign.dashboardSettings.dispositions.forEach((disposition: { name: string }) => {
+		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
+		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
+		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
+			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
+				if (bucket && Array.isArray(bucket.dispositions)) {
+					bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
+						if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
+							allDispositions.push(disp);
+						}
+					});
+				}
+			});
+		}
+
+		if (allDispositions.length > 0) {
+			allDispositions.forEach((disposition: { name: string }) => {
 				if (disposition?.name) {
 					optionsMap.set(disposition.name, { value: disposition.name, label: disposition.name });
 				}
@@ -165,7 +179,21 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 	useEffect(() => {
 		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
 		const lookupKey = selectedCategory || formData.dataSourceName;
-		const disposition = dashboardSettings?.dispositions?.find((d: { name: string }) => d.name === lookupKey);
+
+		// Find disposition from either direct or bucketed dispositions
+		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
+		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
+			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
+				if (bucket && Array.isArray(bucket.dispositions)) {
+					bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
+						if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
+							allDispositions.push(disp);
+						}
+					});
+				}
+			});
+		}
+		const disposition = allDispositions.find((d: { name: string }) => d.name === lookupKey);
 		const outcome = dashboardSettings?.callOutcomes?.find((o: { name: string }) => o.name === lookupKey);
 
 		if (reportData?.data?.breakdown && lookupKey && reportData.data.breakdown[lookupKey] !== undefined) {
@@ -246,7 +274,20 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 	const isValueAutoCalculated = useMemo(() => {
 		const source = formData.dataSourceName;
 		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
-		const isDisposition = dashboardSettings?.dispositions?.some((d: { name: string }) => d.name === source);
+		// Find in both direct and bucketed dispositions
+		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
+		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
+			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
+				if (bucket && Array.isArray(bucket.dispositions)) {
+					bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
+						if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
+							allDispositions.push(disp);
+						}
+					});
+				}
+			});
+		}
+		const isDisposition = allDispositions.some((d: { name: string }) => d.name === source);
 		const isOutcome = dashboardSettings?.callOutcomes?.some((o: { name: string }) => o.name === source);
 		return isDisposition || isOutcome || (reportData?.data?.breakdown && reportData.data.breakdown[source!] !== undefined);
 	}, [formData.dataSourceName, campaignData, reportData]);

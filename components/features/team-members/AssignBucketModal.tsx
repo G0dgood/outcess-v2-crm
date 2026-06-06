@@ -35,7 +35,7 @@ const AssignBucketModal: React.FC<AssignBucketModalProps> = ({
 
 	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
 	const buckets = useMemo(() => {
-		return campaignData?.dashboardSettings?.buckets || [];
+		return campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets || [];
 	}, [campaignData]);
 
 	const filteredBuckets = useMemo(() => {
@@ -71,7 +71,12 @@ const AssignBucketModal: React.FC<AssignBucketModalProps> = ({
 
 	const isMemberInBucket = (bucketId: string) => {
 		const bucket = buckets.find((b: any) => b.id === bucketId);
-		return Array.isArray(bucket?.assignedMembers) && (bucket.assignedMembers as AssignedMember[]).some((m: AssignedMember) => m.memberId === member?._id);
+		return Array.isArray(bucket?.assignedMembers) && (bucket.assignedMembers as AssignedMember[]).some((m: AssignedMember) => {
+			const mId = typeof m.memberId === 'object' && m.memberId !== null
+				? (m.memberId._id || m.memberId.id)
+				: m.memberId;
+			return mId === member?._id;
+		});
 	};
 
 	if (!isOpen || !member) return null;
