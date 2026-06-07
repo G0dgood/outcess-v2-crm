@@ -3,41 +3,39 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
-import Pagination from '@/components/ui/Pagination';
-import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
-import Checkbox from '@/components/ui/Checkbox';
 import PageHeading from '@/components/ui/PageHeading';
-import { ChatBubbleIcon, GearIcon, TrashIcon, PlusIcon, Cross2Icon } from '@radix-ui/react-icons';
-import Icon from '@/components/ui/Icon';
-import StatusBadge from '@/components/ui/StatusBadge';
+import { Dropdown } from '@/components/ui/Dropdown';
+import Tabs from '@/components/ui/Tabs';
+import { ChatBubbleIcon, GearIcon, PlusIcon, Cross2Icon } from '@radix-ui/react-icons';
 import Input from '@/components/ui/Input';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetCampaignByCompanyIdForheaderQuery } from '@/store/services/campaignApi';
-import SMSMessageModal, { SMS } from '@/components/features/sms/SMSMessageModal';
-import SMSMessagePreview from '@/components/features/sms/SMSMessagePreview';
+import SMSMessageModal from '@/components/features/sms/SMSMessageModal';
+import SMSTable from '@/components/features/sms/SMSTable';
+import SMSConfigTable from '@/components/features/sms/SMSConfigTable';
+import SelectedSMSDrawer from '@/components/features/sms/SelectedSMSDrawer';
 import SMSModal from '@/components/ui/SMSModal';
+import { NoRecordFound } from '@/components/Options';
+import {
+	useGetSMSConfigsQuery,
+	useCreateSMSConfigMutation,
+	useUpdateSMSConfigMutation,
+	useDeleteSMSConfigMutation,
+	useGetSMSLogsQuery,
+	useCreateSMSLogMutation,
+	SMSConfig as SMSConfigType,
+	SMSLog as SMSLogType,
+} from '@/store/services/smsApi';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { toast } from 'sonner';
-
-export interface SMSConfig {
-	id: string;
-	name: string;
-	provider: string;
-	senderId: string;
-	accountSid?: string;
-	apiKey?: string;
-	assignType: 'campaign' | 'bucket';
-	assignedId: string;
-	assignedName: string;
-}
 
 const SMSPage: React.FC = () => {
 	const { campaignData } = useCampaign();
 	const { canAccess } = usePrivilege();
 	const { user } = useUserInfo();
-	
+
 	const canAccessModule = canAccess('customerSMS', 'view');
 	const canCreate = canAccess('customerSMS', 'create');
 
@@ -55,8 +53,8 @@ const SMSPage: React.FC = () => {
 		return campaigns.flatMap((c: any) => {
 			const bList = c.dashboardSettings?.buckets || [];
 			return bList.map((b: any) => ({
-				id: b.id,
-				name: b.name,
+				id: b.id || b._id || '',
+				name: b.name || 'Unnamed Bucket',
 				campaignId: c._id,
 				campaignName: c.campaignName || c.name || 'Unnamed Campaign'
 			}));
@@ -68,16 +66,35 @@ const SMSPage: React.FC = () => {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [selectedSMS, setSelectedSMS] = useState<Set<string>>(new Set());
-	const [viewingSMS, setViewingSMS] = useState<SMS | null>(null);
+	const [viewingSMS, setViewingSMS] = useState<SMSLogType | null>(null);
 	const [isSendSMSOpen, setIsSendSMSOpen] = useState(false);
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 	const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
 
-	// Configurations states
-	const [configsList, setConfigsList] = useState<SMSConfig[]>([]);
+	// SMS Configurations states
+	const { data: configsData, isLoading: isConfigsLoading } = useGetSMSConfigsQuery(companyId, { skip: !companyId });
+	const configsList = configsData?.configs || [];
+
+	const [createSMSConfig] = useCreateSMSConfigMutation();
+	const [updateSMSConfig] = useUpdateSMSConfigMutation();
+	const [deleteSMSConfig] = useDeleteSMSConfigMutation();
+
+	// SMS Logs states
+	const { data: logsData, isLoading: isLogsLoading } = useGetSMSLogsQuery({
+		companyId,
+		page: currentPage,
+		limit: itemsPerPage,
+		search: searchTerm,
+	}, { skip: !companyId });
+	const smsList = logsData?.logs || [];
+	const totalItems = logsData?.pagination?.total || 0;
+	const totalPages = logsData?.pagination?.totalPages || 1;
+
+	const [createSMSLog] = useCreateSMSLogMutation();
+
 	const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-	const [editingConfig, setEditingConfig] = useState<SMSConfig | null>(null);
+	const [editingConfig, setEditingConfig] = useState<SMSConfigType | null>(null);
 	const [configForm, setConfigForm] = useState({
 		name: '',
 		provider: 'Twilio',
@@ -88,86 +105,9 @@ const SMSPage: React.FC = () => {
 		assignedId: '',
 	});
 
-	// Load configurations from local storage on mount
-	useEffect(() => {
-		const saved = localStorage.getItem('outcess-sms-configs');
-		if (saved) {
-			try {
-				setConfigsList(JSON.parse(saved));
-			} catch {
-				setConfigsList([]);
-			}
-		}
-	}, []);
-
-	// Save configurations to local storage
-	const saveConfigs = (newConfigs: SMSConfig[]) => {
-		setConfigsList(newConfigs);
-		localStorage.setItem('outcess-sms-configs', JSON.stringify(newConfigs));
-	};
-
-	const [smsList] = useState<SMS[]>([
-		{
-			id: 'SMS001',
-			phoneNumber: '+234 802 345 6789',
-			message: 'Thank you for your inquiry. We will get back to you shortly.',
-			status: 'delivered',
-			direction: 'outbound',
-			timestamp: '2024-01-15 10:30 AM',
-			contactName: 'John Doe',
-		},
-		{
-			id: 'SMS002',
-			phoneNumber: '+234 803 456 7890',
-			message: 'Hello, I would like to know more about your services.',
-			status: 'sent',
-			direction: 'inbound',
-			timestamp: '2024-01-15 09:15 AM',
-			contactName: 'Jane Smith',
-		},
-		{
-			id: 'SMS003',
-			phoneNumber: '+234 804 567 8901',
-			message: 'Your appointment has been confirmed for tomorrow at 2 PM.',
-			status: 'delivered',
-			direction: 'outbound',
-			timestamp: '2024-01-14 03:45 PM',
-		},
-		{
-			id: 'SMS004',
-			phoneNumber: '+234 805 678 9012',
-			message: 'Payment reminder: Your invoice #12345 is due in 3 days.',
-			status: 'pending',
-			direction: 'outbound',
-			timestamp: '2024-01-14 11:20 AM',
-		},
-		{
-			id: 'SMS005',
-			phoneNumber: '+234 806 789 0123',
-			message: 'Thank you for contacting us. How can I assist you today?',
-			status: 'failed',
-			direction: 'outbound',
-			timestamp: '2024-01-13 04:30 PM',
-			contactName: 'Alice Johnson',
-		},
-	]);
-
-	const filteredSMS = smsList.filter(sms =>
-		sms.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		sms.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		sms.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		(sms.contactName && sms.contactName.toLowerCase().includes(searchTerm.toLowerCase()))
-	);
-
-	const totalPages = Math.ceil(filteredSMS.length / itemsPerPage);
-	const currentSMS = filteredSMS.slice(
-		(currentPage - 1) * itemsPerPage,
-		currentPage * itemsPerPage
-	);
-
 	const handleSelectAll = (checked: boolean) => {
 		if (checked) {
-			setSelectedSMS(new Set(currentSMS.map(sms => sms.id)));
+			setSelectedSMS(new Set(smsList.map(sms => sms._id || '')));
 			setIsDrawerOpen(true);
 		} else {
 			setSelectedSMS(new Set());
@@ -190,7 +130,7 @@ const SMSPage: React.FC = () => {
 		}
 	};
 
-	const isAllSelected = currentSMS.length > 0 && currentSMS.every(sms => selectedSMS.has(sms.id));
+	const isAllSelected = smsList.length > 0 && smsList.every(sms => selectedSMS.has(sms._id || ''));
 
 	useEffect(() => {
 		if (isDrawerOpen) {
@@ -205,14 +145,14 @@ const SMSPage: React.FC = () => {
 		}
 	}, [isDrawerOpen]);
 
-	const getDirectionColor = (direction: SMS['direction']) => {
+	const getDirectionColor = (direction: SMSLogType['direction']) => {
 		return direction === 'inbound'
 			? { bg: 'rgba(139, 92, 246, 0.1)', text: '#8B5CF6', border: 'rgba(139, 92, 246, 0.2)' }
 			: { bg: 'rgba(59, 130, 246, 0.1)', text: '#3B82F6', border: 'rgba(59, 130, 246, 0.2)' };
 	};
 
 	// Configuration handlers
-	const handleConfigModalOpen = (config: SMSConfig | null = null) => {
+	const handleConfigModalOpen = (config: SMSConfigType | null = null) => {
 		if (config) {
 			setEditingConfig(config);
 			setConfigForm({
@@ -244,15 +184,15 @@ const SMSPage: React.FC = () => {
 			const updated = { ...prev, [field]: value };
 			// Reset assignedId when switching assignType
 			if (field === 'assignType') {
-				updated.assignedId = value === 'campaign' 
-					? (campaigns[0]?._id || '') 
+				updated.assignedId = value === 'campaign'
+					? (campaigns[0]?._id || '')
 					: (buckets[0]?.id || '');
 			}
 			return updated;
 		});
 	};
 
-	const handleSaveConfig = () => {
+	const handleSaveConfig = async () => {
 		if (!configForm.name || !configForm.senderId || !configForm.assignedId) {
 			toast.error('Please fill in all required fields');
 			return;
@@ -267,32 +207,35 @@ const SMSPage: React.FC = () => {
 			assignedName = bkt ? `${bkt.campaignName} -> ${bkt.name}` : 'Unknown Bucket';
 		}
 
-		if (editingConfig) {
-			const updatedConfigs = configsList.map(c => 
-				c.id === editingConfig.id 
-					? { ...c, ...configForm, assignedName } 
-					: c
-			);
-			saveConfigs(updatedConfigs);
-			toast.success('Configuration updated successfully');
-		} else {
-			const newConfig: SMSConfig = {
-				id: `SMSCFG-${Date.now()}`,
-				...configForm,
-				assignedName,
-			};
-			saveConfigs([...configsList, newConfig]);
-			toast.success('Configuration created successfully');
+		try {
+			if (editingConfig && editingConfig._id) {
+				await updateSMSConfig({
+					id: editingConfig._id,
+					data: { ...configForm, assignedName }
+				}).unwrap();
+				toast.success('Configuration updated successfully');
+			} else {
+				await createSMSConfig({
+					...configForm,
+					assignedName,
+					companyId,
+				}).unwrap();
+				toast.success('Configuration created successfully');
+			}
+			setIsConfigModalOpen(false);
+			setEditingConfig(null);
+		} catch (error) {
+			toast.error('Failed to save configuration');
 		}
-
-		setIsConfigModalOpen(false);
-		setEditingConfig(null);
 	};
 
-	const handleDeleteConfig = (id: string) => {
-		const updated = configsList.filter(c => c.id !== id);
-		saveConfigs(updated);
-		toast.success('Configuration deleted');
+	const handleDeleteConfig = async (id: string) => {
+		try {
+			await deleteSMSConfig(id).unwrap();
+			toast.success('Configuration deleted');
+		} catch (error) {
+			toast.error('Failed to delete configuration');
+		}
 	};
 
 	if (!canAccessModule) {
@@ -304,28 +247,15 @@ const SMSPage: React.FC = () => {
 			{/* Title & Tabs */}
 			<div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
 				<PageHeading text="SMS Integration" />
-				<div className="flex border-b dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
-					<button
-						onClick={() => setActiveTab('logs')}
-						className={`px-4 py-2 text-xs font-semibold border-b-2 transition-colors ${
-							activeTab === 'logs'
-								? 'border-orange-500 text-orange-500'
-								: 'border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
-						}`}
-					>
-						SMS Logs
-					</button>
-					<button
-						onClick={() => setActiveTab('configs')}
-						className={`px-4 py-2 text-xs font-semibold border-b-2 transition-colors ${
-							activeTab === 'configs'
-								? 'border-orange-500 text-orange-500'
-								: 'border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
-						}`}
-					>
-						Configurations
-					</button>
-				</div>
+				<Tabs
+					tabs={[
+						{ id: 'logs', label: 'SMS Logs' },
+						{ id: 'configs', label: 'Configurations' }
+					]}
+					activeTab={activeTab}
+					onTabChange={(id) => setActiveTab(id as 'logs' | 'configs')}
+					activeColor="var(--primary)"
+				/>
 			</div>
 
 			{activeTab === 'logs' ? (
@@ -357,145 +287,23 @@ const SMSPage: React.FC = () => {
 					</div>
 
 					{/* SMS Table */}
-					<div
-						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
-						style={{
-							backgroundColor: 'var(--accent-white)',
-							borderColor: 'var(--light-gray)'
+					<SMSTable
+						smsList={smsList}
+						isLoading={isLogsLoading}
+						totalItems={totalItems}
+						itemsPerPage={itemsPerPage}
+						currentPage={currentPage}
+						onItemsPerPageChange={(value) => {
+							setItemsPerPage(value);
+							setCurrentPage(1);
 						}}
-					>
-						<TablePaginationHeader
-							totalItems={filteredSMS.length}
-							itemsPerPage={itemsPerPage}
-							onItemsPerPageChange={(value) => {
-								setItemsPerPage(value);
-								setCurrentPage(1);
-							}}
-							label="SMS"
-						/>
-						<div className="overflow-x-auto">
-							<table
-								className="min-w-full divide-y dark:divide-gray-700"
-								style={{ borderColor: 'var(--light-gray)' }}
-							>
-								<thead
-									className="dark:bg-gray-700 border-b dark:border-gray-700"
-									style={{
-										backgroundColor: 'var(--bg-primary)',
-										borderColor: 'var(--light-gray)'
-									}}
-								>
-									<tr>
-										<th>
-											<Checkbox
-												checked={isAllSelected}
-												onChange={handleSelectAll}
-												size="medium"
-											/>
-										</th>
-										<th>ID</th>
-										<th>Contact</th>
-										<th>Phone Number</th>
-										<th
-											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-100"
-											style={{ color: 'var(--text-primary)' }}
-										>
-											Message
-										</th>
-										<th>Direction</th>
-										<th>Status</th>
-										<th>Timestamp</th>
-									</tr>
-								</thead>
-								<tbody
-									className="dark:bg-gray-800 divide-y dark:divide-gray-700"
-									style={{
-										backgroundColor: 'var(--accent-white)',
-										borderColor: 'var(--light-gray)'
-									}}
-								>
-									{currentSMS.map((sms) => {
-										const directionColors = getDirectionColor(sms.direction);
-										return (
-											<tr
-												key={sms.id}
-												className="dark:hover:bg-gray-700"
-												style={{ borderColor: 'var(--light-gray)' }}
-												onMouseEnter={(e) => {
-													e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-												}}
-												onMouseLeave={(e) => {
-													e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-												}}
-											>
-												<td className="px-6 py-4 whitespace-nowrap">
-													<Checkbox
-														checked={selectedSMS.has(sms.id)}
-														onChange={(checked) => handleSelectSMS(sms.id, checked)}
-														size="medium"
-													/>
-												</td>
-												<td className="px-6 py-4 whitespace-nowrap dark:text-gray-100" style={{ color: 'var(--text-primary)' }}>
-													{sms.id}
-												</td>
-												<td className="px-6 py-4 whitespace-nowrap dark:text-gray-100" style={{ color: 'var(--text-primary)' }}>
-													{sms.contactName || '-'}
-												</td>
-												<td className="px-6 py-4 whitespace-nowrap dark:text-gray-100" style={{ color: 'var(--text-primary)' }}>
-													{sms.phoneNumber}
-												</td>
-												<td
-													className="px-6 py-4 dark:text-gray-100 max-w-xs truncate cursor-pointer hover:underline"
-													style={{ color: 'var(--text-primary)' }}
-													title={sms.message}
-													onClick={() => setViewingSMS(sms)}
-													onMouseEnter={(e) => {
-														e.currentTarget.style.color = campaignData?.primaryColor || '#050711';
-													}}
-													onMouseLeave={(e) => {
-														e.currentTarget.style.color = 'var(--text-primary)';
-													}}
-												>
-													{sms.message}
-												</td>
-												<td className="px-6 py-4 whitespace-nowrap">
-													<span
-														className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-medium"
-														style={{
-															backgroundColor: directionColors.bg,
-															color: directionColors.text,
-															border: `1px solid ${directionColors.border}`
-														}}
-													>
-														{sms.direction === 'inbound' ? 'Inbound' : 'Outbound'}
-													</span>
-												</td>
-												<td className="px-6 py-4 whitespace-nowrap">
-													<StatusBadge status={sms.status} />
-												</td>
-												<td className="px-6 py-4 whitespace-nowrap dark:text-gray-100" style={{ color: 'var(--text-primary)' }}>
-													{sms.timestamp}
-												</td>
-											</tr>
-										);
-									})}
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					{/* Pagination */}
-					{filteredSMS.length > 0 && (
-						<Pagination
-							currentPage={currentPage}
-							totalPages={totalPages}
-							onPageChange={setCurrentPage}
-							showEllipsis={true}
-							maxVisiblePages={5}
-							primaryColor={campaignData?.primaryColor || 'var(--primary)'}
-							secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
-						/>
-					)}
+						onPageChange={setCurrentPage}
+						selectedSMS={selectedSMS}
+						onSelectAll={handleSelectAll}
+						onSelectSMS={handleSelectSMS}
+						onViewSMS={setViewingSMS}
+						primaryColor={campaignData?.primaryColor}
+					/>
 				</>
 			) : (
 				<>
@@ -516,159 +324,26 @@ const SMSPage: React.FC = () => {
 					</div>
 
 					{/* Configurations Table */}
-					<div
-						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
-						style={{
-							backgroundColor: 'var(--accent-white)',
-							borderColor: 'var(--light-gray)'
-						}}
-					>
-						<div className="overflow-x-auto">
-							<table className="min-w-full divide-y dark:divide-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
-								<thead
-									className="dark:bg-gray-700 border-b dark:border-gray-700"
-									style={{
-										backgroundColor: 'var(--bg-primary)',
-										borderColor: 'var(--light-gray)'
-									}}
-								>
-									<tr>
-										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Name</th>
-										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Provider</th>
-										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Sender ID</th>
-										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Assigned To</th>
-										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Scope</th>
-										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Action</th>
-									</tr>
-								</thead>
-								<tbody className="divide-y dark:divide-gray-700">
-									{configsList.length === 0 ? (
-										<tr>
-											<td colSpan={6} className="px-6 py-12 text-center text-gray-500 text-xs">
-												No SMS configurations found. Click "Add SMS Config" to set up your first gateway integration.
-											</td>
-										</tr>
-									) : (
-										configsList.map((cfg) => (
-											<tr
-												key={cfg.id}
-												className="dark:hover:bg-gray-700/50 transition-colors border-b dark:border-gray-700 last:border-0"
-												style={{ borderColor: 'var(--light-gray)' }}
-											>
-												<td className="px-6 py-4 whitespace-nowrap text-xs font-semibold text-gray-800 dark:text-gray-100">{cfg.name}</td>
-												<td className="px-6 py-4 whitespace-nowrap text-xs text-gray-600 dark:text-gray-300">{cfg.provider}</td>
-												<td className="px-6 py-4 whitespace-nowrap text-xs font-mono text-gray-600 dark:text-gray-300">{cfg.senderId}</td>
-												<td className="px-6 py-4 whitespace-nowrap text-xs text-gray-700 dark:text-gray-200">{cfg.assignedName}</td>
-												<td className="px-6 py-4 whitespace-nowrap text-xs capitalize text-gray-500">
-													<span className={`px-2 py-0.5 rounded-full text-[9px] font-medium ${
-														cfg.assignType === 'campaign' 
-															? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-															: 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300'
-													}`}>
-														{cfg.assignType}
-													</span>
-												</td>
-												<td className="px-6 py-4 whitespace-nowrap text-xs">
-													<div className="flex items-center gap-2">
-														<Button
-															variant="ghost"
-															size="sm"
-															onClick={() => handleConfigModalOpen(cfg)}
-															className="p-2 transition-colors h-auto rounded-full"
-															title="Edit"
-														>
-															<GearIcon width={16} height={16} style={{ color: 'var(--text-secondary)' }} />
-														</Button>
-														<Button
-															variant="ghost"
-															size="sm"
-															onClick={() => handleDeleteConfig(cfg.id)}
-															className="p-2 hover:bg-red-50 rounded-full transition-colors dark:hover:bg-red-900/20 h-auto"
-															title="Delete"
-														>
-															<TrashIcon width={16} height={16} className="text-red-500" />
-														</Button>
-													</div>
-												</td>
-											</tr>
-										))
-									)}
-								</tbody>
-							</table>
-						</div>
-					</div>
+					<SMSConfigTable
+						configsList={configsList}
+						isLoading={isConfigsLoading}
+						onEdit={handleConfigModalOpen}
+						onDelete={handleDeleteConfig}
+					/>
 				</>
 			)}
 
 			{/* Selected SMS Drawer */}
-			{shouldRenderDrawer && (
-				<div
-					className={`fixed top-0 right-0 h-full w-full max-w-md dark:bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${isDrawerAnimating ? 'translate-x-0' : 'translate-x-full'}`}
-					style={{ backgroundColor: 'var(--accent-white)' }}
-				>
-					{/* Drawer Header */}
-					<div
-						className="flex justify-between items-center border-b dark:border-gray-700 p-6"
-						style={{ borderColor: 'var(--light-gray)' }}
-					>
-						<div className="flex items-center gap-3">
-							<ChatBubbleIcon
-								className="w-5 h-5 dark:text-gray-300"
-								style={{ color: 'var(--text-primary)' }}
-							/>
-							<h2
-								className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								Selected SMS ({selectedSMS.size})
-							</h2>
-						</div>
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={() => setIsDrawerOpen(false)}
-							className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-full"
-							style={{ color: 'var(--text-tertiary)' }}
-						>
-							<Icon name="Close_round_light" size="lg" />
-						</Button>
-					</div>
-
-					{/* Drawer Content */}
-					<div className="overflow-y-auto h-[calc(100vh-80px)] p-6">
-						{selectedSMS.size === 0 ? (
-							<div className="flex flex-col items-center justify-center h-full text-center">
-								<ChatBubbleIcon
-									className="w-12 h-12 mb-4 dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								/>
-								<p
-									className="text-[10px] md:text-[12px] dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								>
-									No SMS selected
-								</p>
-							</div>
-						) : (
-							<div className="space-y-4">
-								{smsList
-									.filter(sms => selectedSMS.has(sms.id))
-									.map((sms) => (
-										<SMSMessagePreview
-											key={sms.id}
-											sms={sms}
-											onViewFull={(selectedSms) => {
-												setViewingSMS(selectedSms);
-												setIsDrawerOpen(false);
-											}}
-											getDirectionColor={getDirectionColor}
-										/>
-									))}
-							</div>
-						)}
-					</div>
-				</div>
-			)}
+			<SelectedSMSDrawer
+				isOpen={isDrawerOpen}
+				isAnimating={isDrawerAnimating}
+				selectedSMSList={smsList.filter(sms => selectedSMS.has(sms._id || ''))}
+				onClose={() => setIsDrawerOpen(false)}
+				onViewFull={(sms) => {
+					setViewingSMS(sms);
+					setIsDrawerOpen(false);
+				}}
+			/>
 
 			{/* SMS Config Modal */}
 			{isConfigModalOpen && (
@@ -709,26 +384,18 @@ const SMSPage: React.FC = () => {
 								required
 							/>
 
-							<div className="flex flex-col gap-1.5">
-								<label className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-									Gateway Provider *
-								</label>
-								<select
-									value={configForm.provider}
-									onChange={(e) => handleConfigFormChange('provider', e.target.value)}
-									className="w-full px-4 py-2 border rounded-[var(--radius)] text-[12px] focus:outline-hidden"
-									style={{
-										backgroundColor: 'var(--bg-primary)',
-										borderColor: 'var(--light-gray)',
-										color: 'var(--text-primary)',
-									}}
-								>
-									<option value="Twilio">Twilio</option>
-									<option value="Infobip">Infobip</option>
-									<option value="Plivo">Plivo</option>
-									<option value="Outcess SMS Gateway">Outcess SMS Gateway</option>
-								</select>
-							</div>
+							<Dropdown
+								label="Gateway Provider *"
+								value={configForm.provider}
+								options={[
+									{ value: 'Twilio', label: 'Twilio' },
+									{ value: 'Infobip', label: 'Infobip' },
+									{ value: 'Plivo', label: 'Plivo' },
+									{ value: 'Outcess SMS Gateway', label: 'Outcess SMS Gateway' },
+								]}
+								onChange={(val) => handleConfigFormChange('provider', val as string)}
+								required
+							/>
 
 							<Input
 								label="Sender ID / Phone Number *"
@@ -762,54 +429,34 @@ const SMSPage: React.FC = () => {
 								/>
 							</div>
 
-							<div className="flex flex-col gap-1.5 border-t dark:border-gray-700 pt-3 mt-3">
-								<label className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-									Assign To Scope *
-								</label>
-								<select
-									value={configForm.assignType}
-									onChange={(e) => handleConfigFormChange('assignType', e.target.value)}
-									className="w-full px-4 py-2 border rounded-[var(--radius)] text-[12px] focus:outline-hidden"
-									style={{
-										backgroundColor: 'var(--bg-primary)',
-										borderColor: 'var(--light-gray)',
-										color: 'var(--text-primary)',
-									}}
-								>
-									<option value="campaign">Campaign</option>
-									<option value="bucket">Bucket</option>
-								</select>
-							</div>
+							<Dropdown
+								label="Assign To Scope *"
+								value={configForm.assignType}
+								options={[
+									{ value: 'campaign', label: 'Campaign' },
+									{ value: 'bucket', label: 'Bucket' },
+								]}
+								onChange={(val) => handleConfigFormChange('assignType', val as string)}
+								required
+								className="border-t dark:border-gray-700 pt-3 mt-3"
+							/>
 
-							<div className="flex flex-col gap-1.5">
-								<label className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-									Select Target *
-								</label>
-								<select
-									value={configForm.assignedId}
-									onChange={(e) => handleConfigFormChange('assignedId', e.target.value)}
-									className="w-full px-4 py-2 border rounded-[var(--radius)] text-[12px] focus:outline-hidden"
-									style={{
-										backgroundColor: 'var(--bg-primary)',
-										borderColor: 'var(--light-gray)',
-										color: 'var(--text-primary)',
-									}}
-								>
-									{configForm.assignType === 'campaign' ? (
-										campaigns.map((c: any) => (
-											<option key={c._id} value={c._id}>
-												{c.campaignName || c.name || 'Unnamed Campaign'}
-											</option>
-										))
-									) : (
-										buckets.map((b: any) => (
-											<option key={b.id} value={b.id}>
-												{b.campaignName} ➔ {b.name}
-											</option>
-										))
-									)}
-								</select>
-							</div>
+							<Dropdown
+								label="Select Target *"
+								value={configForm.assignedId}
+								options={configForm.assignType === 'campaign'
+									? campaigns.map((c: any) => ({
+										value: c._id,
+										label: c.campaignName || c.name || 'Unnamed Campaign'
+									}))
+									: buckets.map((b: any) => ({
+										value: b.id,
+										label: `${b.campaignName} ➔ ${b.name}`
+									}))
+								}
+								onChange={(val) => handleConfigFormChange('assignedId', val as string)}
+								required
+							/>
 						</div>
 
 						{/* Footer */}

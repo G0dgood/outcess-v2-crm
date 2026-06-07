@@ -269,7 +269,7 @@ export default function LoginPage() {
 
 				<div className="login-form-container">
 					<div className="login-header">
-						<h1 className="welcome-title font-lato not-italic" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>Welcome People</h1>
+						<h1 className="welcome-title font-lato not-italic" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>Welcome Aboard</h1>
 						<p className="welcome-subtitle font-lato font-normal text-base leading-[150%] text-[#6D7280] dark:text-gray-400">Please Login to continue.</p>
 					</div>
 

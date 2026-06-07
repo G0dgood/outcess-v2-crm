@@ -1,19 +1,24 @@
 import React from 'react';
+import moment from 'moment';
 import StatusBadge from '@/components/ui/StatusBadge';
-import { SMS } from './SMSMessageModal';
+import { SMSLog } from '@/store/services/smsApi';
 import Button from '@/components/ui/Button';
 
 interface SMSMessagePreviewProps {
-	sms: SMS;
-	onViewFull: (sms: SMS) => void;
-	getDirectionColor: (direction: SMS['direction']) => { bg: string; text: string; border: string };
+	sms: SMSLog;
+	onViewFull: (sms: SMSLog) => void;
 }
 
 const SMSMessagePreview: React.FC<SMSMessagePreviewProps> = ({
 	sms,
 	onViewFull,
-	getDirectionColor
 }) => {
+	const getDirectionColor = (direction: SMSLog['direction']) => {
+		return direction === 'inbound'
+			? { bg: 'rgba(139, 92, 246, 0.1)', text: '#8B5CF6', border: 'rgba(139, 92, 246, 0.2)' }
+			: { bg: 'rgba(59, 130, 246, 0.1)', text: '#3B82F6', border: 'rgba(59, 130, 246, 0.2)' };
+	};
+
 	const directionColors = getDirectionColor(sms.direction);
 
 	return (
@@ -32,7 +37,7 @@ const SMSMessagePreview: React.FC<SMSMessagePreviewProps> = ({
 							className="text-[8px] md:text-[10px] font-medium dark:text-gray-300"
 							style={{ color: 'var(--text-secondary)' }}
 						>
-							{sms.id}
+							{sms._id}
 						</span>
 						<span
 							className="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] md:text-[10px] font-medium"
@@ -81,7 +86,7 @@ const SMSMessagePreview: React.FC<SMSMessagePreviewProps> = ({
 					className="text-[8px] md:text-[10px] dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
-					{sms.timestamp}
+					{moment(sms.createdAt).fromNow()}
 				</p>
 			</div>
 
@@ -97,15 +102,8 @@ const SMSMessagePreview: React.FC<SMSMessagePreviewProps> = ({
 					color: 'var(--text-secondary)',
 					backgroundColor: 'transparent'
 				}}
-				onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-					e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-				}}
-				onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-					e.currentTarget.style.backgroundColor = 'transparent';
-				}}
-				title="View Full SMS Details"
 			>
-				View Full Message
+				View Full Details
 			</Button>
 		</div>
 	);

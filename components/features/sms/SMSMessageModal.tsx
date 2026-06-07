@@ -4,12 +4,12 @@ import Icon from '@/components/ui/Icon';
 import { ChatBubbleIcon } from '@radix-ui/react-icons';
 
 export interface SMS {
-	id: string;
+	_id: string;
 	phoneNumber: string;
 	message: string;
 	status: 'sent' | 'delivered' | 'failed' | 'pending';
 	direction: 'inbound' | 'outbound';
-	timestamp: string;
+	createdAt: string;
 	contactName?: string;
 }
 
@@ -123,7 +123,7 @@ const SMSMessageModal: React.FC<SMSMessageModalProps> = ({ isOpen, sms, onClose 
 								className="text-[10px] md:text-[12px] dark:text-gray-100"
 								style={{ color: 'var(--text-primary)' }}
 							>
-								{sms.id}
+								{sms._id}
 							</p>
 						</div>
 						<div>
@@ -165,7 +165,7 @@ const SMSMessageModal: React.FC<SMSMessageModalProps> = ({ isOpen, sms, onClose 
 								className="text-[10px] md:text-[12px] dark:text-gray-100"
 								style={{ color: 'var(--text-primary)' }}
 							>
-								{sms.timestamp}
+								{sms.createdAt}
 							</p>
 						</div>
 						<div>

@@ -24,7 +24,9 @@ export const baseApi = createApi({
         'TeamMembers',
         'Company',
         'StickyNote',
-        'SupportTicket'
+        'SupportTicket',
+        'Email',
+        'SMS'
     ],
     endpoints: () => ({}),
 });
