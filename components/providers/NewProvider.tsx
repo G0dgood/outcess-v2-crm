@@ -40,6 +40,7 @@ const NewProvider: React.FC<NewProviderProps> = ({ children }) => {
                         {children}
                         <Toaster
                           position="top-right"
+                          theme="light"
                           richColors
                           closeButton
                           toastOptions={{

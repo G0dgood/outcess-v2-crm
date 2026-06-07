@@ -26,7 +26,8 @@ import {
  ClockIcon,
  LockClosedIcon,
  QuestionMarkCircledIcon,
- StarIcon
+ StarIcon,
+ EnvelopeClosedIcon
 } from '@radix-ui/react-icons';
 import {
  Tooltip,
@@ -78,12 +79,17 @@ const supportSubItems = [
   { id: 'support-all', label: 'All Support', icon: 'support', path: '/support/all', privilege: { module: 'allSupport', action: 'view' } },
 ];
 
+const integrationSubItems = [
+  { id: 'integration-sms', label: 'SMS', icon: 'sms', path: '/sms' },
+  { id: 'integration-email', label: 'Emails', icon: 'mail', path: '/email' }
+];
+
 const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'grid', path: '/dashboard' },
   { id: 'customer-book', label: 'Customer Book', icon: 'book', path: '/customer-book' },
   { id: 'users', label: 'Users', icon: 'users', path: '/users' },
   { id: 'team-members', label: 'Team Members', icon: 'group', path: '/team-members' },
-  { id: 'sms', label: 'SMS', icon: 'sms', path: '/sms' },
+  { id: 'integration', label: 'Integration', icon: 'integration', path: '/sms' },
   { id: 'setup-book', label: 'Setup Book', icon: 'settings-book', path: '/setup-book' },
   { id: 'report', label: 'Report', icon: 'chart', path: '/report' },
   { id: 'leaderboard', label: 'Leaderboard', icon: 'star', path: '/leaderboard' },
@@ -98,7 +104,7 @@ const moduleMapping: Record<string, ModuleId> = {
   'customer-book': 'customerBook',
   'users': 'userManagement',
   'team-members': 'teamMembers',
-  'sms': 'customerSMS',
+  'integration': 'customerSMS',
   'setup-book': 'setupBook',
   'report': 'report',
   'leaderboard': 'leaderboard',
@@ -119,6 +125,8 @@ const subModuleMapping: Record<string, ModuleId> = {
   'support-mine': 'support',
   'support-team': 'teamMemberSupport',
   'support-all': 'allSupport',
+  'integration-sms': 'customerSMS',
+  'integration-email': 'customerSMS',
 };
 
 const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
@@ -143,9 +151,11 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
  const navRef = useRef<HTMLElement>(null);
  const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
  const [isSupportExpanded, setIsSupportExpanded] = useState(false);
+ const [isIntegrationExpanded, setIsIntegrationExpanded] = useState(false);
  const [isCollapsed, setIsCollapsed] = useState(false);
  const [settingsMenuPos, setSettingsMenuPos] = useState<{ top: number; left: number } | null>(null);
  const [supportMenuPos, setSupportMenuPos] = useState<{ top: number; left: number } | null>(null);
+ const [integrationMenuPos, setIntegrationMenuPos] = useState<{ top: number; left: number } | null>(null);
  const [hasHydrated, setHasHydrated] = useState(false);
 
  useEffect(() => {
@@ -188,6 +198,13 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
        } else {
          title = 'Support | Outcess CRM';
        }
+     } else if (currentNavItem.id === 'integration') {
+       const subItem = integrationSubItems.find(s => s.path === pathname);
+       if (subItem) {
+         title = `${subItem.label} | Outcess CRM`;
+       } else {
+         title = 'Integration | Outcess CRM';
+       }
      } else {
        title = `${currentNavItem.label} | Outcess CRM`;
      }
@@ -202,6 +219,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
    if (navRef.current && !navRef.current.contains(event.target as Node) && isCollapsed) {
     if (isSettingsExpanded) setIsSettingsExpanded(false);
     if (isSupportExpanded) setIsSupportExpanded(false);
+    if (isIntegrationExpanded) setIsIntegrationExpanded(false);
    }
   };
 
@@ -209,7 +227,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
   return () => {
    document.removeEventListener('mousedown', handleClickOutside);
   };
- }, [isSettingsExpanded, isSupportExpanded, isCollapsed]);
+ }, [isSettingsExpanded, isSupportExpanded, isIntegrationExpanded, isCollapsed]);
 
  const toggleCollapse = () => {
   const newState = !isCollapsed;
@@ -218,6 +236,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
   if (newState) {
    setIsSettingsExpanded(false);
    setIsSupportExpanded(false);
+   setIsIntegrationExpanded(false);
   }
  };
 
@@ -226,6 +245,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
   if (isCollapsed) {
    setIsSettingsExpanded(false);
    setIsSupportExpanded(false);
+   setIsIntegrationExpanded(false);
    return;
   }
 
@@ -239,6 +259,12 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
    setIsSupportExpanded(true);
   } else {
    setIsSupportExpanded(false);
+  }
+
+  if (pathname?.startsWith('/sms') || pathname?.startsWith('/email') || pathname?.startsWith('/integration')) {
+    setIsIntegrationExpanded(true);
+  } else {
+    setIsIntegrationExpanded(false);
   }
  }, [pathname, isCollapsed]);
 
@@ -279,6 +305,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 
  const visibleSettingsSubItems = getVisibleSubItems(settingsSubItems);
  const visibleSupportSubItems = getVisibleSubItems(supportSubItems);
+ const visibleIntegrationSubItems = getVisibleSubItems(integrationSubItems);
 
  const handleItemClick = (item: NavItem, e?: React.MouseEvent) => {
   if (item.id === 'settings') {
@@ -301,9 +328,20 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
    if (!isCollapsed && !isSupportExpanded && !pathname?.startsWith('/support')) {
     router.push('/support');
    }
-  } else {
+  } else if (item.id === 'integration') {
+    e?.stopPropagation();
+    setIsIntegrationExpanded(!isIntegrationExpanded);
+    if (isCollapsed && e) {
+     const rect = e.currentTarget.getBoundingClientRect();
+     setIntegrationMenuPos({ top: rect.top, left: rect.right });
+    }
+    if (!isCollapsed && !isIntegrationExpanded && !pathname?.startsWith('/sms') && !pathname?.startsWith('/email')) {
+     router.push('/sms');
+    }
+   } else {
    setIsSettingsExpanded(false);
    setIsSupportExpanded(false);
+   setIsIntegrationExpanded(false);
    if (onMobileClose) onMobileClose();
    if (onItemClick) onItemClick(item.id);
    else router.push(item.path);
@@ -337,6 +375,8 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
    case 'lock': return <LockClosedIcon {...iconProps} />;
    case 'support': return <QuestionMarkCircledIcon {...iconProps} />;
    case 'star': return <StarIcon {...iconProps} />;
+   case 'integration': return <Link2Icon {...iconProps} />;
+   case 'mail': return <EnvelopeClosedIcon {...iconProps} />;
    default: return null;
   }
  };
@@ -386,7 +426,8 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
        const isActive = activeItem === item.id;
        const isSettings = item.id === 'settings';
        const isSupport = item.id === 'support';
-       const isExpanded = (isSettings && isSettingsExpanded) || (isSupport && isSupportExpanded);
+       const isIntegration = item.id === 'integration';
+       const isExpanded = (isSettings && isSettingsExpanded) || (isSupport && isSupportExpanded) || (isIntegration && isIntegrationExpanded);
 
        const itemContent = (
         <button
@@ -400,7 +441,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
         >
          <div className={`shrink-0 transition-colors duration-200 ${(isActive || isExpanded) ? (isDarkMode ? 'text-black' : 'text-white') : 'dark:text-gray-400'}`} style={!(isActive || isExpanded) ? { color: 'var(--text-tertiary)' } : {}}>{getIconComponent(item.icon)}</div>
          {!isCollapsed && <span className={`font-inter font-medium text-[10px] md:text-[12px] leading-5 tracking-[-0.5px] transition-colors duration-200 flex-1 text-left ${(isActive || isExpanded) ? (isDarkMode ? 'text-black' : 'text-white') : 'dark:text-gray-300'}`} style={!(isActive || isExpanded) ? { color: 'var(--text-secondary)' } : {}}>{item.label}</span>}
-         {!isCollapsed && (isSettings || isSupport) && (
+         {!isCollapsed && (isSettings || isSupport || isIntegration) && (
           <div className={`shrink-0 transition-colors duration-200 ${isExpanded ? (isDarkMode ? 'text-black' : 'text-white') : 'dark:text-gray-400'}`} style={!isExpanded ? { color: 'var(--text-tertiary)' } : {}}>
            {isExpanded ? <ChevronDownIcon className="w-4 h-4" /> : <ChevronRightIcon className="w-4 h-4" />}
           </div>
@@ -423,7 +464,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
             className="ml-4 mt-1 space-y-1 border-l-2 dark:border-gray-600 pl-2 overflow-hidden"
             style={{ borderColor: 'var(--light-gray)' }}
            >
-            {(isSettings ? visibleSettingsSubItems : visibleSupportSubItems).map((subItem) => {
+            {(isSettings ? visibleSettingsSubItems : isSupport ? visibleSupportSubItems : visibleIntegrationSubItems).map((subItem) => {
              const pathTab = subItem.path.split('tab=')[1] || subItem?.path.split('view=')[1];
              const currentVal = isSettings ? searchParams?.get('tab') : searchParams?.get('view');
              const isSubActive = isSettings
@@ -457,6 +498,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
    </nav>
    <FloatingMenu items={visibleSettingsSubItems} pos={settingsMenuPos} isOpen={isSettingsExpanded} onClose={() => setIsSettingsExpanded(false)} />
    <FloatingMenu items={visibleSupportSubItems} pos={supportMenuPos} isOpen={isSupportExpanded} onClose={() => setIsSupportExpanded(false)} />
+   <FloatingMenu items={visibleIntegrationSubItems} pos={integrationMenuPos} isOpen={isIntegrationExpanded} onClose={() => setIsIntegrationExpanded(false)} />
   </TooltipProvider>
  );
 };

@@ -7,38 +7,49 @@ import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import Checkbox from '@/components/ui/Checkbox';
 import PageHeading from '@/components/ui/PageHeading';
-import { ChatBubbleIcon, GearIcon, TrashIcon, PlusIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { EnvelopeClosedIcon, EnvelopeOpenIcon, Cross2Icon, GearIcon, TrashIcon, PlusIcon } from '@radix-ui/react-icons';
 import Icon from '@/components/ui/Icon';
 import StatusBadge from '@/components/ui/StatusBadge';
 import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetCampaignByCompanyIdForheaderQuery } from '@/store/services/campaignApi';
-import SMSMessageModal, { SMS } from '@/components/features/sms/SMSMessageModal';
-import SMSMessagePreview from '@/components/features/sms/SMSMessagePreview';
-import SMSModal from '@/components/ui/SMSModal';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { toast } from 'sonner';
 
-export interface SMSConfig {
+export interface EmailLog {
+	id: string;
+	recipientName?: string;
+	emailAddress: string;
+	subject: string;
+	message: string;
+	status: 'sent' | 'delivered' | 'failed' | 'pending';
+	direction: 'inbound' | 'outbound';
+	timestamp: string;
+}
+
+export interface EmailConfig {
 	id: string;
 	name: string;
 	provider: string;
-	senderId: string;
-	accountSid?: string;
-	apiKey?: string;
+	host?: string;
+	port?: number;
+	username?: string;
+	password?: string;
+	fromEmail: string;
 	assignType: 'campaign' | 'bucket';
 	assignedId: string;
 	assignedName: string;
 }
 
-const SMSPage: React.FC = () => {
+const EmailPage: React.FC = () => {
 	const { campaignData } = useCampaign();
 	const { canAccess } = usePrivilege();
 	const { user } = useUserInfo();
-	
-	const canAccessModule = canAccess('customerSMS', 'view');
+
+	const canAccessModule = canAccess('customerSMS', 'view'); // Sharing privilege for demo
 	const canCreate = canAccess('customerSMS', 'create');
 
 	const companyId = user?.companyId || user?.company?._id || '';
@@ -67,33 +78,43 @@ const SMSPage: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
-	const [selectedSMS, setSelectedSMS] = useState<Set<string>>(new Set());
-	const [viewingSMS, setViewingSMS] = useState<SMS | null>(null);
-	const [isSendSMSOpen, setIsSendSMSOpen] = useState(false);
-	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-	const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
-	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
+	const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
+	const [viewingEmail, setViewingEmail] = useState<EmailLog | null>(null);
+	const [isComposeOpen, setIsComposeOpen] = useState(false);
+	
+	const [formData, setFormData] = useState({
+		to: '',
+		subject: '',
+		message: '',
+		configId: '',
+	});
 
-	// Configurations states
-	const [configsList, setConfigsList] = useState<SMSConfig[]>([]);
+	// Email Configurations states
+	const [configsList, setConfigsList] = useState<EmailConfig[]>([]);
 	const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-	const [editingConfig, setEditingConfig] = useState<SMSConfig | null>(null);
+	const [editingConfig, setEditingConfig] = useState<EmailConfig | null>(null);
 	const [configForm, setConfigForm] = useState({
 		name: '',
-		provider: 'Twilio',
-		senderId: '',
-		accountSid: '',
-		apiKey: '',
+		provider: 'SMTP',
+		host: '',
+		port: 587,
+		username: '',
+		password: '',
+		fromEmail: '',
 		assignType: 'campaign' as 'campaign' | 'bucket',
 		assignedId: '',
 	});
 
-	// Load configurations from local storage on mount
+	// Load configs from local storage
 	useEffect(() => {
-		const saved = localStorage.getItem('outcess-sms-configs');
+		const saved = localStorage.getItem('outcess-email-configs');
 		if (saved) {
 			try {
-				setConfigsList(JSON.parse(saved));
+				const parsed = JSON.parse(saved);
+				setConfigsList(parsed);
+				if (parsed.length > 0) {
+					setFormData(prev => ({ ...prev, configId: parsed[0].id }));
+				}
 			} catch {
 				setConfigsList([]);
 			}
@@ -101,126 +122,142 @@ const SMSPage: React.FC = () => {
 	}, []);
 
 	// Save configurations to local storage
-	const saveConfigs = (newConfigs: SMSConfig[]) => {
+	const saveConfigs = (newConfigs: EmailConfig[]) => {
 		setConfigsList(newConfigs);
-		localStorage.setItem('outcess-sms-configs', JSON.stringify(newConfigs));
+		localStorage.setItem('outcess-email-configs', JSON.stringify(newConfigs));
 	};
 
-	const [smsList] = useState<SMS[]>([
+	const [emailList, setEmailList] = useState<EmailLog[]>([
 		{
-			id: 'SMS001',
-			phoneNumber: '+234 802 345 6789',
-			message: 'Thank you for your inquiry. We will get back to you shortly.',
+			id: 'EML001',
+			recipientName: 'John Doe',
+			emailAddress: 'johndoe@example.com',
+			subject: 'Welcome to Outcess CRM!',
+			message: 'Thank you for choosing Outcess CRM. We are excited to help you streamline your customer relation operations.',
 			status: 'delivered',
 			direction: 'outbound',
 			timestamp: '2024-01-15 10:30 AM',
-			contactName: 'John Doe',
 		},
 		{
-			id: 'SMS002',
-			phoneNumber: '+234 803 456 7890',
-			message: 'Hello, I would like to know more about your services.',
+			id: 'EML002',
+			recipientName: 'Jane Smith',
+			emailAddress: 'janesmith@example.com',
+			subject: 'Inquiry about Enterprise Pricing',
+			message: 'Hello Support, I would like to get a customized quote for 50+ users and custom integrations.',
 			status: 'sent',
 			direction: 'inbound',
 			timestamp: '2024-01-15 09:15 AM',
-			contactName: 'Jane Smith',
 		},
 		{
-			id: 'SMS003',
-			phoneNumber: '+234 804 567 8901',
-			message: 'Your appointment has been confirmed for tomorrow at 2 PM.',
+			id: 'EML003',
+			recipientName: 'Robert Johnson',
+			emailAddress: 'robertj@example.com',
+			subject: 'Your Account Verification',
+			message: 'Please click the link below to verify your email and complete your workspace setup.',
 			status: 'delivered',
 			direction: 'outbound',
 			timestamp: '2024-01-14 03:45 PM',
 		},
 		{
-			id: 'SMS004',
-			phoneNumber: '+234 805 678 9012',
-			message: 'Payment reminder: Your invoice #12345 is due in 3 days.',
+			id: 'EML004',
+			recipientName: 'Alice Brown',
+			emailAddress: 'alice.brown@example.com',
+			subject: 'Monthly Usage Report',
+			message: 'Your monthly performance and usage dashboard report is ready. Click to download the PDF.',
 			status: 'pending',
 			direction: 'outbound',
 			timestamp: '2024-01-14 11:20 AM',
 		},
 		{
-			id: 'SMS005',
-			phoneNumber: '+234 806 789 0123',
-			message: 'Thank you for contacting us. How can I assist you today?',
+			id: 'EML005',
+			recipientName: 'Michael Green',
+			emailAddress: 'mgreen@example.com',
+			subject: 'Failed Payment Notification',
+			message: 'Warning: We could not process your recurring payment. Please update your payment details to avoid interruption.',
 			status: 'failed',
 			direction: 'outbound',
 			timestamp: '2024-01-13 04:30 PM',
-			contactName: 'Alice Johnson',
 		},
 	]);
 
-	const filteredSMS = smsList.filter(sms =>
-		sms.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		sms.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		sms.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		(sms.contactName && sms.contactName.toLowerCase().includes(searchTerm.toLowerCase()))
+	const filteredEmails = emailList.filter(email =>
+		email.emailAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+		email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+		email.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+		email.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+		(email.recipientName && email.recipientName.toLowerCase().includes(searchTerm.toLowerCase()))
 	);
 
-	const totalPages = Math.ceil(filteredSMS.length / itemsPerPage);
-	const currentSMS = filteredSMS.slice(
+	const totalPages = Math.ceil(filteredEmails.length / itemsPerPage);
+	const currentEmails = filteredEmails.slice(
 		(currentPage - 1) * itemsPerPage,
 		currentPage * itemsPerPage
 	);
 
 	const handleSelectAll = (checked: boolean) => {
 		if (checked) {
-			setSelectedSMS(new Set(currentSMS.map(sms => sms.id)));
-			setIsDrawerOpen(true);
+			setSelectedEmails(new Set(currentEmails.map(e => e.id)));
 		} else {
-			setSelectedSMS(new Set());
-			setIsDrawerOpen(false);
+			setSelectedEmails(new Set());
 		}
 	};
 
-	const handleSelectSMS = (smsId: string, checked: boolean) => {
-		const newSelected = new Set(selectedSMS);
+	const handleSelectEmail = (emailId: string, checked: boolean) => {
+		const newSelected = new Set(selectedEmails);
 		if (checked) {
-			newSelected.add(smsId);
-			setSelectedSMS(newSelected);
-			setIsDrawerOpen(true);
+			newSelected.add(emailId);
 		} else {
-			newSelected.delete(smsId);
-			setSelectedSMS(newSelected);
-			if (newSelected.size === 0) {
-				setIsDrawerOpen(false);
-			}
+			newSelected.delete(emailId);
 		}
+		setSelectedEmails(newSelected);
 	};
 
-	const isAllSelected = currentSMS.length > 0 && currentSMS.every(sms => selectedSMS.has(sms.id));
+	const isAllSelected = currentEmails.length > 0 && currentEmails.every(e => selectedEmails.has(e.id));
 
-	useEffect(() => {
-		if (isDrawerOpen) {
-			setShouldRenderDrawer(true);
-			setTimeout(() => setIsDrawerAnimating(true), 10);
-		} else {
-			setIsDrawerAnimating(false);
-			const timer = setTimeout(() => {
-				setShouldRenderDrawer(false);
-			}, 300);
-			return () => clearTimeout(timer);
-		}
-	}, [isDrawerOpen]);
-
-	const getDirectionColor = (direction: SMS['direction']) => {
+	const getDirectionColor = (direction: EmailLog['direction']) => {
 		return direction === 'inbound'
 			? { bg: 'rgba(139, 92, 246, 0.1)', text: '#8B5CF6', border: 'rgba(139, 92, 246, 0.2)' }
 			: { bg: 'rgba(59, 130, 246, 0.1)', text: '#3B82F6', border: 'rgba(59, 130, 246, 0.2)' };
 	};
 
-	// Configuration handlers
-	const handleConfigModalOpen = (config: SMSConfig | null = null) => {
+	const handleInputChange = (field: string) => (value: any) => {
+		setFormData(prev => ({ ...prev, [field]: value }));
+	};
+
+	const handleSendEmail = () => {
+		if (formData.to && formData.subject && formData.message) {
+			const activeConfig = configsList.find(c => c.id === formData.configId);
+			const fromDisplay = activeConfig ? `via ${activeConfig.name} (${activeConfig.fromEmail})` : '';
+
+			const newEmail: EmailLog = {
+				id: `EML00${emailList.length + 1}`,
+				recipientName: formData.to.split('@')[0],
+				emailAddress: formData.to,
+				subject: formData.subject,
+				message: formData.message,
+				status: 'sent',
+				direction: 'outbound',
+				timestamp: new Date().toLocaleString(),
+			};
+			setEmailList(prev => [newEmail, ...prev]);
+			toastSuccess(`Email sent successfully to ${formData.to} ${fromDisplay}`);
+			setIsComposeOpen(false);
+			setFormData(prev => ({ ...prev, to: '', subject: '', message: '' }));
+		}
+	};
+
+	// Configuration Handlers
+	const handleConfigModalOpen = (config: EmailConfig | null = null) => {
 		if (config) {
 			setEditingConfig(config);
 			setConfigForm({
 				name: config.name,
 				provider: config.provider,
-				senderId: config.senderId,
-				accountSid: config.accountSid || '',
-				apiKey: config.apiKey || '',
+				host: config.host || '',
+				port: config.port || 587,
+				username: config.username || '',
+				password: config.password || '',
+				fromEmail: config.fromEmail,
 				assignType: config.assignType,
 				assignedId: config.assignedId,
 			});
@@ -228,10 +265,12 @@ const SMSPage: React.FC = () => {
 			setEditingConfig(null);
 			setConfigForm({
 				name: '',
-				provider: 'Twilio',
-				senderId: '',
-				accountSid: '',
-				apiKey: '',
+				provider: 'SMTP',
+				host: '',
+				port: 587,
+				username: '',
+				password: '',
+				fromEmail: '',
 				assignType: 'campaign',
 				assignedId: campaigns[0]?._id || '',
 			});
@@ -242,7 +281,6 @@ const SMSPage: React.FC = () => {
 	const handleConfigFormChange = (field: string, value: any) => {
 		setConfigForm(prev => {
 			const updated = { ...prev, [field]: value };
-			// Reset assignedId when switching assignType
 			if (field === 'assignType') {
 				updated.assignedId = value === 'campaign' 
 					? (campaigns[0]?._id || '') 
@@ -253,7 +291,7 @@ const SMSPage: React.FC = () => {
 	};
 
 	const handleSaveConfig = () => {
-		if (!configForm.name || !configForm.senderId || !configForm.assignedId) {
+		if (!configForm.name || !configForm.fromEmail || !configForm.assignedId) {
 			toast.error('Please fill in all required fields');
 			return;
 		}
@@ -276,12 +314,16 @@ const SMSPage: React.FC = () => {
 			saveConfigs(updatedConfigs);
 			toast.success('Configuration updated successfully');
 		} else {
-			const newConfig: SMSConfig = {
-				id: `SMSCFG-${Date.now()}`,
+			const newConfig: EmailConfig = {
+				id: `EMLCFG-${Date.now()}`,
 				...configForm,
 				assignedName,
 			};
-			saveConfigs([...configsList, newConfig]);
+			const list = [...configsList, newConfig];
+			saveConfigs(list);
+			if (list.length === 1) {
+				setFormData(prev => ({ ...prev, configId: newConfig.id }));
+			}
 			toast.success('Configuration created successfully');
 		}
 
@@ -295,6 +337,18 @@ const SMSPage: React.FC = () => {
 		toast.success('Configuration deleted');
 	};
 
+	// Reset scroll on close
+	useEffect(() => {
+		if (isComposeOpen || viewingEmail || isConfigModalOpen) {
+			document.body.style.overflow = 'hidden';
+		} else {
+			document.body.style.overflow = 'unset';
+		}
+		return () => {
+			document.body.style.overflow = 'unset';
+		};
+	}, [isComposeOpen, viewingEmail, isConfigModalOpen]);
+
 	if (!canAccessModule) {
 		return null;
 	}
@@ -303,7 +357,7 @@ const SMSPage: React.FC = () => {
 		<div>
 			{/* Title & Tabs */}
 			<div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-				<PageHeading text="SMS Integration" />
+				<PageHeading text="Email Integration" />
 				<div className="flex border-b dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
 					<button
 						onClick={() => setActiveTab('logs')}
@@ -313,7 +367,7 @@ const SMSPage: React.FC = () => {
 								: 'border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
 						}`}
 					>
-						SMS Logs
+						Email Logs
 					</button>
 					<button
 						onClick={() => setActiveTab('configs')}
@@ -330,10 +384,10 @@ const SMSPage: React.FC = () => {
 
 			{activeTab === 'logs' ? (
 				<>
-					{/* Logs Tab View */}
+					{/* Logs tab view */}
 					<div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 						<Search
-							placeholder="Search SMS by phone number, message, or contact name"
+							placeholder="Search Emails by recipient, subject, or message content"
 							value={searchTerm}
 							onChange={setSearchTerm}
 							className="w-full sm:w-auto"
@@ -346,17 +400,17 @@ const SMSPage: React.FC = () => {
 								<Button
 									variant="primary"
 									size="md"
-									onClick={() => setIsSendSMSOpen(true)}
+									onClick={() => setIsComposeOpen(true)}
 									className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
 								>
-									<ChatBubbleIcon className="w-4 h-4" />
-									Send SMS
+									<EnvelopeClosedIcon className="w-4 h-4" />
+									Compose Email
 								</Button>
 							)}
 						</div>
 					</div>
 
-					{/* SMS Table */}
+					{/* Email Table */}
 					<div
 						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
 						style={{
@@ -365,13 +419,13 @@ const SMSPage: React.FC = () => {
 						}}
 					>
 						<TablePaginationHeader
-							totalItems={filteredSMS.length}
+							totalItems={filteredEmails.length}
 							itemsPerPage={itemsPerPage}
 							onItemsPerPageChange={(value) => {
 								setItemsPerPage(value);
 								setCurrentPage(1);
 							}}
-							label="SMS"
+							label="Emails"
 						/>
 						<div className="overflow-x-auto">
 							<table
@@ -394,14 +448,9 @@ const SMSPage: React.FC = () => {
 											/>
 										</th>
 										<th>ID</th>
-										<th>Contact</th>
-										<th>Phone Number</th>
-										<th
-											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider dark:text-gray-100"
-											style={{ color: 'var(--text-primary)' }}
-										>
-											Message
-										</th>
+										<th>Recipient / Contact</th>
+										<th>Email Address</th>
+										<th>Subject</th>
 										<th>Direction</th>
 										<th>Status</th>
 										<th>Timestamp</th>
@@ -414,11 +463,11 @@ const SMSPage: React.FC = () => {
 										borderColor: 'var(--light-gray)'
 									}}
 								>
-									{currentSMS.map((sms) => {
-										const directionColors = getDirectionColor(sms.direction);
+									{currentEmails.map((email) => {
+										const directionColors = getDirectionColor(email.direction);
 										return (
 											<tr
-												key={sms.id}
+												key={email.id}
 												className="dark:hover:bg-gray-700"
 												style={{ borderColor: 'var(--light-gray)' }}
 												onMouseEnter={(e) => {
@@ -430,25 +479,25 @@ const SMSPage: React.FC = () => {
 											>
 												<td className="px-6 py-4 whitespace-nowrap">
 													<Checkbox
-														checked={selectedSMS.has(sms.id)}
-														onChange={(checked) => handleSelectSMS(sms.id, checked)}
+														checked={selectedEmails.has(email.id)}
+														onChange={(checked) => handleSelectEmail(email.id, checked)}
 														size="medium"
 													/>
 												</td>
 												<td className="px-6 py-4 whitespace-nowrap dark:text-gray-100" style={{ color: 'var(--text-primary)' }}>
-													{sms.id}
+													{email.id}
 												</td>
 												<td className="px-6 py-4 whitespace-nowrap dark:text-gray-100" style={{ color: 'var(--text-primary)' }}>
-													{sms.contactName || '-'}
+													{email.recipientName || '-'}
 												</td>
 												<td className="px-6 py-4 whitespace-nowrap dark:text-gray-100" style={{ color: 'var(--text-primary)' }}>
-													{sms.phoneNumber}
+													{email.emailAddress}
 												</td>
 												<td
 													className="px-6 py-4 dark:text-gray-100 max-w-xs truncate cursor-pointer hover:underline"
 													style={{ color: 'var(--text-primary)' }}
-													title={sms.message}
-													onClick={() => setViewingSMS(sms)}
+													title={email.subject}
+													onClick={() => setViewingEmail(email)}
 													onMouseEnter={(e) => {
 														e.currentTarget.style.color = campaignData?.primaryColor || '#050711';
 													}}
@@ -456,7 +505,7 @@ const SMSPage: React.FC = () => {
 														e.currentTarget.style.color = 'var(--text-primary)';
 													}}
 												>
-													{sms.message}
+													{email.subject}
 												</td>
 												<td className="px-6 py-4 whitespace-nowrap">
 													<span
@@ -467,14 +516,14 @@ const SMSPage: React.FC = () => {
 															border: `1px solid ${directionColors.border}`
 														}}
 													>
-														{sms.direction === 'inbound' ? 'Inbound' : 'Outbound'}
+														{email.direction === 'inbound' ? 'Inbound' : 'Outbound'}
 													</span>
 												</td>
 												<td className="px-6 py-4 whitespace-nowrap">
-													<StatusBadge status={sms.status} />
+													<StatusBadge status={email.status} />
 												</td>
 												<td className="px-6 py-4 whitespace-nowrap dark:text-gray-100" style={{ color: 'var(--text-primary)' }}>
-													{sms.timestamp}
+													{email.timestamp}
 												</td>
 											</tr>
 										);
@@ -485,7 +534,7 @@ const SMSPage: React.FC = () => {
 					</div>
 
 					{/* Pagination */}
-					{filteredSMS.length > 0 && (
+					{filteredEmails.length > 0 && (
 						<Pagination
 							currentPage={currentPage}
 							totalPages={totalPages}
@@ -502,7 +551,7 @@ const SMSPage: React.FC = () => {
 					{/* Configurations Tab View */}
 					<div className="mb-6 flex justify-between items-center">
 						<p className="text-[12px] text-gray-500">
-							Create and manage SMS gateway connections and assign them to Campaigns or specific Buckets.
+							Configure outgoing email servers (SMTP, SendGrid, Mailgun) and assign them to Campaigns or specific Buckets.
 						</p>
 						<Button
 							variant="primary"
@@ -511,7 +560,7 @@ const SMSPage: React.FC = () => {
 							className="flex items-center gap-2 text-xs"
 						>
 							<PlusIcon className="w-4 h-4" />
-							Add SMS Config
+							Add Email Config
 						</Button>
 					</div>
 
@@ -534,8 +583,8 @@ const SMSPage: React.FC = () => {
 								>
 									<tr>
 										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Name</th>
-										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Provider</th>
-										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Sender ID</th>
+										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Type</th>
+										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>From Address</th>
 										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Assigned To</th>
 										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Scope</th>
 										<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Action</th>
@@ -545,7 +594,7 @@ const SMSPage: React.FC = () => {
 									{configsList.length === 0 ? (
 										<tr>
 											<td colSpan={6} className="px-6 py-12 text-center text-gray-500 text-xs">
-												No SMS configurations found. Click "Add SMS Config" to set up your first gateway integration.
+												No Email configurations found. Click "Add Email Config" to set up your first integration server.
 											</td>
 										</tr>
 									) : (
@@ -557,7 +606,7 @@ const SMSPage: React.FC = () => {
 											>
 												<td className="px-6 py-4 whitespace-nowrap text-xs font-semibold text-gray-800 dark:text-gray-100">{cfg.name}</td>
 												<td className="px-6 py-4 whitespace-nowrap text-xs text-gray-600 dark:text-gray-300">{cfg.provider}</td>
-												<td className="px-6 py-4 whitespace-nowrap text-xs font-mono text-gray-600 dark:text-gray-300">{cfg.senderId}</td>
+												<td className="px-6 py-4 whitespace-nowrap text-xs font-mono text-gray-600 dark:text-gray-300">{cfg.fromEmail}</td>
 												<td className="px-6 py-4 whitespace-nowrap text-xs text-gray-700 dark:text-gray-200">{cfg.assignedName}</td>
 												<td className="px-6 py-4 whitespace-nowrap text-xs capitalize text-gray-500">
 													<span className={`px-2 py-0.5 rounded-full text-[9px] font-medium ${
@@ -600,77 +649,310 @@ const SMSPage: React.FC = () => {
 				</>
 			)}
 
-			{/* Selected SMS Drawer */}
-			{shouldRenderDrawer && (
-				<div
-					className={`fixed top-0 right-0 h-full w-full max-w-md dark:bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${isDrawerAnimating ? 'translate-x-0' : 'translate-x-full'}`}
-					style={{ backgroundColor: 'var(--accent-white)' }}
-				>
-					{/* Drawer Header */}
+			{/* Compose Email Modal */}
+			{isComposeOpen && (
+				<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={() => setIsComposeOpen(false)}>
 					<div
-						className="flex justify-between items-center border-b dark:border-gray-700 p-6"
-						style={{ borderColor: 'var(--light-gray)' }}
+						className="dark:bg-gray-800 shadow-lg w-full max-w-lg mx-4 rounded-[var(--radius)] overflow-hidden"
+						style={{ backgroundColor: 'var(--accent-white)' }}
+						onClick={(e) => e.stopPropagation()}
 					>
-						<div className="flex items-center gap-3">
-							<ChatBubbleIcon
-								className="w-5 h-5 dark:text-gray-300"
-								style={{ color: 'var(--text-primary)' }}
-							/>
+						{/* Header */}
+						<div
+							className="flex justify-between items-center p-6 border-b dark:border-gray-700"
+							style={{ borderColor: 'var(--light-gray)' }}
+						>
 							<h2
-								className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
+								className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100 flex items-center gap-2"
 								style={{ color: 'var(--text-primary)' }}
 							>
-								Selected SMS ({selectedSMS.size})
+								<EnvelopeClosedIcon className="w-5 h-5 text-[#6C8B7D]" />
+								Compose New Email
 							</h2>
+							<button
+								onClick={() => setIsComposeOpen(false)}
+								className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
+								<Cross2Icon className="w-5 h-5" />
+							</button>
 						</div>
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={() => setIsDrawerOpen(false)}
-							className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-full"
-							style={{ color: 'var(--text-tertiary)' }}
-						>
-							<Icon name="Close_round_light" size="lg" />
-						</Button>
-					</div>
 
-					{/* Drawer Content */}
-					<div className="overflow-y-auto h-[calc(100vh-80px)] p-6">
-						{selectedSMS.size === 0 ? (
-							<div className="flex flex-col items-center justify-center h-full text-center">
-								<ChatBubbleIcon
-									className="w-12 h-12 mb-4 dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								/>
-								<p
-									className="text-[10px] md:text-[12px] dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								>
-									No SMS selected
-								</p>
-							</div>
-						) : (
-							<div className="space-y-4">
-								{smsList
-									.filter(sms => selectedSMS.has(sms.id))
-									.map((sms) => (
-										<SMSMessagePreview
-											key={sms.id}
-											sms={sms}
-											onViewFull={(selectedSms) => {
-												setViewingSMS(selectedSms);
-												setIsDrawerOpen(false);
-											}}
-											getDirectionColor={getDirectionColor}
-										/>
-									))}
-							</div>
-						)}
+						{/* Content */}
+						<div className="p-6 space-y-6">
+							{configsList.length > 0 ? (
+								<div className="flex flex-col gap-1.5">
+									<label className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
+										Sender Account / Configuration
+									</label>
+									<select
+										value={formData.configId}
+										onChange={(e) => handleInputChange('configId')(e.target.value)}
+										className="w-full px-4 py-2 border rounded-[var(--radius)] text-[12px] focus:outline-hidden"
+										style={{
+											backgroundColor: 'var(--bg-primary)',
+											borderColor: 'var(--light-gray)',
+											color: 'var(--text-primary)',
+										}}
+									>
+										{configsList.map((cfg) => (
+											<option key={cfg.id} value={cfg.id}>
+												{cfg.name} ({cfg.fromEmail}) — {cfg.assignType === 'campaign' ? 'Campaign' : 'Bucket'}: {cfg.assignedName}
+											</option>
+										))}
+									</select>
+								</div>
+							) : (
+								<div className="p-3 border border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-900 rounded-lg text-[11px] text-yellow-800 dark:text-yellow-200">
+									⚠️ No active Email Configuration found. Sending will use the Default Outbox Server. Set up configurations in the Configurations tab.
+								</div>
+							)}
+
+							<Input
+								label="To"
+								placeholder="Enter recipient email address"
+								value={formData.to}
+								onChange={handleInputChange('to')}
+								type="email"
+								required
+							/>
+
+							<Input
+								label="Subject"
+								placeholder="Enter email subject"
+								value={formData.subject}
+								onChange={handleInputChange('subject')}
+								type="text"
+								required
+							/>
+
+							<Textarea
+								label="Message Body"
+								placeholder="Enter email message body"
+								value={formData.message}
+								onChange={handleInputChange('message')}
+								rows={8}
+								required
+							/>
+						</div>
+
+						{/* Footer */}
+						<div
+							className="flex justify-end items-center p-6 border-t dark:border-gray-700 gap-3"
+							style={{ borderColor: 'var(--light-gray)' }}
+						>
+							<Button
+								variant="outline"
+								size="md"
+								onClick={() => setIsComposeOpen(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								variant="primary"
+								size="md"
+								onClick={handleSendEmail}
+								disabled={!formData.to || !formData.subject || !formData.message}
+							>
+								Send Email
+							</Button>
+						</div>
 					</div>
 				</div>
 			)}
 
-			{/* SMS Config Modal */}
+			{/* Email Details Modal */}
+			{viewingEmail && (
+				<div
+					className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 transition-opacity duration-300"
+					onClick={() => setViewingEmail(null)}
+				>
+					<div
+						className="dark:bg-gray-800 w-full max-w-2xl mx-4 shadow-lg animate-in fade-in zoom-in duration-200 rounded-[var(--radius)]"
+						style={{ backgroundColor: 'var(--accent-white)' }}
+						onClick={(e) => e.stopPropagation()}
+					>
+						{/* Modal Header */}
+						<div
+							className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6"
+							style={{ borderColor: 'var(--light-gray)' }}
+						>
+							<div className="flex items-center gap-3">
+								<EnvelopeOpenIcon
+									className="w-6 h-6 dark:text-gray-300"
+									style={{ color: 'var(--text-primary)' }}
+								/>
+								<h2
+									className="font-inter text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Email Details
+								</h2>
+							</div>
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() => setViewingEmail(null)}
+								className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-full p-1 h-auto"
+								style={{ color: 'var(--text-tertiary)' }}
+							>
+								<Icon name="Close_round_light" size="lg" />
+							</Button>
+						</div>
+
+						{/* Modal Content */}
+						<div className="p-6 space-y-6">
+							<div>
+								<label
+									className="block text-[10px] md:text-[12px] font-medium mb-1 dark:text-gray-300"
+									style={{ color: 'var(--text-secondary)' }}
+								>
+									Subject
+								</label>
+								<p
+									className="text-base font-semibold dark:text-gray-100"
+									style={{ color: 'var(--text-primary)' }}
+								>
+									{viewingEmail.subject}
+								</p>
+							</div>
+
+							<div>
+								<label
+									className="block text-[10px] md:text-[12px] font-medium mb-2 dark:text-gray-300"
+									style={{ color: 'var(--text-secondary)' }}
+								>
+									Message Body
+								</label>
+								<div
+									className="p-4 dark:bg-gray-700 border dark:border-gray-600 rounded-lg min-h-[140px] whitespace-pre-wrap break-words"
+									style={{
+										backgroundColor: 'var(--bg-primary)',
+										borderColor: 'var(--light-gray)',
+										color: 'var(--text-primary)'
+									}}
+								>
+									{viewingEmail.message}
+								</div>
+							</div>
+
+							{/* Details Grid */}
+							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+								<div>
+									<label
+										className="block text-[10px] md:text-[12px] font-medium mb-1 dark:text-gray-300"
+										style={{ color: 'var(--text-secondary)' }}
+									>
+										Email ID
+									</label>
+									<p
+										className="text-[10px] md:text-[12px] dark:text-gray-100 font-mono"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{viewingEmail.id}
+									</p>
+								</div>
+								<div>
+									<label
+										className="block text-[10px] md:text-[12px] font-medium mb-1 dark:text-gray-300"
+										style={{ color: 'var(--text-secondary)' }}
+									>
+										Recipient Contact
+									</label>
+									<p
+										className="text-[10px] md:text-[12px] dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{viewingEmail.recipientName || '-'}
+									</p>
+								</div>
+								<div>
+									<label
+										className="block text-[10px] md:text-[12px] font-medium mb-1 dark:text-gray-300"
+										style={{ color: 'var(--text-secondary)' }}
+									>
+										Email Address
+									</label>
+									<p
+										className="text-[10px] md:text-[12px] dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{viewingEmail.emailAddress}
+									</p>
+								</div>
+								<div>
+									<label
+										className="block text-[10px] md:text-[12px] font-medium mb-1 dark:text-gray-300"
+										style={{ color: 'var(--text-secondary)' }}
+									>
+										Timestamp
+									</label>
+									<p
+										className="text-[10px] md:text-[12px] dark:text-gray-100"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										{viewingEmail.timestamp}
+									</p>
+								</div>
+								<div>
+									<label
+										className="block text-[10px] md:text-[12px] font-medium mb-1 dark:text-gray-300"
+										style={{ color: 'var(--text-secondary)' }}
+									>
+										Direction
+									</label>
+									<span
+										className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-medium"
+										style={getDirectionColor(viewingEmail.direction)}
+									>
+										{viewingEmail.direction === 'inbound' ? 'Inbound' : 'Outbound'}
+									</span>
+								</div>
+								<div>
+									<label
+										className="block text-[10px] md:text-[12px] font-medium mb-1 dark:text-gray-300"
+										style={{ color: 'var(--text-secondary)' }}
+									>
+										Status
+									</label>
+									<span
+										className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-medium"
+										style={{
+											backgroundColor: viewingEmail.status === 'delivered' ? 'rgba(34, 197, 94, 0.1)' :
+												viewingEmail.status === 'sent' ? 'rgba(59, 130, 246, 0.1)' :
+												viewingEmail.status === 'pending' ? 'rgba(251, 191, 36, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+											color: viewingEmail.status === 'delivered' ? '#22C55E' :
+												viewingEmail.status === 'sent' ? '#3B82F6' :
+												viewingEmail.status === 'pending' ? '#FBBF24' : '#EF4444',
+											border: `1px solid ${viewingEmail.status === 'delivered' ? 'rgba(34, 197, 94, 0.2)' :
+												viewingEmail.status === 'sent' ? 'rgba(59, 130, 246, 0.2)' :
+												viewingEmail.status === 'pending' ? 'rgba(251, 191, 36, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`
+										}}
+									>
+										{viewingEmail.status.charAt(0).toUpperCase() + viewingEmail.status.slice(1)}
+									</span>
+								</div>
+							</div>
+						</div>
+
+						{/* Modal Footer */}
+						<div
+							className="flex justify-end gap-3 p-6 border-t dark:border-gray-700"
+							style={{ borderColor: 'var(--light-gray)' }}
+						>
+							<Button
+								variant="outline"
+								size="md"
+								onClick={() => setViewingEmail(null)}
+							>
+								Close
+							</Button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Email Config Modal */}
 			{isConfigModalOpen && (
 				<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={() => setIsConfigModalOpen(false)}>
 					<div
@@ -688,7 +970,7 @@ const SMSPage: React.FC = () => {
 								style={{ color: 'var(--text-primary)' }}
 							>
 								<GearIcon className="w-5 h-5 text-[#6C8B7D]" />
-								{editingConfig ? 'Edit SMS Config' : 'Create SMS Config'}
+								{editingConfig ? 'Edit Email Config' : 'Create Email Config'}
 							</h2>
 							<button
 								onClick={() => setIsConfigModalOpen(false)}
@@ -703,7 +985,7 @@ const SMSPage: React.FC = () => {
 						<div className="p-6 space-y-4 overflow-y-auto max-h-[70vh]">
 							<Input
 								label="Configuration Name *"
-								placeholder="e.g. Sales Twilio Account"
+								placeholder="e.g. Outcess Official SMTP"
 								value={configForm.name}
 								onChange={(val) => handleConfigFormChange('name', val)}
 								required
@@ -711,7 +993,7 @@ const SMSPage: React.FC = () => {
 
 							<div className="flex flex-col gap-1.5">
 								<label className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-									Gateway Provider *
+									Email Provider Type *
 								</label>
 								<select
 									value={configForm.provider}
@@ -723,37 +1005,61 @@ const SMSPage: React.FC = () => {
 										color: 'var(--text-primary)',
 									}}
 								>
-									<option value="Twilio">Twilio</option>
-									<option value="Infobip">Infobip</option>
-									<option value="Plivo">Plivo</option>
-									<option value="Outcess SMS Gateway">Outcess SMS Gateway</option>
+									<option value="SMTP">SMTP Server</option>
+									<option value="SendGrid">SendGrid API</option>
+									<option value="Mailgun">Mailgun API</option>
+									<option value="AWS SES">AWS SES</option>
 								</select>
 							</div>
 
 							<Input
-								label="Sender ID / Phone Number *"
-								placeholder="e.g. OUTCESS or +12345678"
-								value={configForm.senderId}
-								onChange={(val) => handleConfigFormChange('senderId', val)}
+								label="From Email Address *"
+								placeholder="e.g. notifications@outcess.com"
+								value={configForm.fromEmail}
+								onChange={(val) => handleConfigFormChange('fromEmail', val)}
 								required
 							/>
 
+							{configForm.provider === 'SMTP' ? (
+								<>
+									<Input
+										label="SMTP Host Address"
+										placeholder="e.g. smtp.mailtrap.io"
+										value={configForm.host}
+										onChange={(val) => handleConfigFormChange('host', val)}
+									/>
+									<Input
+										label="SMTP Port"
+										type="number"
+										value={configForm.port ? String(configForm.port) : ''}
+										onChange={(val) => handleConfigFormChange('port', parseInt(val) || 587)}
+									/>
+								</>
+							) : (
+								<Input
+									label="API Endpoint / Host"
+									placeholder="e.g. api.sendgrid.com"
+									value={configForm.host}
+									onChange={(val) => handleConfigFormChange('host', val)}
+								/>
+							)}
+
 							<Input
-								label="Account SID / Username"
-								placeholder="Enter account Identifier"
-								value={configForm.accountSid}
-								onChange={(val) => handleConfigFormChange('accountSid', val)}
+								label="Username / API Key"
+								placeholder="Enter API username or Key Identifier"
+								value={configForm.username}
+								onChange={(val) => handleConfigFormChange('username', val)}
 							/>
 
 							<div className="flex flex-col gap-1">
 								<label className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-									API Key / Auth Token
+									Password / Secret Token
 								</label>
 								<input
 									type="password"
 									placeholder="••••••••••••••••"
-									value={configForm.apiKey}
-									onChange={(e) => handleConfigFormChange('apiKey', e.target.value)}
+									value={configForm.password}
+									onChange={(e) => handleConfigFormChange('password', e.target.value)}
 									className="w-full px-4 py-2 border rounded-[var(--radius)] text-[12px] focus:outline-hidden dark:bg-gray-700"
 									style={{
 										borderColor: 'var(--light-gray)',
@@ -835,23 +1141,8 @@ const SMSPage: React.FC = () => {
 					</div>
 				</div>
 			)}
-
-			<SMSMessageModal
-				isOpen={!!viewingSMS}
-				sms={viewingSMS}
-				onClose={() => setViewingSMS(null)}
-			/>
-
-			<SMSModal
-				isOpen={isSendSMSOpen}
-				onClose={() => setIsSendSMSOpen(false)}
-				onSend={(data) => {
-					console.log('Sending SMS:', data);
-					toastSuccess(`SMS queued for sending to ${data.phone}`);
-				}}
-			/>
 		</div>
 	);
 };
 
-export default SMSPage;
+export default EmailPage;

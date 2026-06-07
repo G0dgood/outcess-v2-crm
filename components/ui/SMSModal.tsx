@@ -23,6 +23,29 @@ export const SMSModal: React.FC<SMSModalProps> = ({
 		phone: initialPhone,
 		message: '',
 	});
+	const [configs, setConfigs] = useState<any[]>([]);
+	const [selectedConfigId, setSelectedConfigId] = useState<string>('');
+
+	// Load configs from local storage
+	useEffect(() => {
+		if (isOpen) {
+			const saved = localStorage.getItem('outcess-sms-configs');
+			if (saved) {
+				try {
+					const parsed = JSON.parse(saved);
+					setConfigs(parsed);
+					if (parsed.length > 0) {
+						setSelectedConfigId(parsed[0].id);
+					}
+				} catch {
+					setConfigs([]);
+				}
+			}
+		} else {
+			setConfigs([]);
+			setSelectedConfigId('');
+		}
+	}, [isOpen]);
 
 	// Reset form when modal closes
 	useEffect(() => {
@@ -117,6 +140,34 @@ export const SMSModal: React.FC<SMSModalProps> = ({
 
 				{/* Content */}
 				<div className="p-6 space-y-6">
+					{configs.length > 0 ? (
+						<div className="flex flex-col gap-1.5">
+							<label className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
+								SMS Configuration / Gateway
+							</label>
+							<select
+								value={selectedConfigId}
+								onChange={(e) => setSelectedConfigId(e.target.value)}
+								className="w-full px-4 py-2 border rounded-[var(--radius)] text-[12px] focus:outline-hidden"
+								style={{
+									backgroundColor: 'var(--bg-primary)',
+									borderColor: 'var(--light-gray)',
+									color: 'var(--text-primary)',
+								}}
+							>
+								{configs.map((cfg) => (
+									<option key={cfg.id} value={cfg.id}>
+										{cfg.name} ({cfg.provider}) — {cfg.assignType === 'campaign' ? 'Campaign' : 'Bucket'}: {cfg.assignedName}
+									</option>
+								))}
+							</select>
+						</div>
+					) : (
+						<div className="p-3 border border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-900 rounded-lg text-[11px] text-yellow-800 dark:text-yellow-200">
+							⚠️ No SMS configurations assigned. Messaging will use the Default Gateway. Configure settings in the SMS Configurations tab.
+						</div>
+					)}
+
 					<Input
 						label="Phone"
 						placeholder="Enter phone number"
