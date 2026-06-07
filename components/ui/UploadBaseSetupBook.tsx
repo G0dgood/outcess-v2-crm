@@ -11,7 +11,7 @@ interface UploadBaseProps {
   onClose?: () => void;
   showButton?: boolean;
   onUploadComplete?: (data: CsvRow[], file?: File) => void;
-  searchId?: string;
+  bucketId?: string;
 }
 
 // Simple CSV parser function
@@ -74,7 +74,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
   onClose: externalOnClose,
   showButton = true,
   onUploadComplete,
-  searchId,
+  bucketId,
 }) => {
   const { campaignData } = useCampaign();
   const campaignId = campaignData?.campaign?._id;
@@ -215,30 +215,6 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
     try {
       setProgress(30);
 
-      let fileToSend = fileToUpload;
-
-      if (jsonData.length > 0 && searchId) {
-        // Reconstruct CSV with searchId
-        const headers = Object.keys(jsonData[0]);
-        const newHeaders = [...headers, 'searchId'];
-
-        const csvLines = jsonData.map(row => {
-          const values = headers.map(header => {
-            let val = row[header] || '';
-            if (val.includes(',') || val.includes('"') || val.includes('\n')) {
-              val = `"${val.replace(/"/g, '""')}"`;
-            }
-            return val;
-          });
-          values.push(searchId);
-          return values.join(',');
-        });
-
-        const newContent = [newHeaders.join(','), ...csvLines].join('\n');
-        const blob = new Blob([newContent], { type: 'text/csv' });
-        fileToSend = new File([blob], fileToUpload.name, { type: 'text/csv' });
-      }
-
       const formData = new FormData();
 
       // if (companyId && typeof companyId === 'object') {
@@ -247,7 +223,16 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
 
       if (!companyId || !campaignId) {
         toast.error("Missing required information", {
-          description: "Campaign ID, Company ID, or Search ID is missing.",
+          description: "Campaign ID or Company ID is missing.",
+          duration: 5000,
+        });
+        setProgress(0);
+        return;
+      }
+
+      if (!bucketId) {
+        toast.error("Missing bucket", {
+          description: "Please select a bucket before uploading.",
           duration: 5000,
         });
         setProgress(0);
@@ -256,10 +241,8 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
 
       formData.append('companyId', companyId);
       formData.append('campaignId', campaignId);
-      if (searchId) {
-        formData.append('searchId', searchId);
-      }
-      formData.append('file', fileToSend);
+      formData.append('bucketId', bucketId);
+      formData.append('file', fileToUpload);
 
       await createSetupBook(formData).unwrap();
 

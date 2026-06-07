@@ -12,6 +12,8 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import { useGetSetupBookBySearchIdQuery } from '@/store/services/setupBookApi';
 import { toastError } from '@/utils/toastWithSound';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { BucketWithMembers, getUserAssignedBuckets } from '@/utils/bucketUtils';
 import AccessRestricted from '@/components/ui/AccessRestricted';
 import { SetupData } from '@/contexts/SetupContext';
 
@@ -28,13 +30,30 @@ const CustomerBookPage: React.FC = () => {
 	// const [currentPage, setCurrentPage] = useState(1);
 	const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
 	const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-	const { canAccess } = usePrivilege();
+	const { canAccess, isAdmin, isSuperAdmin } = usePrivilege();
+	const { user } = useAuth();
 	const canAccessModule = canAccess('customerBook');
 	const canView = canAccess('customerBook', 'view');
 	const canCreate = canAccess('customerBook', 'create');
 
 	const searchId = campaignData?.campaign?.customerBookSettings?.searchId;
 	const configuredFields = campaignData?.campaign?.customerBookSettings?.configuredFields || [];
+	const buckets: BucketWithMembers[] = campaignData?.campaign?.dashboardSettings?.buckets || [];
+	const userId = String(user?.id || user?._id || '');
+	const hasFullBucketAccess = isAdmin || isSuperAdmin;
+
+	const accessibleBuckets = useMemo(
+		() => (hasFullBucketAccess ? buckets : getUserAssignedBuckets(userId, buckets)),
+		[buckets, userId, hasFullBucketAccess]
+	);
+
+	const bucketQueryParams = useMemo(() => {
+		if (hasFullBucketAccess || accessibleBuckets.length === 0) return {};
+		if (accessibleBuckets.length === 1) {
+			return { bucketId: accessibleBuckets[0].id };
+		}
+		return { bucketIds: accessibleBuckets.map((b) => b.id).join(',') };
+	}, [accessibleBuckets, hasFullBucketAccess]);
 
 	const mapFieldType = (type: string): 'text' | 'phone' | 'email' | 'number' | 'date' => {
 		if (type === 'phone') return 'phone';
@@ -45,7 +64,13 @@ const CustomerBookPage: React.FC = () => {
 	};
 
 	const fieldDefinitions = useMemo(() => {
-		const allFields = configuredFields.flatMap((config: any) => config?.fields || []);
+		const relevantConfigs = hasFullBucketAccess
+			? configuredFields
+			: configuredFields.filter((config: { bucketId?: string }) =>
+				accessibleBuckets.some((bucket: BucketWithMembers) => bucket.id === config?.bucketId)
+			);
+
+		const allFields = relevantConfigs.flatMap((config: any) => config?.fields || []);
 		// Deduplicate by ID just in case
 		const uniqueFieldsMap = new Map();
 		allFields.forEach((field: any) => {
@@ -58,12 +83,12 @@ const CustomerBookPage: React.FC = () => {
 			type: mapFieldType(field.type),
 			required: field.required
 		}));
-	}, [configuredFields]);
+	}, [configuredFields, accessibleBuckets, hasFullBucketAccess]);
 
-	// Fetch customer by SearchId
+	// Fetch customer by SearchId within the user's assigned buckets
 	const { data: searchResult, isLoading, isError, error } = useGetSetupBookBySearchIdQuery(
-		{ campaignId: campaignId || '', searchId: searchQuery },
-		{ skip: !searchQuery || !campaignId }
+		{ campaignId: campaignId || '', searchId: searchQuery, ...bucketQueryParams },
+		{ skip: !searchQuery || !campaignId || (!hasFullBucketAccess && accessibleBuckets.length === 0) }
 	);
 
 
@@ -127,7 +152,17 @@ const CustomerBookPage: React.FC = () => {
 					message="You do not have access permission to view Customer Book."
 				/>
 			)}
-			{canAccessModule && (
+			{canAccessModule && !hasFullBucketAccess && accessibleBuckets.length === 0 && (
+				<>
+					<PageHeading text="Customer Book" />
+					<div className="my-12 text-center">
+						<p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+							You are not assigned to any bucket. Contact your administrator to get bucket access.
+						</p>
+					</div>
+				</>
+			)}
+			{canAccessModule && (hasFullBucketAccess || accessibleBuckets.length > 0) && (
 				<>
 					<PageHeading text="Customer Book" />
 					<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -228,7 +263,7 @@ const CustomerBookPage: React.FC = () => {
 						isOpen={isAddCustomerModalOpen}
 						onClose={() => setIsAddCustomerModalOpen(false)}
 						fieldDefinitions={fieldDefinitions}
-						searchId={searchId}
+						bucketId={accessibleBuckets.length === 1 ? accessibleBuckets[0].id : accessibleBuckets[0]?.id}
 					/>
 					<CustomerDetailsModal
 						isOpen={!!selectedCustomer}

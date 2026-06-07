@@ -65,24 +65,28 @@ export const setupBookApi = baseApi.injectEndpoints({
             query: (id) => `api/v1/setup-books/${id}`,
             providesTags: (result, error, id) => [{ type: 'SetupBook', id }],
         }),
-        getSetupBookByCampaignId: builder.query<SetupBookResponse, { id: string; page?: number; limit?: number; search?: string }>({
-            query: ({ id, page, limit, search }) => {
+        getSetupBookByCampaignId: builder.query<SetupBookResponse, { id: string; page?: number; limit?: number; search?: string; bucketId?: string; bucketIds?: string }>({
+            query: ({ id, page, limit, search, bucketId, bucketIds }) => {
                 const params = new URLSearchParams();
                 if (page) params.append('page', page.toString());
                 if (limit) params.append('limit', limit.toString());
                 if (search) params.append('search', search);
+                if (bucketIds) params.append('bucketIds', bucketIds);
+                else if (bucketId) params.append('bucketId', bucketId);
                 
                 const queryString = params.toString();
                 return `api/v1/setup-books/${id}${queryString ? `?${queryString}` : ''}`;
             },
             providesTags: ['SetupBook'],
         }),
-        getSetupBookBySearchId: builder.query<SetupBookResponse, { campaignId: string; searchId: string; page?: number; limit?: number; search?: string }>({
-            query: ({ campaignId, searchId, page, limit, search }) => {
+        getSetupBookBySearchId: builder.query<SetupBookResponse, { campaignId: string; searchId: string; page?: number; limit?: number; search?: string; bucketId?: string; bucketIds?: string }>({
+            query: ({ campaignId, searchId, page, limit, search, bucketId, bucketIds }) => {
                 const params = new URLSearchParams();
                 if (page) params.append('page', page.toString());
                 if (limit) params.append('limit', limit.toString());
                 if (search) params.append('search', search);
+                if (bucketIds) params.append('bucketIds', bucketIds);
+                else if (bucketId) params.append('bucketId', bucketId);
                 
                 const queryString = params.toString();
                 return `api/v1/setup-books/${campaignId}/record/${searchId}${queryString ? `?${queryString}` : ''}`;

@@ -17,7 +17,7 @@ interface CreateRecordModalProps {
 	isOpen: boolean;
 	fieldDefinitions: FieldDefinition[];
 	onClose: () => void;
-	searchId?: string;
+	bucketId?: string;
 }
 
 interface ApiError {
@@ -30,7 +30,7 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 	isOpen,
 	fieldDefinitions,
 	onClose,
-	searchId,
+	bucketId,
 }) => {
 	const [formData, setFormData] = useState<Record<string, string | number | boolean>>({});
 	const { campaignData } = useCampaign();
@@ -40,16 +40,16 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 		? (companyIdRaw as { _id?: string; id?: string })._id || (companyIdRaw as { _id?: string; id?: string }).id
 		: companyIdRaw as string | undefined;
 
-	const [manualSearchId, setManualSearchId] = useState(searchId || '');
+	const [manualSearchId, setManualSearchId] = useState('');
 	const [createSetupBook, { isLoading }] = useCreateSetupBookMutation();
 
 	// Reset form when modal opens
 	useEffect(() => {
 		if (isOpen) {
 			setFormData({});
-			setManualSearchId(searchId || '');
+			setManualSearchId('');
 		}
-	}, [isOpen, searchId]);
+	}, [isOpen]);
 
 	if (!isOpen) return null;
 
@@ -73,6 +73,11 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 			return;
 		}
 
+		if (!bucketId) {
+			toast.error("Please select a bucket before creating a record");
+			return;
+		}
+
 		if (campaignId && companyId) {
 			try {
 				// Construct CSV content
@@ -93,7 +98,7 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 				const uploadFormData = new FormData();
 				uploadFormData.append('companyId', companyId);
 				uploadFormData.append('campaignId', campaignId);
-				uploadFormData.append('searchId', manualSearchId);
+				uploadFormData.append('bucketId', bucketId);
 				uploadFormData.append('file', file);
 
 				await createSetupBook(uploadFormData).unwrap();

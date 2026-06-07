@@ -15,10 +15,12 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import SampleCsvDownloader from '@/components/ui/SampleCsvDownloader';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
 import EditRecordModal from '@/components/ui/EditRecordModal';
-import { useGetSetupBookByCampaignIdQuery, useDeleteSetupBookRecordsMutation, useGetSetupBookBySearchIdQuery, useDeleteManySetupBookRecordsMutation } from '@/store/services/setupBookApi';
+import { useGetSetupBookByCampaignIdQuery, useDeleteSetupBookRecordsMutation, useDeleteManySetupBookRecordsMutation } from '@/store/services/setupBookApi';
 import { toast } from 'sonner';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { ALL_MY_BUCKETS, getUserAssignedBuckets } from '@/utils/bucketUtils';
 
 import { SelectBucketModal } from '@/components/ui/SelectBucketModal';
 import Icon from '@/components/ui/Icon';
@@ -45,7 +47,8 @@ interface ApiError {
 
 const SetupBookPage: React.FC = () => {
 	const router = useRouter();
-	const { canAccess } = usePrivilege();
+	const { canAccess, isAdmin, isSuperAdmin } = usePrivilege();
+	const { user } = useAuth();
 	const canAccessModule = canAccess('setupBook');
 	const canCreate = canAccess('setupBook', 'create');
 	const canEdit = canAccess('setupBook', 'edit');
@@ -56,21 +59,73 @@ const SetupBookPage: React.FC = () => {
 
 	const allConfiguredFieldsChunks = campaignData?.campaign?.customerBookSettings?.configuredFields || [];
 	const buckets = (campaignData?.campaign?.dashboardSettings?.buckets || []) as any[];
+	const userId = String(user?.id || user?._id || '');
+	const hasFullBucketAccess = isAdmin || isSuperAdmin;
+
+	const accessibleBuckets = useMemo(
+		() => (hasFullBucketAccess ? buckets : getUserAssignedBuckets(userId, buckets)),
+		[buckets, userId, hasFullBucketAccess]
+	);
+
+	const bucketOptions = useMemo(() => {
+		if (hasFullBucketAccess) return accessibleBuckets;
+		if (accessibleBuckets.length > 1) {
+			return [{ id: ALL_MY_BUCKETS, name: 'All My Buckets', color: '#6B7280' }, ...accessibleBuckets];
+		}
+		return accessibleBuckets;
+	}, [accessibleBuckets, hasFullBucketAccess]);
 
 	const [selectedBucketId, setSelectedBucketId] = useState<string>('');
 	const [isBucketModalOpen, setIsBucketModalOpen] = useState(false);
 
-	// Initialize selectedBucketId with the first bucket if not set
+	// Initialize selected bucket from the user's accessible buckets
 	useEffect(() => {
-		if (!selectedBucketId && buckets.length > 0) {
-			setSelectedBucketId(buckets[0].id);
+		if (accessibleBuckets.length === 0) {
+			setSelectedBucketId('');
+			return;
 		}
-	}, [buckets, selectedBucketId]);
 
-	// Find searchId and fields for selected bucket
-	const currentBucketConfig = allConfiguredFieldsChunks.find((c: any) => c && c.bucketId === selectedBucketId);
-	const searchId = currentBucketConfig?.searchId || (campaignData?.campaign?.customerBookSettings as any)?.searchId || '';
-	const setupBookHeaderFields = currentBucketConfig?.fields || [];
+		const isCurrentSelectionValid =
+			selectedBucketId === ALL_MY_BUCKETS ||
+			accessibleBuckets.some((b) => b.id === selectedBucketId) ||
+			(hasFullBucketAccess && buckets.some((b) => b.id === selectedBucketId));
+
+		if (!selectedBucketId || !isCurrentSelectionValid) {
+			if (!hasFullBucketAccess && accessibleBuckets.length > 1) {
+				setSelectedBucketId(ALL_MY_BUCKETS);
+			} else {
+				setSelectedBucketId(accessibleBuckets[0].id);
+			}
+		}
+	}, [accessibleBuckets, buckets, hasFullBucketAccess, selectedBucketId]);
+
+	// Find fields for selected bucket (or union when viewing all assigned buckets)
+	const setupBookHeaderFields = useMemo(() => {
+		if (selectedBucketId === ALL_MY_BUCKETS) {
+			const fieldsMap = new Map<string, FieldDefinition>();
+			accessibleBuckets.forEach((bucket) => {
+				const config = allConfiguredFieldsChunks.find((c: any) => c && c.bucketId === bucket.id);
+				(config?.fields || []).forEach((field: FieldDefinition) => {
+					if (field?.id) fieldsMap.set(field.id, field);
+				});
+			});
+			return Array.from(fieldsMap.values());
+		}
+
+		const currentBucketConfig = allConfiguredFieldsChunks.find(
+			(c: any) => c && c.bucketId === selectedBucketId
+		);
+		return currentBucketConfig?.fields || [];
+	}, [selectedBucketId, accessibleBuckets, allConfiguredFieldsChunks]);
+
+	const activeUploadBucketId = selectedBucketId === ALL_MY_BUCKETS ? '' : selectedBucketId;
+
+	const bucketQueryParams = useMemo(() => {
+		if (selectedBucketId === ALL_MY_BUCKETS) {
+			return { bucketIds: accessibleBuckets.map((b) => b.id).join(',') };
+		}
+		return { bucketId: selectedBucketId };
+	}, [selectedBucketId, accessibleBuckets]);
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
@@ -86,46 +141,59 @@ const SetupBookPage: React.FC = () => {
 	// Memoize field definitions to avoid infinite loops and unstable references
 	const fieldDefinitions: FieldDefinition[] = useMemo(() => setupBookHeaderFields, [setupBookHeaderFields]);
 
-	// Determine which query to use based on searchId presence
-	// If searchId is available, use useGetSetupBookBySearchIdQuery
-	// Otherwise, fallback to useGetSetupBookByCampaignIdQuery
-	const { data: recordsBySearchId, isLoading: isFetchingBySearchId } = useGetSetupBookBySearchIdQuery(
+	const { data: apiRecords, isLoading } = useGetSetupBookByCampaignIdQuery(
 		{
-			campaignId: campaignId || '',
-			searchId: searchId || '',
+			id: campaignId || '',
 			search: searchTerm,
 			page: currentPage,
-			limit: itemsPerPage
+			limit: itemsPerPage,
+			...bucketQueryParams,
 		},
-		{ skip: !searchId || !campaignId }
-	);
-
-	const { data: recordsByLobId, isLoading: isFetchingByLobId } = useGetSetupBookByCampaignIdQuery(
 		{
-			id: campaignId,
-			search: searchTerm,
-			page: currentPage,
-			limit: itemsPerPage
-		},
-		{ skip: !!searchId || !campaignId }
+			skip:
+				!campaignId ||
+				!selectedBucketId ||
+				(selectedBucketId === ALL_MY_BUCKETS && accessibleBuckets.length === 0),
+		}
 	);
-
-	const apiRecords = searchId ? recordsBySearchId : recordsByLobId;
-	const isLoading = searchId ? isFetchingBySearchId : isFetchingByLobId;
 
 	const [records, setRecords] = useState<SetupBookRecord[]>([]);
 
 	useEffect(() => {
 		if (apiRecords?.data) {
 			setRecords(apiRecords.data as unknown as SetupBookRecord[]);
+		} else {
+			setRecords([]);
 		}
 	}, [apiRecords]);
 
+	useEffect(() => {
+		setSelectedRecords(new Set());
+		setCurrentPage(1);
+	}, [selectedBucketId]);
+
+	const showBucketColumn = selectedBucketId === ALL_MY_BUCKETS;
+
+	const getBucketName = (record: SetupBookRecord) => {
+		const bucketId = String(record.bucketId || '');
+		return accessibleBuckets.find((b) => b.id === bucketId)?.name || bucketId || '-';
+	};
+
 	const handleUpload = () => {
+		if (selectedBucketId === ALL_MY_BUCKETS) {
+			toast.error('Select a specific bucket before uploading');
+			setIsBucketModalOpen(true);
+			return;
+		}
 		setIsUploadModalOpen(true);
 	};
 
 	const handleCreateRecord = () => {
+		if (selectedBucketId === ALL_MY_BUCKETS) {
+			toast.error('Select a specific bucket before creating a record');
+			setIsBucketModalOpen(true);
+			return;
+		}
 		setIsCreateModalOpen(true);
 	};
 
@@ -276,6 +344,19 @@ const SetupBookPage: React.FC = () => {
 		return null;
 	}
 
+	if (!hasFullBucketAccess && accessibleBuckets.length === 0) {
+		return (
+			<div>
+				<PageHeading text="Setup Book" />
+				<div className="my-12 text-center">
+					<p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+						You are not assigned to any bucket. Contact your administrator to get bucket access.
+					</p>
+				</div>
+			</div>
+		);
+	}
+
 	const handleNavigateToDashboard = () => {
 		router.push('/setup/dashboard');
 	};
@@ -304,7 +385,7 @@ const SetupBookPage: React.FC = () => {
 						className="flex items-center gap-2 whitespace-nowrap"
 					>
 						<GridIcon className="w-4 h-4" />
-						{buckets.find(b => b.id === selectedBucketId)?.name || 'Select Bucket'}
+						{bucketOptions.find(b => b.id === selectedBucketId)?.name || 'Select Bucket'}
 					</Button>
 				</div>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
@@ -370,6 +451,9 @@ const SetupBookPage: React.FC = () => {
 								<th>
 									Search ID
 								</th>
+								{showBucketColumn && (
+									<th>Bucket</th>
+								)}
 								{fieldDefinitions?.map((field: FieldDefinition, index: number) => (
 									<th key={field?.id ? `header-id-${field.id}` : `header-idx-${index}`}>
 										{field?.name}
@@ -402,6 +486,9 @@ const SetupBookPage: React.FC = () => {
 									<td>
 										{record['searchId'] || '-'}
 									</td>
+									{showBucketColumn && (
+										<td>{getBucketName(record)}</td>
+									)}
 									{fieldDefinitions?.map((field: FieldDefinition, index: number) => (
 										<td
 											key={`${record.id}-${field?.id ? `id-${field.id}` : `idx-${index}`}`}
@@ -477,7 +564,7 @@ const SetupBookPage: React.FC = () => {
 			<SelectBucketModal
 				isOpen={isBucketModalOpen}
 				onClose={() => setIsBucketModalOpen(false)}
-				buckets={buckets}
+				buckets={bucketOptions}
 				selectedBucketId={selectedBucketId}
 				onSelect={(bucketId) => {
 					setSelectedBucketId(bucketId);
@@ -493,7 +580,7 @@ const SetupBookPage: React.FC = () => {
 				onClose={() => setIsUploadModalOpen(false)}
 				showButton={false}
 				onUploadComplete={handleUploadComplete}
-				searchId={searchId}
+				bucketId={activeUploadBucketId}
 			/>
 
 			{/* Create Record Modal */}
@@ -501,7 +588,7 @@ const SetupBookPage: React.FC = () => {
 				isOpen={isCreateModalOpen}
 				onClose={() => setIsCreateModalOpen(false)}
 				fieldDefinitions={fieldDefinitions}
-				searchId={searchId}
+				bucketId={activeUploadBucketId}
 			/>
 
 			{/* Edit Record Modal */}
