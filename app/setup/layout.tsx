@@ -9,7 +9,7 @@ import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
 import { useUserInfo } from "@/contexts/UserInfoContext";
 import { useCampaign } from "@/contexts/CampaignContext";
-import { useCreateCampaignMutation, useUpdateCampaignMutation, useUpdateBucketCustomerFieldsMutation } from "@/store/services/campaignApi";
+import { useCreateCampaignMutation, useUpdateCampaignMutation, useUpdateBucketCustomerFieldsMutation, CreateCampaignRequest } from "@/store/services/campaignApi";
 import { ApiError, extractErrorMessage } from "@/utils/apiError";
 
 type CampaignLike = {
@@ -246,8 +246,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         };
 
         // Prepare final data (FormData if file exists, otherwise plain object)
-        let finalData: any = { ...baseData, logo: setupData.logo || '' };
-        
+        let finalData: CreateCampaignRequest | FormData = { ...baseData, logo: setupData.logo || '' };
+
         if (setupData.logoFile) {
           const formData = new FormData();
           Object.entries(baseData).forEach(([key, value]) => {
@@ -285,9 +285,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
               // Create new Campaign
               const targetCompanyId = user?.company?.id || setupData.companyId;
-              
+
               // Prepare for create
-              let createData: any = { ...baseData, userId: user?.id, companyName: setupData.companyName, companyId: targetCompanyId, logo: setupData.logo || '' };
+              let createData: CreateCampaignRequest | FormData = { ...baseData, userId: user?.id, companyName: setupData.companyName, companyId: targetCompanyId, logo: setupData.logo || '' };
               if (setupData.logoFile) {
                 const formData = new FormData();
                 Object.entries(createData).forEach(([key, value]) => {
@@ -328,8 +328,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         } else {
           // Create new Campaign
           const targetCompanyId = user?.company?.id || setupData.companyId;
-          
-          let createData: any = { ...baseData, userId: user?.id, companyName: setupData.companyName, companyId: targetCompanyId, logo: setupData.logo || '' };
+
+          let createData: CreateCampaignRequest | FormData = { ...baseData, userId: user?.id, companyName: setupData.companyName, companyId: targetCompanyId, logo: setupData.logo || '' };
           if (setupData.logoFile) {
             const formData = new FormData();
             Object.entries(createData).forEach(([key, value]) => {

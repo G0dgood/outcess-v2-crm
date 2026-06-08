@@ -15,11 +15,23 @@ import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { BucketWithMembers, getUserAssignedBuckets } from '@/utils/bucketUtils';
 import AccessRestricted from '@/components/ui/AccessRestricted';
-import { SetupData } from '@/contexts/SetupContext';
 
 interface Customer {
 	id: string;
 	[key: string]: string | number | boolean | null | undefined;
+}
+
+interface CustomerField {
+	id: string;
+	name: string;
+	type: string;
+	required: boolean;
+	options?: string[];
+}
+
+interface ConfiguredField {
+	bucketId: string;
+	fields: CustomerField[];
 }
 
 const CustomerBookPage: React.FC = () => {
@@ -36,9 +48,14 @@ const CustomerBookPage: React.FC = () => {
 	const canView = canAccess('customerBook', 'view');
 	const canCreate = canAccess('customerBook', 'create');
 
-	const searchId = campaignData?.campaign?.customerBookSettings?.searchId;
-	const configuredFields = campaignData?.campaign?.customerBookSettings?.configuredFields || [];
-	const buckets: BucketWithMembers[] = campaignData?.campaign?.dashboardSettings?.buckets || [];
+	const configuredFields = useMemo(() => {
+		return (campaignData?.campaign?.customerBookSettings?.configuredFields || []) as ConfiguredField[];
+	}, [campaignData]);
+
+	const buckets = useMemo(() => {
+		return (campaignData?.campaign?.dashboardSettings?.buckets || []) as BucketWithMembers[];
+	}, [campaignData]);
+
 	const userId = String(user?.id || user?._id || '');
 	const hasFullBucketAccess = isAdmin || isSuperAdmin;
 
@@ -66,18 +83,18 @@ const CustomerBookPage: React.FC = () => {
 	const fieldDefinitions = useMemo(() => {
 		const relevantConfigs = hasFullBucketAccess
 			? configuredFields
-			: configuredFields.filter((config: { bucketId?: string }) =>
+			: configuredFields.filter((config: ConfiguredField) =>
 				accessibleBuckets.some((bucket: BucketWithMembers) => bucket.id === config?.bucketId)
 			);
 
-		const allFields = relevantConfigs.flatMap((config: any) => config?.fields || []);
+		const allFields = relevantConfigs.flatMap((config: ConfiguredField) => config?.fields || []);
 		// Deduplicate by ID just in case
-		const uniqueFieldsMap = new Map();
-		allFields.forEach((field: any) => {
+		const uniqueFieldsMap = new Map<string, CustomerField>();
+		allFields.forEach((field: CustomerField) => {
 			if (field && field.id) uniqueFieldsMap.set(field.id, field);
 		});
 
-		return Array.from(uniqueFieldsMap.values()).map((field: any) => ({
+		return Array.from(uniqueFieldsMap.values()).map((field: CustomerField) => ({
 			id: field.id,
 			name: field.name,
 			type: mapFieldType(field.type),

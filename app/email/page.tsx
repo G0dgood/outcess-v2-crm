@@ -31,6 +31,16 @@ import {
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { toast } from 'sonner';
+import { Bucket } from '@/contexts/SetupContext';
+
+interface EmailCampaign {
+	_id: string;
+	campaignName?: string;
+	name?: string;
+	dashboardSettings?: {
+		buckets?: Bucket[];
+	};
+}
 
 const EmailPage: React.FC = () => {
 	const { campaignData } = useCampaign();
@@ -47,14 +57,17 @@ const EmailPage: React.FC = () => {
 		{ companyId, page: 1, limit: 100 },
 		{ skip: !companyId }
 	);
-	const campaigns = (campaignQueryData as any)?.campaigns || [];
+
+	const campaigns = useMemo(() => {
+		return (campaignQueryData as { campaigns?: EmailCampaign[] })?.campaigns || [];
+	}, [campaignQueryData]);
 
 	// Extract all buckets from campaigns
 	const buckets = useMemo(() => {
-		return campaigns.flatMap((c: any) => {
+		return campaigns.flatMap((c: EmailCampaign) => {
 			const bList = c.dashboardSettings?.buckets || [];
-			return bList.map((b: any) => ({
-				id: b.id || b._id || '',
+			return bList.map((b: Bucket) => ({
+				id: b.id || (b as any)._id || '',
 				name: b.name || 'Unnamed Bucket',
 				campaignId: c._id,
 				campaignName: c.campaignName || c.name || 'Unnamed Campaign'
@@ -79,7 +92,7 @@ const EmailPage: React.FC = () => {
 
 	// Email Configurations states
 	const { data: configsData, isLoading: isConfigsLoading } = useGetEmailConfigsQuery(companyId, { skip: !companyId });
-	const configsList = configsData?.configs || [];
+	const configsList = useMemo(() => configsData?.configs || [], [configsData]);
 
 	const [createEmailConfig] = useCreateEmailConfigMutation();
 	const [updateEmailConfig] = useUpdateEmailConfigMutation();
@@ -145,7 +158,7 @@ const EmailPage: React.FC = () => {
 			: { bg: 'rgba(59, 130, 246, 0.1)', text: '#3B82F6', border: 'rgba(59, 130, 246, 0.2)' };
 	};
 
-	const handleInputChange = (field: string) => (value: any) => {
+	const handleInputChange = (field: string) => (value: string | number) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
 	};
 
@@ -169,7 +182,7 @@ const EmailPage: React.FC = () => {
 				toastSuccess(`Email sent successfully to ${formData.to} ${fromDisplay}`);
 				setIsComposeOpen(false);
 				setFormData(prev => ({ ...prev, to: '', subject: '', message: '' }));
-			} catch (error) {
+			} catch {
 				toast.error('Failed to send email');
 			}
 		}
@@ -207,7 +220,7 @@ const EmailPage: React.FC = () => {
 		setIsConfigModalOpen(true);
 	};
 
-	const handleConfigFormChange = (field: string, value: any) => {
+	const handleConfigFormChange = (field: string, value: string | number) => {
 		setConfigForm(prev => {
 			const updated = { ...prev, [field]: value };
 			if (field === 'assignType') {
@@ -227,10 +240,10 @@ const EmailPage: React.FC = () => {
 
 		let assignedName = '';
 		if (configForm.assignType === 'campaign') {
-			const camp = campaigns.find((c: any) => c._id === configForm.assignedId);
+			const camp = campaigns.find((c: EmailCampaign) => c._id === configForm.assignedId);
 			assignedName = camp?.campaignName || camp?.name || 'Unknown Campaign';
 		} else {
-			const bkt = buckets.find((b: any) => b.id === configForm.assignedId);
+			const bkt = buckets.find((b) => b.id === configForm.assignedId);
 			assignedName = bkt ? `${bkt.campaignName} -> ${bkt.name}` : 'Unknown Bucket';
 		}
 
@@ -251,7 +264,7 @@ const EmailPage: React.FC = () => {
 			}
 			setIsConfigModalOpen(false);
 			setEditingConfig(null);
-		} catch (error) {
+		} catch {
 			toast.error('Failed to save configuration');
 		}
 	};
@@ -260,7 +273,7 @@ const EmailPage: React.FC = () => {
 		try {
 			await deleteEmailConfig(id).unwrap();
 			toast.success('Configuration deleted');
-		} catch (error) {
+		} catch {
 			toast.error('Failed to delete configuration');
 		}
 	};
@@ -976,11 +989,11 @@ const EmailPage: React.FC = () => {
 								label="Select Target *"
 								value={configForm.assignedId}
 								options={configForm.assignType === 'campaign'
-									? campaigns.map((c: any) => ({
+									? campaigns.map((c: EmailCampaign) => ({
 										value: c._id,
 										label: c.campaignName || c.name || 'Unnamed Campaign'
 									}))
-									: buckets.map((b: any) => ({
+									: buckets.map((b) => ({
 										value: b.id,
 										label: `${b.campaignName} ➔ ${b.name}`
 									}))

@@ -114,11 +114,11 @@ export default function LeaderboardPage() {
 	}, [dataSourceOptions, rankingMetric]);
 
 	const rankedLeaders = useMemo(() => {
-		const rawLeaders = leaderboardResponse?.leaderboard || [];
+		const rawLeaders = (leaderboardResponse?.leaderboard || []) as AgentPerformance[];
 
-		const sorted = [...rawLeaders].sort((a: any, b: any) => {
-			const valA = a.metrics?.[rankingMetric] ?? a[rankingMetric] ?? 0;
-			const valB = b.metrics?.[rankingMetric] ?? b[rankingMetric] ?? 0;
+		const sorted = [...rawLeaders].sort((a: AgentPerformance, b: AgentPerformance) => {
+			const valA = a.metrics?.[rankingMetric] ?? (a[rankingMetric as keyof AgentPerformance] as number) ?? 0;
+			const valB = b.metrics?.[rankingMetric] ?? (b[rankingMetric as keyof AgentPerformance] as number) ?? 0;
 
 			if (valB !== valA) return valB - valA;
 
@@ -133,7 +133,7 @@ export default function LeaderboardPage() {
 			return callsB - callsA;
 		});
 
-		return sorted.map((p: any, index: number) => ({
+		return sorted.map((p: AgentPerformance, index: number) => ({
 			...p,
 			rank: index + 1
 		}));
@@ -146,7 +146,6 @@ export default function LeaderboardPage() {
 	}, [rankedLeaders, searchTerm]);
 
 	const topThree = filteredLeaders.slice(0, 3);
-	const remainingLeaders = filteredLeaders.slice(3);
 
 	if (isLeaderboardLoading) {
 		return (
@@ -433,7 +432,8 @@ export default function LeaderboardPage() {
 							}
 						}).unwrap();
 						toast.success('Bucket targets updated successfully');
-					} catch (error: any) {
+					} catch (err: unknown) {
+						const error = err as { data?: { message?: string } };
 						toast.error(error?.data?.message || 'Failed to save bucket targets');
 					}
 				}}
@@ -476,7 +476,7 @@ function PodiumCard({
 		3: 'border-amber-200 dark:border-amber-900/30',
 	};
 
-	const displayVal = agent.metrics?.[rankingMetric] ?? (agent as any)[rankingMetric] ?? 0;
+	const displayVal = agent.metrics?.[rankingMetric] ?? (agent[rankingMetric as keyof AgentPerformance] as number) ?? 0;
 
 	return (
 		<div className={`relative flex flex-col items-center p-8 border rounded-[var(--radius)] bg-white dark:bg-gray-900 transition-all duration-300 hover:shadow-xl ${rankBorder[rank as keyof typeof rankBorder]} ${isMain ? 'shadow-2xl' : 'shadow-lg'}`} style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}>
@@ -579,7 +579,7 @@ function TargetsModal({ isOpen, onClose, onSave, buckets, initialBucketTargets, 
 			setWeekly(t.weekly);
 			setMonthly(t.monthly);
 		}
-	}, [isOpen]);
+	}, [isOpen, buckets, initialBucketTargets, globalTargets]);
 
 	if (!isOpen) return null;
 
@@ -638,8 +638,8 @@ function TargetsModal({ isOpen, onClose, onSave, buckets, initialBucketTargets, 
 										key={bucket.id}
 										onClick={() => setSelectedBucketId(bucket.id)}
 										className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] rounded-[calc(var(--radius)/1.5)] font-medium border transition-all ${selectedBucketId === bucket.id
-												? 'text-white border-transparent shadow-sm'
-												: 'text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300'
+											? 'text-white border-transparent shadow-sm'
+											: 'text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300'
 											}`}
 										style={selectedBucketId === bucket.id ? { backgroundColor: bucket.color || primaryColor, borderColor: bucket.color || primaryColor } : { borderColor: 'var(--light-gray)' }}
 									>

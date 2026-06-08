@@ -4,12 +4,12 @@ import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
 import Icon from '@/components/ui/Icon';
 
-import { ApiTeamMember } from '@/store/services/teamMembersApi';
+import { ApiTeamMember, TeamMemberFormData } from '@/store/services/teamMembersApi';
 
 interface AddTeamMemberModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onSave: (data: Record<string, any>) => void;
+	onSave: (data: TeamMemberFormData) => void;
 	editingMember?: ApiTeamMember | null;
 	roles: { label: string; value: string }[];
 	supervisors: { label: string; value: string }[];
@@ -40,7 +40,7 @@ const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
 		if (editingMember) {
 			const fullName = editingMember.firstName && editingMember.lastName
 				? `${editingMember.firstName} ${editingMember.lastName}`
-				: editingMember.name || (editingMember as any).fullName || '';
+				: editingMember.name || editingMember.fullName || '';
 
 			const nameParts = fullName.split(' ');
 			setFormData({
@@ -50,9 +50,9 @@ const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
 				phone: editingMember.phone || '',
 				role: typeof editingMember.role === 'object'
 					? (editingMember.role?._id || editingMember.role?.id || '')
-					: (editingMember.role || (editingMember as any).roleId || ''),
-				supervisorId: (editingMember as any).supervisorId || '',
-				shiftHourId: editingMember.shiftHour?.shiftHourId || (editingMember as any).shiftHourId || '',
+					: (editingMember.role || editingMember.roleId || ''),
+				supervisorId: editingMember.supervisorId || '',
+				shiftHourId: editingMember.shiftHour?.shiftHourId || editingMember.shiftHourId || '',
 				password: '', // Don't pre-fill password on edit
 			});
 		} else {

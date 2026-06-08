@@ -65,7 +65,9 @@ export interface ApiTeamMember {
   role?:
     | string
     | { _id?: string; id?: string; roleName?: string; name?: string };
+  roleId?: string;
   supervisor?: string | { name?: string };
+  supervisorId?: string;
   status?: string | StatusPayload;
   loginStatus?: string;
   team?: string | { name?: string };
@@ -74,6 +76,7 @@ export interface ApiTeamMember {
     shiftHourId?: string;
     title?: string;
   };
+  shiftHourId?: string;
 }
 
 export interface PaginatedTeamMembersResponse {
@@ -85,6 +88,17 @@ export interface PaginatedTeamMembersResponse {
     totalPages: number;
   };
   message?: string;
+}
+
+export interface TeamMemberFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  role: string;
+  supervisorId: string;
+  shiftHourId: string;
+  password?: string;
 }
 
 export const teamMembersApi = baseApi.injectEndpoints({

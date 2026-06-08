@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import Search from '@/components/ui/Search';
 import Dropdown from '@/components/ui/Dropdown';
 import { useCampaign } from '@/contexts/CampaignContext';
-import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember, TeamMemberFormData } from '@/store/services/teamMembersApi';
 import { useSocket } from '@/contexts/SocketContext';
 import TeamMembersTable from '@/components/features/team-members/TeamMembersTable';
 import { toastSuccess } from '@/utils/toastWithSound';
@@ -273,7 +273,7 @@ const TeamMembersPage: React.FC = () => {
 			.map((m: ApiTeamMember) => {
 				const fullName = m.firstName && m.lastName
 					? `${m.firstName} ${m.lastName}`
-					: m.name || (m as any).fullName || 'Unknown Member';
+					: m.name || m.fullName || 'Unknown Member';
 				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : 'Supervisor';
 				return {
 					value: m._id || m.id || '',
@@ -330,7 +330,7 @@ const TeamMembersPage: React.FC = () => {
 		return supervisors; // Already calculated
 	}, [supervisors]);
 
-	const handleAddMember = async (data: Record<string, any>) => {
+	const handleAddMember = async (data: TeamMemberFormData) => {
 		try {
 			const payload = {
 				name: `${data.firstName} ${data.lastName}`.trim(),
