@@ -62,10 +62,6 @@ const TicketList: React.FC<TicketListProps> = ({
 		}
 	};
 
-	const getDisplayStatus = (status: string) => {
-		return status.toUpperCase();
-	};
-
 	const getStatusColors = (status: string) => {
 		const normalized = status.toLowerCase();
 		switch (normalized) {

@@ -65,14 +65,6 @@ export const SupportTicketForm: React.FC<SupportTicketFormProps> = ({
 		return m.name || m.fullName || 'Unknown Member';
 	};
 
-	const sortedMembers = [...teamMembers].sort((a, b) => {
-		const roleA = getRoleName(a.role).toLowerCase();
-		const roleB = getRoleName(b.role).toLowerCase();
-		if (roleA.includes('supervisor') && !roleB.includes('supervisor')) return -1;
-		if (!roleA.includes('supervisor') && roleB.includes('supervisor')) return 1;
-		return 0;
-	});
-
 	const getPrioritySettings = (p: 'Low' | 'Medium' | 'High') => {
 		switch (p) {
 			case 'Low':

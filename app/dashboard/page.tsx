@@ -47,7 +47,7 @@ import {
 import SortableChart from '@/components/dashboard/SortableChart';
 import WidgetCard from '@/components/dashboard/WidgetCard';
 import { ChartDataItem } from '@/components/dashboard/charts/types';
-import { Chart, Widget, DispositionCategory, CallOutcome, useSetup, SetupData } from '@/contexts/SetupContext';
+import { Chart, Widget, CallOutcome, useSetup, SetupData } from '@/contexts/SetupContext';
 import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { EmptyState } from '@/components/empty-state';
@@ -66,7 +66,7 @@ const DashboardContent: React.FC = () => {
 	const [updateCampaign] = useUpdateCampaignMutation();
 	const isLoading = isLobLoading;
 	const { isOnline, isConnected, isOffline, send } = useSocket();
-	const { canAccess, isAdmin, userPrivileges } = usePrivilege();
+	const { canAccess, isAdmin } = usePrivilege();
 	const { user } = useUserInfo();
 	const canAccessDashboard = canAccess('dashboard');
 	const canView = canAccess('dashboard', 'view');

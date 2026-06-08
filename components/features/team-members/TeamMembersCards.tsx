@@ -6,6 +6,7 @@ import TeamMemberCard from '@/components/TeamMemberCard';
 import Pagination from '@/components/ui/Pagination';
 import EmptyState from '@/components/ui/EmptyState';
 import AssignBucketModal from './AssignBucketModal';
+import { Bucket } from '@/contexts/SetupContext';
 
 interface TeamMember {
 	_id: string;
@@ -32,6 +33,16 @@ interface TeamMembersCardsProps {
 	campaignData: {
 		primaryColor?: string;
 		secondaryColor?: string;
+		campaign?: {
+			_id?: string;
+			id?: string;
+			dashboardSettings?: {
+				buckets?: Bucket[];
+			};
+		};
+		dashboardSettings?: {
+			buckets?: Bucket[];
+		};
 	};
 	handleEditMemberClick: (member: TeamMember) => void;
 	handleDeleteMember: (id: string) => void;

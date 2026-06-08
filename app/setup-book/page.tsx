@@ -24,7 +24,6 @@ import { ALL_MY_BUCKETS, getUserAssignedBuckets, BucketWithMembers } from '@/uti
 
 import { SelectBucketModal } from '@/components/ui/SelectBucketModal';
 import { useRouter } from 'next/navigation';
-import { Bucket } from '@/contexts/SetupContext';
 
 interface FieldDefinition {
 	id: string;

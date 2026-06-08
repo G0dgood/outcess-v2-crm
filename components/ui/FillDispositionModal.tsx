@@ -122,7 +122,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 		}
 
 		return [];
-	}, [campaignData, authUser, currentAgentId]);
+	}, [campaignData, currentAgentId]);
 
 	// Reset or update form when modal opens/closes
 	useEffect(() => {

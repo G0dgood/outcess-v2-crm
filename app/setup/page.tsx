@@ -8,7 +8,6 @@ import ReviewConfigurationPage from './review-configuration/page';
 import { useSetup } from '@/contexts/SetupContext';
 import { useLazyGetUserByIdQuery } from '@/store/services/authApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { extractErrorMessage, ApiError } from '@/utils/apiError';
 
 export default function Setup() {
 	const { currentStep } = useSetup();

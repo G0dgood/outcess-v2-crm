@@ -21,9 +21,6 @@ const AccountDeletionModal: React.FC<AccountDeletionModalProps> = ({
 	username,
 	isLoading = false,
 }) => {
-	const { campaignData } = useCampaign();
-	const primaryColor = campaignData?.primaryColor || '#050711';
-
 	const [confirmationInput, setConfirmationInput] = useState('');
 	const [agreedToTerms, setAgreedToTerms] = useState(false);
 

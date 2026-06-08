@@ -1,10 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useCampaign } from '@/contexts/CampaignContext';
-import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { usePathname } from 'next/navigation';
 
 /**
  * ThemeColorApplier
@@ -12,13 +9,7 @@ import { usePathname } from 'next/navigation';
  * to global CSS variables on the document root.
  */
 export const ThemeColorApplier: React.FC = () => {
-    const { campaignData } = useCampaign();
-    const { setupData } = useSetup();
     const { isDarkMode } = useTheme();
-    const pathname = usePathname();
-
-    // Check if we are currently in the setup flow
-    const isSetup = pathname?.startsWith('/setup');
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
