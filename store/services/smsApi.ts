@@ -18,6 +18,7 @@ export interface SMSConfig {
   assignedId: string;
   assignedName: string;
   companyId: string;
+  createdAt?: string;
 }
 
 export interface SMSLog {

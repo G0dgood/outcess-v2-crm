@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChatBubbleIcon, Cross2Icon } from '@radix-ui/react-icons';
 import Button from '@/components/ui/Button';
 import SMSMessagePreview from '@/components/features/sms/SMSMessagePreview';
@@ -8,7 +8,6 @@ import { SMSLog } from '@/store/services/smsApi';
 
 interface SelectedSMSDrawerProps {
 	isOpen: boolean;
-	isAnimating: boolean;
 	selectedSMSList: SMSLog[];
 	onClose: () => void;
 	onViewFull: (sms: SMSLog) => void;
@@ -16,12 +15,26 @@ interface SelectedSMSDrawerProps {
 
 const SelectedSMSDrawer: React.FC<SelectedSMSDrawerProps> = ({
 	isOpen,
-	isAnimating,
 	selectedSMSList,
 	onClose,
 	onViewFull,
 }) => {
-	if (!isOpen && !isAnimating) return null;
+	const [isAnimating, setIsAnimating] = useState(false);
+	const [shouldRender, setShouldRender] = useState(false);
+
+	useEffect(() => {
+		if (isOpen) {
+			setShouldRender(true);
+			const timer = setTimeout(() => setIsAnimating(true), 10);
+			return () => clearTimeout(timer);
+		} else {
+			setIsAnimating(false);
+			const timer = setTimeout(() => setShouldRender(false), 300);
+			return () => clearTimeout(timer);
+		}
+	}, [isOpen]);
+
+	if (!shouldRender) return null;
 
 	return (
 		<div

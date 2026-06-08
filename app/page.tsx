@@ -314,7 +314,7 @@ export default function LoginPage() {
 							type="submit"
 							size="lg"
 							loading={isLoading}
-							className="flex items-center gap-2 px-2 !py-4 text-[10px] md:text-[12px] sm:px-4 sm:py-2"
+							className="flex items-center gap-2 px-2 py-4! text-[10px] md:text-[12px] sm:px-4 sm:py-2"
 						>
 							Login
 						</Button>
@@ -324,7 +324,7 @@ export default function LoginPage() {
 								Don&apos;t have an account?{' '}
 								<a href="/signup"
 									className={`font-lato not-italic font-semibold text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100 cursor-pointer `}
-									style={{ color: 'var(--text-primary)' }}> Create account</a>
+									style={{ color: 'var(--text-primary)' }}>Create account</a>
 							</p>
 						</div>
 					</form>

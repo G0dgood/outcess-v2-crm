@@ -1,13 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import PageHeading from '@/components/ui/PageHeading';
-import { Dropdown } from '@/components/ui/Dropdown';
 import Tabs from '@/components/ui/Tabs';
-import { ChatBubbleIcon, GearIcon, PlusIcon, Cross2Icon } from '@radix-ui/react-icons';
-import Input from '@/components/ui/Input';
+import { ChatBubbleIcon, PlusIcon } from '@radix-ui/react-icons';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
@@ -16,15 +14,14 @@ import SMSMessageModal from '@/components/features/sms/SMSMessageModal';
 import SMSTable from '@/components/features/sms/SMSTable';
 import SMSConfigTable from '@/components/features/sms/SMSConfigTable';
 import SelectedSMSDrawer from '@/components/features/sms/SelectedSMSDrawer';
+import SMSConfigModal from '@/components/features/sms/SMSConfigModal';
 import SMSModal from '@/components/ui/SMSModal';
-import { NoRecordFound } from '@/components/Options';
 import {
 	useGetSMSConfigsQuery,
 	useCreateSMSConfigMutation,
 	useUpdateSMSConfigMutation,
 	useDeleteSMSConfigMutation,
 	useGetSMSLogsQuery,
-	useCreateSMSLogMutation,
 	SMSConfig as SMSConfigType,
 	SMSLog as SMSLogType,
 } from '@/store/services/smsApi';
@@ -69,8 +66,6 @@ const SMSPage: React.FC = () => {
 	const [viewingSMS, setViewingSMS] = useState<SMSLogType | null>(null);
 	const [isSendSMSOpen, setIsSendSMSOpen] = useState(false);
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-	const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
-	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
 
 	// SMS Configurations states
 	const { data: configsData, isLoading: isConfigsLoading } = useGetSMSConfigsQuery(companyId, { skip: !companyId });
@@ -89,9 +84,6 @@ const SMSPage: React.FC = () => {
 	}, { skip: !companyId });
 	const smsList = logsData?.logs || [];
 	const totalItems = logsData?.pagination?.total || 0;
-	const totalPages = logsData?.pagination?.totalPages || 1;
-
-	const [createSMSLog] = useCreateSMSLogMutation();
 
 	const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 	const [editingConfig, setEditingConfig] = useState<SMSConfigType | null>(null);
@@ -128,27 +120,6 @@ const SMSPage: React.FC = () => {
 				setIsDrawerOpen(false);
 			}
 		}
-	};
-
-	const isAllSelected = smsList.length > 0 && smsList.every(sms => selectedSMS.has(sms._id || ''));
-
-	useEffect(() => {
-		if (isDrawerOpen) {
-			setShouldRenderDrawer(true);
-			setTimeout(() => setIsDrawerAnimating(true), 10);
-		} else {
-			setIsDrawerAnimating(false);
-			const timer = setTimeout(() => {
-				setShouldRenderDrawer(false);
-			}, 300);
-			return () => clearTimeout(timer);
-		}
-	}, [isDrawerOpen]);
-
-	const getDirectionColor = (direction: SMSLogType['direction']) => {
-		return direction === 'inbound'
-			? { bg: 'rgba(139, 92, 246, 0.1)', text: '#8B5CF6', border: 'rgba(139, 92, 246, 0.2)' }
-			: { bg: 'rgba(59, 130, 246, 0.1)', text: '#3B82F6', border: 'rgba(59, 130, 246, 0.2)' };
 	};
 
 	// Configuration handlers
@@ -336,7 +307,6 @@ const SMSPage: React.FC = () => {
 			{/* Selected SMS Drawer */}
 			<SelectedSMSDrawer
 				isOpen={isDrawerOpen}
-				isAnimating={isDrawerAnimating}
 				selectedSMSList={smsList.filter(sms => selectedSMS.has(sms._id || ''))}
 				onClose={() => setIsDrawerOpen(false)}
 				onViewFull={(sms) => {
@@ -346,146 +316,20 @@ const SMSPage: React.FC = () => {
 			/>
 
 			{/* SMS Config Modal */}
-			{isConfigModalOpen && (
-				<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={() => setIsConfigModalOpen(false)}>
-					<div
-						className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 rounded-[var(--radius)] overflow-hidden"
-						style={{ backgroundColor: 'var(--accent-white)' }}
-						onClick={(e) => e.stopPropagation()}
-					>
-						{/* Header */}
-						<div
-							className="flex justify-between items-center p-6 border-b dark:border-gray-700"
-							style={{ borderColor: 'var(--light-gray)' }}
-						>
-							<h2
-								className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100 flex items-center gap-2"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								<GearIcon className="w-5 h-5 text-[#6C8B7D]" />
-								{editingConfig ? 'Edit SMS Config' : 'Create SMS Config'}
-							</h2>
-							<button
-								onClick={() => setIsConfigModalOpen(false)}
-								className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								<Cross2Icon className="w-5 h-5" />
-							</button>
-						</div>
-
-						{/* Content */}
-						<div className="p-6 space-y-4 overflow-y-auto max-h-[70vh]">
-							<Input
-								label="Configuration Name *"
-								placeholder="e.g. Sales Twilio Account"
-								value={configForm.name}
-								onChange={(val) => handleConfigFormChange('name', val)}
-								required
-							/>
-
-							<Dropdown
-								label="Gateway Provider *"
-								value={configForm.provider}
-								options={[
-									{ value: 'Twilio', label: 'Twilio' },
-									{ value: 'Infobip', label: 'Infobip' },
-									{ value: 'Plivo', label: 'Plivo' },
-									{ value: 'Outcess SMS Gateway', label: 'Outcess SMS Gateway' },
-								]}
-								onChange={(val) => handleConfigFormChange('provider', val as string)}
-								required
-							/>
-
-							<Input
-								label="Sender ID / Phone Number *"
-								placeholder="e.g. OUTCESS or +12345678"
-								value={configForm.senderId}
-								onChange={(val) => handleConfigFormChange('senderId', val)}
-								required
-							/>
-
-							<Input
-								label="Account SID / Username"
-								placeholder="Enter account Identifier"
-								value={configForm.accountSid}
-								onChange={(val) => handleConfigFormChange('accountSid', val)}
-							/>
-
-							<div className="flex flex-col gap-1">
-								<label className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-									API Key / Auth Token
-								</label>
-								<input
-									type="password"
-									placeholder="••••••••••••••••"
-									value={configForm.apiKey}
-									onChange={(e) => handleConfigFormChange('apiKey', e.target.value)}
-									className="w-full px-4 py-2 border rounded-[var(--radius)] text-[12px] focus:outline-hidden dark:bg-gray-700"
-									style={{
-										borderColor: 'var(--light-gray)',
-										color: 'var(--text-primary)',
-									}}
-								/>
-							</div>
-
-							<Dropdown
-								label="Assign To Scope *"
-								value={configForm.assignType}
-								options={[
-									{ value: 'campaign', label: 'Campaign' },
-									{ value: 'bucket', label: 'Bucket' },
-								]}
-								onChange={(val) => handleConfigFormChange('assignType', val as string)}
-								required
-								className="border-t dark:border-gray-700 pt-3 mt-3"
-							/>
-
-							<Dropdown
-								label="Select Target *"
-								value={configForm.assignedId}
-								options={configForm.assignType === 'campaign'
-									? campaigns.map((c: any) => ({
-										value: c._id,
-										label: c.campaignName || c.name || 'Unnamed Campaign'
-									}))
-									: buckets.map((b: any) => ({
-										value: b.id,
-										label: `${b.campaignName} ➔ ${b.name}`
-									}))
-								}
-								onChange={(val) => handleConfigFormChange('assignedId', val as string)}
-								required
-							/>
-						</div>
-
-						{/* Footer */}
-						<div
-							className="flex justify-end items-center p-6 border-t dark:border-gray-700 gap-3"
-							style={{ borderColor: 'var(--light-gray)' }}
-						>
-							<Button
-								variant="outline"
-								size="md"
-								onClick={() => setIsConfigModalOpen(false)}
-							>
-								Cancel
-							</Button>
-							<Button
-								variant="primary"
-								size="md"
-								onClick={handleSaveConfig}
-							>
-								{editingConfig ? 'Save Changes' : 'Create Config'}
-							</Button>
-						</div>
-					</div>
-				</div>
-			)}
+			<SMSConfigModal
+				isOpen={isConfigModalOpen}
+				onClose={() => setIsConfigModalOpen(false)}
+				onSave={handleSaveConfig}
+				editingConfig={editingConfig}
+				configForm={configForm}
+				onFormChange={handleConfigFormChange}
+				campaigns={campaigns}
+				buckets={buckets}
+			/>
 
 			<SMSMessageModal
 				isOpen={!!viewingSMS}
-				sms={viewingSMS}
+				sms={viewingSMS as any}
 				onClose={() => setViewingSMS(null)}
 			/>
 

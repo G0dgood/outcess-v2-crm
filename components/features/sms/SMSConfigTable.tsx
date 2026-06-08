@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { GearIcon, TrashIcon } from '@radix-ui/react-icons';
+import moment from 'moment';
 import Button from '@/components/ui/Button';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { SMSConfig } from '@/store/services/smsApi';
@@ -42,14 +43,15 @@ const SMSConfigTable: React.FC<SMSConfigTableProps> = ({
 							<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Sender ID</th>
 							<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Assigned To</th>
 							<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Scope</th>
+							<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Date Created</th>
 							<th className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Action</th>
 						</tr>
 					</thead>
 					<tbody className="divide-y dark:divide-gray-700">
 						{isLoading ? (
-							<SVGLoaderFetch colSpan={6} text="Loading configurations..." />
+							<SVGLoaderFetch colSpan={7} text="Loading configurations..." />
 						) : configsList.length === 0 ? (
-							<NoRecordFound colSpan={6} />
+							<NoRecordFound colSpan={7} />
 						) : (
 							configsList.map((cfg) => (
 								<tr
@@ -68,6 +70,9 @@ const SMSConfigTable: React.FC<SMSConfigTableProps> = ({
 											}`}>
 											{cfg.assignType}
 										</span>
+									</td>
+									<td className="px-6 py-4 whitespace-nowrap text-xs text-gray-600 dark:text-gray-300">
+										{cfg.createdAt ? moment(cfg.createdAt).format('YYYY-MM-DD HH:mm') : '-'}
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap text-xs">
 										<div className="flex items-center gap-2">
