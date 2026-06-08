@@ -4,10 +4,7 @@ import React from 'react';
 import Icon from './Icon';
 import { plusJakartaStyle } from '../Options';
 
-interface LoginTopHeaderProps {
-}
-
-const LoginTopHeader: React.FC<LoginTopHeaderProps> = () => {
+const LoginTopHeader: React.FC = () => {
   return (
     <div className="login-top-header">
       <div className="login-header-card">
