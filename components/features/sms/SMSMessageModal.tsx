@@ -2,27 +2,18 @@ import React from 'react';
 import Button from '@/components/ui/Button';
 import Icon from '@/components/ui/Icon';
 import { ChatBubbleIcon } from '@radix-ui/react-icons';
-
-export interface SMS {
-	_id: string;
-	phoneNumber: string;
-	message: string;
-	status: 'sent' | 'delivered' | 'failed' | 'pending';
-	direction: 'inbound' | 'outbound';
-	createdAt: string;
-	contactName?: string;
-}
+import { SMSLog } from '@/store/services/smsApi';
 
 interface SMSMessageModalProps {
 	isOpen: boolean;
-	sms: SMS | null;
+	sms: SMSLog | null;
 	onClose: () => void;
 }
 
 const SMSMessageModal: React.FC<SMSMessageModalProps> = ({ isOpen, sms, onClose }) => {
 	if (!isOpen || !sms) return null;
 
-	const getStatusColor = (status: SMS['status']) => {
+	const getStatusColor = (status: SMSLog['status']) => {
 		switch (status) {
 			case 'delivered':
 				return { bg: 'rgba(34, 197, 94, 0.1)', text: '#22C55E', border: 'rgba(34, 197, 94, 0.2)' };
@@ -37,7 +28,7 @@ const SMSMessageModal: React.FC<SMSMessageModalProps> = ({ isOpen, sms, onClose 
 		}
 	};
 
-	const getDirectionColor = (direction: SMS['direction']) => {
+	const getDirectionColor = (direction: SMSLog['direction']) => {
 		return direction === 'inbound'
 			? { bg: 'rgba(139, 92, 246, 0.1)', text: '#8B5CF6', border: 'rgba(139, 92, 246, 0.2)' }
 			: { bg: 'rgba(59, 130, 246, 0.1)', text: '#3B82F6', border: 'rgba(59, 130, 246, 0.2)' };

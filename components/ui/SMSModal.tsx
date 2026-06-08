@@ -6,7 +6,7 @@ import Input from './Input';
 import Textarea from './Textarea';
 import { Dropdown } from './Dropdown';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { useGetSMSConfigsQuery } from '@/store/services/smsApi';
+import { useGetSMSConfigsQuery, SMSConfig } from '@/store/services/smsApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 
 interface SMSModalProps {
@@ -32,7 +32,7 @@ export const SMSModal: React.FC<SMSModalProps> = ({
 	const [selectedConfigId, setSelectedConfigId] = useState<string>('');
 
 	const { data: configsData } = useGetSMSConfigsQuery(companyId, { skip: !isOpen || !companyId });
-	const configs = configsData?.configs || [];
+	const configs = React.useMemo(() => configsData?.configs || [], [configsData]);
 
 	// Set default config
 	useEffect(() => {
@@ -139,8 +139,8 @@ export const SMSModal: React.FC<SMSModalProps> = ({
 						<Dropdown
 							label="SMS Configuration / Gateway"
 							value={selectedConfigId}
-							options={configs.map((cfg: any) => ({
-								value: cfg._id,
+							options={configs.map((cfg: SMSConfig) => ({
+								value: cfg._id || '',
 								label: `${cfg.name} (${cfg.provider}) — ${cfg.assignType === 'campaign' ? 'Campaign' : 'Bucket'}: ${cfg.assignedName}`
 							}))}
 							onChange={(val) => setSelectedConfigId(val as string)}

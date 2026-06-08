@@ -5,7 +5,7 @@ import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
 import Button from '@/components/ui/Button';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { useCreateTeamMemberMutation, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
+import { useCreateTeamMemberMutation, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
 import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
@@ -109,25 +109,25 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 
 		const supervisorRoleIds = new Set<string>();
 		if (supervisorsResponse && Array.isArray(supervisorsResponse.roles)) {
-			supervisorsResponse.roles.forEach((r: any) => {
+			supervisorsResponse.roles.forEach((r: Role) => {
 				if (r._id) supervisorRoleIds.add(r._id.toString());
 				if (r.id) supervisorRoleIds.add(r.id.toString());
 			});
 		}
 
 		return rawMembers
-			.filter((m: any) => {
+			.filter((m: ApiTeamMember) => {
 				const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
 				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
-				
-				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) || 
+
+				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) ||
 					(roleName && roleName.toLowerCase().includes('supervisor'));
-				
+
 				return isSupervisorRole;
 			})
-			.map((m: any) => {
-				const fullName = m.firstName && m.lastName 
-					? `${m.firstName} ${m.lastName}` 
+			.map((m: ApiTeamMember) => {
+				const fullName = m.firstName && m.lastName
+					? `${m.firstName} ${m.lastName}`
 					: m.name || m.fullName || 'Unknown Member';
 				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : 'Supervisor';
 				return {

@@ -2,13 +2,11 @@
 
 import React, { useState, useMemo } from 'react';
 import Button from '@/components/ui/Button';
-import Icon from '@/components/ui/Icon';
 import { useAssignMemberToBucketMutation } from '@/store/services/campaignApi';
-import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
 import Search from '@/components/ui/Search';
 import { Cross2Icon, CheckIcon, PlusIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
-import { AssignedMember } from '@/contexts/SetupContext';
+import { AssignedMember, Bucket } from '@/contexts/SetupContext';
 
 interface AssignBucketModalProps {
 	isOpen: boolean;
@@ -18,7 +16,18 @@ interface AssignBucketModalProps {
 		fullName: string;
 		agentId: string;
 	} | null;
-	campaignData: any;
+	campaignData: {
+		campaign?: {
+			_id?: string;
+			id?: string;
+			dashboardSettings?: {
+				buckets?: Bucket[];
+			};
+		};
+		dashboardSettings?: {
+			buckets?: Bucket[];
+		};
+	};
 }
 
 const AssignBucketModal: React.FC<AssignBucketModalProps> = ({
@@ -33,13 +42,13 @@ const AssignBucketModal: React.FC<AssignBucketModalProps> = ({
 	const [durationHours, setDurationHours] = useState<number | ''>('');
 	const [durationMinutes, setDurationMinutes] = useState<number | ''>('');
 
-	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
+	const campaignId = (campaignData?.campaign?._id || campaignData?.campaign?.id || '') as string;
 	const buckets = useMemo(() => {
 		return campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets || [];
 	}, [campaignData]);
 
 	const filteredBuckets = useMemo(() => {
-		return buckets.filter((b: any) =>
+		return buckets.filter((b) =>
 			(b.name || '').toLowerCase().includes(searchTerm.toLowerCase())
 		);
 	}, [buckets, searchTerm]);
@@ -47,7 +56,7 @@ const AssignBucketModal: React.FC<AssignBucketModalProps> = ({
 	const handleAssign = async () => {
 		if (!selectedBucketId || !member || !campaignId) return;
 
-		const selectedBucket = buckets.find((b: any) => b.id === selectedBucketId);
+		const selectedBucket = buckets.find((b) => b.id === selectedBucketId);
 		if (!selectedBucket) return;
 
 		const totalMinutes = (Number(durationHours || 0) * 60) + Number(durationMinutes || 0);
@@ -63,17 +72,18 @@ const AssignBucketModal: React.FC<AssignBucketModalProps> = ({
 
 			toastSuccess(`Assigned ${member.fullName} to ${selectedBucket.name}`);
 			onClose();
-		} catch (error: any) {
-			toastError(error?.data?.message || 'Failed to assign bucket');
-			console.error("Bucket assignment failed:", error);
+		} catch (error: unknown) {
+			const err = error as { data?: { message?: string } };
+			toastError(err?.data?.message || 'Failed to assign bucket');
+			console.error("Bucket assignment failed:", err);
 		}
 	};
 
 	const isMemberInBucket = (bucketId: string) => {
-		const bucket = buckets.find((b: any) => b.id === bucketId);
-		return Array.isArray(bucket?.assignedMembers) && (bucket.assignedMembers as AssignedMember[]).some((m: AssignedMember) => {
+		const bucket = buckets.find((b) => b.id === bucketId);
+		return Array.isArray(bucket?.assignedMembers) && (bucket.assignedMembers as AssignedMember[]).some((m) => {
 			const mId = typeof m.memberId === 'object' && m.memberId !== null
-				? (m.memberId._id || m.memberId.id)
+				? (m.memberId as { _id?: string; id?: string })._id || (m.memberId as { _id?: string; id?: string }).id
 				: m.memberId;
 			return mId === member?._id;
 		});
@@ -129,7 +139,7 @@ const AssignBucketModal: React.FC<AssignBucketModalProps> = ({
 								</div>
 							) : (
 								<div className="divide-y dark:divide-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
-									{filteredBuckets.map((bucket: any) => {
+									{filteredBuckets.map((bucket) => {
 										const alreadyAssigned = isMemberInBucket(bucket.id);
 										return (
 											<div
@@ -151,10 +161,8 @@ const AssignBucketModal: React.FC<AssignBucketModalProps> = ({
 														)}
 													</div>
 												</div>
-												{selectedBucketId === bucket.id && !alreadyAssigned && (
-													<div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-														<CheckIcon className="w-3 h-3 text-white" />
-													</div>
+												{selectedBucketId === bucket.id && (
+													<CheckIcon className="w-5 h-5 text-primary" />
 												)}
 											</div>
 										);

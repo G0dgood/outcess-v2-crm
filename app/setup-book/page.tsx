@@ -25,6 +25,7 @@ import { ALL_MY_BUCKETS, getUserAssignedBuckets } from '@/utils/bucketUtils';
 import { SelectBucketModal } from '@/components/ui/SelectBucketModal';
 import Icon from '@/components/ui/Icon';
 import { useRouter } from 'next/navigation';
+import { Bucket } from '@/contexts/SetupContext';
 
 interface FieldDefinition {
 	id: string;
@@ -57,8 +58,8 @@ const SetupBookPage: React.FC = () => {
 	const { campaignData } = useCampaign();
 	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
 
-	const allConfiguredFieldsChunks = campaignData?.campaign?.customerBookSettings?.configuredFields || [];
-	const buckets = (campaignData?.campaign?.dashboardSettings?.buckets || []) as any[];
+	const allConfiguredFieldsChunks = useMemo(() => campaignData?.campaign?.customerBookSettings?.configuredFields || [], [campaignData]);
+	const buckets = useMemo(() => (campaignData?.campaign?.dashboardSettings?.buckets || []) as Bucket[], [campaignData]);
 	const userId = String(user?.id || user?._id || '');
 	const hasFullBucketAccess = isAdmin || isSuperAdmin;
 
@@ -104,7 +105,7 @@ const SetupBookPage: React.FC = () => {
 		if (selectedBucketId === ALL_MY_BUCKETS) {
 			const fieldsMap = new Map<string, FieldDefinition>();
 			accessibleBuckets.forEach((bucket) => {
-				const config = allConfiguredFieldsChunks.find((c: any) => c && c.bucketId === bucket.id);
+				const config = allConfiguredFieldsChunks.find((c: { bucketId: string }) => c && c.bucketId === bucket.id);
 				(config?.fields || []).forEach((field: FieldDefinition) => {
 					if (field?.id) fieldsMap.set(field.id, field);
 				});
@@ -113,7 +114,7 @@ const SetupBookPage: React.FC = () => {
 		}
 
 		const currentBucketConfig = allConfiguredFieldsChunks.find(
-			(c: any) => c && c.bucketId === selectedBucketId
+			(c: { bucketId: string }) => c && c.bucketId === selectedBucketId
 		);
 		return currentBucketConfig?.fields || [];
 	}, [selectedBucketId, accessibleBuckets, allConfiguredFieldsChunks]);

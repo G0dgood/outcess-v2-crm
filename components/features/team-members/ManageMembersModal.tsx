@@ -2,17 +2,27 @@
 
 import React, { useState, useMemo } from 'react';
 import Button from '@/components/ui/Button';
-import Icon from '@/components/ui/Icon';
 import { useRemoveMemberFromBucketMutation, useAssignMemberToBucketMutation } from '@/store/services/campaignApi';
 import { Cross2Icon, PlusIcon, PersonIcon, ArchiveIcon, TrashIcon, ClockIcon } from '@radix-ui/react-icons';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import AssignMemberModal from '@/components/features/dashboard/AssignMemberModal';
-import { AssignedMember, Bucket } from '@/contexts/SetupContext';
+import { Bucket, AssignedMember } from '@/contexts/SetupContext';
 
 interface ManageMembersModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	campaignData: any;
+	campaignData: {
+		campaign?: {
+			_id?: string;
+			id?: string;
+			dashboardSettings?: {
+				buckets?: Bucket[];
+			};
+		};
+		dashboardSettings?: {
+			buckets?: Bucket[];
+		};
+	};
 }
 
 const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
@@ -26,7 +36,7 @@ const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
 	const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 	const [targetBucket, setTargetBucket] = useState<{ id: string; name: string } | null>(null);
 
-	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
+	const campaignId = (campaignData?.campaign?._id || campaignData?.campaign?.id || '') as string;
 	const buckets = useMemo(() => {
 		return campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets || [];
 	}, [campaignData]);
@@ -36,8 +46,9 @@ const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
 			try {
 				await removeMember({ id: campaignId, bucketId, memberId }).unwrap();
 				toastSuccess(`Removed ${memberName} from bucket`);
-			} catch (error: any) {
-				toastError(error?.data?.message || 'Failed to remove member');
+			} catch (error: unknown) {
+				const err = error as { data?: { message?: string } };
+				toastError(err?.data?.message || 'Failed to remove member');
 			}
 		}
 	};
@@ -61,8 +72,9 @@ const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
 
 			toastSuccess(`Assigned ${memberName} to ${targetBucket.name}`);
 			setIsAssignModalOpen(false);
-		} catch (error: any) {
-			toastError(error?.data?.message || "Failed to assign member");
+		} catch (error: unknown) {
+			const err = error as { data?: { message?: string } };
+			toastError(err?.data?.message || "Failed to assign member");
 			throw error;
 		}
 	};

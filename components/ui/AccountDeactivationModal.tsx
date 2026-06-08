@@ -170,7 +170,7 @@ const AccountDeactivationModal: React.FC<AccountDeactivationModalProps> = ({
 					className="text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-4"
 					style={{ color: 'var(--text-secondary)' }}
 				>
-					We're sorry to see you go. Why are you deactivating your account?
+					We&apos;re sorry to see you go. Why are you deactivating your account?
 				</p>
 
 				{/* Reason Options */}

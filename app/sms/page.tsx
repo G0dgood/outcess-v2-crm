@@ -24,6 +24,8 @@ import {
 	useGetSMSLogsQuery,
 	SMSConfig as SMSConfigType,
 	SMSLog as SMSLogType,
+	SMSCampaign,
+	SMSBucket,
 } from '@/store/services/smsApi';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { toast } from 'sonner';
@@ -43,13 +45,13 @@ const SMSPage: React.FC = () => {
 		{ companyId, page: 1, limit: 100 },
 		{ skip: !companyId }
 	);
-	const campaigns = (campaignQueryData as any)?.campaigns || [];
+	const campaigns = useMemo(() => (campaignQueryData as { campaigns: SMSCampaign[] })?.campaigns || [], [campaignQueryData]);
 
 	// Extract all buckets from campaigns
 	const buckets = useMemo(() => {
-		return campaigns.flatMap((c: any) => {
+		return campaigns.flatMap((c) => {
 			const bList = c.dashboardSettings?.buckets || [];
-			return bList.map((b: any) => ({
+			return bList.map((b) => ({
 				id: b.id || b._id || '',
 				name: b.name || 'Unnamed Bucket',
 				campaignId: c._id,
@@ -150,7 +152,7 @@ const SMSPage: React.FC = () => {
 		setIsConfigModalOpen(true);
 	};
 
-	const handleConfigFormChange = (field: string, value: any) => {
+	const handleConfigFormChange = (field: string, value: string | number | boolean) => {
 		setConfigForm(prev => {
 			const updated = { ...prev, [field]: value };
 			// Reset assignedId when switching assignType
@@ -171,10 +173,10 @@ const SMSPage: React.FC = () => {
 
 		let assignedName = '';
 		if (configForm.assignType === 'campaign') {
-			const camp = campaigns.find((c: any) => c._id === configForm.assignedId);
+			const camp = campaigns.find((c) => c._id === configForm.assignedId);
 			assignedName = camp?.campaignName || camp?.name || 'Unknown Campaign';
 		} else {
-			const bkt = buckets.find((b: any) => b.id === configForm.assignedId);
+			const bkt = buckets.find((b) => b.id === configForm.assignedId);
 			assignedName = bkt ? `${bkt.campaignName} -> ${bkt.name}` : 'Unknown Bucket';
 		}
 
@@ -329,7 +331,7 @@ const SMSPage: React.FC = () => {
 
 			<SMSMessageModal
 				isOpen={!!viewingSMS}
-				sms={viewingSMS as any}
+				sms={viewingSMS}
 				onClose={() => setViewingSMS(null)}
 			/>
 

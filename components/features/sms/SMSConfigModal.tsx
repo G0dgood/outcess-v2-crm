@@ -5,7 +5,7 @@ import { GearIcon, Cross2Icon } from '@radix-ui/react-icons';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Dropdown } from '@/components/ui/Dropdown';
-import { SMSConfig } from '@/store/services/smsApi';
+import { SMSConfig, SMSCampaign, SMSBucket } from '@/store/services/smsApi';
 
 interface SMSConfigModalProps {
 	isOpen: boolean;
@@ -21,9 +21,9 @@ interface SMSConfigModalProps {
 		assignType: 'campaign' | 'bucket';
 		assignedId: string;
 	};
-	onFormChange: (field: string, value: any) => void;
-	campaigns: any[];
-	buckets: any[];
+	onFormChange: (field: string, value: string | number | boolean) => void;
+	campaigns: SMSCampaign[];
+	buckets: SMSBucket[];
 }
 
 const SMSConfigModal: React.FC<SMSConfigModalProps> = ({
@@ -137,11 +137,11 @@ const SMSConfigModal: React.FC<SMSConfigModalProps> = ({
 						label="Select Target *"
 						value={configForm.assignedId}
 						options={configForm.assignType === 'campaign'
-							? campaigns.map((c: any) => ({
+							? campaigns.map((c) => ({
 								value: c._id,
 								label: c.campaignName || c.name || 'Unnamed Campaign'
 							}))
-							: buckets.map((b: any) => ({
+							: buckets.map((b) => ({
 								value: b.id,
 								label: `${b.campaignName} ➔ ${b.name}`
 							}))

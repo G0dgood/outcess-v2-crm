@@ -4,11 +4,13 @@ import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
 import Icon from '@/components/ui/Icon';
 
+import { ApiTeamMember } from '@/store/services/teamMembersApi';
+
 interface AddTeamMemberModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onSave: (data: any) => void;
-	editingMember?: any;
+	onSave: (data: Record<string, any>) => void;
+	editingMember?: ApiTeamMember | null;
 	roles: { label: string; value: string }[];
 	supervisors: { label: string; value: string }[];
 	shiftHours: { label: string; value: string }[];
@@ -36,15 +38,21 @@ const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
 
 	useEffect(() => {
 		if (editingMember) {
-			const nameParts = editingMember.fullName?.split(' ') || ['', ''];
+			const fullName = editingMember.firstName && editingMember.lastName
+				? `${editingMember.firstName} ${editingMember.lastName}`
+				: editingMember.name || (editingMember as any).fullName || '';
+
+			const nameParts = fullName.split(' ');
 			setFormData({
-				firstName: nameParts[0] || '',
-				lastName: nameParts.slice(1).join(' ') || '',
+				firstName: editingMember.firstName || nameParts[0] || '',
+				lastName: editingMember.lastName || nameParts.slice(1).join(' ') || '',
 				email: editingMember.email || '',
 				phone: editingMember.phone || '',
-				role: editingMember.roleId || editingMember.role || '',
-				supervisorId: editingMember.supervisorId || '',
-				shiftHourId: editingMember.shiftHourId || '',
+				role: typeof editingMember.role === 'object'
+					? (editingMember.role?._id || editingMember.role?.id || '')
+					: (editingMember.role || (editingMember as any).roleId || ''),
+				supervisorId: (editingMember as any).supervisorId || '',
+				shiftHourId: editingMember.shiftHour?.shiftHourId || (editingMember as any).shiftHourId || '',
 				password: '', // Don't pre-fill password on edit
 			});
 		} else {

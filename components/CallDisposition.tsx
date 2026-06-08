@@ -362,8 +362,9 @@ export default function CallDisposition() {
 					toast.success(`Assigned ${memberName} to ${assigningToBucketName}`);
 				}
 			}
-		} catch (error: any) {
-			toast.error(error.data?.message || "Failed to assign member");
+		} catch (error: unknown) {
+			const err = error as { data?: { message?: string } };
+			toast.error(err.data?.message || "Failed to assign member");
 			throw error;
 		}
 	};
@@ -382,7 +383,7 @@ export default function CallDisposition() {
 				updateDashboardSettings({ buckets: result.campaign.dashboardSettings.buckets });
 				toast.success(`Removed ${memberName} from bucket`);
 			}
-		} catch (error: any) {
+		} catch (error: unknown) {
 			toast.error("Failed to remove member");
 		}
 	};
@@ -585,7 +586,7 @@ export default function CallDisposition() {
 								updateDashboardSettings({
 									dispositionSettings: {
 										...dispositionSettings,
-										chartType: stringValue as any
+										chartType: stringValue as 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble'
 									}
 								});
 							}}

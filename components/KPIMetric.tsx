@@ -6,7 +6,6 @@ import Dropdown from '@/components/ui/Dropdown';
 import Input from '@/components/ui/Input';
 import Icon from '@/components/ui/Icon';
 import ColorPicker from '@/components/ui/ColorPicker';
-import NextImage from 'next/image';
 import EmptyState from '@/components/ui/EmptyState';
 import { MixIcon } from '@radix-ui/react-icons';
 

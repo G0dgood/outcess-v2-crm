@@ -3,23 +3,20 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import Search from '@/components/ui/Search';
 import Dropdown from '@/components/ui/Dropdown';
-import Pagination from '@/components/ui/Pagination';
 import { useCampaign } from '@/contexts/CampaignContext';
-import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
 import { useSocket } from '@/contexts/SocketContext';
 import TeamMembersTable from '@/components/features/team-members/TeamMembersTable';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
-import TeamMemberCard from '@/components/TeamMemberCard';
 import {
 	useCreateTeamMemberMutation,
 	useUpdateTeamMemberMutation,
 	useDeleteTeamMemberMutation
 } from '@/store/services/teamMembersApi';
-import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
-import Icon from '@/components/ui/Icon';
+import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
 import TeamMembersCards from '@/components/features/team-members/TeamMembersCards';
 import { toastError } from '@/utils/toastWithSound';
 import PageHeader from '@/components/ui/PageHeader';
@@ -56,34 +53,6 @@ interface TeamMemberStatusUpdatePayload {
 	status: StatusPayload | string;
 	name?: string;
 	timestamp?: string;
-}
-
-
-
-interface ApiTeamMember {
-	_id?: string;
-	id?: string;
-	userId?: string;
-	name?: string;
-	firstName?: string;
-	lastName?: string;
-	email?: string;
-	phone?: string;
-	role?: string | { roleName?: string; name?: string };
-	supervisor?: string | { name?: string };
-	status?: string | StatusPayload;
-	loginStatus?: string;
-	team?: string | { name?: string };
-	statusReason?: string;
-	shiftHour?: {
-		shiftHourId?: string;
-		title?: string;
-	};
-}
-
-interface SupervisorOption {
-	label: string;
-	value: string;
 }
 
 const TeamMembersPage: React.FC = () => {
@@ -285,26 +254,26 @@ const TeamMembersPage: React.FC = () => {
 
 		const supervisorRoleIds = new Set<string>();
 		if (supervisorsData && Array.isArray(supervisorsData.roles)) {
-			supervisorsData.roles.forEach((r: any) => {
+			supervisorsData.roles.forEach((r: Role) => {
 				if (r._id) supervisorRoleIds.add(r._id.toString());
 				if (r.id) supervisorRoleIds.add(r.id.toString());
 			});
 		}
 
 		return rawMembers
-			.filter((m: any) => {
+			.filter((m: ApiTeamMember) => {
 				const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
 				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
-				
-				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) || 
+
+				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) ||
 					(roleName && roleName.toLowerCase().includes('supervisor'));
-				
+
 				return isSupervisorRole;
 			})
-			.map((m: any) => {
-				const fullName = m.firstName && m.lastName 
-					? `${m.firstName} ${m.lastName}` 
-					: m.name || m.fullName || 'Unknown Member';
+			.map((m: ApiTeamMember) => {
+				const fullName = m.firstName && m.lastName
+					? `${m.firstName} ${m.lastName}`
+					: m.name || (m as any).fullName || 'Unknown Member';
 				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : 'Supervisor';
 				return {
 					value: m._id || m.id || '',
@@ -361,7 +330,7 @@ const TeamMembersPage: React.FC = () => {
 		return supervisors; // Already calculated
 	}, [supervisors]);
 
-	const handleAddMember = async (data: any) => {
+	const handleAddMember = async (data: Record<string, any>) => {
 		try {
 			const payload = {
 				name: `${data.firstName} ${data.lastName}`.trim(),
@@ -383,8 +352,9 @@ const TeamMembersPage: React.FC = () => {
 			}
 			setIsAddModalOpen(false);
 			setEditingMember(null);
-		} catch (err: any) {
-			toastError(err?.data?.message || 'Failed to save team member');
+		} catch (err: unknown) {
+			const error = err as { data?: { message?: string } };
+			toastError(error?.data?.message || 'Failed to save team member');
 		}
 	};
 
@@ -393,8 +363,9 @@ const TeamMembersPage: React.FC = () => {
 			try {
 				await deleteTeamMember(id).unwrap();
 				toastSuccess('Team member deleted successfully');
-			} catch (err: any) {
-				toastError(err?.data?.message || 'Failed to delete team member');
+			} catch (err: unknown) {
+				const error = err as { data?: { message?: string } };
+				toastError(error?.data?.message || 'Failed to delete team member');
 			}
 		}
 	};
@@ -428,9 +399,9 @@ const TeamMembersPage: React.FC = () => {
 						view={viewType}
 						onChange={setViewType}
 					/>
-					<Button 
-						variant="outline" 
-						size="md" 
+					<Button
+						variant="outline"
+						size="md"
 						onClick={() => setIsManageModalOpen(true)}
 						className="flex items-center gap-2"
 					>
@@ -531,7 +502,7 @@ const TeamMembersPage: React.FC = () => {
 				shiftHours={shiftHourOptions}
 			/>
 
-			<ManageMembersModal 
+			<ManageMembersModal
 				isOpen={isManageModalOpen}
 				onClose={() => setIsManageModalOpen(false)}
 				campaignData={campaignData}

@@ -29,7 +29,10 @@ interface TeamMembersCardsProps {
 	currentPage: number;
 	totalPages: number;
 	setCurrentPage: (page: number) => void;
-	campaignData: any;
+	campaignData: {
+		primaryColor?: string;
+		secondaryColor?: string;
+	};
 	handleEditMemberClick: (member: TeamMember) => void;
 	handleDeleteMember: (id: string) => void;
 	setStatusModalMember: (member: TeamMember) => void;

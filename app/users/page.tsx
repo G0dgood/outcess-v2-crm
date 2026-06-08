@@ -440,15 +440,15 @@ const UsersPage: React.FC = () => {
 									>
 										<div className="flex flex-wrap gap-1">
 											{(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)
-												?.filter((b: any) =>
-													b.assignedMembers?.some((m: any) => {
+												?.filter((b) =>
+													b.assignedMembers?.some((m) => {
 														const mId = typeof m.memberId === 'object' && m.memberId !== null
-															? (m.memberId._id || m.memberId.id)
+															? (m.memberId as { _id?: string; id?: string })._id || (m.memberId as { _id?: string; id?: string }).id
 															: m.memberId;
 														return mId === user.id;
 													})
 												)
-												.map((b: any) => (
+												.map((b) => (
 													<span
 														key={b.id}
 														className="text-[9px] px-1.5 py-0.5 rounded-full text-white font-medium shadow-sm"
@@ -459,10 +459,10 @@ const UsersPage: React.FC = () => {
 													</span>
 												))
 											}
-											{(!(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)?.some((b: any) =>
-												b.assignedMembers?.some((m: any) => {
+											{(!(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)?.some((b) =>
+												b.assignedMembers?.some((m) => {
 													const mId = typeof m.memberId === 'object' && m.memberId !== null
-														? (m.memberId._id || m.memberId.id)
+														? (m.memberId as { _id?: string; id?: string })._id || (m.memberId as { _id?: string; id?: string }).id
 														: m.memberId;
 													return mId === user.id;
 												})

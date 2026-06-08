@@ -11,7 +11,7 @@ import { ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
 import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
 import { Skeleton } from '@/components/ui/skeleton';
 import Tabs from '@/components/ui/Tabs';
@@ -165,28 +165,28 @@ const EditUserPage: React.FC = () => {
 
 		const supervisorRoleIds = new Set<string>();
 		if (supervisorsResponse && Array.isArray(supervisorsResponse.roles)) {
-			supervisorsResponse.roles.forEach((r: any) => {
+			supervisorsResponse.roles.forEach((r: Role) => {
 				if (r._id) supervisorRoleIds.add(r._id.toString());
 				if (r.id) supervisorRoleIds.add(r.id.toString());
 			});
 		}
 
 		return rawMembers
-			.filter((m: any) => {
+			.filter((m: ApiTeamMember) => {
 				const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
 				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
-				
-				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) || 
+
+				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) ||
 					(roleName && roleName.toLowerCase().includes('supervisor'));
-				
+
 				const isSelf = (m._id || m.id) === userId;
-				
+
 				return isSupervisorRole && !isSelf;
 			})
-			.map((m: any) => {
-				const fullName = m.firstName && m.lastName 
-					? `${m.firstName} ${m.lastName}` 
-					: m.name || m.fullName || 'Unknown Member';
+			.map((m: ApiTeamMember) => {
+				const fullName = m.firstName && m.lastName
+					? `${m.firstName} ${m.lastName}`
+					: m.name || (m as { fullName?: string }).fullName || 'Unknown Member';
 				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : 'Supervisor';
 				return {
 					value: m._id || m.id || '',
@@ -446,12 +446,12 @@ const EditUserPage: React.FC = () => {
 							onChange={(value) => handleInputChange('role')(Array.isArray(value) ? value[0] : value)}
 							options={roleOptions}
 							placeholder="Select Role"
-							renderOptionRight={(option) => 
+							renderOptionRight={(option) =>
 								option.status === 'supervisor' ? (
-									<span 
+									<span
 										className="text-[8px] px-1.5 py-0.5 rounded-full font-medium"
-										style={{ 
-											backgroundColor: `${primaryColor}15`, 
+										style={{
+											backgroundColor: `${primaryColor}15`,
 											color: primaryColor,
 											border: `1px solid ${primaryColor}30`
 										}}

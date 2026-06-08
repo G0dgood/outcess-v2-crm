@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { ChatBubbleIcon, Cross2Icon } from '@radix-ui/react-icons';
-import Button from '@/components/ui/Button';
 import SMSMessagePreview from '@/components/features/sms/SMSMessagePreview';
 import { SMSLog } from '@/store/services/smsApi';
 
@@ -73,7 +72,7 @@ const SelectedSMSDrawer: React.FC<SelectedSMSDrawerProps> = ({
 					{selectedSMSList.map((sms) => (
 						<SMSMessagePreview
 							key={sms._id}
-							sms={sms as any} // Using any temporarily as SMSMessagePreview might expect old SMS type
+							sms={sms}
 							onViewFull={() => onViewFull(sms)}
 						/>
 					))}

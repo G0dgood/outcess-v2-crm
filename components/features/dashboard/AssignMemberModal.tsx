@@ -2,13 +2,12 @@
 
 import React, { useState, useMemo } from 'react';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
 import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
-import { useSetup, AssignedMember } from '@/contexts/SetupContext';
+import { useSetup, AssignedMember, Bucket } from '@/contexts/SetupContext';
 import Search from '@/components/ui/Search';
 import { Cross2Icon, CheckIcon, InfoCircledIcon, IdCardIcon } from '@radix-ui/react-icons';
-import { Icon } from 'lucide-react';
+import Icon from '@/components/ui/Icon';
 
 interface AssignMemberModalProps {
 	isOpen: boolean;
@@ -39,26 +38,27 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 	const [durationHours, setDurationHours] = useState<number | ''>('');
 	const [durationMinutes, setDurationMinutes] = useState<number | ''>('');
 	const [conflictBuckets, setConflictBuckets] = useState<string[]>([]);
-	const [selectedAssignment, setSelectedAssignment] = useState<{ memberId: string, memberName: string, bucket: any } | null>(null);
+	const [selectedAssignment, setSelectedAssignment] = useState<{ memberId: string, memberName: string, bucket: Bucket & { assignmentData?: AssignedMember } } | null>(null);
 
 	const members = useMemo(() => {
 		return teamMembersResponse?.teamMembers || [];
 	}, [teamMembersResponse]);
 
 	const filteredMembers = useMemo(() => {
-		return members.filter((m: any) =>
+		return members.filter((m: ApiTeamMember) =>
 			(m.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
 			(m.userId || '').toLowerCase().includes(searchTerm.toLowerCase())
 		);
 	}, [members, searchTerm]);
 
-	const handleMemberSelect = (member: any) => {
+	const handleMemberSelect = (member: ApiTeamMember) => {
 		setSelectedMemberIds(prev => {
-			const isSelected = prev.includes(member._id);
+			const memberId = (member._id || member.id || '') as string;
+			const isSelected = prev.includes(memberId);
 			if (isSelected) {
-				return prev.filter(id => id !== member._id);
+				return prev.filter(id => id !== memberId);
 			} else {
-				return [...prev, member._id];
+				return [...prev, memberId];
 			}
 		});
 	};
@@ -86,7 +86,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 		if (selectedMemberIds.length === filteredMembers.length) {
 			setSelectedMemberIds([]);
 		} else {
-			setSelectedMemberIds(filteredMembers.map(m => m._id));
+			setSelectedMemberIds(filteredMembers.map(m => (m._id || m.id || '') as string));
 		}
 	};
 
@@ -110,7 +110,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 		try {
 			// Iterate over selected members and call onAssign
 			await Promise.all(selectedMemberIds.map(id => {
-				const member = members.find((m: any) => m._id === id);
+				const member = members.find((m) => (m._id || m.id) === id);
 				return onAssign(id, member?.name || 'Unknown', totalMinutes > 0 ? totalMinutes : undefined);
 			}));
 			onClose();
@@ -184,11 +184,12 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 								</div>
 							) : (
 								<div className="divide-y dark:divide-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
-									{filteredMembers.map((member: any) => {
-										const isSelected = selectedMemberIds.includes(member._id);
+									{filteredMembers.map((member) => {
+										const memberId = (member._id || member.id || '') as string;
+										const isSelected = selectedMemberIds.includes(memberId);
 										return (
 											<div
-												key={member._id}
+												key={memberId}
 												onClick={() => handleMemberSelect(member)}
 												className={`p-3 flex items-center justify-between cursor-pointer transition-all ${isSelected ? 'bg-primary/5 ring-1 ring-inset ring-primary/10' : 'hover:bg-white dark:hover:bg-gray-800'}`}
 											>
@@ -199,24 +200,24 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 													<div className="flex flex-col gap-1">
 														<div className="flex flex-col">
 															<span className="text-[12px] font-medium text-gray-900 dark:text-gray-100">{member.name}</span>
-															<span className="text-[10px] text-gray-500">{member.userId} • {member.role?.roleName || member.role?.name || (typeof member.role === 'string' ? member.role : 'Member')}</span>
+															<span className="text-[10px] text-gray-500">{member.userId} • {typeof member.role === 'object' ? member.role?.roleName || member.role?.name : (typeof member.role === 'string' ? member.role : 'Member')}</span>
 														</div>
 														{/* Bucket Badges */}
 														<div className="flex flex-wrap gap-1">
-															{getMemberBuckets(member._id).map(b => (
+															{getMemberBuckets(memberId).map(b => (
 																<button
 																	key={b.id}
 																	onClick={(e) => {
 																		e.stopPropagation();
-																		const assignment = b?.assignedMembers?.find((m: any) => {
+																		const assignment = b?.assignedMembers?.find((m) => {
 																			const mId = typeof m.memberId === 'object' && m.memberId !== null
 																				? (m.memberId._id || m.memberId.id)
 																				: m.memberId;
-																			return mId === member._id;
+																			return mId === memberId;
 																		});
 																		setSelectedAssignment({
-																			memberId: member?._id,
-																			memberName: member?.name,
+																			memberId: memberId,
+																			memberName: member?.name || '',
 																			bucket: { ...b, assignmentData: assignment }
 																		});
 																	}}
@@ -331,7 +332,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 								<div className="flex flex-col">
 									<span className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">Session Duration</span>
 									<span className="text-[12px] text-primary font-bold flex items-center gap-1.5">
-										<Icon name="Time" size="sm" iconNode={[]} />
+										<Icon name="Time" size="sm" />
 										{selectedAssignment.bucket.assignmentData.duration} Minutes
 									</span>
 								</div>

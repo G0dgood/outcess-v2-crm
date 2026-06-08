@@ -33,7 +33,6 @@ export interface UserDropdownProps {
 }
 
 const UserDropdown: React.FC<UserDropdownProps> = ({
-	user,
 	userId,
 	userName = '',
 	userEmail = '',
@@ -107,13 +106,21 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 	useEffect(() => {
 		if (!socket || !isConnected || !selectedCampaignId) return;
 
-		const handleStatusCreated = (newStatus: any) => {
+		interface StatusPayload {
+			id?: string;
+			_id?: string;
+			name: string;
+			color?: string;
+			campaignId: string;
+		}
+
+		const handleStatusCreated = (newStatus: StatusPayload) => {
 			if (newStatus.campaignId !== selectedCampaignId) return;
 			setStatusOptions((prev) => {
 				const statusId = newStatus.id || newStatus._id;
 				if (prev.find(s => s.value === statusId)) return prev;
 				return [...prev, {
-					value: statusId,
+					value: statusId || '',
 					label: newStatus.name,
 					color: newStatus.color || '#6C8B7D'
 				}];
@@ -123,7 +130,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 			}
 		};
 
-		const handleStatusUpdated = (updatedStatus: any) => {
+		const handleStatusUpdated = (updatedStatus: StatusPayload) => {
 			if (updatedStatus.campaignId !== selectedCampaignId) return;
 			setStatusOptions((prev) => prev.map((s) => {
 				const statusId = updatedStatus.id || updatedStatus._id;
@@ -141,7 +148,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 			}
 		};
 
-		const handleStatusDeleted = (payload: any) => {
+		const handleStatusDeleted = (payload: { campaignId: string; id: string }) => {
 			if (payload.campaignId !== selectedCampaignId) return;
 			setStatusOptions((prev) => prev.filter((s) => s.value !== payload.id));
 			toastInfo("A campaign status was removed.");

@@ -52,8 +52,32 @@ export interface AssignShiftHourRequest {
   teamMemberIds: string[];
 }
 
+export interface ApiTeamMember {
+  _id?: string;
+  id?: string;
+  userId?: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  fullName?: string;
+  role?:
+    | string
+    | { _id?: string; id?: string; roleName?: string; name?: string };
+  supervisor?: string | { name?: string };
+  status?: string | StatusPayload;
+  loginStatus?: string;
+  team?: string | { name?: string };
+  statusReason?: string;
+  shiftHour?: {
+    shiftHourId?: string;
+    title?: string;
+  };
+}
+
 export interface PaginatedTeamMembersResponse {
-  teamMembers: any[];
+  teamMembers: ApiTeamMember[];
   pagination: {
     total: number;
     page: number;

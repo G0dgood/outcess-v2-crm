@@ -32,7 +32,6 @@ export default function SettingsPage() {
 	const { isDarkMode, toggleTheme } = useTheme();
 	const { campaignData } = useCampaign();
 	const primaryColor = campaignData?.primaryColor || '#050711';
-	const router = useRouter();
 
 	const { user } = useAuth();
 
