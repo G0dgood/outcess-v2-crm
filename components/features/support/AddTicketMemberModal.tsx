@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '../../ui/Modal';
 import { Dropdown } from '../../ui/Dropdown';
 import { Button } from '../../ui/Button';
-import { useGetTeamMembersByCampaignIdQuery } from '../../../store/services/teamMembersApi';
+import { useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '../../../store/services/teamMembersApi';
 import { useUpdateTicketMutation, SupportTicket, PopulatedMember } from '../../../store/services/supportApi';
 
 interface AddTicketMemberModalProps {
@@ -36,7 +36,7 @@ export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({
 		return 'Agent';
 	};
 
-	const getMemberName = (member: PopulatedMember): string => {
+	const getMemberName = (member: PopulatedMember | ApiTeamMember): string => {
 		if (!member) return 'Unknown';
 		if (member.firstName || member.lastName) {
 			return `${member.firstName || ''} ${member.lastName || ''}`.trim();
@@ -63,7 +63,10 @@ export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({
 	};
 
 	const availableMembers = (teamMembersData?.teamMembers || [])
-		.filter((member: PopulatedMember) => !ticket?.assignedToIds?.some((a) => (typeof a === 'string' ? a : a._id) === member._id));
+		.filter((member: ApiTeamMember) => {
+			const memberId = member._id || member.id;
+			return !!(memberId && !ticket?.assignedToIds?.some((a) => (typeof a === 'string' ? a : a._id) === memberId));
+		});
 
 	return (
 		<Modal
@@ -80,8 +83,8 @@ export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({
 					label="Select Members"
 					placeholder="Search and select teammates..."
 					multiple={true}
-					options={availableMembers.map((member: PopulatedMember) => ({
-						value: member._id,
+					options={availableMembers.map((member: ApiTeamMember) => ({
+						value: member._id || member.id || '',
 						label: `${getMemberName(member)} (${getRoleLabel(member.role)})`
 					}))}
 					value={selectedMemberIds}
