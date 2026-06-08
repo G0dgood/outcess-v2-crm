@@ -166,7 +166,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 			try {
 				if (isEditMode && statusId) {
 					// Update existing status
-					const result = await updateStatus({
+					await updateStatus({
 						id: statusId,
 						statusData: formData
 					}).unwrap();

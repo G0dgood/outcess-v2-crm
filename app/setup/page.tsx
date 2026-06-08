@@ -31,8 +31,7 @@ export default function Setup() {
 						localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
 					}
 				} catch (error) {
-					const apiError = error as ApiError;
-					const message = extractErrorMessage(apiError, 'Failed to fetch user data');
+					console.error('Failed to fetch user data:', error);
 				}
 			}
 		};

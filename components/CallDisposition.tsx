@@ -383,7 +383,7 @@ export default function CallDisposition() {
 				updateDashboardSettings({ buckets: result.campaign.dashboardSettings.buckets });
 				toast.success(`Removed ${memberName} from bucket`);
 			}
-		} catch (error: unknown) {
+		} catch {
 			toast.error("Failed to remove member");
 		}
 	};

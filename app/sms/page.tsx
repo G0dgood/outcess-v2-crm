@@ -25,7 +25,6 @@ import {
 	SMSConfig as SMSConfigType,
 	SMSLog as SMSLogType,
 	SMSCampaign,
-	SMSBucket,
 } from '@/store/services/smsApi';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { toast } from 'sonner';
@@ -197,7 +196,7 @@ const SMSPage: React.FC = () => {
 			}
 			setIsConfigModalOpen(false);
 			setEditingConfig(null);
-		} catch (error) {
+		} catch {
 			toast.error('Failed to save configuration');
 		}
 	};
@@ -206,7 +205,7 @@ const SMSPage: React.FC = () => {
 		try {
 			await deleteSMSConfig(id).unwrap();
 			toast.success('Configuration deleted');
-		} catch (error) {
+		} catch {
 			toast.error('Failed to delete configuration');
 		}
 	};

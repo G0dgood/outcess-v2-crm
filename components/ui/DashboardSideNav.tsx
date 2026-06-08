@@ -348,11 +348,6 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
   }
  };
 
- const handleView = (_id: string, path: string) => {
-  router.push(path);
-  if (onMobileClose) onMobileClose();
- };
-
  const handleSubItemClick = (path: string) => {
   router.push(path);
   if (onMobileClose) onMobileClose();

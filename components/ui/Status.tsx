@@ -213,7 +213,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 			socket.off("statusUpdated", handleStatusUpdated);
 			socket.off("statusDeleted", handleStatusDeleted);
 		};
-	}, [socket, isConnected, roleLabels]);
+	}, [socket, isConnected, roleLabels, selectedCampaignId]);
 
 	const formatRoleDisplay = (status: StatusItem): string => {
 		if (status.roleSelection === 'all' || !status.roleSelection) {

@@ -22,6 +22,7 @@ import SelectedUsersDrawerContent from './SelectedUsersDrawerContent';
 import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
 import LoginStatusInfoBanner from '@/components/ui/LoginStatusInfoBanner';
 import SampleCsvDownloader from '@/components/ui/SampleCsvDownloader';
+import { Bucket, AssignedMember } from '@/contexts/SetupContext';
 
 interface User {
 	id: string;
@@ -440,15 +441,15 @@ const UsersPage: React.FC = () => {
 									>
 										<div className="flex flex-wrap gap-1">
 											{(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)
-												?.filter((b) =>
-													b.assignedMembers?.some((m) => {
+												?.filter((b: Bucket) =>
+													b.assignedMembers?.some((m: AssignedMember) => {
 														const mId = typeof m.memberId === 'object' && m.memberId !== null
 															? (m.memberId as { _id?: string; id?: string })._id || (m.memberId as { _id?: string; id?: string }).id
 															: m.memberId;
 														return mId === user.id;
 													})
 												)
-												.map((b) => (
+												.map((b: Bucket) => (
 													<span
 														key={b.id}
 														className="text-[9px] px-1.5 py-0.5 rounded-full text-white font-medium shadow-sm"
@@ -459,8 +460,8 @@ const UsersPage: React.FC = () => {
 													</span>
 												))
 											}
-											{(!(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)?.some((b) =>
-												b.assignedMembers?.some((m) => {
+											{(!(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)?.some((b: Bucket) =>
+												b.assignedMembers?.some((m: AssignedMember) => {
 													const mId = typeof m.memberId === 'object' && m.memberId !== null
 														? (m.memberId as { _id?: string; id?: string })._id || (m.memberId as { _id?: string; id?: string }).id
 														: m.memberId;

@@ -122,7 +122,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 		}
 
 		return [];
-	}, [campaignData, authUser]);
+	}, [campaignData, authUser, currentAgentId]);
 
 	// Reset or update form when modal opens/closes
 	useEffect(() => {
@@ -302,7 +302,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 			onSave?.(formData);
 			onClose();
-		} catch (error) {
+		} catch {
 			toastError('Failed to save disposition');
 			onSave?.(formData);
 			onClose();

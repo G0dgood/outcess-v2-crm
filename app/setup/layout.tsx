@@ -439,7 +439,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [currentStep, handleSubmitForApproval, validateStep, setIsLoading, setupData, updateCampaign, user, createCampaign, setSelectedCampaignId, updateSetupData, resetDirty, onStepComplete]);
+  }, [currentStep, handleSubmitForApproval, validateStep, setIsLoading, setupData, updateCampaign, user, createCampaign, setSelectedCampaignId, updateSetupData, resetDirty, onStepComplete, updateBucketCustomerFields]);
 
   const handleSave = () => handlePersist(true);
 

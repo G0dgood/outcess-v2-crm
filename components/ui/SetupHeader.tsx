@@ -1,7 +1,5 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import Icon from './Icon';
-import { plusJakartaStyle } from '../Options';
 import ThemeToggle from './ThemeToggle';
 import { HamburgerMenuIcon, ChevronLeftIcon } from '@radix-ui/react-icons';
 import NextImage from 'next/image';

@@ -18,7 +18,7 @@ import {
 	useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Plus, Pencil, Trash2, X, ChevronRight } from 'lucide-react';
+import { GripVertical, Plus, Pencil, Trash2 } from 'lucide-react';
 import { RowsIcon } from '@radix-ui/react-icons';
 import EmptyState from '@/components/ui/EmptyState';
 import Button from '@/components/ui/Button';
@@ -31,7 +31,6 @@ import CheckboxSelect from '@/components/ui/CheckboxSelect';
 import Dropdown from '@/components/ui/Dropdown';
 import FieldPropertiesModal from '@/components/ui/FieldPropertiesModal';
 import { useSetup } from '@/contexts/SetupContext';
-import SelectBucketModalPrompt from '@/components/ui/SelectBucketModalPrompt';
 import { SelectBucketModal } from '@/components/ui/SelectBucketModal';
 
 interface CustomerField {
@@ -175,7 +174,7 @@ export default function CustomerBookPage() {
 		setCurrentStep(3);
 	}, [setCurrentStep]);
 
-	const buckets = setupData?.dashboardSettings?.buckets || [];
+	const buckets = useMemo(() => setupData?.dashboardSettings?.buckets || [], [setupData?.dashboardSettings?.buckets]);
 	const [selectedBucketId, setSelectedBucketId] = useState<string | null>(null);
 	const selectedBucket = useMemo(() => {
 		return buckets.find(b => b.id === selectedBucketId);

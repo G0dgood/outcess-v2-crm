@@ -67,7 +67,7 @@ const EmailPage: React.FC = () => {
 		return campaigns.flatMap((c: EmailCampaign) => {
 			const bList = c.dashboardSettings?.buckets || [];
 			return bList.map((b: Bucket) => ({
-				id: b.id || (b as any)._id || '',
+				id: b.id || b._id || '',
 				name: b.name || 'Unnamed Bucket',
 				campaignId: c._id,
 				campaignName: c.campaignName || c.name || 'Unnamed Campaign'

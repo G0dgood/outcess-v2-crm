@@ -35,6 +35,7 @@ export interface Bucket {
 	color: string;
 	assignedMembers?: AssignedMember[];
 	id: string;
+	_id?: string;
 	name: string;
 	description?: string;
 	dispositions: DispositionCategory[];

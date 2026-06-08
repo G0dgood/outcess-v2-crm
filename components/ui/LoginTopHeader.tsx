@@ -5,10 +5,9 @@ import Icon from './Icon';
 import { plusJakartaStyle } from '../Options';
 
 interface LoginTopHeaderProps {
-  primaryColor: string;
 }
 
-const LoginTopHeader: React.FC<LoginTopHeaderProps> = ({ primaryColor }) => {
+const LoginTopHeader: React.FC<LoginTopHeaderProps> = () => {
   return (
     <div className="login-top-header">
       <div className="login-header-card">

@@ -20,10 +20,9 @@ import { toast } from 'sonner';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { ALL_MY_BUCKETS, getUserAssignedBuckets } from '@/utils/bucketUtils';
+import { ALL_MY_BUCKETS, getUserAssignedBuckets, BucketWithMembers } from '@/utils/bucketUtils';
 
 import { SelectBucketModal } from '@/components/ui/SelectBucketModal';
-import Icon from '@/components/ui/Icon';
 import { useRouter } from 'next/navigation';
 import { Bucket } from '@/contexts/SetupContext';
 
@@ -59,7 +58,7 @@ const SetupBookPage: React.FC = () => {
 	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
 
 	const allConfiguredFieldsChunks = useMemo(() => campaignData?.campaign?.customerBookSettings?.configuredFields || [], [campaignData]);
-	const buckets = useMemo(() => (campaignData?.campaign?.dashboardSettings?.buckets || []) as Bucket[], [campaignData]);
+	const buckets = useMemo(() => (campaignData?.campaign?.dashboardSettings?.buckets || []) as BucketWithMembers[], [campaignData]);
 	const userId = String(user?.id || user?._id || '');
 	const hasFullBucketAccess = isAdmin || isSuperAdmin;
 

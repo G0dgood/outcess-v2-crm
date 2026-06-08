@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Button from './Button';
-import Icon from './Icon';
 import { MoonIcon } from '@radix-ui/react-icons';
 import { useUpdateTeamMemberStatusMutation } from '@/store/services/teamMembersApi';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';

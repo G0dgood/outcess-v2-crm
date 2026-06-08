@@ -9,7 +9,7 @@ import CreateCustomRoleModal from '@/components/ui/CreateCustomRoleModal';
 import DeleteRoleModal from './DeleteRoleModal';
 import SubPageHeading from '@/components/ui/SubPageHeading';
 import PageHeading from '@/components/ui/PageHeading';
-import { ExclamationTriangleIcon, TrashIcon, CopyIcon, Component1Icon } from '@radix-ui/react-icons';
+import { TrashIcon, CopyIcon, Component1Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 

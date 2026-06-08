@@ -6,7 +6,6 @@ import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
 import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
-import { Cross2Icon } from '@radix-ui/react-icons';
 import type { Widget } from '@/contexts/SetupContext';
 import { useCampaign } from '@/contexts/CampaignContext';
 // import { useSocket } from '@/contexts/SocketContext';

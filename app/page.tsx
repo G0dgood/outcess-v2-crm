@@ -15,7 +15,6 @@ import { useLoginMutation, useTeamMemberLoginMutation } from '@/store/services/a
 import { login as loginAction } from '@/store/slices/authSlice';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
-import ReactivationRequestModal from '@/components/ui/ReactivationRequestModal';
 
 interface ApiError {
 	data?: {
@@ -48,11 +47,6 @@ export default function LoginPage() {
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isLoading, setIsLoading] = useState(false);
 
-	// Reactivation states
-	const [isReactivationModalOpen, setIsReactivationModalOpen] = useState(false);
-	const [reactivationData, setReactivationData] = useState<{ email: string; reason?: string }>({ email: '' });
-	const [isReactivationLoading, setIsReactivationLoading] = useState(false);
-
 	// Set browser tab title
 	React.useEffect(() => {
 		if (typeof document !== 'undefined') {
@@ -83,34 +77,6 @@ export default function LoginPage() {
 			setErrors(prev => ({ ...prev, [field]: '' }));
 		}
 	};
-
-	const handleReactivationSubmit = async (reason: string) => {
-		setIsReactivationLoading(true);
-		try {
-			const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/api/v1/users/request-reactivation`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ email: reactivationData.email, reason }),
-			});
-
-			const data = await response.json();
-
-			if (response.ok) {
-				toast.success('Reactivation request sent! You will be notified via email once approved.');
-				setIsReactivationModalOpen(false);
-			} else {
-				toast.error(data.message || 'Failed to submit reactivation request');
-			}
-		} catch (error) {
-			console.error('Error requesting reactivation:', error);
-			toast.error('An error occurred. Please try again.');
-		} finally {
-			setIsReactivationLoading(false);
-		}
-	};
-
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -204,16 +170,7 @@ export default function LoginPage() {
 
 					// Handle Account Deactivated
 					if (apiError.status === 403 && apiError.data?.status === 'deactivated') {
-						const isEmail = /\S+@\S+\.\S+/.test(formData.emailOrUserId);
-						if (isEmail) {
-							setReactivationData({
-								email: formData.emailOrUserId,
-								reason: apiError.data.deactivationReason
-							});
-							setIsReactivationModalOpen(true);
-						} else {
-							toast.error('Account deactivated. Use email to login and request reactivation.');
-						}
+						toast.error('Account deactivated. Contact your administrator.');
 						setIsLoading(false);
 						return;
 					}
@@ -250,9 +207,7 @@ export default function LoginPage() {
 
 	return (
 		<div className="login-container">
-			<LoginTopHeader
-				primaryColor={primaryColor}
-			/>
+			<LoginTopHeader />
 
 			{/* Left Side - Image Section */}
 			<div className="login-image-section w-full md:w-1/2 relative">
