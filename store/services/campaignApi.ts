@@ -18,10 +18,10 @@ export interface Campaign {
     dashboardName: string;
     dashboardVisibility: string;
     activeTab: string;
-    widgets: any[];
-    dispositions: any[];
-    buckets: any[];
-    callOutcomes: any[];
+    widgets: unknown[];
+    dispositions: unknown[];
+    buckets: unknown[];
+    callOutcomes: unknown[];
     leaderboardTargets?: {
       daily: number;
       weekly: number;
@@ -30,10 +30,10 @@ export interface Campaign {
     dispositionSettings: {
       timeRangeView: string;
       chartType: string;
-      charts: any[];
+      charts: unknown[];
     };
   };
-  businessHours?: any;
+  businessHours?: unknown;
   [key: string]: unknown;
 }
 

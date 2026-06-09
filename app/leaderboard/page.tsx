@@ -45,8 +45,9 @@ export default function LeaderboardPage() {
 	);
 
 	// Buckets from campaign settings
-	const buckets: Array<{ id: string; name: string; color?: string; leaderboardTargets?: { daily: number; weekly: number; monthly: number } }> =
-		(campaignData?.dashboardSettings?.buckets as any[]) || [];
+	const buckets = useMemo(() => {
+		return (campaignData?.dashboardSettings?.buckets as unknown[])?.map(b => b as { id: string; name: string; color?: string; leaderboardTargets?: { daily: number; weekly: number; monthly: number } }) || [];
+	}, [campaignData]);
 
 	// Selected bucket for target display (default to first bucket if available)
 	const [selectedBucketId, setSelectedBucketId] = useState<string>('');
@@ -84,10 +85,22 @@ export default function LeaderboardPage() {
 		const dashboardSettings = campaignData?.dashboardSettings;
 
 		// Add disposition categories if available (direct and bucketed)
-		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
+		const allDispositions: Array<{ name: string; color?: string }> = [];
+		// Type guard to check if an object has required disposition properties
+		const isValidDisposition = (disp: unknown): disp is { name: string; color?: string } => {
+			return typeof disp === 'object' && disp !== null && 'name' in disp && typeof (disp as { name: string }).name === 'string';
+		};
+		// Add valid base dispositions
+		if (dashboardSettings?.dispositions && Array.isArray(dashboardSettings.dispositions)) {
+			dashboardSettings.dispositions.forEach((disp: unknown) => {
+				if (isValidDisposition(disp) && !allDispositions.some(d => d.name === disp.name)) {
+					allDispositions.push(disp);
+				}
+			});
+		}
 		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
-			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
-				if (bucket && Array.isArray(bucket.dispositions)) {
+			dashboardSettings.buckets.forEach((bucket: unknown) => {
+				if (bucket && typeof bucket === 'object' && 'dispositions' in bucket && Array.isArray(bucket.dispositions)) {
 					bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
 						if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
 							allDispositions.push(disp);
@@ -108,9 +121,11 @@ export default function LeaderboardPage() {
 		// Add call outcomes if available
 		const callOutcomes = dashboardSettings?.callOutcomes || [];
 		if (callOutcomes.length > 0) {
-			callOutcomes.forEach((outcome: { name: string }) => {
-				if (outcome?.name) {
-					optionsMap.set(outcome.name, { value: outcome.name, label: outcome.name });
+			callOutcomes.forEach((outcome: unknown) => {
+				if (outcome && typeof outcome === 'object' && 'name' in outcome && outcome.name) {
+					if (typeof outcome.name === 'string') {
+						optionsMap.set(outcome.name, { value: outcome.name, label: outcome.name });
+					}
 				}
 			});
 		}
@@ -435,7 +450,7 @@ export default function LeaderboardPage() {
 							id: campaignId,
 							data: {
 								dashboardSettings: {
-									...(campaignData as any)?.dashboardSettings,
+									...(campaignData as { dashboardSettings?: Record<string, unknown> })?.dashboardSettings,
 									buckets: updatedBuckets,
 								}
 							}
