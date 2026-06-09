@@ -37,7 +37,7 @@ export default function LeaderboardPage() {
 	const [rankingMetric, setRankingMetric] = useState<string>('points');
 	const [updateCampaign] = useUpdateCampaignMutation();
 
-	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id || campaignData?._id || '';
+	const campaignId = campaignData?._id || '';
 
 	const { data: leaderboardResponse, isLoading: isLeaderboardLoading } = useGetLeaderboardQuery(
 		{ campaignId, timeFilter },
@@ -46,15 +46,23 @@ export default function LeaderboardPage() {
 
 	// Buckets from campaign settings
 	const buckets: Array<{ id: string; name: string; color?: string; leaderboardTargets?: { daily: number; weekly: number; monthly: number } }> =
-		campaignData?.campaign?.dashboardSettings?.buckets || [];
+		(campaignData?.dashboardSettings?.buckets as any[]) || [];
 
 	// Selected bucket for target display (default to first bucket if available)
 	const [selectedBucketId, setSelectedBucketId] = useState<string>('');
 	const effectiveBucketId = selectedBucketId || buckets[0]?.id || '';
 
 	// Retrieve targets from API response or campaign data — prefer per-bucket
-	const globalTargets = leaderboardResponse?.leaderboardTargets || campaignData?.campaign?.dashboardSettings?.leaderboardTargets || { daily: 50, weekly: 250, monthly: 1000 };
-	const bucketTargetsMap: Record<string, { daily: number; weekly: number; monthly: number }> = leaderboardResponse?.bucketTargets || {};
+	const globalTargets = leaderboardResponse?.leaderboardTargets || campaignData?.dashboardSettings?.leaderboardTargets || { daily: 50, weekly: 250, monthly: 1000 };
+	const bucketTargetsMap: Record<string, { daily: number; weekly: number; monthly: number }> = useMemo(() => {
+		const map: Record<string, { daily: number; weekly: number; monthly: number }> = { ...leaderboardResponse?.bucketTargets };
+		buckets.forEach(b => {
+			if (b.leaderboardTargets) {
+				map[b.id] = map[b.id] || b.leaderboardTargets;
+			}
+		});
+		return map;
+	}, [leaderboardResponse, buckets]);
 
 	const targets = effectiveBucketId && bucketTargetsMap[effectiveBucketId]
 		? bucketTargetsMap[effectiveBucketId]
@@ -73,7 +81,7 @@ export default function LeaderboardPage() {
 		optionsMap.set('calls', { value: 'calls', label: 'Calls' });
 		optionsMap.set('conversions', { value: 'conversions', label: 'Conversions' });
 
-		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
+		const dashboardSettings = campaignData?.dashboardSettings;
 
 		// Add disposition categories if available (direct and bucketed)
 		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
@@ -98,8 +106,9 @@ export default function LeaderboardPage() {
 		}
 
 		// Add call outcomes if available
-		if (dashboardSettings?.callOutcomes && dashboardSettings.callOutcomes.length > 0) {
-			dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
+		const callOutcomes = dashboardSettings?.callOutcomes || [];
+		if (callOutcomes.length > 0) {
+			callOutcomes.forEach((outcome: { name: string }) => {
 				if (outcome?.name) {
 					optionsMap.set(outcome.name, { value: outcome.name, label: outcome.name });
 				}
@@ -426,7 +435,7 @@ export default function LeaderboardPage() {
 							id: campaignId,
 							data: {
 								dashboardSettings: {
-									...campaignData?.campaign?.dashboardSettings,
+									...(campaignData as any)?.dashboardSettings,
 									buckets: updatedBuckets,
 								}
 							}
