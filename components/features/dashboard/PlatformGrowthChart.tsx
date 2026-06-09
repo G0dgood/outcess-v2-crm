@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Skeleton from '@/components/ui/Skeleton';
 
 interface MonthlyData {
 	month: string;
@@ -8,26 +9,18 @@ interface MonthlyData {
 	users: number;
 }
 
-const PlatformGrowthChart: React.FC = () => {
+interface PlatformGrowthChartProps {
+	data?: MonthlyData[];
+	isLoading?: boolean;
+}
 
+const PlatformGrowthChart: React.FC<PlatformGrowthChartProps> = ({
+	data,
+	isLoading
+}) => {
+	if (!data && !isLoading) return null;
 
-	// Sample data based on the image description
-	const data: MonthlyData[] = [
-		{ month: 'Jan', businesses: 90, users: 58 },
-		{ month: 'Feb', businesses: 18, users: 85 },
-		{ month: 'Mar', businesses: 45, users: 70 },
-		{ month: 'Apr', businesses: 60, users: 80 },
-		{ month: 'May', businesses: 55, users: 90 },
-		{ month: 'Jun', businesses: 65, users: 95 },
-		{ month: 'Jul', businesses: 70, users: 100 },
-		{ month: 'Aug', businesses: 75, users: 95 },
-		{ month: 'Sep', businesses: 68, users: 92 },
-		{ month: 'Oct', businesses: 70, users: 95 },
-		{ month: 'Nov', businesses: 72, users: 98 },
-		{ month: 'Dec', businesses: 75, users: 100 },
-	];
-
-	const maxValue = 100;
+	const maxValue = Math.max(100, ...(data || []).map(d => Math.max(d.businesses, d.users)));
 	const chartHeight = 300;
 	const chartWidth = 1000;
 	const barWidth = 25;
@@ -54,6 +47,24 @@ const PlatformGrowthChart: React.FC = () => {
 		return (value / maxValue) * maxBarHeight;
 	};
 
+	if (isLoading) {
+		return (
+			<div className="w-full h-[300px] flex flex-col justify-end gap-4 p-4">
+				<div className="flex items-end justify-between h-full gap-2">
+					{[...Array(12)].map((_, i) => (
+						<div key={i} className="flex flex-col items-center flex-1 gap-2">
+							<div className="flex items-end gap-1 w-full justify-center">
+								<Skeleton className="w-3" style={{ height: `${Math.random() * 60 + 20}%` }} />
+								<Skeleton className="w-3" style={{ height: `${Math.random() * 60 + 20}%` }} />
+							</div>
+							<Skeleton className="h-3 w-8" />
+						</div>
+					))}
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="w-full overflow-x-auto">
 			<svg
@@ -64,7 +75,8 @@ const PlatformGrowthChart: React.FC = () => {
 				preserveAspectRatio="xMinYMin meet"
 			>
 				{/* Grid lines */}
-				{[0, 20, 40, 60, 80, 100].map((value, index) => {
+				{[0, 20, 40, 60, 80, 100].map((v, index) => {
+					const value = (v / 100) * maxValue;
 					const y = topPadding + (maxValue - value) / maxValue * maxBarHeight;
 					return (
 						<g key={index}>
@@ -84,7 +96,7 @@ const PlatformGrowthChart: React.FC = () => {
 								className="text-[8px] md:text-[10px] fill-gray-600"
 								fontSize="12"
 							>
-								{value}
+								{Math.round(value)}
 							</text>
 						</g>
 					);

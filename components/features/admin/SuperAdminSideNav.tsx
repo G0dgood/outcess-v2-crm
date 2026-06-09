@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useRouter } from '@bprogress/next/app';
 import {
@@ -11,8 +12,10 @@ import {
 	GearIcon,
 } from '@radix-ui/react-icons';
 import Button from '@/components/ui/Button';
+import Icon from '@/components/ui/Icon';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { plusJakartaStyle } from '@/components/Options';
 import {
 	Tooltip,
 	TooltipContent,
@@ -80,7 +83,7 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 		},
 		{
 			id: 'settings',
-			label: 'Settings',
+			label: 'Account Settings',
 			icon: <GearIcon className="w-5 h-5" />,
 			path: '/superadmin/settings',
 		}
@@ -108,6 +111,10 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 
 	const currentActiveItem = getActiveItem();
 
+	const currentCampaign = campaignData?.campaign;
+	const headerLogo = currentCampaign?.logo;
+	const headerName = currentCampaign?.companyName || 'Outcess';
+
 	return (
 		<TooltipProvider>
 			{/* Side Navigation - Desktop Only */}
@@ -123,7 +130,16 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 					borderColor: 'var(--light-gray)'
 				}}
 			>
-				<div className="p-4 mt-4 flex-1">
+				<div className="flex-1 py-4 px-2 overflow-y-auto overflow-x-hidden">
+					<div className={`mb-6 flex items-center ${isCollapsed ? 'justify-center' : 'px-4 gap-2'}`}>
+						{headerLogo ? (
+							<div className="relative h-8 w-auto min-w-[32px] rounded-[var(--radius)] overflow-hidden">
+								<Image src={headerLogo} alt="Logo" height={32} width={100} className="h-8 w-auto object-contain" unoptimized priority />
+							</div>
+						) : <Icon name="outcessHalf" size="lg" className="dark:inline-block" />}
+						{!isCollapsed && <span className="font-semibold text-[18px] md:text-[20px] leading-7 flex items-center text-[#050711]" style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>{headerName}</span>}
+					</div>
+
 					{/* Navigation Items */}
 					<div className="space-y-2">
 						{navItems.map((item) => {
@@ -134,7 +150,7 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 									size="md"
 									fullWidth
 									onClick={() => handleItemClick(item)}
-									className={`cursor-pointer w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 transition-all duration-200 !rounded-none ${isActive
+									className={`cursor-pointer w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 transition-all duration-200 rounded-[var(--radius)] ${isActive
 										? (isDarkMode ? 'text-black' : 'text-white')
 										: 'dark:text-gray-300 hover:text-white dark:hover:text-white'
 										}`}
@@ -210,7 +226,7 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 						variant="ghost"
 						size="sm"
 						onClick={toggleCollapse}
-						className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors h-auto !rounded-none"
+						className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors h-auto rounded-[var(--radius)]"
 						style={{ color: 'var(--text-secondary)' }}
 						title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
 					>

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
+import Skeleton from "@/components/ui/skeleton";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +19,7 @@ import {
 } from "@radix-ui/react-icons";
 import PageHeading from "@/components/ui/PageHeading";
 import SubPageHeading from "@/components/ui/SubPageHeading";
+import Tabs, { TabItem } from "@/components/ui/Tabs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCampaign } from "@/contexts/CampaignContext";
 
@@ -295,7 +296,7 @@ export default function SettingsPage() {
 
 				{/* Current info skeleton */}
 				<div
-					className="p-4"
+					className="p-4 rounded-[var(--radius)]"
 					style={{ backgroundColor: 'var(--bg-primary)' }}
 				>
 					<h4
@@ -360,62 +361,23 @@ export default function SettingsPage() {
 				/>
 			</div>
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 w-full h-full p-6"
+				className="dark:bg-gray-800 border dark:border-gray-700 w-full h-full p-6 rounded-[var(--radius)]"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
 				}}
 			>
 				{/* Navigation Tabs */}
-				<div
-					className="border-b dark:border-gray-700 mb-8"
-					style={{ borderColor: 'var(--light-gray)' }}
-				>
-					<nav className="-mb-px flex space-x-1">
-						{[
-							{ id: 'profile', label: 'Profile', icon: PersonIcon },
-							{ id: 'password', label: 'Password', icon: LockClosedIcon },
-							{ id: 'payment', label: 'Payment', icon: IdCardIcon },
-							{ id: 'preferences', label: 'Preferences', icon: GearIcon },
-						].map(({ id, label, icon: IconComponent }) => {
-							const isActive = activeSection === id;
-							const activeColor = isDarkMode ? '#F3F4F6' : (primaryColor || '#050711');
-							const inactiveColor = isDarkMode ? '#9CA3AF' : 'var(--text-tertiary)';
-							return (
-								<Button
-									key={id}
-									variant="ghost"
-									size="sm"
-									onClick={() => setActiveSection(id as 'profile' | 'password' | 'email' | 'payment' | 'preferences')}
-									className={`relative flex items-center space-x-2 py-3 px-4 font-medium text-[10px] md:text-[12px] transition-all duration-200 h-auto hover:transform-none rounded-none ${isActive ? '' : 'dark:text-gray-400 dark:hover:text-gray-300'
-										}`}
-									style={{
-										color: isActive ? activeColor : inactiveColor,
-									}}
-									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-										if (!isActive) {
-											e.currentTarget.style.color = isDarkMode ? '#D1D5DB' : (secondaryColor || '#6C8B7D');
-										}
-									}}
-									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-										if (!isActive) {
-											e.currentTarget.style.color = inactiveColor;
-										}
-									}}
-									title={`${label} settings`}
-								>
-									<IconComponent className="h-4 w-4 transition-colors" />
-									<span>{label}</span>
-									{isActive && (
-										<span
-											className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t"
-											style={{ backgroundColor: activeColor }}
-										/>
-									)}
-								</Button>
-							);
-						})}
-					</nav>
+				<div className="mb-8">
+					<Tabs
+						tabs={[
+							{ id: 'profile', label: 'Profile', icon: <PersonIcon className="h-4 w-4" /> },
+							{ id: 'password', label: 'Password', icon: <LockClosedIcon className="h-4 w-4" /> },
+						]}
+						activeTab={activeSection}
+						onTabChange={(tabId) => setActiveSection(tabId as 'profile' | 'password' | 'email' | 'payment' | 'preferences')}
+						activeColor={isDarkMode ? '#F3F4F6' : (primaryColor || '#050711')}
+					/>
 				</div>
 
 				{/* Profile Section */}
@@ -482,7 +444,7 @@ export default function SettingsPage() {
 
 								{/* Current User Info Display */}
 								<div
-									className="dark:bg-gray-700/50 p-4"
+									className="dark:bg-gray-700/50 p-4 rounded-[var(--radius)]"
 									style={{ backgroundColor: 'var(--bg-primary)' }}
 								>
 									<h4
@@ -1092,7 +1054,7 @@ export default function SettingsPage() {
 				)}
 
 				{/* Preferences Section */}
-				{activeSection === 'preferences' && (
+				{/* {activeSection === 'preferences' && (
 					<div className="py-6">
 						<div className="mb-6">
 							<div className="flex items-center space-x-2 mb-2">
@@ -1116,7 +1078,7 @@ export default function SettingsPage() {
 						</div>
 
 						<div className="space-y-6">
-							{/* Dark Mode Toggle */}
+							
 							<div
 								className="flex items-center justify-between p-4 dark:bg-gray-700/50 border dark:border-gray-700"
 								style={{
@@ -1166,7 +1128,7 @@ export default function SettingsPage() {
 							</div>
 						</div>
 					</div>
-				)}
+				)} */}
 			</div>
 		</div>
 	);

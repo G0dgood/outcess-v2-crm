@@ -108,8 +108,8 @@ const SVGLoaderFetch = ({ colSpan, text, asTable = true }: { colSpan?: number; t
 const tabs = [
 	{ id: 'overview', label: 'Overview' },
 	{ id: 'users', label: 'Users' },
-	{ id: 'billing', label: 'Billing' },
-	{ id: 'activity-log', label: 'Activity Log' },
+	// { id: 'billing', label: 'Billing' },
+	// { id: 'activity-log', label: 'Activity Log' },
 ];
 
 

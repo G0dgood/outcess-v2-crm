@@ -15,6 +15,8 @@ import { useLoginMutation, useTeamMemberLoginMutation } from '@/store/services/a
 import { login as loginAction } from '@/store/slices/authSlice';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
+import ReactivationRequestModal from '@/components/ui/ReactivationRequestModal';
+import { useRequestReactivationMutation } from '@/store/services/authApi';
 
 interface ApiError {
 	data?: {
@@ -46,6 +48,10 @@ export default function LoginPage() {
 
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isLoading, setIsLoading] = useState(false);
+	const [isDeactivatedModalOpen, setIsDeactivatedModalOpen] = useState(false);
+	const [deactivatedEmail, setDeactivatedEmail] = useState('');
+	const [deactivationReason, setDeactivationReason] = useState('');
+	const [requestReactivation, { isLoading: isRequestingReactivation }] = useRequestReactivationMutation();
 
 	// Set browser tab title
 	React.useEffect(() => {
@@ -170,7 +176,9 @@ export default function LoginPage() {
 
 					// Handle Account Deactivated
 					if (apiError.status === 403 && apiError.data?.status === 'deactivated') {
-						toast.error('Account deactivated. Contact your administrator.');
+						setDeactivatedEmail(formData.emailOrUserId);
+						setDeactivationReason(apiError.data.deactivationReason || '');
+						setIsDeactivatedModalOpen(true);
 						setIsLoading(false);
 						return;
 					}
@@ -204,6 +212,19 @@ export default function LoginPage() {
 		}
 	};
 
+
+	const handleReactivationConfirm = async (reason: string) => {
+		try {
+			await requestReactivation({
+				email: deactivatedEmail,
+				reason,
+			}).unwrap();
+			toast.success('Reactivation request sent successfully!');
+			setIsDeactivatedModalOpen(false);
+		} catch (error: any) {
+			toast.error(error?.data?.message || 'Failed to send reactivation request');
+		}
+	};
 
 	return (
 		<div className="login-container">
@@ -285,6 +306,15 @@ export default function LoginPage() {
 					</form>
 				</div>
 			</div>
+
+			<ReactivationRequestModal
+				isOpen={isDeactivatedModalOpen}
+				onClose={() => setIsDeactivatedModalOpen(false)}
+				onConfirm={handleReactivationConfirm}
+				email={deactivatedEmail}
+				deactivationReason={deactivationReason}
+				isLoading={isRequestingReactivation}
+			/>
 		</div>
 	);
 }

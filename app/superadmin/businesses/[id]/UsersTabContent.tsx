@@ -102,11 +102,13 @@ const UsersTabContent: React.FC<UsersTabContentProps> = ({ users, isLoading }) =
 
   const columns = useMemo(() => {
     if (!users || users.length === 0) return [];
-    return Object.keys(users[0]).map((key) => ({
-      header: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
-      key,
-      render: (user: User) => formatValue(key, user[key as keyof User])
-    }));
+    return Object.keys(users[0])
+      .filter((key) => key !== '_id')
+      .map((key) => ({
+        header: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
+        key,
+        render: (user: User) => formatValue(key, user[key as keyof User])
+      }));
   }, [users]);
 
   return (

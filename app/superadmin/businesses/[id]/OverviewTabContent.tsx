@@ -1,10 +1,12 @@
 import React from 'react';
 import Button from '@/components/ui/Button';
+import moment from 'moment';
 
 interface BusinessData {
  businessId: string;
  businessName: string;
  status: string;
+ deactivationReason?: string;
  industry: string;
  registrationDate: string;
  primaryContact: string;
@@ -21,6 +23,9 @@ interface OverviewTabContentProps {
 }
 
 const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData }) => {
+ const isInactive = businessData.status === 'Inactive';
+ const isDeactivated = businessData.status === 'Deactivated';
+
  return (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
    {/* Basic Information Card */}
@@ -61,16 +66,44 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
       </span>
       <span className="ml-2">
        <span
-        className="inline-flex px-2 py-1 text-[8px] md:text-[10px] font-semibold rounded-full dark:bg-green-900/30 dark:text-green-400"
+        className={`inline-flex px-2 py-1 text-[8px] md:text-[10px] font-semibold rounded-full ${
+         businessData.status === 'Active'
+          ? 'dark:bg-green-900/30 dark:text-green-400'
+          : businessData.status === 'Inactive'
+          ? 'dark:bg-yellow-900/30 dark:text-yellow-400'
+          : 'dark:bg-red-900/30 dark:text-red-400'
+        }`}
         style={{
-         backgroundColor: 'rgba(34, 197, 94, 0.1)',
-         color: '#16A34A'
+         backgroundColor: 
+          businessData.status === 'Active' ? 'rgba(34, 197, 94, 0.1)' : 
+          businessData.status === 'Inactive' ? 'rgba(234, 179, 8, 0.1)' : 
+          'rgba(239, 68, 68, 0.1)',
+         color: 
+          businessData.status === 'Active' ? '#16A34A' : 
+          businessData.status === 'Inactive' ? '#CA8A04' : 
+          '#DC2626'
         }}
        >
         {businessData.status}
        </span>
       </span>
      </div>
+     {(isInactive || isDeactivated) && businessData.deactivationReason && (
+      <div>
+       <span
+        className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
+        style={{ color: 'var(--text-tertiary)' }}
+       >
+        Deactivation Reason:
+       </span>
+       <span
+        className="ml-2 text-[10px] md:text-[12px] dark:text-gray-100 italic"
+        style={{ color: 'var(--text-primary)' }}
+       >
+        {businessData.deactivationReason}
+       </span>
+      </div>
+     )}
      <div>
       <span
        className="text-[10px] md:text-[12px] font-medium dark:text-gray-400"
@@ -96,7 +129,7 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({ businessData })
        className="ml-2 text-[10px] md:text-[12px] dark:text-gray-100"
        style={{ color: 'var(--text-primary)' }}
       >
-       {businessData.registrationDate}
+       {moment(businessData.registrationDate).format('DD-MM-YYYY')}
       </span>
      </div>
     </div>

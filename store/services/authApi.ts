@@ -116,6 +116,14 @@ export const authApi = baseApi.injectEndpoints({
                 body,
             }),
         }),
+        requestReactivation: builder.mutation<{ message: string }, { email: string; reason: string }>({
+            query: (body) => ({
+                url: 'api/v1/users/request-reactivation',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['User'],
+        }),
     }),
     overrideExisting: true,
 });
@@ -129,5 +137,6 @@ export const {
     useLogoutMutation, 
     useTeamMemberLogoutMutation,
     useUpdateUserMutation,
-    useChangePasswordMutation
+    useChangePasswordMutation,
+    useRequestReactivationMutation
 } = authApi;

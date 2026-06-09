@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import Button from './Button';
 import Modal from './Modal';
+import Textarea from './Textarea';
 import { useCampaign } from '@/contexts/CampaignContext';
 
 interface ReactivationRequestModalProps {
@@ -63,16 +64,14 @@ const ReactivationRequestModal: React.FC<ReactivationRequestModalProps> = ({
 						<p className="text-[12px] font-medium dark:text-gray-300 mb-2" style={{ color: 'var(--text-secondary)' }}>
 							To reactivate your account, please provide a reason for the request. A Super Admin will review your request and notify you via email at <span className="font-semibold">{email}</span>.
 						</p>
-						<textarea
+						<Textarea
+							label=""
 							value={reason}
-							onChange={(e) => setReason(e.target.value)}
+							onChange={setReason}
 							placeholder="Please explain why you would like to reactivate your account..."
-							className="w-full h-32 p-3 text-[12px] rounded-[var(--radius)] border-2 border-gray-200 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-2 transition-all resize-none"
-							style={{
-								borderColor: 'var(--light-gray)',
-							}}
-							onFocus={(e) => e.target.style.borderColor = primaryColor}
-							onBlur={(e) => e.target.style.borderColor = 'var(--light-gray)'}
+							rows={4}
+							resize="none"
+							inputClassName="text-[12px]"
 						/>
 					</div>
 				</div>

@@ -10,6 +10,7 @@ import { updateUser as updateReduxUser } from '@/store/slices/authSlice';
 import { usePathname } from 'next/navigation';
 import { TicketMessage } from '@/store/services/supportApi';
 import { teamMembersApi, TeamMemberStatusUpdatePayload } from '@/store/services/teamMembersApi';
+import { companyApi } from '@/store/services/companyApi';
 import { playNotificationSound } from '@/utils/soundEffects';
 
 export const RealTimeUpdates: React.FC = () => {
@@ -115,16 +116,29 @@ export const RealTimeUpdates: React.FC = () => {
       playNotificationSound('error', 'notifications');
     };
 
+    // Handle Table Refreshes
+    const handleRefreshCompanies = () => {
+      dispatch(companyApi.util.invalidateTags(['Company']));
+    };
+
+    const handleRefreshPendingReactivations = () => {
+      dispatch(companyApi.util.invalidateTags(['Company']));
+    };
+
     on('roleUpdated', handleRoleUpdated);
     on('teamMemberStatusUpdate', handleTeamMemberStatusUpdate);
     on('statusExpired', handleStatusExpired);
     on('newTicketMessage', handleGlobalMessage);
+    on('refreshCompanies', handleRefreshCompanies);
+    on('refreshPendingReactivations', handleRefreshPendingReactivations);
 
     return () => {
       off('roleUpdated', handleRoleUpdated);
       off('teamMemberStatusUpdate', handleTeamMemberStatusUpdate);
       off('statusExpired', handleStatusExpired);
       off('newTicketMessage', handleGlobalMessage);
+      off('refreshCompanies', handleRefreshCompanies);
+      off('refreshPendingReactivations', handleRefreshPendingReactivations);
     };
   }, [socket, on, off, updateUser, dispatch, user?.id, user?._id, pathname]);
 

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { BackpackIcon, BarChartIcon, PersonIcon } from '@radix-ui/react-icons';
+import Skeleton from './skeleton';
 
 interface SummaryCard {
 	title: string;
@@ -14,38 +15,65 @@ interface SummaryCard {
 interface SummaryCardsProps {
 	cards?: SummaryCard[];
 	className?: string;
+	isLoading?: boolean;
 }
 
 const SummaryCards: React.FC<SummaryCardsProps> = ({
 	cards,
 	className = '',
+	isLoading = false,
 }) => {
 	// Default cards if none provided
 	const defaultCards: SummaryCard[] = [
 		{
 			title: 'Total Businesses',
-			value: 123,
+			value: 0,
 			icon: <BackpackIcon className="w-8 h-8" />,
 			iconBgColor: 'bg-blue-50',
 			iconColor: 'text-blue-600',
 		},
 		{
 			title: 'Total Active Businesses',
-			value: 104,
+			value: 0,
 			icon: <BarChartIcon className="w-8 h-8" />,
 			iconBgColor: 'bg-green-50',
 			iconColor: 'text-green-600',
 		},
 		{
 			title: 'Total Users',
-			value: 150,
+			value: 0,
 			icon: <PersonIcon className="w-8 h-8" />,
 			iconBgColor: 'bg-purple-50',
 			iconColor: 'text-purple-600',
 		},
 	];
 
-	const displayCards = cards || defaultCards;
+	const displayCards: SummaryCard[] = cards || defaultCards;
+
+	if (isLoading) {
+		return (
+			<div className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${className}`}>
+				{[1, 2, 3].map((i) => (
+					<div
+						key={i}
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6 rounded-[var(--radius)]"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)'
+						}}
+					>
+						<div className="flex items-center justify-between">
+							<div className="flex-1">
+								<Skeleton className="h-4 w-24 mb-2" />
+								<Skeleton className="h-8 w-16" />
+							</div>
+							<Skeleton variant="circle" className="h-12 w-12" />
+						</div>
+					</div>
+				))}
+			</div>
+		);
+	}
 
 	return (
 		<div className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${className}`}>

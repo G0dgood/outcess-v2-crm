@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { PersonIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { useRouter } from 'next/navigation';
 import { Notification } from '@/store/services/notificationApi';
 import Pagination from './Pagination';
 import Search from './Search';
@@ -22,6 +23,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 	onMarkAsRead
 }) => {
 	const { campaignData } = useCampaign();
+	const router = useRouter();
 	const primaryColor = campaignData?.primaryColor || '#050711';
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
@@ -107,6 +109,23 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 	}, [filter, searchTerm, notifications]);
 
 	const unreadCount = notifications.filter(n => !n.isRead).length;
+
+	const handleNotificationClick = (notification: Notification) => {
+		if (!notification.isRead && onMarkAsRead) {
+			onMarkAsRead(notification.id);
+		}
+
+		onClose();
+
+		// Handle navigation based on notification type
+		if (notification.type === 'business_registration' && notification.data?.companyId) {
+			router.push(`/superadmin/businesses/${notification.data.companyId}`);
+		} else if (notification.type === 'user_created' && notification.data?.userId) {
+			if (notification.data.companyId) {
+				router.push(`/superadmin/businesses/${notification.data.companyId}`);
+			}
+		}
+	};
 
 	if (!shouldRender) return null;
 
@@ -279,11 +298,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 								{paginatedNotifications.map((notification) => (
 									<div
 										key={notification.id}
-										onClick={() => {
-											if (!notification.isRead && onMarkAsRead) {
-												onMarkAsRead(notification.id);
-											}
-										}}
+										onClick={() => handleNotificationClick(notification)}
 										className={`p-4 border-b dark:border-gray-700 dark:hover:bg-gray-700 transition-colors cursor-pointer ${!notification.isRead ? 'dark:bg-green-900/20' : 'dark:bg-gray-800'
 											}`}
 										style={{

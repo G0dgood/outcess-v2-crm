@@ -3,8 +3,8 @@
 import React, { useEffect, useRef } from 'react';
 import Button from './Button';
 import { PersonIcon } from '@radix-ui/react-icons';
-import { usePathname } from 'next/navigation';
-import { playNotificationSound } from '@/utils/soundEffects';
+import { usePathname, useRouter } from 'next/navigation';
+import { playNotificationSound, SoundType } from '@/utils/soundEffects';
 import { setNavigating } from '@/utils/navigationState';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { Notification, NotificationUser } from '@/store/services/notificationApi';
@@ -28,6 +28,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 }) => {
 	const { campaignData, isLoading: isLobLoading } = useCampaign();
 	const pathname = usePathname();
+	const router = useRouter();
 	const primaryColor = campaignData?.primaryColor || '#050711';
 	const hasPlayedOpenSound = useRef(false);
 	const playedNotificationIds = useRef<Set<string>>(new Set());
@@ -52,14 +53,23 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	}, [pathname]);
 
 	// Map notification type to sound type
-	const getSoundTypeForNotification = (type: Notification['type']): 'follow' | 'like' | 'join_request' | 'group_activity' | 'comment' | 'welcome' | 'notification' => {
+	const getSoundTypeForNotification = (type: Notification['type']): SoundType => {
 		switch (type) {
 			case 'status_created':
 			case 'role_updated':
 			case 'custom_alert':
+			case 'business_registration':
+			case 'user_created':
 				return 'notification';
-			default:
+			case 'follow':
+			case 'like':
+			case 'join_request':
+			case 'group_activity':
+			case 'comment':
+			case 'welcome':
 				return type;
+			default:
+				return 'notification';
 		}
 	};
 
@@ -144,6 +154,23 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
 	if (!isOpen) return null;
 
+	const handleNotificationClick = (notification: Notification) => {
+		if (!notification.isRead && onMarkAsRead) {
+			onMarkAsRead(notification.id);
+		}
+
+		onClose();
+
+		// Handle navigation based on notification type
+		if (notification.type === 'business_registration' && notification.data?.companyId) {
+			router.push(`/superadmin/businesses/${notification.data.companyId}`);
+		} else if (notification.type === 'user_created' && notification.data?.userId) {
+			if (notification.data.companyId) {
+				router.push(`/superadmin/businesses/${notification.data.companyId}`);
+			}
+		}
+	};
+
 	return (
 		<>
 			{/* Dropdown */}
@@ -193,11 +220,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 						{notifications.map((notification) => (
 							<div
 								key={notification.id}
-								onClick={() => {
-									if (!notification.isRead && onMarkAsRead) {
-										onMarkAsRead(notification.id);
-									}
-								}}
+								onClick={() => handleNotificationClick(notification)}
 								className={`p-4 border-b dark:border-gray-700 dark:hover:bg-gray-700 transition-colors cursor-pointer ${!notification.isRead ? 'dark:bg-green-900/20' : 'dark:bg-gray-800'
 									}`}
 								style={{

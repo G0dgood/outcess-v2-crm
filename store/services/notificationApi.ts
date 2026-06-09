@@ -8,7 +8,7 @@ export interface NotificationUser {
 
 export interface Notification {
     id: string;
-    type: 'follow' | 'like' | 'join_request' | 'group_activity' | 'comment' | 'welcome' | 'notification' | 'status_created' | 'role_updated' | 'custom_alert';
+    type: 'follow' | 'like' | 'join_request' | 'group_activity' | 'comment' | 'welcome' | 'notification' | 'status_created' | 'role_updated' | 'custom_alert' | 'business_registration' | 'user_created';
     user: NotificationUser;
     message: string;
     timestamp: string;
@@ -40,6 +40,14 @@ export const notificationApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         getNotificationsByCampaignId: builder.query<GetNotificationsResponse, string>({
             query: (campaignId) => `api/v1/notifications?campaignId=${campaignId}`,
+            providesTags: ['Notification'],
+        }),
+        getNotificationsByUserId: builder.query<GetNotificationsResponse, string>({
+            query: (userId) => `api/v1/notifications?userId=${userId}`,
+            providesTags: ['Notification'],
+        }),
+        getNotificationsByRole: builder.query<GetNotificationsResponse, string>({
+            query: (role) => `api/v1/notifications?role=${role}`,
             providesTags: ['Notification'],
         }),
         markNotificationAsRead: builder.mutation<any, string>({
@@ -76,6 +84,8 @@ export const notificationApi = baseApi.injectEndpoints({
 
 export const { 
     useGetNotificationsByCampaignIdQuery,
+    useGetNotificationsByUserIdQuery,
+    useGetNotificationsByRoleQuery,
     useMarkNotificationAsReadMutation,
     useMarkAllNotificationsAsReadMutation,
     useCreateNotificationMutation,

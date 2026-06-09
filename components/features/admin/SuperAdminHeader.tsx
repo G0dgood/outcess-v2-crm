@@ -1,9 +1,11 @@
 'use client';
 
 import React from 'react';
-import { BellIcon, HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
+import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
 import Button from '@/components/ui/Button';
-import ThemeDropdown from '@/components/ui/ThemeDropdown';
+import ThemeToggle from '@/components/ui/ThemeToggle';
+import Icon from '@/components/ui/Icon';
+import NotificationBell from '@/components/ui/NotificationBell';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { useRouter } from '@bprogress/next/app';
@@ -11,6 +13,7 @@ import { toastSuccess } from '@/utils/toastWithSound';
 import { useDispatch } from 'react-redux';
 import { useLogoutMutation, useTeamMemberLogoutMutation } from '@/store/services/authApi';
 import { logout as logoutAction } from '@/store/slices/authSlice';
+import { useGetNotificationsByRoleQuery, useMarkNotificationAsReadMutation } from '@/store/services/notificationApi';
 import SuperAdminUserDropdown from './SuperAdminUserDropdown';
 
 interface SuperAdminHeaderProps {
@@ -38,10 +41,37 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 }) => {
 	const router = useRouter();
 	const dispatch = useDispatch();
-	const { user: authUser } = useAuth();
-	const { disconnect: disconnectSocket } = useSocket();
+	const { user: authUser, logout: contextLogout } = useAuth();
+	const { disconnect: disconnectSocket, socket } = useSocket();
 	const [logoutApi] = useLogoutMutation();
 	const [teamMemberLogoutApi] = useTeamMemberLogoutMutation();
+
+	// Notifications integration
+	const { data: notificationsData, refetch: refetchNotifications } = useGetNotificationsByRoleQuery('super admin', {
+		skip: !['super admin', 'superadmin'].includes(authUser?.role?.toString().toLowerCase() || ''),
+	});
+
+	const [markAsRead] = useMarkNotificationAsReadMutation();
+	const notifications = React.useMemo(() => notificationsData?.notifications || [], [notificationsData]);
+	const unreadCount = React.useMemo(() => notifications.filter(n => !n.isRead).length, [notifications]);
+
+	// Join superadmin role room
+	React.useEffect(() => {
+		const userRole = authUser?.role?.toString().toLowerCase();
+		if (!socket || !['super admin', 'superadmin'].includes(userRole || '')) return;
+
+		socket.emit("joinRole", "super admin");
+
+		const handleNotification = () => {
+			refetchNotifications();
+		};
+
+		socket.on("notification", handleNotification);
+
+		return () => {
+			socket.off("notification", handleNotification);
+		};
+	}, [socket, authUser?.role, refetchNotifications]);
 
 	// Handle logout
 	const handleLogout = async () => {
@@ -63,6 +93,9 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 			// Logout from Redux
 			dispatch(logoutAction());
 
+			// Logout from Context
+			contextLogout();
+
 			// Show success message
 			toastSuccess('Logged out successfully');
 
@@ -75,6 +108,7 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 			// Still perform client-side cleanup
 			disconnectSocket();
 			dispatch(logoutAction());
+			contextLogout();
 
 			// Even if there's an error, redirect to login
 			router.push('/');
@@ -103,19 +137,15 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 
 				{/* Right side - Icons */}
 				<div className="flex items-center justify-center gap-4">
-					{/* Dark Mode Toggle Dropdown */}
-					<ThemeDropdown />
+					{/* Dark Mode Toggle */}
+					<ThemeToggle />
 
 					{/* Notifications Bell */}
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={onNotificationsClick}
-						className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer h-auto"
-						title="Notifications"
-					>
-						<BellIcon className="w-6 h-6" />
-					</Button>
+					<NotificationBell
+						notifications={notifications}
+						unreadCount={unreadCount}
+						onMarkAsRead={(id) => markAsRead(id)}
+					/>
 
 					{/* User Dropdown */}
 					<SuperAdminUserDropdown
@@ -133,4 +163,3 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 };
 
 export default SuperAdminHeader;
-

@@ -5,7 +5,7 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import dynamic from 'next/dynamic';
 import { useSetup } from '@/contexts/SetupContext';
-import { Skeleton } from '@/components/ui/skeleton';
+import Skeleton from '@/components/ui/skeleton';
 
 const KPIMetric = dynamic(() => import('@/components/KPIMetric'), {
 	ssr: false,

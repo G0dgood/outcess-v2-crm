@@ -1,13 +1,24 @@
+'use client';
 
+import React from 'react';
 
-function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
-	return (
-		<div
-			data-slot="skeleton"
-			className={`bg-accent animate-pulse rounded-[var(--radius)] ${className}`}
-			{...props}
-		/>
-	)
+interface SkeletonProps {
+	className?: string;
+	variant?: 'rect' | 'circle' | 'text';
+	style?: React.CSSProperties;
 }
 
-export { Skeleton }
+const Skeleton: React.FC<SkeletonProps> = ({ 
+	className = '', 
+	variant = 'rect',
+	style
+}) => {
+	const baseClass = "animate-pulse bg-gray-200 dark:bg-gray-700";
+	const variantClass = variant === 'circle' ? 'rounded-full' : 'rounded-[var(--radius)]';
+	
+	return (
+		<div className={`${baseClass} ${variantClass} ${className}`} style={style} />
+	);
+};
+
+export default Skeleton;

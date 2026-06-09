@@ -1,11 +1,13 @@
 "use client";
 import React, { useState } from "react";
 import { SetupProvider } from "@/contexts/SetupContext";
+import { useAuth } from "@/contexts/AuthContext";
 import SuperAdminSideNav from "@/components/features/admin/SuperAdminSideNav";
 import SuperAdminHeader from "@/components/features/admin/SuperAdminHeader";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+	const { user } = useAuth();
 
 	const toggleMobileMenu = () => {
 		setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -15,6 +17,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 	return (
 		<div id="page-wrapper" className={isMobileMenuOpen ? 'mobile-nav-open' : ''}>
 			<SuperAdminHeader
+				userName={user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || ""}
+				userEmail={user?.email || ""}
+				userAvatar={user?.avatar}
 				onMobileMenuToggle={toggleMobileMenu}
 				isMobileMenuOpen={isMobileMenuOpen}
 			/>

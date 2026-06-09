@@ -13,7 +13,7 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
 import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
-import { Skeleton } from '@/components/ui/skeleton';
+import Skeleton from '@/components/ui/skeleton';
 import Tabs from '@/components/ui/Tabs';
 
 

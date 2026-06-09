@@ -9,7 +9,7 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import PageHeading from '@/components/ui/PageHeading';
 import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
-import FilterDropdown from '@/components/ui/FilterDropdown';
+import { Dropdown } from '@/components/ui/Dropdown';
 import DateFilter from '@/components/ui/DateFilter';
 import TicketList from '@/components/features/support/TicketList';
 import NewTicketModal from '@/components/features/support/NewTicketModal';
@@ -32,7 +32,25 @@ const SupportPage = () => {
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [priorityFilter, setPriorityFilter] = useState('');
 	const [dateFilter, setDateFilter] = useState<{ filterType: string; startDate?: string; endDate?: string } | null>(null);
+	const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
 	const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
+	const dateFilterRef = React.useRef<HTMLDivElement>(null);
+
+	// Close date filter on outside click
+	React.useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (dateFilterRef.current && !dateFilterRef.current.contains(event.target as Node)) {
+				setIsDateFilterOpen(false);
+			}
+		};
+
+		if (isDateFilterOpen) {
+			document.addEventListener('mousedown', handleClickOutside);
+		}
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, [isDateFilterOpen]);
 
 	const hasAccess = canAccess('support', 'view');
 	const campaignId = (user as { campaignId?: string })?.campaignId || '';
@@ -100,44 +118,48 @@ const SupportPage = () => {
 					/>
 				</div>
 				<div className="flex items-center gap-3">
-					<FilterDropdown
-						label={priorityFilter || "Select Priority"}
-						triggerClassName="!px-2 !py-2 !text-[8px] md:!text-[10px] sm:!px-4 sm:!py-2 !bg-[#F8F9FA]"
-					>
-						{({ close }) => (
-							<div className="dark:bg-gray-800 shadow-lg overflow-hidden w-40 cursor-default rounded-[var(--radius)]">
-								{['High', 'Medium', 'Low', 'Clear'].map((p) => (
-									<div
-										key={p}
-										onClick={() => {
-											setPriorityFilter(p === 'Clear' ? '' : p);
-											setPage(1);
-											close();
-										}}
-										className="px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer dark:text-gray-200"
-									>
-										{p}
-									</div>
-								))}
+					<div className="w-40">
+						<Dropdown
+							label=""
+							placeholder="Select Priority"
+							options={[
+								{ value: 'High', label: 'High' },
+								{ value: 'Medium', label: 'Medium' },
+								{ value: 'Low', label: 'Low' },
+								{ value: '', label: 'Clear' }
+							]}
+							value={priorityFilter}
+							onChange={(val) => {
+								setPriorityFilter(val as string);
+								setPage(1);
+							}}
+							className="!mt-0"
+						/>
+					</div>
+
+					<div className="relative" ref={dateFilterRef}>
+						<Button
+							variant="outline"
+							size="md"
+							className="flex items-center gap-2 h-10 px-4 text-[10px] md:text-[12px] bg-white dark:bg-gray-800"
+							onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
+						>
+							{dateFilter?.filterType ? (dateFilter.filterType === 'all' ? 'All Time' : dateFilter.filterType) : "This Week"}
+						</Button>
+						{isDateFilterOpen && (
+							<div className="absolute top-full right-0 mt-2 z-50">
+								<DateFilter
+									initialFilter={(dateFilter?.filterType as "dateRange" | "today" | "yesterday" | "last7days" | "last30days" | "all" | undefined) || 'last7days'}
+									onApply={(filter: { filterType: string; startDate?: string; endDate?: string }) => {
+										setDateFilter(filter);
+										setPage(1);
+										setIsDateFilterOpen(false);
+									}}
+									onClose={() => setIsDateFilterOpen(false)}
+								/>
 							</div>
 						)}
-					</FilterDropdown>
-					<FilterDropdown
-						label={dateFilter?.filterType ? (dateFilter.filterType === 'all' ? 'All Time' : dateFilter.filterType) : "This Week"}
-						triggerClassName="!px-2 !py-2 !text-[8px] md:!text-[10px] sm:!px-4 sm:!py-2 !bg-[#F8F9FA]"
-					>
-						{({ close }) => (
-							<DateFilter
-								initialFilter={(dateFilter?.filterType as "dateRange" | "today" | "yesterday" | "last7days" | "last30days" | "all" | undefined) || 'last7days'}
-								onApply={(filter: { filterType: string; startDate?: string; endDate?: string }) => {
-									setDateFilter(filter);
-									setPage(1);
-									close();
-								}}
-								onClose={close}
-							/>
-						)}
-					</FilterDropdown>
+					</div>
 					<Button
 						onClick={() => setIsNewTicketModalOpen(true)}
 						variant="primary"

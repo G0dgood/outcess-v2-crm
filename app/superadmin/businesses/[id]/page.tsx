@@ -5,9 +5,11 @@ import BusinessDetailSkeleton from '@/components/skeletons/BusinessDetailSkeleto
 import BackButton from '@/components/ui/BackButton';
 import Button from '@/components/ui/Button';
 import DeactivateBusinessModal from '@/components/ui/DeactivateBusinessModal';
+import ActivateBusinessModal from '@/components/ui/ActivateBusinessModal';
 import { useCampaign } from '@/contexts/CampaignContext';
-import { useSuperAdminGetActivityLogsByCompanyIdQuery, useSuperAdminGetCompanyDetailsQuery, useSuperAdminGetTeamMembersByCompanyIdQuery } from '@/store/services/companyApi';
+import { useSuperAdminGetActivityLogsByCompanyIdQuery, useSuperAdminGetCompanyDetailsQuery, useSuperAdminGetTeamMembersByCompanyIdQuery, useDeactivateCompanyMutation, useActivateCompanyMutation } from '@/store/services/companyApi';
 import React, { use as usePromise, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { ActivityLogItem } from './ActivityLogTabContent';
 import ActivityLogTabContent from './ActivityLogTabContent';
 import BillingTabContent from './BillingTabContent';
@@ -58,6 +60,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 	const { campaignData } = useCampaign();
 	const [activeTab, setActiveTab] = useState('overview');
 	const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
+	const [isActivateModalOpen, setIsActivateModalOpen] = useState(false);
 
 	const { data: companyDetailsData, isLoading: isLoadingCompanyDetails } = useSuperAdminGetCompanyDetailsQuery(id);
 
@@ -68,6 +71,8 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 
 	const { data: teamMembersData, isLoading: isLoadingTeamMembers } = useSuperAdminGetTeamMembersByCompanyIdQuery(id);
 	const { data: activityLogsData, isLoading: isLoadingActivityLogs } = useSuperAdminGetActivityLogsByCompanyIdQuery({ companyId: id, page: 1, limit: 100 });
+	const [deactivateCompany, { isLoading: isDeactivating }] = useDeactivateCompanyMutation();
+	const [activateCompany, { isLoading: isActivating }] = useActivateCompanyMutation();
 
 	const users = useMemo(() => {
 		if (!teamMembersData) return [];
@@ -101,39 +106,63 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 		}));
 	}, [activityLogsData]);
 
-	const billingHistory = [
-		{ id: '1', date: '13-11-2023', amount: 'N500,000', status: 'Paid' },
-		{ id: '2', date: '13-12-2023', amount: 'N500,000', status: 'Paid' },
-		{ id: '3', date: '11-02-2024', amount: 'N500,000', status: 'Paid' },
-		{ id: '4', date: '11-03-2024', amount: 'N500,000', status: 'Paid' },
-		{ id: '5', date: '11-04-2024', amount: 'N500,000', status: 'Paid' },
-		{ id: '6', date: '11-05-2024', amount: 'N500,000', status: 'Paid' },
-		{ id: '7', date: '11-06-2024', amount: 'N500,000', status: 'Paid' },
-		{ id: '8', date: '11-07-2024', amount: 'N500,000', status: 'Paid' },
-		{ id: '9', date: '11-08-2024', amount: 'N500,000', status: 'Paid' },
-		{ id: '10', date: '11-09-2024', amount: 'N500,000', status: 'Paid' },
-		{ id: '11', date: '11-10-2024', amount: 'N500,000', status: 'Paid' },
-		{ id: '12', date: '11-11-2024', amount: 'N500,000', status: 'Paid' },
-		{ id: '13', date: '11-12-2024', amount: 'N500,000', status: 'Paid' },
-		{ id: '14', date: '11-01-2025', amount: 'N500,000', status: 'Paid' },
-		{ id: '15', date: '11-02-2025', amount: 'N500,000', status: 'Paid' },
-		{ id: '16', date: '11-03-2025', amount: 'N500,000', status: 'Paid' },
-		{ id: '17', date: '11-04-2025', amount: 'N500,000', status: 'Paid' },
-		{ id: '18', date: '11-05-2025', amount: 'N500,000', status: 'Paid' },
-		{ id: '19', date: '11-06-2025', amount: 'N500,000', status: 'Paid' },
-		{ id: '20', date: '11-07-2025', amount: 'N500,000', status: 'Paid' },
-		{ id: '21', date: '11-08-2025', amount: 'N500,000', status: 'Paid' },
-		{ id: '22', date: '11-09-2025', amount: 'N500,000', status: 'Paid' },
-		{ id: '23', date: '11-10-2025', amount: 'N500,000', status: 'Paid' },
-		{ id: '24', date: '01-03-2025', amount: 'N500,000', status: 'Paid' },
-	];
+	// const billingHistory = [
+	// 	{ id: '1', date: '13-11-2023', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '2', date: '13-12-2023', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '3', date: '11-02-2024', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '4', date: '11-03-2024', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '5', date: '11-04-2024', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '6', date: '11-05-2024', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '7', date: '11-06-2024', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '8', date: '11-07-2024', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '9', date: '11-08-2024', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '10', date: '11-09-2024', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '11', date: '11-10-2024', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '12', date: '11-11-2024', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '13', date: '11-12-2024', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '14', date: '11-01-2025', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '15', date: '11-02-2025', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '16', date: '11-03-2025', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '17', date: '11-04-2025', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '18', date: '11-05-2025', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '19', date: '11-06-2025', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '20', date: '11-07-2025', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '21', date: '11-08-2025', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '22', date: '11-09-2025', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '23', date: '11-10-2025', amount: 'N500,000', status: 'Paid' },
+	// 	{ id: '24', date: '01-03-2025', amount: 'N500,000', status: 'Paid' },
+	// ];
 
 	const handleDeactivate = () => {
 		setIsDeactivateModalOpen(true);
 	};
 
-	const handleConfirmDeactivate = () => {
-		// TODO: Implement deactivate business logic
+	const handleActivate = () => {
+		setIsActivateModalOpen(true);
+	};
+
+	const handleConfirmActivate = async () => {
+		try {
+			await activateCompany(id).unwrap();
+			toast.success('Business activated successfully');
+			setIsActivateModalOpen(false);
+		} catch (error: any) {
+			console.error('Activation error:', error);
+			const errorMessage = error?.data?.error || error?.data?.message || 'Failed to activate business';
+			toast.error(errorMessage);
+		}
+	};
+
+	const handleConfirmDeactivate = async (reason: string) => {
+		try {
+			await deactivateCompany({ companyId: id, reason }).unwrap();
+			toast.success('Business deactivated successfully');
+			setIsDeactivateModalOpen(false);
+		} catch (error: any) {
+			console.error('Deactivation error:', error);
+			const errorMessage = error?.data?.error || error?.data?.message || 'Failed to deactivate business';
+			toast.error(errorMessage);
+		}
 	};
 
 	if (isLoadingCompanyDetails) {
@@ -175,14 +204,27 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 					activeColor={campaignData?.primaryColor || '#2563EB'}
 					className="border-b-0"
 				/>
-				<Button
-					variant="danger"
-					size="md"
-					onClick={handleDeactivate}
-					className="mb-4"
-				>
-					Deactivate Business
-				</Button>
+				{businessData.status === 'Deactivated' ? (
+					<Button
+						variant="primary"
+						size="md"
+						onClick={handleActivate}
+						className="mb-4"
+						loading={isActivating}
+					>
+						Activate Business
+					</Button>
+				) : (
+					<Button
+						variant="danger"
+						size="md"
+						onClick={handleDeactivate}
+						className="mb-4"
+						loading={isDeactivating}
+					>
+						Deactivate Business
+					</Button>
+				)}
 			</div>
 
 			{/* Overview Content */}
@@ -199,18 +241,18 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 			)}
 
 			{/* Billing Tab Content */}
-			{activeTab === 'billing' && (
+			{/* {activeTab === 'billing' && (
 				<BillingTabContent
 					billingHistory={billingHistory} />
-			)}
+			)} */}
 
 			{/* Activity Log Tab Content */}
-			{activeTab === 'activity-log' && (
+			{/* {activeTab === 'activity-log' && (
 				<ActivityLogTabContent
 					isLoading={isLoadingActivityLogs}
 					activityLog={mappedActivityLogs}
 				/>
-			)}
+			)} */}
 
 			{/* Deactivate Business Modal */}
 			<DeactivateBusinessModal
@@ -218,6 +260,16 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 				onClose={() => setIsDeactivateModalOpen(false)}
 				onConfirm={handleConfirmDeactivate}
 				businessName={businessData.businessName}
+				isLoading={isDeactivating}
+			/>
+
+			{/* Activate Business Modal */}
+			<ActivateBusinessModal
+				isOpen={isActivateModalOpen}
+				onClose={() => setIsActivateModalOpen(false)}
+				onConfirm={handleConfirmActivate}
+				businessName={businessData.businessName}
+				isLoading={isActivating}
 			/>
 		</div>
 	);
