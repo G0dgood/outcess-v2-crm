@@ -46,8 +46,8 @@ const PendingReactivationsPage: React.FC = () => {
 			await approveReactivation(selectedUser._id).unwrap();
 			toast.success('Account reactivated successfully');
 			setIsModalOpen(false);
-		} catch (error: any) {
-			toast.error(error?.data?.message || 'Failed to reactivate account');
+		} catch (error: unknown) {
+			toast.error((error as { data?: { message?: string } })?.data?.message || 'Failed to reactivate account');
 		}
 	};
 
@@ -56,7 +56,7 @@ const PendingReactivationsPage: React.FC = () => {
 			<PageHeading
 				text="Pending Reactivations"
 			/>
-			
+
 			<div className="my-6">
 				<Search
 					placeholder="Search requests..."
@@ -188,7 +188,7 @@ const PendingReactivationsPage: React.FC = () => {
 						</table>
 					</div>
 
-				 
+
 
 					{selectedUser && (
 						<ApproveReactivationModal
@@ -200,12 +200,12 @@ const PendingReactivationsPage: React.FC = () => {
 							reactivationReason={selectedUser.reactivationReason}
 						/>
 					)}
-				</div> 
-						<Pagination
-							currentPage={currentPage}
-							totalPages={totalPages}
-							onPageChange={setCurrentPage}
-						/>
+				</div>
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onPageChange={setCurrentPage}
+				/>
 			</div>
 		</div>
 	);

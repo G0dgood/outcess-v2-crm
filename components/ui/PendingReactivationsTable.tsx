@@ -43,8 +43,8 @@ const PendingReactivationsTable: React.FC<PendingReactivationsTableProps> = ({
 			await approveReactivation(selectedUser._id).unwrap();
 			toast.success('Account reactivated successfully');
 			setIsModalOpen(false);
-		} catch (error: any) {
-			toast.error(error?.data?.message || 'Failed to reactivate account');
+		} catch (error: unknown) {
+			toast.error((error as { data?: { message?: string } })?.data?.message || 'Failed to reactivate account');
 		}
 	};
 

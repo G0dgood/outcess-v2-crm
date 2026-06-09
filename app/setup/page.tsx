@@ -36,7 +36,7 @@ export default function Setup() {
 		};
 
 		fetchUserData();
-	}, [userId, triggerGetUser, updateUser]);
+	}, [userId, triggerGetUser, updateUser, user]);
 
 	return (
 		<div className="w-full">

@@ -169,6 +169,7 @@ export default function LoginPage() {
 					}
 				}
 			} catch (err: unknown) {
+				console.error('Login error:', err);
 				let errorMessage = 'Invalid email or password';
 
 				if (err && typeof err === 'object') {
@@ -221,8 +222,8 @@ export default function LoginPage() {
 			}).unwrap();
 			toast.success('Reactivation request sent successfully!');
 			setIsDeactivatedModalOpen(false);
-		} catch (error: any) {
-			toast.error(error?.data?.message || 'Failed to send reactivation request');
+		} catch (error: unknown) {
+			toast.error((error as { data?: { message?: string } })?.data?.message || 'Failed to send reactivation request');
 		}
 	};
 

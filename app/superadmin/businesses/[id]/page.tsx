@@ -146,9 +146,9 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 			await activateCompany(id).unwrap();
 			toast.success('Business activated successfully');
 			setIsActivateModalOpen(false);
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error('Activation error:', error);
-			const errorMessage = error?.data?.error || error?.data?.message || 'Failed to activate business';
+			const errorMessage = (error as { data?: { error?: string; message?: string } })?.data?.error || (error as { data?: { error?: string; message?: string } })?.data?.message || 'Failed to activate business';
 			toast.error(errorMessage);
 		}
 	};
@@ -158,9 +158,9 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
 			await deactivateCompany({ companyId: id, reason }).unwrap();
 			toast.success('Business deactivated successfully');
 			setIsDeactivateModalOpen(false);
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error('Deactivation error:', error);
-			const errorMessage = error?.data?.error || error?.data?.message || 'Failed to deactivate business';
+			const errorMessage = (error as { data?: { error?: string; message?: string } })?.data?.error || (error as { data?: { error?: string; message?: string } })?.data?.message || 'Failed to deactivate business';
 			toast.error(errorMessage);
 		}
 	};
