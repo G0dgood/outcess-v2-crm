@@ -8,8 +8,24 @@ import moment from 'moment';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import ApproveReactivationModal from './ApproveReactivationModal';
 
-const PendingReactivationsTable: React.FC = () => {
-	const { data: reactivationsData, isLoading } = useGetPendingReactivationsQuery();
+interface PendingReactivationsTableProps {
+	hideTitle?: boolean;
+	page?: number;
+	limit?: number;
+	search?: string;
+}
+
+const PendingReactivationsTable: React.FC<PendingReactivationsTableProps> = ({ 
+	hideTitle = false,
+	page = 1,
+	limit = 10,
+	search = ''
+}) => {
+	const { data: reactivationsData, isLoading } = useGetPendingReactivationsQuery({
+		page,
+		limit,
+		search
+	});
 	const [approveReactivation, { isLoading: isApproving }] = useApproveReactivationMutation();
 	const [selectedUser, setSelectedUser] = useState<any>(null);
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,12 +58,14 @@ const PendingReactivationsTable: React.FC = () => {
 				borderColor: 'var(--light-gray)'
 			}}
 		>
-			<h2
-				className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100 mb-6"
-				style={{ color: 'var(--text-primary)' }}
-			>
-				Pending Reactivation Requests
-			</h2>
+			{!hideTitle && (
+				<h2
+					className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100 mb-6"
+					style={{ color: 'var(--text-primary)' }}
+				>
+					Pending Reactivation Requests
+				</h2>
+			)}
 			<div className="overflow-x-auto">
 				<table
 					className="min-w-full divide-y dark:divide-gray-700"
@@ -61,11 +79,11 @@ const PendingReactivationsTable: React.FC = () => {
 						}}
 					>
 						<tr>
-							<th className="px-6 py-3 text-left text-[10px] md:text-[12px] font-medium text-gray-500 uppercase tracking-wider">User Name</th>
-							<th className="px-6 py-3 text-left text-[10px] md:text-[12px] font-medium text-gray-500 uppercase tracking-wider">Company</th>
-							<th className="px-6 py-3 text-left text-[10px] md:text-[12px] font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-							<th className="px-6 py-3 text-left text-[10px] md:text-[12px] font-medium text-gray-500 uppercase tracking-wider">Request Date</th>
-							<th className="px-6 py-3 text-left text-[10px] md:text-[12px] font-medium text-gray-500 uppercase tracking-wider">Action</th>
+							<th>User Name</th>
+							<th>Company</th>
+							<th>Reason</th>
+							<th>Request Date</th>
+							<th>Action</th>
 						</tr>
 					</thead>
 					<tbody

@@ -69,8 +69,12 @@ export const companyApi = baseApi.injectEndpoints({
     getSuperAdminDashboardStats: builder.query<any, void>({
       query: () => "api/v1/super-admin/dashboard-stats",
     }),
-    getPendingReactivations: builder.query<any, void>({
-      query: () => "api/v1/super-admin/pending-reactivations",
+    getPendingReactivations: builder.query<
+      any,
+      { page?: number; limit?: number; search?: string }
+    >({
+      query: ({ page = 1, limit = 10, search = "" }) =>
+        `api/v1/super-admin/pending-reactivations?page=${page}&limit=${limit}&search=${search}`,
       providesTags: ["User"],
     }),
     approveReactivation: builder.mutation<any, string>({

@@ -10,6 +10,7 @@ import {
 	DoubleArrowLeftIcon,
 	DoubleArrowRightIcon,
 	GearIcon,
+	UpdateIcon,
 } from '@radix-ui/react-icons';
 import Button from '@/components/ui/Button';
 import Icon from '@/components/ui/Icon';
@@ -82,6 +83,12 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 			path: '/superadmin/businesses',
 		},
 		{
+			id: 'pending-reactivations',
+			label: 'Pending Reactivations',
+			icon: <UpdateIcon className="w-5 h-5" />,
+			path: '/superadmin/pending-reactivations',
+		},
+		{
 			id: 'settings',
 			label: 'Account Settings',
 			icon: <GearIcon className="w-5 h-5" />,
@@ -105,6 +112,7 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 	const getActiveItem = () => {
 		if (pathname?.startsWith('/superadmin/dashboard')) return 'dashboard';
 		if (pathname?.startsWith('/superadmin/businesses')) return 'businesses-management';
+		if (pathname?.startsWith('/superadmin/pending-reactivations')) return 'pending-reactivations';
 		if (pathname?.startsWith('/superadmin/settings')) return 'settings';
 		return activeItem;
 	};
