@@ -50,6 +50,28 @@ export interface PendingReactivationsResponse {
   };
 }
 
+export interface ActivityLogsResponse {
+  activityLogs: {
+    _id: string;
+    action: string;
+    userId:
+      | {
+          name: string;
+          email: string;
+        }
+      | string;
+    details: string;
+    ipAddress?: string;
+    createdAt: string;
+  }[];
+  pagination: {
+    total: number;
+    totalPages: number;
+    page: number;
+    limit: number;
+  };
+}
+
 export const companyApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createCompany: builder.mutation<
@@ -95,7 +117,7 @@ export const companyApi = baseApi.injectEndpoints({
         `api/v1/super-admin/companies/${companyId}/team-members`,
     }),
     superAdminGetActivityLogsByCompanyId: builder.query<
-      unknown,
+      ActivityLogsResponse,
       { companyId: string; page?: number; limit?: number }
     >({
       query: ({ companyId, page = 1, limit = 10 }) =>

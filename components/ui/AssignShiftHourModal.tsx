@@ -5,9 +5,9 @@ import { Modal } from './Modal';
 import Button from './Button';
 import Checkbox from './Checkbox';
 import { useCampaign } from '@/contexts/CampaignContext';
-import { useGetTeamMembersByCampaignIdQuery, useAssignShiftHourMutation } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByCampaignIdQuery, useAssignShiftHourToTeamMembersMutation } from '@/store/services/teamMembersApi';
 import { toastError, toastSuccess } from '@/utils/toastWithSound';
-import { Skeleton } from './skeleton';
+import Skeleton from './Skeleton';
 
 interface AssignShiftHourModalProps {
 	isOpen: boolean;
@@ -37,15 +37,14 @@ const AssignShiftHourModal: React.FC<AssignShiftHourModalProps> = ({
 	shiftName,
 }) => {
 	const { campaignData } = useCampaign();
-	const campaignId =
-		campaignData?.campaign?._id || campaignData?._id || '';
+	const campaignId = campaignData?._id || '';
 
 	const { data: teamMembersResponse, isLoading, refetch } =
-		useGetTeamMembersByCampaignIdQuery(campaignId, {
+		useGetTeamMembersByCampaignIdQuery({ campaignId: campaignId }, {
 			skip: !campaignId || !isOpen,
 		});
 
-	const [assignShiftHour, { isLoading: isAssigning }] = useAssignShiftHourMutation();
+	const [assignShiftHour, { isLoading: isAssigning }] = useAssignShiftHourToTeamMembersMutation();
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [teamMembers, setTeamMembers] = useState<ApiTeamMember[]>([]);
 	const [initializedSelection, setInitializedSelection] = useState(false);
@@ -246,3 +245,5 @@ const AssignShiftHourModal: React.FC<AssignShiftHourModalProps> = ({
 };
 
 export default AssignShiftHourModal;
+
+

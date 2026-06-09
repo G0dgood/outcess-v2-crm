@@ -122,13 +122,19 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 	};
 
 	const dayOptions = (() => {
-		const businessHours = campaignData?.campaign?.businessHours as
+		const businessHours = (campaignData as any)?.businessHours as
 			| { name?: string; businessDays?: string[] }[]
 			| { name?: string; businessDays?: string[] }
 			| undefined;
 
 		if (!businessHours) {
-			return [];
+			return [
+				{ value: 'monday-friday', label: 'Monday - Friday' },
+				{ value: 'monday-saturday', label: 'Monday - Saturday' },
+				{ value: 'monday-sunday', label: 'Monday - Sunday' },
+				{ value: 'tuesday-saturday', label: 'Tuesday - Saturday' },
+				{ value: 'custom', label: 'Custom' },
+			];
 		}
 
 		const list = Array.isArray(businessHours) ? businessHours : [businessHours];

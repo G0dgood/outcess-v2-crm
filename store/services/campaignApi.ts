@@ -14,6 +14,26 @@ export interface Campaign {
   timeZone?: string;
   companyId?: string;
   companyName?: string;
+  dashboardSettings?: {
+    dashboardName: string;
+    dashboardVisibility: string;
+    activeTab: string;
+    widgets: any[];
+    dispositions: any[];
+    buckets: any[];
+    callOutcomes: any[];
+    leaderboardTargets?: {
+      daily: number;
+      weekly: number;
+      monthly: number;
+    };
+    dispositionSettings: {
+      timeRangeView: string;
+      chartType: string;
+      charts: any[];
+    };
+  };
+  businessHours?: any;
   [key: string]: unknown;
 }
 

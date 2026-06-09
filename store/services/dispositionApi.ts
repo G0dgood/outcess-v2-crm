@@ -64,6 +64,20 @@ export interface GetLeaderboardRequest {
     timeFilter?: 'daily' | 'weekly' | 'monthly';
 }
 
+export interface LeaderboardResponse {
+    leaderboard: unknown[];
+    leaderboardTargets?: {
+        daily: number;
+        weekly: number;
+        monthly: number;
+    };
+    bucketTargets?: Record<string, {
+        daily: number;
+        weekly: number;
+        monthly: number;
+    }>;
+}
+
 export const dispositionApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         createDisposition: builder.mutation<CreateDispositionResponse, CreateDispositionRequest>({
@@ -109,7 +123,7 @@ export const dispositionApi = baseApi.injectEndpoints({
                 `api/v1/dispositions/${campaignId}/dashboard-report?startDate=${startDate}&endDate=${endDate}`,
             providesTags: ['Disposition'],
         }),
-        getLeaderboard: builder.query<unknown, GetLeaderboardRequest>({
+        getLeaderboard: builder.query<LeaderboardResponse, GetLeaderboardRequest>({
             query: ({ campaignId, timeFilter = 'weekly' }) => 
                 `api/v1/leaderboard/${campaignId}?timeFilter=${timeFilter}`,
             providesTags: ['Disposition'],

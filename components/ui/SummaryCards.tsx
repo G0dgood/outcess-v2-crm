@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { BackpackIcon, BarChartIcon, PersonIcon } from '@radix-ui/react-icons';
-import Skeleton from './skeleton';
+import Skeleton from './Skeleton';
 
 interface SummaryCard {
 	title: string;

@@ -8,21 +8,9 @@ import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
 import Pagination from './Pagination';
 import TablePaginationHeader from './TablePaginationHeader';
 
-interface ActivityLog {
-	_id: string;
-	action: string;
-	userId: {
-		name: string;
-		email: string;
-	} | string;
-	details: string;
-	ipAddress?: string;
-	createdAt: string;
-}
-
 const AuditLogs: React.FC = () => {
 	const { user } = useUserInfo();
-	const companyId = user?.companyId || user?.company?._id || '';
+	const companyId = user?.companyId || user?.id || '';
 
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(15);
@@ -32,11 +20,10 @@ const AuditLogs: React.FC = () => {
 		{ skip: !companyId }
 	);
 
-	const rawLogs = logsData?.activityLogs || logsData?.logs || logsData || [];
-	const logs: ActivityLog[] = Array.isArray(rawLogs) ? rawLogs : [];
+	const logs = logsData?.activityLogs || [];
 
-	const totalItems = logsData?.pagination?.total || logs.length;
-	const totalPages = logsData?.pagination?.totalPages || Math.ceil(totalItems / itemsPerPage);
+	const totalItems = logsData?.pagination?.total || 0;
+	const totalPages = logsData?.pagination?.totalPages || 1;
 	const currentLogs = logs; // Backend already paginated
 
 	const formatDate = (dateString: string) => {
