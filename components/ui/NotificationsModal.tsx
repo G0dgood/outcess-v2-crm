@@ -1,23 +1,30 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSetup } from '@/contexts/SetupContext';
+import Image from 'next/image';
 import { PersonIcon, Cross2Icon } from '@radix-ui/react-icons';
-import { sampleNotifications } from '@/data/notifications';
+import { useRouter } from 'next/navigation';
+import { Notification } from '@/store/services/notificationApi';
 import Pagination from './Pagination';
 import Search from './Search';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface NotificationsModalProps {
 	isOpen: boolean;
 	onClose: () => void;
+	notifications: Notification[];
+	onMarkAsRead?: (id: string) => void;
 }
 
 const NotificationsModal: React.FC<NotificationsModalProps> = ({
 	isOpen,
 	onClose,
+	notifications,
+	onMarkAsRead
 }) => {
-	const { setupData } = useSetup();
-	const primaryColor = setupData.primaryColor || '#050711';
+	const { campaignData } = useCampaign();
+	const router = useRouter();
+	const primaryColor = campaignData?.primaryColor || '#050711';
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
@@ -70,7 +77,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
 	// Filter and search notifications
 	const filteredNotifications = useMemo(() => {
-		let filtered = sampleNotifications;
+		let filtered = notifications;
 
 		// Apply read/unread filter
 		if (filter === 'unread') {
@@ -89,7 +96,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 		}
 
 		return filtered;
-	}, [filter, searchTerm]);
+	}, [filter, searchTerm, notifications]);
 
 	// Paginate notifications
 	const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
@@ -99,9 +106,26 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 	// Update current page when filters change
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [filter, searchTerm]);
+	}, [filter, searchTerm, notifications]);
 
-	const unreadCount = sampleNotifications.filter(n => !n.isRead).length;
+	const unreadCount = notifications.filter(n => !n.isRead).length;
+
+	const handleNotificationClick = (notification: Notification) => {
+		if (!notification.isRead && onMarkAsRead) {
+			onMarkAsRead(notification.id);
+		}
+
+		onClose();
+
+		// Handle navigation based on notification type
+		if (notification.type === 'business_registration' && notification.data?.companyId) {
+			router.push(`/superadmin/businesses/${notification.data.companyId}`);
+		} else if (notification.type === 'user_created' && notification.data?.userId) {
+			if (notification.data.companyId) {
+				router.push(`/superadmin/businesses/${notification.data.companyId}`);
+			}
+		}
+	};
 
 	if (!shouldRender) return null;
 
@@ -129,13 +153,13 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 					<div className="flex justify-between items-center">
 						<div>
 							<h2
-								className="text-2xl font-semibold dark:text-gray-100"
+								className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								Notifications
 							</h2>
 							<p
-								className="text-sm dark:text-gray-400 mt-1"
+								className="text-[10px] md:text-[12px] dark:text-gray-400 mt-1"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								{filteredNotifications.length} {filteredNotifications.length === 1 ? 'notification' : 'notifications'}
@@ -182,9 +206,9 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 						<div className="flex items-center gap-2">
 							<button
 								onClick={() => setFilter('all')}
-								className={`px-4 py-2 text-sm font-medium transition-colors ${filter === 'all'
-										? 'dark:bg-gray-700 dark:text-gray-100'
-										: 'dark:text-gray-400 dark:hover:text-gray-200'
+								className={`px-4 py-2 text-[10px] md:text-[12px] font-medium transition-colors rounded-[var(--radius)] ${filter === 'all'
+									? 'dark:bg-gray-700 dark:text-gray-100'
+									: 'dark:text-gray-400 dark:hover:text-gray-200'
 									}`}
 								style={{
 									backgroundColor: filter === 'all' ? 'var(--bg-primary)' : 'transparent',
@@ -207,9 +231,9 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 							</button>
 							<button
 								onClick={() => setFilter('unread')}
-								className={`px-4 py-2 text-sm font-medium transition-colors ${filter === 'unread'
-										? 'dark:bg-gray-700 dark:text-gray-100'
-										: 'dark:text-gray-400 dark:hover:text-gray-200'
+								className={`px-4 py-2 text-[10px] md:text-[12px] font-medium transition-colors rounded-[var(--radius)] ${filter === 'unread'
+									? 'dark:bg-gray-700 dark:text-gray-100'
+									: 'dark:text-gray-400 dark:hover:text-gray-200'
 									}`}
 								style={{
 									backgroundColor: filter === 'unread' ? 'var(--bg-primary)' : 'transparent',
@@ -232,9 +256,9 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 							</button>
 							<button
 								onClick={() => setFilter('read')}
-								className={`px-4 py-2 text-sm font-medium transition-colors ${filter === 'read'
-										? 'dark:bg-gray-700 dark:text-gray-100'
-										: 'dark:text-gray-400 dark:hover:text-gray-200'
+								className={`px-4 py-2 text-[10px] md:text-[12px] font-medium transition-colors rounded-[var(--radius)] ${filter === 'read'
+									? 'dark:bg-gray-700 dark:text-gray-100'
+									: 'dark:text-gray-400 dark:hover:text-gray-200'
 									}`}
 								style={{
 									backgroundColor: filter === 'read' ? 'var(--bg-primary)' : 'transparent',
@@ -263,7 +287,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 				<div className="flex-1 overflow-y-auto p-8">
 					{/* Notifications List */}
 					<div
-						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
@@ -274,7 +298,8 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 								{paginatedNotifications.map((notification) => (
 									<div
 										key={notification.id}
-										className={`p-4 border-b dark:border-gray-700 dark:hover:bg-gray-700 transition-colors ${!notification.isRead ? 'dark:bg-green-900/20' : 'dark:bg-gray-800'
+										onClick={() => handleNotificationClick(notification)}
+										className={`p-4 border-b dark:border-gray-700 dark:hover:bg-gray-700 transition-colors cursor-pointer ${!notification.isRead ? 'dark:bg-green-900/20' : 'dark:bg-gray-800'
 											}`}
 										style={{
 											borderColor: 'var(--light-gray)',
@@ -291,10 +316,12 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 											{/* User Avatar or Icon */}
 											<div className="shrink-0">
 												{notification.user.avatar ? (
-													<img
+													<Image
 														src={notification.user.avatar}
 														alt={notification.user.name}
-														className="w-10 h-10 rounded-full border-2"
+														width={40}
+														height={40}
+														className="rounded-full border-2 object-cover"
 														style={{ borderColor: primaryColor }}
 													/>
 												) : (
@@ -310,18 +337,18 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 												<div className="flex items-start justify-between">
 													<div className="flex-1">
 														<p
-															className="text-sm dark:text-gray-300 leading-relaxed"
+															className="text-[10px] md:text-[12px] dark:text-gray-300 leading-relaxed"
 															style={{ color: 'var(--text-tertiary)' }}
 														>
 															<span
-																className="font-inter not-italic font-medium text-sm leading-[145%] dark:text-gray-100 font-features"
+																className="font-inter not-italic font-medium text-[10px] md:text-[12px] leading-[145%] dark:text-gray-100 font-features"
 																style={{ color: 'var(--text-primary)' }}
 															>
 																{notification.user.name}
 															</span>{' '}
 															{notification.message}
 															<span
-																className="text-xs dark:text-gray-400 mt-1 block"
+																className="text-[8px] md:text-[10px] dark:text-gray-400 mt-1 block"
 																style={{ color: 'var(--text-tertiary)' }}
 															>
 																{notification.timestamp}
@@ -345,7 +372,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 						) : (
 							<div className="p-12 text-center">
 								<p
-									className="text-sm dark:text-gray-400"
+									className="text-[10px] md:text-[12px] dark:text-gray-400"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									No notifications found

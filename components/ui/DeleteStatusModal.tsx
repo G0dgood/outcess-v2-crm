@@ -9,6 +9,7 @@ interface DeleteStatusModalProps {
 	onClose: () => void;
 	onConfirm: () => void;
 	statusName: string;
+	isLoading?: boolean;
 }
 
 export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
@@ -16,6 +17,7 @@ export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
 	onClose,
 	onConfirm,
 	statusName,
+	isLoading,
 }) => {
 	useEffect(() => {
 		if (isOpen) {
@@ -45,7 +47,7 @@ export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
 			<div
-				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 overflow-hidden flex flex-col"
+				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 overflow-hidden flex flex-col rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
@@ -54,12 +56,14 @@ export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="text-xl font-semibold dark:text-gray-100"
+						className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Delete Status
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
 						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
 						style={{ color: 'var(--text-tertiary)' }}
@@ -74,13 +78,13 @@ export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Content */}
 				<div className="flex-1 p-6">
 					<p
-						className="text-sm dark:text-gray-400"
+						className="text-[10px] md:text-[12px] dark:text-gray-400"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
 						Are you sure you want to delete the <span
@@ -106,6 +110,8 @@ export const DeleteStatusModal: React.FC<DeleteStatusModalProps> = ({
 						variant="primary"
 						size="md"
 						onClick={onConfirm}
+						loading={isLoading}
+						disabled={isLoading}
 					>
 						Delete Status
 					</Button>

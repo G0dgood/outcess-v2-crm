@@ -18,12 +18,12 @@
         "name": "next"
       }
     ],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@bprogress/*": ["node_modules/@bprogress/*"]
+      "@bprogress/*": ["./node_modules/@bprogress/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "extends": "expo/tsconfig.base"
 }

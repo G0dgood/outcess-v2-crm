@@ -1,31 +1,173 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Icon from './Icon';
-import { ArrowLeftIcon } from '@radix-ui/react-icons';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { StatusConfirmationModal } from './StatusConfirmationModal';
+import { StatusSubmenu, StatusOption } from './StatusSubmenu';
+import { UserMenu } from './UserMenu';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { useGetStatusesByCampaignIdQuery } from '@/store/services/statusApi';
+import { useUpdateTeamMemberStatusMutation } from '@/store/services/teamMembersApi';
+import { useUpdateUserMutation } from '@/store/services/authApi';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useSocket } from '@/contexts/SocketContext';
+import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
+import { User } from '@/store/slices/authSlice';
+import Image from 'next/image';
 
-interface UserDropdownProps {
-	userName: string;
-	userEmail: string;
+export interface UserDropdownProps {
+	userId?: string;
+	userName?: string;
+	userEmail?: string;
 	userAvatar?: string;
+	user?: User | null;
 	isOnline?: boolean;
+	currentStatus?: {
+		status: string;
+		color?: string;
+	};
 	onStatusClick?: () => void;
 	onEditProfileClick?: () => void;
 	onLogoutClick?: () => void;
+	isOpen?: boolean;
+	onToggle?: (isOpen: boolean) => void;
 }
 
 const UserDropdown: React.FC<UserDropdownProps> = ({
-	userName,
-	userEmail,
+	userId,
+	userName = '',
+	userEmail = '',
 	userAvatar,
 	isOnline = true,
+	currentStatus,
 	onLogoutClick,
+	isOpen: externalIsOpen,
+	onToggle,
 }) => {
-	const router = useRouter();
-	const [isOpen, setIsOpen] = useState(false);
+	const [internalIsOpen, setInternalIsOpen] = useState(false);
+
+	// Use either controlled or internal state
+	const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+	const setIsOpen = useCallback((value: boolean) => {
+		if (onToggle) {
+			onToggle(value);
+		} else {
+			setInternalIsOpen(value);
+		}
+	}, [onToggle]);
 	const [isStatusOpen, setIsStatusOpen] = useState(false);
+	const [isStatusConfirmOpen, setIsStatusConfirmOpen] = useState(false);
+	const [pendingStatus, setPendingStatus] = useState<StatusOption | null>(null);
+	const [statusReason, setStatusReason] = useState('');
+	const [mounted, setMounted] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
+	const { selectedCampaignId } = useCampaign();
+	const { isAdmin, isSuperAdmin } = usePrivilege();
+	const { socket, isConnected } = useSocket();
+
+	const showStatusFeature = !isAdmin && !isSuperAdmin;
+
+	const [updateStatus, { isLoading: isUpdatingTeamMemberStatus }] = useUpdateTeamMemberStatusMutation();
+	const [updateUser, { isLoading: isUpdatingUserStatus }] = useUpdateUserMutation();
+
+	const isUpdatingStatus = isUpdatingTeamMemberStatus || isUpdatingUserStatus;
+
+	const { data: fetchedStatuses, isLoading } = useGetStatusesByCampaignIdQuery(selectedCampaignId || '', {
+		skip: !selectedCampaignId
+	});
+
+	const [statusOptions, setStatusOptions] = useState<StatusOption[]>([]);
+
+	useEffect(() => {
+		if (fetchedStatuses) {
+			const rawStatuses = (Array.isArray(fetchedStatuses) ? fetchedStatuses :
+				(Array.isArray((fetchedStatuses as unknown as { data?: unknown[] }).data) ? (fetchedStatuses as unknown as { data?: unknown[] }).data :
+					(Array.isArray((fetchedStatuses as unknown as { statuses?: unknown[] }).statuses) ? (fetchedStatuses as unknown as { statuses?: unknown[] }).statuses :
+						(Array.isArray((fetchedStatuses as unknown as { docs?: unknown[] }).docs) ? (fetchedStatuses as unknown as { docs?: unknown[] }).docs :
+							[])))) || [];
+
+			const mappedStatuses = (rawStatuses as { id?: string; _id?: string; name: string; color?: string }[]).map((status) => ({
+				value: status.id || status._id || '',
+				label: status.name,
+				color: status.color || '#6C8B7D'
+			}));
+
+			if (mappedStatuses.length > 0) {
+				setStatusOptions(mappedStatuses);
+			} else {
+				// Fallback to default options if no dynamic statuses found
+				setStatusOptions([]);
+			}
+		} else if (!isLoading && !selectedCampaignId) {
+			// Fallback if no LOB selected
+			setStatusOptions([]);
+		}
+	}, [fetchedStatuses, isLoading, selectedCampaignId]);
+
+	useEffect(() => {
+		if (!socket || !isConnected || !selectedCampaignId) return;
+
+		interface StatusPayload {
+			id?: string;
+			_id?: string;
+			name: string;
+			color?: string;
+			campaignId: string;
+		}
+
+		const handleStatusCreated = (newStatus: StatusPayload) => {
+			if (newStatus.campaignId !== selectedCampaignId) return;
+			setStatusOptions((prev) => {
+				const statusId = newStatus.id || newStatus._id;
+				if (prev.find(s => s.value === statusId)) return prev;
+				return [...prev, {
+					value: statusId || '',
+					label: newStatus.name,
+					color: newStatus.color || '#6C8B7D'
+				}];
+			});
+			if (newStatus.name) {
+				toastInfo(`New status '${newStatus.name}' is now available.`);
+			}
+		};
+
+		const handleStatusUpdated = (updatedStatus: StatusPayload) => {
+			if (updatedStatus.campaignId !== selectedCampaignId) return;
+			setStatusOptions((prev) => prev.map((s) => {
+				const statusId = updatedStatus.id || updatedStatus._id;
+				if (s.value === statusId) {
+					return {
+						...s,
+						label: updatedStatus.name,
+						color: updatedStatus.color || '#6C8B7D'
+					};
+				}
+				return s;
+			}));
+			if (updatedStatus.name) {
+				toastInfo(`Status '${updatedStatus.name}' has been updated.`);
+			}
+		};
+
+		const handleStatusDeleted = (payload: { campaignId: string; id: string }) => {
+			if (payload.campaignId !== selectedCampaignId) return;
+			setStatusOptions((prev) => prev.filter((s) => s.value !== payload.id));
+			toastInfo("A campaign status was removed.");
+		};
+
+		socket.on("statusCreated", handleStatusCreated);
+		socket.on("statusUpdated", handleStatusUpdated);
+		socket.on("statusDeleted", handleStatusDeleted);
+
+		return () => {
+			socket.off("statusCreated", handleStatusCreated);
+			socket.off("statusUpdated", handleStatusUpdated);
+			socket.off("statusDeleted", handleStatusDeleted);
+		};
+	}, [socket, isConnected, selectedCampaignId]);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	// Close dropdown when clicking outside
 	useEffect(() => {
@@ -40,24 +182,77 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, []);
+	}, [setIsOpen]);
 
 	// Close main dropdown when status submenu opens
 	useEffect(() => {
 		if (isStatusOpen) {
 			setIsOpen(false);
 		}
-	}, [isStatusOpen]);
+	}, [isStatusOpen, setIsOpen]);
 
-	const statusOptions = [
-		{ value: 'online', label: 'Online' },
-		{ value: 'lunch', label: 'Lunch Break' },
-		{ value: 'restroom', label: 'Restroom Break' },
-		{ value: 'offline', label: 'Offline' },
-	];
 
-	const handleStatusSelect = (status: string) => {
-		console.log('Status selected:', status);
+
+	const handleStatusSelect = (status: StatusOption) => {
+		setPendingStatus(status);
+		setStatusReason('');
+		setIsStatusConfirmOpen(true);
+	};
+
+	const confirmStatusChange = async () => {
+		if (pendingStatus && userId) {
+			const statusData = {
+				status: pendingStatus.label,
+				reason: statusReason,
+				color: pendingStatus.color
+			};
+
+			try {
+				// If user is admin/owner, try updateUser first (they often aren't team members)
+				if (isAdmin) {
+					await updateUser({
+						id: userId,
+						data: { status: statusData }
+					}).unwrap();
+				} else {
+					// Otherwise try team member status update
+					try {
+						await updateStatus({
+							id: userId,
+							status: pendingStatus.label,
+							reason: statusReason
+						}).unwrap();
+					} catch (err: unknown) {
+						const errorObj = err as { status?: number; data?: { message?: string } };
+						// Fallback to updateUser if team member not found (404)
+						if (errorObj?.status === 404 ||
+							errorObj?.data?.message?.toLowerCase().includes('not found') ||
+							errorObj?.data?.message?.toLowerCase().includes('team member')) {
+
+							await updateUser({
+								id: userId,
+								data: { status: statusData }
+							}).unwrap();
+						} else {
+							throw err;
+						}
+					}
+				}
+
+				toastSuccess('Status updated successfully');
+			} catch (error: unknown) {
+				console.error('Failed to update status:', error);
+				const errorObj = error as { data?: { message?: string }; message?: string };
+				const errorMessage = errorObj?.data?.message || errorObj?.message || 'Failed to update status';
+				toastError(errorMessage);
+			}
+		} else if (!userId) {
+			toastError('User ID is missing');
+		}
+
+		setIsStatusConfirmOpen(false);
+		setPendingStatus(null);
+		setStatusReason('');
 		setIsStatusOpen(false);
 		setIsOpen(false);
 	};
@@ -66,47 +261,50 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 		<div className="relative" ref={dropdownRef}>
 			<button
 				onClick={() => setIsOpen(!isOpen)}
-				className="p-1 rounded-full transition-colors cursor-pointer"
-				title={userName}
+				className={`flex items-center gap-2.5 p-1.5 px-2.5 rounded-[var(--radius)] transition-all duration-200 cursor-pointer group header-dropdown-trigger`}
+				title={mounted ? `${userName}${currentStatus ? ` - ${currentStatus.status}` : ''}` : ''}
 				style={{
-					color: 'var(--text-tertiary)',
-					backgroundColor: 'transparent'
-				}}
-				onMouseEnter={(e) => {
-					e.currentTarget.style.color = 'var(--text-primary)';
-					e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-				}}
-				onMouseLeave={(e) => {
-					e.currentTarget.style.color = 'var(--text-tertiary)';
-					e.currentTarget.style.backgroundColor = 'transparent';
+					backgroundColor: isOpen ? 'var(--bg-primary)' : 'transparent',
+					border: isOpen ? '1px solid var(--light-gray)' : '1px solid transparent'
 				}}
 			>
 				<div className="relative">
 					{userAvatar ? (
-						<img
+						<Image
 							src={userAvatar}
-							alt={userName}
-							className="w-8 h-8 rounded-full border-2"
+							alt={mounted ? userName : ''}
+							width={32}
+							height={32}
+							className="rounded-full border-2 object-cover shrink-0"
 							style={{ borderColor: 'var(--light-gray)' }}
 						/>
 					) : (
 						<div
-							className="box-border w-[40px] h-[40px] rounded-full flex items-center justify-center"
+							className="box-border w-8 h-8 rounded-full flex items-center justify-center shrink-0"
 							style={{
 								backgroundColor: 'var(--bg-primary)',
 								border: '1px solid var(--light-gray)'
 							}}
 						>
 							<span
-								className="font-semibold text-sm"
+								className="font-semibold text-[12px] transition-colors duration-200 dark:group-hover:!text-white"
 								style={{ color: 'var(--text-primary)' }}
 							>
-								{userName.charAt(0).toUpperCase()}
+								{mounted ? userName.charAt(0).toUpperCase() : ''}
 							</span>
 						</div>
 					)}
-					{/* Online Status Indicator */}
-					{isOnline && (
+					{/* Status Indicator */}
+					{showStatusFeature && mounted && currentStatus ? (
+						<div
+							className="absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 rounded-full"
+							style={{
+								backgroundColor: currentStatus.color || "", // Default to green if no color
+								borderColor: 'var(--accent-white)'
+							}}
+							title={currentStatus.status}
+						></div>
+					) : showStatusFeature && isOnline && (
 						<div
 							className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 rounded-full"
 							style={{ borderColor: 'var(--accent-white)' }}
@@ -116,191 +314,43 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 			</button>
 
 			{/* User Dropdown */}
-			{isOpen && !isStatusOpen && (
-				<div
-					className="absolute right-0 top-full mt-2 w-80 dark:bg-gray-800 border dark:border-gray-700 shadow-lg z-50 overflow-hidden"
-					style={{
-						backgroundColor: 'var(--accent-white)',
-						borderColor: 'var(--light-gray)'
-					}}
-				>
-					{/* User Info Section */}
-					<div
-						className="p-4 border-b dark:border-gray-700"
-						style={{
-							borderColor: 'var(--light-gray)'
-						}}
-					>
-						<div className="flex items-center gap-3">
-							{userAvatar ? (
-								<img
-									src={userAvatar}
-									alt={userName}
-									className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-600"
-								/>
-							) : (
-								<div className="w-12 h-12 bg-[#F2F4F7] dark:bg-gray-700 border border-[#E5E7EB] dark:border-gray-600 rounded-full flex items-center justify-center">
-									<span
-										className="font-semibold text-lg dark:text-gray-300"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{userName.charAt(0).toUpperCase()}
-									</span>
-								</div>
-							)}
-							<div className="flex-1">
-								<h3
-									className="font-semibold text-base dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									{userName}
-								</h3>
-								<p
-									className="text-sm dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								>
-									{userEmail}
-								</p>
-							</div>
-						</div>
-					</div>
-
-					{/* Menu Items */}
-					<div style={{ backgroundColor: 'var(--accent-white)' }} className="dark:bg-gray-800">
-						{/* Status */}
-						<div className="relative">
-							<button
-								onClick={(e) => {
-									e.stopPropagation();
-									setIsStatusOpen(!isStatusOpen);
-								}}
-								className="w-full px-4 py-2 text-left flex items-center justify-between transition-colors"
-								style={{
-									color: 'var(--text-secondary)',
-									backgroundColor: 'transparent'
-								}}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.backgroundColor = 'transparent';
-								}}
-							>
-								<span>Status</span>
-								<Icon name="Expand_right_light" size="lg" />
-							</button>
-						</div>
-
-						{/* Settings */}
-						<button
-							onClick={() => {
-								router.push('/usersettings');
-								setIsOpen(false);
-							}}
-							className="w-full px-4 py-2 text-left cursor-pointer transition-colors"
-							style={{
-								color: 'var(--text-secondary)',
-								backgroundColor: 'transparent'
-							}}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.backgroundColor = 'transparent';
-							}}
-						>
-							Settings
-						</button>
-
-						{/* Separator */}
-						<div
-							className="border-t my-2 dark:border-gray-700"
-							style={{ borderColor: 'var(--light-gray)' }}
-						></div>
-
-						{/* Logout */}
-						<button
-							onClick={() => {
-								onLogoutClick?.();
-								setIsOpen(false);
-							}}
-							className="w-full px-4 py-2 text-left flex items-center gap-2 cursor-pointer transition-colors"
-							style={{
-								color: 'var(--status-error)',
-								backgroundColor: 'transparent'
-							}}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.backgroundColor = 'transparent';
-							}}
-						>
-							<Icon name="Sign_out_squre_light" size="lg" color="red" className="dark:invert-0! dark:opacity-100!" />
-							Log out
-						</button>
-					</div>
-				</div>
-			)}
+			<UserMenu
+				isOpen={isOpen && !isStatusOpen}
+				userAvatar={userAvatar}
+				userName={userName}
+				userEmail={userEmail}
+				onStatusClick={() => setIsStatusOpen(!isStatusOpen)}
+				onClose={() => setIsOpen(false)}
+				onLogoutClick={onLogoutClick}
+				currentStatus={currentStatus}
+				showStatus={showStatusFeature}
+			/>
 
 			{/* Status Submenu */}
-			{isStatusOpen && (
-				<div
-					className="absolute right-0 top-full mt-2 w-48 dark:bg-gray-800 border dark:border-gray-700 shadow-lg z-50 overflow-hidden"
-					style={{
-						backgroundColor: 'var(--accent-white)',
-						borderColor: 'var(--light-gray)'
-					}}
-				>
-					{/* Back Button Header */}
-					<div
-						className="px-4 py-2 border-b dark:border-gray-700"
-						style={{ borderColor: 'var(--light-gray)' }}
-					>
-						<button
-							onClick={() => {
-								setIsStatusOpen(false);
-								setIsOpen(true);
-							}}
-							className="flex items-center gap-2 transition-colors cursor-pointer"
-							style={{
-								color: 'var(--text-secondary)',
-								backgroundColor: 'transparent'
-							}}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.color = 'var(--text-primary)';
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.color = 'var(--text-secondary)';
-							}}
-						>
-							<ArrowLeftIcon className="w-4 h-4" />
-							<span className="text-sm font-medium">Back</span>
-						</button>
-					</div>
-					<div style={{ backgroundColor: 'var(--accent-white)' }} className="dark:bg-gray-800">
-						{statusOptions.map((option) => (
-							<button
-								key={option.value}
-								onClick={() => handleStatusSelect(option.value)}
-								className="w-full px-4 py-2 text-left cursor-pointer font-lato font-medium text-[16px] leading-[150%] transition-colors"
-								style={{
-									color: 'var(--text-primary)',
-									backgroundColor: 'transparent'
-								}}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.backgroundColor = 'transparent';
-								}}
-							>
-								{option.label}
-							</button>
-						))}
-					</div>
-				</div>
-			)}
+			<StatusSubmenu
+				isOpen={isStatusOpen}
+				onBack={() => {
+					setIsStatusOpen(false);
+					setIsOpen(true);
+				}}
+				statusOptions={statusOptions}
+				onSelect={handleStatusSelect}
+				userAvatar={userAvatar}
+				userName={userName}
+				currentStatus={currentStatus}
+				userEmail={userEmail}
+			/>
+
+			{/* Status Confirmation Modal */}
+			<StatusConfirmationModal
+				isOpen={isStatusConfirmOpen}
+				onClose={() => setIsStatusConfirmOpen(false)}
+				pendingStatus={pendingStatus}
+				statusReason={statusReason}
+				onStatusReasonChange={setStatusReason}
+				onConfirm={confirmStatusChange}
+				isUpdating={isUpdatingStatus}
+			/>
 		</div>
 	);
 };

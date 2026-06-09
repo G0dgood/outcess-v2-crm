@@ -4,14 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import Button from './Button';
 import Modal from './Modal';
-import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface DeactivateBusinessModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onConfirm: (reason: string) => void;
 	businessName?: string;
+	isLoading?: boolean;
 }
 
 const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
@@ -19,12 +20,13 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 	onClose,
 	onConfirm,
 	businessName = 'Business',
+	isLoading = false,
 }) => {
-	const { setupData } = useSetup();
+	const { campaignData } = useCampaign();
 	const { isDarkMode } = useTheme();
-	const primaryColor = setupData.primaryColor || '#050711';
-    const [selectedReason, setSelectedReason] = useState<string>('');
-    const [showConfirmation, setShowConfirmation] = useState(false);
+	const primaryColor = campaignData?.primaryColor || '#050711';
+	const [selectedReason, setSelectedReason] = useState<string>('');
+	const [showConfirmation, setShowConfirmation] = useState(false);
 
 	// Helper function to convert hex to rgba
 	const hexToRgba = (hex: string, alpha: number): string => {
@@ -59,25 +61,22 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 
 	// Reset state when modal closes
 	useEffect(() => {
-        if (!isOpen) {
-            setSelectedReason('');
-            setShowConfirmation(false);
-        }
+		if (!isOpen) {
+			setSelectedReason('');
+			setShowConfirmation(false);
+		}
 	}, [isOpen]);
 
 	const handleContinue = () => {
-        if (selectedReason) {
-            setShowConfirmation(true);
-        }
+		if (selectedReason) {
+			setShowConfirmation(true);
+		}
 	};
 
 	const handleConfirm = () => {
-        if (selectedReason) {
-            onConfirm(selectedReason);
-            setSelectedReason('');
-            setShowConfirmation(false);
-            onClose();
-        }
+		if (selectedReason) {
+			onConfirm(selectedReason);
+		}
 	};
 
 	const handleBack = () => {
@@ -92,56 +91,50 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 				onClose={handleBack}
 				title=""
 				size="md"
-				className="!bg-[rgba(251,146,60,0.1)] dark:bg-orange-900/30 !border-2 border-[rgba(251,146,60,0.3)] dark:border-orange-800"
+				className="!bg-white dark:!bg-gray-900 !border-2 border-orange-500 dark:border-orange-600 shadow-2xl"
 				showCloseButton={false}
 			>
-				<div className="p-6">
+				<div className="p-8">
 					{/* Warning Icon and Message */}
-					<div className="flex items-start gap-3 mb-6">
-						<ExclamationTriangleIcon
-							className="w-6 h-6 dark:text-orange-400 shrink-0 mt-0.5"
-							style={{ color: '#F97316' }}
-						/>
+					<div className="flex flex-col items-center text-center gap-4 mb-8">
+						<div className="bg-orange-100 dark:bg-orange-900/50 p-4 rounded-full">
+							<ExclamationTriangleIcon
+								className="w-12 h-12 text-orange-600 dark:text-orange-400"
+							/>
+						</div>
 						<div>
 							<h2
-								className="text-lg font-bold dark:text-orange-400 mb-1"
-								style={{ color: '#EA580C' }}
+								className="text-[16px] md:text-[18px] font-bold text-gray-900 dark:text-white mb-2"
 							>
 								Confirm Business Deactivation
 							</h2>
 							<p
-								className="text-sm dark:text-orange-400"
-								style={{ color: '#EA580C' }}
+								className="text-[12px] md:text-[14px] text-gray-600 dark:text-gray-400"
 							>
-								You are about to deactivate: <span className="font-semibold">{businessName}</span>
+								This action will deactivate <span className="font-bold text-gray-900 dark:text-white">{businessName}</span> and all its associated users. Are you sure you want to proceed?
 							</p>
 						</div>
 					</div>
 
 					{/* Footer */}
 					<div
-						className="flex items-center justify-end gap-3 pt-4 border-t dark:border-orange-800"
-						style={{ borderColor: 'rgba(251, 146, 60, 0.3)' }}
+						className="flex items-center justify-center gap-4 pt-6 border-t dark:border-gray-800"
 					>
 						<button
 							onClick={handleBack}
-							className="px-4 py-2 text-sm font-medium dark:text-orange-400 dark:hover:text-orange-300 transition-colors cursor-pointer"
-							style={{ color: '#EA580C' }}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.color = '#C2410C';
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.color = '#EA580C';
-							}}
+							disabled={isLoading}
+							className="px-6 py-2.5 text-[12px] md:text-[14px] font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer disabled:opacity-50"
 						>
-							Cancel
+							Go Back
 						</button>
 						<Button
 							variant="danger"
-							size="md"
+							size="lg"
 							onClick={handleConfirm}
+							loading={isLoading}
+							className="px-8"
 						>
-							Deactivate
+							Yes, Deactivate
 						</Button>
 					</div>
 				</div>
@@ -159,7 +152,7 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 		>
 			<div className="p-6">
 				<p
-					className="text-sm font-medium dark:text-gray-300 mb-4"
+					className="text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-4"
 					style={{ color: 'var(--text-secondary)' }}
 				>
 					Why are you deactivating this business?
@@ -173,7 +166,7 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 							<button
 								key={reason.id}
 								onClick={() => setSelectedReason(reason.id)}
-								className={`w-full text-left p-4 border-2 transition-all ${isSelected
+								className={`w-full text-left p-4 border-2 transition-all rounded-[var(--radius)] ${isSelected
 									? ''
 									: 'dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-700/50'
 									}`}
@@ -222,13 +215,13 @@ const DeactivateBusinessModal: React.FC<DeactivateBusinessModalProps> = ({
 									</div>
 									<div className="flex-1">
 										<h3
-											className="text-sm font-semibold dark:text-gray-100 mb-1"
+											className="text-[10px] md:text-[12px] font-semibold dark:text-gray-100 mb-1"
 											style={{ color: 'var(--text-primary)' }}
 										>
 											{reason.title}
 										</h3>
 										<p
-											className="text-sm dark:text-gray-400"
+											className="text-[10px] md:text-[12px] dark:text-gray-400"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											{reason.description}

@@ -10,9 +10,12 @@ interface CheckboxOption {
 
 interface CheckboxSelectProps {
 	label: string;
+	name?: string;
 	value?: string[];
 	onChange?: (values: string[]) => void;
-	options: CheckboxOption[];
+	options?: CheckboxOption[];
+	checked?: boolean;
+	onCheckedChange?: (checked: boolean) => void;
 	required?: boolean;
 	disabled?: boolean;
 	error?: string;
@@ -22,6 +25,7 @@ interface CheckboxSelectProps {
 
 export const CheckboxSelect: React.FC<CheckboxSelectProps> = ({
 	label,
+	name,
 	value = [],
 	onChange,
 	options,
@@ -30,6 +34,8 @@ export const CheckboxSelect: React.FC<CheckboxSelectProps> = ({
 	error,
 	className = '',
 	orientation = 'vertical',
+	checked = false,
+	onCheckedChange,
 }) => {
 	const handleChange = (optionValue: string, checked: boolean) => {
 		if (!disabled) {
@@ -42,7 +48,7 @@ export const CheckboxSelect: React.FC<CheckboxSelectProps> = ({
 
 	const containerClass = orientation === 'horizontal'
 		? 'flex flex-wrap gap-4'
-		: 'space-y-2';
+		: 'flex flex-col gap-2';
 
 	return (
 		<div className={`input-container ${className}`}>
@@ -50,25 +56,50 @@ export const CheckboxSelect: React.FC<CheckboxSelectProps> = ({
 				{label}
 				{required && <span className="required-asterisk">*</span>}
 			</label>
-			<div className={containerClass}>
-				{options.map((option) => (
-					<label
-						key={option.value}
-						className={`flex items-center cursor-pointer ${disabled || option.disabled ? 'opacity-50 cursor-not-allowed' : ''
-							}`}
-					>
+			{options && options.length > 0 ? (
+				<div className={containerClass}>
+					{options.map((option) => {
+						const optionId = `checkbox-${option.value}`;
+						const isChecked = value.includes(option.value);
+						const isDisabled = disabled || option.disabled;
+						return (
+							<div key={option.value} className={`checkbox-container ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+								<div className="checkbox-round">
+									<input
+										type="checkbox"
+										id={optionId}
+										checked={isChecked}
+										onChange={(e) => handleChange(option.value, e.target.checked)}
+										disabled={isDisabled}
+										className="checkbox-input mb-4"
+									/>
+									<label htmlFor={optionId} className="checkbox-label"></label>
+								</div>
+								<label htmlFor={optionId} className="checkbox-text-label pl-4">
+									{option.label}
+								</label>
+							</div>
+						);
+					})}
+				</div>
+			) : (
+				<div className={`checkbox-container flex flex-col gap-3 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+					<div className="checkbox-round">
 						<input
 							type="checkbox"
-							value={option.value}
-							checked={value.includes(option.value)}
-							onChange={(e) => handleChange(option.value, e.target.checked)}
-							disabled={disabled || option.disabled}
-							className="mr-2 text-blue-600 focus:ring-blue-500 focus:ring-2 rounded"
+							id={`${name || 'checkbox-single'}`}
+							checked={!!checked}
+							onChange={(e) => !disabled && onCheckedChange?.(e.target.checked)}
+							disabled={disabled}
+							className="checkbox-input"
 						/>
-						<span className="text-sm text-gray-700">{option.label}</span>
+						<label htmlFor={`${name || 'checkbox-single'}`} className="checkbox-label"></label>
+					</div>
+					<label htmlFor={`${name || 'checkbox-single'}`} className="checkbox-text-label">
+						{label}
 					</label>
-				))}
-			</div>
+				</div>
+			)}
 			{error && <span className="input-error">{error}</span>}
 		</div>
 	);

@@ -4,15 +4,25 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
-import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
+import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import Checkbox from '@/components/ui/Checkbox';
-import { useSetup } from '@/contexts/SetupContext';
-import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
+import { useGetTeamMembersByCampaignIdQuery, useDeleteTeamMemberMutation } from '@/store/services/teamMembersApi';
 import PageHeading from '@/components/ui/PageHeading';
-import { Pencil1Icon, TrashIcon, ExclamationTriangleIcon, PersonIcon } from '@radix-ui/react-icons';
-import AddUserModal from '@/components/ui/AddUserModal';
-import DeleteUserModal from '@/components/ui/DeleteUserModal';
+import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
+import AddUserModal from '@/components/features/user/AddUserModal';
+import DeleteUserModal from '@/components/features/user/DeleteUserModal';
+import BulkUploadModal from '@/components/features/user/BulkUploadModal';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
+import { toast } from 'sonner';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useSocket } from '@/contexts/SocketContext';
+import SelectedUsersDrawerContent from './SelectedUsersDrawerContent';
+import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
+import LoginStatusInfoBanner from '@/components/ui/LoginStatusInfoBanner';
+import SampleCsvDownloader from '@/components/ui/SampleCsvDownloader';
+import { Bucket, AssignedMember } from '@/contexts/SetupContext';
 
 interface User {
 	id: string;
@@ -21,53 +31,198 @@ interface User {
 	email: string;
 	phone: string;
 	role: string;
+	userId: string;
 	loginStatus: string;
+	status?: {
+		status: string;
+		color?: string;
+		reason?: string;
+	};
+	shiftHour?: {
+		shiftHourId?: string;
+		title?: string;
+	};
+}
+
+interface StatusPayload {
+	status: string;
+	color?: string;
+	reason?: string;
+	statusReason?: string;
+}
+
+interface TeamMemberStatusUpdatePayload {
+	teamMemberId: string;
+	status: StatusPayload | string;
+	name?: string;
+	timestamp?: string;
+}
+
+
+
+interface ApiTeamMember {
+	_id?: string;
+	id?: string;
+	userId?: string;
+	name?: string;
+	firstName?: string;
+	lastName?: string;
+	email?: string;
+	phone?: string;
+	role?: string | { roleName?: string; name?: string };
+	status?: string | StatusPayload;
+	statusReason?: string;
+	shiftHour?: {
+		shiftHourId?: string;
+		title?: string;
+	};
+	loginStatus?: string;
 }
 
 const UsersPage: React.FC = () => {
 	const router = useRouter();
-	const { setupData } = useSetup();
-	const companyId = setupData?.companyId || '674e2a8706e2361668e82d73';
-	const { data: rolesDataResponse } = useGetRolesByCompanyIdQuery(companyId);
+	const { campaignData } = useCampaign();
+	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage, setItemsPerPage] = useState(10);
+	const campaignId = campaignData?.campaign?._id || campaignData?._id || '';
+	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersByCampaignIdQuery(
+		{ campaignId, page: currentPage, limit: itemsPerPage },
+		{ skip: !campaignId }
+	);
+	const [deleteTeamMember] = useDeleteTeamMemberMutation();
+	const { canAccess } = usePrivilege();
+	const { socket } = useSocket();
+	const canCreate = canAccess('teamMembers', 'create');
+	const canEdit = canAccess('teamMembers', 'edit');
+	const canDelete = canAccess('teamMembers', 'delete');
+
+	const userImportFields = useMemo(() => {
+		return [
+			{ name: 'firstName' },
+			{ name: 'lastName' },
+			{ name: 'email' },
+			{ name: 'phone' },
+			{ name: 'role' },
+			{ name: 'userId' },
+			{ name: 'password' },
+			{ name: 'supervisorId' },
+		];
+	}, []);
 
 	const [searchTerm, setSearchTerm] = useState('');
-	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
 	const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+	const [isBulkUploadModalOpen, setIsBulkUploadModalOpen] = useState(false);
 	const [deleteUser, setDeleteUser] = useState<{ id: string; name: string } | null>(null);
+	const [statusModalUser, setStatusModalUser] = useState<User | null>(null);
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 	const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
 	const [showInfoBanner, setShowInfoBanner] = useState(true);
-	const [users, setUsers] = useState<User[]>([
-		{
-			id: 'Sup1109',
-			firstName: 'Jane',
-			lastName: 'Doe',
-			email: 'janedoe@example.com',
-			phone: '08023456789',
-			role: 'Agent',
-			loginStatus: 'Logged In',
-		},
-		{
-			id: 'Sup1110',
-			firstName: 'John',
-			lastName: 'Smith',
-			email: 'johnsmith@example.com',
-			phone: '08023456790',
-			role: 'Supervisor',
-			loginStatus: 'Logged Out',
-		},
-		{
-			id: 'Sup1111',
-			firstName: 'Alice',
-			lastName: 'Johnson',
-			email: 'alicejohnson@example.com',
-			phone: '08023456791',
-			role: 'Agent',
-			loginStatus: 'Logged In',
-		},
-	]);
+	const [users, setUsers] = useState<User[]>([]);
+	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Shift Hour', 'Bucket', 'Login Status', 'Actions'];
+	const totalColumns = tableHeaders.length + 1;
+
+	useEffect(() => {
+		if (socket) {
+			const handleStatusUpdate = (payload: TeamMemberStatusUpdatePayload) => {
+				const newStatus = typeof payload.status === 'object' ? payload.status.status : payload.status;
+				const newColor = typeof payload.status === 'object' ? payload.status.color : undefined;
+				const newReason =
+					typeof payload.status === 'object'
+						? payload.status.statusReason || payload.status.reason
+						: undefined;
+
+				setUsers((prevUsers) =>
+					prevUsers.map((user) =>
+						user.id === payload.teamMemberId
+							? {
+								...user,
+								loginStatus: newStatus,
+								status: {
+									status: newStatus,
+									color: newColor,
+									reason: newReason,
+								},
+							}
+							: user
+					)
+				);
+			};
+
+			const handleRefresh = () => {
+				refetch();
+			};
+
+			socket.on('teamMemberStatusUpdate', handleStatusUpdate);
+			socket.on('refreshTeamMembers', handleRefresh);
+
+			return () => {
+				socket.off('teamMemberStatusUpdate', handleStatusUpdate);
+				socket.off('refreshTeamMembers', handleRefresh);
+			};
+		}
+	}, [socket, refetch]);
+
+	useEffect(() => {
+		if (teamMembersResponse) {
+			const membersList = teamMembersResponse.teamMembers || [];
+
+			const mappedUsers = membersList.map((member: ApiTeamMember) => {
+				const m = member as ApiTeamMember;
+				const fullName = m?.name || '';
+				const [firstName, ...lastNameParts] = fullName.split(' ');
+				const lastName = lastNameParts.join(' ');
+
+				let loginStatus = 'Logged Out';
+				let statusObj: { status: string; color?: string; reason?: string } | undefined;
+
+				if (m.status) {
+					if (typeof m.status === 'object') {
+						const statusText = m.status.status || m.loginStatus || 'Logged Out';
+						const reasonText = m.status.statusReason || m.status.reason || m.statusReason;
+						loginStatus = statusText;
+						statusObj = {
+							status: statusText,
+							color: m.status.color,
+							reason: reasonText,
+						};
+					} else if (typeof m.status === 'string') {
+						loginStatus = m.status;
+						statusObj = {
+							status: m.status,
+							color: undefined,
+							reason: m.statusReason,
+						};
+					}
+				} else {
+					loginStatus = m.loginStatus || 'Logged Out';
+				}
+
+				return {
+					id: m._id || m.id || '',
+					userId: m?.userId || '',
+					firstName: m?.firstName || firstName || '',
+					lastName: m?.lastName || lastName || '',
+					email: m?.email || '',
+					phone: m?.phone || '',
+					role:
+						typeof m.role === 'object'
+							? (m?.role?.roleName || m.role?.name || '')
+							: (m.role || 'Agent'),
+					loginStatus,
+					status: statusObj,
+					shiftHour: m.shiftHour
+						? {
+							shiftHourId: m.shiftHour.shiftHourId,
+							title: m.shiftHour.title,
+						}
+						: undefined,
+				};
+			});
+			setUsers(mappedUsers);
+		}
+	}, [teamMembersResponse]);
 
 	const filteredUsers = users.filter(user =>
 		user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -77,34 +232,17 @@ const UsersPage: React.FC = () => {
 		user.role.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
-	const usersPerPage = 10;
-	const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-	const currentUsers = filteredUsers.slice(
-		(currentPage - 1) * usersPerPage,
-		currentPage * usersPerPage
-	);
+	const totalPages = teamMembersResponse?.pagination?.totalPages || 1;
+	// When using backend pagination, filteredUsers is already the current page of data from the API
+	// However, the component also has a local search filter. 
+	// To be fully backend-driven, search should also be on the backend.
+	// For now, we'll keep the local mapping, but the list is already limited by the backend.
+	const currentUsers = filteredUsers;
 
 	const handleAddUser = () => {
 		setIsAddUserModalOpen(true);
 	};
 
-	const handleSaveUser = (userData: {
-		firstName: string;
-		lastName: string;
-		email: string;
-		phone: string;
-		role: string;
-	}) => {
-		console.log('Saving user:', userData);
-		// Implement save user logic here
-		// For now, just close the modal
-		setIsAddUserModalOpen(false);
-	};
-
-	const handleAddFields = () => {
-		console.log('Add Fields clicked');
-		// Implement add fields logic here
-	};
 
 	const handleDeleteClick = (user: User) => {
 		setDeleteUser({
@@ -113,27 +251,18 @@ const UsersPage: React.FC = () => {
 		});
 	};
 
-	const handleConfirmDelete = () => {
+	const handleConfirmDelete = async () => {
 		if (deleteUser) {
-			setUsers(prevUsers => prevUsers.filter(user => user.id !== deleteUser.id));
-			setDeleteUser(null);
+			try {
+				await deleteTeamMember(deleteUser.id).unwrap();
+				toast.success('User deleted successfully');
+				setDeleteUser(null);
+			} catch (error) {
+				console.error('Failed to delete user:', error);
+				toast.error('Failed to delete user');
+			}
 		}
 	};
-
-	const roleOptions = useMemo(() => {
-		if (!rolesDataResponse) return [];
-
-		const rawRoles = rolesDataResponse.data || rolesDataResponse.roles || rolesDataResponse || [];
-		const rolesList = Array.isArray(rawRoles) ? rawRoles : (rawRoles.docs || []);
-
-		if (rolesList.length === 0) return [];
-
-		return rolesList.map((role: any) => ({
-			value: role.roleName,
-			label: role.roleName
-		}));
-	}, [rolesDataResponse]);
-
 
 
 	const handleSelectAll = (checked: boolean) => {
@@ -181,6 +310,9 @@ const UsersPage: React.FC = () => {
 		}
 	}, [isDrawerOpen]);
 
+
+
+
 	return (
 		<div>
 			{/* Title and Action Buttons */}
@@ -188,8 +320,6 @@ const UsersPage: React.FC = () => {
 				<PageHeading
 					text="Users"
 				/>
-
-
 				{/* Search Bar */}
 			</div>
 			<div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -204,75 +334,58 @@ const UsersPage: React.FC = () => {
 					showClearButton={true}
 				/>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
-					<Button
-						variant="primary"
-						size="md"
-						onClick={handleAddUser}
-						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
-					>
-						Add User
-					</Button>
+					<SampleCsvDownloader
+						fields={userImportFields}
+						fileName="sample_users.csv"
+						className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+					/>
+					{canCreate && (
+						<>
+							<Button
+								variant="outline"
+								size="md"
+								onClick={() => setIsBulkUploadModalOpen(true)}
+								className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+							>
+								Upload
+							</Button>
+							<Button
+								variant="primary"
+								size="md"
+								onClick={handleAddUser}
+								className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+							>
+								Add User
+							</Button>
+						</>
+					)}
 				</div>
 			</div>
 
-			{/* Login Status Info Banner */}
 			{showInfoBanner && (
-				<div
-					className="mb-4 p-3 dark:bg-gray-800 border dark:border-gray-700 flex items-center gap-3"
-					style={{
-						backgroundColor: 'var(--bg-primary)',
-						borderColor: 'var(--light-gray)'
-					}}
-				>
-					<div className="shrink-0 w-6 h-6 flex items-center justify-center">
-						<ExclamationTriangleIcon
-							className="w-4 h-4 dark:text-gray-300"
-							style={{ color: 'var(--text-secondary)' }}
-						/>
-					</div>
-					<p
-						className="text-sm dark:text-gray-300 flex-1"
-						style={{ color: 'var(--text-secondary)' }}
-					>
-						This is for tracking agents who are logged in or logged out
-					</p>
-					<button
-						onClick={() => setShowInfoBanner(false)}
-						className="shrink-0 p-1 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-						style={{ color: 'var(--text-tertiary)' }}
-						onMouseEnter={(e) => {
-							e.currentTarget.style.color = 'var(--text-secondary)';
-						}}
-						onMouseLeave={(e) => {
-							e.currentTarget.style.color = 'var(--text-tertiary)';
-						}}
-						title="Close"
-					>
-						<Icon name="Close_round_light" size="sm" />
-					</button>
-				</div>
+				<LoginStatusInfoBanner onClose={() => setShowInfoBanner(false)} />
 			)}
 
 			{/* Users Table */}
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
 				}}
 			>
+				<TablePaginationHeader
+					totalItems={teamMembersResponse?.pagination?.total || 0}
+					itemsPerPage={itemsPerPage}
+					onItemsPerPageChange={(value) => {
+						setItemsPerPage(value);
+						setCurrentPage(1);
+					}}
+					label="Users"
+				/>
 				<div className="overflow-x-auto">
-					<table
-						className="min-w-full divide-y dark:divide-gray-700"
-						style={{ borderColor: 'var(--light-gray)' }}
-					>
-						<thead
-							className="dark:bg-gray-700 border-b dark:border-gray-700"
-							style={{
-								backgroundColor: 'var(--bg-primary)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
+					<table>
+						<thead>
 							<tr>
 								<th>
 									<Checkbox
@@ -281,74 +394,29 @@ const UsersPage: React.FC = () => {
 										size="medium"
 									/>
 								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									ID
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									First Name
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Last Name
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Email
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Phone
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Role
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Login Status
-								</th>
-								<th
-									className="dark:text-gray-100"
-									style={{ color: 'var(--text-primary)' }}
-								>
-									Actions
-								</th>
+								{tableHeaders.map((label) => (
+									<th
+										key={label}
+									>
+										{label}
+									</th>
+								))}
 							</tr>
 						</thead>
 						<tbody
-							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
+							className="divide-y dark:divide-gray-700"
 							style={{
-								backgroundColor: 'var(--accent-white)',
-								borderColor: 'var(--light-gray)'
+								borderColor: 'var(--light-gray)',
 							}}
 						>
-							{currentUsers.map((user) => (
+							{isLoading ? (
+								<SVGLoaderFetch colSpan={totalColumns} text={''} />
+							) : currentUsers.length === 0 ? (
+								<NoRecordFound colSpan={totalColumns} />
+							) : currentUsers?.map((user) => (
 								<tr
 									key={user.id}
-									className="dark:hover:bg-gray-700"
 									style={{ borderColor: 'var(--light-gray)' }}
-									onMouseEnter={(e) => {
-										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-									}}
-									onMouseLeave={(e) => {
-										e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-									}}
 								>
 									<td>
 										<Checkbox
@@ -357,82 +425,111 @@ const UsersPage: React.FC = () => {
 											size="medium"
 										/>
 									</td>
+									<td>{user?.userId}</td>
+									<td>{user?.firstName}</td>
+									<td>{user.lastName}</td>
+									<td>{user.email}</td>
+									<td>{user.phone}</td>
+									<td>{user.role}</td>
 									<td
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
 									>
-										{user.id}
+										{user.shiftHour?.title ? user.shiftHour.title : 'No shift assigned'}
 									</td>
 									<td
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
+										className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-400"
+										style={{ color: 'var(--text-tertiary)' }}
 									>
-										{user.firstName}
+										<div className="flex flex-wrap gap-1">
+											{(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)
+												?.filter((b: Bucket) =>
+													b.assignedMembers?.some((m: AssignedMember) => {
+														const mId = typeof m.memberId === 'object' && m.memberId !== null
+															? (m.memberId as { _id?: string; id?: string })._id || (m.memberId as { _id?: string; id?: string }).id
+															: m.memberId;
+														return mId === user.id;
+													})
+												)
+												.map((b: Bucket) => (
+													<span
+														key={b.id}
+														className="text-[9px] px-1.5 py-0.5 rounded-full text-white font-medium shadow-sm"
+														style={{ backgroundColor: b.color || '#6B7280' }}
+														title={b.name}
+													>
+														{b.name}
+													</span>
+												))
+											}
+											{(!(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)?.some((b: Bucket) =>
+												b.assignedMembers?.some((m: AssignedMember) => {
+													const mId = typeof m.memberId === 'object' && m.memberId !== null
+														? (m.memberId as { _id?: string; id?: string })._id || (m.memberId as { _id?: string; id?: string }).id
+														: m.memberId;
+													return mId === user.id;
+												})
+											)) && (
+													<span className="text-[10px] text-gray-300 italic font-inter font-normal">Unassigned</span>
+												)}
+										</div>
 									</td>
 									<td
-										className="dark:text-gray-100"
+										className="dark:text-gray-100 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
 										style={{ color: 'var(--text-primary)' }}
+										onClick={() => setStatusModalUser(user)}
+										title="Click to view status details"
 									>
-										{user.lastName}
-									</td>
-									<td
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{user.email}
-									</td>
-									<td
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{user.phone}
-									</td>
-									<td
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{user.role}
-									</td>
-									<td
-										className="dark:text-gray-100"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{user.loginStatus}
+										<div className="flex items-center">
+											{(user.status?.color || user.loginStatus === 'Logged In') && (
+												<span
+													className="w-2.5 h-2.5 rounded-full inline-block mr-2"
+													style={{ backgroundColor: user.status?.color || '#22C55E' }}
+												/>
+											)}
+											{user.loginStatus}
+										</div>
 									</td>
 									<td>
 										<div className="flex items-center gap-2">
-											<button
-												onClick={() => router.push(`/users/${user.id}/edit`)}
-												className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
-												style={{ color: 'var(--text-secondary)' }}
-												onMouseEnter={(e) => {
-													e.currentTarget.style.color = '#2563EB';
-													e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
-												}}
-												onMouseLeave={(e) => {
-													e.currentTarget.style.color = 'var(--text-secondary)';
-													e.currentTarget.style.backgroundColor = 'transparent';
-												}}
-												title="Edit User"
-											>
-												<Pencil1Icon className="w-5 h-5" />
-											</button>
-											<button
-												onClick={() => handleDeleteClick(user)}
-												className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
-												style={{ color: 'var(--text-secondary)' }}
-												onMouseEnter={(e) => {
-													e.currentTarget.style.color = '#DC2626';
-													e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-												}}
-												onMouseLeave={(e) => {
-													e.currentTarget.style.color = 'var(--text-secondary)';
-													e.currentTarget.style.backgroundColor = 'transparent';
-												}}
-												title="Delete User"
-											>
-												<TrashIcon className="w-5 h-5" />
-											</button>
+											{canEdit && (
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() => router.push(`/users/${user.id}/edit`)}
+													className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+													style={{ color: 'var(--text-secondary)' }}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.color = '#2563EB';
+														e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.color = 'var(--text-secondary)';
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
+													title="Edit User"
+												>
+													<Pencil1Icon className="w-5 h-5" />
+												</Button>
+											)}
+											{canDelete && (
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() => handleDeleteClick(user)}
+													className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
+													style={{ color: 'var(--text-secondary)' }}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.color = '#DC2626';
+														e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.color = 'var(--text-secondary)';
+														e.currentTarget.style.backgroundColor = 'transparent';
+													}}
+													title="Delete User"
+												>
+													<TrashIcon className="w-5 h-5" />
+												</Button>
+											)}
 										</div>
 									</td>
 								</tr>
@@ -443,23 +540,28 @@ const UsersPage: React.FC = () => {
 			</div>
 
 			{/* Pagination */}
-			<Pagination
-				currentPage={currentPage}
-				totalPages={totalPages}
-				onPageChange={setCurrentPage}
-				showEllipsis={true}
-				maxVisiblePages={5}
-				primaryColor={setupData.primaryColor}
-				secondaryColor={setupData.secondaryColor}
-			/>
+			{currentUsers.length > 0 && (
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onPageChange={setCurrentPage}
+					showEllipsis={true}
+					maxVisiblePages={5}
+					primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
+				/>
+			)}
 
 			{/* Add User Modal */}
 			<AddUserModal
 				isOpen={isAddUserModalOpen}
 				onClose={() => setIsAddUserModalOpen(false)}
-				onSave={handleSaveUser}
-				roleOptions={roleOptions}
-				onAddFields={handleAddFields}
+			/>
+
+			{/* Bulk Upload Modal */}
+			<BulkUploadModal
+				isOpen={isBulkUploadModalOpen}
+				onClose={() => setIsBulkUploadModalOpen(false)}
 			/>
 
 			{/* Delete User Modal */}
@@ -476,189 +578,29 @@ const UsersPage: React.FC = () => {
 					className={`fixed top-0 right-0 h-full w-full max-w-md dark:bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${isDrawerAnimating ? 'translate-x-0' : 'translate-x-full'}`}
 					style={{ backgroundColor: 'var(--accent-white)' }}
 				>
-					{/* Drawer Header */}
-					<div
-						className="flex justify-between items-center border-b dark:border-gray-700 p-6"
-						style={{ borderColor: 'var(--light-gray)' }}
-					>
-						<div className="flex items-center gap-3">
-							<PersonIcon
-								className="w-5 h-5 dark:text-gray-300"
-								style={{ color: 'var(--text-primary)' }}
-							/>
-							<h2
-								className="font-inter text-lg font-semibold dark:text-gray-100"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								Selected Users ({selectedUsers.size})
-							</h2>
-						</div>
-						<button
-							onClick={() => setIsDrawerOpen(false)}
-							className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-							style={{ color: 'var(--text-tertiary)' }}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.color = 'var(--text-secondary)';
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.color = 'var(--text-tertiary)';
-							}}
-						>
-							<Icon name="Close_round_light" size="lg" />
-						</button>
-					</div>
-
-					{/* Drawer Content */}
-					<div className="overflow-y-auto h-[calc(100vh-80px)] p-6">
-						{selectedUsers.size === 0 ? (
-							<div className="flex flex-col items-center justify-center h-full text-center">
-								<PersonIcon
-									className="w-12 h-12 mb-4 dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								/>
-								<p
-									className="text-sm dark:text-gray-400"
-									style={{ color: 'var(--text-tertiary)' }}
-								>
-									No users selected
-								</p>
-							</div>
-						) : (
-							<div className="space-y-4">
-								{users
-									.filter(user => selectedUsers.has(user.id))
-									.map((user) => {
-										const getLoginStatusColor = (status: string) => {
-											return status === 'Logged In'
-												? { bg: 'rgba(34, 197, 94, 0.1)', text: '#22C55E', border: 'rgba(34, 197, 94, 0.2)' }
-												: { bg: 'rgba(156, 163, 175, 0.1)', text: '#9CA3AF', border: 'rgba(156, 163, 175, 0.2)' };
-										};
-										const loginStatusColors = getLoginStatusColor(user.loginStatus);
-										return (
-											<div
-												key={user.id}
-												className="p-4 dark:bg-gray-700 border dark:border-gray-600 rounded-lg"
-												style={{
-													backgroundColor: 'var(--bg-primary)',
-													borderColor: 'var(--light-gray)'
-												}}
-											>
-												{/* User Header */}
-												<div className="flex justify-between items-start mb-3">
-													<div className="flex-1">
-														<div className="flex items-center gap-2 mb-2">
-															<span
-																className="text-xs font-medium dark:text-gray-300"
-																style={{ color: 'var(--text-secondary)' }}
-															>
-																{user.id}
-															</span>
-															<span
-																className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-																style={{
-																	backgroundColor: loginStatusColors.bg,
-																	color: loginStatusColors.text,
-																	border: `1px solid ${loginStatusColors.border}`
-																}}
-															>
-																{user.loginStatus}
-															</span>
-														</div>
-														<p
-															className="text-sm font-medium dark:text-gray-100 mb-1"
-															style={{ color: 'var(--text-primary)' }}
-														>
-															{user.firstName} {user.lastName}
-														</p>
-														<p
-															className="text-xs dark:text-gray-400"
-															style={{ color: 'var(--text-tertiary)' }}
-														>
-															{user.email}
-														</p>
-													</div>
-												</div>
-
-												{/* User Details */}
-												<div className="mt-3 space-y-2">
-													<div className="flex items-center justify-between text-xs">
-														<span
-															className="dark:text-gray-400"
-															style={{ color: 'var(--text-tertiary)' }}
-														>
-															Phone:
-														</span>
-														<span
-															className="dark:text-gray-100"
-															style={{ color: 'var(--text-primary)' }}
-														>
-															{user.phone}
-														</span>
-													</div>
-													<div className="flex items-center justify-between text-xs">
-														<span
-															className="dark:text-gray-400"
-															style={{ color: 'var(--text-tertiary)' }}
-														>
-															Role:
-														</span>
-														<span
-															className="dark:text-gray-100"
-															style={{ color: 'var(--text-primary)' }}
-														>
-															{user.role}
-														</span>
-													</div>
-												</div>
-
-												{/* Actions */}
-												<div className="flex gap-2 mt-3">
-													<button
-														onClick={() => router.push(`/users/${user.id}/edit`)}
-														className="flex-1 text-xs py-2 px-3 rounded border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
-														style={{
-															borderColor: 'var(--light-gray)',
-															color: 'var(--text-secondary)',
-															backgroundColor: 'transparent'
-														}}
-														onMouseEnter={(e) => {
-															e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-														}}
-														onMouseLeave={(e) => {
-															e.currentTarget.style.backgroundColor = 'transparent';
-														}}
-													>
-														Edit
-													</button>
-													<button
-														onClick={() => {
-															handleDeleteClick(user);
-															setIsDrawerOpen(false);
-														}}
-														className="flex-1 text-xs py-2 px-3 rounded border dark:border-gray-600 transition-colors dark:text-gray-300 dark:hover:bg-gray-600"
-														style={{
-															borderColor: 'var(--light-gray)',
-															color: '#DC2626',
-															backgroundColor: 'transparent'
-														}}
-														onMouseEnter={(e) => {
-															e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-														}}
-														onMouseLeave={(e) => {
-															e.currentTarget.style.backgroundColor = 'transparent';
-														}}
-													>
-														Delete
-													</button>
-												</div>
-											</div>
-										);
-									})}
-							</div>
-						)}
-					</div>
+					<SelectedUsersDrawerContent
+						selectedUsers={selectedUsers}
+						users={users}
+						onClose={() => setIsDrawerOpen(false)}
+						onEdit={(user) => router.push(`/users/${user.id}/edit`)}
+						onDelete={(user) => {
+							handleDeleteClick(user);
+							setIsDrawerOpen(false);
+						}}
+						onBulkDeleteSuccess={() => {
+							setSelectedUsers(new Set());
+							setIsDrawerOpen(false);
+						}}
+					/>
 				</div>
 			)}
+
+			<StatusDetailsModal
+				isOpen={!!statusModalUser}
+				onClose={() => setStatusModalUser(null)}
+				loginStatus={statusModalUser?.loginStatus || ''}
+				status={statusModalUser?.status}
+			/>
 		</div>
 	);
 };

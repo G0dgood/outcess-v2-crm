@@ -1,6 +1,11 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
+import { useSocket } from '@/contexts/SocketContext';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { toastInfo } from '@/utils/toastWithSound';
+import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
 
 // Permission/Module types
 export type ModuleId =
@@ -12,34 +17,46 @@ export type ModuleId =
 	| 'report'
 	| 'systemSetting'
 	| 'auditLog'
-	| 'teamMembers';
+	| 'status'
+	| 'roles'
+	| 'permission'
+	| 'teamMembers'
+	| 'campaignPlan'
+	| 'support'
+	| 'teamMemberSupport'
+	| 'allSupport'
+	| 'leaderboard'
+	| 'buckets';
 
 export type PermissionAction =
 	| 'view'
 	| 'create'
 	| 'edit'
-	| 'delete'
-	| 'export'
-	| 'manage';
+	| 'delete';
 
-export interface Permission {
-	moduleId: ModuleId;
-	actions: PermissionAction[];
+export interface RoleModulePermission {
+	id: string;
+	moduleName: string;
+	access: boolean;
+	permissions: {
+		view: boolean;
+		edit: boolean;
+		delete: boolean;
+		create: boolean;
+	};
 }
 
 export interface UserRole {
-	id: string;
-	name: string;
-	description: string;
-	permissions: Record<ModuleId, boolean>;
+	roleName: string;
+	permissions: RoleModulePermission[];
+	id?: string;
+	description?: string;
 }
 
 export interface UserPrivileges {
 	userId: string;
 	roleId: string;
 	role: UserRole | null;
-	permissions: Record<ModuleId, boolean>;
-	customPermissions?: Permission[];
 }
 
 interface PrivilegeContextType {
@@ -55,225 +72,192 @@ interface PrivilegeContextType {
 
 	// Privilege management
 	setUserPrivileges: (privileges: UserPrivileges) => void;
-	updateUserPrivileges: (updates: Partial<UserPrivileges>) => void;
 	clearPrivileges: () => void;
-
-	// Role management helpers
-	getAvailableRoles: () => UserRole[];
-	setAvailableRoles: (roles: UserRole[]) => void;
+	isAdmin: boolean;
+	isSuperAdmin: boolean;
 }
+
+import { useSelector, useDispatch } from 'react-redux';
+import {
+	selectUserPrivileges,
+	selectIsPrivilegeLoading,
+	selectIsAdmin,
+	selectIsSuperAdmin,
+	setPrivileges as setReduxPrivileges,
+	clearPrivileges as clearReduxPrivileges,
+	setLoading as setReduxLoading
+} from '@/store/slices/privilegeSlice';
 
 const PrivilegeContext = createContext<PrivilegeContextType | undefined>(undefined);
 
-// Default roles (can be overridden)
-const defaultRoles: UserRole[] = [
-	{
-		id: 'administrator',
-		name: 'Administrator',
-		description: 'Full access to the system',
-		permissions: {
-			dashboard: true,
-			customerBook: true,
-			userManagement: true,
-			setupBook: true,
-			customerSMS: true,
-			report: true,
-			systemSetting: true,
-			auditLog: true,
-			teamMembers: true,
-		},
-	},
-	{
-		id: 'supervisor',
-		name: 'Supervisor',
-		description: 'Manage team and view reports',
-		permissions: {
-			dashboard: true,
-			customerBook: true,
-			userManagement: false,
-			setupBook: false,
-			customerSMS: true,
-			report: true,
-			systemSetting: false,
-			auditLog: true,
-			teamMembers: true,
-		},
-	},
-	{
-		id: 'agent',
-		name: 'Agent',
-		description: 'Basic access to customer and call management',
-		permissions: {
-			dashboard: true,
-			customerBook: true,
-			userManagement: false,
-			setupBook: false,
-			customerSMS: true,
-			report: false,
-			systemSetting: false,
-			auditLog: false,
-			teamMembers: false,
-		},
-	},
-];
-
 interface PrivilegeProviderProps {
-	children: ReactNode;
+	children: React.ReactNode;
 	initialPrivileges?: UserPrivileges;
-	initialRoles?: UserRole[];
 }
 
 export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 	children,
 	initialPrivileges,
-	initialRoles
 }) => {
-	const [userPrivileges, setUserPrivilegesState] = useState<UserPrivileges | null>(null);
-	const [availableRoles, setAvailableRolesState] = useState<UserRole[]>(initialRoles || defaultRoles);
-	const [isLoading, setIsLoading] = useState(true);
+	const dispatch = useDispatch();
+	const userPrivileges = useSelector(selectUserPrivileges);
+	const isLoading = useSelector(selectIsPrivilegeLoading);
+	const isAdmin = useSelector(selectIsAdmin);
+	const isSuperAdmin = useSelector(selectIsSuperAdmin);
+
+	const { socket } = useSocket();
+	const { selectedCampaignId } = useCampaign();
+	const { user, updateUser } = useAuth();
+
+	// Add reactive query for roles in this Campaign
+	const { data: rolesData } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', {
+		skip: !selectedCampaignId
+	});
+
+	// Reactively update user privileges when roles data changes
+	useEffect(() => {
+		if (!rolesData?.roles || !userPrivileges?.role) return;
+
+		const currentRoleId = userPrivileges.roleId || userPrivileges.role.id || (userPrivileges.role as { _id?: string })._id;
+		const matchingRole = rolesData.roles.find((r: { _id?: string; id?: string }) =>
+			(r._id || r.id) === currentRoleId
+		);
+
+		if (matchingRole && JSON.stringify(matchingRole.permissions) !== JSON.stringify(userPrivileges.role.permissions)) {
+			const updatedUserPrivileges = {
+				...userPrivileges,
+				role: {
+					...userPrivileges.role,
+					permissions: matchingRole.permissions
+				}
+			};
+
+			dispatch(setReduxPrivileges(updatedUserPrivileges));
+
+			if (user) {
+				const currentRole = typeof user.role === 'object' ? user.role : { roleName: '', permissions: [] };
+				const matchingRoleData = matchingRole as { roleName?: string; name?: string; permissions: RoleModulePermission[] };
+				updateUser({
+					...user,
+					role: {
+						...currentRole,
+						roleName: currentRole.roleName || matchingRoleData.roleName || matchingRoleData.name || '',
+						permissions: matchingRole.permissions
+					}
+				});
+			}
+
+		}
+	}, [rolesData, userPrivileges, user, updateUser, dispatch]);
 
 	// Initialize from localStorage or initial props
 	useEffect(() => {
-		setIsLoading(true);
+		dispatch(setReduxLoading(true));
 
 		// Try to load from localStorage first
 		try {
 			const stored = localStorage.getItem('userPrivileges');
 			if (stored) {
 				const parsed = JSON.parse(stored);
-				setUserPrivilegesState(parsed);
+				dispatch(setReduxPrivileges(parsed));
 			} else if (initialPrivileges) {
-				setUserPrivilegesState(initialPrivileges);
+				dispatch(setReduxPrivileges(initialPrivileges));
 			}
 		} catch (error) {
 			console.error('Error loading privileges from localStorage:', error);
 			if (initialPrivileges) {
-				setUserPrivilegesState(initialPrivileges);
+				dispatch(setReduxPrivileges(initialPrivileges));
 			}
 		} finally {
-			setIsLoading(false);
+			dispatch(setReduxLoading(false));
 		}
-	}, [initialPrivileges]);
+	}, [initialPrivileges, dispatch]);
 
-	// Save to localStorage when privileges change
+	// Socket integration for real-time role updates
 	useEffect(() => {
-		if (userPrivileges) {
-			try {
-				localStorage.setItem('userPrivileges', JSON.stringify(userPrivileges));
-			} catch (error) {
-				console.error('Error saving privileges to localStorage:', error);
+		if (!socket || !selectedCampaignId) return;
+
+		socket.emit("joinCampaign", selectedCampaignId);
+
+		const handleUpdateRole = (data: { role: { _id?: string; id?: string; roleName: string; permissions: RoleModulePermission[] } }) => {
+			if (!userPrivileges || !userPrivileges.role) return;
+
+			const currentRoleId = userPrivileges.roleId || userPrivileges.role.id || (userPrivileges.role as { _id?: string })._id;
+			const updatedRoleId = data.role._id || data.role.id;
+
+			if (userPrivileges.role.roleName === data.role.roleName || (currentRoleId && updatedRoleId && currentRoleId === updatedRoleId)) {
+
+				const updatedUserPrivileges = {
+					...userPrivileges,
+					role: {
+						...userPrivileges.role,
+						permissions: data.role.permissions
+					}
+				};
+
+				dispatch(setReduxPrivileges(updatedUserPrivileges));
+
+				if (user) {
+					updateUser({
+						...user,
+						role: {
+							...(user.role as { roleName: string; permissions: RoleModulePermission[] }),
+							permissions: data.role.permissions
+						}
+					});
+				}
+
+				toastInfo("Your permissions have been updated.");
 			}
-		}
-	}, [userPrivileges]);
+		};
 
-	// Check if user has permission for a specific module
-	const hasPermission = (moduleId: ModuleId): boolean => {
-		if (!userPrivileges) return false;
+		socket.on("updateRole", handleUpdateRole);
 
-		// Administrator always has all permissions
-		if (userPrivileges.roleId === 'administrator') {
-			return true;
-		}
+		return () => {
+			socket.off("updateRole", handleUpdateRole);
+		};
+	}, [socket, selectedCampaignId, userPrivileges, user, updateUser, dispatch]);
 
-		return userPrivileges.permissions[moduleId] === true;
+	const findModulePermission = (moduleId: string): RoleModulePermission | undefined => {
+		if (!userPrivileges?.role?.permissions) return undefined;
+		const normalize = (str?: string) => (str ?? '').replace(/\s+/g, '').toLowerCase();
+		const target = normalize(moduleId);
+		return userPrivileges.role.permissions.find(p => normalize(p.moduleName) === target);
 	};
 
-	// Check if user has permission for any of the provided modules
+	const hasPermission = (moduleId: ModuleId): boolean => {
+		if (!userPrivileges) return false;
+		if (isAdmin) return true;
+		const modulePermission = findModulePermission(moduleId);
+		return modulePermission ? modulePermission.access : false;
+	};
+
 	const hasAnyPermission = (moduleIds: ModuleId[]): boolean => {
 		return moduleIds.some(moduleId => hasPermission(moduleId));
 	};
 
-	// Check if user has permission for all of the provided modules
 	const hasAllPermissions = (moduleIds: ModuleId[]): boolean => {
 		return moduleIds.every(moduleId => hasPermission(moduleId));
 	};
 
-	// Check if user can perform a specific action on a module
 	const canAccess = (moduleId: ModuleId, action?: PermissionAction): boolean => {
 		if (!userPrivileges) return false;
-
-		// Administrator can do everything
-		if (userPrivileges.roleId === 'administrator') {
-			return true;
+		if (isAdmin) return true;
+		const modulePermission = findModulePermission(moduleId);
+		if (modulePermission) {
+			if (!modulePermission.access) return false;
+			if (!action) return true;
+			return modulePermission.permissions[action];
 		}
-
-		// Check module access first
-		if (!hasPermission(moduleId)) {
-			return false;
-		}
-
-		// If no specific action required, module access is enough
-		if (!action) {
-			return true;
-		}
-
-		// Check custom permissions for specific actions
-		if (userPrivileges.customPermissions) {
-			const modulePermission = userPrivileges.customPermissions.find(
-				p => p.moduleId === moduleId
-			);
-			if (modulePermission) {
-				return modulePermission.actions.includes(action);
-			}
-		}
-
-		// Default: if module access is granted, allow all actions
-		// (unless custom permissions restrict it)
-		return true;
+		return false;
 	};
 
-	// Set user privileges
 	const setUserPrivileges = (privileges: UserPrivileges) => {
-		// Find and attach role object if roleId is provided
-		if (privileges.roleId && !privileges.role) {
-			const role = availableRoles.find(r => r.id === privileges.roleId);
-			if (role) {
-				privileges.role = role;
-				// Sync permissions from role if not explicitly provided
-				if (!privileges.permissions || Object.keys(privileges.permissions).length === 0) {
-					privileges.permissions = { ...role.permissions };
-				}
-			}
-		}
-		setUserPrivilegesState(privileges);
+		dispatch(setReduxPrivileges(privileges));
 	};
 
-	// Update user privileges partially
-	const updateUserPrivileges = (updates: Partial<UserPrivileges>) => {
-		if (!userPrivileges) return;
-
-		const updated = { ...userPrivileges, ...updates };
-
-		// If roleId changed, update role and permissions
-		if (updates.roleId && updates.roleId !== userPrivileges.roleId) {
-			const role = availableRoles.find(r => r.id === updates.roleId);
-			if (role) {
-				updated.role = role;
-				updated.permissions = { ...role.permissions };
-			}
-		}
-
-		setUserPrivilegesState(updated);
-	};
-
-	// Clear user privileges
 	const clearPrivileges = () => {
-		setUserPrivilegesState(null);
-		try {
-			localStorage.removeItem('userPrivileges');
-		} catch (error) {
-			console.error('Error clearing privileges from localStorage:', error);
-		}
-	};
-
-	// Get available roles
-	const getAvailableRoles = (): UserRole[] => {
-		return availableRoles;
-	};
-
-	// Set available roles
-	const setAvailableRoles = (roles: UserRole[]) => {
-		setAvailableRolesState(roles);
+		dispatch(clearReduxPrivileges());
 	};
 
 	const contextValue: PrivilegeContextType = {
@@ -284,10 +268,9 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		hasAllPermissions,
 		canAccess,
 		setUserPrivileges,
-		updateUserPrivileges,
 		clearPrivileges,
-		getAvailableRoles,
-		setAvailableRoles,
+		isAdmin,
+		isSuperAdmin,
 	};
 
 	return (
@@ -306,4 +289,3 @@ export const usePrivilege = () => {
 };
 
 export default PrivilegeContext;
-

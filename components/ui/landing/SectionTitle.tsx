@@ -11,7 +11,7 @@ interface SectionTitleProps {
 const SectionTitle: React.FC<SectionTitleProps> = ({ title, className = '' }) => {
 	return (
 		<h2
-			className={`font-[Plus-Jakarta-Sans] font-bold text-[28px] leading-[32px] sm:text-[36px] sm:leading-[40px] md:text-[48px] md:leading-[48px] flex items-center text-center text-[#050711] ${className}`}
+			className={`font-[Plus-Jakarta-Sans] font-bold text-[24px] md:text-[26px] leading-[32px] sm:text-[36px] sm:leading-[40px] md:text-[48px] md:leading-[48px] flex items-center text-center text-[#050711] ${className}`}
 			style={plusJakartaStyle}
 		>
 			{title}

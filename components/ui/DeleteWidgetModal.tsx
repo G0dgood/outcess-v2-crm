@@ -4,6 +4,7 @@ import React from 'react';
 import Button from './Button';
 import { Modal } from './Modal';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { useSocket } from '@/contexts/SocketContext';
 
 interface DeleteWidgetModalProps {
 	isOpen: boolean;
@@ -18,6 +19,7 @@ export const DeleteWidgetModal: React.FC<DeleteWidgetModalProps> = ({
 	onConfirm,
 	widgetTitle = 'this widget',
 }) => {
+	const { isOffline } = useSocket();
 	const handleDelete = () => {
 		onConfirm();
 		onClose();
@@ -49,7 +51,7 @@ export const DeleteWidgetModal: React.FC<DeleteWidgetModalProps> = ({
 						className="font-lato font-normal text-[13px] leading-[150%] dark:text-orange-400"
 						style={{ color: '#EA580C' }}
 					>
-                        Are you sure you want to delete <span className="font-semibold">&apos;{widgetTitle}&apos;</span>? This action cannot be undone.
+						Are you sure you want to delete <span className="font-semibold">&apos;{widgetTitle}&apos;</span>? This action cannot be undone.
 					</div>
 				</div>
 
@@ -67,7 +69,7 @@ export const DeleteWidgetModal: React.FC<DeleteWidgetModalProps> = ({
 						size="md"
 						onClick={handleDelete}
 					>
-						Delete Widget
+						{isOffline ? 'Delete Offline' : 'Delete Widget'}
 					</Button>
 				</div>
 			</div>

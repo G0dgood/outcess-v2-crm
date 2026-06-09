@@ -1,10 +1,11 @@
 /**
- * Color Palette for Peoplely CRM
+ * Color Palette for Outcess CRM
  * Generated from COLORS.png image
  */
 
 // Row 1: Light/Neutral Colors
 export const lightColors = {
+  accentWhite: '#FFFFFF', // Very light, almost white gray
   offWhite: '#F8F9FA', // Very light, almost white gray
   offWhite2: '#F5F6F7', // Another very light gray
   lightGray: '#E9ECEF', // Pale, cool-toned gray

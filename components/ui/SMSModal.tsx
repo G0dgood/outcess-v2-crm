@@ -4,7 +4,10 @@ import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import Input from './Input';
 import Textarea from './Textarea';
+import { Dropdown } from './Dropdown';
 import { Cross2Icon } from '@radix-ui/react-icons';
+import { useGetSMSConfigsQuery, SMSConfig } from '@/store/services/smsApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
 
 interface SMSModalProps {
 	isOpen: boolean;
@@ -19,10 +22,24 @@ export const SMSModal: React.FC<SMSModalProps> = ({
 	onSend,
 	initialPhone = '',
 }) => {
+	const { user } = useUserInfo();
+	const companyId = user?.companyId || user?.company?._id || '';
+
 	const [formData, setFormData] = useState({
 		phone: initialPhone,
 		message: '',
 	});
+	const [selectedConfigId, setSelectedConfigId] = useState<string>('');
+
+	const { data: configsData } = useGetSMSConfigsQuery(companyId, { skip: !isOpen || !companyId });
+	const configs = React.useMemo(() => configsData?.configs || [], [configsData]);
+
+	// Set default config
+	useEffect(() => {
+		if (configs.length > 0 && !selectedConfigId) {
+			setSelectedConfigId(configs[0]._id || '');
+		}
+	}, [configs, selectedConfigId]);
 
 	// Reset form when modal closes
 	useEffect(() => {
@@ -31,6 +48,7 @@ export const SMSModal: React.FC<SMSModalProps> = ({
 				phone: initialPhone,
 				message: '',
 			});
+			setSelectedConfigId('');
 		} else {
 			setFormData(prev => ({
 				...prev,
@@ -81,24 +99,25 @@ export const SMSModal: React.FC<SMSModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-			<div 
-				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4"
+			<div
+				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 rounded-[var(--radius)] overflow-hidden"
 				style={{ backgroundColor: 'var(--accent-white)' }}
+				onClick={(e) => e.stopPropagation()}
 			>
 				{/* Header */}
-				<div 
+				<div
 					className="flex justify-between items-center p-6 border-b dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<h2 
-						className="text-xl font-semibold dark:text-gray-100"
+					<h2
+						className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						SMS
 					</h2>
 					<button
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -116,6 +135,22 @@ export const SMSModal: React.FC<SMSModalProps> = ({
 
 				{/* Content */}
 				<div className="p-6 space-y-6">
+					{configs.length > 0 ? (
+						<Dropdown
+							label="SMS Configuration / Gateway"
+							value={selectedConfigId}
+							options={configs.map((cfg: SMSConfig) => ({
+								value: cfg._id || '',
+								label: `${cfg.name} (${cfg.provider}) — ${cfg.assignType === 'campaign' ? 'Campaign' : 'Bucket'}: ${cfg.assignedName}`
+							}))}
+							onChange={(val) => setSelectedConfigId(val as string)}
+						/>
+					) : (
+						<div className="p-3 border border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-900 rounded-lg text-[11px] text-yellow-800 dark:text-yellow-200">
+							⚠️ No SMS configurations assigned. Messaging will use the Default Gateway. Configure settings in the SMS Configurations tab.
+						</div>
+					)}
+
 					<Input
 						label="Phone"
 						placeholder="Enter phone number"
@@ -136,7 +171,7 @@ export const SMSModal: React.FC<SMSModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div 
+				<div
 					className="flex justify-end items-center p-6 border-t dark:border-gray-700"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>

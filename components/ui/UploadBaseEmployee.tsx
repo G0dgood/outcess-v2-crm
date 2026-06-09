@@ -1,14 +1,14 @@
 "use client";
 import React, { useState, useRef } from "react";
 import { Cross2Icon, UploadIcon } from "@radix-ui/react-icons";
-import { useSetup } from "@/contexts/SetupContext";
 import { toast } from "sonner";
+import { useCampaign } from "@/contexts/CampaignContext";
 
 interface UploadBaseProps {
   isOpen?: boolean;
   onClose?: () => void;
   showButton?: boolean;
-  onUploadComplete?: (data: CsvRow[]) => void;
+  onUploadComplete?: (data: CsvRow[], file?: File) => void;
 }
 
 // Simple CSV parser function
@@ -66,8 +66,8 @@ const UploadBase: React.FC<UploadBaseProps> = ({
   showButton = true,
   onUploadComplete,
 }) => {
-  const { setupData } = useSetup();
-  const primaryColor = setupData.primaryColor || '#050711';
+  const { campaignData } = useCampaign();
+  const primaryColor = campaignData?.primaryColor || '#050711';
   const [progress, setProgress] = useState(0);
   const [show, setShow] = useState(false);
   const [jsonData, setJSONData] = useState<CsvRow[]>([]);
@@ -75,8 +75,8 @@ const UploadBase: React.FC<UploadBaseProps> = ({
   const [isSuccess] = useState(false);
   const [isError] = useState(false);
   const [isLoading] = useState(false);
-  type ApiError = { data?: { message?: string } };
-  const [error] = useState<ApiError | null>(null);
+  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -93,6 +93,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
     setProgress(0);
     setJSONData([]);
     setIsDragOver(false);
+    setFileToUpload(null);
   };
 
   const handleShow = () => setShow(true);
@@ -101,6 +102,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
     setProgress(0);
     setJSONData([]);
     setIsDragOver(false);
+    setFileToUpload(null);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -132,6 +134,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
   };
 
   const handleFileUpload = (file: File) => {
+    setFileToUpload(file);
     const reader = new FileReader();
 
     reader.onload = (e) => {
@@ -144,6 +147,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
           duration: 3000,
         });
       } catch (error) {
+        console.error("CSV parse error:", error);
         toast.error("Failed to parse CSV", {
           description: "Please check the file format",
           duration: 3000,
@@ -211,7 +215,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
 
       // Call onUploadComplete callback if provided
       if (onUploadComplete && jsonData.length > 0) {
-        onUploadComplete(jsonData);
+        onUploadComplete(jsonData, fileToUpload || undefined);
       }
     } catch (err: unknown) {
       setProgress(0);
@@ -228,7 +232,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
       {showButton && (
         <button
           onClick={handleShow}
-          className="cursor-pointer flex flex-col md:flex-row justify-center items-center px-2 py-[8px] gap-2 md:w-[150px] h-[40px] font-normal text-[14px] leading-[150%] text-[#FFFFFF]"
+          className="cursor-pointer flex flex-col md:flex-row justify-center items-center px-2 py-[8px] gap-2 md:w-[150px] h-[40px] font-normal text-[10px] md:text-[12px] leading-[150%] text-[#FFFFFF] rounded-[var(--radius)]"
           style={{ backgroundColor: primaryColor }}
         >
           Upload
@@ -238,7 +242,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
       {isOpen && (
         <div className="fixed flex items-center justify-center inset-0 bg-[#00000051] bg-opacity-50 z-40">
           <div
-            className="dark:bg-gray-800 w-full max-w-2xl shadow-lg p-6"
+            className="dark:bg-gray-800 w-full max-w-2xl shadow-lg p-6 rounded-[var(--radius)]"
             style={{ backgroundColor: 'var(--accent-white)' }}
           >
             <div
@@ -246,14 +250,14 @@ const UploadBase: React.FC<UploadBaseProps> = ({
               style={{ borderColor: 'var(--light-gray)' }}
             >
               <h2
-                className="text-xl font-semibold dark:text-gray-100"
+                className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
                 style={{ color: 'var(--text-primary)' }}
               >
                 Upload CSV File
               </h2>
               <button
                 onClick={handleClose}
-                className="dark:text-gray-400 dark:hover:text-red-400 text-lg"
+                className="dark:text-gray-400 dark:hover:text-red-400 text-[12px] md:text-[14px]"
                 style={{ color: 'var(--text-tertiary)' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.color = '#DC2626';
@@ -272,7 +276,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
             <form className="mt-4 space-y-4" onSubmit={submitHandler}>
               {isError && (
                 <div
-                  className="dark:bg-red-900/30 dark:text-red-400 px-4 py-2 relative flex justify-between items-center"
+                  className="dark:bg-red-900/30 dark:text-red-400 px-4 py-2 relative flex justify-between items-center rounded-[var(--radius)]"
                   style={{
                     backgroundColor: 'rgba(220, 38, 38, 0.1)',
                     color: '#DC2626'
@@ -280,7 +284,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                 >
                   <p>
                     <i className="fas fa-exclamation-circle mr-2" />{" "}
-                    {error?.data?.message || "Upload failed"}
+                    Upload failed
                   </p>
                   <button
                     onClick={onClickReset}
@@ -300,7 +304,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
 
               {isSuccess && (
                 <div
-                  className="dark:bg-green-900/30 dark:text-green-400 px-4 py-2 relative flex justify-between items-center"
+                  className="dark:bg-green-900/30 dark:text-green-400 px-4 py-2 relative flex justify-between items-center rounded-[var(--radius)]"
                   style={{
                     backgroundColor: 'rgba(34, 197, 94, 0.1)',
                     color: '#22C55E'
@@ -312,7 +316,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                   </p>
                   <button
                     onClick={onClickReset}
-                    className="dark:text-gray-400 dark:hover:text-red-400 text-lg"
+                    className="dark:text-gray-400 dark:hover:text-red-400 text-[12px] md:text-[14px]"
                     style={{ color: 'var(--text-tertiary)' }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.color = '#DC2626';
@@ -330,7 +334,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
               )}
 
               <div
-                className={`flex flex-col items-center justify-center border-2 border-dashed p-8 transition-all cursor-pointer ${isDragOver
+                className={`flex flex-col items-center justify-center border-2 border-dashed p-8 transition-all cursor-pointer rounded-[var(--radius)] ${isDragOver
                   ? ""
                   : progress > 0
                     ? "dark:bg-green-900/20 dark:border-green-500"
@@ -368,7 +372,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                   style={isDragOver ? { color: primaryColor } : { color: 'var(--text-tertiary)' }}
                 />
                 <p
-                  className="text-lg font-medium dark:text-gray-300 mb-2"
+                  className="text-[12px] md:text-[14px] font-medium dark:text-gray-300 mb-2"
                   style={{ color: 'var(--text-secondary)' }}
                 >
                   {progress === 0
@@ -376,7 +380,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                     : "Uploading..."}
                 </p>
                 <p
-                  className="text-sm dark:text-gray-400 text-center"
+                  className="text-[10px] md:text-[12px] dark:text-gray-400 text-center"
                   style={{ color: 'var(--text-tertiary)' }}
                 >
                   {progress === 0
@@ -385,7 +389,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                 </p>
                 {jsonData.length > 0 && progress === 0 && (
                   <p
-                    className="text-sm dark:text-green-400 mt-2"
+                    className="text-[10px] md:text-[12px] dark:text-green-400 mt-2"
                     style={{ color: '#22C55E' }}
                   >
                     ✓ File loaded successfully ({jsonData.length} records)
@@ -416,7 +420,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                 <button
                   type="reset"
                   onClick={onClickReset}
-                  className="px-4 py-2 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 transition-colors"
+                  className="px-4 py-2 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 transition-colors rounded-[var(--radius)]"
                   style={{
                     backgroundColor: 'var(--bg-primary)',
                     color: 'var(--text-secondary)'
@@ -433,7 +437,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading || jsonData.length === 0}
-                  className={`px-4 py-2 text-white transition-opacity ${isLoading || jsonData.length === 0
+                  className={`px-4 py-2 text-white transition-opacity rounded-[var(--radius)] ${isLoading || jsonData.length === 0
                     ? "dark:bg-gray-600 cursor-not-allowed"
                     : ""
                     }`}

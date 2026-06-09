@@ -3,97 +3,377 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import Search from '@/components/ui/Search';
 import Dropdown from '@/components/ui/Dropdown';
-import Pagination from '@/components/ui/Pagination';
-import PaginationSummary from '@/components/ui/PaginationSummary';
-import { useSetup } from '@/contexts/SetupContext';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember, TeamMemberFormData } from '@/store/services/teamMembersApi';
+import { useSocket } from '@/contexts/SocketContext';
+import TeamMembersTable from '@/components/features/team-members/TeamMembersTable';
+import { toastSuccess } from '@/utils/toastWithSound';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
+import {
+	useCreateTeamMemberMutation,
+	useUpdateTeamMemberMutation,
+	useDeleteTeamMemberMutation
+} from '@/store/services/teamMembersApi';
+import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
+import TeamMembersCards from '@/components/features/team-members/TeamMembersCards';
+import { toastError } from '@/utils/toastWithSound';
+import PageHeader from '@/components/ui/PageHeader';
+import Button from '@/components/ui/Button';
+import ViewToggle from '@/components/ui/ViewToggle';
+import AddTeamMemberModal from '@/components/AddTeamMemberModal';
+import { PersonIcon, IdCardIcon } from '@radix-ui/react-icons';
+import ManageMembersModal from '@/components/features/team-members/ManageMembersModal';
 
 interface TeamMember {
+	_id: string;
 	agentId: string;
 	fullName: string;
 	email: string;
 	phone: string;
-	role: 'agent' | 'supervisor' | 'qa' | 'admin';
+	role: string | { roleName?: string; name?: string };
 	supervisor: string;
-	status: 'Logged In' | 'Logged Out';
+	status: string;
+	statusColor?: string;
+	reason?: string;
 	team: string;
+	shiftHourTitle?: string;
 }
 
-const teamMembersData: TeamMember[] = [
-	{ agentId: 'agent.10167', fullName: 'Chinwe Felicia, Ugwumba', email: 'chinwe@outcess.com', phone: '0809', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'QA' },
-	{ agentId: 'agent.10234', fullName: 'George Atuk Atuk , George', email: 'george.atck@outcess.com', phone: 'admin.01', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'QA' },
-	{ agentId: '10398', fullName: 'Emmanuel , Omonigho', email: 'emmanuelomonigho@outcess.com', phone: 'admin.01', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'Sales' },
-	{ agentId: '10399', fullName: 'Ugochuwu , Asuzu', email: 'ugochuwuasuzu@outcess.com', phone: 'admin.01', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'Sales' },
-	{ agentId: 'agent.10398', fullName: 'Emmanuel , Omonigho', email: 'emmanuelo@outcess.com', phone: 'admin.01', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Support' },
-	{ agentId: 'agent.10541', fullName: 'Amarachi , Okoro', email: 'amarachi.okoro@outcess.com', phone: 'admin.01', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Support' },
-	{ agentId: 'agent.10542', fullName: 'Victoria , Falade', email: 'jadesola.ayeni@outcess.com', phone: 'admin.01', role: 'qa', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'QA' },
-	{ agentId: 'agent.10572', fullName: 'Mariam Opeyemi, Balogun', email: 'mariambalogun@outcess.com', phone: 'admin.01', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'Support' },
-	{ agentId: 'agent.10573', fullName: 'Elizabeth Fikayo, Babalola', email: 'elizabethbabalola@outcess.com', phone: 'admin.01', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Support' },
-	{ agentId: 'agent10399', fullName: 'Ugochukwu , Asuzuu', email: 'ugochukwu.asuzuu@outcess.com', phone: 'admin.01', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Sales' },
-	// Additional sample members to simulate a larger dataset
-	{ agentId: 'agent.10574', fullName: 'Samuel Adeola, Ajayi', email: 'samuelajayi@outcess.com', phone: '0802', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'QA' },
-	{ agentId: 'agent.10575', fullName: 'Omotola , Adeyemi', email: 'omotolaadeyemi@outcess.com', phone: '0803', role: 'qa', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'QA' },
-	{ agentId: 'agent.10576', fullName: 'John , Akintola', email: 'johnakintola@outcess.com', phone: '0804', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Support' },
-	{ agentId: 'agent.10577', fullName: 'Helen , Daniels', email: 'helendaniels@outcess.com', phone: '0805', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'Sales' },
-	{ agentId: 'agent.10578', fullName: 'Chidera , Eze', email: 'chideraeze@outcess.com', phone: '0806', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'QA' },
-	{ agentId: 'agent.10579', fullName: 'Tolulope , Lawal', email: 'tolulope.lawal@outcess.com', phone: '0807', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'QA' },
-	{ agentId: 'agent.10580', fullName: 'Biola , Martins', email: 'biolamartins@outcess.com', phone: '0808', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Support' },
-	{ agentId: 'agent.10581', fullName: 'Adaobi , Nwosu', email: 'adaobinwosu@outcess.com', phone: '0809', role: 'qa', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'QA' },
-	{ agentId: 'agent.10582', fullName: 'Olumide , Ogundipe', email: 'olumideogundipe@outcess.com', phone: '0810', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'Support' },
-	{ agentId: 'agent.10583', fullName: 'Blessing , Onuoha', email: 'blessingonuoha@outcess.com', phone: '0811', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Sales' },
-	{ agentId: 'agent.10584', fullName: 'Funke , Ojo', email: 'funkeojo@outcess.com', phone: '0812', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'QA' },
-	{ agentId: 'agent.10585', fullName: 'Victor , Okafor', email: 'victorokafor@outcess.com', phone: '0813', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'Sales' },
-	{ agentId: 'agent.10586', fullName: 'Ifeoma , Obi', email: 'ifeomaobi@outcess.com', phone: '0814', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Support' },
-	{ agentId: 'agent.10587', fullName: 'Feyi , Oyinlola', email: 'feyioyinlola@outcess.com', phone: '0815', role: 'qa', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'QA' },
-	{ agentId: 'agent.10588', fullName: 'Joseph , Peters', email: 'josephpeters@outcess.com', phone: '0816', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Sales' },
-	{ agentId: 'agent.10589', fullName: 'Ngozi , Simon', email: 'ngozisimon@outcess.com', phone: '0817', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'Support' },
-	{ agentId: 'agent.10590', fullName: 'Hadiza , Sule', email: 'hadizasule@outcess.com', phone: '0818', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Support' },
-	{ agentId: 'agent.10591', fullName: 'Opeyemi , Taiwo', email: 'opeyemitaiwo@outcess.com', phone: '0819', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'QA' },
-	{ agentId: 'agent.10592', fullName: 'Obinna , Uche', email: 'obinnauche@outcess.com', phone: '0820', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Support' },
-	{ agentId: 'agent.10593', fullName: 'Kemi , Williams', email: 'kemiwilliams@outcess.com', phone: '0821', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'Sales' },
-	{ agentId: 'agent.10594', fullName: 'Ibrahim , Yakubu', email: 'ibrahimyakubu@outcess.com', phone: '0822', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'QA' },
-	{ agentId: 'agent.10595', fullName: 'Yewande , Yusuf', email: 'yewandeyusuf@outcess.com', phone: '0823', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'Support' },
-	{ agentId: 'agent.10596', fullName: 'Bolu , Adebayo', email: 'boluadebayo@outcess.com', phone: '0824', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Support' },
-	{ agentId: 'agent.10597', fullName: 'Shade , Adekunle', email: 'shadeadekunle@outcess.com', phone: '0825', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'QA' },
-	{ agentId: 'agent.10598', fullName: 'Oladimeji , Akin', email: 'oladimejiakin@outcess.com', phone: '0826', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Sales' },
-	{ agentId: 'agent.10599', fullName: 'Halima , Bello', email: 'halimabello@outcess.com', phone: '0827', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged Out', team: 'QA' },
-	{ agentId: 'agent.10600', fullName: 'Temi , Fakeye', email: 'temifakeye@outcess.com', phone: '0828', role: 'agent', supervisor: 'Motunrayo Adelanwaa', status: 'Logged In', team: 'Support' },
-];
+interface StatusPayload {
+	status: string;
+	color?: string;
+	reason?: string;
+	statusReason?: string;
+}
+
+interface TeamMemberStatusUpdatePayload {
+	teamMemberId: string;
+	status: StatusPayload | string;
+	name?: string;
+	timestamp?: string;
+}
 
 const TeamMembersPage: React.FC = () => {
-	const { setupData } = useSetup();
-	const [searchTerm, setSearchTerm] = useState('');
-	const [itemsPerPage, setItemsPerPage] = useState(10);
+	const { campaignData } = useCampaign();
+	const { user } = useUserInfo();
+	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
+	const [supervisorFilter, setSupervisorFilter] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
-	const [supervisorFilter, setSupervisorFilter] = useState('all');
-	const [teamFilter, setTeamFilter] = useState('all');
+	const [itemsPerPage, setItemsPerPage] = useState(10);
+	const [teamMembersData, setTeamMembersData] = useState<TeamMember[]>([]);
+	const [searchTerm, setSearchTerm] = useState('');
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+	const [statusModalMember, setStatusModalMember] = useState<TeamMember | null>(null);
+	const [shiftFilter, setShiftFilter] = useState<string>('');
+	const [viewType, setViewType] = useState<'table' | 'card'>('card');
+	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+	const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+	const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+
+	// Handle search debouncing
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearchTerm(searchTerm);
+			setCurrentPage(1); // Reset to first page on new search
+		}, 500);
+
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
+
+	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersBySupervisorIdQuery(
+		{
+			supervisorId: supervisorFilter,
+			page: currentPage,
+			limit: itemsPerPage,
+			search: debouncedSearchTerm
+		},
+		{ skip: !supervisorFilter }
+	);
+
+	const companyId =
+		(user?.company as { _id?: string; id?: string } | undefined)?._id ||
+		(user?.company as { _id?: string; id?: string } | undefined)?.id ||
+		user?.companyId ||
+		'';
+
+	const { data: supervisorsData } = useGetSupervisorsByCampaignIdQuery(
+		{ companyId, campaignId: campaignId || '' },
+		{
+			skip: !companyId || !campaignId
+		}
+	);
+	const { data: campaignMembersResponse } = useGetTeamMembersByCampaignIdQuery(
+		{ campaignId: campaignId || '', limit: 1000 },
+		{ skip: !campaignId }
+	);
+	const { socket } = useSocket();
+	const { canAccess } = usePrivilege();
+	const canAccessModule = canAccess('teamMembers', 'view');
+
+	const [createTeamMember] = useCreateTeamMemberMutation();
+	const [updateTeamMember] = useUpdateTeamMemberMutation();
+	const [deleteTeamMember] = useDeleteTeamMemberMutation();
+
+	const { data: rolesData } = useGetRolesByCampaignIdQuery(campaignId || '', { skip: !campaignId });
+
+	const supervisorId = supervisorFilter;
+
+	useEffect(() => {
+		if (socket) {
+			const handleStatusUpdate = (payload: TeamMemberStatusUpdatePayload) => {
+				const newStatus = typeof payload.status === 'object' ? payload.status.status : payload.status;
+				const newColor = typeof payload.status === 'object' ? payload.status.color : undefined;
+				const newReason =
+					typeof payload.status === 'object'
+						? payload.status.statusReason || payload.status.reason
+						: undefined;
+
+				setTeamMembersData((prevMembers) =>
+					prevMembers.map((member) =>
+						member._id === payload.teamMemberId
+							? {
+								...member,
+								status: newStatus,
+								statusColor: newColor,
+								reason: newReason,
+							}
+							: member
+					)
+				);
+			};
+
+			const handleRefresh = () => {
+				refetch();
+			};
+
+			socket.on('teamMemberStatusUpdate', handleStatusUpdate);
+			socket.on('refreshTeamMembers', handleRefresh);
+
+			return () => {
+				socket.off('teamMemberStatusUpdate', handleStatusUpdate);
+				socket.off('refreshTeamMembers', handleRefresh);
+			};
+		}
+	}, [socket, refetch]);
+
+	useEffect(() => {
+		if (teamMembersResponse) {
+			const membersList = teamMembersResponse.teamMembers || [];
+
+			const mappedMembers: TeamMember[] = membersList.map((member: unknown) => {
+				const m = member as ApiTeamMember;
+
+				let status = 'Logged out';
+				let statusColor = undefined;
+				let reason = undefined;
+
+				if (m?.status) {
+					if (typeof m?.status === 'object') {
+						status = m?.status?.status || m?.loginStatus || 'Logged out';
+						statusColor = m?.status?.color;
+						reason = m?.status?.statusReason || m?.status?.reason || m?.statusReason;
+					} else if (typeof m?.status === 'string') {
+						status = m?.status;
+						reason = m?.statusReason;
+					}
+				} else {
+					status = m?.loginStatus || 'Logged out';
+					reason = m?.statusReason;
+				}
+
+				return {
+					_id: m?._id || m?.id || '',
+					agentId: m?.userId || 'N/A', // Prioritize userId from API response
+					fullName: m?.name || `${m?.firstName || ''} ${m?.lastName || ''}`.trim(),
+					email: m?.email || '',
+					phone: m?.phone || '',
+					role: (typeof m?.role === 'object' ? (m?.role?.roleName || m?.role?.name) : (m?.role || 'agent'))?.toLowerCase() as TeamMember['role'],
+					supervisor: (typeof m?.supervisor === 'object' ? m?.supervisor?.name : m?.supervisor) || 'Unassigned',
+					status,
+					statusColor,
+					reason,
+					team: (typeof m?.team === 'object' ? m?.team?.name : m?.team) || 'Unassigned',
+					shiftHourTitle: m?.shiftHour?.title || ''
+				};
+			});
+			setTeamMembersData(mappedMembers);
+		}
+	}, [teamMembersResponse]);
+
+	// Socket connection for real-time status updates
+	useEffect(() => {
+		if (!socket) return;
+
+		// Join the supervisor's room
+		socket.emit('join', supervisorId);
+
+		// Listen for status updates
+		const handleStatusUpdate = (data: unknown) => {
+			// data: { teamMemberId, name, status, timestamp }
+			const updateData = data as TeamMemberStatusUpdatePayload;
+
+			const newStatus = typeof updateData.status === 'object' ? updateData.status.status : updateData.status;
+			const newColor = typeof updateData.status === 'object' ? updateData.status.color : undefined;
+			const newReason =
+				typeof updateData.status === 'object'
+					? updateData.status.statusReason || updateData.status.reason
+					: undefined;
+
+			setTeamMembersData(prevMembers => prevMembers.map(member => {
+				if (member._id === updateData.teamMemberId || member.agentId === updateData.teamMemberId) {
+					return {
+						...member,
+						status: newStatus,
+						statusColor: newColor,
+						reason: newReason,
+					};
+				}
+				return member;
+			}));
+		};
+
+		// Listen for refresh requests
+		const handleRefresh = () => {
+			refetch();
+		};
+
+		socket.on('teamMemberStatusUpdate', handleStatusUpdate);
+		socket.on('refreshTeamMembers', handleRefresh);
+
+		return () => {
+			socket.off('teamMemberStatusUpdate', handleStatusUpdate);
+			socket.off('refreshTeamMembers', handleRefresh);
+		};
+	}, [socket, supervisorId, refetch]);
 
 	const supervisors = useMemo(() => {
-		const unique = new Set(teamMembersData.map(member => member.supervisor));
-		return ['all', ...Array.from(unique)];
-	}, []);
+		if (!campaignMembersResponse) return [];
+		const rawMembers = campaignMembersResponse.teamMembers || (Array.isArray(campaignMembersResponse) ? campaignMembersResponse : []);
 
-	const teams = useMemo(() => {
-		const unique = new Set(teamMembersData.map(member => member.team));
-		return ['all', ...Array.from(unique)];
-	}, []);
+		const supervisorRoleIds = new Set<string>();
+		if (supervisorsData && Array.isArray(supervisorsData.roles)) {
+			supervisorsData.roles.forEach((r: Role) => {
+				if (r._id) supervisorRoleIds.add(r._id.toString());
+				if (r.id) supervisorRoleIds.add(r.id.toString());
+			});
+		}
+
+		return rawMembers
+			.filter((m: ApiTeamMember) => {
+				const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
+				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
+
+				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) ||
+					(roleName && roleName.toLowerCase().includes('supervisor'));
+
+				return isSupervisorRole;
+			})
+			.map((m: ApiTeamMember) => {
+				const fullName = m.firstName && m.lastName
+					? `${m.firstName} ${m.lastName}`
+					: m.name || m.fullName || 'Unknown Member';
+				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : 'Supervisor';
+				return {
+					value: m._id || m.id || '',
+					label: `${fullName} (${roleName})`
+				};
+			});
+	}, [campaignMembersResponse, supervisorsData]);
+
+	useEffect(() => {
+		if (supervisors.length > 0 && !supervisorFilter) {
+			setSupervisorFilter(supervisors[0].value);
+		}
+	}, [supervisors, supervisorFilter]);
+
+	const shiftHourOptions = useMemo(() => {
+		const lobShiftHours = campaignData?.campaign?.shiftHours as
+			| { title?: string; shiftName?: string }[]
+			| { title?: string; shiftName?: string }
+			| undefined;
+
+		const fromLob: string[] = (() => {
+			if (!lobShiftHours) return [];
+			const list = Array.isArray(lobShiftHours) ? lobShiftHours : [lobShiftHours];
+			return list
+				.map((s) => s.title || s.shiftName || '')
+				.filter((name): name is string => Boolean(name));
+		})();
+
+		const fromMembers = Array.from(
+			new Set(teamMembersData.map((m) => m.shiftHourTitle).filter(Boolean))
+		) as string[];
+
+		const allTitles = Array.from(new Set([...fromLob, ...fromMembers]));
+
+		return allTitles.map((t) => ({ label: t, value: t }));
+	}, [campaignData, teamMembersData]);
 
 	const filteredMembers = useMemo(() => {
 		return teamMembersData.filter(member => {
-			const matchesSearch =
-				searchTerm.trim().length === 0 ||
-				member.agentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				member.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				member.email.toLowerCase().includes(searchTerm.toLowerCase());
-
-			const matchesSupervisor = supervisorFilter === 'all' || member.supervisor === supervisorFilter;
-			const matchesTeam = teamFilter === 'all' || member.team === teamFilter;
-
-			return matchesSearch && matchesSupervisor && matchesTeam;
+			const matchesShift = !shiftFilter || member.shiftHourTitle === shiftFilter;
+			return matchesShift;
 		});
-	}, [searchTerm, supervisorFilter, teamFilter]);
+	}, [teamMembersData, shiftFilter]);
 
-	const totalPages = Math.max(1, Math.ceil(filteredMembers.length / itemsPerPage));
-	const currentMembers = filteredMembers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+	const totalPages = teamMembersResponse?.pagination?.totalPages || 1;
+	const currentMembers = filteredMembers;
+
+	const roleOptions = useMemo(() => {
+		if (!rolesData?.roles) return [];
+		return rolesData.roles.map(r => ({ label: r.roleName, value: r._id || r.id || '' }));
+	}, [rolesData]);
+
+	const supervisorOptions = useMemo(() => {
+		return supervisors; // Already calculated
+	}, [supervisors]);
+
+	const handleAddMember = async (data: TeamMemberFormData) => {
+		try {
+			const payload = {
+				name: `${data.firstName} ${data.lastName}`.trim(),
+				email: data.email,
+				phone: data.phone,
+				role: data.role,
+				companyId,
+				campaignId: campaignId,
+				supervisorId: data.supervisorId || null,
+				password: data.password || 'Outcess@123',
+			};
+
+			if (editingMember) {
+				await updateTeamMember({ id: editingMember._id, data: payload }).unwrap();
+				toastSuccess('Team member updated successfully');
+			} else {
+				await createTeamMember(payload).unwrap();
+				toastSuccess('Team member created successfully');
+			}
+			setIsAddModalOpen(false);
+			setEditingMember(null);
+		} catch (err: unknown) {
+			const error = err as { data?: { message?: string } };
+			toastError(error?.data?.message || 'Failed to save team member');
+		}
+	};
+
+	const handleDeleteMember = async (id: string) => {
+		if (window.confirm('Are you sure you want to delete this team member?')) {
+			try {
+				await deleteTeamMember(id).unwrap();
+				toastSuccess('Team member deleted successfully');
+			} catch (err: unknown) {
+				const error = err as { data?: { message?: string } };
+				toastError(error?.data?.message || 'Failed to delete team member');
+			}
+		}
+	};
+
+	const handleEditMemberClick = (member: TeamMember) => {
+		setEditingMember(member);
+		setIsAddModalOpen(true);
+	};
 
 	useEffect(() => {
 		if (currentPage > totalPages) {
@@ -101,52 +381,41 @@ const TeamMembersPage: React.FC = () => {
 		}
 	}, [currentPage, totalPages]);
 
-	const statusStyles = (status: TeamMember['status']) => {
-		if (status === 'Logged In') {
-			return {
-				color: '#15803D',
-			};
-		}
-
-		return {
-			color: '#B91C1C',
-		};
-	};
-
-	const statusStylesTable = (status: TeamMember['status']) => {
-		if (status === 'Logged In') {
-			return {
-				backgroundColor: 'rgba(34, 197, 94, 0.12)',
-				color: '#15803D',
-			};
-		}
-
-		return {
-			backgroundColor: 'rgba(248, 113, 113, 0.15)',
-			color: '#B91C1C',
-		};
-	};
+	if (!canAccessModule) {
+		return null;
+	}
 
 	return (
-		<div className="space-y-6">
-			{/* Header */}
-			<div>
-				<h1
-					className="text-2xl font-semibold dark:text-gray-100"
-					style={{ color: 'var(--text-primary)' }}
-				>
-					Team Members
-				</h1>
-				<p
-					className="text-sm mt-1 dark:text-gray-400"
-					style={{ color: 'var(--text-tertiary)' }}
-				>
-					Monitor agent login activity and supervisor assignments.
-				</p>
+		<div>
+			<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+				<PageHeader
+					title="Team Members"
+					description="Monitor agent login activity and supervisor assignments."
+					icon={PersonIcon}
+					className="mb-0"
+				/>
+				<div className="flex items-center gap-3">
+					<ViewToggle
+						view={viewType}
+						onChange={setViewType}
+					/>
+					<Button
+						variant="outline"
+						size="md"
+						onClick={() => setIsManageModalOpen(true)}
+						className="flex items-center gap-2"
+					>
+						<IdCardIcon className="w-4 h-4" />
+						Manage Members
+					</Button>
+					<Button variant="primary" size="md" onClick={() => { setEditingMember(null); setIsAddModalOpen(true); }}>
+						Add Team Member
+					</Button>
+				</div>
 			</div>
 
 			{/* Controls */}
-			<div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+			<div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-5">
 				<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
 					<Search
 						placeholder="Search Agent ID"
@@ -158,10 +427,7 @@ const TeamMembersPage: React.FC = () => {
 				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 w-auto">
 					<Dropdown
 						label="Supervisor"
-						options={supervisors.map(value => ({
-							value,
-							label: value === 'all' ? 'All Supervisors' : value,
-						}))}
+						options={supervisors}
 						value={supervisorFilter}
 						onChange={(val) => {
 							if (Array.isArray(val)) return;
@@ -170,162 +436,77 @@ const TeamMembersPage: React.FC = () => {
 						inputClassName="h-10 whitespace-nowrap"
 					/>
 					<Dropdown
-						label="Team"
-						options={teams.map(value => ({
-							value,
-							label: value === 'all' ? 'All Teams' : value,
-						}))}
-						value={teamFilter}
+						label="Shift Hour"
+						options={shiftHourOptions}
+						value={shiftFilter}
 						onChange={(val) => {
 							if (Array.isArray(val)) return;
-							setTeamFilter(val);
+							setShiftFilter(val);
 						}}
 						inputClassName="h-10 whitespace-nowrap"
 					/>
 				</div>
 			</div>
 
-			{/* Table */}
-			<div
-				className="dark:bg-gray-800 border dark:border-gray-700"
-				style={{
-					backgroundColor: 'var(--accent-white)',
-					borderColor: 'var(--light-gray)',
-				}}
-			>
-				<div className="p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<PaginationSummary
-						totalItems={filteredMembers.length}
-						itemsPerPage={itemsPerPage}
-						onItemsPerPageChange={(value) => {
-							setItemsPerPage(value);
-							setCurrentPage(1);
-						}}
-						className="text-gray-600"
-					/>
-					<span
-						className="text-sm dark:text-gray-400"
-						style={{ color: 'var(--text-tertiary)' }}
-					>
-						Total of {filteredMembers.length} Team Members
-					</span>
-				</div>
+			{/* Content Area */}
+			{viewType === 'table' ? (
+				<TeamMembersTable
+					teamMembersResponse={teamMembersResponse}
+					currentMembers={currentMembers}
+					itemsPerPage={itemsPerPage}
+					setItemsPerPage={setItemsPerPage}
+					currentPage={currentPage}
+					setCurrentPage={setCurrentPage}
+					totalPages={totalPages}
+					isLoading={isLoading}
+					campaignData={campaignData}
+					setStatusModalMember={setStatusModalMember}
+				/>
+			) : (
+				<TeamMembersCards
+					isLoading={isLoading}
+					filteredMembers={filteredMembers}
+					currentMembers={currentMembers}
+					currentPage={currentPage}
+					totalPages={totalPages}
+					setCurrentPage={setCurrentPage}
+					campaignData={campaignData}
+					handleEditMemberClick={handleEditMemberClick}
+					handleDeleteMember={handleDeleteMember}
+					setStatusModalMember={setStatusModalMember}
+				/>
+			)}
 
-				<div className="overflow-x-auto">
-					<table
-						className="min-w-full divide-y dark:divide-gray-700"
-						style={{ borderColor: 'var(--light-gray)' }}
-					>
-						<thead
-							className="dark:bg-gray-700"
-							style={{
-								backgroundColor: 'var(--bg-primary)',
-								borderColor: 'var(--light-gray)',
-							}}
-						>
-							<tr>
-								{['Agent ID', 'Full Name', 'Email', 'Phone No', 'Role', 'Supervisor', 'Logged In Status'].map((heading) => (
-									<th
-										key={heading}
-										className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider dark:text-gray-300"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{heading}
-									</th>
-								))}
-							</tr>
-						</thead>
-						<tbody
-							className="divide-y dark:divide-gray-700"
-							style={{
-								backgroundColor: 'var(--accent-white)',
-								borderColor: 'var(--light-gray)',
-							}}
-						>
-							{currentMembers.length === 0 ? (
-								<tr>
-									<td
-										colSpan={7}
-										className="px-6 py-12 text-center text-sm dark:text-gray-400"
-										style={{ color: 'var(--text-tertiary)' }}
-									>
-										No team members match your filters.
-									</td>
-								</tr>
-							) : (
-								currentMembers.map((member, index) => (
-									<tr
-										key={`${member.agentId}-${index}`}
-										className="dark:hover:bg-gray-700 transition-colors"
-										style={{ borderColor: 'var(--light-gray)' }}
-										onMouseEnter={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-										}}
-										onMouseLeave={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-										}}
-									>
-										<td
-											className="px-6 py-4 text-sm font-medium dark:text-gray-100"
-											style={{ color: 'var(--text-primary)' }}
-										>
-											{member.agentId}
-										</td>
-										<td
-											className="px-6 py-4 text-sm dark:text-gray-100"
-											style={{ color: 'var(--text-primary)' }}
-										>
-											{member.fullName}
-										</td>
-										<td
-											className="px-6 py-4 text-sm dark:text-gray-400"
-											style={{ color: 'var(--text-tertiary)' }}
-										>
-											{member.email}
-										</td>
-										<td
-											className="px-6 py-4 text-sm dark:text-gray-400"
-											style={{ color: 'var(--text-tertiary)' }}
-										>
-											{member.phone}
-										</td>
-										<td
-											className="px-6 py-4 text-sm capitalize dark:text-gray-400"
-											style={{ color: 'var(--text-tertiary)' }}
-										>
-											{member.role}
-										</td>
-										<td
-											className="px-6 py-4 text-sm dark:text-gray-400"
-											style={{ color: 'var(--text-tertiary)' }}
-										>
-											{member.supervisor}
-										</td>
-										<td className="px-6 py-4" style={statusStylesTable(member.status)}>
-											<span
-												// className="inline-flex items-center  text-xs font-semibold rounded-full"
-												style={statusStyles(member.status)}
-											>
-												{member.status}
-											</span>
-										</td>
-									</tr>
-								))
-							)}
-						</tbody>
-					</table>
-				</div>
-				<div className="p-4 px-6">
+			<StatusDetailsModal
+				isOpen={!!statusModalMember}
+				onClose={() => setStatusModalMember(null)}
+				loginStatus={statusModalMember?.status || ''}
+				status={
+					statusModalMember
+						? {
+							status: statusModalMember.status,
+							color: statusModalMember.statusColor,
+							reason: statusModalMember.reason,
+						}
+						: undefined
+				}
+			/>
 
-					<Pagination
-						currentPage={currentPage}
-						totalPages={totalPages}
-						onPageChange={setCurrentPage}
-						primaryColor={setupData.primaryColor}
-						secondaryColor={setupData.secondaryColor}
-					/>
-				</div>
-			</div>
+			<AddTeamMemberModal
+				isOpen={isAddModalOpen}
+				onClose={() => { setIsAddModalOpen(false); setEditingMember(null); }}
+				onSave={handleAddMember}
+				editingMember={editingMember}
+				roles={roleOptions}
+				supervisors={supervisorOptions}
+				shiftHours={shiftHourOptions}
+			/>
+
+			<ManageMembersModal
+				isOpen={isManageModalOpen}
+				onClose={() => setIsManageModalOpen(false)}
+				campaignData={campaignData}
+			/>
 		</div>
 	);
 };

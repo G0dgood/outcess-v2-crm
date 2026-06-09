@@ -4,7 +4,7 @@ import React from 'react';
 import type { ChartProps } from './types';
 
 export const DoughnutChart: React.FC<ChartProps> = ({ data }) => {
-	const total = data.reduce((sum, item) => sum + item.value, 0);
+	const total = data.reduce((sum, item) => sum + item.value, 0) || 1;
 	let cumulativePercentage = 0;
 
 	return (

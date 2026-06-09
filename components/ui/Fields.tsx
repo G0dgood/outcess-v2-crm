@@ -98,13 +98,13 @@ const Fields: React.FC<FieldsProps> = ({ className = '' }) => {
 						}}
 					>
 						<h3
-							className="text-lg font-semibold dark:text-gray-100 mb-2"
+							className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-2"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							{fieldType.name}
 						</h3>
 						<p
-							className="text-sm dark:text-gray-400"
+							className="text-[10px] md:text-[12px] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							{fieldType.description}

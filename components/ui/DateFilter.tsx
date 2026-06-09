@@ -1,16 +1,20 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import Button from './Button';
 import DateInput from './DateInput';
 import { CalendarIcon } from '@radix-ui/react-icons';
-import { useSetup } from '@/contexts/SetupContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface DateFilterProps {
+	initialFilter?: 'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange';
+	initialFromDate?: string;
+	initialToDate?: string;
 	onApply?: (filter: {
-		type: 'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange';
-		from?: string;
-		to?: string;
+		startDate: string;
+		endDate: string;
+		filterType: 'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange';
+		fromDate?: string;
+		toDate?: string;
 	}) => void;
 	onClose?: () => void;
 }
@@ -18,20 +22,83 @@ interface DateFilterProps {
 export const DateFilter: React.FC<DateFilterProps> = ({
 	onApply,
 	onClose,
+	initialFilter = 'today',
+	initialFromDate = '',
+	initialToDate = ''
 }) => {
-	const { setupData } = useSetup();
-	const primaryColor = setupData?.primaryColor || '#050711';
-	const [selectedFilter, setSelectedFilter] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange'>('all');
-	const [fromDate, setFromDate] = useState('');
-	const [toDate, setToDate] = useState('');
+	const { campaignData } = useCampaign();
+	const primaryColor = campaignData?.primaryColor || '#050711';
+	const [selectedFilter, setSelectedFilter] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'all' | 'dateRange'>(initialFilter);
+	const [fromDate, setFromDate] = useState(initialFromDate);
+	const [toDate, setToDate] = useState(initialToDate);
 	const fromDateInputRef = useRef<HTMLInputElement>(null);
 	const toDateInputRef = useRef<HTMLInputElement>(null);
 
+	const formatDate = (date: Date) => {
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const day = String(date.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	};
+
+	const toStartOfDayISO = (dateStr: string) => {
+		if (!dateStr) return '';
+		return `${dateStr}T00:00:00.000Z`;
+	};
+
+	const toEndOfDayISO = (dateStr: string) => {
+		if (!dateStr) return '';
+		return `${dateStr}T23:59:59.999Z`;
+	};
+
 	const handleApply = () => {
+		const today = new Date();
+		let start = '';
+		let end = '';
+
+		switch (selectedFilter) {
+			case 'today':
+				const todayStr = formatDate(today);
+				start = toStartOfDayISO(todayStr);
+				end = toEndOfDayISO(todayStr);
+				break;
+			case 'yesterday':
+				const yesterday = new Date(today);
+				yesterday.setDate(today.getDate() - 1);
+				const yesterdayStr = formatDate(yesterday);
+				start = toStartOfDayISO(yesterdayStr);
+				end = toEndOfDayISO(yesterdayStr);
+				break;
+			case 'last7days':
+				const last7 = new Date(today);
+				last7.setDate(today.getDate() - 7);
+				start = toStartOfDayISO(formatDate(last7));
+				end = toEndOfDayISO(formatDate(today));
+				break;
+			case 'last30days':
+				const last30 = new Date(today);
+				last30.setDate(today.getDate() - 30);
+				start = toStartOfDayISO(formatDate(last30));
+				end = toEndOfDayISO(formatDate(today));
+				break;
+			case 'dateRange':
+				if (fromDate && toDate) {
+					start = toStartOfDayISO(fromDate);
+					end = toEndOfDayISO(toDate);
+				}
+				break;
+			case 'all':
+				start = '';
+				end = '';
+				break;
+		}
+
 		onApply?.({
-			type: selectedFilter,
-			from: selectedFilter === 'dateRange' ? fromDate : undefined,
-			to: selectedFilter === 'dateRange' ? toDate : undefined,
+			startDate: start,
+			endDate: end,
+			filterType: selectedFilter,
+			fromDate: selectedFilter === 'dateRange' ? fromDate : undefined,
+			toDate: selectedFilter === 'dateRange' ? toDate : undefined
 		});
 		onClose?.();
 	};
@@ -46,10 +113,9 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 
 	return (
 		<div
-			className="dark:bg-gray-800 border dark:border-gray-700 shadow-lg dark:shadow-xl p-6 w-full md:w-[283px] whitespace-nowrap"
+			className="dark:bg-gray-800 shadow-lg dark:shadow-xl p-6 w-full md:w-[283px] whitespace-nowrap rounded-[var(--radius)]"
 			style={{
-				backgroundColor: 'var(--accent-white)',
-				borderColor: 'var(--light-gray)'
+				backgroundColor: 'var(--accent-white)'
 			}}
 		>
 			<div className="space-y-4">
@@ -70,7 +136,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							}}
 						/>
 						<span
-							className="text-sm font-medium dark:text-gray-100"
+							className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Today
@@ -91,7 +157,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							}}
 						/>
 						<span
-							className="text-sm font-medium dark:text-gray-100"
+							className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Yesterday
@@ -112,7 +178,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							}}
 						/>
 						<span
-							className="text-sm font-medium dark:text-gray-100"
+							className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Last 7 days
@@ -133,7 +199,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							}}
 						/>
 						<span
-							className="text-sm font-medium dark:text-gray-100"
+							className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Last 30 days
@@ -154,7 +220,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							}}
 						/>
 						<span
-							className="text-sm font-medium dark:text-gray-100"
+							className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							All time record
@@ -175,7 +241,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							}}
 						/>
 						<span
-							className="text-sm font-medium dark:text-gray-100"
+							className="text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Date Range
@@ -198,15 +264,8 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							<button
 								type="button"
 								onClick={handleFromIconClick}
-								className="absolute right-3 bottom-3 cursor-pointer dark:hover:text-gray-300 transition-colors"
+								className="absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors !p-1"
 								style={{ color: 'var(--text-tertiary)' }}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.color = 'var(--text-secondary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.color = 'var(--text-tertiary)';
-								}}
-								aria-label="Open date picker"
 							>
 								<CalendarIcon
 									className="w-4 h-4 dark:text-gray-500"
@@ -226,15 +285,8 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 							<button
 								type="button"
 								onClick={handleToIconClick}
-								className="absolute right-3 bottom-3 cursor-pointer dark:hover:text-gray-300 transition-colors"
+								className="absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors !p-1"
 								style={{ color: 'var(--text-tertiary)' }}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.color = 'var(--text-secondary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.color = 'var(--text-tertiary)';
-								}}
-								aria-label="Open date picker"
 							>
 								<CalendarIcon
 									className="w-4 h-4 dark:text-gray-500"
@@ -247,13 +299,16 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 
 				{/* Apply Button */}
 				<div className="flex justify-end pt-2">
-					<Button
-						variant="primary"
-						size="md"
+					<button
 						onClick={handleApply}
+						className="px-4 py-2 text-white font-medium transition-all duration-200 hover-bg-custom w-full md:w-auto rounded-[var(--radius)]"
+						style={{
+							backgroundColor: campaignData?.primaryColor || '#050711',
+							'--hover-bg': campaignData?.secondaryColor || '#6C8B7D'
+						} as React.CSSProperties}
 					>
 						Apply
-					</Button>
+					</button>
 				</div>
 			</div>
 		</div>
@@ -261,4 +316,3 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 };
 
 export default DateFilter;
-

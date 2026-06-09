@@ -7,6 +7,7 @@ import IndividualRadio from './IndividualRadio';
 import { Cross2Icon } from '@radix-ui/react-icons';
 
 export interface BusinessHourData {
+	name?: string;
 	businessHourType: '24hours-7days' | '24hours-5days' | 'custom';
 	businessTiming?: 'same' | 'different';
 	sameStartTime?: string;
@@ -35,6 +36,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 	const [sameStartTime, setSameStartTime] = useState('09:00');
 	const [sameEndTime, setSameEndTime] = useState('17:00');
 	const [businessDays, setBusinessDays] = useState<string[]>([]);
+	const [name, setName] = useState('');
 	const [differentHours, setDifferentHours] = useState<{ [key: string]: { startTime: string; endTime: string; enabled: boolean } }>({
 		monday: { startTime: '09:00', endTime: '17:00', enabled: false },
 		tuesday: { startTime: '09:00', endTime: '17:00', enabled: false },
@@ -62,16 +64,17 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 			setSameStartTime(initialData.sameStartTime || '09:00');
 			setSameEndTime(initialData.sameEndTime || '17:00');
 			setBusinessDays(initialData.businessDays || []);
+			setName(initialData.name || '');
 			if (initialData.differentHours) {
 				setDifferentHours(initialData.differentHours);
 			}
 		} else if (isOpen && !initialData) {
-			// Reset to defaults
 			setBusinessHourType('24hours-7days');
 			setBusinessTiming('same');
 			setSameStartTime('09:00');
 			setSameEndTime('17:00');
 			setBusinessDays([]);
+			setName('');
 			setDifferentHours({
 				monday: { startTime: '09:00', endTime: '17:00', enabled: false },
 				tuesday: { startTime: '09:00', endTime: '17:00', enabled: false },
@@ -139,18 +142,25 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 	};
 
 	const handleSave = () => {
+		const enabledDifferentDays = Object.keys(differentHours).filter(
+			(day) => differentHours[day].enabled
+		);
+
 		const data: BusinessHourData = {
+			name: businessHourType === 'custom' ? name : undefined,
 			businessHourType,
-			businessDays: businessHourType === 'custom' ? businessDays : undefined,
 		};
 
 		if (businessHourType === 'custom') {
 			data.businessTiming = businessTiming;
+			data.sameStartTime = sameStartTime;
+			data.sameEndTime = sameEndTime;
+
 			if (businessTiming === 'same') {
-				data.sameStartTime = sameStartTime;
-				data.sameEndTime = sameEndTime;
+				data.businessDays = businessDays;
 			} else {
 				data.differentHours = differentHours;
+				data.businessDays = enabledDifferentDays.length > 0 ? enabledDifferentDays : undefined;
 			}
 		}
 
@@ -169,7 +179,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
 			<div
-				className="dark:bg-gray-800 shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+				className="dark:bg-gray-800 shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
@@ -178,12 +188,14 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="text-xl font-semibold dark:text-gray-100"
+						className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Add Business Hour
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
 						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
 						style={{ color: 'var(--text-tertiary)' }}
@@ -198,7 +210,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Form Content */}
@@ -206,7 +218,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 					{/* Business Hours Section */}
 					<div>
 						<label
-							className="block text-sm font-medium dark:text-gray-200 mb-3"
+							className="block text-[10px] md:text-[12px] font-medium dark:text-gray-200 mb-3"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							Business Hours
@@ -238,114 +250,135 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 
 					{/* Business Timing Section (only shown when Custom Hour is selected) */}
 					{businessHourType === 'custom' && (
-						<div>
-							<label
-								className="block text-sm font-medium dark:text-gray-200 mb-3"
-								style={{ color: 'var(--text-secondary)' }}
-							>
-								Business Timing
-							</label>
-							<div className="space-y-4">
-								<IndividualRadio
-									name="businessTiming"
-									value="same"
-									checked={businessTiming === 'same'}
-									onChange={(value) => setBusinessTiming(value as 'same' | 'different')}
-									label="Same hour everyday"
+						<div className="space-y-4">
+							<div>
+								<label
+									className="block text-[10px] md:text-[12px] font-medium dark:text-gray-200 mb-2"
+									style={{ color: 'var(--text-secondary)' }}
+								>
+									Business hour name
+								</label>
+								<input
+									type="text"
+									value={name}
+									onChange={(e) => setName(e.target.value)}
+									className="w-full px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 rounded-[var(--radius)]"
+									style={{
+										borderColor: 'var(--light-gray)',
+										color: 'var(--text-primary)',
+										backgroundColor: 'var(--accent-white)'
+									}}
 								/>
-								{businessTiming === 'same' && (
-									<div className="ml-7 flex items-center gap-3">
-										<input
-											type="time"
-											value={sameStartTime}
-											onChange={(e) => setSameStartTime(e.target.value)}
-											className="px-3 py-2 border rounded-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-											style={{
-												borderColor: 'var(--light-gray)',
-												color: 'var(--text-primary)',
-												backgroundColor: 'var(--accent-white)'
-											}}
-										/>
-										<span
-											className="text-sm dark:text-gray-400"
-											style={{ color: 'var(--text-tertiary)' }}
-										>
-											to
-										</span>
-										<input
-											type="time"
-											value={sameEndTime}
-											onChange={(e) => setSameEndTime(e.target.value)}
-											className="px-3 py-2 border rounded-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-											style={{
-												borderColor: 'var(--light-gray)',
-												color: 'var(--text-primary)',
-												backgroundColor: 'var(--accent-white)'
-											}}
-										/>
-									</div>
-								)}
+							</div>
+							<div>
+								<label
+									className="block text-[10px] md:text-[12px] font-medium dark:text-gray-200 mb-3"
+									style={{ color: 'var(--text-secondary)' }}
+								>
+									Business Timing
+								</label>
+								<div className="space-y-4">
+									<IndividualRadio
+										name="businessTiming"
+										value="same"
+										checked={businessTiming === 'same'}
+										onChange={(value) => setBusinessTiming(value as 'same' | 'different')}
+										label="Same hour everyday"
+									/>
+									{businessTiming === 'same' && (
+										<div className="ml-7 flex items-center gap-3">
+											<input
+												type="time"
+												value={sameStartTime}
+												onChange={(e) => setSameStartTime(e.target.value)}
+														className="px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed rounded-[var(--radius)]"
+												style={{
+													borderColor: 'var(--light-gray)',
+													color: 'var(--text-primary)',
+													backgroundColor: 'var(--accent-white)'
+												}}
+											/>
+											<span
+												className="text-[10px] md:text-[12px] dark:text-gray-400"
+												style={{ color: 'var(--text-tertiary)' }}
+											>
+												to
+											</span>
+											<input
+												type="time"
+												value={sameEndTime}
+												onChange={(e) => setSameEndTime(e.target.value)}
+														className="px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed rounded-[var(--radius)]"
+												style={{
+													borderColor: 'var(--light-gray)',
+													color: 'var(--text-primary)',
+													backgroundColor: 'var(--accent-white)'
+												}}
+											/>
+										</div>
+									)}
 
-								<IndividualRadio
-									name="businessTiming"
-									value="different"
-									checked={businessTiming === 'different'}
-									onChange={(value) => setBusinessTiming(value as 'same' | 'different')}
-									label="Different hours everyday"
-								/>
-								{businessTiming === 'different' && (
-									<div className="ml-7 space-y-3">
-										{daysOfWeek.map((day) => (
-											<div key={day.key} className="flex items-center gap-3">
-												<Checkbox
-													checked={differentHours[day.key].enabled}
-													onChange={(checked) => {
-														handleDifferentHourChange(day.key, 'startTime', differentHours[day.key].startTime);
-														setDifferentHours(prev => ({
-															...prev,
-															[day.key]: {
-																...prev[day.key],
-																enabled: checked,
-															},
-														}));
-													}}
-													size="medium"
-													label={day.label}
-												/>
-												<input
-													type="time"
-													value={differentHours[day.key].startTime}
-													onChange={(e) => handleDifferentHourChange(day.key, 'startTime', e.target.value)}
-													disabled={!differentHours[day.key].enabled}
-													className="px-3 py-2 border rounded-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed"
-													style={{
-														borderColor: 'var(--light-gray)',
-														color: 'var(--text-primary)',
-														backgroundColor: 'var(--accent-white)'
-													}}
-												/>
-												<span
-													className="text-sm dark:text-gray-400"
-													style={{ color: 'var(--text-tertiary)' }}
-												>
-													to
-												</span>
-												<input
-													type="time"
-													value={differentHours[day.key].endTime}
-													onChange={(e) => handleDifferentHourChange(day.key, 'endTime', e.target.value)}
-													disabled={!differentHours[day.key].enabled}
-													className="px-3 py-2 border rounded-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed"
-													style={{
-														borderColor: 'var(--light-gray)',
-														color: 'var(--text-primary)',
-														backgroundColor: 'var(--accent-white)'
-													}}
-												/>
-											</div>
-										))}
-									</div>
-								)}
+									<IndividualRadio
+										name="businessTiming"
+										value="different"
+										checked={businessTiming === 'different'}
+										onChange={(value) => setBusinessTiming(value as 'same' | 'different')}
+										label="Different hours everyday"
+									/>
+									{businessTiming === 'different' && (
+										<div className="ml-7 space-y-3">
+											{daysOfWeek.map((day) => (
+												<div key={day.key} className="flex items-center gap-3">
+													<Checkbox
+														checked={differentHours[day.key].enabled}
+														onChange={(checked) => {
+															handleDifferentHourChange(day.key, 'startTime', differentHours[day.key].startTime);
+															setDifferentHours(prev => ({
+																...prev,
+																[day.key]: {
+																	...prev[day.key],
+																	enabled: checked,
+																},
+															}));
+														}}
+														size="medium"
+														label={day.label}
+													/>
+													<input
+														type="time"
+														value={differentHours[day.key].startTime}
+														onChange={(e) => handleDifferentHourChange(day.key, 'startTime', e.target.value)}
+														disabled={!differentHours[day.key].enabled}
+														className="px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed rounded-[var(--radius)]"
+														style={{
+															borderColor: 'var(--light-gray)',
+															color: 'var(--text-primary)',
+															backgroundColor: 'var(--accent-white)'
+														}}
+													/>
+													<span
+														className="text-[10px] md:text-[12px] dark:text-gray-400"
+														style={{ color: 'var(--text-tertiary)' }}
+													>
+														to
+													</span>
+													<input
+														type="time"
+														value={differentHours[day.key].endTime}
+														onChange={(e) => handleDifferentHourChange(day.key, 'endTime', e.target.value)}
+														disabled={!differentHours[day.key].enabled}
+														className="px-3 py-2 border dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed rounded-[var(--radius)]"
+														style={{
+															borderColor: 'var(--light-gray)',
+															color: 'var(--text-primary)',
+															backgroundColor: 'var(--accent-white)'
+														}}
+													/>
+												</div>
+											))}
+										</div>
+									)}
+								</div>
 							</div>
 						</div>
 					)}
@@ -354,7 +387,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 					{businessHourType === 'custom' && businessTiming === 'same' && (
 						<div>
 							<label
-								className="block text-sm font-medium dark:text-gray-200 mb-3"
+								className="block text-[10px] md:text-[12px] font-medium dark:text-gray-200 mb-3"
 								style={{ color: 'var(--text-secondary)' }}
 							>
 								Business Days
@@ -364,7 +397,7 @@ export const AddBusinessHourModal: React.FC<AddBusinessHourModalProps> = ({
 									<div key={day.key} className="flex items-center gap-3 cursor-pointer">
 										<Checkbox
 											checked={businessDays.includes(day.key)}
-											onChange={(checked) => handleDayToggle(day.key)}
+											onChange={() => handleDayToggle(day.key)}
 											size="medium"
 											label={day.label}
 										/>

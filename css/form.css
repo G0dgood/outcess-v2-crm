@@ -4,7 +4,7 @@ form .form-ctrl {
 }
 
 form .form-ctrl:focus {
-  border-color: var(--accent-blue) !important;
+  border-color: var(--accent-blue);
 }
 
 form label {
@@ -19,14 +19,12 @@ form input[type="date"],
 form input[type="number"],
 form select {
   background-color: var(--accent-white);
-  padding: 10px 0 !important;
+  padding: 10px 0;
   width: 100%;
   color: var(--gray);
   outline: none;
   border: 0;
-  border-bottom: 1px solid var(--border);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+  border-bottom: 1px solid var(--border); 
 }
 
 form input[type="text"]:focus,
@@ -36,9 +34,7 @@ form input[type="date"]:focus,
 form input[type="number"]:focus,
 form select:focus {
   outline: none;
-  border-bottom: 1px solid var(--accent-blue);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+  border-bottom: 1px solid var(--accent-blue); 
 }
 
 form input[type="text"]:disabled,
@@ -47,21 +43,19 @@ form input[type="password"]:disabled,
 form input[type="date"]:disabled,
 form input[type="number"]:disabled,
 form select:disabled {
-  border-bottom: 1px solid var(--border);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+  border-bottom: 1px solid var(--border); 
 }
 
 form input::-webkit-input-placeholder {
-  color: #d8d8d8 !important;
+  color: #d8d8d8;
 }
 
 form input::-ms-input-placeholder {
-  color: #d8d8d8 !important;
+  color: #d8d8d8;
 }
 
 form input::placeholder {
-  color: #d8d8d8 !important;
+  color: #d8d8d8;
   font-size: 13px;
 }
 
@@ -69,15 +63,13 @@ form input[type="button"],
 form input[type="submit"] {
   background-color: var(--accent-blue);
   color: var(--accent-white);
-  border-radius: 3px;
+  border-radius: var(--radius);
   font-weight: bold;
   margin-top: 40px;
   padding: 9px 26px;
   border: none;
   box-shadow: 0 0 1px rgba(0, 0, 0, 0.15), 0 0 2px rgba(0, 0, 0, 0.15),
-    0 0 16px rgba(218, 209, 209, 0.15);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+    0 0 16px rgba(218, 209, 209, 0.15); 
 }
 
 .input-group form input[type="button"]:hover,
@@ -95,15 +87,13 @@ form input[type="submit"] {
 .input-group form input[type="password"],
 .input-group form select {
   background-color: var(--accent-white);
-  padding: 10px 0 !important;
+  padding: 10px 0;
   width: 100%;
   color: var(--gray);
   outline: none;
   border: 0;
-  border-bottom: 1px solid var(--border);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
-  border-radius: 0px !important;
+  border-bottom: 1px solid var(--border); 
+  border-radius: 0px;
 }
 
 .input-group input[type="text"]:focus,
@@ -111,45 +101,39 @@ form input[type="submit"] {
 .input-group input[type="password"]:focus,
 .input-group select:focus {
   outline: none;
-  border-bottom: 1px solid var(--accent-blue);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+  border-bottom: 1px solid var(--accent-blue); 
 }
 
 .input-group input[type="text"]:disabled,
 .input-group input[type="email"]:disabled,
 .input-group input[type="password"]:disabled,
 .input-group select:disabled {
-  border-bottom: 1px solid var(--border);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+  border-bottom: 1px solid var(--border); 
 }
 
 .input-group input::-webkit-input-placeholder {
-  color: #d8d8d8 !important;
+  color: #d8d8d8;
 }
 
 .input-group input::-ms-input-placeholder {
-  color: #d8d8d8 !important;
+  color: #d8d8d8;
 }
 
 .input-group input::placeholder {
-  color: #d8d8d8 !important;
+  color: #d8d8d8;
 }
 
 .input-group input[type="button"],
 .input-group input[type="submit"] {
   background-color: var(--accent-blue);
   color: var(--accent-white);
-  border-radius: 3px;
+  border-radius: var(--radius);
   font-weight: bold;
   margin-top: 40px;
   padding: 9px 26px;
   border: none;
   box-shadow: 0 0 1px rgba(0, 0, 0, 0.15), 0 0 2px rgba(0, 0, 0, 0.15),
-    0 0 16px rgba(218, 209, 209, 0.15);
-  transition: all 0.3s ease-out;
-  -webkit-transition: all 0.3s ease-out;
+    0 0 16px rgba(218, 209, 209, 0.15);  
 }
 
 .input-group input[type="button"]:hover,
@@ -169,17 +153,17 @@ form input[type="submit"] {
   outline: none;
   /* margin-top: 3px; */
   border-radius: 5px;
-  border: none !important;
-  font-size: 16px;
+  border: none;
+  font-size: 14px;
   transition: all 0.3s ease;
-  border-radius: 0px !important;
+  border-radius: var(--radius);
   background: var(--accent-white);
   font-style: normal;
   font-weight: 400;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 24px;
   color: rgba(0, 0, 0, 0.5);
-  padding: 8px 20px !important;
+  padding: 8px 20px;
 }
 
 input {
@@ -188,13 +172,13 @@ input {
   margin-top: 3px;
   border-radius: 5px;
   border: 1px solid rgba(0, 0, 0, 0.2);
-  font-size: 16px;
+  font-size: 14px;
   transition: all 0.3s ease;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--accent-white);
   font-style: normal;
   font-weight: 400;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 24px;
   color: rgba(0, 0, 0, 0.5);
   padding: 12px 20px;
@@ -208,24 +192,26 @@ input:focus {
   box-shadow: 0 0 5px var(--accent-blue-light);
 }
 
-
-input :hover {
-  border: 1px solid var(--accent-blue-soft) !important;
+.dark input:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
 }
 
-/* input :focus{ 
-  border: 1px solid var(--accent-blue) !important; 
-} */
+
+input :hover {
+  border: 1px solid var(--accent-blue-soft);
+}
+
 /* button */
 .btn {
   background-color: var(--accent-blue);
-  border: 1px solid var(--accent-blue) !important;
-  color: var(--accent-white) !important;
-  border-radius: 7.70833px !important;
-  font-style: normal !important;
-  font-weight: 500 !important;
-  font-size: 12px !important;
-  line-height: 17px !important;
+  border: 1px solid var(--accent-blue);
+  color: var(--accent-white);
+  border-radius: var(--radius);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 17px;
   display: flex;
   align-items: center;
   text-align: center;
@@ -234,14 +220,15 @@ input :hover {
   outline: none;
   padding: 9px 20px;
 }
-.btn_choose{
-  border: 1px solid #2563EB !important;
-  background-color: #2563EB !important;
-  color: white !important;
-  border-radius: 7.70833px !important;
-  font-style: normal !important;
-  font-weight: 500 !important;
-  font-size: 12px !important;
+
+.btn_choose {
+  border: 1px solid #2563EB;
+  background-color: #2563EB;
+  color: white;
+  border-radius: var(--radius);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
   display: flex;
   align-items: center;
   text-align: center;
@@ -251,13 +238,13 @@ input :hover {
 }
 
 .btn_outline {
-  border: 1px solid var(--accent-blue) !important;
-  background-color: var(--accent-blue-light) !important;
-  color: var(--accent-blue) !important;
-  border-radius: 7.70833px !important;
-  font-style: normal !important;
-  font-weight: 500 !important;
-  font-size: 12px !important;
+  border: 1px solid var(--accent-blue);
+  background-color: var(--accent-blue-light);
+  color: var(--accent-blue);
+  border-radius: var(--radius);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
   display: flex;
   align-items: center;
   text-align: center;
@@ -270,13 +257,13 @@ input :hover {
 .btn:hover {
   border: 2px solid var(--accent-blue);
   background-color: var(--accent-blue-light);
-  color: var(--accent-blue) !important;
+  color: var(--accent-blue);
 }
 
 .btn_outline:hover {
-  border: 2px solid var(--accent-blue) !important;
-  background-color: var(--accent-blue) !important;
-  color: var(--accent-white) !important;
+  border: 2px solid var(--accent-blue);
+  background-color: var(--accent-blue);
+  color: var(--accent-white);
 }
 
 button {
@@ -292,13 +279,13 @@ button {
      padding: 9px 20px;
 } */
 
-.img-search-access{
+.img-search-access {
   cursor: pointer;
   transition: 0.5s;
   margin: 0px 10px;
 }
 
-.img-search-access:hover{
+.img-search-access:hover {
   font-size: 17px;
 }
 
@@ -321,11 +308,11 @@ button {
   padding: 10px;
   border-radius: 5px;
   margin-top: 3px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--accent-white);
   font-style: normal;
   font-weight: 400;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 24px;
   color: rgba(0, 0, 0, 0.5);
   padding: 12px 20px;
@@ -354,7 +341,7 @@ button {
   align-items: center;
   color: var(--accent-blue);
   background-color: var(--accent-blue-light);
-  border-radius: 0px;
+  border-radius: var(--radius);
   font-size: smaller;
   white-space: nowrap;
   padding: 0px 10px;
@@ -371,7 +358,7 @@ button {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: bold !important;
+  font-weight: bold;
   background-color: var(--accent-blue);
   border: none;
   color: var(--accent-white);
@@ -384,7 +371,7 @@ button {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: bold !important;
+  font-weight: bold;
   background-color: var(--accent-blue-soft);
   color: var(--accent-white);
 }
@@ -396,13 +383,13 @@ Select {
   margin-top: 3px;
   border-radius: 5px;
   border: 1px solid rgba(0, 0, 0, 0.2);
-  font-size: 16px;
+  font-size: 14px;
   transition: all 0.3s ease;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--accent-white);
   font-style: normal;
   font-weight: 400;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 24px;
   color: rgba(0, 0, 0, 0.5);
   padding: 12px 20px;
@@ -414,18 +401,23 @@ Select:focus {
   box-shadow: 0 0 5px var(--accent-blue-light);
 }
 
+.dark Select:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+}
+
 Select :hover {
-  border: 1px solid var(--accent-blue-light) !important;
+  border: 1px solid var(--accent-blue-light);
 }
 
 textarea {
   width: 100%;
   outline: none;
   margin-top: 3px;
-  border-radius: 5px;
+  border-radius: var(--radius);
   border: 1px solid #ccc;
   padding: 10px;
-  font-size: 16px;
+  font-size: 14px;
   transition: all 0.3s ease;
 }
 
@@ -435,8 +427,13 @@ textarea:focus {
   box-shadow: 0 0 5px var(--accent-blue-light);
 }
 
+.dark textarea:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+}
+
 textarea :hover {
-  border: 1px solid var(--accent-blue-light) !important;
+  border: 1px solid var(--accent-blue-light);
 }
 
 .css-t3ipsp-control {
@@ -457,13 +454,11 @@ textarea :hover {
   -webkit-justify-content: space-between;
   justify-content: space-between;
   min-height: 38px;
-  outline: 0 !important;
-  position: relative;
-  -webkit-transition: all 100ms;
-  transition: all 100ms;
+  outline: 0;
+  position: relative; 
   background-color: hsl(0, 0%, 100%);
-  border-color: var(--accent-purple) !important;
-  border-radius: 4px;
+  border-color: var(--accent-purple);
+  border-radius: var(--radius);
   border-style: solid;
   border-width: 1px;
   box-shadow: 0 0 0 1px var(--box-shadow);
@@ -473,7 +468,7 @@ textarea :hover {
 /* Targeting the control (container) */
 .react-select__control {
   border: 1px solid var(--text);
-  border-radius: 4px;
+  border-radius: var(--radius);
 }
 
 /* Targeting the focused state of the control */
@@ -508,11 +503,11 @@ textarea :hover {
 
 .dashboard-first-card-p {
   margin-bottom: 5px;
-  font-size: 14px;
+  font-size: 12px;
   color: var(--text);
 }
 
- 
+
 
 .flex-date-input {
   display: grid;
@@ -521,14 +516,14 @@ textarea :hover {
 }
 
 .de-active {
-  background-color: var(--accent-red-light) !important;
-  border: 1px solid var(--accent-red) !important;
-  border-radius: 3px !important;
-  color: var(--accent-red) !important;
-  padding: 0.15rem 1rem !important;
+  background-color: var(--accent-red-light);
+  border: 1px solid var(--accent-red);
+  border-radius: 3px;
+  color: var(--accent-red);
+  padding: 0.15rem 1rem;
 }
 
- 
+
 
 .container_reg form .user__details {
   display: flex;
@@ -536,7 +531,7 @@ textarea :hover {
   justify-content: space-between;
   font-style: normal;
   font-weight: 400;
-  font-size: 14px;
+  font-size: 12px;
   line-height: 22px;
   color: var(--black);
 }
@@ -609,11 +604,11 @@ textarea :hover {
 }
 
 .ang-dash-notfound {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  align-self: center !important;
-  height: 100% !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+  height: 100%;
 }
 
 
@@ -653,14 +648,14 @@ form#ticket-form .form-grp_btn {
 }
 
 .de-active {
-  background-color: rgba(255, 0, 0, .159) !important;
-  border: 1px solid red !important;
-  border-radius: 3px !important;
-  color: red !important;
-  padding: 0.15rem 1rem !important;
+  background-color: rgba(255, 0, 0, .159);
+  border: 1px solid red;
+  border-radius: 3px;
+  color: red;
+  padding: 0.15rem 1rem;
 }
 
- 
+
 
 .container_reg form .user__details {
   display: flex;
@@ -682,4 +677,25 @@ form#ticket-form .form-grp_btn {
 .close-span-icon:hover {
   border: 1px solid var(--accent-blue);
   box-shadow: 0 0 5px (--accent-blue-light);
+}
+
+@media (max-width: 768px) {
+
+  /* 16px -> 14px (desktop) -> 12px (mobile) */
+  .input-group,
+  input,
+  #register-select,
+  Select,
+  textarea {
+    font-size: 12px;
+  }
+
+  /* 14px -> 12px (desktop) -> 10px (mobile) */
+  .dashboard-first-card-p,
+  .container_reg form .user__details,
+  .btn,
+  .btn_choose,
+  .btn_outline {
+    font-size: 10px;
+  }
 }

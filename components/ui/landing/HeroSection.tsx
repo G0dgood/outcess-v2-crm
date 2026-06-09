@@ -25,30 +25,30 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
 					<span className="inline md:block">CRM Built for Call</span>{' '}
 					<span className="inline md:block">Centers</span>
 				</h1>
-				<p className="font-normal text-[16px] leading-[24px] sm:text-[20px] sm:leading-[32px] flex items-center text-[#4A5565] mt-6 sm:pr-16" style={plusJakartaStyle}>
+				<p className="font-normal text-[12px] md:text-[14px] leading-[24px] sm:text-[20px] sm:leading-[32px] flex items-center text-[#4A5565] mt-6 sm:pr-16" style={plusJakartaStyle}>
 					Streamline operations, boost agent productivity, and deliver exceptional customer experiences in one seamless CRM platform
 					designed for busy call center teams.
 				</p>
 				<div className="mt-8 flex flex-col gap-4 sm:flex-row">
 					<Link
 						href="/signup"
-						className="flex flex-row justify-center items-center px-[16px] py-[12px] gap-[8px] h-[48px] bg-[#050711] font-[Plus-Jakarta-Sans] font-medium text-[14px] leading-[20px] text-center text-white" style={plusJakartaStyle}>
+						className="flex flex-row justify-center items-center px-[16px] py-[12px] gap-[8px] h-[48px] bg-[#050711] font-[Plus-Jakarta-Sans] font-medium text-[10px] md:text-[12px] leading-[20px] text-center text-white" style={plusJakartaStyle}>
 						Start Free 14-Day Trial
 						<Image src="/logo/margin.svg" alt="Arrow Right" width={20} height={20} />
 					</Link>
 					<Link
 						href="/demo"
-						className="box-border flex flex-row justify-center items-center px-[16px] py-[12px] gap-[8px] h-[48px] bg-white border border-[#050711] font-[Plus-Jakarta-Sans] font-medium text-[14px] leading-[20px] text-center text-[#050711]" style={plusJakartaStyle}>
+						className="box-border flex flex-row justify-center items-center px-[16px] py-[12px] gap-[8px] h-[48px] bg-white border border-[#050711] font-[Plus-Jakarta-Sans] font-medium text-[10px] md:text-[12px] leading-[20px] text-center text-[#050711]" style={plusJakartaStyle}>
 						<Image src="/logo/play.svg" alt="Play" width={16} height={16} />
 						Schedule Demo
 					</Link>
 				</div>
-				<div className="mt-10 flex items-center gap-2 text-sm text-tertiary">
-					<div className="flex flex-row items-center gap-2 font-normal text-[16px] leading-[24px] text-[#4A5565]">
+				<div className="mt-10 flex items-center gap-2 text-[10px] md:text-[12px] text-tertiary">
+					<div className="flex flex-row items-center gap-2 font-normal text-[12px] md:text-[14px] leading-[24px] text-[#4A5565]">
 						<Image src="/logo/circleCheck.svg" alt="Check" width={16} height={16} />
 						No credit card required.
 					</div>
-					<div className="flex flex-row items-center gap-2 font-normal text-[16px] leading-[24px] text-[#4A5565]">
+					<div className="flex flex-row items-center gap-2 font-normal text-[12px] md:text-[14px] leading-[24px] text-[#4A5565]">
 						<Image src="/logo/circleCheck.svg" alt="Check" width={16} height={16} />
 						Cancel anytime.
 					</div>

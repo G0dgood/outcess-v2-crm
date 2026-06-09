@@ -1,6 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback, ReactNode } from 'react';
+import { io, Socket } from 'socket.io-client';
+import { toastSuccess, toastInfo } from '@/utils/toastWithSound';
+import { useAuth } from './AuthContext';
 
 // Socket connection status
 export type SocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error' | 'reconnecting' | 'offline';
@@ -14,7 +17,7 @@ export interface SocketMessage {
 }
 
 // Event handler type
-export type SocketEventHandler = (message: SocketMessage) => void;
+export type SocketEventHandler = (message: unknown) => void;
 
 // Socket configuration
 export interface SocketConfig {
@@ -22,7 +25,6 @@ export interface SocketConfig {
 	reconnectInterval?: number;
 	maxReconnectAttempts?: number;
 	autoConnect?: boolean;
-	protocols?: string | string[];
 	enableOfflineMode?: boolean;
 	maxQueueSize?: number;
 	persistQueue?: boolean;
@@ -37,7 +39,7 @@ interface SocketContextType {
 	isOffline: boolean;
 	isReconnected: boolean;
 	networkSpeed: 'fast' | 'slow' | 'unknown';
-	socket: WebSocket | null;
+	socket: Socket | null;
 
 	// Connection methods
 	connect: (url?: string) => void;
@@ -45,19 +47,18 @@ interface SocketContextType {
 	reconnect: () => void;
 
 	// Message methods
-	send: (message: SocketMessage | string) => void;
-	sendJSON: (data: unknown) => void;
+	emit: (event: string, data?: unknown) => void;
+	send: (message: SocketMessage) => void;
 
 	// Event listeners
 	on: (event: string, handler: SocketEventHandler) => void;
 	off: (event: string, handler: SocketEventHandler) => void;
-	once: (event: string, handler: SocketEventHandler) => void;
 
 	// Offline mode methods
 	enableOfflineMode: () => void;
 	disableOfflineMode: () => void;
 	clearMessageQueue: () => void;
-	getQueuedMessages: () => SocketMessage[];
+	getQueuedMessages: () => unknown[];
 	getQueueSize: () => number;
 
 	// Connection info
@@ -72,34 +73,104 @@ interface SocketProviderProps {
 	config?: Partial<SocketConfig>;
 }
 
+interface QueuedMessage {
+	event: string;
+	data: unknown;
+	timestamp?: number;
+}
+
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config }) => {
 	const [status, setStatus] = useState<SocketStatus>('disconnected');
-	const [socket, setSocket] = useState<WebSocket | null>(null);
+	const [socket, setSocket] = useState<Socket | null>(null);
 	const [reconnectAttempts, setReconnectAttempts] = useState(0);
 	const [lastError, setLastError] = useState<Error | null>(null);
 	const [isOnline, setIsOnline] = useState(true);
 	const [offlineModeEnabled, setOfflineModeEnabled] = useState(false);
 	const [isReconnected, setIsReconnected] = useState(false);
+	const { isAuthenticated } = useAuth();
 	const [networkSpeed, setNetworkSpeed] = useState<'fast' | 'slow' | 'unknown'>('unknown');
-	const previousStatusRef = useRef<SocketStatus>('disconnected');
+	const networkSpeedRef = useRef<'fast' | 'slow' | 'unknown'>('unknown');
 
-	const socketRef = useRef<WebSocket | null>(null);
-	const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-	const eventHandlersRef = useRef<Map<string, Set<SocketEventHandler>>>(new Map());
-	const reconnectAttemptsRef = useRef(0);
-	const messageQueueRef = useRef<SocketMessage[]>([]);
+	const socketRef = useRef<Socket | null>(null);
+	const messageQueueRef = useRef<QueuedMessage[]>([]);
+	const isSyncingDispositionsRef = useRef(false);
 
 	const {
-		url = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080',
-		reconnectInterval = 3000,
-		maxReconnectAttempts = 5,
-		autoConnect = false,
-		protocols,
+		url = process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+		autoConnect = true,
 		enableOfflineMode: configEnableOfflineMode = true,
 		maxQueueSize = 100,
 		persistQueue = true,
 		queueStorageKey = 'socket_message_queue',
 	} = config || {};
+
+	// Monitor network status
+	useEffect(() => {
+		if (typeof window === 'undefined') return;
+
+		const handleOnline = async () => {
+			setIsOnline(true);
+
+			// Show reconnected banner when network comes back
+			setIsReconnected(true);
+			setTimeout(() => setIsReconnected(false), 3000);
+
+			// Update status immediately based on socket state
+			if (socketRef.current?.connected) {
+				setStatus('connected');
+			} else {
+				setStatus('connecting');
+				// Attempt to reconnect
+				if (socketRef.current) {
+					socketRef.current.connect();
+				}
+			}
+		};
+
+		const handleOffline = () => {
+			setIsOnline(false);
+			setStatus('offline');
+		};
+
+		// Set initial state
+		setIsOnline(navigator.onLine);
+		if (!navigator.onLine) {
+			setStatus('offline');
+		}
+
+		window.addEventListener('online', handleOnline);
+		window.addEventListener('offline', handleOffline);
+
+		// Network speed monitoring
+		const connection = (navigator as NavigatorWithConnection).connection ||
+			(navigator as NavigatorWithConnection).mozConnection ||
+			(navigator as NavigatorWithConnection).webkitConnection;
+
+		const updateNetworkSpeed = () => {
+			if (connection) {
+				const type = connection.effectiveType;
+				// 'slow-2g', '2g', '3g', or '4g'
+				if (type === 'slow-2g' || type === '2g') {
+					setNetworkSpeed('slow');
+				} else {
+					setNetworkSpeed('fast');
+				}
+			}
+		};
+
+		if (connection) {
+			updateNetworkSpeed();
+			connection.addEventListener?.('change', updateNetworkSpeed);
+		}
+
+		return () => {
+			window.removeEventListener('online', handleOnline);
+			window.removeEventListener('offline', handleOffline);
+			if (connection) {
+				connection.removeEventListener?.('change', updateNetworkSpeed);
+			}
+		};
+	}, []);
 
 	// Load queued messages from localStorage on mount
 	useEffect(() => {
@@ -129,431 +200,122 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 		}
 	}, [persistQueue, queueStorageKey]);
 
-	const cleanup = useCallback(() => {
-		if (reconnectTimeoutRef.current) {
-			clearTimeout(reconnectTimeoutRef.current);
-			reconnectTimeoutRef.current = null;
-		}
-		if (socketRef.current) {
-			socketRef.current.onopen = null;
-			socketRef.current.onclose = null;
-			socketRef.current.onerror = null;
-			socketRef.current.onmessage = null;
-			if (socketRef.current.readyState === WebSocket.OPEN || socketRef.current.readyState === WebSocket.CONNECTING) {
-				socketRef.current.close();
-			}
-			socketRef.current = null;
-		}
-	}, []);
-
-	const handleMessage = useCallback((event: MessageEvent) => {
-		try {
-			let message: SocketMessage;
-
-			if (typeof event.data === 'string') {
-				message = JSON.parse(event.data);
-			} else {
-				message = event.data;
-			}
-
-			// Add timestamp if not present
-			if (!message.timestamp) {
-				message.timestamp = Date.now();
-			}
-
-			// Call all handlers for the message type
-			const handlers = eventHandlersRef.current.get(message.type);
-			if (handlers) {
-				handlers.forEach((handler) => {
-					try {
-						handler(message);
-					} catch (error) {
-						console.error(`Error in socket event handler for ${message.type}:`, error);
-					}
-				});
-			}
-
-			// Also call wildcard handlers
-			const wildcardHandlers = eventHandlersRef.current.get('*');
-			if (wildcardHandlers) {
-				wildcardHandlers.forEach((handler) => {
-					try {
-						handler(message);
-					} catch (error) {
-						console.error('Error in wildcard socket event handler:', error);
-					}
-				});
-			}
-		} catch (error) {
-			console.error('Error parsing socket message:', error);
-		}
-	}, []);
-
-	// Flush queued messages when connection is restored
 	const flushMessageQueue = useCallback(() => {
-		if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-			return;
-		}
+		if (!socketRef.current || !socketRef.current.connected) return;
 
 		const queue = [...messageQueueRef.current];
 		messageQueueRef.current = [];
 
-		queue.forEach((message) => {
+		queue.forEach((msg) => {
 			try {
-				if (typeof message === 'string') {
-					socketRef.current?.send(message);
-				} else {
-					socketRef.current?.send(JSON.stringify(message));
-				}
+				socketRef.current?.emit(msg.event, msg.data);
 			} catch (error) {
 				console.error('Error flushing queued message:', error);
-				// Re-queue failed messages
-				messageQueueRef.current.push(message);
+				messageQueueRef.current.push(msg);
 			}
 		});
 
 		saveQueueToStorage();
 	}, [saveQueueToStorage]);
 
-	// Network speed detection
-	const checkNetworkSpeed = useCallback(async () => {
-		if (!navigator.onLine) {
-			setNetworkSpeed('unknown');
-			return;
-		}
-
-		const connection =
-			(navigator as NavigatorWithConnection).connection ||
-			(navigator as NavigatorWithConnection).mozConnection ||
-			(navigator as NavigatorWithConnection).webkitConnection;
-		if (!connection) {
-			setNetworkSpeed('unknown');
-			return;
-		}
-
-		// Check effective connection type
-		const effectiveType = connection.effectiveType;
-		if (effectiveType === 'slow-2g' || effectiveType === '2g') {
-			setNetworkSpeed('slow');
-		} else if (effectiveType === '3g' || effectiveType === '4g') {
-			setNetworkSpeed('fast');
-		} else {
-			// Fallback: measure download speed
-			try {
-				const startTime = performance.now();
-				const response = await fetch('/api/ping', { cache: 'no-cache' }).catch(() => null);
-				const endTime = performance.now();
-
-				if (response) {
-					const duration = endTime - startTime;
-					// If response takes more than 2 seconds, consider it slow
-					setNetworkSpeed(duration > 2000 ? 'slow' : 'fast');
-				} else {
-					setNetworkSpeed('slow');
-				}
-			} catch {
-				setNetworkSpeed('unknown');
-			}
-		}
-	}, []);
-
-	// Network status detection
-	useEffect(() => {
-		if (!configEnableOfflineMode) return;
-
-		const handleOnline = () => {
-			setIsOnline(true);
-			if (status === 'offline' || previousStatusRef.current === 'offline' || previousStatusRef.current === 'reconnecting') {
-				setIsReconnected(true);
-				// Hide reconnected banner after 3 seconds
-				setTimeout(() => setIsReconnected(false), 3000);
-			}
-			if (status === 'offline') {
-				setStatus('disconnected');
-			}
-			// Flush queued messages when back online
-			flushMessageQueue();
-			checkNetworkSpeed();
-		};
-
-		const handleOffline = () => {
-			setIsOnline(false);
-			setIsReconnected(false);
-			if (offlineModeEnabled) {
-				setStatus('offline');
-			}
-		};
-
-		// Set initial online status
-		setIsOnline(navigator.onLine);
-		checkNetworkSpeed();
-
-		// Monitor connection changes
-		const connection =
-			(navigator as NavigatorWithConnection).connection ||
-			(navigator as NavigatorWithConnection).mozConnection ||
-			(navigator as NavigatorWithConnection).webkitConnection;
-		if (connection) {
-			connection?.addEventListener?.('change', checkNetworkSpeed);
-		}
-
-		window.addEventListener('online', handleOnline);
-		window.addEventListener('offline', handleOffline);
-
-		return () => {
-			if (connection) {
-				connection?.removeEventListener?.('change', checkNetworkSpeed);
-			}
-			window.removeEventListener('online', handleOnline);
-			window.removeEventListener('offline', handleOffline);
-		};
-	}, [configEnableOfflineMode, offlineModeEnabled, status, flushMessageQueue, checkNetworkSpeed]);
-
 	const connect = useCallback((customUrl?: string) => {
-		// Clean up existing connection
-		cleanup();
+		if (socketRef.current?.connected) return;
 
 		const wsUrl = customUrl || url;
-		if (!wsUrl) {
-			console.error('Socket URL is required');
-			setLastError(new Error('Socket URL is required'));
-			setStatus('error');
-			return;
-		}
 
 		try {
 			setStatus('connecting');
-			setLastError(null);
+			const newSocket = io(wsUrl, {
+				autoConnect: true,
+				reconnection: true,
+			});
 
-			const ws = protocols
-				? new WebSocket(wsUrl, protocols)
-				: new WebSocket(wsUrl);
-
-			ws.onopen = () => {
-				console.log('Socket connected');
-				const wasReconnecting = previousStatusRef.current === 'reconnecting' || previousStatusRef.current === 'offline' || previousStatusRef.current === 'disconnected';
+			newSocket.on('connect', () => {
 				setStatus('connected');
-				setSocket(ws);
-				socketRef.current = ws;
+				setLastError(null);
 				setReconnectAttempts(0);
-				reconnectAttemptsRef.current = 0;
-
-				// Show reconnected banner if we were previously offline/reconnecting
-				if (wasReconnecting && isOnline) {
-					setIsReconnected(true);
-					setTimeout(() => setIsReconnected(false), 3000);
-				}
-
-				// Flush queued messages when connected
+				setIsReconnected(true);
+				setTimeout(() => setIsReconnected(false), 3000);
 				flushMessageQueue();
-				checkNetworkSpeed();
-			};
+			});
 
-			ws.onclose = (event) => {
-				console.log('Socket closed', event.code, event.reason);
-				setSocket(null);
-				socketRef.current = null;
+			newSocket.on('disconnect', (reason) => {
 				setStatus('disconnected');
-
-				// Attempt to reconnect if not a normal closure
-				if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
-					setStatus('reconnecting');
-					reconnectAttemptsRef.current += 1;
-					setReconnectAttempts(reconnectAttemptsRef.current);
-
-					reconnectTimeoutRef.current = setTimeout(() => {
-						connect(wsUrl);
-					}, reconnectInterval);
-				} else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-					setStatus('error');
-					setLastError(new Error('Max reconnection attempts reached'));
+				if (reason === 'io server disconnect') {
+					newSocket.connect();
 				}
-			};
+			});
 
-			ws.onerror = (error) => {
-				console.error('Socket error:', error);
+			newSocket.on('connect_error', (error) => {
+				console.error('Socket connection error:', error);
 				setStatus('error');
-				setLastError(new Error('WebSocket connection error'));
-			};
+				setLastError(error);
+			});
 
-			ws.onmessage = handleMessage;
+			setSocket(newSocket);
+			socketRef.current = newSocket;
+
 		} catch (error) {
 			console.error('Error creating socket connection:', error);
 			setStatus('error');
 			setLastError(error instanceof Error ? error : new Error('Unknown error'));
 		}
-	}, [url, protocols, reconnectInterval, maxReconnectAttempts, cleanup, handleMessage, flushMessageQueue, isOnline, checkNetworkSpeed]);
+	}, [url, flushMessageQueue]);
 
 	const disconnect = useCallback(() => {
-		cleanup();
-		setStatus('disconnected');
-		setSocket(null);
-		setReconnectAttempts(0);
-		reconnectAttemptsRef.current = 0;
-	}, [cleanup]);
+		if (socketRef.current) {
+			socketRef.current.disconnect();
+			setSocket(null);
+			socketRef.current = null;
+			setStatus('disconnected');
+		}
+	}, []);
 
 	const reconnect = useCallback(() => {
 		disconnect();
-		setTimeout(() => {
-			connect();
-		}, 100);
+		setTimeout(() => connect(), 100);
 	}, [disconnect, connect]);
 
-	const send = useCallback((message: SocketMessage | string) => {
-		// If offline mode is enabled and we're offline, queue the message
-		if (offlineModeEnabled && (!isOnline || status === 'offline')) {
-			const messageToQueue: SocketMessage = typeof message === 'string'
-				? { type: 'queued', payload: message, timestamp: Date.now() }
-				: { ...message, timestamp: message.timestamp || Date.now() };
-
-			// Check queue size limit
+	const emit = useCallback((event: string, data?: unknown) => {
+		if (socketRef.current?.connected) {
+			socketRef.current.emit(event, data);
+		} else if (offlineModeEnabled) {
 			if (messageQueueRef.current.length >= maxQueueSize) {
-				console.warn('Message queue is full. Removing oldest message.');
 				messageQueueRef.current.shift();
 			}
-
-			messageQueueRef.current.push(messageToQueue);
+			messageQueueRef.current.push({ event, data, timestamp: Date.now() });
 			saveQueueToStorage();
-			console.log('Message queued (offline mode). Queue size:', messageQueueRef.current.length);
-			return;
 		}
+	}, [offlineModeEnabled, maxQueueSize, saveQueueToStorage]);
 
-		// If socket is not connected, queue if offline mode is enabled
-		if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-			if (offlineModeEnabled) {
-				const messageToQueue: SocketMessage = typeof message === 'string'
-					? { type: 'queued', payload: message, timestamp: Date.now() }
-					: { ...message, timestamp: message.timestamp || Date.now() };
-
-				if (messageQueueRef.current.length >= maxQueueSize) {
-					messageQueueRef.current.shift();
-				}
-
-				messageQueueRef.current.push(messageToQueue);
-				saveQueueToStorage();
-				console.log('Message queued (socket not connected). Queue size:', messageQueueRef.current.length);
-				return;
-			}
-
-			console.warn('Socket is not connected. Message not sent.');
-			return;
-		}
-
-		try {
-			if (typeof message === 'string') {
-				socketRef.current.send(message);
-			} else {
-				socketRef.current.send(JSON.stringify(message));
-			}
-		} catch (error) {
-			console.error('Error sending socket message:', error);
-			setLastError(error instanceof Error ? error : new Error('Failed to send message'));
-
-			// Queue message if offline mode is enabled
-			if (offlineModeEnabled) {
-				const messageToQueue: SocketMessage = typeof message === 'string'
-					? { type: 'queued', payload: message, timestamp: Date.now() }
-					: { ...message, timestamp: message.timestamp || Date.now() };
-
-				if (messageQueueRef.current.length >= maxQueueSize) {
-					messageQueueRef.current.shift();
-				}
-
-				messageQueueRef.current.push(messageToQueue);
-				saveQueueToStorage();
-			}
-		}
-	}, [offlineModeEnabled, isOnline, status, maxQueueSize, saveQueueToStorage]);
-
-	const sendJSON = useCallback((data: unknown) => {
-		send({
-			type: 'message',
-			payload: data,
-			timestamp: Date.now(),
-		});
-	}, [send]);
+	const send = useCallback((message: SocketMessage) => {
+		emit(message.type, message.payload);
+	}, [emit]);
 
 	const on = useCallback((event: string, handler: SocketEventHandler) => {
-		if (!eventHandlersRef.current.has(event)) {
-			eventHandlersRef.current.set(event, new Set());
-		}
-		eventHandlersRef.current.get(event)!.add(handler);
+		socketRef.current?.on(event, handler);
 	}, []);
 
 	const off = useCallback((event: string, handler: SocketEventHandler) => {
-		const handlers = eventHandlersRef.current.get(event);
-		if (handlers) {
-			handlers.delete(handler);
-			if (handlers.size === 0) {
-				eventHandlersRef.current.delete(event);
-			}
-		}
+		socketRef.current?.off(event, handler);
 	}, []);
 
-	const once = useCallback((event: string, handler: SocketEventHandler) => {
-		const onceHandler = (message: SocketMessage) => {
-			handler(message);
-			off(event, onceHandler);
-		};
-		on(event, onceHandler);
-	}, [on, off]);
+	// Auto-Sync for Offline Dispositions when both online and connected and authenticated
 
-	// Offline mode management
-	const enableOfflineMode = useCallback(() => {
-		setOfflineModeEnabled(true);
-		if (!isOnline) {
-			setStatus('offline');
-		}
-	}, [isOnline]);
 
-	const disableOfflineMode = useCallback(() => {
-		setOfflineModeEnabled(false);
-		if (status === 'offline') {
-			setStatus('disconnected');
-		}
-	}, [status]);
 
-	const clearMessageQueue = useCallback(() => {
-		messageQueueRef.current = [];
-		if (persistQueue && typeof window !== 'undefined') {
-			try {
-				localStorage.removeItem(queueStorageKey);
-			} catch (error) {
-				console.error('Error clearing message queue from storage:', error);
-			}
-		}
-	}, [persistQueue, queueStorageKey]);
 
-	const getQueuedMessages = useCallback(() => {
-		return [...messageQueueRef.current];
-	}, []);
 
-	const getQueueSize = useCallback(() => {
-		return messageQueueRef.current.length;
-	}, []);
 
-	// Initialize offline mode
-	useEffect(() => {
-		if (configEnableOfflineMode) {
-			setOfflineModeEnabled(true);
-		}
-	}, [configEnableOfflineMode]);
-
-	// Track status changes
-	useEffect(() => {
-		previousStatusRef.current = status;
-	}, [status]);
-
-	// Auto-connect on mount if enabled
+	// Auto-connect
 	useEffect(() => {
 		if (autoConnect) {
 			connect();
 		}
-
 		return () => {
-			cleanup();
+			disconnect();
 		};
-	}, [autoConnect, connect, cleanup]);
+	}, [autoConnect, connect, disconnect]);
 
 	const contextValue: SocketContextType = {
 		status,
@@ -566,16 +328,18 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 		connect,
 		disconnect,
 		reconnect,
+		emit,
 		send,
-		sendJSON,
 		on,
 		off,
-		once,
-		enableOfflineMode,
-		disableOfflineMode,
-		clearMessageQueue,
-		getQueuedMessages,
-		getQueueSize,
+		enableOfflineMode: () => setOfflineModeEnabled(true),
+		disableOfflineMode: () => setOfflineModeEnabled(false),
+		clearMessageQueue: () => {
+			messageQueueRef.current = [];
+			saveQueueToStorage();
+		},
+		getQueuedMessages: () => [...messageQueueRef.current],
+		getQueueSize: () => messageQueueRef.current.length,
 		reconnectAttempts,
 		lastError,
 	};
@@ -596,6 +360,7 @@ export const useSocket = () => {
 };
 
 export default SocketContext;
+
 type NetworkConnection = {
 	effectiveType?: string;
 	addEventListener?: (type: 'change', listener: () => void) => void;
@@ -607,4 +372,3 @@ type NavigatorWithConnection = Navigator & {
 	mozConnection?: NetworkConnection;
 	webkitConnection?: NetworkConnection;
 };
-

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface ThemeContextType {
 	isDarkMode: boolean;
@@ -10,9 +11,15 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const LIGHT_ONLY_PATH_PREFIXES = ['/blog', '/about', '/careers'];
+
+const isLightOnlyPath = (path: string) =>
+	LIGHT_ONLY_PATH_PREFIXES.some((prefix) => path.startsWith(prefix));
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 	const [isDarkMode, setIsDarkMode] = useState(false);
 	const [mounted, setMounted] = useState(false);
+	const pathname = usePathname();
 
 	// Initialize from localStorage on mount
 	useEffect(() => {
@@ -22,8 +29,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 		const shouldBeDark = savedTheme === 'true';
 		setIsDarkMode(shouldBeDark);
 		
-		// Update DOM immediately
-		if (shouldBeDark) {
+		// Marketing pages stay in light mode; login and app pages respect saved preference
+		if (isLightOnlyPath(window.location.pathname)) {
+			document.documentElement.classList.remove('dark');
+		} else if (shouldBeDark) {
 			document.documentElement.classList.add('dark');
 		} else {
 			document.documentElement.classList.remove('dark');
@@ -34,6 +43,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 	useEffect(() => {
 		if (!mounted) return;
 		
+		if (pathname && isLightOnlyPath(pathname)) {
+			document.documentElement.classList.remove('dark');
+			return;
+		}
+
 		if (isDarkMode) {
 			document.documentElement.classList.add('dark');
 			localStorage.setItem('darkMode', 'true');
@@ -41,22 +55,27 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 			document.documentElement.classList.remove('dark');
 			localStorage.setItem('darkMode', 'false');
 		}
-	}, [isDarkMode, mounted]);
+	}, [isDarkMode, mounted, pathname]);
+
+	const applyThemeToDocument = (dark: boolean) => {
+		if (typeof window !== 'undefined' && isLightOnlyPath(window.location.pathname)) {
+			document.documentElement.classList.remove('dark');
+			return;
+		}
+
+		if (dark) {
+			document.documentElement.classList.add('dark');
+			localStorage.setItem('darkMode', 'true');
+		} else {
+			document.documentElement.classList.remove('dark');
+			localStorage.setItem('darkMode', 'false');
+		}
+	};
 
 	const toggleTheme = () => {
 		setIsDarkMode((prev) => {
 			const newValue = !prev;
-			
-			// Update DOM immediately for instant feedback
-			const htmlElement = document.documentElement;
-			if (newValue) {
-				htmlElement.classList.add('dark');
-				localStorage.setItem('darkMode', 'true');
-			} else {
-				htmlElement.classList.remove('dark');
-				localStorage.setItem('darkMode', 'false');
-			}
-			
+			applyThemeToDocument(newValue);
 			return newValue;
 		});
 	};
@@ -64,14 +83,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 	const setTheme = (theme: 'light' | 'dark') => {
 		const newValue = theme === 'dark';
 		setIsDarkMode(newValue);
-		// Update DOM immediately
-		if (newValue) {
-			document.documentElement.classList.add('dark');
-			localStorage.setItem('darkMode', 'true');
-		} else {
-			document.documentElement.classList.remove('dark');
-			localStorage.setItem('darkMode', 'false');
-		}
+		applyThemeToDocument(newValue);
 	};
 
 	return (

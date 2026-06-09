@@ -6,6 +6,8 @@ import Dropdown from '@/components/ui/Dropdown';
 import Input from '@/components/ui/Input';
 import Icon from '@/components/ui/Icon';
 import ColorPicker from '@/components/ui/ColorPicker';
+import EmptyState from '@/components/ui/EmptyState';
+import { MixIcon } from '@radix-ui/react-icons';
 
 interface Widget {
 	id: string;
@@ -77,7 +79,7 @@ const WidgetModal: React.FC<WidgetModalProps> = ({
 			}}
 		>
 			<div
-				className="dark:bg-gray-800 w-full max-w-md mx-4"
+				className="dark:bg-gray-800 w-full max-w-md mx-4 rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 				onClick={(e) => e.stopPropagation()}
 			>
@@ -86,14 +88,16 @@ const WidgetModal: React.FC<WidgetModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="font-inter text-lg font-semibold dark:text-gray-100"
+						className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						{title}
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="dark:text-gray-500 dark:hover:text-gray-300"
+						className="p-1 h-auto"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -101,9 +105,10 @@ const WidgetModal: React.FC<WidgetModalProps> = ({
 						onMouseLeave={(e) => {
 							e.currentTarget.style.color = 'var(--text-tertiary)';
 						}}
+						title="Close"
 					>
 						<Icon name="Close_round_light" size="lg" />
-					</button>
+					</Button>
 				</div>
 				<div className="p-6 space-y-4">
 					<Input
@@ -180,7 +185,7 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 			}}
 		>
 			<div
-				className="dark:bg-gray-800 w-full max-w-md mx-4"
+				className="dark:bg-gray-800 w-full max-w-md mx-4 rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 				onClick={(e) => e.stopPropagation()}
 			>
@@ -189,14 +194,16 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="font-inter text-lg font-semibold dark:text-gray-100"
+						className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Call Outcomes
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="dark:text-gray-500 dark:hover:text-gray-300"
+						className="p-1 h-auto"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -204,9 +211,10 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 						onMouseLeave={(e) => {
 							e.currentTarget.style.color = 'var(--text-tertiary)';
 						}}
+						title="Close"
 					>
 						<Icon name="Close_round_light" size="lg" />
-					</button>
+					</Button>
 				</div>
 				<div className="p-6 space-y-4">
 					<div className="flex gap-2">
@@ -229,39 +237,28 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 
 					{/* Empty State */}
 					{callOutcomes.length === 0 ? (
-						<div className="flex flex-col items-center justify-center py-8 text-center">
-							<img
-								src="/illustrations/Call-Block--Streamline-Ux.png"
-								alt="No call outcomes"
-								className="w-32 h-32 mb-4 opacity-60"
-							/>
-							<h3
-								className="font-inter text-base font-medium dark:text-gray-100 mb-2"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								No Call Outcomes Yet
-							</h3>
-							<p
-								className="font-lato text-sm dark:text-gray-400 mb-4"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
-								Add your first call outcome above to get started
-							</p>
-						</div>
+						<EmptyState
+							icon={MixIcon}
+							title="No Call Outcomes Yet"
+							description="Add your first call outcome above to get started"
+							className="py-10"
+						/>
 					) : (
 						<div className="space-y-2">
 							{callOutcomes.map((outcome) => (
 								<div key={outcome.id} className="flex items-center justify-between">
 									<span
-										className="font-lato text-sm dark:text-gray-100"
+										className="font-lato text-[10px] md:text-[12px] dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{outcome.name}
 									</span>
 									<div className="flex items-center gap-2">
-										<button
+										<Button
+											variant="ghost"
+											size="sm"
 											onClick={() => handleEditClick(outcome)}
-											className="dark:text-gray-500 dark:hover:text-blue-400"
+											className="p-1 h-auto"
 											style={{ color: 'var(--text-tertiary)' }}
 											onMouseEnter={(e) => {
 												e.currentTarget.style.color = 'var(--text-secondary)';
@@ -269,12 +266,15 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 											onMouseLeave={(e) => {
 												e.currentTarget.style.color = 'var(--text-tertiary)';
 											}}
+											title="Edit Outcome"
 										>
 											<Icon name="Edit_duotone_line" size="sm" />
-										</button>
-										<button
+										</Button>
+										<Button
+											variant="ghost"
+											size="sm"
 											onClick={() => onDeleteOutcome(outcome.id)}
-											className="dark:text-gray-500 dark:hover:text-red-400"
+											className="p-1 h-auto"
 											style={{ color: 'var(--text-tertiary)' }}
 											onMouseEnter={(e) => {
 												e.currentTarget.style.color = '#DC2626';
@@ -282,9 +282,10 @@ const OutcomesModal: React.FC<OutcomesModalProps> = ({
 											onMouseLeave={(e) => {
 												e.currentTarget.style.color = 'var(--text-tertiary)';
 											}}
+											title="Delete Outcome"
 										>
 											<Icon name="Trash_light" size="sm" />
-										</button>
+										</Button>
 									</div>
 								</div>
 							))}
@@ -386,7 +387,7 @@ export default function KPIMetric({
 			{/* Action Buttons */}
 			<div className="flex justify-end gap-3">
 				<Button
-					variant="outline"
+					variant="primary"
 					size="md"
 					onClick={() => setIsOutcomesModalOpen(true)}
 				>
@@ -406,22 +407,29 @@ export default function KPIMetric({
 				{widgets.map((widget) => (
 					<div
 						key={widget.id}
-						className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative"
+						className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative rounded-[var(--radius)] overflow-hidden"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
 						}}
 					>
+						{/* Widget Color Accent */}
+						<div
+							className="absolute top-0 left-0 w-full h-1"
+							style={{ backgroundColor: widget.color }}
+						/>
 						<div className="flex items-center justify-between mb-4">
 							<h3
-								className="font-inter text-sm font-medium dark:text-gray-100"
+								className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{widget.title}
 							</h3>
-							<button
+							<Button
+								variant="ghost"
+								size="sm"
 								onClick={() => handleEditWidget(widget)}
-								className="dark:text-gray-500 dark:hover:text-gray-300"
+								className="p-1 h-auto"
 								style={{ color: 'var(--text-tertiary)' }}
 								onMouseEnter={(e) => {
 									e.currentTarget.style.color = 'var(--text-secondary)';
@@ -429,13 +437,14 @@ export default function KPIMetric({
 								onMouseLeave={(e) => {
 									e.currentTarget.style.color = 'var(--text-tertiary)';
 								}}
+								title="Edit Widget"
 							>
 								<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
 									<path d="M8 4C8.55228 4 9 3.55228 9 3C9 2.44772 8.55228 2 8 2C7.44772 2 7 2.44772 7 3C7 3.55228 7.44772 4 8 4Z" fill="currentColor" />
 									<path d="M8 9C8.55228 9 9 8.55228 9 8C9 7.44772 8.55228 7 8 7C7.44772 7 7 7.44772 7 8C7 8.55228 7.44772 9 8 9Z" fill="currentColor" />
 									<path d="M8 14C8.55228 14 9 13.5523 9 13C9 12.4477 8.55228 12 8 12C7.44772 12 7 12.4477 7 13C7 13.5523 7.44772 14 8 14Z" fill="currentColor" />
 								</svg>
-							</button>
+							</Button>
 						</div>
 						<div
 							className="text-3xl font-bold"

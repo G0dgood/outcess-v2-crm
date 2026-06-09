@@ -8,8 +8,12 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { UserInfoProvider } from '@/contexts/UserInfoContext';
 import { PrivilegeProvider } from '@/contexts/PrivilegeContext';
+import { CampaignProvider } from '@/contexts/CampaignContext';
+import { SetupProvider } from '@/contexts/SetupContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import { NavigationProvider } from '@/components/providers/NavigationProvider';
+import { RealTimeUpdates } from '@/components/providers/RealTimeUpdates';
+import { ThemeColorApplier } from '@/components/providers/ThemeColorApplier';
 
 interface NewProviderProps {
   children: React.ReactNode;
@@ -25,23 +29,30 @@ const NewProvider: React.FC<NewProviderProps> = ({ children }) => {
         shallowRouting>
         <ThemeProvider>
           <AuthProvider>
-            <UserInfoProvider>
-              <PrivilegeProvider>
-                <SocketProvider config={{ autoConnect: false }}>
-                  <NavigationProvider>
-                    {children}
-                    <Toaster
-                      position="top-right"
-                      richColors
-                      closeButton
-                      toastOptions={{
-                        style: { borderRadius: 0 },
-                      }}
-                    />
-                  </NavigationProvider>
-                </SocketProvider>
-              </PrivilegeProvider>
-            </UserInfoProvider>
+            <SocketProvider config={{ autoConnect: true }}>
+              <UserInfoProvider>
+                <CampaignProvider>
+                  <SetupProvider>
+                    <PrivilegeProvider>
+                      <NavigationProvider>
+                        <RealTimeUpdates />
+                        <ThemeColorApplier />
+                        {children}
+                        <Toaster
+                          position="top-right"
+                          theme="light"
+                          richColors
+                          closeButton
+                          toastOptions={{
+                            style: { borderRadius: 0 },
+                          }}
+                        />
+                      </NavigationProvider>
+                    </PrivilegeProvider>
+                  </SetupProvider>
+                </CampaignProvider>
+              </UserInfoProvider>
+            </SocketProvider>
           </AuthProvider>
         </ThemeProvider>
       </ProgressProvider>

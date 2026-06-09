@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
+import Button from '@/components/ui/Button';
 import { useSetup } from '@/contexts/SetupContext';
 
 interface ConfigurationDetail {
@@ -19,8 +19,11 @@ interface ConfigurationCard {
 }
 
 export default function ReviewConfigurationPage(): React.JSX.Element {
-	const router = useRouter();
 	const { setupData, setCurrentStep } = useSetup();
+
+	React.useEffect(() => {
+		setCurrentStep(4);
+	}, [setCurrentStep]);
 
 
 
@@ -39,26 +42,15 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 				{ label: 'Company Name', value: setupData.companyName || 'Not configured' },
 				{ label: 'Industry', value: setupData.industry || 'Not configured' },
 				{ label: 'Time Zone', value: setupData.timeZone || 'Not configured' },
-				{ label: 'Size', value: setupData.businessSize || 'Not configured' }
-			]
-		},
-		{
-			id: 'header-navigation',
-			title: 'Header & Navigation',
-			icon: 'darhboard',
-			step: 2,
-			details: [
-				{ label: 'Menu Layout', value: setupData.navigationSettings.menuStyle || 'Not configured' },
-				{ label: 'Primary Color', value: setupData.primaryColor || 'Not configured' },
-				{ label: 'Secondary Color', value: setupData.secondaryColor || 'Not configured' },
-				{ label: 'Logo', value: setupData.navigationSettings.logo ? 'Uploaded' : 'Not uploaded' }
+				{ label: 'Size', value: setupData.businessSize || 'Not configured' },
+				{ label: 'Logo', value: setupData.logo ? 'Uploaded' : 'Not uploaded' }
 			]
 		},
 		{
 			id: 'dashboard',
 			title: 'Dashboard',
 			icon: 'darhboard',
-			step: 3,
+			step: 2,
 			details: [
 				{ label: 'Dashboard Name', value: setupData.dashboardSettings.dashboardName || 'Not configured' },
 				{ label: 'Visibility', value: setupData.dashboardSettings.dashboardVisibility || 'Not configured' },
@@ -73,23 +65,10 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 			id: 'customer-book',
 			title: 'Customer Book',
 			icon: 'Group_light',
-			step: 4,
+			step: 3,
 			details: [
-				{ label: 'Custom Fields', value: `${setupData.customerBookSettings.configuredFields.length} added` },
-				{ label: 'Required Fields', value: `${setupData.customerBookSettings.configuredFields.filter(field => field.required).length} set` }
-			]
-		},
-		{
-			id: 'user-management',
-			title: 'User Management',
-			icon: 'User_alt_light',
-			step: 5,
-			details: [
-				{ label: 'Roles Defined', value: `${setupData.roleManagementSettings.roles.length} roles` },
-				{ label: 'Users Added', value: `${setupData.userManagementSettings.users.length} users` },
-				{ label: 'Modules', value: `${setupData.roleManagementSettings.modules.length} modules` },
-				{ label: 'Permission Categories', value: `${setupData.permissionAccessSettings.permissionCategories.length} categories` },
-				{ label: 'Selected Role', value: setupData.permissionAccessSettings.selectedRole || 'Not selected' }
+				{ label: 'Custom Fields', value: `${setupData.customerBookSettings.configuredFields.reduce((acc, config) => acc + (config?.fields?.length || 0), 0)} added` },
+				{ label: 'Required Fields', value: `${setupData.customerBookSettings.configuredFields.reduce((acc, config) => acc + (config?.fields?.filter(f => f.required).length || 0), 0)} set` }
 			]
 		}
 	];
@@ -101,22 +80,22 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 					className="font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100"
 					style={{ color: 'var(--text-secondary)' }}
 				>
-					Review Your CRM Configuration
+					Review Your Campaign
 				</h1>
 				<p
-					className="font-lato not-italic font-normal text-[16px] leading-[150%] dark:text-gray-400"
+					className="font-lato not-italic font-normal text-[12px] md:text-[14px] leading-[150%] dark:text-gray-400"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
-					Please review all your selections before submitting for approval
+					Please review all your selections before submitting your LOB plan for approval
 				</p>
 			</div>
 
 			{/* Configuration Cards */}
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-				{configurationCards.map((card) => (
+				{configurationCards?.map((card) => (
 					<div
 						key={card.id}
-						className="dark:bg-gray-800 border dark:border-gray-700"
+						className="dark:bg-gray-800 border dark:border-gray-700 rounded-[var(--radius)]"
 						style={{
 							backgroundColor: 'var(--accent-white)',
 							borderColor: 'var(--light-gray)'
@@ -135,26 +114,28 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 										<Icon name={card.icon} size="md" />
 									</div>
 									<h2
-										className="font-inter text-lg font-semibold dark:text-gray-100"
+										className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{card.title}
 									</h2>
 								</div>
-								<button
+								<Button
+									variant="ghost"
+									size="sm"
 									onClick={() => handleEditStep(card.step)}
-									className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+									className="transition-colors p-1 h-auto"
 									style={{ color: 'var(--text-tertiary)' }}
-									onMouseEnter={(e) => {
+									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.color = 'var(--text-secondary)';
 									}}
-									onMouseLeave={(e) => {
+									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.color = 'var(--text-tertiary)';
 									}}
 									title={`Edit ${card.title}`}
 								>
 									<Icon name="Edit_duotone_line" size="sm" />
-								</button>
+								</Button>
 							</div>
 						</div>
 
@@ -162,13 +143,13 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 							{card.details.map((detail, index) => (
 								<div key={index} className="flex justify-between items-start">
 									<span
-										className="font-lato text-sm dark:text-gray-400 flex-1"
+										className="font-lato text-[10px] md:text-[12px] dark:text-gray-400 flex-1"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										{detail.label}:
 									</span>
 									<span
-										className="font-lato text-sm font-medium dark:text-gray-100 text-right ml-4"
+										className="font-lato text-[10px] md:text-[12px] font-medium dark:text-gray-100 text-right ml-4"
 										style={{ color: 'var(--text-primary)' }}
 									>
 										{detail.value}

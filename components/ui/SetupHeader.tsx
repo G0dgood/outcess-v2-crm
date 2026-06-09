@@ -1,9 +1,8 @@
 "use client";
-import React from 'react';
-import Icon from './Icon';
-import { plusJakartaStyle } from '../Options';
+import React, { useState, useEffect } from 'react';
 import ThemeToggle from './ThemeToggle';
-import { HamburgerMenuIcon } from '@radix-ui/react-icons';
+import { HamburgerMenuIcon, ChevronLeftIcon } from '@radix-ui/react-icons';
+import NextImage from 'next/image';
 
 interface User {
 	name: string;
@@ -18,17 +17,22 @@ interface SetupHeaderProps {
 	showLogo?: boolean;
 	className?: string;
 	onMobileMenuToggle?: () => void;
+	onBack?: () => void;
 }
 
 export const SetupHeader: React.FC<SetupHeaderProps> = ({
 	title = "CRM Setup Configurator",
 	user,
-	showLogo = true,
 	className = '',
 	onMobileMenuToggle,
+	onBack,
 }) => {
-	// If no user is provided, we don't display user info
 	const userData = user;
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	return (
 		<header
@@ -47,38 +51,26 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 				>
 					<HamburgerMenuIcon className="w-6 h-6" />
 				</button>
-				{showLogo && (
-					<div className="flex items-center gap-3">
-						<div className="flex-1 md:flex-none">
-							<div className="hidden md:flex items-center gap-2">
-								<Icon name="peoplelyHalf" size="xl" color="black" className="dark:hidden" />
-								<Icon name="peoplelyHalf" size="xl" className="hidden dark:inline-block" />
-								<span className="font-semibold text-[25px] leading-[28px] flex items-center text-[#050711]"
-									style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>Peoplely</span>
 
-							</div>
-							{/* <Image src="/logo/peoplelyHalf.svg" alt="Peoplely logo" width={140} height={40} priority /> */}
-							{/* This space can be used for logo or main title */}
-						</div>
-						<span
-							className="font-lato not-italic font-medium text-[14px] leading-[150%] dark:text-gray-100"
-							style={{ color: 'var(--text-secondary)' }}
-						>
-							{title}
-						</span>
-					</div>
-				)}
-				{!showLogo && (
-					<span
-						className="font-inter font-semibold text-lg dark:text-gray-100"
-						style={{ color: 'var(--text-primary)' }}
+				{onBack && (
+					<button
+						onClick={onBack}
+						className="p-2 text-black dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer mr-2"
+						aria-label="Go back"
 					>
-						{title}
-					</span>
+						<ChevronLeftIcon className="w-6 h-6" />
+					</button>
 				)}
+
+				<span
+					className="font-inter font-semibold text-[12px] md:text-[14px] dark:text-gray-100"
+					style={{ color: 'var(--text-primary)' }}
+				>
+					{title}
+				</span>
 			</div>
 
-			{userData && (
+			{mounted && userData && (
 				<div className="flex items-center gap-3">
 					<ThemeToggle />
 					<div
@@ -89,9 +81,11 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 						}}
 					>
 						{userData.avatar ? (
-							<img
+							<NextImage
 								src={userData.avatar}
 								alt={userData.name}
+								width={40}
+								height={40}
 								className="w-10 h-10 rounded-full object-cover"
 							/>
 						) : (
@@ -99,19 +93,19 @@ export const SetupHeader: React.FC<SetupHeaderProps> = ({
 								className="font-lato font-semibold text-base leading-[150%] text-center dark:text-gray-300"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
-								{userData.initials || userData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+								{userData.initials || userData.name.split(' ').map(part => part[0]).join('').toUpperCase()}
 							</span>
 						)}
 					</div>
 					<div className="flex flex-col">
 						<span
-							className="font-lato font-medium text-sm leading-[150%] dark:text-gray-100"
+							className="font-lato font-medium text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							{userData.name}
 						</span>
 						<span
-							className="font-lato font-normal text-xs leading-[150%] dark:text-gray-400"
+							className="font-lato font-normal text-[8px] md:text-[10px] leading-[150%] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							{userData.role}

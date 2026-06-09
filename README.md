@@ -40,7 +40,7 @@ A modern, customizable CRM setup application built with Next.js, TypeScript, and
 ## 📁 Project Structure
 
 ```
-peoplely/
+outcess/
 ├── app/
 │   ├── setup/                    # Setup wizard pages
 │   │   ├── page.tsx             # Main setup page

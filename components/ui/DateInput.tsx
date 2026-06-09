@@ -48,6 +48,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(({
 					appearance: 'none',
 					WebkitAppearance: 'none',
 				}}
+				suppressHydrationWarning
 			/>
 			{error && <span className="input-error">{error}</span>}
 		</div>

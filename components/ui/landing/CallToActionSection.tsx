@@ -14,8 +14,8 @@ const CallToActionSection: React.FC = () => {
 	return (
 		<section className="bg-textPrimary px-6 md:px-10 py-16 text-center text-white shadow-soft flex flex-col justify-center items-center">
 			<h2 className="text-3xl font-semibold sm:text-4xl">Ready to Transform Your Call Center?</h2>
-			<p className="mt-4 text-sm text-white/80 sm:text-base">
-				Join thousands of teams already using Peoplely CRM to deliver exceptional customer experiences.
+			<p className="mt-4 text-[10px] md:text-[12px] text-white/80 sm:text-base">
+				Join thousands of teams already using Outcess CRM to deliver exceptional customer experiences.
 			</p>
 			<div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
 				<input
@@ -26,12 +26,12 @@ const CallToActionSection: React.FC = () => {
 				/>
 				<Link
 					href="/demo"
-					className="whitespace-nowrap flex flex-row justify-center items-center px-[32px] py-[12px] w-[158px] h-[48px] bg-[#6C8B7D] border border-white/20 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+					className="whitespace-nowrap flex flex-row justify-center items-center px-[32px] py-[12px] w-[158px] h-[48px] bg-[#6C8B7D] border border-white/20 text-[10px] md:text-[12px] font-semibold text-white transition-colors hover:bg-white/10"
 				>
 					Speak with Sales
 				</Link>
 			</div>
-			<p className="mt-3 text-xs text-white/60">No credit card required • 14-day free trial.</p>
+			<p className="mt-3 text-[8px] md:text-[10px] text-white/60">No credit card required • 14-day free trial.</p>
 		</section>
 	);
 };

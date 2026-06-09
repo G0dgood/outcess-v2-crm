@@ -1,9 +1,12 @@
 "use client";
 import { useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import Skeleton from "@/components/ui/Skeleton";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { useSetup } from "@/contexts/SetupContext";
+import { useCampaign } from "@/contexts/CampaignContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useGetUserByIdQuery } from "@/store/services/authApi";
+import { useEffect } from "react";
 import {
 	PersonIcon,
 	LockClosedIcon,
@@ -17,26 +20,34 @@ import {
 import SoundSettings from "@/components/ui/SoundSettings";
 import PageHeading from "@/components/ui/PageHeading";
 import SubPageHeading from "@/components/ui/SubPageHeading";
+import BackButton from "@/components/ui/BackButton";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 
 
 
-export default function SettingsPage() {
-	const { setupData } = useSetup();
-	const { isDarkMode, toggleTheme } = useTheme();
-	const primaryColor = setupData.primaryColor || '#9333EA';
-	const secondaryColor = setupData.secondaryColor || '#6C8B7D';
 
-	console.log('secondaryColor', secondaryColor);
+export default function SettingsPage() {
+	const { isDarkMode, toggleTheme } = useTheme();
+	const { campaignData } = useCampaign();
+	const primaryColor = campaignData?.primaryColor || '#050711';
+
+	const { user } = useAuth();
+
+	const { data: userData, isLoading: isUserLoading } = useGetUserByIdQuery(user?.id || '', {
+		skip: !user?.id
+	});
+
+
 	const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'email' | 'preferences' | 'sound'>('profile');
+
 
 	// Loading states
 	const [isProfileLoading, setIsProfileLoading] = useState(false);
 	const [isPasswordLoading, setIsPasswordLoading] = useState(false);
-	const [isLoadingUserData, setIsLoadingUserData] = useState(false);
 
 	// Profile section
+
 	const [isEditingProfile, setIsEditingProfile] = useState(false);
 	const [profileData, setProfileData] = useState({
 		fullName: '',
@@ -45,7 +56,19 @@ export default function SettingsPage() {
 		email: '',
 	});
 
-	// Fetch user data on component mount
+	useEffect(() => {
+		if (userData?.user) {
+			setProfileData({
+				fullName: userData.user.firstName && userData.user.lastName
+					? `${userData.user.firstName} ${userData.user.lastName}`
+					: userData.user.name || '',
+				username: userData.user.username || '',
+				phone: userData.user.phone || '',
+				email: userData.user.email || '',
+			});
+		}
+	}, [userData]);
+
 
 
 	// Password section
@@ -60,12 +83,8 @@ export default function SettingsPage() {
 		confirm: false,
 	});
 
-	// // Email section
-	// const [emailData, setEmailData] = useState({
-	// 	newEmail: '',
-	// 	verificationCode: '',
-	// });
-	// const [isEmailVerifying, setIsEmailVerifying] = useState(false);
+
+
 
 	// Credit cards section
 
@@ -73,20 +92,19 @@ export default function SettingsPage() {
 	const handleProfileSave = async () => {
 		setIsProfileLoading(true);
 		try {
-			console.log('Sending profile update request:', profileData);
 
-			const response = await fetch('/api/user/profile', {
-				method: 'POST',
+			const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL as string) || 'http://localhost:5000/api/v1'}/api/v1/users/user/${user?.id}`, {
+				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 				},
 				body: JSON.stringify(profileData),
 			});
 
-			console.log('Profile update response status:', response.status);
+
 
 			const data = await response.json();
-			console.log('Profile update response data:', data);
 
 			if (response.ok) {
 				toast.success('Profile updated successfully!');
@@ -105,12 +123,16 @@ export default function SettingsPage() {
 
 	const handleProfileCancel = () => {
 		// Reset to original values from auth context
-		setProfileData({
-			fullName: 'kishan kumar',
-			username: 'kishan',
-			phone: '1234567890',
-			email: 'kishan@example.com',
-		});
+		if (userData?.user) {
+			setProfileData({
+				fullName: userData.user.firstName && userData.user.lastName
+					? `${userData.user.firstName} ${userData.user.lastName}`
+					: userData.user.name || '',
+				username: userData.user.username || '',
+				phone: userData.user.phone || '',
+				email: userData.user.email || '',
+			});
+		}
 		setIsEditingProfile(false);
 	};
 
@@ -123,16 +145,13 @@ export default function SettingsPage() {
 				return;
 			}
 
-			console.log('Sending password change request:', {
-				currentPassword: passwordData.currentPassword ? '[REDACTED]' : 'empty',
-				newPassword: passwordData.newPassword ? '[REDACTED]' : 'empty',
-				confirmPassword: passwordData.confirmPassword ? '[REDACTED]' : 'empty'
-			});
 
-			const response = await fetch('/api/user/password', {
-				method: 'POST',
+
+			const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL as string) || 'http://localhost:5000/api/v1'}/api/v1/users/user/${user?.id}/password`, {
+				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 				},
 				body: JSON.stringify(passwordData),
 			});
@@ -156,13 +175,16 @@ export default function SettingsPage() {
 			} else {
 				toast.error(data.error || 'Failed to update password');
 			}
-		} catch (error) {
-			console.error('Error updating password:', error);
+		} catch {
 			toast.error('Failed to update password. Please try again.');
 		} finally {
 			setIsPasswordLoading(false);
 		}
 	};
+
+
+
+
 
 
 	// Skeleton loader component for profile section
@@ -181,7 +203,7 @@ export default function SettingsPage() {
 				{/* Header skeleton */}
 				<div className="flex justify-between items-center">
 					<h3
-						className="text-lg font-medium"
+						className="text-[12px] md:text-[14px] font-medium"
 						style={{ color: 'var(--text-secondary)' }}
 					>
 						Profile Details
@@ -195,7 +217,7 @@ export default function SettingsPage() {
 					style={{ backgroundColor: 'var(--bg-primary)' }}
 				>
 					<h4
-						className="text-sm font-medium mb-3"
+						className="text-[10px] md:text-[12px] font-medium mb-3"
 						style={{ color: 'var(--text-secondary)' }}
 					>
 						Current Information
@@ -248,6 +270,9 @@ export default function SettingsPage() {
 		<div className="space-y-8">
 			{/* Page Header */}
 			<div>
+				<div className="mb-4">
+					<BackButton />
+				</div>
 				<PageHeading
 					text="Account Settings"
 				/>
@@ -257,7 +282,7 @@ export default function SettingsPage() {
 			</div>
 
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 w-full h-full p-6"
+				className="dark:bg-gray-800 border dark:border-gray-700 w-full h-full p-6 rounded-[var(--radius)]"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
@@ -276,10 +301,12 @@ export default function SettingsPage() {
 							{ id: 'sound', label: 'Sound', icon: SpeakerLoudIcon },
 							// { id: 'email', label: 'Email', icon: Mail }, 
 						].map(({ id, label, icon: IconComponent }) => (
-							<button
+							<Button
 								key={id}
+								variant="ghost"
+								size="sm"
 								onClick={() => setActiveSection(id as 'profile' | 'password' | 'email' | 'preferences' | 'sound')}
-								className={`relative flex items-center space-x-2 py-3 px-4 font-medium text-sm transition-all duration-200 ${activeSection === id
+								className={`relative flex items-center space-x-2 py-3 px-4 font-medium text-[10px] md:text-[12px] transition-all duration-200 !rounded-none ${activeSection === id
 									? 'dark:text-gray-100'
 									: 'dark:text-gray-400 dark:hover:text-gray-300'
 									}`}
@@ -307,14 +334,14 @@ export default function SettingsPage() {
 										style={{ backgroundColor: primaryColor }}
 									/>
 								)}
-							</button>
+							</Button>
 						))}
 					</nav>
 				</div>
 
 				{/* Profile Section */}
 				{activeSection === 'profile' && (
-					isLoadingUserData ? (
+					isUserLoading ? (
 						<ProfileSkeleton />
 					) : (
 						<div className="py-6">
@@ -325,14 +352,14 @@ export default function SettingsPage() {
 										style={{ color: 'var(--text-secondary)' }}
 									/>
 									<h2
-										className="text-xl font-semibold"
+										className="text-[14px] md:text-[16px] font-semibold"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Personal Information
 									</h2>
 								</div>
 								<p
-									className="text-sm dark:text-gray-400 ml-8"
+									className="text-[10px] md:text-[12px] dark:text-gray-400 ml-8"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									Update your personal details and contact information.
@@ -341,7 +368,7 @@ export default function SettingsPage() {
 							<div className="space-y-6">
 								<div className="flex justify-between items-center">
 									<h3
-										className="text-lg font-medium"
+										className="text-[12px] md:text-[14px] font-medium"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Profile Details
@@ -349,10 +376,10 @@ export default function SettingsPage() {
 									{!isEditingProfile ? (
 										<Button
 											onClick={() => setIsEditingProfile(true)}
-											disabled={isLoadingUserData}
+											disabled={isUserLoading}
 											style={{ backgroundColor: primaryColor }}
 										>
-											{isLoadingUserData ? 'Loading...' : 'Edit Profile'}
+											{isUserLoading ? 'Loading...' : 'Edit Profile'}
 										</Button>
 									) : (
 										<div className="space-x-3">
@@ -380,12 +407,12 @@ export default function SettingsPage() {
 									style={{ backgroundColor: 'var(--bg-primary)' }}
 								>
 									<h4
-										className="text-sm font-medium dark:text-gray-300 mb-3"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-3"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Current Information
 									</h4>
-									<div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+									<div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[10px] md:text-[12px]">
 										<div>
 											<span
 												className="font-medium dark:text-gray-400"
@@ -449,7 +476,7 @@ export default function SettingsPage() {
 									<div className="space-y-2">
 										<label
 											htmlFor="fullName"
-											className="text-sm font-medium dark:text-gray-300"
+											className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 											style={{ color: 'var(--text-secondary)' }}
 										>
 											Full Name
@@ -467,7 +494,7 @@ export default function SettingsPage() {
 									<div className="space-y-2">
 										<label
 											htmlFor="username"
-											className="text-sm font-medium dark:text-gray-300"
+											className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 											style={{ color: 'var(--text-secondary)' }}
 										>
 											Username
@@ -485,7 +512,7 @@ export default function SettingsPage() {
 									<div className="space-y-2">
 										<label
 											htmlFor="email"
-											className="text-sm font-medium dark:text-gray-300"
+											className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 											style={{ color: 'var(--text-secondary)' }}
 										>
 											Email Address
@@ -498,7 +525,7 @@ export default function SettingsPage() {
 											className="disabled:bg-gray-50 dark:disabled:bg-gray-800"
 										/>
 										<p
-											className="text-sm dark:text-gray-400 mt-1"
+											className="text-[10px] md:text-[12px] dark:text-gray-400 mt-1"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											Email changes require verification. Use the Email tab to update.
@@ -508,7 +535,7 @@ export default function SettingsPage() {
 									<div className="space-y-2">
 										<label
 											htmlFor="phone"
-											className="text-sm font-medium dark:text-gray-300"
+											className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 											style={{ color: 'var(--text-secondary)' }}
 										>
 											Phone Number
@@ -538,14 +565,14 @@ export default function SettingsPage() {
 									style={{ color: 'var(--text-secondary)' }}
 								/>
 								<h2
-									className="text-xl font-semibold"
+									className="text-[14px] md:text-[16px] font-semibold"
 									style={{ color: 'var(--text-secondary)' }}
 								>
 									Change Password
 								</h2>
 							</div>
 							<p
-								className="text-sm dark:text-gray-400 ml-8"
+								className="text-[10px] md:text-[12px] dark:text-gray-400 ml-8"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Update your password to keep your account secure.
@@ -556,7 +583,7 @@ export default function SettingsPage() {
 								<div className="space-y-2">
 									<label
 										htmlFor="currentPassword"
-										className="text-sm font-medium dark:text-gray-300"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Current Password
@@ -568,9 +595,11 @@ export default function SettingsPage() {
 											value={passwordData.currentPassword}
 											onChange={(value) => setPasswordData({ ...passwordData, currentPassword: value })}
 										/>
-										<button
+										<Button
+											variant="ghost"
+											size="sm"
 											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors rounded-full"
 											style={{ color: 'var(--text-tertiary)' }}
 											onMouseEnter={(e) => {
 												e.currentTarget.style.color = 'var(--text-secondary)';
@@ -581,14 +610,14 @@ export default function SettingsPage() {
 											onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
 										>
 											{showPasswords.current ? <EyeClosedIcon className="h-5 w-5" /> : <EyeOpenIcon className="h-5 w-5" />}
-										</button>
+										</Button>
 									</div>
 								</div>
 
 								<div className="space-y-2">
 									<label
 										htmlFor="newPassword"
-										className="text-sm font-medium dark:text-gray-300"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										New Password
@@ -600,9 +629,11 @@ export default function SettingsPage() {
 											value={passwordData.newPassword}
 											onChange={(value) => setPasswordData({ ...passwordData, newPassword: value })}
 										/>
-										<button
+										<Button
+											variant="ghost"
+											size="sm"
 											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors rounded-full"
 											style={{ color: 'var(--text-tertiary)' }}
 											onMouseEnter={(e) => {
 												e.currentTarget.style.color = 'var(--text-secondary)';
@@ -613,14 +644,14 @@ export default function SettingsPage() {
 											onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
 										>
 											{showPasswords.new ? <EyeClosedIcon className="h-5 w-5" /> : <EyeOpenIcon className="h-5 w-5" />}
-										</button>
+										</Button>
 									</div>
 								</div>
 
 								<div className="space-y-2">
 									<label
 										htmlFor="confirmPassword"
-										className="text-sm font-medium dark:text-gray-300"
+										className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 										style={{ color: 'var(--text-secondary)' }}
 									>
 										Confirm New Password
@@ -632,9 +663,11 @@ export default function SettingsPage() {
 											value={passwordData.confirmPassword}
 											onChange={(value) => setPasswordData({ ...passwordData, confirmPassword: value })}
 										/>
-										<button
+										<Button
+											variant="ghost"
+											size="sm"
 											type="button"
-											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+											className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-gray-500 dark:hover:text-gray-300 transition-colors rounded-full"
 											style={{ color: 'var(--text-tertiary)' }}
 											onMouseEnter={(e) => {
 												e.currentTarget.style.color = 'var(--text-secondary)';
@@ -645,7 +678,7 @@ export default function SettingsPage() {
 											onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
 										>
 											{showPasswords.confirm ? <EyeClosedIcon className="h-5 w-5" /> : <EyeOpenIcon className="h-5 w-5" />}
-										</button>
+										</Button>
 									</div>
 								</div>
 
@@ -671,14 +704,14 @@ export default function SettingsPage() {
 									style={{ color: 'var(--text-secondary)' }}
 								/>
 								<h2
-									className="text-xl font-semibold"
+									className="text-[14px] md:text-[16px] font-semibold"
 									style={{ color: 'var(--text-secondary)' }}
 								>
 									Appearance
 								</h2>
 							</div>
 							<p
-								className="text-sm dark:text-gray-400 ml-8"
+								className="text-[10px] md:text-[12px] dark:text-gray-400 ml-8"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Customize the appearance of your application.
@@ -688,7 +721,7 @@ export default function SettingsPage() {
 						<div className="space-y-6">
 							{/* Dark Mode Toggle */}
 							<div
-								className="flex items-center justify-between p-4 dark:bg-gray-800 border dark:border-gray-700"
+								className="flex items-center justify-between p-4 dark:bg-gray-800 border dark:border-gray-700 rounded-[var(--radius)]"
 								style={{
 									backgroundColor: 'var(--bg-primary)',
 									borderColor: 'var(--light-gray)'
@@ -710,7 +743,7 @@ export default function SettingsPage() {
 											Dark Mode
 										</h3>
 										<p
-											className="text-sm dark:text-gray-400"
+											className="text-[10px] md:text-[12px] dark:text-gray-400"
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											{isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -745,14 +778,14 @@ export default function SettingsPage() {
 									style={{ color: 'var(--text-secondary)' }}
 								/>
 								<h2
-									className="text-xl font-semibold"
+									className="text-[14px] md:text-[16px] font-semibold"
 									style={{ color: 'var(--text-secondary)' }}
 								>
 									Sound Settings
 								</h2>
 							</div>
 							<p
-								className="text-sm dark:text-gray-400 ml-8"
+								className="text-[10px] md:text-[12px] dark:text-gray-400 ml-8"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								Control sound notifications for different components. You can enable or disable sounds globally or for specific components.
@@ -763,6 +796,7 @@ export default function SettingsPage() {
 				)}
 
 			</div>
+
 		</div>
 	);
 }

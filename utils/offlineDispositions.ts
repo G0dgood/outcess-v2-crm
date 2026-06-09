@@ -3,20 +3,50 @@
  * Manages disposition data when offline, storing in localStorage and syncing when online
  */
 
-import { DispositionFormData } from '@/components/ui/FillDispositionModal';
 import type { SocketMessage } from '@/contexts/SocketContext';
 
-export interface OfflineDisposition extends DispositionFormData {
+export interface DispositionFieldEntry {
+	fieldId: string;
+	fieldName: string;
+	fieldValue: string | number | boolean | undefined;
+	fieldType: string;
+}
+
+export interface DispositionHistoryItem {
+	id: string;
+	date: string;
+	time: string;
+	agent: string;
+	isOffline?: boolean;
+	offlineStatus?: 'pending' | 'synced' | 'failed';
+	agentId?: string;
+	dispositionData?: DispositionFieldEntry[];
+	timestamp?: number;
+	[key: string]: any;
+}
+
+export interface OfflineDisposition {
+	agent: string;
+	agentId: string;
 	id: string;
 	customerId?: string;
 	customerName?: string;
+	campaignId?: string;
 	status: 'pending' | 'synced' | 'failed';
 	createdAt: string;
 	updatedAt: string;
 	syncedAt?: string;
+	dispositionData: DispositionFieldEntry[];
 }
 
 const STORAGE_KEY = 'offline_dispositions';
+export const OFFLINE_DISPOSITIONS_EVENT = 'offlineDispositionsUpdated';
+
+const notifyUpdate = () => {
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(OFFLINE_DISPOSITIONS_EVENT));
+    }
+};
 
 /**
  * Get all offline dispositions
@@ -40,23 +70,28 @@ export const getOfflineDispositions = (): OfflineDisposition[] => {
  * Save a disposition offline
  */
 export const saveOfflineDisposition = (
-	disposition: DispositionFormData,
+	dispositionData: DispositionFieldEntry[],
 	customerId?: string,
-	customerName?: string
+	customerName?: string,
+	campaignId?: string
 ): OfflineDisposition => {
 	const offlineDisposition: OfflineDisposition = {
-		...disposition,
+		dispositionData,
 		id: `offline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
 		customerId,
 		customerName,
+		campaignId,
 		status: 'pending',
 		createdAt: new Date().toISOString(),
 		updatedAt: new Date().toISOString(),
+		agent: '',
+		agentId: ''
 	};
 
 	const existing = getOfflineDispositions();
 	existing.push(offlineDisposition);
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+	notifyUpdate();
 
 	return offlineDisposition;
 };
@@ -78,6 +113,7 @@ export const updateDispositionStatus = (
 			dispositions[index].syncedAt = new Date().toISOString();
 		}
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(dispositions));
+		notifyUpdate();
 	}
 };
 
@@ -88,6 +124,7 @@ export const removeOfflineDisposition = (id: string): void => {
 	const dispositions = getOfflineDispositions();
 	const filtered = dispositions.filter(d => d.id !== id);
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+	notifyUpdate();
 };
 
 /**
@@ -111,6 +148,7 @@ export const clearSyncedDispositions = (): void => {
 	const dispositions = getOfflineDispositions();
 	const pending = dispositions.filter(d => d.status !== 'synced');
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(pending));
+	notifyUpdate();
 };
 
 /**
@@ -121,29 +159,34 @@ export const syncPendingDispositions = async (
     sendFn?: (message: SocketMessage) => void
 ): Promise<{ success: number; failed: number }> => {
 	const pending = getPendingDispositions();
+ 
+	
 	let success = 0;
 	let failed = 0;
 
 	for (const disposition of pending) {
 		try {
 			if (sendFn) {
+				// Special check: if it's a socket-based sendFn, we should ensure it's not just queuing
+				// But we'll trust the caller for now.
 				sendFn({
 					type: 'disposition',
 					payload: {
-						...disposition,
-						timestamp: new Date().toISOString(),
+						fillDisposition: disposition.dispositionData,
+						customerId: disposition.customerId,
+						customerName: disposition.customerName,
+						campaignId: disposition.campaignId,
+						timestamp: disposition.createdAt, // Use original creation time
 					},
 				});
+				
+			 
 				updateDispositionStatus(disposition.id, 'synced');
 				success++;
-			} else {
-				// If no send function, mark as failed
-				updateDispositionStatus(disposition.id, 'failed');
+			} else { 
 				failed++;
 			}
 		} catch (error) {
-			console.error('Error syncing disposition:', error);
-			updateDispositionStatus(disposition.id, 'failed');
 			failed++;
 		}
 	}
@@ -157,29 +200,33 @@ export const syncPendingDispositions = async (
  */
 const SYNCED_DISPOSITIONS_KEY = 'synced_dispositions';
 
-export interface SyncedDisposition extends DispositionFormData {
+export interface SyncedDisposition {
 	id: string;
 	customerId?: string;
 	customerName?: string;
+	campaignId?: string;
 	syncedAt: string;
 	agent?: string;
 	agentId?: string;
+	dispositionData: DispositionFieldEntry[];
 }
 
 export const saveSyncedDisposition = (
-	disposition: DispositionFormData,
+	dispositionData: DispositionFieldEntry[],
 	customerId?: string,
 	customerName?: string,
 	agent?: string,
-	agentId?: string
+	agentId?: string,
+	campaignId?: string
 ): SyncedDisposition => {
 	const syncedDisposition: SyncedDisposition = {
-		...disposition,
+		dispositionData,
 		id: `synced-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
 		customerId,
 		customerName,
-		agent: agent || 'Current User',
-		agentId: agentId || 'user.001',
+		campaignId,
+		agent: agent ,
+		agentId: agentId,
 		syncedAt: new Date().toISOString(),
 	};
 

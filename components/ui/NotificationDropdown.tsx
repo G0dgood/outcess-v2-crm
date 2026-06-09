@@ -1,26 +1,13 @@
 "use client";
 
 import React, { useEffect, useRef } from 'react';
+import Button from './Button';
 import { PersonIcon } from '@radix-ui/react-icons';
-import { usePathname } from 'next/navigation';
-import { useSetup } from '@/contexts/SetupContext';
-import { playNotificationSound } from '@/utils/soundEffects';
+import { usePathname, useRouter } from 'next/navigation';
+import { playNotificationSound, SoundType } from '@/utils/soundEffects';
 import { setNavigating } from '@/utils/navigationState';
-
-interface NotificationUser {
-	name: string;
-	avatar?: string;
-	icon?: string;
-}
-
-interface Notification {
-	id: string;
-	type: 'follow' | 'like' | 'join_request' | 'group_activity' | 'comment' | 'welcome';
-	user: NotificationUser;
-	message: string;
-	timestamp: string;
-	isRead: boolean;
-}
+import { useCampaign } from '@/contexts/CampaignContext';
+import { Notification, NotificationUser } from '@/store/services/notificationApi';
 
 interface NotificationDropdownProps {
 	isOpen: boolean;
@@ -28,6 +15,7 @@ interface NotificationDropdownProps {
 	notifications: Notification[];
 	className?: string;
 	onShowMore?: () => void;
+	onMarkAsRead?: (id: string) => void;
 }
 
 const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
@@ -35,15 +23,20 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	onClose,
 	notifications,
 	className = '',
-	onShowMore
+	onShowMore,
+	onMarkAsRead
 }) => {
-	const { setupData } = useSetup();
+	const { campaignData, isLoading: isLobLoading } = useCampaign();
 	const pathname = usePathname();
-	const primaryColor = setupData.primaryColor || '#050711';
+	const router = useRouter();
+	const primaryColor = campaignData?.primaryColor || '#050711';
 	const hasPlayedOpenSound = useRef(false);
 	const playedNotificationIds = useRef<Set<string>>(new Set());
 	const previousPathname = useRef(pathname);
 	const isNavigating = useRef(false);
+	const { selectedCampaignId } = useCampaign();
+	const previousLobId = useRef(selectedCampaignId);
+	const isInitialOpen = useRef(true);
 
 	// Track navigation to prevent sounds during page switches
 	useEffect(() => {
@@ -60,8 +53,24 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	}, [pathname]);
 
 	// Map notification type to sound type
-	const getSoundTypeForNotification = (type: Notification['type']): 'follow' | 'like' | 'join_request' | 'group_activity' | 'comment' | 'welcome' | 'notification' => {
-		return type;
+	const getSoundTypeForNotification = (type: Notification['type']): SoundType => {
+		switch (type) {
+			case 'status_created':
+			case 'role_updated':
+			case 'custom_alert':
+			case 'business_registration':
+			case 'user_created':
+				return 'notification';
+			case 'follow':
+			case 'like':
+			case 'join_request':
+			case 'group_activity':
+			case 'comment':
+			case 'welcome':
+				return type;
+			default:
+				return 'notification';
+		}
 	};
 
 	// Play sound when notification panel opens (but not during navigation)
@@ -84,10 +93,36 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 		}
 	}, [isOpen, pathname]);
 
-	// Play sounds for new unread notifications (but not during navigation)
+	// Play sounds for new unread notifications (but not during navigation or LOB switch)
 	useEffect(() => {
-		// Don't play sounds if we're navigating between pages
-		if (isNavigating.current || !isOpen) return;
+		if (!isOpen || isNavigating.current || isLobLoading) {
+			if (!isOpen) isInitialOpen.current = true;
+			return;
+		}
+
+		// If this is the first time the effect runs after opening,
+		// mark all current unread notifications as "played" to silence the backlog
+		if (isInitialOpen.current) {
+			notifications.forEach(n => {
+				if (!n.isRead) playedNotificationIds.current.add(n.id);
+			});
+			isInitialOpen.current = false;
+			return;
+		}
+
+		// If LOB has changed, mark all current unread notifications as "played" to skip sounds
+		if (previousLobId.current !== selectedCampaignId) {
+			previousLobId.current = selectedCampaignId;
+			notifications.forEach(n => {
+				if (!n.isRead) playedNotificationIds.current.add(n.id);
+			});
+			// Also reset the navigation flag to be safe
+			isNavigating.current = true;
+			setTimeout(() => {
+				isNavigating.current = false;
+			}, 2000);
+			return;
+		}
 
 		notifications.forEach((notification) => {
 			// Only play sound for unread notifications that haven't been played yet
@@ -103,7 +138,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 				}, 100 * playedNotificationIds.current.size);
 			}
 		});
-	}, [notifications, isOpen, pathname]);
+	}, [notifications, isOpen, pathname, selectedCampaignId, isLobLoading]);
 
 	// Clean up played notification IDs when panel closes
 	useEffect(() => {
@@ -119,12 +154,29 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
 	if (!isOpen) return null;
 
+	const handleNotificationClick = (notification: Notification) => {
+		if (!notification.isRead && onMarkAsRead) {
+			onMarkAsRead(notification.id);
+		}
+
+		onClose();
+
+		// Handle navigation based on notification type
+		if (notification.type === 'business_registration' && notification.data?.companyId) {
+			router.push(`/superadmin/businesses/${notification.data.companyId}`);
+		} else if (notification.type === 'user_created' && notification.data?.userId) {
+			if (notification.data.companyId) {
+				router.push(`/superadmin/businesses/${notification.data.companyId}`);
+			}
+		}
+	};
+
 	return (
 		<>
 			{/* Dropdown */}
 			{isOpen && (
 				<div
-					className={`absolute top-full right-0 mt-2 w-90 dark:bg-gray-800 border dark:border-gray-700 shadow-xl z-50 overflow-hidden ${className}`}
+					className={`absolute top-full right-0 mt-2 w-90 dark:bg-gray-800 border dark:border-gray-700 shadow-xl z-50 overflow-hidden rounded-[var(--radius)] ${className}`}
 					style={{
 						backgroundColor: 'var(--accent-white)',
 						borderColor: 'var(--light-gray)'
@@ -139,14 +191,16 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 						}}
 					>
 						<h3
-							className="text-lg dark:text-gray-100 font-inter font-medium text-[16px] leading-[120%] flex items-center tracking-[-0.02em]"
+							className="text-[12px] md:text-[14px] dark:text-gray-100 font-inter font-medium text-[12px] md:text-[14px] leading-[120%] flex items-center tracking-[-0.02em]"
 							style={{ color: 'var(--text-primary)' }}
 						>
-							Notification ({notifications.length})
+							Notification ({notifications.filter(n => !n.isRead).length})
 						</h3>
-						<button
+						<Button
+							variant="ghost"
+							size="sm"
 							onClick={onClose}
-							className="dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
+							className="dark:text-gray-300 dark:hover:text-gray-100 transition-colors rounded-[var(--radius)]"
 							style={{ color: 'var(--text-primary)' }}
 							onMouseEnter={(e) => {
 								e.currentTarget.style.color = 'var(--text-primary)';
@@ -158,7 +212,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 							<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
 							</svg>
-						</button>
+						</Button>
 					</div>
 
 					{/* Notifications List */}
@@ -166,17 +220,22 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 						{notifications.map((notification) => (
 							<div
 								key={notification.id}
-								className={`p-4 border-b dark:border-gray-700 dark:hover:bg-gray-700 transition-colors ${!notification.isRead ? 'dark:bg-green-900/20' : 'dark:bg-gray-800'
+								onClick={() => handleNotificationClick(notification)}
+								className={`p-4 border-b dark:border-gray-700 dark:hover:bg-gray-700 transition-colors cursor-pointer ${!notification.isRead ? 'dark:bg-green-900/20' : 'dark:bg-gray-800'
 									}`}
 								style={{
 									borderColor: 'var(--light-gray)',
 									backgroundColor: notification.isRead ? 'var(--accent-white)' : 'var(--pale-mint-green)'
 								}}
 								onMouseEnter={(e) => {
-									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+									e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+									const textElements = e.currentTarget.querySelectorAll('p, span');
+									textElements.forEach(el => (el as HTMLElement).style.color = 'var(--text-primary)');
 								}}
 								onMouseLeave={(e) => {
 									e.currentTarget.style.backgroundColor = notification.isRead ? 'var(--accent-white)' : 'var(--pale-mint-green)';
+									const textElements = e.currentTarget.querySelectorAll('p, span');
+									textElements.forEach(el => (el as HTMLElement).style.color = '');
 								}}
 							>
 								<div className="flex items-start space-x-3">
@@ -193,17 +252,17 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 										<div className="flex items-start justify-between">
 											<div className="">
 												<p
-													className="text-sm dark:text-gray-300 leading-relaxed"
+													className="text-[10px] md:text-[12px] dark:text-gray-300 leading-relaxed"
 													style={{ color: 'var(--text-tertiary)' }}
 												>
 													<span
-														className="font-inter not-italic font-medium text-sm leading-[145%] dark:text-gray-100 font-features"
+														className="font-inter not-italic font-medium text-[10px] md:text-[12px] leading-[145%] dark:text-gray-100 font-features"
 														style={{ color: 'var(--text-primary)' }}
 													>
 														{notification.user.name}
 													</span> {notification.message}
 													<span
-														className="text-xs dark:text-gray-400 mt-1"
+														className="text-[8px] md:text-[10px] dark:text-gray-400 mt-1"
 														style={{ color: 'var(--text-tertiary)' }}
 													>
 														-{notification.timestamp}
@@ -213,8 +272,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 											</div>
 
 											{/* Action Menu */}
-											<button
-												className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors ml-2"
+											<Button
+												variant="ghost"
+												size="sm"
+												className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors ml-2 rounded-[var(--radius)]"
 												style={{ color: 'var(--text-tertiary)' }}
 												onMouseEnter={(e) => {
 													e.currentTarget.style.color = 'var(--text-secondary)';
@@ -226,7 +287,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 												<svg className="cursor-pointer w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
 													<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
 												</svg>
-											</button>
+											</Button>
 										</div>
 									</div>
 
@@ -244,7 +305,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 							borderColor: 'var(--light-gray)'
 						}}
 					>
-						<button
+						<Button
+							variant="ghost"
+							size="sm"
+							fullWidth
 							onClick={() => {
 								if (onShowMore) {
 									onShowMore();
@@ -252,7 +316,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 									onClose();
 								}
 							}}
-							className="text-sm dark:text-gray-300 dark:hover:text-gray-100 font-medium transition-colors font-inter not-italic leading-[145%] font-features cursor-pointer"
+							className="text-[10px] md:text-[12px] dark:text-gray-300 dark:hover:text-gray-100 font-medium transition-colors font-inter not-italic leading-[145%] font-features cursor-pointer rounded-[var(--radius)]"
 							style={{ color: 'var(--text-primary)' }}
 							onMouseEnter={(e) => {
 								e.currentTarget.style.color = 'var(--text-primary)';
@@ -262,7 +326,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 							}}
 						>
 							Show more
-						</button>
+						</Button>
 					</div>
 
 				</div>

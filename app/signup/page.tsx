@@ -2,25 +2,28 @@
 
 import React, { useState } from 'react';
 import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
 import PasswordInput from '@/components/ui/PasswordInput';
 import Checkbox from '@/components/ui/Checkbox';
 import { useRouter } from 'next/navigation';
-import { useSetup } from '@/contexts/SetupContext';
+import Link from 'next/link';
 import { useTheme } from '@/contexts/ThemeContext';
-import ArtworkCarousel from '@/components/ui/ArtworkCarousel';
+import Image from 'next/image';
 import { toast } from 'sonner';
 import { useRegisterMutation } from '@/store/services/authApi';
 import { useCreateCompanyMutation } from '@/store/services/companyApi';
 
 import { useDispatch } from 'react-redux';
-import { setUser, setTokens, register as registerAction } from '@/store/slices/authSlice';
+import { setUser, register as registerAction } from '@/store/slices/authSlice';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { Button } from '@/components/ui/Button';
 
 export default function SignUpPage() {
+	const { setSelectedCampaignId } = useCampaign();
 	const router = useRouter();
 	const dispatch = useDispatch();
-	const { setupData } = useSetup();
 	const { isDarkMode } = useTheme();
-	const primaryColor = setupData.primaryColor || '#050711';
+	const primaryColor = '#050711';
 	const [register] = useRegisterMutation();
 	const [createCompany] = useCreateCompanyMutation();
 	const [formData, setFormData] = useState({
@@ -40,6 +43,13 @@ export default function SignUpPage() {
 	const [userId, setUserId] = useState<string | null>(null);
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isLoading, setIsLoading] = useState(false);
+
+	// Set browser tab title
+	React.useEffect(() => {
+		if (typeof document !== 'undefined') {
+			document.title = 'Sign Up | Outcess CRM';
+		}
+	}, []);
 	const [step, setStep] = useState(1);
 
 	const handleInputChange = (field: string) => (value: string) => {
@@ -52,9 +62,23 @@ export default function SignUpPage() {
 
 	const validateStep1 = () => {
 		const newErrors: Record<string, string> = {};
-		if (!formData.firstname.trim()) newErrors.firstname = 'First name is required';
-		if (!formData.lastname.trim()) newErrors.lastname = 'Last name is required';
-		if (!formData.username.trim()) newErrors.username = 'Username is required';
+		if (!formData.firstname.trim()) {
+			newErrors.firstname = 'First name is required';
+		} else if (formData.firstname.trim().length < 2) {
+			newErrors.firstname = 'First name must be at least 2 characters';
+		}
+
+		if (!formData.lastname.trim()) {
+			newErrors.lastname = 'Last name is required';
+		} else if (formData.lastname.trim().length < 2) {
+			newErrors.lastname = 'Last name must be at least 2 characters';
+		}
+
+		if (!formData.username.trim()) {
+			newErrors.username = 'Username is required';
+		} else if (formData.username.trim().length < 3) {
+			newErrors.username = 'Username must be at least 3 characters';
+		}
 
 		setErrors(newErrors);
 		return Object.keys(newErrors).length === 0;
@@ -134,12 +158,12 @@ export default function SignUpPage() {
 							user: normalizedUser,
 							tokens: { accessToken: response.token }
 						}));
-						localStorage.setItem('token', response.token);
-						localStorage.setItem('peoplely-user', JSON.stringify(normalizedUser));
+						localStorage.setItem('outcess-token', response.token);
+						localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
 					} else {
 						// Fallback if no token (shouldn't happen for successful auth)
 						dispatch(setUser(normalizedUser));
-						localStorage.setItem('peoplely-user', JSON.stringify(normalizedUser));
+						localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
 					}
 
 					setUserId(normalizedUser.id);
@@ -148,8 +172,8 @@ export default function SignUpPage() {
 				} else {
 					toast.error('Account created but user ID is missing.');
 				}
-			} catch (err: any) {
-				toast.error(err?.data?.message || 'Failed to create account');
+			} catch (err: unknown) {
+				toast.error((err as { data?: { message?: string } })?.data?.message || 'Failed to create account');
 			} finally {
 				setIsLoading(false);
 			}
@@ -181,9 +205,11 @@ export default function SignUpPage() {
 
 			await createCompany(payload).unwrap();
 			toast.success('Company profile created successfully!');
-			router.push('/setup');
-		} catch (err: any) {
-			toast.error(err?.data?.message || 'Failed to create company profile');
+			setSelectedCampaignId('new');
+			localStorage.removeItem('outcess-setup-data');
+			router.push('/signup/success');
+		} catch (err: unknown) {
+			toast.error((err as { data?: { message?: string } })?.data?.message || 'Failed to create company profile');
 		} finally {
 			setIsLoading(false);
 		}
@@ -196,61 +222,55 @@ export default function SignUpPage() {
 	};
 
 	return (
-		<div className="login-container">
-			{/* Left Side - Image */}
-			<div className="login-image-section w-full md:w-1/2">
-				<ArtworkCarousel autoPlayInterval={300000} />
+		<div className="login-container h-screen">
+			{/* Left Side - Image Section */}
+			<div className="login-image-section w-full md:w-1/2 relative">
+				<Image
+					src="/image/signupImage.png"
+					alt="Outcess CRM"
+					fill
+					priority
+					style={{ objectFit: 'cover' }}
+				/>
 			</div>
 
 			{/* Right Side - Sign Up Form */}
 			<div className="login-form-section w-full md:w-1/2">
-				<div className="login-form-container">
+				<div className="login-form-container max-h-[720px] overflow-y-auto no-scrollbar pr-2">
 					<div className="login-header">
-						{/* <div className="logo-container">
-							<Image
-								src="/peoplely-logo.svg"
-								alt="Peoplely Logo"
-								width={120}
-								height={40}
-								priority
-							// className="logo"
-							/>
-						</div> */}
-						<h1 className="welcome-title" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>
+						<h1 className="welcome-title font-lato not-italic" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>
 							{step === 3 ? 'Company Details' : 'Create Account'}
 						</h1>
 						<p className="font-lato not-italic font-normal text-base leading-[150%] text-[#6D7280] dark:text-gray-400">
-							{step === 3 ? 'Tell us more about your company.' : 'Join Peoplely CRM to get started.'}
+							{step === 3 ? 'Tell us more about your company.' : 'Join Outcess CRM to get started.'}
 						</p>
 					</div>
 
 					<form onSubmit={getSubmitHandler} className="login-form" noValidate>
 						{step === 1 && (
-							<>
-								<div className="name-fields">
-									<Input
-										label="First Name"
-										name="firstname"
-										id="firstname"
-										placeholder="Enter first name"
-										value={formData.firstname}
-										onChange={handleInputChange('firstname')}
-										required
-										error={errors.firstname}
-										autoComplete="given-name"
-									/>
-									<Input
-										label="Last Name"
-										name="lastname"
-										id="lastname"
-										placeholder="Enter last name"
-										value={formData.lastname}
-										onChange={handleInputChange('lastname')}
-										required
-										error={errors.lastname}
-										autoComplete="family-name"
-									/>
-								</div>
+							<div className="space-y-4 ">
+								<Input
+									label="First Name"
+									name="firstname"
+									id="firstname"
+									placeholder="Enter first name"
+									value={formData.firstname}
+									onChange={handleInputChange('firstname')}
+									required
+									error={errors.firstname}
+									autoComplete="given-name"
+								/>
+								<Input
+									label="Last Name"
+									name="lastname"
+									id="lastname"
+									placeholder="Enter last name"
+									value={formData.lastname}
+									onChange={handleInputChange('lastname')}
+									required
+									error={errors.lastname}
+									autoComplete="family-name"
+								/>
 
 								<Input
 									label="Username"
@@ -263,11 +283,11 @@ export default function SignUpPage() {
 									error={errors.username}
 									autoComplete="username"
 								/>
-							</>
+							</div>
 						)}
 
 						{step === 2 && (
-							<>
+							<div className="space-y-4">
 								<Input
 									label="Email Address"
 									name="email"
@@ -321,7 +341,7 @@ export default function SignUpPage() {
 									showHelpIcon={false}
 									autoComplete="new-password"
 								/>
-							</>
+							</div>
 						)}
 
 						{step === 2 && (
@@ -333,12 +353,12 @@ export default function SignUpPage() {
 										onChange={(checked) => setFormData(prev => ({ ...prev, agreetoterms: checked }))}
 										size="small"
 									/>
-									<span className="text-sm text-gray-600 dark:text-gray-400">
+									<span className="text-[10px] md:text-[12px] text-gray-600 dark:text-gray-400">
 										I agree to the Terms of Service and Privacy Policy
 									</span>
 								</div>
 								{errors.agreetoterms && (
-									<span className="terms-error text-red-500 text-sm mt-1 block">{errors.agreetoterms}</span>
+									<span className="terms-error text-red-500 text-[10px] md:text-[12px] mt-1 block">{errors.agreetoterms}</span>
 								)}
 							</div>
 						)}
@@ -356,57 +376,53 @@ export default function SignUpPage() {
 									error={errors.companyname}
 								/>
 
-								<Input
+								<Textarea
 									label="Company Description"
 									name="companydescription"
-									id="companydescription"
 									placeholder="Describe your company"
 									value={formData.companydescription}
 									onChange={handleInputChange('companydescription')}
+									rows={4}
 								/>
 							</>
 						)}
 
-						<div style={{ display: 'flex', gap: '10px' }}>
+						<div style={{ display: 'flex', gap: '10px' }} className="flex flex-row justify-between items-center">
 							{step === 2 && (
-								<button
+								<Button
 									type="button"
+									variant="outline"
 									onClick={handleBack}
-									className="login-button back-button"
-									style={{
-										backgroundColor: 'transparent',
-										border: `1px solid ${primaryColor}`,
-										color: primaryColor,
-										width: '100px'
-									}}
+									className="flex items-center gap-2 px-2 !py-4 text-[10px] md:text-[12px] sm:px-4 sm:py-2"
 									disabled={isLoading}
 								>
 									Back
-								</button>
+								</Button>
 							)}
-							<button
+							<Button
 								type="submit"
-								className={`login-button ${isLoading ? 'loading' : ''}`}
-								disabled={isLoading}
-								style={{ backgroundColor: primaryColor, flex: 1 }}
-								onMouseEnter={(e) => {
-									if (!isLoading) {
-										e.currentTarget.style.backgroundColor = primaryColor;
-										e.currentTarget.style.opacity = '0.9';
-									}
-								}}
-								onMouseLeave={(e) => {
-									if (!isLoading) {
-										e.currentTarget.style.backgroundColor = primaryColor;
-										e.currentTarget.style.opacity = '1';
-									}
-								}}
+								loading={isLoading}
+								style={{ flex: 1 }}
+								className="flex items-center gap-2 px-2 !py-4 text-[10px] md:text-[12px] sm:px-4 sm:py-2"
 							>
 								{step === 1 ? 'Next' : (
 									step === 2 ? (isLoading ? 'Creating Account...' : 'Create Account') :
 										(isLoading ? 'Creating Company...' : 'Finish Setup')
 								)}
-							</button>
+							</Button>
+						</div>
+
+						<div className="signup-footer" style={{ marginTop: '24px', textAlign: 'center' }}>
+							<p className="signup-text" style={{ color: '#6D7280', fontSize: '14px' }}>
+								Already have an account?{' '}
+								<Link
+									href="/"
+									className={`font-lato not-italic font-semibold text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100 cursor-pointer `}
+									style={{ color: 'var(--text-primary)' }}
+								>
+									Login
+								</Link>
+							</p>
 						</div>
 					</form>
 				</div>

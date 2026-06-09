@@ -13,9 +13,13 @@ import {
 } from '@/utils/soundPreferences';
 import { playNotificationSound, type SoundType } from '@/utils/soundEffects';
 import { SpeakerLoudIcon, SpeakerOffIcon } from '@radix-ui/react-icons';
+import Toggle from './Toggle';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 const SoundSettings: React.FC = () => {
 	const pathname = usePathname();
+	const { campaignData } = useCampaign();
+	const primaryColor = campaignData?.primaryColor || '#6C8B7D';
 	const [preferences, setPreferences] = useState<SoundPreferences>(loadSoundPreferences());
 	const [hasChanges, setHasChanges] = useState(false);
 
@@ -57,6 +61,11 @@ const SoundSettings: React.FC = () => {
 		};
 		setPreferences(newPreferences);
 		setHasChanges(true);
+
+		// Play the sound immediately so the user can hear it
+		if (preferences.globalSoundEnabled && preferences.components[component].enabled) {
+			playNotificationSound(soundType as SoundType);
+		}
 	};
 
 	const handleSave = () => {
@@ -106,114 +115,85 @@ const SoundSettings: React.FC = () => {
 			)}
 
 			{/* Global Sound Toggle */}
-			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6"
-				style={{
-					backgroundColor: 'var(--accent-white)',
-					borderColor: 'var(--light-gray)'
-				}}
-			>
+			<div className="bg-surface dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6 border-light transition-colors rounded-[var(--radius)]">
 				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-3">
-						{preferences.globalSoundEnabled ? (
-							<SpeakerLoudIcon className="w-5 h-5" style={{ color: 'var(--text-primary)' }} />
-						) : (
-							<SpeakerOffIcon className="w-5 h-5" style={{ color: 'var(--text-tertiary)' }} />
-						)}
+					<div className="flex items-center gap-4">
+						<div className={`p-3 rounded-full ${preferences.globalSoundEnabled ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-gray-900/20'}`}>
+							{preferences.globalSoundEnabled ? (
+								<SpeakerLoudIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+							) : (
+								<SpeakerOffIcon className="w-6 h-6 text-gray-400" />
+							)}
+						</div>
 						<div>
-							<h3
-								className="font-inter text-base font-semibold dark:text-gray-100"
-								style={{ color: 'var(--text-primary)' }}
-							>
+							<h3 className="text-primary font-inter text-base font-semibold dark:text-gray-100">
 								Global Sound
 							</h3>
-							<p
-								className="font-inter text-sm dark:text-gray-400 mt-1"
-								style={{ color: 'var(--text-tertiary)' }}
-							>
+							<p className="text-tertiary font-inter text-[10px] md:text-[12px] dark:text-gray-400 mt-0.5">
 								Enable or disable all sounds across the application
 							</p>
 						</div>
 					</div>
-					<label className="relative inline-flex items-center cursor-pointer">
-						<input
-							type="checkbox"
-							checked={preferences.globalSoundEnabled}
-							onChange={(e) => handleGlobalToggle(e.target.checked)}
-							className="sr-only peer"
-						/>
-						<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-					</label>
+					<Toggle
+						checked={preferences.globalSoundEnabled}
+						onChange={(checked) => handleGlobalToggle(checked)}
+						color={primaryColor}
+					/>
 				</div>
 			</div>
 
 			{/* Component Sound Settings */}
-			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 p-6"
-				style={{
-					backgroundColor: 'var(--accent-white)',
-					borderColor: 'var(--light-gray)'
-				}}
-			>
-				<h3
-					className="font-inter text-base font-semibold dark:text-gray-100 mb-4"
-					style={{ color: 'var(--text-primary)' }}
-				>
-					Component Sound Settings
+			<div className="bg-surface dark:bg-gray-800 border border-light dark:border-gray-700 p-6   transition-colors rounded-[var(--radius)]">
+				<h3 className="text-primary font-inter text-base font-semibold dark:text-gray-100 mb-6">
+					Component Notifications
 				</h3>
-				<div className="space-y-4">
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 					{(Object.keys(preferences.components) as Array<keyof SoundPreferences['components']>).map((component) => (
 						<div
 							key={component}
-							className="p-4 border dark:border-gray-700 rounded-lg"
-							style={{
-								backgroundColor: 'var(--bg-primary)',
-								borderColor: 'var(--light-gray)'
-							}}
+							className={`p-5 border border-light dark:border-gray-700 rounded-[var(--radius)] transition-all duration-200 ${preferences.globalSoundEnabled && preferences.components[component].enabled
+								? 'bg-white dark:bg-gray-800/50  border-blue-100 dark:border-blue-900/30'
+								: 'bg-gray-50/50 dark:bg-gray-900/30 opacity-75'
+								}`}
 						>
-							<div className="flex items-start justify-between gap-4">
-								<div className="flex-1">
-									<div className="flex items-center justify-between mb-3">
-										<h4
-											className="font-inter text-sm font-medium dark:text-gray-100"
-											style={{ color: 'var(--text-primary)' }}
-										>
-											{componentLabels[component]}
-										</h4>
-										<label className="relative inline-flex items-center cursor-pointer">
-											<input
-												type="checkbox"
-												checked={preferences.components[component].enabled}
-												onChange={(e) => handleComponentToggle(component, e.target.checked)}
-												disabled={!preferences.globalSoundEnabled}
-												className="sr-only peer"
-											/>
-											<div className={`w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 ${!preferences.globalSoundEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
-										</label>
-									</div>
-									<div className="flex items-center gap-3">
-										<div className="flex-1">
-											<Dropdown
-												label="Sound Type"
-												value={preferences.components[component].soundType}
-												onChange={(value) => {
-													const stringValue = Array.isArray(value) ? value[0] : value;
-													handleSoundTypeChange(component, stringValue);
-												}}
-												options={soundTypeOptions}
-												disabled={!preferences.globalSoundEnabled || !preferences.components[component].enabled}
-											/>
-										</div>
-										<Button
-											variant="outline"
-											size="md"
-											onClick={() => handleTestSound(component)}
+							<div className="space-y-4">
+								<div className="flex items-center justify-between">
+									<h4 className="text-primary font-inter text-sm font-semibold dark:text-gray-100">
+										{componentLabels[component]}
+									</h4>
+									<Toggle
+										checked={preferences.components[component].enabled}
+										onChange={(checked) => handleComponentToggle(component, checked)}
+										disabled={!preferences.globalSoundEnabled}
+										size="sm"
+										color={primaryColor}
+									/>
+								</div>
+
+								<div className="flex items-end gap-3">
+									<div className="flex-1">
+										<Dropdown
+											label="Alert Sound"
+											value={preferences.components[component].soundType}
+											onChange={(value) => {
+												const stringValue = Array.isArray(value) ? value[0] : value;
+												handleSoundTypeChange(component, stringValue);
+											}}
+											options={soundTypeOptions}
 											disabled={!preferences.globalSoundEnabled || !preferences.components[component].enabled}
-											className="mt-6"
-										>
-											Test
-										</Button>
+											className="mb-0"
+										/>
 									</div>
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => handleTestSound(component)}
+										disabled={!preferences.globalSoundEnabled || !preferences.components[component].enabled}
+										className="h-[43px] mb-[-1px] min-w-[60px]"
+										icon={<SpeakerLoudIcon className="w-3.5 h-3.5" />}
+									>
+										Test
+									</Button>
 								</div>
 							</div>
 						</div>
@@ -222,20 +202,19 @@ const SoundSettings: React.FC = () => {
 			</div>
 
 			{/* Save Button */}
-			{hasChanges && (
-				<div className="mt-6 flex justify-end">
-					<Button
-						variant="primary"
-						size="md"
-						onClick={handleSave}
-					>
-						Save Changes
-					</Button>
-				</div>
-			)}
+			<div className="mt-8 flex justify-end">
+				<Button
+					variant="primary"
+					size="md"
+					onClick={handleSave}
+					disabled={!hasChanges}
+					className={`min-w-[140px] shadow-lg transition-transform ${hasChanges ? 'scale-100 opacity-100' : 'scale-95 opacity-50 pointer-events-none'}`}
+				>
+					Save Preferences
+				</Button>
+			</div>
 		</div>
 	);
 };
 
 export default SoundSettings;
-

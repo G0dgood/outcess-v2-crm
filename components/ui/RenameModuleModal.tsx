@@ -55,24 +55,26 @@ export const RenameModuleModal: React.FC<RenameModuleModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-			<div 
+			<div
 				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 overflow-hidden flex flex-col"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
-				<div 
+				<div
 					className="flex justify-between items-center p-6 border-b dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<h2 
-						className="text-xl font-semibold dark:text-gray-100"
+					<h2
+						className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Rename Module
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -85,7 +87,7 @@ export const RenameModuleModal: React.FC<RenameModuleModalProps> = ({
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Form Content */}
@@ -100,7 +102,7 @@ export const RenameModuleModal: React.FC<RenameModuleModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div 
+				<div
 					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Icon from '@/components/ui/Icon';
+import Button from '@/components/ui/Button';
 
 interface WidgetCardProps {
 	title: string;
@@ -9,9 +10,11 @@ interface WidgetCardProps {
 	widgetId: string;
 	onEdit?: (widgetId: string) => void;
 	onDelete?: (widgetId: string) => void;
+	canEdit?: boolean;
+	canDelete?: boolean;
 }
 
-export const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, widgetId, onEdit, onDelete }) => {
+export const WidgetCard: React.FC<WidgetCardProps> = React.memo(({ title, value, widgetId, onEdit, onDelete, canEdit = true, canDelete = true }) => {
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +47,7 @@ export const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, widgetId, 
 
 	return (
 		<div
-			className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative"
+			className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative rounded-[var(--radius)]"
 			style={{
 				backgroundColor: 'var(--accent-white)',
 				borderColor: 'var(--light-gray)'
@@ -52,69 +55,87 @@ export const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, widgetId, 
 		>
 			<div className="flex justify-between items-start mb-4">
 				<h3
-					className="font-lato font-normal text-[18px] leading-[150%] dark:text-gray-300"
+					className="font-lato font-normal text-[14px] md:text-[16px] leading-[150%] dark:text-gray-300"
 					style={{ color: 'var(--text-tertiary)' }}
 				>
 					{title}
 				</h3>
 				<div className="relative" ref={dropdownRef}>
-					<button
-						onClick={(e) => {
-							e.stopPropagation();
-							setIsDropdownOpen(!isDropdownOpen);
-						}}
-						className="dark:text-gray-500 dark:hover:text-gray-300 transition-colors cursor-pointer"
-						style={{ color: 'var(--text-tertiary)' }}
-						onMouseEnter={(e) => {
-							e.currentTarget.style.color = 'var(--text-secondary)';
-						}}
-						onMouseLeave={(e) => {
-							e.currentTarget.style.color = 'var(--text-tertiary)';
-						}}
-						title="Widget options"
-					>
-						<Icon name="Ellipsis_vertical_light" size="sm" />
-					</button>
-					{isDropdownOpen && (
+					{(canEdit || canDelete) && (
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+								e.stopPropagation();
+								setIsDropdownOpen(!isDropdownOpen);
+							}}
+							className="p-1 h-auto transition-colors cursor-pointer"
+							style={{ color: 'var(--text-tertiary)' }}
+							onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+								e.currentTarget.style.color = 'var(--text-secondary)';
+							}}
+							onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+								e.currentTarget.style.color = 'var(--text-tertiary)';
+							}}
+							title="Widget options"
+						>
+							<Icon name="Ellipsis_vertical_light" size="sm" />
+						</Button>
+					)}
+					{isDropdownOpen && (canEdit || canDelete) && (
 						<div
-							className="absolute right-0 top-6 z-50 dark:bg-gray-800 border dark:border-gray-700 shadow-lg min-w-[120px]"
+							className="absolute right-0 top-10 z-50 dark:bg-gray-800 border dark:border-gray-700 shadow-xl min-w-[140px] rounded-[var(--radius)] overflow-hidden"
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)'
 							}}
 						>
-							<button
-								onClick={handleEdit}
-								className="w-full px-4 py-2 text-left text-sm dark:text-gray-300 dark:hover:bg-gray-700 transition-colors first:rounded-t-lg cursor-pointer"
-								style={{
-									color: 'var(--text-secondary)',
-									backgroundColor: 'transparent'
-								}}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.backgroundColor = 'transparent';
-								}}
-							>
-								Edit
-							</button>
-							<button
-								onClick={handleDelete}
-								className="w-full px-4 py-2 text-left text-sm dark:text-gray-300 dark:hover:bg-gray-700 transition-colors last:rounded-b-lg cursor-pointer"
-								style={{
-									color: 'var(--text-secondary)',
-									backgroundColor: 'transparent'
-								}}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.backgroundColor = 'transparent';
-								}}
-							>
-								Delete
-							</button>
+							{canEdit && (
+								<Button
+									variant="ghost"
+									size="md"
+									onClick={handleEdit}
+									fullWidth
+									className="justify-start px-4 py-2.5 h-auto text-[10px] md:text-[12px] transition-all cursor-pointer"
+									style={{
+										color: 'var(--text-secondary)',
+										backgroundColor: 'transparent'
+									}}
+									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+									}}
+									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+										e.currentTarget.style.backgroundColor = 'transparent';
+									}}
+								>
+									<Icon name="Edit_duotone_line" size="sm" className="mr-2" />
+									Edit
+								</Button>
+							)}
+							{canDelete && (
+								<Button
+									variant="ghost"
+									size="md"
+									onClick={handleDelete}
+									fullWidth
+									className="justify-start px-4 py-2.5 h-auto text-[10px] md:text-[12px] transition-all cursor-pointer text-red-500 hover:text-red-600"
+									style={{
+										color: 'var(--text-secondary)',
+										backgroundColor: 'transparent'
+									}}
+									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+										e.currentTarget.style.color = '#ef4444'; // Red
+									}}
+									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+										e.currentTarget.style.backgroundColor = 'transparent';
+										e.currentTarget.style.color = 'var(--text-secondary)';
+									}}
+								>
+									<Icon name="Trash_light" size="sm" className="mr-2" />
+									Delete
+								</Button>
+							)}
 						</div>
 					)}
 				</div>
@@ -127,7 +148,8 @@ export const WidgetCard: React.FC<WidgetCardProps> = ({ title, value, widgetId, 
 			</div>
 		</div>
 	);
-};
+});
 
-export default WidgetCard;
-
+WidgetCard.displayName = 'WidgetCard';
+ 
+ export default WidgetCard;

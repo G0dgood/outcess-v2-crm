@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Icon from './Icon';
 import { Cross2Icon, EnterIcon } from '@radix-ui/react-icons';
+import Button from './Button';
 
 export interface StickyNoteData {
 	id: string;
@@ -156,6 +157,19 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 		});
 	};
 
+	const addTodoWithValue = (text: string) => {
+		const newTodo = {
+			id: Date.now().toString(),
+			text,
+			completed: false,
+		};
+		onUpdate({
+			...note,
+			todos: [...note.todos, newTodo],
+			updatedAt: new Date(),
+		});
+	};
+
 	const deleteTodo = (todoId: string) => {
 		const updatedTodos = note.todos.filter(todo => todo.id !== todoId);
 		onUpdate({ ...note, todos: updatedTodos, updatedAt: new Date() });
@@ -182,6 +196,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 	};
 
 	const textColor = getTextColor(note.color || '#FFFACD');
+	const buttonHoverClass = note.color === '#606060' ? 'hover:bg-white/20' : 'hover:bg-black/10';
 
 	// Auto-edit new empty notes
 	useEffect(() => {
@@ -199,7 +214,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 		<div
 			ref={noteRef}
 			data-note-id={note.id}
-			className={`fixed border border-gray-300 rounded-sm shadow-lg w-[280px] select-none hover:shadow-xl transition-all ${isHidden ? '' : isDragging ? 'cursor-grabbing opacity-90 scale-105' : 'cursor-grab'
+			className={`fixed border border-gray-300 shadow-lg w-[280px] select-none hover:shadow-xl transition-all rounded-[var(--radius)] ${isHidden ? '' : isDragging ? 'cursor-grabbing opacity-90 scale-105' : 'cursor-grab'
 				}`}
 			style={{
 				left: `${position.x}px`,
@@ -220,93 +235,107 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 			>
 				{isHidden ? (
 					<div className="flex gap-1 items-center">
-						<button
-							onClick={(e) => {
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.stopPropagation();
 								handleRestore();
 							}}
-							className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+							className={`p-1 ${buttonHoverClass} transition-colors h-auto`}
 							title="Restore"
 						>
 							<EnterIcon className="w-4 h-4 text-black" />
-						</button>
+						</Button>
 					</div>
 				) : (
 					<div className="flex gap-1 items-center">
-						<button
-							onClick={(e) => {
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.stopPropagation();
 								addTodo();
 							}}
-							className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+							className={`p-1 ${buttonHoverClass} transition-colors h-auto`}
 							title="Add"
 						>
 							<svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
 							</svg>
-						</button>
+						</Button>
 						{isEditing && (
-							<button
-								onClick={(e) => {
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 									e.stopPropagation();
 									handleSave();
 								}}
-								className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+								className={`p-1 ${buttonHoverClass} transition-colors h-auto`}
 								title="Done"
 							>
 								<svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
 								</svg>
-							</button>
+							</Button>
 						)}
 					</div>
 				)}
 				{!isHidden && (
 					<div className="flex gap-1 items-center">
-						<button
-							onClick={(e) => {
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.stopPropagation();
 								handleClose();
 							}}
-							className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+							className={`p-1 ${buttonHoverClass} transition-colors h-auto`}
 							title="Close"
 						>
 							<Cross2Icon className="w-4 h-4 text-black" />
-						</button>
-						<button
-							onClick={(e) => {
+						</Button>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.stopPropagation();
 								onDelete(note.id);
 							}}
-							className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+							className={`p-1 ${buttonHoverClass} transition-colors h-auto`}
 							title="Delete"
 						>
 							<Icon name="Trash_light" size="sm" className="text-black" />
-						</button>
-						<button
-							onClick={(e) => {
+						</Button>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.stopPropagation();
 								handleSave();
 							}}
-							className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+							className={`p-1 ${buttonHoverClass} transition-colors h-auto`}
 							title="Save"
 						>
 							<svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
 							</svg>
-						</button>
-						<button
-							onClick={(e) => {
+						</Button>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.stopPropagation();
 								setIsEditing(!isEditing);
 							}}
-							className="p-1 hover:bg-black hover:bg-opacity-10 rounded transition-colors"
+							className={`p-1 ${buttonHoverClass} transition-colors h-auto`}
 							title="Edit"
 						>
 							<svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
 							</svg>
-						</button>
+						</Button>
 					</div>
 				)}
 			</div>
@@ -318,7 +347,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 						<textarea
 							value={content}
 							onChange={(e) => setContent(e.target.value)}
-							className="w-full px-2 py-1 text-sm bg-transparent border-0 focus:outline-none resize-none cursor-text placeholder-opacity-60"
+							className="w-full px-2 py-1 text-[10px] md:text-[12px] bg-transparent border-0 focus:outline-none resize-none cursor-text placeholder-opacity-60"
 							rows={5}
 							onMouseDown={(e) => e.stopPropagation()}
 							placeholder="Write your note here..."
@@ -329,93 +358,152 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 						/>
 					) : (
 						<p
-							className="text-sm whitespace-pre-wrap font-sans leading-relaxed"
+							className="text-[10px] md:text-[12px] whitespace-pre-wrap font-sans leading-relaxed cursor-text"
 							style={{ color: textColor }}
+							onClick={() => setIsEditing(true)}
 						>
-							{note.content || 'No content'}
+							{note.content || 'Click to add content...'}
 						</p>
 					)}
 
 					{/* Todos */}
 					{note.todos.length > 0 && (
 						<div className="mt-3 space-y-2">
-							<div className="text-xs font-semibold" style={{ color: textColor, opacity: 0.8 }}>To-dos:</div>
+							<div className="text-[8px] md:text-[10px] font-semibold" style={{ color: textColor, opacity: 0.8 }}>List:</div>
 							{note.todos.map((todo) => (
-								<div key={todo.id} className="flex items-center gap-2 text-xs">
-									<input
-										type="checkbox"
-										checked={todo.completed}
-										onChange={() => toggleTodo(todo.id)}
-										onMouseDown={(e) => e.stopPropagation()}
-										className="cursor-pointer"
-									/>
-									{isEditing ? (
-										<input
-											type="text"
-											value={todo.text}
-											onChange={(e) => {
-												const updatedTodos = note.todos.map(t =>
-													t.id === todo.id ? { ...t, text: e.target.value } : t
-												);
-												onUpdate({ ...note, todos: updatedTodos, updatedAt: new Date() });
-											}}
-											onMouseDown={(e) => e.stopPropagation()}
-											className="flex-1 px-1 py-0.5 text-xs bg-transparent rounded border-0 focus:outline-none cursor-text"
-											style={{ color: textColor, caretColor: textColor }}
-										/>
-									) : (
-										<span
-											className={todo.completed ? 'line-through' : ''}
-											style={{
-												color: textColor,
-												opacity: todo.completed ? 0.6 : 1
-											}}
-										>
-											{todo.text}
+								<div key={todo.id} className="flex items-center gap-1 text-[8px] md:text-[10px] group">
+									<Button
+										variant="ghost"
+										size="sm"
+										onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
+										onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+											e.stopPropagation();
+											toggleTodo(todo.id);
+										}}
+										className="w-4 h-4 flex items-center justify-center hover:bg-black/5 rounded-sm transition-colors p-0 h-auto"
+										title={todo.completed ? 'Mark as incomplete' : 'Mark as complete'}
+									>
+										<span style={{ color: textColor, opacity: todo.completed ? 1 : 0.5 }}>
+											{todo.completed ? '✓' : '•'}
 										</span>
-									)}
-									{isEditing && (
-										<button
-											onMouseDown={(e) => e.stopPropagation()}
-											onClick={(e) => {
-												e.stopPropagation();
-												deleteTodo(todo.id);
-											}}
-											className="text-red-500 hover:text-red-700"
-										>
-											<Icon name="Close_round_light" size="xs" />
-										</button>
-									)}
+									</Button>
+									<input
+										type="text"
+										value={todo.text}
+										onChange={(e) => {
+											const updatedTodos = note.todos.map(t =>
+												t.id === todo.id ? { ...t, text: e.target.value } : t
+											);
+											onUpdate({ ...note, todos: updatedTodos, updatedAt: new Date() });
+										}}
+										onMouseDown={(e) => e.stopPropagation()}
+										onBlur={() => handleSave()}
+										className={`flex-1 px-1 py-0.5 text-[8px] md:text-[10px] bg-transparent border-0 focus:outline-none cursor-text transition-all ${todo.completed ? 'line-through opacity-50' : ''
+											}`}
+										style={{ color: textColor, caretColor: textColor }}
+										placeholder="Item text..."
+									/>
+									<Button
+										variant="ghost"
+										size="sm"
+										onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
+										onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+											e.stopPropagation();
+											handleSave();
+										}}
+										className="p-1 hover:bg-black/5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity h-auto"
+										title="Save item"
+									>
+										<EnterIcon className="w-3 h-3" style={{ color: textColor }} />
+									</Button>
+									<Button
+										variant="ghost"
+										size="sm"
+										onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
+										onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+											e.stopPropagation();
+											deleteTodo(todo.id);
+										}}
+										className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity p-1 h-auto"
+										title="Delete item"
+									>
+										<Cross2Icon className="w-3 h-3" />
+									</Button>
 								</div>
 							))}
-							{isEditing && (
-								<button
-									onMouseDown={(e) => e.stopPropagation()}
-									onClick={(e) => {
-										e.stopPropagation();
-										addTodo();
+
+							{/* Quick add input */}
+							<div className="flex items-center gap-1 text-[8px] md:text-[10px] opacity-60 hover:opacity-100 transition-opacity group">
+								<span style={{ color: textColor }}>+</span>
+								<input
+									type="text"
+									placeholder="Add item..."
+									onFocus={() => {
+										// Focus handler
 									}}
-									className="text-xs mt-1 hover:opacity-80 transition-opacity"
-									style={{ color: textColor, opacity: 0.7 }}
+									onKeyDown={(e) => {
+										if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+											addTodoWithValue(e.currentTarget.value.trim());
+											e.currentTarget.value = '';
+										}
+									}}
+									onMouseDown={(e) => e.stopPropagation()}
+									className="flex-1 px-1 py-0.5 text-[8px] md:text-[10px] bg-transparent border-0 focus:outline-none cursor-text"
+									style={{ color: textColor, caretColor: textColor }}
+								/>
+								<Button
+									variant="ghost"
+									size="sm"
+									onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
+									onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+										const input = (e.currentTarget.previousSibling as HTMLInputElement);
+										if (input.value.trim()) {
+											addTodoWithValue(input.value.trim());
+											input.value = '';
+										}
+									}}
+									className="p-1 hover:bg-black/5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity h-auto"
+									title="Add item"
 								>
-									+ Add todo
-								</button>
-							)}
+									<EnterIcon className="w-3 h-3" style={{ color: textColor }} />
+								</Button>
+							</div>
 						</div>
 					)}
 
-					{!isEditing && note.todos.length === 0 && (
-						<button
-							onMouseDown={(e) => e.stopPropagation()}
-							onClick={(e) => {
-								e.stopPropagation();
-								addTodo();
-							}}
-							className="text-xs mt-2 hover:opacity-80 transition-opacity"
-							style={{ color: textColor, opacity: 0.7 }}
-						>
-							+ Add todo
-						</button>
+					{note.todos.length === 0 && (
+						<div className="mt-2 flex items-center gap-1 text-[8px] md:text-[10px] opacity-60 hover:opacity-100 transition-opacity group">
+							<span style={{ color: textColor }}>+</span>
+							<input
+								type="text"
+								placeholder="Add first item..."
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+										addTodoWithValue(e.currentTarget.value.trim());
+										e.currentTarget.value = '';
+									}
+								}}
+								onMouseDown={(e) => e.stopPropagation()}
+								className="flex-1 px-1 py-0.5 text-[8px] md:text-[10px] bg-transparent border-0 focus:outline-none cursor-text"
+								style={{ color: textColor, caretColor: textColor }}
+							/>
+							<Button
+								variant="ghost"
+								size="sm"
+								onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
+								onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+									const input = (e.currentTarget.previousSibling as HTMLInputElement);
+									if (input.value.trim()) {
+										addTodoWithValue(input.value.trim());
+										input.value = '';
+									}
+								}}
+								className="p-1 hover:bg-black/5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity h-auto"
+								title="Add item"
+							>
+								<EnterIcon className="w-3 h-3" style={{ color: textColor }} />
+							</Button>
+						</div>
 					)}
 				</div>
 			)}
@@ -424,20 +512,24 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onUpdate, onDelete }) => 
 			{!isHidden && (
 				<div className="p-2 border-t border-gray-300 flex gap-1 justify-center items-center">
 					{colorPalette.map((colorOption) => (
-						<button
+						<Button
+							variant="ghost"
+							size="sm"
 							key={colorOption}
-							onClick={(e) => {
+							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
 								e.stopPropagation();
 								onUpdate({ ...note, color: colorOption, updatedAt: new Date() });
 							}}
-							className={`w-6 h-6 rounded-sm border transition-all ${note.color === colorOption || (!note.color && colorOption === '#FFFACD')
+							className={`w-6 h-6 border transition-all p-0 h-auto ${note.color === colorOption || (!note.color && colorOption === '#FFFACD')
 								? 'border-gray-800 scale-110 ring-2 ring-gray-400'
 								: 'border-gray-300 hover:scale-110'
 								}`}
 							style={{ backgroundColor: colorOption }}
 							title={colorOption}
-							onMouseDown={(e) => e.stopPropagation()}
-						/>
+							onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
+						>
+							<span className="sr-only">{colorOption}</span>
+						</Button>
 					))}
 				</div>
 			)}

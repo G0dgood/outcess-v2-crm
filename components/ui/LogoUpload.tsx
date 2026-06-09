@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import Icon from './Icon';
+import Button from './Button';
 
 interface LogoUploadProps {
 	label?: string;
@@ -23,11 +25,23 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 	minDimensions = { width: 174, height: 28 },
 	className = '',
 	disabled = false,
-	error
+	error,
+	value
 }) => {
 	const [isDragOver, setIsDragOver] = useState(false);
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	// Update preview when value changes
+	React.useEffect(() => {
+		if (typeof value === 'string') {
+			setPreviewUrl(value);
+		} else if (value instanceof File) {
+			setPreviewUrl(URL.createObjectURL(value));
+		} else if (value === null) {
+			setPreviewUrl(null);
+		}
+	}, [value]);
 
 	// Handle file validation
 	const validateFile = (file: File): string | null => {
@@ -96,15 +110,22 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 	};
 
 	// Handle click to open file dialog
-	const handleClick = () => {
-		if (!disabled) {
-			fileInputRef.current?.click();
+	const handleClick = (e: React.MouseEvent) => {
+		if (disabled) {
+			e.preventDefault();
+			return;
+		}
+		// If clicking on the remove button or its container, don't trigger file input
+		if ((e.target as HTMLElement).closest('button')) {
+			e.preventDefault();
+			return;
 		}
 	};
 
 	// Handle remove file
 	const handleRemove = (e: React.MouseEvent) => {
-		e.stopPropagation();
+		e.preventDefault(); // Prevent default label behavior
+		e.stopPropagation(); // Stop propagation
 		setPreviewUrl(null);
 		onFileSelect?.(null);
 		if (fileInputRef.current) {
@@ -117,13 +138,14 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 	return (
 		<div className={`logo-upload-container ${className}`}>
 			{label && (
-				<label className="font-inter text-base font-medium text-[#050711] mb-4 block">
+				<label className="font-inter text-base font-medium text-[#050711] mb-4 block"
+					style={{ color: 'var(--text-secondary)' }}>
 					{label}
 				</label>
 			)}
 
-			<div
-				className={`border-2 border-dashed transition-colors cursor-pointer ${isDragOver
+			<label
+				className={`border-2 border-dashed transition-colors cursor-pointer block rounded-[var(--radius)] ${isDragOver
 					? 'border-blue-400 bg-blue-50'
 					: error
 						? 'border-red-300 bg-red-50'
@@ -137,22 +159,28 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 				{previewUrl ? (
 					<div className="p-4 text-center">
 						<div className="relative inline-block">
-							<img
+							<Image
 								src={previewUrl}
 								alt="Logo preview"
+								width={192}
+								height={64}
 								className="max-h-16 max-w-48 object-contain"
+								unoptimized
 							/>
 							{!disabled && (
-								<button
+								<Button
+									variant="danger"
+									size="sm"
 									type="button"
 									onClick={handleRemove}
-									className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+									className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] md:text-[12px] hover:bg-red-600 transition-colors z-10 p-0"
 								>
 									×
-								</button>
+								</Button>
 							)}
 						</div>
-						<p className="font-inter text-sm text-gray-600 mt-2">Click to change logo</p>
+						<p className="font-inter text-[10px] md:text-[12px] text-gray-600 mt-2"
+							style={{ color: 'var(--text-secondary)' }}>Click to change logo</p>
 					</div>
 				) : (
 					<div className="p-8 text-center">
@@ -160,28 +188,30 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
 							<div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
 								<Icon name="upload-cloud" />
 							</div>
-							<p className="font-inter text-sm font-medium text-[#050711] mb-2">
+							<p className="font-inter text-[10px] md:text-[12px] font-medium text-[#050711] mb-2"
+								style={{ color: 'var(--text-secondary)' }}>
 								Drag and Drop or Upload Organization Logo
 							</p>
-							<p className="font-lato text-xs text-gray-600">
+							<p className="font-lato text-[8px] md:text-[10px] text-gray-600"
+								style={{ color: 'var(--text-secondary)' }}>
 								We recommend you to upload a jpg / jpeg / png file with a minimum dimension of {minDimensions.width}w x {minDimensions.height}h and less than {maxSize}MB
 							</p>
 						</div>
 					</div>
 				)}
-			</div>
 
-			<input
-				ref={fileInputRef}
-				type="file"
-				accept={acceptedTypes.join(',')}
-				onChange={handleInputChange}
-				className="hidden"
-				disabled={disabled}
-			/>
+				<input
+					ref={fileInputRef}
+					type="file"
+					accept={acceptedTypes.join(',')}
+					onChange={handleInputChange}
+					className="hidden"
+					disabled={disabled}
+				/>
+			</label>
 
 			{error && (
-				<p className="font-lato text-sm text-red-600 mt-2">{error}</p>
+				<p className="font-lato text-[10px] md:text-[12px] text-red-600 mt-2">{error}</p>
 			)}
 		</div>
 	);

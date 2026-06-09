@@ -1,8 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 interface DropdownOption {
 	value: string;
 	label: string;
+	status?: string;
 }
 
 interface DropdownProps {
@@ -17,6 +19,9 @@ interface DropdownProps {
 	className?: string;
 	inputClassName?: string;
 	multiple?: boolean;
+	rightElement?: React.ReactNode;
+	renderOptionRight?: (option: DropdownOption) => React.ReactNode;
+	direction?: 'up' | 'down';
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -31,20 +36,57 @@ export const Dropdown: React.FC<DropdownProps> = ({
 	className = '',
 	inputClassName = '',
 	multiple = false,
+	rightElement,
+	renderOptionRight,
+	direction = 'down',
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
+	const [mounted, setMounted] = useState(false);
+	const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, bottom: 0 });
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
+	const updateCoords = useCallback(() => {
+		if (dropdownRef.current) {
+			const rect = dropdownRef.current.getBoundingClientRect();
+			setCoords({
+				top: rect.top,
+				left: rect.left,
+				width: rect.width,
+				bottom: rect.bottom
+			});
+		}
+	}, []);
+
+	useEffect(() => {
+		if (isOpen) {
+			updateCoords();
+			window.addEventListener('resize', updateCoords);
+			window.addEventListener('scroll', updateCoords, true);
+		}
+		return () => {
+			window.removeEventListener('resize', updateCoords);
+			window.removeEventListener('scroll', updateCoords, true);
+		};
+	}, [isOpen, updateCoords]);
+
 	const isMultiple = multiple;
-	const selectedValues: string[] = isMultiple 
+	const selectedValues: string[] = isMultiple
 		? (Array.isArray(value) ? value : [])
 		: (typeof value === 'string' && value ? [value] : []);
-	
+
 	const selectedOption = !isMultiple && typeof value === 'string'
 		? options.find(option => option.value === value)
 		: null;
 
 	const getDisplayText = () => {
+		if (!mounted) {
+			return placeholder;
+		}
+
 		if (isMultiple) {
 			if (selectedValues.length === 0) {
 				return placeholder;
@@ -98,58 +140,82 @@ export const Dropdown: React.FC<DropdownProps> = ({
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-				setIsOpen(false);
+				// We also need to check if the click target is within the portal menu
+				// But since the menu is inside the portal, we should check if the click was on document.body or similar
+				// Actually, simpler: check if the click was on anything with a data-dropdown-menu attribute
+				const target = event.target as HTMLElement;
+				if (!target.closest('.dropdown-menu')) {
+					setIsOpen(false);
+				}
 			}
 		};
 
-		document.addEventListener('mousedown', handleClickOutside);
+		if (isOpen) {
+			document.addEventListener('mousedown', handleClickOutside);
+		}
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, []);
+	}, [isOpen]);
 
 	return (
-		<div className={`dropdown-container ${className}`}>
+		<div className={`dropdown-container ${className}`} ref={dropdownRef}>
 			<label className="dropdown-label">
 				{label}
 				{required && <span className="required-asterisk">*</span>}
 			</label>
 
 			<div
-				ref={dropdownRef}
 				className={`dropdown-wrapper ${isOpen ? 'open' : ''} ${error ? 'error' : ''} ${disabled ? 'disabled' : ''}`}
 			>
 				<button
 					type="button"
-					className={`dropdown-trigger ${inputClassName}`}
+					className={`dropdown-trigger ${inputClassName} rounded-[var(--radius)]`}
 					onClick={handleToggle}
 					onKeyDown={handleKeyDown}
 					disabled={disabled}
 					aria-haspopup="listbox"
 					aria-expanded={isOpen}
 				>
-					<span className={`dropdown-text ${(isMultiple ? selectedValues.length === 0 : !selectedOption) ? 'placeholder' : ''}`}>
-						{getDisplayText()}
+					<span className="flex items-center justify-between w-full gap-2">
+						<span className={`dropdown-text ${(isMultiple ? selectedValues.length === 0 : !selectedOption) ? 'placeholder' : ''}`}>
+							{getDisplayText()}
+						</span>
+						{rightElement && (
+							<span className="flex items-center">
+								{rightElement}
+							</span>
+						)}
+						<svg
+							className={`dropdown-chevron ${isOpen ? 'open' : ''}`}
+							width="12"
+							height="12"
+							viewBox="0 0 12 12"
+							fill="none"
+						>
+							<path
+								d="M3 4.5L6 7.5L9 4.5"
+								stroke="currentColor"
+								strokeWidth="1.5"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							/>
+						</svg>
 					</span>
-					<svg
-						className={`dropdown-chevron ${isOpen ? 'open' : ''}`}
-						width="12"
-						height="12"
-						viewBox="0 0 12 12"
-						fill="none"
-					>
-						<path
-							d="M3 4.5L6 7.5L9 4.5"
-							stroke="currentColor"
-							strokeWidth="1.5"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-						/>
-					</svg>
 				</button>
 
-				{isOpen && (
-					<div className="dropdown-menu">
+				{isOpen && typeof document !== 'undefined' && createPortal(
+					<div
+						className={`dropdown-menu ${direction === 'up' ? 'dropdown-menu-up' : ''} rounded-[var(--radius)]`}
+						style={{
+							position: 'fixed',
+							top: direction === 'up' ? 'auto' : `${coords.bottom + 4}px`,
+							bottom: direction === 'up' ? `${window.innerHeight - coords.top + 4}px` : 'auto',
+							left: `${coords.left}px`,
+							width: `${coords.width}px`,
+							zIndex: 10000,
+						}}
+					>
 						<div className="dropdown-options">
 							{options.length === 0 ? (
 								<div className="dropdown-empty-state">
@@ -170,34 +236,45 @@ export const Dropdown: React.FC<DropdownProps> = ({
 									</div>
 								</div>
 							) : (
-								options.map((option) => (
+								options?.map((option) => (
 									<button
 										key={option.value}
 										type="button"
 										className={`dropdown-option ${isSelected(option.value) ? 'selected' : ''} ${isMultiple ? 'dropdown-option-multiple' : ''}`}
 										onClick={() => handleSelect(option.value)}
-										style={isMultiple ? { display: 'flex', alignItems: 'center', gap: '8px' } : undefined}
+										style={{
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'space-between',
+											gap: '8px',
+										}}
 									>
 										{isMultiple && (
 											<span className="dropdown-checkbox" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
 												{isSelected(option.value) ? (
 													<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-														<rect x="2" y="2" width="12" height="12" rx="2" fill="currentColor" stroke="currentColor" strokeWidth="1.5"/>
-														<path d="M5 8L7 10L11 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+														<rect x="2" y="2" width="12" height="12" rx="2" fill="currentColor" stroke="currentColor" strokeWidth="1.5" />
+														<path d="M5 8L7 10L11 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 													</svg>
 												) : (
 													<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-														<rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+														<rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
 													</svg>
 												)}
 											</span>
 										)}
 										<span style={{ flex: 1, textAlign: 'left' }}>{option.label}</span>
+										{renderOptionRight && !isMultiple && (
+											<span style={{ marginLeft: '8px', display: 'flex', alignItems: 'center' }}>
+												{renderOptionRight(option)}
+											</span>
+										)}
 									</button>
 								))
 							)}
 						</div>
-					</div>
+					</div>,
+					document.body
 				)}
 			</div>
 

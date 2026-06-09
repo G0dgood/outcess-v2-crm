@@ -8,24 +8,43 @@ import Dropdown from '@/components/ui/Dropdown';
 import PageHeading from '@/components/ui/PageHeading';
 import BackButton from '@/components/ui/BackButton';
 import { ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons';
-import { useSetup } from '@/contexts/SetupContext';
+import { toast } from 'sonner';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
+import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
+import Skeleton from '@/components/ui/Skeleton';
+import Tabs from '@/components/ui/Tabs';
 
-interface User {
-	id: string;
-	firstName: string;
-	lastName: string;
-	email: string;
-	phone: string;
-	role: string;
-	loginStatus: string;
+
+interface ApiError {
+	data?: {
+		message?: string;
+	};
+}
+
+interface Role {
+	_id: string;
+	id?: string;
+	roleName: string;
+	supervisorTitle?: string;
 }
 
 const EditUserPage: React.FC = () => {
 	const router = useRouter();
 	const params = useParams();
 	const userId = params.id as string;
-	const { setupData } = useSetup();
-	const primaryColor = setupData.primaryColor || '#050711';
+	const { campaignData, selectedCampaignId } = useCampaign();
+	const { user } = useUserInfo();
+	const primaryColor = campaignData?.primaryColor || '#050711';
+
+	const { data: userResponse, isLoading: isUserLoading } = useGetTeamMemberByIdQuery(userId);
+	const { data: rolesData } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', {
+		skip: !selectedCampaignId
+	});
+
+	const [updateTeamMember] = useUpdateTeamMemberMutation();
+	const [adminResetTeamMemberPassword, { isLoading: isResettingPassword }] = useAdminResetTeamMemberPasswordByIdMutation();
 
 	const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
 	const [showAlert, setShowAlert] = useState(true);
@@ -40,72 +59,176 @@ const EditUserPage: React.FC = () => {
 		phone: '',
 		role: '',
 		status: true,
+		supervisorId: '',
+		userId: '',
 	});
 
-	const [loading, setLoading] = useState(true);
+	const companyId =
+		(user?.company as { _id?: string; id?: string } | undefined)?._id ||
+		(user?.company as { _id?: string; id?: string } | undefined)?.id ||
+		user?.companyId ||
+		'';
 
-	// Mock user data - in a real app, fetch from API using userId
-	const mockUsers: User[] = useMemo(() => ([
-		{
-			id: 'Sup1109',
-			firstName: 'Jane',
-			lastName: 'Doe',
-			email: 'janedoe@example.com',
-			phone: '08023456789',
-			role: 'Agent',
-			loginStatus: 'Logged In',
-		},
-		{
-			id: 'Sup1110',
-			firstName: 'John',
-			lastName: 'Smith',
-			email: 'johnsmith@example.com',
-			phone: '08023456790',
-			role: 'Supervisor',
-			loginStatus: 'Logged Out',
-		},
-		{
-			id: 'Sup1111',
-			firstName: 'Alice',
-			lastName: 'Johnson',
-			email: 'alicejohnson@example.com',
-			phone: '08023456791',
-			role: 'Agent',
-			loginStatus: 'Logged In',
-		},
-	]), []);
+	const { data: supervisorsResponse } = useGetSupervisorsByCampaignIdQuery(
+		{ companyId, campaignId: selectedCampaignId || '' },
+		{ skip: !companyId || !selectedCampaignId }
+	);
+
+	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
+		{ campaignId: selectedCampaignId || '', limit: 1000 },
+		{ skip: !selectedCampaignId }
+	);
 
 	useEffect(() => {
-		// Find user by ID
-		const user = mockUsers.find(u => u.id === userId);
-		if (user) {
+		if (userResponse) {
+			const user = userResponse?.teamMember || userResponse.data || userResponse;
+
+			let fName = user?.firstName || '';
+			let lName = user?.lastName || '';
+
+			if (!fName && !lName && user?.name) {
+				const parts = user?.name.split(' ');
+				fName = parts[0];
+				lName = parts.slice(1).join(' ');
+			}
+
 			setFormData({
-				firstName: user.firstName,
-				lastName: user.lastName,
-				email: user.email,
-				phone: user.phone,
-				role: user.role,
-				status: user.loginStatus === 'Logged In',
+				firstName: fName,
+				lastName: lName,
+				email: user?.email || '',
+				phone: user?.phone || '',
+				role: typeof user.role === 'object' ? (user?.role?._id || user?.role?.id) : (user?.role || ''),
+				status: user?.status === 'Active' ||
+					user?.status === 'active' ||
+					user?.loginStatus === 'Logged In' ||
+					user?.isActive === true ||
+					user?.status === true,
+				supervisorId: user?.supervisorId || '',
+				userId: user?.userId || '',
 			});
 		}
-		setLoading(false);
-	}, [userId, mockUsers]);
+	}, [userResponse]);
 
-	const roleOptions = [
-		{ value: 'Agent', label: 'Agent' },
-		{ value: 'Supervisor', label: 'Supervisor' },
-		{ value: 'Admin', label: 'Admin' },
-	];
+	const roleOptions = useMemo(() => {
+		const rawRoles = rolesData
+			? (Array.isArray(rolesData) ? rolesData :
+				(Array.isArray((rolesData as unknown as { data: unknown[] })?.data) ? (rolesData as unknown as { data: unknown[] }).data :
+					(Array.isArray((rolesData as unknown as { roles: unknown[] })?.roles) ? (rolesData as unknown as { roles: unknown[] }).roles :
+						(Array.isArray((rolesData as unknown as { docs: unknown[] })?.docs) ? (rolesData as unknown as { docs: unknown[] }).docs :
+							[]))))
+			: [];
+
+		const baseOptions = rawRoles
+			.filter((role: unknown): role is { _id?: string; id?: string } => {
+				const r = role as { _id?: string; id?: string };
+				return !!(r._id || r.id);
+			})
+			.map((role) => {
+				const r = role as Role;
+				return {
+					value: r._id || r.id || '',
+					label: r.supervisorTitle || r.roleName,
+					status: (r.supervisorTitle || r.roleName?.toLowerCase().includes('supervisor')) ? 'supervisor' : undefined
+				};
+			});
+
+		if (!supervisorsResponse || !Array.isArray(supervisorsResponse.roles)) {
+			return baseOptions;
+		}
+
+		const supervisorRoles = supervisorsResponse.roles as {
+			_id?: string;
+			id?: string;
+			roleName?: string;
+			supervisorTitle?: string;
+		}[];
+
+		const supervisorOptions = supervisorRoles
+			.map((role) => ({
+				value: (role._id || role.id || '') as string,
+				label: (role.supervisorTitle || role.roleName || '') as string,
+				status: 'supervisor'
+			}))
+			.filter((opt) => opt.value && opt.label);
+
+		const existingValues = new Set(baseOptions.map((opt) => opt.value));
+
+		return [
+			...baseOptions,
+			...supervisorOptions.filter((opt) => !existingValues.has(opt.value)),
+		];
+	}, [rolesData, supervisorsResponse]);
+
+	const supervisorOptions = useMemo(() => {
+		if (!teamMembersData) return [];
+		const rawMembers = teamMembersData.teamMembers || (Array.isArray(teamMembersData) ? teamMembersData : []);
+
+		const supervisorRoleIds = new Set<string>();
+		if (supervisorsResponse && Array.isArray(supervisorsResponse.roles)) {
+			supervisorsResponse.roles.forEach((r: Role) => {
+				if (r._id) supervisorRoleIds.add(r._id.toString());
+				if (r.id) supervisorRoleIds.add(r.id.toString());
+			});
+		}
+
+		return rawMembers
+			.filter((m: ApiTeamMember) => {
+				const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
+				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
+
+				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) ||
+					(roleName && roleName.toLowerCase().includes('supervisor'));
+
+				const isSelf = (m._id || m.id) === userId;
+
+				return isSupervisorRole && !isSelf;
+			})
+			.map((m: ApiTeamMember) => {
+				const fullName = m.firstName && m.lastName
+					? `${m.firstName} ${m.lastName}`
+					: m.name || (m as { fullName?: string }).fullName || 'Unknown Member';
+				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : 'Supervisor';
+				return {
+					value: m._id || m.id || '',
+					label: `${fullName} (${roleName})`
+				};
+			});
+	}, [teamMembersData, supervisorsResponse, userId]);
+
+	const shouldShowSupervisor = useMemo(() => {
+		if (!formData?.role) return false;
+
+		const selected = roleOptions.find((opt) => opt.value === formData.role);
+		const label = selected?.label.toLowerCase() || '';
+
+		return label === 'agent' || label === 'supervisor' || label.includes('supervisor');
+	}, [formData?.role, roleOptions]);
 
 	const handleInputChange = (field: string) => (value: string | boolean) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
 	};
 
-	const handleSave = () => {
-		console.log('Saving user:', formData);
-		// Implement save logic here
-		// After saving, navigate back to users page
-		router.push('/users');
+	const handleSave = async () => {
+		try {
+			await updateTeamMember({
+				id: userId,
+				data: {
+					firstName: formData?.firstName,
+					lastName: formData?.lastName,
+					phone: formData?.phone,
+					role: formData?.role,
+					status: formData?.status ? 'Active' : 'Inactive',
+					supervisorId: formData?.supervisorId || null,
+					userId: formData?.userId
+				}
+			}).unwrap();
+			toast.success('User updated successfully');
+			router.push('/users');
+		} catch (error: unknown) {
+			console.error('Failed to update user:', error);
+			const errorMessage = (error as ApiError)?.data?.message || 'Failed to update user';
+			toast.error(errorMessage);
+		}
 	};
 
 	const handleCancel = () => {
@@ -116,22 +239,89 @@ const EditUserPage: React.FC = () => {
 		setPasswordData(prev => ({ ...prev, [field]: value }));
 	};
 
-	const handleChangePassword = () => {
+	const handleChangePassword = async () => {
 		if (passwordData.newPassword && passwordData.confirmPassword) {
 			if (passwordData.newPassword === passwordData.confirmPassword) {
-				console.log('Changing password for user:', userId);
-				// Implement password change logic here
-				router.push('/users');
+				try {
+					await adminResetTeamMemberPassword({ id: userId, password: passwordData.newPassword }).unwrap();
+					toast.success('Password updated successfully');
+					router.push('/users');
+				} catch (error: unknown) {
+					console.error('Failed to update password:', error);
+					const errorMessage = (error as ApiError)?.data?.message || 'Failed to update password';
+					toast.error(errorMessage);
+				}
 			} else {
-				alert('Passwords do not match');
+				toast.error('Passwords do not match');
 			}
 		}
 	};
 
-	if (loading) {
+	if (isUserLoading) {
 		return (
-			<div className="flex items-center justify-center min-h-screen">
-				<div>Loading...</div>
+			<div className="w-full">
+				<div className="mb-4">
+					<Skeleton className="h-8 w-24" />
+				</div>
+				<div
+					className="dark:bg-gray-800 border dark:border-gray-700 p-6 mb-6"
+					style={{
+						backgroundColor: 'var(--accent-white)',
+						borderColor: 'var(--light-gray)'
+					}}
+				>
+					<div className="flex items-center gap-4 mb-4">
+						<Skeleton className="w-16 h-16 rounded-full" />
+						<div className="space-y-2">
+							<Skeleton className="h-8 w-48" />
+							<Skeleton className="h-4 w-32" />
+							<Skeleton className="h-4 w-24" />
+						</div>
+					</div>
+					<div className="flex gap-6 border-b dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
+						<Skeleton className="h-8 w-20" />
+						<Skeleton className="h-8 w-20" />
+					</div>
+				</div>
+				<div
+					className="dark:bg-gray-800 border dark:border-gray-700 p-6"
+					style={{
+						backgroundColor: 'var(--accent-white)',
+						borderColor: 'var(--light-gray)'
+					}}
+				>
+					<Skeleton className="h-8 w-32 mb-6" />
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div className="space-y-2">
+							<Skeleton className="h-4 w-20" />
+							<Skeleton className="h-10 w-full" />
+						</div>
+						<div className="space-y-2">
+							<Skeleton className="h-4 w-20" />
+							<Skeleton className="h-10 w-full" />
+						</div>
+						<div className="space-y-2">
+							<Skeleton className="h-4 w-20" />
+							<Skeleton className="h-10 w-full" />
+						</div>
+						<div className="space-y-2">
+							<Skeleton className="h-4 w-20" />
+							<Skeleton className="h-10 w-full" />
+						</div>
+						<div className="space-y-2">
+							<Skeleton className="h-4 w-20" />
+							<Skeleton className="h-10 w-full" />
+						</div>
+						<div className="space-y-2">
+							<Skeleton className="h-4 w-20" />
+							<Skeleton className="h-10 w-full" />
+						</div>
+					</div>
+					<div className="flex justify-end gap-3 mt-8 pt-6 border-t dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
+						<Skeleton className="h-10 w-24" />
+						<Skeleton className="h-10 w-24" />
+					</div>
+				</div>
 			</div>
 		);
 	}
@@ -157,7 +347,7 @@ const EditUserPage: React.FC = () => {
 						style={{ backgroundColor: 'var(--bg-primary)' }}
 					>
 						<span
-							className="text-xl font-semibold dark:text-gray-300"
+							className="text-[14px] md:text-[16px] font-semibold dark:text-gray-300"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							{formData.firstName[0]}{formData.lastName[0]}
@@ -165,19 +355,19 @@ const EditUserPage: React.FC = () => {
 					</div>
 					<div>
 						<h2
-							className="text-2xl font-semibold dark:text-gray-100"
+							className="text-[18px] md:text-[20px] font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							{formData.firstName} {formData.lastName}
 						</h2>
 						<p
-							className="text-sm dark:text-gray-400"
+							className="text-[10px] md:text-[12px] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							{formData.email}
 						</p>
 						<p
-							className="text-sm dark:text-gray-400"
+							className="text-[10px] md:text-[12px] dark:text-gray-400"
 							style={{ color: 'var(--text-tertiary)' }}
 						>
 							{formData.phone}
@@ -186,57 +376,15 @@ const EditUserPage: React.FC = () => {
 				</div>
 
 				{/* Tabs */}
-				<div
-					className="flex gap-6 border-b dark:border-gray-700"
-					style={{ borderColor: 'var(--light-gray)' }}
-				>
-					<button
-						onClick={() => setActiveTab('profile')}
-						className={`pb-2 px-1 font-medium transition-colors ${activeTab === 'profile'
-							? 'border-b-2'
-							: 'dark:text-gray-400 dark:hover:text-gray-200'
-							}`}
-						style={activeTab === 'profile'
-							? { borderColor: primaryColor, color: primaryColor }
-							: { color: 'var(--text-tertiary)' }
-						}
-						onMouseEnter={(e) => {
-							if (activeTab !== 'profile') {
-								e.currentTarget.style.color = 'var(--text-secondary)';
-							}
-						}}
-						onMouseLeave={(e) => {
-							if (activeTab !== 'profile') {
-								e.currentTarget.style.color = 'var(--text-tertiary)';
-							}
-						}}
-					>
-						Profile
-					</button>
-					<button
-						onClick={() => setActiveTab('security')}
-						className={`pb-2 px-1 font-medium transition-colors ${activeTab === 'security'
-							? 'border-b-2'
-							: 'dark:text-gray-400 dark:hover:text-gray-200'
-							}`}
-						style={activeTab === 'security'
-							? { borderColor: primaryColor, color: primaryColor }
-							: { color: 'var(--text-tertiary)' }
-						}
-						onMouseEnter={(e) => {
-							if (activeTab !== 'security') {
-								e.currentTarget.style.color = 'var(--text-secondary)';
-							}
-						}}
-						onMouseLeave={(e) => {
-							if (activeTab !== 'security') {
-								e.currentTarget.style.color = 'var(--text-tertiary)';
-							}
-						}}
-					>
-						Security
-					</button>
-				</div>
+				<Tabs
+					tabs={[
+						{ id: 'profile', label: 'Profile' },
+						{ id: 'security', label: 'Security' }
+					]}
+					activeTab={activeTab}
+					onTabChange={(id) => setActiveTab(id as 'profile' | 'security')}
+					activeColor={primaryColor}
+				/>
 			</div>
 
 			{/* Profile Form */}
@@ -265,6 +413,14 @@ const EditUserPage: React.FC = () => {
 							placeholder="Enter Last Name"
 						/>
 
+						<Input
+							label="User ID"
+							value={formData.userId}
+							onChange={handleInputChange('userId')}
+							placeholder="Enter User ID (e.g. EMP001)"
+							required
+						/>
+
 						<div style={{ backgroundColor: 'var(--bg-primary)' }} className="dark:bg-gray-700">
 							<Input
 								label="Email Address"
@@ -278,7 +434,7 @@ const EditUserPage: React.FC = () => {
 
 						<Input
 							label="Mobile"
-							value={formData.phone}
+							value={formData?.phone}
 							onChange={handleInputChange('phone')}
 							placeholder="Enter Mobile Number"
 							type="tel"
@@ -286,30 +442,54 @@ const EditUserPage: React.FC = () => {
 
 						<Dropdown
 							label="Role"
-							value={formData.role}
+							value={formData?.role}
 							onChange={(value) => handleInputChange('role')(Array.isArray(value) ? value[0] : value)}
 							options={roleOptions}
 							placeholder="Select Role"
+							renderOptionRight={(option) =>
+								option.status === 'supervisor' ? (
+									<span
+										className="text-[8px] px-1.5 py-0.5 rounded-full font-medium"
+										style={{
+											backgroundColor: `${primaryColor}15`,
+											color: primaryColor,
+											border: `1px solid ${primaryColor}30`
+										}}
+									>
+										Supervisor
+									</span>
+								) : null
+							}
 						/>
+
+						{shouldShowSupervisor && (
+							<Dropdown
+								label="Supervisor"
+								placeholder="Select Supervisor"
+								options={supervisorOptions}
+								value={formData?.supervisorId}
+								onChange={(value) => handleInputChange('supervisorId')(Array.isArray(value) ? value[0] : value)}
+							/>
+						)}
 
 						<div>
 							<label
-								className="block text-sm font-medium dark:text-gray-300 mb-2"
+								className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-2"
 								style={{ color: 'var(--text-secondary)' }}
 							>
 								Status
 							</label>
 							<div className="flex items-center gap-3">
 								<span
-									className="text-sm dark:text-gray-300"
+									className="text-[10px] md:text-[12px] dark:text-gray-300"
 									style={{ color: 'var(--text-secondary)' }}
 								>
-									{formData.status ? 'Active' : 'Inactive'}
+									{formData?.status ? 'Active' : 'Inactive'}
 								</span>
 								<label className="relative inline-flex items-center cursor-pointer">
 									<input
 										type="checkbox"
-										checked={formData.status}
+										checked={formData?.status}
 										onChange={(e) => handleInputChange('status')(e.target.checked)}
 										className="sr-only peer"
 									/>
@@ -371,25 +551,27 @@ const EditUserPage: React.FC = () => {
 								<ExclamationTriangleIcon className="w-5 h-5 dark:text-orange-400" style={{ color: '#F97316' }} />
 							</div>
 							<div
-								className="flex-1 text-sm dark:text-orange-400"
+								className="flex-1 text-[10px] md:text-[12px] dark:text-orange-400"
 								style={{ color: '#EA580C' }}
 							>
 								You&apos;re about to change the password of {formData.firstName} {formData.lastName}. The user will be logged out immediately.
 							</div>
-							<button
+							<Button
+								variant="ghost"
+								size="sm"
 								onClick={() => setShowAlert(false)}
-								className="shrink-0 dark:text-orange-400 dark:hover:text-orange-300 transition-colors"
+								className="shrink-0 transition-colors p-1 h-auto"
 								style={{ color: '#F97316' }}
-								onMouseEnter={(e) => {
+								onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 									e.currentTarget.style.color = '#EA580C';
 								}}
-								onMouseLeave={(e) => {
+								onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 									e.currentTarget.style.color = '#F97316';
 								}}
-								aria-label="Close alert"
+								title="Close alert"
 							>
 								<Cross2Icon className="w-4 h-4" />
-							</button>
+							</Button>
 						</div>
 					)}
 
@@ -405,7 +587,7 @@ const EditUserPage: React.FC = () => {
 
 						<Input
 							label="Confirm new password"
-							value={passwordData.confirmPassword}
+							value={passwordData?.confirmPassword}
 							onChange={handlePasswordChange('confirmPassword')}
 							placeholder="Confirm new password"
 							type="password"
@@ -428,9 +610,9 @@ const EditUserPage: React.FC = () => {
 							variant="primary"
 							size="md"
 							onClick={handleChangePassword}
-							disabled={!passwordData.newPassword || !passwordData.confirmPassword}
+							disabled={!passwordData?.newPassword || !passwordData?.confirmPassword}
 						>
-							Change Password
+							{isResettingPassword ? 'Resetting...' : 'Change Password'}
 						</Button>
 					</div>
 				</div>

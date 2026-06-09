@@ -2,6 +2,7 @@
 
 import React from 'react';
 import LandingHeader from '@/components/ui/LandingHeader';
+import Button from '@/components/ui/Button';
 import LandingFooter from '@/components/ui/landing/LandingFooter';
 import { plusJakartaStyle } from '@/components/Options';
 import { ArrowRightIcon, CalendarIcon } from '@radix-ui/react-icons';
@@ -86,13 +87,13 @@ const BlogPage: React.FC = () => {
 			<section className="pt-32 pb-16 px-6 md:px-[180px]">
 				<div className="max-w-4xl mx-auto text-center">
 					<h1
-						className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-[#050711] leading-tight"
+						className="text-[30px] md:text-[36px] lg:text-[48px] font-bold mb-6 text-[#050711] leading-tight"
 						style={plusJakartaStyle}
 					>
-						Peoplely Blog
+						Outcess Blog
 					</h1>
 					<p
-						className="text-lg md:text-xl text-[#4A5565] leading-relaxed"
+						className="text-[14px] md:text-[16px] text-[#4A5565] leading-relaxed"
 						style={plusJakartaStyle}
 					>
 						Insights, tips, and best practices for call center operations, customer experience, and CRM technology.
@@ -104,7 +105,7 @@ const BlogPage: React.FC = () => {
 			<section className="py-16 px-6 md:px-[180px] bg-white">
 				<div className="max-w-6xl mx-auto">
 					<h2
-						className="text-2xl font-semibold mb-8 text-[#050711]"
+						className="text-[18px] md:text-[20px] font-semibold mb-8 text-[#050711]"
 						style={plusJakartaStyle}
 					>
 						Featured Article
@@ -133,7 +134,7 @@ const BlogPage: React.FC = () => {
 						<div className="flex flex-col justify-center">
 							<div className="flex items-center gap-3 mb-4">
 								<span
-									className="text-xs px-3 py-1 rounded-full font-medium"
+									className="text-[8px] md:text-[10px] px-3 py-1 rounded-full font-medium"
 									style={{
 										backgroundColor: '#6C8B7D',
 										color: 'white'
@@ -142,7 +143,7 @@ const BlogPage: React.FC = () => {
 									{featuredPost.category}
 								</span>
 								<span
-									className="text-xs text-[#4A5565] flex items-center gap-1"
+									className="text-[8px] md:text-[10px] text-[#4A5565] flex items-center gap-1"
 									style={plusJakartaStyle}
 								>
 									<CalendarIcon className="w-3 h-3" />
@@ -150,7 +151,7 @@ const BlogPage: React.FC = () => {
 								</span>
 							</div>
 							<h3
-								className="text-2xl md:text-3xl font-bold mb-4 text-[#050711]"
+								className="text-[18px] md:text-[20px] font-bold mb-4 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								{featuredPost.title}
@@ -164,35 +165,38 @@ const BlogPage: React.FC = () => {
 							<div className="flex items-center justify-between">
 								<div>
 									<p
-										className="text-sm font-medium text-[#050711]"
+										className="text-[10px] md:text-[12px] font-medium text-[#050711]"
 										style={plusJakartaStyle}
 									>
 										{featuredPost.author}
 									</p>
 									<p
-										className="text-xs text-[#4A5565]"
+										className="text-[8px] md:text-[10px] text-[#4A5565]"
 										style={plusJakartaStyle}
 									>
 										{featuredPost.readTime}
 									</p>
 								</div>
-								<Link
-									href={`/blog/${encodeURIComponent(featuredPost.title.toLowerCase().replace(/\s+/g, '-'))}`}
-									className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-colors"
+								<Button
+									onClick={() => window.location.href = `/blog/${encodeURIComponent(featuredPost.title.toLowerCase().replace(/\s+/g, '-'))}`}
+									variant="primary"
+									size="lg"
+									className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-[10px] md:text-[12px] transition-colors"
 									style={{
 										backgroundColor: '#050711',
 										color: 'white'
 									}}
-									onMouseEnter={(e) => {
+									onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.backgroundColor = '#6C8B7D';
 									}}
-									onMouseLeave={(e) => {
+									onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 										e.currentTarget.style.backgroundColor = '#050711';
 									}}
+									title="Read Featured Article"
 								>
 									Read Article
 									<ArrowRightIcon className="w-4 h-4" />
-								</Link>
+								</Button>
 							</div>
 						</div>
 					</div>
@@ -206,28 +210,31 @@ const BlogPage: React.FC = () => {
 				<div className="max-w-6xl mx-auto">
 					<div className="flex flex-wrap gap-3">
 						{categories.map((category) => (
-							<button
+							<Button
 								key={category}
-								className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+								variant={category === 'All' ? 'primary' : 'ghost'}
+								size="sm"
+								className="px-4 py-2 rounded-lg text-[10px] md:text-[12px] font-medium transition-colors h-auto hover:transform-none"
 								style={{
 									backgroundColor: category === 'All' ? '#050711' : 'transparent',
 									color: category === 'All' ? 'white' : 'var(--text-secondary)',
 									border: category !== 'All' ? '1px solid' : 'none',
 									borderColor: category !== 'All' ? 'var(--light-gray)' : 'transparent'
 								}}
-								onMouseEnter={(e) => {
+								onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 									if (category !== 'All') {
 										e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
 									}
 								}}
-								onMouseLeave={(e) => {
+								onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 									if (category !== 'All') {
 										e.currentTarget.style.backgroundColor = 'transparent';
 									}
 								}}
+								title={`Category: ${category}`}
 							>
 								{category}
-							</button>
+							</Button>
 						))}
 					</div>
 				</div>
@@ -237,7 +244,7 @@ const BlogPage: React.FC = () => {
 			<section className="py-16 px-6 md:px-[180px] bg-white">
 				<div className="max-w-6xl mx-auto">
 					<h2
-						className="text-3xl md:text-4xl font-bold mb-12 text-[#050711]"
+						className="text-[24px] md:text-[30px] font-bold mb-12 text-[#050711]"
 						style={plusJakartaStyle}
 					>
 						Latest Articles
@@ -271,7 +278,7 @@ const BlogPage: React.FC = () => {
 									</div>
 									<div className="flex items-center gap-3 mb-3">
 										<span
-											className="text-xs px-3 py-1 rounded-full font-medium"
+											className="text-[8px] md:text-[10px] px-3 py-1 rounded-full font-medium"
 											style={{
 												backgroundColor: 'var(--light-gray)',
 												color: 'var(--text-secondary)'
@@ -280,7 +287,7 @@ const BlogPage: React.FC = () => {
 											{post.category}
 										</span>
 										<span
-											className="text-xs text-[#4A5565] flex items-center gap-1"
+											className="text-[8px] md:text-[10px] text-[#4A5565] flex items-center gap-1"
 											style={plusJakartaStyle}
 										>
 											<CalendarIcon className="w-3 h-3" />
@@ -288,13 +295,13 @@ const BlogPage: React.FC = () => {
 										</span>
 									</div>
 									<h3
-										className="text-xl font-semibold mb-3 text-[#050711] group-hover:text-[#6C8B7D] transition-colors"
+										className="text-[14px] md:text-[16px] font-semibold mb-3 text-[#050711] group-hover:text-[#6C8B7D] transition-colors"
 										style={plusJakartaStyle}
 									>
 										{post.title}
 									</h3>
 									<p
-										className="text-sm text-[#4A5565] leading-relaxed mb-4 flex-1"
+										className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed mb-4 flex-1"
 										style={plusJakartaStyle}
 									>
 										{post.excerpt}
@@ -304,13 +311,13 @@ const BlogPage: React.FC = () => {
 									>
 										<div>
 											<p
-												className="text-sm font-medium text-[#050711]"
+												className="text-[10px] md:text-[12px] font-medium text-[#050711]"
 												style={plusJakartaStyle}
 											>
 												{post.author}
 											</p>
 											<p
-												className="text-xs text-[#4A5565]"
+												className="text-[8px] md:text-[10px] text-[#4A5565]"
 												style={plusJakartaStyle}
 											>
 												{post.readTime}
@@ -332,13 +339,13 @@ const BlogPage: React.FC = () => {
 			>
 				<div className="max-w-3xl mx-auto">
 					<h2
-						className="text-3xl md:text-4xl font-bold mb-4 text-white"
+						className="text-[24px] md:text-[30px] font-bold mb-4 text-white"
 						style={plusJakartaStyle}
 					>
 						Stay Updated
 					</h2>
 					<p
-						className="text-base md:text-lg text-white/90 mb-8"
+						className="text-[12px] md:text-[14px] text-white/90 mb-8"
 						style={plusJakartaStyle}
 					>
 						Get the latest articles, tips, and insights delivered to your inbox.
@@ -347,18 +354,21 @@ const BlogPage: React.FC = () => {
 						<input
 							type="email"
 							placeholder="Enter your email"
-							className="flex-1 px-4 py-3 rounded-lg text-sm"
+							className="flex-1 px-4 py-3 rounded-lg text-[10px] md:text-[12px]"
 							style={{
 								backgroundColor: 'white',
 								color: '#050711'
 							}}
 						/>
-						<button
-							className="px-8 py-3 bg-[#050711] text-white rounded-lg font-semibold text-sm transition-colors hover:bg-[#050711]/90"
-							style={plusJakartaStyle}
+						<Button
+							variant="primary"
+							size="lg"
+							className="px-8 py-3 bg-[#050711] text-white rounded-lg font-semibold text-[10px] md:text-[12px] transition-colors hover:bg-[#050711]/90"
+							style={{ backgroundColor: '#050711' }}
+							title="Subscribe to Newsletter"
 						>
 							Subscribe
-						</button>
+						</Button>
 					</div>
 				</div>
 			</section>

@@ -1,49 +1,33 @@
 'use client';
 
 import React, { useState, Suspense } from 'react';
-import { SetupProvider, useSetup } from '@/contexts/SetupContext';
 import DashboardHeader from '@/components/ui/DashboardHeader';
 import DashboardSideNav from '@/components/ui/DashboardSideNav';
-import MobileSideNav from '@/components/ui/MobileSideNav';
 import GlobalStickyNotes from '@/components/ui/GlobalStickyNotes';
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-	const { setupData } = useSetup();
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
 	const toggleMobileMenu = () => {
 		setIsMobileMenuOpen(!isMobileMenuOpen);
 	};
 
-	const closeMobileMenu = () => {
-		setIsMobileMenuOpen(false);
-	};
 
 	return (
-		<div id="page-wrapper">
+		<div id="page-wrapper" className={isMobileMenuOpen ? 'mobile-nav-open' : ''}>
 			<DashboardHeader
-				companyName={setupData.companyName || 'Fairmoney'}
-				userName="John Doe"
-				userEmail="johndoe@example.com"
-				userIsOnline={true}
-				onCompanyChange={(company) => console.log('Company changed:', company)}
-				onSettingsClick={() => console.log('Settings clicked')}
-				onStatusClick={() => console.log('Status clicked')}
-				onEditProfileClick={() => console.log('Edit profile clicked')}
 				onMobileMenuToggle={toggleMobileMenu}
+				isMobileMenuOpen={isMobileMenuOpen}
 			/>
 			<Suspense fallback={null}>
-				<DashboardSideNav activeItem="settings" />
-			</Suspense>
-			<Suspense fallback={null}>
-				<MobileSideNav
-					isOpen={isMobileMenuOpen}
-					onClose={closeMobileMenu}
+				<DashboardSideNav
 					activeItem="settings"
+					isMobileOpen={isMobileMenuOpen}
+					onMobileClose={() => setIsMobileMenuOpen(false)}
 				/>
 			</Suspense>
 			<GlobalStickyNotes />
-			<main className="flex-1 overflow-y-auto p-6 md:p-8">
+			<main>
 				{children}
 			</main>
 		</div>
@@ -52,8 +36,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
 	return (
-		<SetupProvider>
+		<Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
 			<LayoutContent>{children}</LayoutContent>
-		</SetupProvider>
+		</Suspense>
 	);
 }

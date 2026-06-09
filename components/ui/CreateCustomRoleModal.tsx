@@ -1,24 +1,40 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Button from './Button';
-import Input from './Input';
-import Textarea from './Textarea';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
 import { Cross2Icon } from '@radix-ui/react-icons';
+import { useCreateRoleMutation, RolePermission } from '@/store/services/roleApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { useSetup } from '@/contexts/SetupContext';
+import { toast } from 'sonner';
 
 interface CreateCustomRoleModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onCreate?: (data: { name: string; description: string }) => void;
+	onSuccess?: () => void;
 }
 
-export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
+export interface ApiError {
+	data?: {
+		message?: string;
+	};
+	message?: string;
+}
+
+const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 	isOpen,
 	onClose,
-	onCreate,
+	onSuccess,
 }) => {
 	const [roleName, setRoleName] = useState('');
 	const [roleDescription, setRoleDescription] = useState('');
+	const [createRole] = useCreateRoleMutation();
+	const { user } = useUserInfo();
+	const { selectedCampaignId } = useCampaign();
+	const { setupData } = useSetup();
 
 	useEffect(() => {
 		if (isOpen) {
@@ -46,10 +62,51 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 		};
 	}, [isOpen, onClose]);
 
-	const handleCreate = () => {
+	const handleCreate = async () => {
 		if (roleName.trim()) {
-			onCreate?.({ name: roleName, description: roleDescription });
-			onClose();
+			const companyId = user?.company?._id || user?.companyId;
+
+			if (!companyId) {
+				toast.error('Company ID is missing');
+				return;
+			}
+
+			if (!selectedCampaignId || selectedCampaignId === 'new') {
+				toast.error('Please select a campaign first');
+				return;
+			}
+
+			try {
+				const modules = setupData.roleManagementSettings?.modules || [];
+				const defaultPermissions: RolePermission[] = modules.map((module: { name: string }) => ({
+					id: '',
+					moduleName: module.name,
+					access: false,
+					permissions: {
+						view: false,
+						edit: false,
+						delete: false,
+						create: false,
+					},
+				}));
+
+				await createRole({
+					roleName: roleName.toLowerCase(),
+					description: roleDescription,
+					companyId: companyId,
+					campaignId: selectedCampaignId || undefined,
+					permissions: defaultPermissions
+				}).unwrap();
+
+				toast.success('Custom role created successfully');
+				onSuccess?.();
+				onClose();
+			} catch (error: unknown) {
+				console.error('Failed to create custom role:', JSON.stringify(error, null, 2));
+				const apiError = error as ApiError;
+				const errorMessage = apiError?.data?.message || apiError?.message || 'Failed to create custom role';
+				toast.error(errorMessage);
+			}
 		}
 	};
 
@@ -62,25 +119,27 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-			<div 
-				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
+			<div
+				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
-				<div 
+				<div
 					className="flex justify-between items-center p-6 border-b dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<h2 
-						className="text-xl font-semibold dark:text-gray-100"
+					<h2
+						className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Create Custom Role
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -93,7 +152,7 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Form Content */}
@@ -115,7 +174,7 @@ export const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div 
+				<div
 					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>

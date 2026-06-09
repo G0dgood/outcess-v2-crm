@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Button } from '@/components/ui/Button';
 
 interface ModalProps {
 	isOpen: boolean;
@@ -27,6 +29,12 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
 	const [isAnimating, setIsAnimating] = useState(false);
 	const [shouldRender, setShouldRender] = useState(false);
+	const [mounted, setMounted] = useState(false);
+
+	// Handle mounting for Portal (SSR check)
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	// Handle opening animation
 	useEffect(() => {
@@ -46,6 +54,7 @@ export const Modal: React.FC<ModalProps> = ({
 			return () => clearTimeout(timer);
 		}
 	}, [isOpen]);
+
 
 	// Close modal when pressing Escape key
 	useEffect(() => {
@@ -129,12 +138,13 @@ export const Modal: React.FC<ModalProps> = ({
 		return 'opacity-100';
 	};
 
-	if (!shouldRender) return null;
+	if (!shouldRender || !mounted) return null;
+	if (typeof document === 'undefined') return null;
 
 	// Check if className contains a custom background override
 	const hasCustomBackground = className.includes('bg-[') || className.includes('!bg-');
 
-	return (
+	return createPortal(
 		<>
 			{/* Backdrop */}
 			<div
@@ -144,7 +154,7 @@ export const Modal: React.FC<ModalProps> = ({
 
 			{/* Modal */}
 			<div
-				className={`fixed ${getPositionClasses()} ${getSizeClasses()} dark:bg-gray-800 shadow-xl z-50 transition-all duration-300 ease-in-out ${getAnimationClasses()} overflow-x-hidden ${className}`}
+				className={`fixed ${getPositionClasses()} ${getSizeClasses()} dark:bg-gray-800 shadow-xl z-50 transition-all duration-300 ease-in-out ${getAnimationClasses()} overflow-x-hidden ${className} rounded-[var(--radius)]`}
 				style={hasCustomBackground ? undefined : {
 					backgroundColor: 'var(--accent-white)'
 				}}
@@ -158,28 +168,24 @@ export const Modal: React.FC<ModalProps> = ({
 						>
 							{title && (
 								<h2
-									className="font-inter text-lg font-semibold dark:text-gray-100"
+									className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
 									style={{ color: 'var(--text-primary)' }}
 								>
 									{title}
 								</h2>
 							)}
 							{showCloseButton && (
-								<button
+								<Button
+									variant="ghost"
+									size="sm"
 									onClick={onClose}
-									className="dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+									className="dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors !p-1 rounded-full"
 									style={{ color: 'var(--text-tertiary)' }}
-									onMouseEnter={(e) => {
-										e.currentTarget.style.color = 'var(--text-secondary)';
-									}}
-									onMouseLeave={(e) => {
-										e.currentTarget.style.color = 'var(--text-tertiary)';
-									}}
 								>
 									<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 										<path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 									</svg>
-								</button>
+								</Button>
 							)}
 						</div>
 					)}
@@ -190,7 +196,8 @@ export const Modal: React.FC<ModalProps> = ({
 					</div>
 				</div>
 			</div>
-		</>
+		</>,
+		document.body
 	);
 };
 

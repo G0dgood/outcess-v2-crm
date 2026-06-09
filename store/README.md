@@ -1,6 +1,6 @@
 # Redux Toolkit (RTK) Setup
 
-This directory contains the Redux Toolkit store configuration for the Peoplely CRM application.
+This directory contains the Redux Toolkit store configuration for the Outcess CRM application.
 
 ## Structure
 

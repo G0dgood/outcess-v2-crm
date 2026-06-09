@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from './Button';
 
 interface PaginationProps {
 	currentPage: number;
@@ -83,13 +84,15 @@ const Pagination: React.FC<PaginationProps> = ({
 		<div className={`mt-6 flex items-center justify-between ${className}`}>
 			{/* Previous Button */}
 			<div className="flex items-center gap-2">
-				<button
+				<Button
+					variant="ghost"
+					size="sm"
 					onClick={handlePrevious}
 					disabled={currentPage === 1}
-					className="py-2 text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+					className="py-2 text-[10px] md:text-[12px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-[var(--radius)]"
 				>
 					Previous
-				</button>
+				</Button>
 			</div>
 
 			{/* Page Numbers */}
@@ -97,7 +100,7 @@ const Pagination: React.FC<PaginationProps> = ({
 				{visiblePages.map((page, index) => {
 					if (page === '...') {
 						return (
-							<span key={`ellipsis-${index}`} className="px-2 text-gray-500">
+							<span key={`ellipsis-${index}`} className="px-2 text-gray-500 dark:text-gray-400">
 								...
 							</span>
 						);
@@ -107,30 +110,34 @@ const Pagination: React.FC<PaginationProps> = ({
 					const isCurrentPage = currentPage === pageNumber;
 
 					return (
-						<button
+						<Button
 							key={pageNumber}
+							variant={isCurrentPage ? 'primary' : 'ghost'}
+							size="sm"
 							onClick={() => onPageChange(pageNumber)}
-							className={`cursor-pointer font-inter font-medium text-[16px] leading-[150%] px-3 py-1 text-sm transition-colors ${isCurrentPage
-								? 'text-white  '
-								: 'text-gray-500 hover:text-gray-700'
+							className={`cursor-pointer font-inter font-medium leading-[150%] px-3 py-1 text-[10px] md:text-[12px] transition-colors rounded-[var(--radius)] ${isCurrentPage
+								? 'text-white shadow-sm'
+								: 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
 								}`}
 							style={isCurrentPage ? { backgroundColor: primaryColor } : {}}
 						>
 							{pageNumber}
-						</button>
+						</Button>
 					);
 				})}
 			</div>
 
 			{/* Next Button */}
 			<div className="flex items-center gap-2">
-				<button
+				<Button
+					variant="ghost"
+					size="sm"
 					onClick={handleNext}
 					disabled={currentPage === totalPages}
-					className="py-2 text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+					className="py-2 text-[10px] md:text-[12px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-[var(--radius)]"
 				>
 					Next
-				</button>
+				</Button>
 			</div>
 		</div>
 	);

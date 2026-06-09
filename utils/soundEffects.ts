@@ -27,6 +27,7 @@ interface SoundConfig {
 	type?: 'sine' | 'square' | 'triangle' | 'sawtooth';
 	volume?: number;
 	delay?: number;
+	bypassNavigationCheck?: boolean;
 }
 
 /**
@@ -36,7 +37,8 @@ export const playSound = (
 	frequency: number,
 	duration: number,
 	type: 'sine' | 'square' | 'triangle' | 'sawtooth' = 'sine',
-	volume: number = 0.3
+	volume: number = 0.3,
+	bypassNavigationCheck: boolean = false
 ): void => {
 	if (typeof window === 'undefined') return;
 	
@@ -46,8 +48,8 @@ export const playSound = (
 		return;
 	}
 	
-	// Don't play sounds during navigation
-	if (getIsNavigating()) {
+	// Don't play sounds during navigation unless bypassed
+	if (getIsNavigating() && !bypassNavigationCheck) {
 		return;
 	}
 
@@ -85,7 +87,8 @@ export const playSoundSequence = (sounds: SoundConfig[]): void => {
 				sound.frequency,
 				sound.duration,
 				sound.type || 'sine',
-				sound.volume || 0.3
+				sound.volume || 0.3,
+				(sound as any).bypassNavigationCheck || false
 			);
 		}, delay);
 	});
@@ -106,93 +109,112 @@ export const playNotificationSound = (type: SoundType, component?: keyof SoundPr
 	if (component) {
 		type = getComponentSoundType(component);
 	}
+
+	const bypassCheck = component === 'navigation';
+
 	switch (type) {
 		case 'notification':
 		case 'new_notification':
 			// Pleasant notification sound
-			playSound(523.25, 0.15, 'sine', 0.25); // C5
+			playSound(523.25, 0.15, 'sine', 0.25, bypassCheck); // C5
 			break;
 
 		case 'success':
 			// Success chime (ascending)
-			playSoundSequence([
-				{ frequency: 523.25, duration: 0.1, type: 'sine', volume: 0.25 }, // C5
-				{ frequency: 659.25, duration: 0.1, type: 'sine', volume: 0.25, delay: 100 }, // E5
-				{ frequency: 783.99, duration: 0.2, type: 'sine', volume: 0.25, delay: 200 }, // G5
-			]);
+			// For sequences, we need to pass bypassCheck to each playSound call
+			// This would require updating playSoundSequence too, but let's just handle Success/Info/etc.
+			playSoundSequence(
+				[
+					{ frequency: 523.25, duration: 0.1, type: 'sine', volume: 0.25 }, // C5
+					{ frequency: 659.25, duration: 0.1, type: 'sine', volume: 0.25, delay: 100 }, // E5
+					{ frequency: 783.99, duration: 0.2, type: 'sine', volume: 0.25, delay: 200 }, // G5
+				].map(s => ({ ...s, bypassNavigationCheck: bypassCheck })) as any
+			);
 			break;
 
 		case 'error':
 			// Error sound (descending)
-			playSoundSequence([
-				{ frequency: 440, duration: 0.15, type: 'square', volume: 0.3 }, // A4
-				{ frequency: 392, duration: 0.15, type: 'square', volume: 0.3, delay: 150 }, // G4
-			]);
+			playSoundSequence(
+				[
+					{ frequency: 440, duration: 0.15, type: 'square', volume: 0.3 }, // A4
+					{ frequency: 392, duration: 0.15, type: 'square', volume: 0.3, delay: 150 }, // G4
+				].map(s => ({ ...s, bypassNavigationCheck: bypassCheck })) as any
+			);
 			break;
 
 		case 'warning':
 			// Warning sound
-			playSoundSequence([
-				{ frequency: 440, duration: 0.15, type: 'triangle', volume: 0.3 }, // A4
-				{ frequency: 440, duration: 0.15, type: 'triangle', volume: 0.3, delay: 200 }, // A4
-			]);
+			playSoundSequence(
+				[
+					{ frequency: 440, duration: 0.15, type: 'triangle', volume: 0.3 }, // A4
+					{ frequency: 440, duration: 0.15, type: 'triangle', volume: 0.3, delay: 200 }, // A4
+				].map(s => ({ ...s, bypassNavigationCheck: bypassCheck })) as any
+			);
 			break;
 
 		case 'info':
 			// Info sound (gentle)
-			playSound(493.88, 0.15, 'sine', 0.2); // B4
+			playSound(493.88, 0.15, 'sine', 0.2, bypassCheck); // B4
 			break;
 
 		case 'follow':
 			// Pleasant ascending tone
-			playSoundSequence([
-				{ frequency: 523.25, duration: 0.1, type: 'sine', volume: 0.25 }, // C5
-				{ frequency: 659.25, duration: 0.15, type: 'sine', volume: 0.25, delay: 100 }, // E5
-			]);
+			playSoundSequence(
+				[
+					{ frequency: 523.25, duration: 0.1, type: 'sine', volume: 0.25 }, // C5
+					{ frequency: 659.25, duration: 0.15, type: 'sine', volume: 0.25, delay: 100 }, // E5
+				].map(s => ({ ...s, bypassNavigationCheck: bypassCheck })) as any
+			);
 			break;
 
 		case 'like':
 			// Short pleasant beep
-			playSound(659.25, 0.12, 'sine', 0.2); // E5
+			playSound(659.25, 0.12, 'sine', 0.2, bypassCheck); // E5
 			break;
 
 		case 'join_request':
 			// Attention-getting tone
-			playSoundSequence([
-				{ frequency: 440, duration: 0.15, type: 'triangle', volume: 0.3 }, // A4
-				{ frequency: 554.37, duration: 0.15, type: 'triangle', volume: 0.3, delay: 150 }, // C#5
-			]);
+			playSoundSequence(
+				[
+					{ frequency: 440, duration: 0.15, type: 'triangle', volume: 0.3 }, // A4
+					{ frequency: 554.37, duration: 0.15, type: 'triangle', volume: 0.3, delay: 150 }, // C#5
+				].map(s => ({ ...s, bypassNavigationCheck: bypassCheck })) as any
+			);
 			break;
 
 		case 'group_activity':
 			// Gentle chime
-			playSoundSequence([
-				{ frequency: 392, duration: 0.1, type: 'sine', volume: 0.2 }, // G4
-				{ frequency: 523.25, duration: 0.1, type: 'sine', volume: 0.2, delay: 100 }, // C5
-			]);
+			playSoundSequence(
+				[
+					{ frequency: 392, duration: 0.1, type: 'sine', volume: 0.2 }, // G4
+					{ frequency: 523.25, duration: 0.1, type: 'sine', volume: 0.2, delay: 100 }, // C5
+				].map(s => ({ ...s, bypassNavigationCheck: bypassCheck })) as any
+			);
 			break;
 
 		case 'comment':
 			// Soft notification sound
-			playSound(493.88, 0.15, 'sine', 0.25); // B4
+			playSound(493.88, 0.15, 'sine', 0.25, bypassCheck); // B4
 			break;
 
 		case 'welcome':
 			// Welcoming melody
-			playSoundSequence([
-				{ frequency: 523.25, duration: 0.1, type: 'sine', volume: 0.25 }, // C5
-				{ frequency: 659.25, duration: 0.1, type: 'sine', volume: 0.25, delay: 100 }, // E5
-				{ frequency: 783.99, duration: 0.2, type: 'sine', volume: 0.25, delay: 200 }, // G5
-			]);
+			playSoundSequence(
+				[
+					{ frequency: 523.25, duration: 0.1, type: 'sine', volume: 0.25 }, // C5
+					{ frequency: 659.25, duration: 0.1, type: 'sine', volume: 0.25, delay: 100 }, // E5
+					{ frequency: 783.99, duration: 0.2, type: 'sine', volume: 0.25, delay: 200 }, // G5
+				].map(s => ({ ...s, bypassNavigationCheck: bypassCheck })) as any
+			);
 			break;
 
 		case 'panel_open':
 			// Subtle opening sound
-			playSound(440, 0.1, 'sine', 0.15); // A4
+			playSound(440, 0.1, 'sine', 0.15, bypassCheck); // A4
 			break;
 
 		default:
 			// Default notification sound
-			playSound(440, 0.15, 'sine', 0.25); // A4
+			playSound(440, 0.15, 'sine', 0.25, bypassCheck); // A4
 	}
 };

@@ -3,8 +3,8 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon } from '@radix-ui/react-icons';
-import { useSetup } from '@/contexts/SetupContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface BackButtonProps {
 	onClick?: () => void;
@@ -20,9 +20,9 @@ const BackButton: React.FC<BackButtonProps> = ({
 	useCustomColor = true,
 }) => {
 	const router = useRouter();
-	const { setupData } = useSetup();
+	const { campaignData } = useCampaign();
 	const { isDarkMode } = useTheme();
-	const primaryColor = setupData?.primaryColor || '#050711';
+	const primaryColor = campaignData?.primaryColor || '#050711';
 
 	const handleClick = () => {
 		if (onClick) {
@@ -35,7 +35,7 @@ const BackButton: React.FC<BackButtonProps> = ({
 	return (
 		<button
 			onClick={handleClick}
-			className={`curson-pointer inline-flex items-center gap-2 text-sm font-medium transition-all duration-200 ${useCustomColor
+			className={`curson-pointer inline-flex items-center gap-2 text-[10px] md:text-[12px] font-medium transition-all duration-200 ${useCustomColor
 				? 'dark:text-gray-100' // Override dark mode to ensure visibility
 				: 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
 				} ${className}`}

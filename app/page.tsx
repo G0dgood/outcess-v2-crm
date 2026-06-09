@@ -1,218 +1,333 @@
-import LandingHeader from "@/components/ui/LandingHeader";
-import HeroSection from "@/components/ui/landing/HeroSection";
-import StatsSection, { StatItem } from "@/components/ui/landing/StatsSection";
-import FeaturesSection, { FeatureItem } from "@/components/ui/landing/FeaturesSection";
-import IndustriesSection, { IndustryItem } from "@/components/ui/landing/IndustriesSection";
-import TestimonialsSection, { TestimonialItem } from "@/components/ui/landing/TestimonialsSection";
-import FAQSection, { FAQItem } from "@/components/ui/landing/FAQSection";
-import PricingSection, { PricingTier } from "@/components/ui/landing/PricingSection";
-import CallToActionSection from "@/components/ui/landing/CallToActionSection";
-import LandingFooter from "@/components/ui/landing/LandingFooter";
+'use client';
 
-const stats: StatItem[] = [
-  { label: 'Uptime Guarantee', value: '99.9%' },
-  { label: 'Active Agents', value: '50K+' },
-  { label: 'Calls Handled Monthly', value: '10M+' },
-  { label: 'Customer Rating', value: '4.9/5' },
-];
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
+import { toast } from 'sonner';
+import Input from '@/components/ui/Input';
+import PasswordInput from '@/components/ui/PasswordInput';
+import Checkbox from '@/components/ui/Checkbox';
+import Image from 'next/image';
+import LoginTopHeader from '@/components/ui/LoginTopHeader';
+import { useTheme } from '@/contexts/ThemeContext';
+import { usePrivilege, RoleModulePermission, UserPrivileges } from '@/contexts/PrivilegeContext';
+import { useLoginMutation, useTeamMemberLoginMutation, LoginResponse } from '@/store/services/authApi';
+import { login as loginAction } from '@/store/slices/authSlice';
+import { Button } from '@/components/ui/Button';
+import { useAuth, User as AuthUser } from '@/contexts/AuthContext';
+import ReactivationRequestModal from '@/components/ui/ReactivationRequestModal';
+import { useRequestReactivationMutation } from '@/store/services/authApi';
 
-const features: FeatureItem[] = [
-  {
-    title: 'Smart Call Routing',
-    description: 'Intelligent call distribution based on agent skills, availability, and customer priority. Reduce wait times and improve first-call resolution.',
-    icon: 'smart-call-routing',
-    iconSrc: '/logo/Call1.svg'
-  },
-  {
-    title: 'Real-Time Analytics',
-    description: 'Comprehensive dashboards with live metrics, performance tracking, and actionable insights to optimize your call center operations.',
-    icon: 'real-time-analytics',
-    iconSrc: '/logo/Call2.svg'
-  },
-  {
-    title: 'Contact Management',
-    description: 'Unified customer profiles with complete interaction history, notes, and automated data enrichment for personalized service.',
-    icon: 'contact-management',
-    iconSrc: '/logo/Call3.svg'
-  },
-  {
-    title: 'Custom Workflows',
-    description: 'Build automated workflows tailored to your processes. Trigger actions, send notifications, and streamline repetitive tasks.',
-    icon: 'custom-workflows',
-    iconSrc: '/logo/Call4.svg'
-  },
-  {
-    title: 'Omnichannel Support',
-    description: 'Manage calls, emails, SMS, chat, and social media from a single platform. Provide seamless customer experiences across all channels.',
-    icon: 'omnichannel-support',
-    iconSrc: '/logo/Call5.svg'
-  },
-  {
-    title: 'Advanced Security',
-    description: 'Enterprise-grade encryption, role-based access control, and compliance with GDPR, HIPAA, and PCI-DSS standards.',
-    icon: 'advanced-security',
-    iconSrc: '/logo/Call6.svg'
-  },
-  {
-    title: 'Cloud-Based Platform',
-    description: 'Access your CRM from anywhere with our secure cloud infrastructure. Scale instantly without hardware investments.',
-    icon: 'cloud-based-platform',
-    iconSrc: '/logo/Call7.svg'
-  },
-  {
-    title: 'Performance Tracking',
-    description: 'Track KPIs like average handle time, CSAT scores, and conversion rates. Set goals and monitor team performance in real-time.',
-    icon: 'performance-tracking',
-    iconSrc: '/logo/Call8.svg'
-  },
-  {
-    title: 'Quality Monitoring',
-    description: 'Record calls, score interactions, and provide coaching feedback. Ensure consistent service quality across your team.',
-    icon: 'performance-tracking',
-    iconSrc: '/logo/Call9.svg'
-  },
-];
+interface ApiError {
+	data?: {
+		message?: string;
+		status?: string;
+		deactivationReason?: string;
+	};
+	message?: string;
+	error?: string;
+	status?: number | string;
+}
 
-const industries: IndustryItem[] = [
-  {
-    title: 'Customer Support',
-    description: 'Deliver exceptional customer experiences with intelligent case routing and knowledge suggestions.',
-    iconSrc: '/logo/earphone.svg'
-  },
-  {
-    title: 'Technical Support',
-    description: 'Resolve complex issues faster with integrated diagnostics and collaborative workspaces.',
-    iconSrc: '/logo/shield.svg'
-  },
-  {
-    title: 'Outbound Calling',
-    description: 'Launch targeted campaigns with predictive dialing, compliant scripts, and live conversion insights.',
-    iconSrc: '/logo/phone.svg'
-  },
-];
+interface RawUser extends Partial<AuthUser> {
+	_id: string;
+	id?: string;
+	email?: string;
+	name?: string;
+	token?: string;
+}
 
-const testimonials: TestimonialItem[] = [
-  {
-    name: 'Tom John',
-    title: 'VP of Customer Success, Tech Solutions',
-    quote: '“Peoplely CRM cut our average handle time by 18% in just three weeks. Switching between tools is a thing of the past.”',
-    iconSrc: '/logo/greenStar.svg'
-  },
-  {
-    name: 'Michelle Michael',
-    title: 'Operations Director, Health Connect',
-    quote: '“Supercharged visibility. I can see team performance, sentiment, and QA feedback in one place. Our NPS jumped 12 points.”',
-    iconSrc: '/logo/greenStar.svg'
-  },
-  {
-    name: 'Emma Francis',
-    title: 'Call Center Manager, Retail Hub',
-    quote: '“Getting started was seamless. The onboarding team migrated thousands of contacts and built our workflows in days.”',
-    iconSrc: '/logo/greenStar.svg'
-  },
-];
+export default function LoginPage() {
+	const router = useRouter();
+	const dispatch = useDispatch();
+	const authContext = useAuth();
+	const [login] = useLoginMutation();
+	const [teamMemberLogin] = useTeamMemberLoginMutation();
+	const { isDarkMode } = useTheme();
+	const { setUserPrivileges } = usePrivilege();
+	const primaryColor = '#050711';
+	// loginMethod is determined dynamically based on input value (email vs userId)
+	// const [loginMethod, setLoginMethod] = useState<'email' | 'userId'>('email');
+	const [formData, setFormData] = useState({
+		emailOrUserId: '',
+		password: '',
+		rememberMe: false,
+	});
 
-const faqs: FAQItem[] = [
-  {
-    question: 'How fast can we upload large customer bases or lead lists?',
-    answer:
-      'You can import unlimited records via CSV, SFTP, or API. Our migration specialists will guide you through deduplicating, field mapping, and data validation so everything is ready day one.',
-  },
-  {
-    question: 'What security measures are in place for our customer data?',
-    answer:
-      'Peoplely CRM is secured with AES-256 encryption, SSO/SAML, granular permissions, and SOC2 compliant infrastructure hosted in ISO certified data centers.',
-  },
-  {
-    question: 'How customizable is the CRM for our specific call flows?',
-    answer:
-      'Design any workflow using drag-and-drop automation. Trigger actions based on queues, SLAs, dispositions, or integrations—no engineering tickets required.',
-  },
-  {
-    question: 'Is this system only for outbound or does it handle inbound calls too?',
-    answer:
-      'Handle inbound, outbound, and blended call strategies. Build IVRs, predictive campaigns, and follow-ups from the same console.',
-  },
-  {
-    question: 'Will we need a dedicated IT team to manage the system?',
-    answer:
-      'No dedicated team needed. Administrators can configure everything from the browser, and our success engineers partner with you for complex projects.',
-  },
-  {
-    question: 'Can managers monitor agent status and performance in real-time?',
-    answer:
-      'Yes. Supervisors get live dashboards with agent presence, queue depth, KPI alerts, and one-click coaching tools.',
-  },
-];
+	const [errors, setErrors] = useState<Record<string, string>>({});
+	const [isLoading, setIsLoading] = useState(false);
+	const [isDeactivatedModalOpen, setIsDeactivatedModalOpen] = useState(false);
+	const [deactivatedEmail, setDeactivatedEmail] = useState('');
+	const [deactivationReason, setDeactivationReason] = useState('');
+	const [requestReactivation, { isLoading: isRequestingReactivation }] = useRequestReactivationMutation();
 
-const pricing: PricingTier[] = [
-  {
-    title: 'Starter',
-    price: '₦49',
-    description: 'Perfect for small teams getting started.',
-    highlight: false,
-    features: [
-      'Up to 25 agent seats',
-      'Contact management',
-      'Omnichannel inbox',
-      'Basic analytics',
-      'Role permissions',
-    ],
-  },
-  {
-    title: 'Professional',
-    price: '₦99',
-    description: 'For growing call centers.',
-    highlight: true,
-    features: [
-      'Unlimited agent seats',
-      'Advanced routing & IVR',
-      'Predictive dialing',
-      'Real-time dashboards',
-      'Workforce management',
-    ],
-  },
-  {
-    title: 'Enterprise',
-    price: 'Custom',
-    description: 'For large-scale operations.',
-    highlight: false,
-    features: [
-      'Dedicated success manager',
-      'Private cloud or on-prem',
-      'Custom integrations',
-      'AI quality monitoring',
-      'Priority support & SLAs',
-    ],
-  },
-];
+	// Set browser tab title
+	React.useEffect(() => {
+		if (typeof document !== 'undefined') {
+			document.title = 'Login | Outcess CRM';
+		}
+	}, []);
 
-export default function Home() {
-  const heroAgents = ['Sarah M.', 'Kemi O.', 'Ivan D.', 'Lisa R.'];
+	// Redirect authenticated users back to dashboard
+	React.useEffect(() => {
+		if (authContext.isAuthenticated && !authContext.isLoading && authContext.user) {
+			const role = authContext.user.role;
+			const roleName = (typeof role === 'object' && role !== null && 'roleName' in role)
+				? (role as { roleName: string }).roleName
+				: (typeof role === 'string' ? role : '');
 
-  return (
-    <div className="bg-page">
-      <LandingHeader />
+			if (roleName.toLowerCase() === 'super admin' || roleName.toLowerCase() === 'superadmin') {
+				router.push('/superadmin/dashboard');
+			} else {
+				router.push('/dashboard');
+			}
+		}
+	}, [authContext.isAuthenticated, authContext.isLoading, authContext.user, router]);
 
-      <div className="flex flex-col gap-24">
-        <HeroSection agents={heroAgents} />
+	const handleInputChange = (field: string) => (value: string) => {
+		setFormData(prev => ({ ...prev, [field]: value }));
+		// Clear error when user starts typing
+		if (errors[field]) {
+			setErrors(prev => ({ ...prev, [field]: '' }));
+		}
+	};
 
-        <StatsSection items={stats} />
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		setIsLoading(true);
 
-        <FeaturesSection items={features} />
+		const newErrors: Record<string, string> = {};
 
-        <IndustriesSection items={industries} />
+		if (!formData.emailOrUserId.trim()) {
+			newErrors.emailOrUserId = 'Email or User ID is required';
+		}
 
-        <TestimonialsSection items={testimonials} />
+		if (!formData.password.trim()) {
+			newErrors.password = 'Password is required';
+		}
 
-        <FAQSection items={faqs} />
+		setErrors(newErrors);
 
-        <PricingSection tiers={pricing} />
+		if (Object.keys(newErrors).length === 0) {
+			try {
+				const isEmail = /\S+@\S+\.\S+/.test(formData.emailOrUserId);
 
-        <CallToActionSection />
-      </div>
+				let response: LoginResponse;
 
-      <LandingFooter />
-    </div>
-  );
+				if (isEmail) {
+					response = await login({
+						email: formData.emailOrUserId,
+						password: formData.password,
+					}).unwrap();
+				} else {
+					response = await teamMemberLogin({
+						userId: formData.emailOrUserId,
+						password: formData.password,
+					}).unwrap();
+				}
+
+				// Based on the provided response structure:
+				// For email login: { message: "...", user: { ...userFields, token: "..." } }
+				// For userId login: { message: "...", teamMember: { ...userFields, token: "..." } }
+
+				const rawUser = (response.user || response.teamMember || response) as RawUser;
+				const token = rawUser?.token || response.token;
+
+				if (rawUser && token) {
+					// Normalize user object - ALWAYS use _id for consistent linking
+					const normalizedUser: AuthUser = {
+						...rawUser,
+						_id: rawUser._id,
+						id: rawUser._id || rawUser.id || '',
+						email: rawUser.email || '',
+						name: rawUser.name || (rawUser.firstName && rawUser.lastName ? `${rawUser.firstName} ${rawUser.lastName}` : ''),
+						isTeamMember: !!response.teamMember
+					};
+
+					// Login to Context for immediate sync - This now handles all storage
+					authContext.login(normalizedUser, { accessToken: token });
+
+					dispatch(loginAction({
+						user: normalizedUser as unknown as import('@/store/slices/authSlice').User,
+						tokens: { accessToken: token }
+					}));
+
+					// Update PrivilegeContext with the user's role and permissions
+					if (normalizedUser.role && typeof normalizedUser.role === 'object') {
+						const privileges: UserPrivileges = {
+							userId: normalizedUser.id,
+							roleId: normalizedUser.role.roleName,
+							role: {
+								roleName: normalizedUser.role.roleName,
+								permissions: normalizedUser.role.permissions as RoleModulePermission[]
+							},
+						};
+						setUserPrivileges(privileges);
+						localStorage.setItem('userPrivileges', JSON.stringify(privileges));
+					}
+
+					toast.success('Login successful!');
+
+					// Check for Super Admin role
+					const role = normalizedUser.role;
+					const roleName = (typeof role === 'object' && role !== null && 'roleName' in role)
+						? (role as { roleName: string }).roleName
+						: (typeof role === 'string' ? role : '');
+
+					if (roleName.toLowerCase() === 'super admin' || roleName.toLowerCase() === 'superadmin') {
+						router.push('/superadmin/dashboard');
+					} else {
+						router.push('/dashboard');
+					}
+				}
+			} catch (err: unknown) {
+				console.error('Login error:', err);
+				let errorMessage = 'Invalid email or password';
+
+				if (err && typeof err === 'object') {
+					const apiError = err as ApiError;
+
+					// Handle Account Deactivated
+					if (apiError.status === 403 && apiError.data?.status === 'deactivated') {
+						setDeactivatedEmail(formData.emailOrUserId);
+						setDeactivationReason(apiError.data.deactivationReason || '');
+						setIsDeactivatedModalOpen(true);
+						setIsLoading(false);
+						return;
+					}
+
+					// Handle Pending Reactivation
+					if (apiError.status === 403 && apiError.data?.status === 'pending_reactivation') {
+						toast.error(apiError.data.message || 'Reactivation request is under review.');
+						setIsLoading(false);
+						return;
+					}
+
+					// Handle RTK Query FetchBaseQueryError with data.message
+					if ('data' in apiError && apiError.data?.message) {
+						errorMessage = apiError.data.message;
+					}
+					// Handle RTK Query SerializedError or standard Error
+					else if ('message' in apiError && apiError.message) {
+						errorMessage = apiError.message;
+					}
+					// Handle RTK Query FetchBaseQueryError string error
+					else if ('error' in apiError && typeof apiError.error === 'string') {
+						errorMessage = apiError.error;
+					}
+				}
+
+				toast.error(errorMessage);
+				setIsLoading(false);
+			}
+		} else {
+			setIsLoading(false);
+		}
+	};
+
+
+	const handleReactivationConfirm = async (reason: string) => {
+		try {
+			await requestReactivation({
+				email: deactivatedEmail,
+				reason,
+			}).unwrap();
+			toast.success('Reactivation request sent successfully!');
+			setIsDeactivatedModalOpen(false);
+		} catch (error: unknown) {
+			toast.error((error as { data?: { message?: string } })?.data?.message || 'Failed to send reactivation request');
+		}
+	};
+
+	return (
+		<div className="login-container">
+			<LoginTopHeader />
+
+			{/* Left Side - Image Section */}
+			<div className="login-image-section w-full md:w-1/2 relative">
+				<Image
+					src="/image/loginImage.png"
+					alt="Outcess CRM"
+					fill
+					priority
+					style={{ objectFit: 'cover' }}
+				/>
+			</div>
+			{/* Right Side - Login Form */}
+			<div className="login-form-section w-full md:w-1/4">
+
+				<div className="login-form-container">
+					<div className="login-header">
+						<h1 className="welcome-title font-lato not-italic" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>Welcome Aboard</h1>
+						<p className="welcome-subtitle font-lato font-normal text-base leading-[150%] text-[#6D7280] dark:text-gray-400">Please Login to continue.</p>
+					</div>
+
+					<form onSubmit={handleSubmit} className="login-form">
+						<Input
+							label="Email or User ID"
+							placeholder="Enter your email or user ID"
+							type="text"
+							value={formData.emailOrUserId}
+							onChange={handleInputChange('emailOrUserId')}
+							required
+							error={errors.emailOrUserId}
+						/>
+
+						<PasswordInput
+							label="Password"
+							placeholder="Enter your password"
+							value={formData.password}
+							onChange={handleInputChange('password')}
+							required
+							error={errors.password}
+							onHelpClick={() => {
+								alert('Password Requirements:\n• At least 8 characters\n• Mix of letters and numbers\n• Special characters recommended');
+							}}
+						/>
+
+						<div className="login-options">
+							<Checkbox
+								checked={formData.rememberMe}
+								onChange={(checked) => setFormData(prev => ({ ...prev, rememberMe: checked }))}
+								label="Remember me"
+								size="small"
+							/>
+							<a href="#" className="forgot-password" style={{ color: primaryColor }} onMouseEnter={(e) => {
+								e.currentTarget.style.opacity = '0.8';
+							}} onMouseLeave={(e) => {
+								e.currentTarget.style.opacity = '1';
+							}}>Forgot password?</a>
+						</div>
+
+						<Button
+							type="submit"
+							size="lg"
+							loading={isLoading}
+							className="flex items-center gap-2 px-2 py-4! text-[10px] md:text-[12px] sm:px-4 sm:py-2"
+						>
+							Login
+						</Button>
+
+						<div className="signup-footer">
+							<p className="signup-text">
+								Don&apos;t have an account?{' '}
+								<a href="/signup"
+									className={`font-lato not-italic font-semibold text-[10px] md:text-[12px] leading-[150%] dark:text-gray-100 cursor-pointer `}
+									style={{ color: 'var(--text-primary)' }}>Create account</a>
+							</p>
+						</div>
+					</form>
+				</div>
+			</div>
+
+			<ReactivationRequestModal
+				isOpen={isDeactivatedModalOpen}
+				onClose={() => setIsDeactivatedModalOpen(false)}
+				onConfirm={handleReactivationConfirm}
+				email={deactivatedEmail}
+				deactivationReason={deactivationReason}
+				isLoading={isRequestingReactivation}
+			/>
+		</div>
+	);
 }

@@ -1,23 +1,36 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
+import Button from './Button';
 import Icon from './Icon';
 import Dropdown from './Dropdown';
 import UserDropdown from './UserDropdown';
-import { HamburgerMenuIcon } from '@radix-ui/react-icons';
-import NotificationDropdown from './NotificationDropdown';
-import NotificationsModal from './NotificationsModal';
-import { sampleNotifications } from '@/data/notifications';
+import StatusBadge from './StatusBadge';
+import LogoutConfirmationModal from './LogoutConfirmationModal';
+import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
 import ThemeToggle from './ThemeToggle';
-import { plusJakartaStyle } from '../Options';
+import NotificationBell from './NotificationBell';
 import { useSocket } from '@/contexts/SocketContext';
 import { playNotificationSound } from '@/utils/soundEffects';
-import { useAuth } from '@/contexts/AuthContext';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { setNavigating } from '@/utils/navigationState';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useGetCampaignByCompanyIdForheaderQuery } from '@/store/services/campaignApi';
+import { useLogoutMutation, useTeamMemberLogoutMutation, useUpdateUserMutation } from '@/store/services/authApi';
+import { useUpdateTeamMemberStatusMutation } from '@/store/services/teamMembersApi';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout as logoutAction, User } from '@/store/slices/authSlice';
+import { statusApi } from '@/store/services/statusApi';
+import { useGetNotificationsByCampaignIdQuery, useMarkNotificationAsReadMutation } from '@/store/services/notificationApi';
+import { useGetStickyNotesQuery } from '@/store/services/stickyNoteApi';
+import { useAuth } from '@/contexts/AuthContext';
+import HibernateOverlay from './HibernateOverlay';
 
 interface DashboardHeaderProps {
+	name?: string;
 	companyName?: string;
 	userName?: string;
 	userEmail?: string;
@@ -31,36 +44,130 @@ interface DashboardHeaderProps {
 	onLogoutClick?: () => void;
 	companyOptions?: Array<{ value: string; label: string; }>;
 	onMobileMenuToggle?: () => void;
+	isMobileMenuOpen?: boolean;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
-	companyName = 'Fairmoney',
-	userName = 'John Doe',
-	userEmail = 'johndoe@example.com',
-	userAvatar,
 	userIsOnline = true,
-	onCompanyChange,
 	onNotificationsClick,
 	onStatusClick,
 	onEditProfileClick,
 	onLogoutClick,
-	companyOptions = [
-		{ value: 'Fairmoney', label: 'Fairmoney' },
-		{ value: 'Company 2', label: 'Company 2' },
-		{ value: 'Company 3', label: 'Company 3' },
-	],
 	onMobileMenuToggle,
+	isMobileMenuOpen = false,
 }) => {
 	const router = useRouter();
+	const dispatch = useDispatch();
 	const pathname = usePathname();
-	const [hasStickyNotes, setHasStickyNotes] = useState(false);
-	const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
-	const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
-	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket } = useSocket();
-	const { logout: authLogout, user: authUser } = useAuth();
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
+	const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+	const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+	const [isLoggingOut, setIsLoggingOut] = useState(false);
+	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket, socket } = useSocket();
+	const [logoutApi] = useLogoutMutation();
+	const [teamMemberLogoutApi] = useTeamMemberLogoutMutation();
+	const [updateTeamMemberStatus] = useUpdateTeamMemberStatusMutation();
+	const [updateUser] = useUpdateUserMutation();
+	const { isAdmin, canAccess } = usePrivilege();
+	const { logout: contextLogout } = useAuth();
+
+	// Get user from Redux store
+	const reduxUser = useSelector((state: { auth: { user: User | null } }) => state.auth.user);
+
+	// Determine the effective user to display
+	const displayUser =
+		mounted && reduxUser
+			? {
+				name:
+					String(
+						reduxUser.name ||
+						`${reduxUser.firstName || ''} 
+      ${reduxUser.lastName ||
+							''}`.trim() ||
+						'User'
+					),
+				email: reduxUser.email,
+				avatar: reduxUser.avatar,
+				companyId: reduxUser.companyId || reduxUser.company?._id,
+			}
+			: null;
+
 	const previousUnreadCount = useRef(0);
 	const previousPathname = useRef(pathname);
 	const isNavigating = useRef(false);
+	const { setSelectedCampaignId, isLoading: isLobLoading, campaignData: selectedLOBData, selectedCampaignId } = useCampaign();
+	const previousLobId = useRef(selectedCampaignId);
+	const companyId = selectedLOBData?.companyId || displayUser?.companyId || (reduxUser?.company as { _id?: string })?._id || '';
+
+	const { data: campaignData } = useGetCampaignByCompanyIdForheaderQuery({ companyId }, {
+		skip: !companyId
+	});
+
+	// Notifications integration
+	const { data: notificationsData, refetch: refetchNotifications } = useGetNotificationsByCampaignIdQuery(selectedCampaignId || '', {
+		skip: !selectedCampaignId,
+		// pollingInterval: 30000 // Poll every 30 seconds as fallback
+	});
+
+	const [markAsRead] = useMarkNotificationAsReadMutation();
+	const notifications = React.useMemo(() => notificationsData?.notifications || [], [notificationsData]);
+	const unreadCount = React.useMemo(() => notifications.filter(n => !n.isRead).length, [notifications]);
+
+	const [lobOptions, setLobOptions] = useState<{ value: string; label: string; status?: string }[]>([]);
+	const safeUserName = String(displayUser?.name ?? '');
+
+
+
+	useEffect(() => {
+		const data = campaignData as { campaigns?: { _id: string; campaignName: string; status?: string }[] } | undefined;
+		if (data && Array.isArray(data.campaigns)) {
+			const options = data?.campaigns?.map((lob) => ({
+				value: lob?._id,
+				label: lob?.campaignName,
+				status: lob?.status,
+			}));
+			setLobOptions(options);
+
+			// Auto-select first LOB if none selected
+			if (options.length > 0 && !selectedCampaignId) {
+				setSelectedCampaignId(options[0].value);
+			}
+		}
+	}, [campaignData, selectedCampaignId, setSelectedCampaignId]);
+
+	// Socket integration for Campaign updates
+	useEffect(() => {
+		if (!socket || !selectedCampaignId) return;
+
+		// Join the Campaign room
+		socket.emit("joinCampaign", selectedCampaignId);
+
+
+		// Listen for status list updates
+		const handleStatusListUpdate = () => {
+
+			// Invalidate RTK Query cache for statuses
+			dispatch(statusApi.util.invalidateTags(['Statuses']));
+		};
+
+		// Listen for notification updates
+		const handleNotificationUpdate = () => {
+			refetchNotifications();
+		};
+
+		socket.on("statusListUpdated", handleStatusListUpdate);
+		socket.on("notificationUpdated", handleNotificationUpdate);
+
+		return () => {
+			socket.off("statusListUpdated", handleStatusListUpdate);
+			socket.off("notificationUpdated", handleNotificationUpdate);
+		};
+	}, [socket, selectedCampaignId, dispatch, refetchNotifications]);
 
 	// Track navigation to prevent sounds during page switches
 	useEffect(() => {
@@ -77,111 +184,172 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	}, [pathname]);
 
 	// Detect new unread notifications and play sound (works even when panel is closed)
-	// But don't play sounds during navigation
+	// But don't play sounds during navigation or LOB switch
 	useEffect(() => {
 		// Don't play sounds if we're navigating between pages
-		if (isNavigating.current) {
+		// or if the data is still loading
+		if (isNavigating.current || isLobLoading) {
 			// Update the count but don't play sounds
-			const unreadNotifications = sampleNotifications.filter(n => !n.isRead);
+			const unreadNotifications = notifications.filter(n => !n.isRead);
 			previousUnreadCount.current = unreadNotifications.length;
 			return;
 		}
 
-		const unreadNotifications = sampleNotifications.filter(n => !n.isRead);
+		// Don't play sounds if the LOB has just changed
+		if (previousLobId.current !== selectedCampaignId) {
+			previousLobId.current = selectedCampaignId;
+			const unreadNotifications = notifications.filter(n => !n.isRead);
+			previousUnreadCount.current = unreadNotifications.length;
+			// Also reset the navigation flag to be safe
+			isNavigating.current = true;
+			setTimeout(() => {
+				isNavigating.current = false;
+			}, 2000);
+			return;
+		}
+
+		const unreadNotifications = notifications.filter(n => !n.isRead);
 		const unreadCount = unreadNotifications.length;
 
 		// Play sound when new unread notifications arrive (count increases)
-		if (unreadCount > previousUnreadCount.current) {
+		// Only if we already had a count (avoid sound on first load/hydration)
+		if (unreadCount > previousUnreadCount.current && previousUnreadCount.current > 0) {
 			// Play sound for each new notification
 			const newNotifications = unreadNotifications.slice(previousUnreadCount.current);
 			newNotifications.forEach((notification, index) => {
 				setTimeout(() => {
-					playNotificationSound('new_notification', 'notifications');
+					// Final check before playing
+					if (!isNavigating.current) {
+						playNotificationSound('new_notification', 'notifications');
+					}
 				}, index * 150); // Stagger sounds if multiple notifications arrive
 			});
 		}
 
 		previousUnreadCount.current = unreadCount;
-	}, [pathname]);
+	}, [pathname, notifications, selectedCampaignId, isLobLoading]);
 
-	const handleNotificationClick = () => {
-		// Don't play sound if we're navigating - NotificationDropdown will handle it
-		if (isNavigating.current) {
-			setIsNotificationPanelOpen(!isNotificationPanelOpen);
-			onNotificationsClick?.();
-			return;
-		}
-
-		setIsNotificationPanelOpen(!isNotificationPanelOpen);
+	const handleNotificationToggle = (isOpen: boolean) => {
+		if (isOpen) setIsUserDropdownOpen(false);
 		onNotificationsClick?.();
-		// Note: Sound is now handled by NotificationDropdown component to avoid duplicate sounds
-		// Close profile dropdown if open
-		// setShowDropdown(false);
 	};
 
-	// Handle logout
-	const handleLogout = async () => {
+	// Trigger logout modal
+	const handleLogout = () => {
+		setIsUserDropdownOpen(false);
+		setIsLogoutModalOpen(true);
+	};
+
+	// Perform actual logout after confirmation
+	const handleConfirmLogout = async () => {
+		setIsLoggingOut(true);
 		try {
+			// Explicitly update status to "Logged out" FIRST before calling logout API
+			if (reduxUser?.id) {
+				const statusData = {
+					status: "Logged out",
+					color: "#FF0000",
+					reason: "User confirmed logout"
+				};
+
+				try {
+					if (isAdmin) {
+						// Use direct user update for admins
+						await updateUser({
+							id: reduxUser.id,
+							data: { status: statusData }
+						}).unwrap();
+					} else {
+						// Otherwise try team member status update
+						try {
+							await updateTeamMemberStatus({
+								id: reduxUser.id,
+								status: "Logged out",
+								reason: "User confirmed logout"
+							}).unwrap();
+						} catch (err: unknown) {
+							const errorObj = err as { status?: number; data?: { message?: string } };
+							// Fallback to updateUser if team member not found (404)
+							if (errorObj?.status === 404 ||
+								errorObj?.data?.message?.toLowerCase().includes('not found') ||
+								errorObj?.data?.message?.toLowerCase().includes('team member')) {
+
+								await updateUser({
+									id: reduxUser.id,
+									data: { status: statusData }
+								}).unwrap();
+							} else {
+								throw err;
+							}
+						}
+					}
+					console.log('Status updated to Logged out before session termination');
+
+					// Emit socket update for real-time tracking
+					if (socket && socket.connected) {
+						socket.emit('teamMemberStatusUpdate', {
+							teamMemberId: reduxUser.id,
+							name: displayUser?.name,
+							status: statusData,
+							timestamp: new Date().toISOString()
+						});
+					}
+				} catch (statusError) {
+					console.warn('Failed to update status explicitly, proceeding with logout sequence:', statusError);
+				}
+			}
+
+			// Call API to invalidate session on server
+			if (reduxUser?.id) {
+				if (reduxUser.isTeamMember) {
+					await teamMemberLogoutApi({ userId: reduxUser.id }).unwrap();
+				} else {
+					await logoutApi({ userId: reduxUser.id }).unwrap();
+				}
+			} else {
+				console.warn('No user ID found for logout API call');
+			}
+
 			// Disconnect socket connection
 			disconnectSocket();
-
-			// Logout from auth context
-			await authLogout();
+			// Logout from Redux
+			dispatch(logoutAction());
+			// Logout from Context
+			contextLogout();
 
 			// Show success message
 			toastSuccess('Logged out successfully');
 
+			// Close modal
+			setIsLogoutModalOpen(false);
+
 			// Redirect to login page
 			setTimeout(() => {
-				router.push('/login');
+				router.push('/');
 			}, 500);
 		} catch (error) {
-			console.error('Logout error:', error);
+			console.warn('Logout API failed, proceeding with local logout:', error);
+
+			// Still perform client-side cleanup even if API fails
+			disconnectSocket();
+			dispatch(logoutAction());
+			contextLogout();
+
+			// Close modal
+			setIsLogoutModalOpen(false);
+
 			// Even if there's an error, redirect to login
-			router.push('/login');
+			router.push('/');
+		} finally {
+			setIsLoggingOut(false);
 		}
 	};
 
-	// Check if sticky notes exist in localStorage
-	useEffect(() => {
-		const checkStickyNotes = () => {
-			try {
-				const savedNotes = localStorage.getItem('stickyNotes');
-				if (savedNotes) {
-					const parsed = JSON.parse(savedNotes);
-					setHasStickyNotes(Array.isArray(parsed) && parsed.length > 0);
-				} else {
-					setHasStickyNotes(false);
-				}
-			} catch {
-				setHasStickyNotes(false);
-			}
-		};
-
-		checkStickyNotes();
-
-		// Check periodically for changes (in case notes are added/removed in another tab)
-		const interval = setInterval(checkStickyNotes, 1000);
-
-		// Listen for storage events from other tabs
-		const handleStorageChange = () => {
-			checkStickyNotes();
-		};
-
-		// Check when window gains focus (user returns to page)
-		const handleFocus = () => {
-			checkStickyNotes();
-		};
-
-		window.addEventListener('storage', handleStorageChange);
-		window.addEventListener('focus', handleFocus);
-
-		return () => {
-			clearInterval(interval);
-			window.removeEventListener('storage', handleStorageChange);
-			window.removeEventListener('focus', handleFocus);
-		};
-	}, []);
+	// Check if sticky notes exist via API
+	const { data: stickyNotesData } = useGetStickyNotesQuery(reduxUser?.id || '', {
+		skip: !reduxUser?.id
+	});
+	const hasStickyNotes = (stickyNotesData?.stickyNotes?.length || 0) > 0;
 
 	const handleNoteIconClick = () => {
 		// Store that user wants to see notes on current page
@@ -201,27 +369,55 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 		<header id="header" >
 			<div className="flex items-center justify-between py-2.5">
 				{/* Menu Toggle - Mobile Only */}
-				<button
+				<Button
+					variant="ghost"
+					size="sm"
 					onClick={onMobileMenuToggle}
-					className="md:hidden p-2 text-black dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+					className="md:hidden p-2 text-black dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors cursor-pointer rounded-[var(--radius)]"
 					title="Menu"
 				>
-					<HamburgerMenuIcon className="w-6 h-6 " />
-				</button>
-
-				<div className="flex-1 md:flex-none">
-					<div className="hidden md:flex items-center gap-2">
-						<Icon name="peoplelyHalf" size="xl" color="black" className="dark:hidden" />
-						<Icon name="peoplelyHalf" size="xl" className="hidden dark:inline-block" />
-						<span className="font-semibold text-[25px] leading-[28px] flex items-center text-[#050711]"
-							style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>Peoplely</span>
+					<div className={`transition-all duration-300 ease-in-out transform ${isMobileMenuOpen ? 'rotate-90 scale-110' : 'rotate-0 scale-100'}`}>
+						{isMobileMenuOpen ? (
+							<Cross1Icon className="w-6 h-6" />
+						) : (
+							<HamburgerMenuIcon className="w-6 h-6 " />
+						)}
 					</div>
+				</Button>
+				<div>
+					{(isAdmin || canAccess('dashboard', 'edit')) && (
+						<Dropdown
+							label=""
+							value={selectedLOBData?.campaign?._id || selectedLOBData?._id || ''}
+							onChange={(value) => {
+								const stringValue = Array.isArray(value) ? value[0] : value;
+								if (!stringValue) return;
+								const target = lobOptions.find(o => o.value === stringValue);
+								const targetStatus = target?.status?.toLowerCase() || '';
+								if (targetStatus === 'in review') {
+									return;
+								}
+								// Set navigating state to suppress sounds during LOB switch
+								isNavigating.current = true;
+								setNavigating(true);
+								setSelectedCampaignId(stringValue);
+								// Reset navigation flag after a delay
+								setTimeout(() => {
+									isNavigating.current = false;
+								}, 2000);
+							}}
+							options={lobOptions}
+							placeholder={isLobLoading ? "Loading..." : "Select Campaign"}
+							className="min-w-[200px]"
+							renderOptionRight={(option) => (
+								<StatusBadge status={option.status || 'In Review'} />
+							)}
+						/>
+					)}
+
 				</div>
-
-
-
 				{/* Right side - Icons */}
-				<div className="flex items-center justify-center gap-4">
+				<div className="flex items-center justify-center gap-5">
 					{/* Offline Indicator */}
 					{(isOffline || socketStatus === 'offline') && (
 						<div
@@ -232,51 +428,30 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 							}}
 							title="Offline - Messages will be queued"
 						>
-							<svg
-								className="w-4 h-4"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-								xmlns="http://www.w3.org/2000/svg"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
-								/>
-							</svg>
-							<span className="text-xs font-medium hidden sm:inline">Offline</span>
+							<Icon name="cloud-off" size="sm" color="white" />
+							<span className="text-[8px] md:text-[10px] font-medium hidden sm:inline">Offline</span>
 						</div>
 					)}
+
+					{/* LOB Dropdown - Only for Administrator or users with Dashboard Edit permission */}
 
 					{/* Dark/Light Mode Toggle */}
 					<ThemeToggle />
 
-					<Dropdown
-						label=""
-						value={companyName}
-						onChange={(value) => {
-							const stringValue = Array.isArray(value) ? value[0] : value;
-							onCompanyChange?.(stringValue);
-						}}
-						options={companyOptions}
-						className="min-w-[140px]"
-						inputClassName="h-8"
-					/>
+
 
 					{/* Sticky Notes Icon - Only show if notes exist */}
 					{hasStickyNotes && (
 						<button
 							onClick={handleNoteIconClick}
-							className="hidden md:inline-flex p-2 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer relative"
+							className="hidden md:inline-flex p-2 dark:text-gray-300 dark:hover:text-gray-100 transition-colors cursor-pointer relative rounded-[var(--radius)] "
 							style={{
 								color: 'var(--text-tertiary)',
 								backgroundColor: 'transparent'
 							}}
 							onMouseEnter={(e) => {
 								e.currentTarget.style.color = 'var(--text-primary)';
-								e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+								e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
 							}}
 							onMouseLeave={(e) => {
 								e.currentTarget.style.color = 'var(--text-tertiary)';
@@ -284,60 +459,72 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 							}}
 							title="View Sticky Notes"
 						>
-							<Icon name="Edit_duotone_line" size="3xl" />
+							<Icon name="Edit_duotone_line" size="lg" />
 							{/* Indicator dot */}
 							<span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
 						</button>
 					)}
 
 					{/* Notifications Bell */}
-					<div className="relative">
-						<button
-							onClick={handleNotificationClick}
-							className="p-1 w-7 h-7 flex justify-center items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-							title="Notifications"
-						>
-							<Icon name="Bell_light" size="3xl" />
-						</button>
-
-
-
-
-
-
-						<NotificationDropdown
-							isOpen={isNotificationPanelOpen}
-							onClose={() => setIsNotificationPanelOpen(false)}
-							notifications={sampleNotifications}
-							onShowMore={() => {
-								setIsNotificationPanelOpen(false);
-								setIsNotificationsModalOpen(true);
-							}}
-						/>
-					</div>
-
-					{/* Notifications Modal - Render at header level so it persists */}
-					{isNotificationsModalOpen && (
-						<NotificationsModal
-							isOpen={isNotificationsModalOpen}
-							onClose={() => setIsNotificationsModalOpen(false)}
-						/>
-					)}
+					<NotificationBell
+						notifications={notifications}
+						unreadCount={unreadCount}
+						onMarkAsRead={(id) => markAsRead(id)}
+						onToggle={handleNotificationToggle}
+						isNavigating={isNavigating.current}
+					/>
 
 					{/* User Dropdown */}
 					<UserDropdown
-						userName={authUser?.name || userName}
-						userEmail={authUser?.email || userEmail}
-						userAvatar={authUser?.avatar || userAvatar}
+						user={reduxUser}
+						userId={reduxUser?.id}
+						userName={safeUserName}
+						userEmail={displayUser?.email || ""}
+						userAvatar={displayUser?.avatar || ""}
 						isOnline={userIsOnline && isOnline && !isOffline && socketStatus !== 'offline'}
+						currentStatus={reduxUser?.status ? (
+							typeof reduxUser.status === 'string'
+								? { status: reduxUser.status }
+								: {
+									status: reduxUser.status.status || (reduxUser.status as unknown as { name?: string }).name || (reduxUser.status as unknown as { label?: string }).label || 'Active',
+									color: reduxUser.status.color
+								}
+						) : undefined}
 						onStatusClick={onStatusClick}
 						onEditProfileClick={onEditProfileClick}
 						onLogoutClick={onLogoutClick || handleLogout}
+						isOpen={isUserDropdownOpen}
+						onToggle={(open) => {
+							setIsUserDropdownOpen(open);
+						}}
 					/>
 				</div>
 			</div>
+
+			<LogoutConfirmationModal
+				isOpen={isLogoutModalOpen}
+				onClose={() => setIsLogoutModalOpen(false)}
+				onConfirm={handleConfirmLogout}
+				isLoading={isLoggingOut}
+				initials={displayUser?.name?.charAt(0).toUpperCase() || 'U'}
+				status={reduxUser?.status?.status || (isOnline ? 'Online' : 'Offline')}
+				statusColor={reduxUser?.status?.color || (isOnline ? '#22C55E' : '#94A3B8')}
+			/>
+
+			{/* Hibernate Overlay Enforcement */}
+			{reduxUser?.status?.isHibernate && (
+				<HibernateOverlay
+					userId={reduxUser.id}
+					userName={safeUserName}
+					statusName={reduxUser.status.status || 'Hibernate'}
+					statusColor={reduxUser.status.color || '#6366f1'}
+					duration={reduxUser.status.duration}
+					statusUpdatedAt={reduxUser.status.statusUpdatedAt?.toString()}
+				/>
+			)}
 		</header>
 	);
 };
 
 export default DashboardHeader;
+

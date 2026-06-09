@@ -66,7 +66,7 @@ const FAQSection: React.FC<FAQSectionProps> = ({ items }) => {
 							{isActive && (
 								<div className="px-6 pb-6">
 									<p
-										className="font-normal text-[16px] leading-[24px] text-[#4A5565]"
+										className="font-normal text-[12px] md:text-[14px] leading-[24px] text-[#4A5565]"
 										style={plusJakartaStyle}
 									>
 										{faq.answer}

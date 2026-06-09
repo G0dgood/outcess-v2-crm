@@ -1,36 +1,62 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Button from './Button';
 import Input from './Input';
 import Dropdown from './Dropdown';
 import Textarea from './Textarea';
 import DateInput from './DateInput';
-import { Cross2Icon, CalendarIcon, ClockIcon } from '@radix-ui/react-icons';
+import SingleRadio from './SingleRadio';
+import RadioGroup from './RadioGroup';
+import SingleCheckbox from './SingleCheckbox';
+import MultipleCheckbox from './MultipleCheckbox';
+import { Cross2Icon, CalendarIcon, ClockIcon, PersonIcon, MobileIcon, EnvelopeClosedIcon, HomeIcon, FileTextIcon } from '@radix-ui/react-icons';
+import EmptyState from './EmptyState';
 import { useSocket } from '@/contexts/SocketContext';
-import { saveOfflineDisposition, saveSyncedDisposition } from '@/utils/offlineDispositions';
+import { saveOfflineDisposition, saveSyncedDisposition, DispositionFieldEntry } from '@/utils/offlineDispositions';
 import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { useCreateDispositionMutation } from '@/store/services/dispositionApi';
 
 interface FillDispositionModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onSave?: (data: DispositionFormData) => void;
-	initialData?: Partial<DispositionFormData>;
+	onSave?: (data: DispositionFormState) => void;
+	initialData?: Partial<DispositionFormState>;
 	customerId?: string;
 	customerName?: string;
+	customer?: {
+		id: string;
+		[key: string]: unknown;
+	} | null;
 }
 
-export interface DispositionFormData {
-	callAnswered: string;
-	reasonForNotWatching: string;
-	amountToPay: string;
-	comment: string;
-	reasonForNonPayment: string;
-	commitmentDate: string;
-	date: string;
-	time: string;
+interface ApiError {
+	data?: {
+		error?: string;
+		message?: string;
+	};
 }
+
+export type DispositionFormState = Record<string, string | number | boolean | undefined>;
+
+interface DispositionField {
+	id: string;
+	name: string;
+	color: string;
+	fieldType: string;
+	dropdownOptions?: string[];
+	sortOrder?: string;
+	isRequired: boolean;
+}
+
+// Helper to convert string to camelCase for state keys
+const toCamelCase = (str: string) => {
+	return str
+		.toLowerCase()
+		.replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
+};
 
 export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	isOpen,
@@ -39,51 +65,93 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	initialData,
 	customerId,
 	customerName,
+	customer,
 }) => {
-	const { isOnline, isConnected, isOffline, send } = useSocket();
+	const { isConnected, isOffline, send } = useSocket();
 	const { user: authUser } = useAuth();
+	const currentAgentId = (authUser?.id || authUser?._id || '') as string;
+	const { campaignData, selectedCampaignId } = useCampaign();
+	const [createDisposition] = useCreateDispositionMutation();
 	const [isSaving, setIsSaving] = useState(false);
-	const [formData, setFormData] = useState<DispositionFormData>({
-		callAnswered: initialData?.callAnswered || '',
-		reasonForNotWatching: initialData?.reasonForNotWatching || '',
-		amountToPay: initialData?.amountToPay || '',
-		comment: initialData?.comment || '',
-		reasonForNonPayment: initialData?.reasonForNonPayment || '',
-		commitmentDate: initialData?.commitmentDate || '',
-		date: initialData?.date || '',
-		time: initialData?.time || '',
-	});
+	const [formData, setFormData] = useState<DispositionFormState>({});
+	const [showPersonalInfo, setShowPersonalInfo] = useState(false);
 
-	const dateInputRef = useRef<HTMLInputElement>(null);
-	const timeInputRef = useRef<HTMLInputElement>(null);
-	const commitmentDateInputRef = useRef<HTMLInputElement>(null);
+	// Get dispositions from context
+	const dispositions = useMemo(() => {
+		const settings = campaignData?.campaign?.dashboardSettings;
+		if (!settings) return [];
+
+		// 1. If direct dispositions exist, use them
+		if (settings.dispositions && settings.dispositions.length > 0) {
+			return settings.dispositions as DispositionField[];
+		}
+
+		// 2. If buckets exist, check if this agent is assigned to a specific bucket
+		const buckets = settings.buckets || [];
+		if (buckets.length > 0) {
+			const currentUserId = currentAgentId;
+			const assignedBucket = buckets.find((b: { assignedMembers?: Array<{ memberId: string | { _id?: string; id?: string } }>; dispositions?: DispositionField[] }) =>
+				b.assignedMembers?.some((m: { memberId: string | { _id?: string; id?: string } }) => {
+					const mId = typeof m.memberId === 'object' && m.memberId !== null
+						? (m.memberId._id || m.memberId.id)
+						: m.memberId;
+					return mId === currentUserId;
+				})
+			);
+
+			if (assignedBucket && assignedBucket.dispositions && assignedBucket.dispositions.length > 0) {
+				return assignedBucket.dispositions as DispositionField[];
+			}
+
+			// 3. Fallback: gather all unique dispositions across all buckets
+			const allDispositions: DispositionField[] = [];
+			const seenIds = new Set<string>();
+			buckets.forEach((b: { dispositions?: DispositionField[] }) => {
+				if (b.dispositions) {
+					b.dispositions.forEach((disp: DispositionField) => {
+						if (disp && disp.id && !seenIds.has(disp.id)) {
+							seenIds.add(disp.id);
+							allDispositions.push(disp);
+						}
+					});
+				}
+			});
+			if (allDispositions.length > 0) {
+				return allDispositions;
+			}
+		}
+
+		return [];
+	}, [campaignData, currentAgentId]);
 
 	// Reset or update form when modal opens/closes
 	useEffect(() => {
-		if (isOpen && initialData) {
-			setFormData({
-				callAnswered: initialData.callAnswered || '',
-				reasonForNotWatching: initialData.reasonForNotWatching || '',
-				amountToPay: initialData.amountToPay || '',
-				comment: initialData.comment || '',
-				reasonForNonPayment: initialData.reasonForNonPayment || '',
-				commitmentDate: initialData.commitmentDate || '',
-				date: initialData.date || '',
-				time: initialData.time || '',
+		if (isOpen) {
+			const initialForm: DispositionFormState = {};
+
+			// Initialize with defaults or empty strings based on dispositions
+			dispositions.forEach((d) => {
+				const key = toCamelCase(d.name);
+				if (d.fieldType === 'date-time') {
+					initialForm[`${key}_date`] = '';
+					initialForm[`${key}_time`] = '';
+				} else {
+					initialForm[key] = '';
+				}
 			});
-		} else if (!isOpen) {
-			setFormData({
-				callAnswered: '',
-				reasonForNotWatching: '',
-				amountToPay: '',
-				comment: '',
-				reasonForNonPayment: '',
-				commitmentDate: '',
-				date: '',
-				time: '',
-			});
+
+			// Merge with provided initialData
+			if (initialData) {
+				Object.keys(initialData).forEach(key => {
+					initialForm[key] = initialData[key];
+				});
+			}
+
+			setFormData(initialForm);
+		} else {
+			setFormData({});
 		}
-	}, [isOpen, initialData]);
+	}, [isOpen, initialData, dispositions]);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -108,98 +176,85 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 		};
 	}, [isOpen, onClose]);
 
-	const handleInputChange = (field: keyof DispositionFormData) => (value: string) => {
+	const handleInputChange = (field: string) => (value: string) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
 	};
 
-	const handleDateIconClick = () => {
-		if (dateInputRef.current) {
-			// Use showPicker() if available (modern browsers)
-			const el = dateInputRef.current as HTMLInputElement & { showPicker?: () => void };
-			if (typeof el.showPicker === 'function') {
-				try {
-					el.showPicker();
-				} catch {
-					// Fallback to focus and click if showPicker fails
-					dateInputRef.current.focus();
-					dateInputRef.current.click();
-				}
-			} else {
-				// Fallback for older browsers
-				dateInputRef.current.focus();
-				dateInputRef.current.click();
-			}
-		}
-	};
-
-	const handleTimeIconClick = () => {
-		if (timeInputRef.current) {
-			// Use showPicker() if available (modern browsers)
-			const el = timeInputRef.current as HTMLInputElement & { showPicker?: () => void };
-			if (typeof el.showPicker === 'function') {
-				try {
-					el.showPicker();
-				} catch {
-					// Fallback to focus and click if showPicker fails
-					timeInputRef.current.focus();
-					timeInputRef.current.click();
-				}
-			} else {
-				// Fallback for older browsers
-				timeInputRef.current.focus();
-				timeInputRef.current.click();
-			}
-		}
-	};
-
-	const handleCommitmentDateIconClick = () => {
-		if (commitmentDateInputRef.current) {
-			// Use showPicker() if available (modern browsers)
-			const el = commitmentDateInputRef.current as HTMLInputElement & { showPicker?: () => void };
-			if (typeof el.showPicker === 'function') {
-				try {
-					el.showPicker();
-				} catch {
-					// Fallback to focus and click if showPicker fails
-					commitmentDateInputRef.current.focus();
-					commitmentDateInputRef.current.click();
-				}
-			} else {
-				// Fallback for older browsers
-				commitmentDateInputRef.current.focus();
-				commitmentDateInputRef.current.click();
-			}
-		}
-	};
-
 	const handleView = () => {
-		console.log('View disposition:', formData);
-		// Implement view logic
+		setShowPersonalInfo(!showPersonalInfo);
 	};
 
 	const handleSaveAndPost = async () => {
-		setIsSaving(true);
-		try {
-			// If offline, save to localStorage
-			if (isOffline) {
-				saveOfflineDisposition(formData, customerId, customerName);
-				toastInfo('Disposition saved offline. It will sync when you\'re back online.');
-				onSave?.(formData);
-				onClose();
-				return;
+		// Basic validation
+		const missingFields: string[] = [];
+		dispositions.forEach((d) => {
+			if (d.isRequired) {
+				const key = toCamelCase(d.name);
+				if (d.fieldType === 'date-time') {
+					if (!formData[`${key}_date`] || !formData[`${key}_time`]) {
+						missingFields.push(d.name);
+					}
+				} else {
+					if (!formData[key]) {
+						missingFields.push(d.name);
+					}
+				}
+			}
+		});
+
+		if (missingFields.length > 0) {
+			toastError(`Please fill in required fields: ${missingFields.join(', ')}`);
+			return;
+		}
+
+		// Transform formData to array structure
+		const dispositionData: DispositionFieldEntry[] = dispositions.map(d => {
+			const key = toCamelCase(d.name);
+			let value: string | number | boolean | undefined;
+
+			if (d.fieldType === 'date-time') {
+				const date = formData[`${key}_date`];
+				const time = formData[`${key}_time`];
+				if (date && time) {
+					value = `${date} ${time}`;
+				} else {
+					value = String(date || time || '');
+				}
+			} else {
+				value = formData[key];
 			}
 
-			// If online and connected, try to save via API/socket
-			if (isOnline && isConnected) {
-				try {
+			return {
+				fieldId: d.id,
+				fieldName: d.name,
+				fieldValue: value,
+				fieldType: d.fieldType
+			};
+		});
+
+		setIsSaving(true);
+		try {
+			// Always try to save via API first unless explicitly offline
+			try {
+				if (!isOffline) {
+					// Save via API
+					await createDisposition({
+						fillDisposition: dispositionData,
+						customerId,
+						agentId: currentAgentId,
+						campaignId: selectedCampaignId || undefined,
+						timestamp: new Date().toISOString(),
+					}).unwrap();
+
 					// Try to send via socket or API
-					if (send) {
+					if (send && isConnected) {
 						send({
 							type: 'disposition',
 							payload: {
-								...formData,
+								fillDisposition: dispositionData,
 								customerId,
-								customerName,
+								agentId: currentAgentId,
+								campaignId: selectedCampaignId || undefined,
 								timestamp: new Date().toISOString(),
 							},
 						});
@@ -207,11 +262,12 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 					// Save to synced dispositions for history
 					saveSyncedDisposition(
-						formData,
+						dispositionData,
 						customerId,
 						customerName,
 						authUser?.name,
-						authUser?.id
+						currentAgentId,
+						selectedCampaignId || undefined
 					);
 
 					// Call the onSave callback
@@ -219,23 +275,34 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 					toastSuccess('Disposition saved successfully');
 					onClose();
-				} catch (error) {
-					console.error('Error saving disposition online:', error);
-					// Fall through to offline save
-					saveOfflineDisposition(formData, customerId, customerName);
-					toastInfo('Disposition saved offline due to connection error. It will sync when connection is restored.');
-					onSave?.(formData);
-					onClose();
+					return;
 				}
-			} else {
-				// Not offline but also not connected - save offline as fallback
-				saveOfflineDisposition(formData, customerId, customerName);
-				toastInfo('Disposition saved offline. It will sync when you\'re back online.');
-				onSave?.(formData);
-				onClose();
+			} catch (error: unknown) {
+				console.error('Error saving disposition online:', error);
+
+				// If the server returns a specific error message (e.g. validation error), show it
+				const serverError = (error as ApiError)?.data?.error || (error as ApiError)?.data?.message;
+				if (serverError) {
+					toastError(serverError);
+					// Do not return here - continue to save offline
+				}
+				// If API fails (e.g. network error or validation error), fall through to offline save
 			}
-		} catch (error) {
-			console.error('Error saving disposition:', error);
+
+			// If we're here, either we are offline OR the API call failed due to network issues or validation errors
+			// Save to offline storage
+			saveOfflineDisposition(dispositionData, customerId, customerName, selectedCampaignId || undefined);
+
+			if (isOffline) {
+				toastInfo('Disposition saved offline. It will sync when you\'re back online.');
+			} else {
+				// Show offline save message even if we already showed an error toast
+				toastInfo('Disposition saved offline due to error. It will sync when connection is restored.');
+			}
+
+			onSave?.(formData);
+			onClose();
+		} catch {
 			toastError('Failed to save disposition');
 			onSave?.(formData);
 			onClose();
@@ -246,28 +313,264 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 	if (!isOpen) return null;
 
-	const callAnsweredOptions = [
-		{ value: 'yes', label: 'Yes' },
-		{ value: 'no', label: 'No' },
-	];
+	const renderField = (field: DispositionField) => {
+		const key = toCamelCase(field.name);
 
-	const reasonForNotWatchingOptions = [
-		{ value: 'busy', label: 'Busy' },
-		{ value: 'not-interested', label: 'Not Interested' },
-		{ value: 'other', label: 'Other' },
-	];
+		switch (field.fieldType) {
+			case 'dropdown':
+				return (
+					<Dropdown
+						key={field.id}
+						label={field.name}
+						placeholder="Select"
+						options={(field.dropdownOptions || []).map((opt: string) => ({ value: opt, label: opt.charAt(0).toUpperCase() + opt.slice(1) }))}
+						value={String(formData[key] || '')}
+						onChange={(value) => handleInputChange(key)(Array.isArray(value) ? value.join(',') : value)}
+					/>
+				);
 
-	const reasonForNonPaymentOptions = [
-		{ value: 'financial-hardship', label: 'Financial Hardship' },
-		{ value: 'pending', label: 'Pending Payment' },
-		{ value: 'dispute', label: 'Dispute' },
-		{ value: 'other', label: 'Other' },
-	];
+			case 'radio-select':
+			case 'radio-group':
+				return (
+					(field.dropdownOptions && field.dropdownOptions.length > 0) ? (
+						<RadioGroup
+							key={field.id}
+							label={field.name}
+							name={key}
+							value={String(formData[key] || '')}
+							onChange={(val: string) => handleInputChange(key)(val)}
+							options={(field.dropdownOptions || []).map((opt: string) => ({
+								value: opt,
+								label: opt.charAt(0).toUpperCase() + opt.slice(1),
+							}))}
+						/>
+					) : (
+						<SingleRadio
+							key={field.id}
+							label={field.name}
+							name={key}
+							checked={formData[key] === 'true'}
+							onChange={(checked: boolean) => handleInputChange(key)(checked ? 'true' : 'false')}
+						/>
+					)
+				);
+
+			case 'single-radio':
+				return (
+					<SingleRadio
+						key={field.id}
+						label={field.name}
+						name={key}
+						checked={formData[key] === 'true'}
+						onChange={(checked: boolean) => handleInputChange(key)(checked ? 'true' : 'false')}
+					/>
+				);
+
+			case 'checkbox':
+			case 'multiple-checkbox':
+				if (field.dropdownOptions && field.dropdownOptions.length > 0) {
+					return (
+						<MultipleCheckbox
+							key={field.id}
+							label={field.name}
+							value={String(formData[key] || '').split(',').filter(Boolean)}
+							onChange={(values: string[]) => handleInputChange(key)(values.join(','))}
+							options={(field.dropdownOptions || []).map((opt: string) => ({
+								value: opt,
+								label: opt.charAt(0).toUpperCase() + opt.slice(1),
+							}))}
+						/>
+					);
+				}
+				return (
+					<SingleCheckbox
+						key={field.id}
+						label={field.name}
+						name={key}
+						checked={formData[key] === 'true'}
+						onChange={(checked: boolean) => handleInputChange(key)(checked ? 'true' : 'false')}
+					/>
+				);
+
+			case 'single-checkbox':
+				return (
+					<SingleCheckbox
+						key={field.id}
+						label={field.name}
+						name={key}
+						checked={formData[key] === 'true'}
+						onChange={(checked: boolean) => handleInputChange(key)(checked ? 'true' : 'false')}
+					/>
+				);
+
+			case 'number':
+				return (
+					<Input
+						key={field.id}
+						label={field.name}
+						placeholder=""
+						value={String(formData[key] || '')}
+						onChange={handleInputChange(key)}
+						type="number"
+					/>
+				);
+
+			case 'phone':
+				return (
+					<Input
+						key={field.id}
+						label={field.name}
+						placeholder=""
+						value={String(formData[key] || '')}
+						onChange={handleInputChange(key)}
+						type="tel"
+					/>
+				);
+
+			case 'email':
+				return (
+					<Input
+						key={field.id}
+						label={field.name}
+						placeholder=""
+						value={String(formData[key] || '')}
+						onChange={handleInputChange(key)}
+						type="email"
+					/>
+				);
+
+			case 'multi-line-text':
+				return (
+					<Textarea
+						key={field.id}
+						label={field.name}
+						placeholder=""
+						value={String(formData[key] || '')}
+						onChange={handleInputChange(key)}
+						rows={4}
+					/>
+				);
+
+			case 'date':
+				return (
+					<div key={field.id} className="relative">
+						<DateInput
+							label={field.name}
+							placeholder="DD/MM/YY"
+							value={String(formData[key] || '')}
+							onChange={handleInputChange(key)}
+							inputClassName="pr-10"
+						/>
+						<button
+							type="button"
+							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+								// Find the input sibling and focus/click it
+								const input = e.currentTarget.previousElementSibling?.querySelector('input');
+								if (input) {
+									try {
+										(input as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
+									} catch {
+										(input as HTMLInputElement).focus();
+										(input as HTMLInputElement).click();
+									}
+								}
+							}}
+							className="absolute right-3 top-[38px] cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
+							style={{ color: 'var(--text-tertiary)' }}
+						>
+							<CalendarIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
+						</button>
+					</div>
+				);
+
+			case 'date-time':
+				return (
+					<div key={field.id}>
+						<label
+							className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-2"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							{field.name}
+						</label>
+						<div className="grid grid-cols-2 gap-3">
+							<div className="input-container relative">
+								<input
+									type="date"
+									placeholder="DD/MM/YY"
+									value={String(formData[`${key}_date`] || '')}
+									onChange={(e) => handleInputChange(`${key}_date`)(e.target.value)}
+									className="input-field pr-10"
+								/>
+								<button
+									type="button"
+									onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+										const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+										if (input) {
+											try {
+												(input as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
+											} catch {
+												input.focus();
+												input.click();
+											}
+										}
+									}}
+									className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									<CalendarIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
+								</button>
+							</div>
+							<div className="input-container relative">
+								<input
+									type="time"
+									placeholder="HH:MM"
+									value={String(formData[`${key}_time`] || '')}
+									onChange={(e) => handleInputChange(`${key}_time`)(e.target.value)}
+									className="input-field pr-10"
+								/>
+								<button
+									type="button"
+									onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+										const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+										if (input) {
+											try {
+												(input as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
+											} catch {
+												input.focus();
+												input.click();
+											}
+										}
+									}}
+									className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
+									style={{ color: 'var(--text-tertiary)' }}
+								>
+									<ClockIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
+								</button>
+							</div>
+						</div>
+					</div>
+				);
+
+			case 'single-line-text':
+			default:
+				// Fallback for text or unknown types
+				return (
+					<Input
+						key={field.id}
+						label={field.name}
+						placeholder=""
+						value={String(formData[key] || '')}
+						onChange={handleInputChange(key)}
+						type="text"
+					/>
+				);
+		}
+	};
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
 			<div
-				className="dark:bg-gray-800 shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+				className="dark:bg-gray-800 shadow-lg w-full max-w-4xl mx-4 max-h-[80vh] overflow-hidden flex flex-col rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
@@ -277,14 +580,14 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 				>
 					<div className="flex items-center gap-3">
 						<h2
-							className="text-xl font-semibold dark:text-gray-100"
+							className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
 							Disposition
 						</h2>
 						{isOffline && (
 							<span
-								className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+								className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[8px] md:text-[10px] font-medium"
 								style={{
 									backgroundColor: 'rgba(220, 53, 69, 0.1)',
 									color: '#DC3545',
@@ -310,7 +613,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					</div>
 					<button
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -328,139 +631,68 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 				{/* Form Content */}
 				<div className="flex-1 overflow-y-auto p-6">
+					{showPersonalInfo && customer && (
+						<div
+							className="mb-6 dark:bg-gray-700 border dark:border-gray-600 p-6 "
+							style={{
+								backgroundColor: 'var(--bg-primary)',
+								borderColor: 'var(--light-gray)'
+							}}
+						>
+							<h3
+								className="text-[12px] md:text-[14px] font-semibold dark:text-gray-100 mb-4 flex items-center gap-2"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								<PersonIcon className="w-5 h-5 text-[#6C8B7D]" />
+								Personal Information
+							</h3>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+								{Object.entries(customer)
+									.filter(([key]) => !['id', '_id', 'companyId', 'campaignId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid')
+									.map(([key, value]) => {
+										let IconComponent = PersonIcon;
+										const lowerKey = key.toLowerCase();
+										if (lowerKey.includes('phone')) IconComponent = MobileIcon;
+										else if (lowerKey.includes('email')) IconComponent = EnvelopeClosedIcon;
+										else if (lowerKey.includes('address')) IconComponent = HomeIcon;
+										else IconComponent = PersonIcon;
+
+										return (
+											<div key={key} className="flex items-start gap-4">
+												<IconComponent className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+												<div>
+													<label
+														className="block text-[8px] md:text-[10px] font-medium dark:text-gray-400 uppercase tracking-wider mb-1"
+														style={{ color: 'var(--text-tertiary)' }}
+													>
+														{key}
+													</label>
+													<p
+														className="text-base dark:text-gray-100 font-semibold break-all"
+														style={{ color: 'var(--text-primary)' }}
+													>
+														{value ? String(value) : '-'}
+													</p>
+												</div>
+											</div>
+										);
+									})}
+							</div>
+						</div>
+					)}
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-						{/* Left Column */}
-						<div className="space-y-6">
-							<Dropdown
-								label="Call Answered"
-								placeholder="Select"
-								options={callAnsweredOptions}
-								value={formData.callAnswered}
-								onChange={(value) => handleInputChange('callAnswered')(Array.isArray(value) ? value.join(',') : value)}
-							/>
-
-							<Dropdown
-								label="Reason for not watching"
-								placeholder="Select"
-								options={reasonForNotWatchingOptions}
-								value={formData.reasonForNotWatching}
-								onChange={(value) => handleInputChange('reasonForNotWatching')(Array.isArray(value) ? value.join(',') : value)}
-							/>
-
-							<Input
-								label="Amount to Pay"
-								placeholder=""
-								value={formData.amountToPay}
-								onChange={handleInputChange('amountToPay')}
-								type="number"
-							/>
-
-							<Textarea
-								label="Comment"
-								placeholder=""
-								value={formData.comment}
-								onChange={handleInputChange('comment')}
-								rows={4}
-							/>
-						</div>
-
-						{/* Right Column */}
-						<div className="space-y-6">
-							<Dropdown
-								label="Reason For Non Payment"
-								placeholder="Select"
-								options={reasonForNonPaymentOptions}
-								value={formData.reasonForNonPayment}
-								onChange={(value) => handleInputChange('reasonForNonPayment')(Array.isArray(value) ? value.join(',') : value)}
-							/>
-
-							<div className="relative">
-								<DateInput
-									ref={commitmentDateInputRef}
-									label="Commitment Date"
-									placeholder="DD/MM/YY"
-									value={formData.commitmentDate}
-									onChange={handleInputChange('commitmentDate')}
-									inputClassName="pr-10"
+						{dispositions?.length > 0 ? (
+							dispositions?.map((field) => renderField(field))
+						) : (
+							<div className="col-span-2">
+								<EmptyState
+									icon={FileTextIcon}
+									title="No Dispositions Found"
+									description="There are no disposition fields configured for this campaign. Please contact your administrator."
+									className="py-10"
 								/>
-								<button
-									type="button"
-									onClick={handleCommitmentDateIconClick}
-									className="absolute right-3 top-[38px] cursor-pointer dark:hover:text-gray-300 transition-colors z-10"
-									style={{ color: 'var(--text-tertiary)' }}
-									onMouseEnter={(e) => {
-										e.currentTarget.style.color = 'var(--text-secondary)';
-									}}
-									onMouseLeave={(e) => {
-										e.currentTarget.style.color = 'var(--text-tertiary)';
-									}}
-									aria-label="Open date picker"
-								>
-									<CalendarIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
-								</button>
 							</div>
-
-							<div>
-								<label
-									className="block text-sm font-medium dark:text-gray-300 mb-2"
-									style={{ color: 'var(--text-secondary)' }}
-								>
-									Date and Time
-								</label>
-								<div className="grid grid-cols-2 gap-3">
-									<div className="input-container relative">
-										<input
-											ref={dateInputRef}
-											type="date"
-											placeholder="DD/MM/YY"
-											value={formData.date}
-											onChange={(e) => handleInputChange('date')(e.target.value)}
-											className="input-field pr-10"
-										/>
-										<button
-											type="button"
-											onClick={handleDateIconClick}
-											className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10"
-											style={{ color: 'var(--text-tertiary)' }}
-											onMouseEnter={(e) => {
-												e.currentTarget.style.color = 'var(--text-secondary)';
-											}}
-											onMouseLeave={(e) => {
-												e.currentTarget.style.color = 'var(--text-tertiary)';
-											}}
-											aria-label="Open date picker"
-										>
-											<CalendarIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
-										</button>
-									</div>
-									<div className="input-container relative">
-										<input
-											ref={timeInputRef}
-											type="time"
-											placeholder="HH:MM"
-											value={formData.time}
-											onChange={(e) => handleInputChange('time')(e.target.value)}
-											className="input-field pr-10"
-										/>
-										<button
-											type="button"
-											onClick={handleTimeIconClick}
-											className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10"
-											style={{ color: 'var(--text-tertiary)' }}
-											onMouseEnter={(e) => {
-												e.currentTarget.style.color = 'var(--text-secondary)';
-											}}
-											onMouseLeave={(e) => {
-												e.currentTarget.style.color = 'var(--text-tertiary)';
-											}}
-											aria-label="Open time picker"
-										>
-											<ClockIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
-										</button>
-									</div>
-								</div>
-							</div>
-						</div>
+						)}
 					</div>
 				</div>
 
@@ -470,7 +702,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					{isOffline && (
-						<span className="text-xs flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
+						<span className="text-[8px] md:text-[10px] flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
 							<svg
 								className="w-4 h-4"
 								fill="none"

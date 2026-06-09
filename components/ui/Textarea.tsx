@@ -14,6 +14,8 @@ interface TextareaProps {
 	inputClassName?: string;
 	rows?: number;
 	resize?: 'none' | 'both' | 'horizontal' | 'vertical';
+	onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+	name?: string;
 }
 
 export const Textarea: React.FC<TextareaProps> = ({
@@ -28,6 +30,8 @@ export const Textarea: React.FC<TextareaProps> = ({
 	inputClassName = '',
 	rows = 3,
 	resize = 'vertical',
+	onKeyDown,
+	name,
 }) => {
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		onChange?.(e.target.value);
@@ -54,6 +58,9 @@ export const Textarea: React.FC<TextareaProps> = ({
 				rows={rows}
 				className={`input-field ${error ? 'error' : ''} ${resizeClass} ${inputClassName}`}
 				required={required}
+				onKeyDown={onKeyDown}
+				name={name}
+				suppressHydrationWarning
 			/>
 			{error && <span className="input-error">{error}</span>}
 		</div>

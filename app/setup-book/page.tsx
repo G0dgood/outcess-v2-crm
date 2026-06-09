@@ -1,17 +1,29 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
-import Icon from '@/components/ui/Icon';
 import Pagination from '@/components/ui/Pagination';
+import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import Checkbox from '@/components/ui/Checkbox';
-import { useSetup } from '@/contexts/SetupContext';
 import PageHeading from '@/components/ui/PageHeading';
-import { UploadIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
-import Input from '@/components/ui/Input';
-import UploadBase from '@/components/ui/UploadBaseEmployee';
+import { UploadIcon, Pencil1Icon, TrashIcon, PlusIcon, GridIcon } from '@radix-ui/react-icons';
+import UploadBaseSetupBook from '@/components/ui/UploadBaseSetupBook';
+import CreateRecordModal from '@/components/ui/CreateRecordModal';
 import SelectedRecordsDrawerContent from './SelectedRecordsDrawerContent';
+import { useCampaign } from '@/contexts/CampaignContext';
+import SampleCsvDownloader from '@/components/ui/SampleCsvDownloader';
+import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
+import EditRecordModal from '@/components/ui/EditRecordModal';
+import { useGetSetupBookByCampaignIdQuery, useDeleteSetupBookRecordsMutation, useDeleteManySetupBookRecordsMutation } from '@/store/services/setupBookApi';
+import { toast } from 'sonner';
+import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { ALL_MY_BUCKETS, getUserAssignedBuckets, BucketWithMembers } from '@/utils/bucketUtils';
+
+import { SelectBucketModal } from '@/components/ui/SelectBucketModal';
+import { useRouter } from 'next/navigation';
 
 interface FieldDefinition {
 	id: string;
@@ -22,51 +34,177 @@ interface FieldDefinition {
 
 interface SetupBookRecord {
 	id: string;
-	[key: string]: string | number | boolean; // Dynamic fields based on field definitions
+	[key: string]: string | number | boolean | null; // Dynamic fields based on field definitions
 }
 
 
+interface ApiError {
+	data?: {
+		message?: string;
+	};
+}
+
 const SetupBookPage: React.FC = () => {
-	const { setupData } = useSetup();
+	const router = useRouter();
+	const { canAccess, isAdmin, isSuperAdmin } = usePrivilege();
+	const { user } = useAuth();
+	const canAccessModule = canAccess('setupBook');
+	const canCreate = canAccess('setupBook', 'create');
+	const canEdit = canAccess('setupBook', 'edit');
+	const canDelete = canAccess('setupBook', 'delete');
+
+	const { campaignData } = useCampaign();
+	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
+
+	const allConfiguredFieldsChunks = useMemo(() => campaignData?.campaign?.customerBookSettings?.configuredFields || [], [campaignData]);
+	const buckets = useMemo(() => (campaignData?.campaign?.dashboardSettings?.buckets || []) as BucketWithMembers[], [campaignData]);
+	const userId = String(user?.id || user?._id || '');
+	const hasFullBucketAccess = isAdmin || isSuperAdmin;
+
+	const accessibleBuckets = useMemo(
+		() => (hasFullBucketAccess ? buckets : getUserAssignedBuckets(userId, buckets)),
+		[buckets, userId, hasFullBucketAccess]
+	);
+
+	const bucketOptions = useMemo(() => {
+		if (hasFullBucketAccess) return accessibleBuckets;
+		if (accessibleBuckets.length > 1) {
+			return [{ id: ALL_MY_BUCKETS, name: 'All My Buckets', color: '#6B7280' }, ...accessibleBuckets];
+		}
+		return accessibleBuckets;
+	}, [accessibleBuckets, hasFullBucketAccess]);
+
+	const [selectedBucketId, setSelectedBucketId] = useState<string>('');
+	const [isBucketModalOpen, setIsBucketModalOpen] = useState(false);
+
+	// Initialize selected bucket from the user's accessible buckets
+	useEffect(() => {
+		if (accessibleBuckets.length === 0) {
+			setSelectedBucketId('');
+			return;
+		}
+
+		const isCurrentSelectionValid =
+			selectedBucketId === ALL_MY_BUCKETS ||
+			accessibleBuckets.some((b) => b.id === selectedBucketId) ||
+			(hasFullBucketAccess && buckets.some((b) => b.id === selectedBucketId));
+
+		if (!selectedBucketId || !isCurrentSelectionValid) {
+			if (!hasFullBucketAccess && accessibleBuckets.length > 1) {
+				setSelectedBucketId(ALL_MY_BUCKETS);
+			} else {
+				setSelectedBucketId(accessibleBuckets[0].id);
+			}
+		}
+	}, [accessibleBuckets, buckets, hasFullBucketAccess, selectedBucketId]);
+
+	// Find fields for selected bucket (or union when viewing all assigned buckets)
+	const setupBookHeaderFields = useMemo(() => {
+		if (selectedBucketId === ALL_MY_BUCKETS) {
+			const fieldsMap = new Map<string, FieldDefinition>();
+			accessibleBuckets.forEach((bucket) => {
+				const config = allConfiguredFieldsChunks.find((c: { bucketId: string }) => c && c.bucketId === bucket.id);
+				(config?.fields || []).forEach((field: FieldDefinition) => {
+					if (field?.id) fieldsMap.set(field.id, field);
+				});
+			});
+			return Array.from(fieldsMap.values());
+		}
+
+		const currentBucketConfig = allConfiguredFieldsChunks.find(
+			(c: { bucketId: string }) => c && c.bucketId === selectedBucketId
+		);
+		return currentBucketConfig?.fields || [];
+	}, [selectedBucketId, accessibleBuckets, allConfiguredFieldsChunks]);
+
+	const activeUploadBucketId = selectedBucketId === ALL_MY_BUCKETS ? '' : selectedBucketId;
+
+	const bucketQueryParams = useMemo(() => {
+		if (selectedBucketId === ALL_MY_BUCKETS) {
+			return { bucketIds: accessibleBuckets.map((b) => b.id).join(',') };
+		}
+		return { bucketId: selectedBucketId };
+	}, [selectedBucketId, accessibleBuckets]);
+
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 	const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 	const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
 	const [editingRecord, setEditingRecord] = useState<SetupBookRecord | null>(null);
 	const [deleteRecord, setDeleteRecord] = useState<{ id: string; name: string } | null>(null);
-	const [fieldDefinitions, setFieldDefinitions] = useState<FieldDefinition[]>([
-		{ id: '1', name: 'Name', type: 'text', required: true },
-		{ id: '2', name: 'Phone', type: 'phone', required: true },
-		{ id: '3', name: 'Email', type: 'email', required: false },
-	]);
-	const [records, setRecords] = useState<SetupBookRecord[]>([
-		{ id: '1', Name: 'John Doe', Phone: '08012345678', Email: 'john.doe@example.com' },
-		{ id: '2', Name: 'Jane Smith', Phone: '08087654321', Email: 'jane.smith@example.com' },
-		{ id: '3', Name: 'Bob Johnson', Phone: '08011223344', Email: 'bob.johnson@example.com' },
-		{ id: '4', Name: 'Alice Williams', Phone: '08055667788', Email: 'alice.williams@example.com' },
-		{ id: '5', Name: 'Charlie Brown', Phone: '08099887766', Email: 'charlie.brown@example.com' },
-		{ id: '6', Name: 'David Miller', Phone: '08044332211', Email: 'david.miller@example.com' },
-	]);
+	// Memoize field definitions to avoid infinite loops and unstable references
+	const fieldDefinitions: FieldDefinition[] = useMemo(() => setupBookHeaderFields, [setupBookHeaderFields]);
+
+	const { data: apiRecords, isLoading } = useGetSetupBookByCampaignIdQuery(
+		{
+			id: campaignId || '',
+			search: searchTerm,
+			page: currentPage,
+			limit: itemsPerPage,
+			...bucketQueryParams,
+		},
+		{
+			skip:
+				!campaignId ||
+				!selectedBucketId ||
+				(selectedBucketId === ALL_MY_BUCKETS && accessibleBuckets.length === 0),
+		}
+	);
+
+	const [records, setRecords] = useState<SetupBookRecord[]>([]);
+
+	useEffect(() => {
+		if (apiRecords?.data) {
+			setRecords(apiRecords.data as unknown as SetupBookRecord[]);
+		} else {
+			setRecords([]);
+		}
+	}, [apiRecords]);
+
+	useEffect(() => {
+		setSelectedRecords(new Set());
+		setCurrentPage(1);
+	}, [selectedBucketId]);
+
+	const showBucketColumn = selectedBucketId === ALL_MY_BUCKETS;
+
+	const getBucketName = (record: SetupBookRecord) => {
+		const bucketId = String(record.bucketId || '');
+		return accessibleBuckets.find((b) => b.id === bucketId)?.name || bucketId || '-';
+	};
 
 	const handleUpload = () => {
+		if (selectedBucketId === ALL_MY_BUCKETS) {
+			toast.error('Select a specific bucket before uploading');
+			setIsBucketModalOpen(true);
+			return;
+		}
 		setIsUploadModalOpen(true);
 	};
 
-	const handleUploadComplete = (data: Record<string, string>[]) => {
-		console.log('Upload completed with data:', data);
-		// Process the uploaded data and update records
-		// You can add logic here to add the new records to the state
-		setIsUploadModalOpen(false);
+	const handleCreateRecord = () => {
+		if (selectedBucketId === ALL_MY_BUCKETS) {
+			toast.error('Select a specific bucket before creating a record');
+			setIsBucketModalOpen(true);
+			return;
+		}
+		setIsCreateModalOpen(true);
+	};
+
+	const handleUploadComplete = async () => {
+		// setIsUploadModalOpen(false);
 	};
 
 	const handleEditRecord = (record: SetupBookRecord) => {
 		setEditingRecord(record);
 	};
 
-	const handleSaveEdit = (updatedData: Record<string, string | number | boolean>) => {
+	const handleSaveEdit = (updatedData: Record<string, string | number | boolean | null>) => {
 		if (editingRecord) {
 			setRecords(prevRecords =>
 				prevRecords.map(record =>
@@ -89,34 +227,72 @@ const SetupBookPage: React.FC = () => {
 		});
 	};
 
-	const handleConfirmDelete = () => {
-		if (deleteRecord) {
-			setRecords(prevRecords => prevRecords.filter(record => record.id !== deleteRecord.id));
-			// Remove from selected if it was selected
-			setSelectedRecords(prev => {
-				const newSelected = new Set(prev);
-				newSelected.delete(deleteRecord.id);
-				if (newSelected.size === 0) {
-					setIsDrawerOpen(false);
-				}
-				return newSelected;
-			});
-			setDeleteRecord(null);
+	const [deleteSetupBookRecords] = useDeleteSetupBookRecordsMutation();
+	const [deleteManySetupBookRecords] = useDeleteManySetupBookRecordsMutation();
+
+	const handleDeleteSelected = () => {
+		setDeleteRecord({
+			id: 'BULK_DELETE',
+			name: `${selectedRecords.size} records`
+		});
+	};
+
+	const handleConfirmDelete = async () => {
+		if (deleteRecord?.id === 'BULK_DELETE' && campaignId) {
+			try {
+				await deleteManySetupBookRecords({
+					campaignId: campaignId,
+					ids: Array.from(selectedRecords)
+				}).unwrap();
+
+				toast.success("Records deleted successfully");
+
+				setSelectedRecords(new Set());
+				setIsDrawerOpen(false);
+				setDeleteRecord(null);
+			} catch (error: unknown) {
+				const apiError = error as ApiError;
+				toast.error("Failed to delete records", {
+					description: apiError?.data?.message || "An error occurred while deleting records"
+				});
+			}
+			return;
+		}
+
+		if (deleteRecord && campaignId) {
+			try {
+				await deleteSetupBookRecords({
+					campaignId: campaignId,
+					id: deleteRecord.id
+				}).unwrap();
+
+				toast.success("Record deleted successfully");
+
+				// Remove from selected if it was selected
+				setSelectedRecords(prev => {
+					const newSelected = new Set(prev);
+					newSelected.delete(deleteRecord.id);
+					if (newSelected.size === 0) {
+						setIsDrawerOpen(false);
+					}
+					return newSelected;
+				});
+				setDeleteRecord(null);
+			} catch (error: unknown) {
+				const apiError = error as ApiError;
+				toast.error("Failed to delete record", {
+					description: apiError?.data?.message || "An error occurred while deleting the record"
+				});
+			}
+		} else if (!campaignId) {
+			toast.error("Missing Campaign ID");
 		}
 	};
 
-	const filteredRecords = records.filter(record => {
-		if (!searchTerm) return true;
-		const searchLower = searchTerm.toLowerCase();
-		return fieldDefinitions.some(field => {
-			const value = record[field.name];
-			return value && String(value).toLowerCase().includes(searchLower);
-		});
-	});
+	const filteredRecords = records;
 
-	const totalPages = Math.ceil(filteredRecords.length / 10);
-	const startIndex = (currentPage - 1) * 10;
-	const paginatedRecords = filteredRecords.slice(startIndex, startIndex + 10);
+	const totalPages = apiRecords?.pagination?.totalPages || 1;
+	const paginatedRecords = records;
 
 	const handleSelectAll = (checked: boolean) => {
 		if (checked) {
@@ -163,57 +339,106 @@ const SetupBookPage: React.FC = () => {
 		}
 	}, [isDrawerOpen]);
 
+	if (!canAccessModule) {
+		return null;
+	}
+
+	if (!hasFullBucketAccess && accessibleBuckets.length === 0) {
+		return (
+			<div>
+				<PageHeading text="Setup Book" />
+				<div className="my-12 text-center">
+					<p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+						You are not assigned to any bucket. Contact your administrator to get bucket access.
+					</p>
+				</div>
+			</div>
+		);
+	}
+
+	const handleNavigateToDashboard = () => {
+		router.push('/setup/dashboard');
+	};
+
 	return (
 		<div>
-			{/* Title */}
 			<PageHeading
 				text="Setup Book"
 			/>
 
 			<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-				<Search
-					placeholder="Search"
-					value={searchTerm}
-					onChange={setSearchTerm}
-					className="w-full sm:w-auto"
-					maxWidth="w-full"
-					onSearch={(value) => console.log('Search triggered:', value)}
-					onClear={() => console.log('Search cleared')}
-					showClearButton={true}
-				/>
-				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
+				<div className="flex items-center gap-3 w-full sm:w-auto">
+					<Search
+						placeholder="Search"
+						value={searchTerm}
+						onChange={setSearchTerm}
+						className="flex-1 sm:w-auto"
+						maxWidth="w-full sm:max-w-xs"
+						onSearch={(value) => console.log('Search triggered:', value)}
+						showClearButton={true}
+					/>
 					<Button
+						variant="outline"
 						size="md"
-						onClick={handleUpload}
-						variant="primary"
-						className="flex items-center gap-2 px-2 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm"
+						onClick={() => setIsBucketModalOpen(true)}
+						className="flex items-center gap-2 whitespace-nowrap"
 					>
-						<UploadIcon className="w-4 h-4" />
-						Upload
+						<GridIcon className="w-4 h-4" />
+						{bucketOptions.find(b => b.id === selectedBucketId)?.name || 'Select Bucket'}
 					</Button>
+				</div>
+				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
+					<SampleCsvDownloader
+						fields={setupBookHeaderFields || []}
+						fileName="sample_setup_book.csv"
+						className="flex items-center gap-2 px-2 py-2  sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+						extraHeaders={['searchId']}
+					/>
+					{canCreate && (
+						<>
+							<Button
+								size="md"
+								onClick={handleCreateRecord}
+								variant="outline"
+								className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+							>
+								<PlusIcon className="w-4 h-4" />
+								Create Record
+							</Button>
+							<Button
+								size="md"
+								onClick={handleUpload}
+								variant="primary"
+								className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+							>
+								<UploadIcon className="w-4 h-4" />
+								Upload
+							</Button>
+						</>
+					)}
 				</div>
 			</div>
 
 			{/* Records Table */}
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden"
+				className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
 				}}
 			>
+				<TablePaginationHeader
+					totalItems={apiRecords?.pagination?.total || 0}
+					itemsPerPage={itemsPerPage}
+					onItemsPerPageChange={(value) => {
+						setItemsPerPage(value);
+						setCurrentPage(1);
+					}}
+					label="Records"
+				/>
 				<div className="overflow-x-auto">
-					<table
-						className="min-w-full divide-y dark:divide-gray-700"
-						style={{ borderColor: 'var(--light-gray)' }}
-					>
-						<thead
-							className="dark:bg-gray-700 border-b dark:border-gray-700"
-							style={{
-								backgroundColor: 'var(--bg-primary)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
+					<table>
+						<thead>
 							<tr>
 								<th>
 									<Checkbox
@@ -222,306 +447,168 @@ const SetupBookPage: React.FC = () => {
 										size="medium"
 									/>
 								</th>
-								{fieldDefinitions.map((field) => (
-									<th
-										key={field.id}
-										className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-										style={{ color: 'var(--text-primary)' }}
-									>
-										{field.name}
+								<th>
+									Search ID
+								</th>
+								{showBucketColumn && (
+									<th>Bucket</th>
+								)}
+								{fieldDefinitions?.map((field: FieldDefinition, index: number) => (
+									<th key={field?.id ? `header-id-${field.id}` : `header-idx-${index}`}>
+										{field?.name}
 									</th>
 								))}
-								<th
-									className="px-6 py-3 text-left text-xs font-medium dark:text-gray-100 uppercase tracking-wider"
-									style={{ color: 'var(--text-primary)' }}
-								>
+								<th>
 									Actions
 								</th>
 							</tr>
 						</thead>
-						<tbody
-							className="dark:bg-gray-800 divide-y dark:divide-gray-700"
-							style={{
-								backgroundColor: 'var(--accent-white)',
-								borderColor: 'var(--light-gray)'
-							}}
-						>
-							{filteredRecords.length === 0 ? (
-								<tr>
-									<td colSpan={fieldDefinitions.length + 2} className="px-6 py-12 text-center">
-										<div className="flex flex-col items-center justify-center">
-											<div className="mb-4">
-												<Icon name="upload-cloud" size="4xl" className="text-gray-300 dark:text-gray-600" />
-											</div>
-											<h3
-												className="text-lg font-medium dark:text-gray-100 mb-2"
-												style={{ color: 'var(--text-primary)' }}
-											>
-												No Data Found
-											</h3>
-											<p
-												className="dark:text-gray-400"
-												style={{ color: 'var(--text-tertiary)' }}
-											>
-												{searchTerm ? 'No records match your search.' : 'Upload your call list to get started.'}
-											</p>
-										</div>
+						<tbody>
+
+
+							{isLoading ? (
+								<SVGLoaderFetch colSpan={8} text={''} />
+							) : filteredRecords.length === 0 ? (
+								<NoRecordFound colSpan={8} />
+							) : paginatedRecords.map((record) => (
+								<tr
+									key={record.id}
+									style={{ borderColor: 'var(--light-gray)' }}
+								>
+									<td className="px-6 py-4 whitespace-nowrap">
+										<Checkbox
+											checked={selectedRecords.has(record.id)}
+											onChange={(checked) => handleSelectRecord(record.id, checked)}
+											size="medium"
+										/>
 									</td>
-								</tr>
-							) : (
-								paginatedRecords.map((record) => (
-									<tr
-										key={record.id}
-										className="dark:hover:bg-gray-700"
-										style={{ borderColor: 'var(--light-gray)' }}
-										onMouseEnter={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-										}}
-										onMouseLeave={(e) => {
-											e.currentTarget.style.backgroundColor = 'var(--accent-white)';
-										}}
-									>
-										<td className="px-6 py-4 whitespace-nowrap">
-											<Checkbox
-												checked={selectedRecords.has(record.id)}
-												onChange={(checked) => handleSelectRecord(record.id, checked)}
-												size="medium"
-											/>
+									<td>
+										{record['searchId'] || '-'}
+									</td>
+									{showBucketColumn && (
+										<td>{getBucketName(record)}</td>
+									)}
+									{fieldDefinitions?.map((field: FieldDefinition, index: number) => (
+										<td
+											key={`${record.id}-${field?.id ? `id-${field.id}` : `idx-${index}`}`}
+										>
+											{record[field.name] || '-'}
 										</td>
-										{fieldDefinitions.map((field) => (
-											<td
-												key={field.id}
-												className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-100"
-												style={{ color: 'var(--text-primary)' }}
-											>
-												{record[field.name] || '-'}
-											</td>
-										))}
-										<td>
-											<div className="flex items-center gap-2">
-												<button
+									))}
+									<td>
+										<div className="flex items-center gap-2">
+											{canEdit && (
+												<Button
+													variant="ghost"
+													size="sm"
 													onClick={() => handleEditRecord(record)}
-													className="p-2 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+													className="p-2 dark:text-gray-400 text-gray-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer h-auto"
 													style={{ color: 'var(--text-secondary)' }}
-													onMouseEnter={(e) => {
+													onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 														e.currentTarget.style.color = '#2563EB';
 														e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
 													}}
-													onMouseLeave={(e) => {
+													onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 														e.currentTarget.style.color = 'var(--text-secondary)';
 														e.currentTarget.style.backgroundColor = 'transparent';
 													}}
 													title="Edit Record"
 												>
 													<Pencil1Icon className="w-5 h-5" />
-												</button>
-												<button
+												</Button>
+											)}
+											{canDelete && (
+												<Button
+													variant="ghost"
+													size="sm"
 													onClick={() => handleDeleteClick(record)}
-													className="p-2 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
+													className="p-2 dark:text-gray-400 text-gray-400 hover:text-red-800 dark:hover:text-red-300 transition-colors cursor-pointer h-auto"
 													style={{ color: 'var(--text-secondary)' }}
-													onMouseEnter={(e) => {
+													onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 														e.currentTarget.style.color = '#DC2626';
 														e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
 													}}
-													onMouseLeave={(e) => {
+													onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 														e.currentTarget.style.color = 'var(--text-secondary)';
 														e.currentTarget.style.backgroundColor = 'transparent';
 													}}
 													title="Delete Record"
 												>
 													<TrashIcon className="w-5 h-5" />
-												</button>
-											</div>
-										</td>
-									</tr>
-								))
-							)}
+												</Button>
+											)}
+										</div>
+									</td>
+								</tr>
+							))}
 						</tbody>
 					</table>
 				</div>
 			</div>
 
 			{/* Pagination */}
-			{filteredRecords.length > 0 && (
+			{filteredRecords?.length > 0 && (
 				<Pagination
 					currentPage={currentPage}
 					totalPages={totalPages}
 					onPageChange={setCurrentPage}
 					showEllipsis={true}
 					maxVisiblePages={5}
-					primaryColor={setupData.primaryColor}
-					secondaryColor={setupData.secondaryColor}
+					primaryColor={campaignData?.primaryColor || 'var(--primary)'}
+					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
 
+			{/* Select Bucket Modal */}
+			<SelectBucketModal
+				isOpen={isBucketModalOpen}
+				onClose={() => setIsBucketModalOpen(false)}
+				buckets={bucketOptions}
+				selectedBucketId={selectedBucketId}
+				onSelect={(bucketId) => {
+					setSelectedBucketId(bucketId);
+					setCurrentPage(1);
+					setIsBucketModalOpen(false);
+				}}
+				onNavigateToDashboard={handleNavigateToDashboard}
+			/>
+
 			{/* Upload Modal */}
-			<UploadBase
+			<UploadBaseSetupBook
 				isOpen={isUploadModalOpen}
 				onClose={() => setIsUploadModalOpen(false)}
 				showButton={false}
 				onUploadComplete={handleUploadComplete}
+				bucketId={activeUploadBucketId}
+			/>
+
+			{/* Create Record Modal */}
+			<CreateRecordModal
+				isOpen={isCreateModalOpen}
+				onClose={() => setIsCreateModalOpen(false)}
+				fieldDefinitions={fieldDefinitions}
+				bucketId={activeUploadBucketId}
 			/>
 
 			{/* Edit Record Modal */}
-			{editingRecord && (
-				<div
-					className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-					onClick={() => setEditingRecord(null)}
-				>
-					<div
-						className="dark:bg-gray-800 w-full max-w-2xl mx-4 shadow-lg"
-						style={{ backgroundColor: 'var(--accent-white)' }}
-						onClick={(e) => e.stopPropagation()}
-					>
-						{/* Modal Header */}
-						<div
-							className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6"
-							style={{ borderColor: 'var(--light-gray)' }}
-						>
-							<h2
-								className="font-inter text-xl font-semibold dark:text-gray-100"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								Edit Record
-							</h2>
-							<button
-								onClick={() => setEditingRecord(null)}
-								className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-								style={{ color: 'var(--text-tertiary)' }}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.color = 'var(--text-secondary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.color = 'var(--text-tertiary)';
-								}}
-							>
-								<Icon name="Close_round_light" size="lg" />
-							</button>
-						</div>
-
-						{/* Modal Form */}
-						<div className="p-6 space-y-4">
-							{fieldDefinitions.map((field) => (
-								<Input
-									key={field.id}
-									label={field.name}
-									placeholder={`Enter ${field.name}`}
-									value={String(editingRecord[field.name] || '')}
-									onChange={(value) => {
-										setEditingRecord(prev => prev ? { ...prev, [field.name]: value } : null);
-									}}
-									type={field.type === 'phone' ? 'tel' : field.type === 'email' ? 'email' : field.type === 'number' ? 'number' : 'text'}
-									required={field.required}
-								/>
-							))}
-						</div>
-
-						{/* Modal Footer */}
-						<div
-							className="flex justify-end gap-3 p-6 border-t dark:border-gray-700"
-							style={{ borderColor: 'var(--light-gray)' }}
-						>
-							<Button
-								variant="outline"
-								size="md"
-								onClick={() => setEditingRecord(null)}
-							>
-								Cancel
-							</Button>
-							<Button
-								variant="primary"
-								size="md"
-								onClick={() => {
-									handleSaveEdit(editingRecord);
-								}}
-							>
-								Save Changes
-							</Button>
-						</div>
-					</div>
-				</div>
-			)}
+			<EditRecordModal
+				isOpen={!!editingRecord}
+				record={editingRecord}
+				fieldDefinitions={fieldDefinitions}
+				onClose={() => setEditingRecord(null)}
+				onSave={(updatedRecord) => {
+					handleSaveEdit(updatedRecord);
+					setEditingRecord(null);
+				}}
+			/>
 
 			{/* Delete Record Modal */}
-			{deleteRecord && (
-				<div
-					className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-					onClick={() => setDeleteRecord(null)}
-				>
-					<div
-						className="dark:bg-gray-800 w-full max-w-md mx-4 shadow-lg"
-						style={{ backgroundColor: 'var(--accent-white)' }}
-						onClick={(e) => e.stopPropagation()}
-					>
-						{/* Modal Header */}
-						<div
-							className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6"
-							style={{ borderColor: 'var(--light-gray)' }}
-						>
-							<h2
-								className="font-inter text-xl font-semibold dark:text-gray-100"
-								style={{ color: 'var(--text-primary)' }}
-							>
-								Delete Record
-							</h2>
-							<button
-								onClick={() => setDeleteRecord(null)}
-								className="dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-								style={{ color: 'var(--text-tertiary)' }}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.color = 'var(--text-secondary)';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.color = 'var(--text-tertiary)';
-								}}
-							>
-								<Icon name="Close_round_light" size="lg" />
-							</button>
-						</div>
-
-						{/* Modal Content */}
-						<div className="p-6">
-							<p
-								className="text-sm dark:text-gray-300 mb-6"
-								style={{ color: 'var(--text-secondary)' }}
-							>
-								Are you sure you want to delete the record <strong>{deleteRecord.name}</strong>? This action cannot be undone.
-							</p>
-						</div>
-
-						{/* Modal Footer */}
-						<div
-							className="flex justify-end gap-3 p-6 border-t dark:border-gray-700"
-							style={{ borderColor: 'var(--light-gray)' }}
-						>
-							<Button
-								variant="outline"
-								size="md"
-								onClick={() => setDeleteRecord(null)}
-							>
-								Cancel
-							</Button>
-							<Button
-								variant="primary"
-								size="md"
-								onClick={handleConfirmDelete}
-								style={{
-									backgroundColor: '#DC2626',
-									color: 'white'
-								}}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.backgroundColor = '#B91C1C';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.backgroundColor = '#DC2626';
-								}}
-							>
-								Delete
-							</Button>
-						</div>
-					</div>
-				</div>
-			)}
+			<DeleteRecordModal
+				isOpen={!!deleteRecord}
+				recordName={deleteRecord?.name || ''}
+				onClose={() => setDeleteRecord(null)}
+				onConfirm={handleConfirmDelete}
+			/>
 
 			{/* Selected Records Drawer */}
 			{shouldRenderDrawer && (
@@ -533,9 +620,9 @@ const SetupBookPage: React.FC = () => {
 						selectedRecords={selectedRecords}
 						fieldDefinitions={fieldDefinitions}
 						records={records}
-						onEdit={handleEditRecord}
-						onDelete={handleDeleteClick}
 						onClose={() => setIsDrawerOpen(false)}
+						onDeleteSelected={handleDeleteSelected}
+						canDelete={canDelete}
 					/>
 				</div>
 			)}

@@ -70,14 +70,16 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
 					className={`password-field ${error ? 'error' : ''}`}
 					required={required}
 					autoComplete={autoComplete}
+					suppressHydrationWarning
 				/>
 				<div className="password-icons">
 					{showHelpIcon && (
 						<button
 							type="button"
-							className="help-icon"
+							className="help-icon p-1 h-auto"
 							onClick={handleHelpClick}
 							disabled={disabled}
+							title="Password help"
 							aria-label="Password help"
 						>
 							?
@@ -85,9 +87,10 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
 					)}
 					<button
 						type="button"
-						className="toggle-visibility"
+						className="toggle-visibility p-1 h-auto"
 						onClick={togglePasswordVisibility}
 						disabled={disabled}
+						title={showPassword ? 'Hide password' : 'Show password'}
 						aria-label={showPassword ? 'Hide password' : 'Show password'}
 					>
 						{showPassword ? '👁️' : '👁️‍🗨️'}

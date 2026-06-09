@@ -58,3 +58,46 @@ export const sampleNotifications: Notification[] = [
 		isRead: true
 	}
 ];
+
+
+	const settingsSubItems = [
+		{
+			id: 'general-settings-tab',
+			label: 'General',
+			icon: 'settings',
+			path: '/settings?tab=settings'
+		},
+		// {
+		// 	id: 'fields-tab',
+		// 	label: 'Fields',
+		// 	icon: 'users',
+		// 	path: '/settings?tab=fields'
+		// },
+		{
+			id: 'status-tab',
+			label: 'Status',
+			icon: 'id-card',
+			path: '/settings?tab=status'
+		},
+		{
+			id: 'permission-tab',
+			label: 'Permission',
+			icon: 'chart',
+			path: '/settings?tab=permission'
+		},
+		{
+			id: 'company-details-tab',
+			label: 'Company Details',
+			icon: 'settings',
+			path: '/settings?tab=company-details'
+		},
+		{
+			id: 'roles-tab',
+			label: 'Roles',
+			icon: 'book',
+			path: '/settings?tab=roles'
+		},
+	];
+
+
+	export { settingsSubItems };

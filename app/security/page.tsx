@@ -15,13 +15,13 @@ const SecurityPage: React.FC = () => {
 			<section className="pt-32 pb-16 px-6 md:px-[180px]">
 				<div className="max-w-4xl mx-auto">
 					<h1
-						className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-[#050711] leading-tight"
+						className="text-[30px] md:text-[36px] lg:text-[48px] font-bold mb-6 text-[#050711] leading-tight"
 						style={plusJakartaStyle}
 					>
 						Security
 					</h1>
 					<p
-						className="text-lg md:text-xl text-[#4A5565] leading-relaxed"
+						className="text-[14px] md:text-[16px] text-[#4A5565] leading-relaxed"
 						style={plusJakartaStyle}
 					>
 						Enterprise-grade security to protect your data and ensure compliance with industry standards.
@@ -33,7 +33,7 @@ const SecurityPage: React.FC = () => {
 			<section className="py-16 px-6 md:px-[180px] bg-white">
 				<div className="max-w-6xl mx-auto">
 					<h2
-						className="text-3xl md:text-4xl font-bold mb-12 text-[#050711] text-center"
+						className="text-[24px] md:text-[30px] font-bold mb-12 text-[#050711] text-center"
 						style={plusJakartaStyle}
 					>
 						Our Security Commitment
@@ -55,13 +55,13 @@ const SecurityPage: React.FC = () => {
 								<LockClosedIcon className="w-6 h-6" style={{ color: '#6C8B7D' }} />
 							</div>
 							<h3
-								className="text-xl font-semibold mb-3 text-[#050711]"
+								className="text-[14px] md:text-[16px] font-semibold mb-3 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								End-to-End Encryption
 							</h3>
 							<p
-								className="text-sm text-[#4A5565] leading-relaxed"
+								className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed"
 								style={plusJakartaStyle}
 							>
 								All data is encrypted using AES-256 encryption both at rest and in transit. We use TLS 1.3 for all data transmission to ensure your information remains secure.
@@ -83,13 +83,13 @@ const SecurityPage: React.FC = () => {
 								<EyeOpenIcon className="w-6 h-6" style={{ color: '#6C8B7D' }} />
 							</div>
 							<h3
-								className="text-xl font-semibold mb-3 text-[#050711]"
+								className="text-[14px] md:text-[16px] font-semibold mb-3 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								Role-Based Access Control
 							</h3>
 							<p
-								className="text-sm text-[#4A5565] leading-relaxed"
+								className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed"
 								style={plusJakartaStyle}
 							>
 								Granular permissions and role-based access controls ensure that users only have access to the data and features they need. Multi-factor authentication (MFA) is available for all accounts.
@@ -121,13 +121,13 @@ const SecurityPage: React.FC = () => {
 								</svg>
 							</div>
 							<h3
-								className="text-xl font-semibold mb-3 text-[#050711]"
+								className="text-[14px] md:text-[16px] font-semibold mb-3 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								Industry Compliance
 							</h3>
 							<p
-								className="text-sm text-[#4A5565] leading-relaxed"
+								className="text-[10px] md:text-[12px] text-[#4A5565] leading-relaxed"
 								style={plusJakartaStyle}
 							>
 								We maintain SOC 2 Type II certification, ISO 27001 compliance, and adhere to GDPR, HIPAA, and PCI-DSS standards to ensure your data meets the highest security requirements.
@@ -144,13 +144,13 @@ const SecurityPage: React.FC = () => {
 						{/* Data Encryption */}
 						<div>
 							<h2
-								className="text-2xl md:text-3xl font-bold mb-4 text-[#050711]"
+								className="text-[18px] md:text-[20px] font-bold mb-4 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								Data Encryption
 							</h2>
 							<p
-								className="text-base md:text-lg text-[#4A5565] leading-relaxed mb-4"
+								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
 								We employ industry-standard encryption to protect your data:
@@ -166,13 +166,13 @@ const SecurityPage: React.FC = () => {
 						{/* Infrastructure Security */}
 						<div>
 							<h2
-								className="text-2xl md:text-3xl font-bold mb-4 text-[#050711]"
+								className="text-[18px] md:text-[20px] font-bold mb-4 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								Infrastructure Security
 							</h2>
 							<p
-								className="text-base md:text-lg text-[#4A5565] leading-relaxed mb-4"
+								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
 								Our infrastructure is built on secure, enterprise-grade foundations:
@@ -189,13 +189,13 @@ const SecurityPage: React.FC = () => {
 						{/* Access Control and Authentication */}
 						<div>
 							<h2
-								className="text-2xl md:text-3xl font-bold mb-4 text-[#050711]"
+								className="text-[18px] md:text-[20px] font-bold mb-4 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								Access Control and Authentication
 							</h2>
 							<p
-								className="text-base md:text-lg text-[#4A5565] leading-relaxed mb-4"
+								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
 								We implement multiple layers of access control:
@@ -213,13 +213,13 @@ const SecurityPage: React.FC = () => {
 						{/* Compliance and Certifications */}
 						<div>
 							<h2
-								className="text-2xl md:text-3xl font-bold mb-4 text-[#050711]"
+								className="text-[18px] md:text-[20px] font-bold mb-4 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								Compliance and Certifications
 							</h2>
 							<p
-								className="text-base md:text-lg text-[#4A5565] leading-relaxed mb-4"
+								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
 								We maintain compliance with major industry standards:
@@ -236,13 +236,13 @@ const SecurityPage: React.FC = () => {
 						{/* Security Monitoring */}
 						<div>
 							<h2
-								className="text-2xl md:text-3xl font-bold mb-4 text-[#050711]"
+								className="text-[18px] md:text-[20px] font-bold mb-4 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								Security Monitoring and Incident Response
 							</h2>
 							<p
-								className="text-base md:text-lg text-[#4A5565] leading-relaxed mb-4"
+								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
 								We continuously monitor and protect our systems:
@@ -260,13 +260,13 @@ const SecurityPage: React.FC = () => {
 						{/* Data Privacy */}
 						<div>
 							<h2
-								className="text-2xl md:text-3xl font-bold mb-4 text-[#050711]"
+								className="text-[18px] md:text-[20px] font-bold mb-4 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								Data Privacy and Retention
 							</h2>
 							<p
-								className="text-base md:text-lg text-[#4A5565] leading-relaxed mb-4"
+								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
 								Your data privacy is our priority:
@@ -283,13 +283,13 @@ const SecurityPage: React.FC = () => {
 						{/* Employee Security */}
 						<div>
 							<h2
-								className="text-2xl md:text-3xl font-bold mb-4 text-[#050711]"
+								className="text-[18px] md:text-[20px] font-bold mb-4 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								Employee Security Practices
 							</h2>
 							<p
-								className="text-base md:text-lg text-[#4A5565] leading-relaxed mb-4"
+								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
 								Our team is trained and committed to security:
@@ -306,13 +306,13 @@ const SecurityPage: React.FC = () => {
 						{/* Security Best Practices */}
 						<div>
 							<h2
-								className="text-2xl md:text-3xl font-bold mb-4 text-[#050711]"
+								className="text-[18px] md:text-[20px] font-bold mb-4 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								Security Best Practices for Users
 							</h2>
 							<p
-								className="text-base md:text-lg text-[#4A5565] leading-relaxed mb-4"
+								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
 								Help us keep your account secure:
@@ -330,23 +330,23 @@ const SecurityPage: React.FC = () => {
 						{/* Security Contact */}
 						<div>
 							<h2
-								className="text-2xl md:text-3xl font-bold mb-4 text-[#050711]"
+								className="text-[18px] md:text-[20px] font-bold mb-4 text-[#050711]"
 								style={plusJakartaStyle}
 							>
 								Report a Security Issue
 							</h2>
 							<p
-								className="text-base md:text-lg text-[#4A5565] leading-relaxed mb-4"
+								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mb-4"
 								style={plusJakartaStyle}
 							>
 								If you discover a security vulnerability or have a security concern, please contact us immediately:
 							</p>
 							<ul className="list-none space-y-2 text-[#4A5565]">
-								<li style={plusJakartaStyle}><strong>Email:</strong> security@peoplely.com</li>
+								<li style={plusJakartaStyle}><strong>Email:</strong> security@outcess.com</li>
 								<li style={plusJakartaStyle}><strong>Security Team:</strong> We respond to all security reports within 24 hours</li>
 							</ul>
 							<p
-								className="text-base md:text-lg text-[#4A5565] leading-relaxed mt-4"
+								className="text-[12px] md:text-[14px] text-[#4A5565] leading-relaxed mt-4"
 								style={plusJakartaStyle}
 							>
 								We appreciate responsible disclosure and will work with security researchers to address any issues.

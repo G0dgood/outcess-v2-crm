@@ -1,59 +1,149 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from "./baseApi";
+
+export interface RolePermission {
+  id: string;
+  moduleName: string;
+  access: boolean;
+  permissions: {
+    view: boolean;
+    edit: boolean;
+    delete: boolean;
+    create: boolean;
+  };
+}
+
+export interface Role {
+  _id: string;
+  id?: string;
+  roleName: string;
+  supervisorTitle?: string;
+  description: string;
+  isSupervisor?: boolean;
+  companyId: string;
+  campaignId?: string;
+  permissions: RolePermission[];
+  userCount?: number;
+  teamMemberCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export interface CreateRoleRequest {
-    roleName: string;
-    description: string;
-    companyId: string;
-    permissions: Record<string, boolean>;
+  roleName: string;
+  description: string;
+  companyId: string;
+  campaignId?: string;
+  permissions: RolePermission[];
 }
 
 export interface CreateRoleResponse {
-    message: string;
-    role?: any;
+  message: string;
+  role?: Role;
 }
 
-export const roleApi = createApi({
-    reducerPath: 'roleApi',
-    baseQuery: fetchBaseQuery({ 
-        baseUrl: process.env.base_url,
-        prepareHeaders: (headers, { getState }) => {
-            const token = (getState() as any).auth?.tokens?.accessToken || localStorage.getItem('token');
-            if (token) {
-                headers.set('authorization', `Bearer ${token}`);
-            }
-            return headers;
-        },
+export interface GetRolesResponse {
+  message?: string;
+  roles: Role[];
+}
+
+export interface CreateSupervisorRoleRequest {
+  roleName: string;
+  supervisorTitle: string;
+  description: string;
+  isSupervisor: boolean;
+  companyId: string;
+  campaignId?: string;
+}
+
+export interface PermissionTemplate {
+  id: string;
+  moduleName: string;
+  access: boolean;
+  permissions: {
+    view: boolean;
+    edit: boolean;
+    delete: boolean;
+    create: boolean;
+  };
+}
+
+export interface GetPermissionTemplatesResponse {
+  message: string;
+  roles: Role[];
+}
+
+export const roleApi = baseApi.injectEndpoints({
+  endpoints: (builder) => ({
+    createRole: builder.mutation<CreateRoleResponse, CreateRoleRequest>({
+      query: (roleData) => ({
+        url: "api/v1/roles",
+        method: "POST",
+        body: roleData,
+      }),
+      invalidatesTags: ["Roles"],
     }),
-    tagTypes: ['Roles'],
-    endpoints: (builder) => ({
-        createRole: builder.mutation<CreateRoleResponse, CreateRoleRequest>({
-            query: (roleData) => ({
-                url: 'api/v1/roles',
-                method: 'POST',
-                body: roleData,
-            }),
-            invalidatesTags: ['Roles'],
-        }),
-        getRolesByCompanyId: builder.query<any, string>({
-             query: (companyId) => `api/v1/roles/company/${companyId}`,
-             providesTags: ['Roles'],
-        }),
-        updateRole: builder.mutation<any, { id: string; roleData: Partial<CreateRoleRequest> }>({
-            query: ({ id, roleData }) => ({
-                url: `api/v1/roles/${id}`,
-                method: 'PATCH',
-                body: roleData,
-            }),
-            invalidatesTags: ['Roles'],
-        }),
-        deleteRole: builder.mutation<any, string>({
-            query: (id) => ({
-                url: `api/v1/roles/${id}`,
-                method: 'DELETE',
-            }),
-            invalidatesTags: ['Roles'],
-        }),
+    getRolesByCompanyId: builder.query<GetRolesResponse, string>({
+      query: (companyId) => `api/v1/roles/company/${companyId}`,
+      providesTags: ["Roles"],
     }),
+    getRolesByCampaignId: builder.query<GetRolesResponse, string>({
+      query: (campaignId) => `api/v1/roles/campaign/${campaignId}`,
+      providesTags: ["Roles"],
+    }),
+    getPermissionWithPrivilege: builder.query<
+      GetPermissionTemplatesResponse,
+      string
+    >({
+      query: (campaignId) =>
+        `api/v1/roles/permissions/keys?campaignId=${campaignId}`,
+      providesTags: ["PermissionTemplates"],
+    }),
+    updateRole: builder.mutation<
+      Role,
+      { id: string; roleData: Partial<CreateRoleRequest> }
+    >({
+      query: ({ id, roleData }) => ({
+        url: `api/v1/roles/${id}`,
+        method: "PATCH",
+        body: roleData,
+      }),
+      invalidatesTags: ["Roles"],
+    }),
+    deleteRole: builder.mutation<unknown, string>({
+      query: (id) => ({
+        url: `api/v1/roles/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Roles"],
+    }),
+    deleteRolesByCampaign: builder.mutation<unknown, string>({
+      query: (id) => ({
+        url: `api/v1/roles/campaign/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Roles"],
+    }),
+    createSupervisorRole: builder.mutation<
+      CreateRoleResponse,
+      CreateSupervisorRoleRequest
+    >({
+      query: (data) => ({
+        url: "api/v1/roles/supervisors",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Roles"],
+    }),
+  }),
 });
 
-export const { useCreateRoleMutation, useGetRolesByCompanyIdQuery, useUpdateRoleMutation, useDeleteRoleMutation } = roleApi;
+export const {
+  useCreateRoleMutation,
+  useGetRolesByCompanyIdQuery,
+  useGetRolesByCampaignIdQuery,
+  useGetPermissionWithPrivilegeQuery,
+  useUpdateRoleMutation,
+  useDeleteRoleMutation,
+  useDeleteRolesByCampaignMutation,
+  useCreateSupervisorRoleMutation,
+} = roleApi;

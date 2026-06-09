@@ -35,8 +35,8 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ items }) => {
 						className="flex h-full flex-col gap-3 rounded-2xl border border-light bg-surface p-6 transition-shadow hover:shadow-lg hover:shadow-soft"
 					>
 						<Image src={feature.iconSrc} alt={feature.title} width={40} height={40} />
-						<h3 className="text-lg font-semibold text-primary">{feature.title}</h3>
-						<p className="font-[Plus-Jakarta-Sans] font-normal text-[16px] leading-[26px] flex items-center text-[#4A5565]"
+						<h3 className="text-[12px] md:text-[14px] font-semibold text-primary">{feature.title}</h3>
+						<p className="font-[Plus-Jakarta-Sans] font-normal text-[12px] md:text-[14px] leading-[26px] flex items-center text-[#4A5565]"
 							style={plusJakartaStyle}>{feature.description}</p>
 					</div>
 				))}

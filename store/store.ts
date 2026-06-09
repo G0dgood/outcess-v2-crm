@@ -1,26 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit';
 
-// Import your slices here
 import authSlice from './slices/authSlice';
-// import dispositionSlice from './slices/dispositionSlice';
+import privilegeReducer from './slices/privilegeSlice';
 import exampleSlice from './slices/exampleSlice';
-import { authApi } from './services/authApi';
-import { companyApi } from './services/companyApi';
-import { lineOfBusinessApi } from './services/lineOfBusinessApi';
-import { roleApi } from './services/roleApi';
-import { teamMembersApi } from './services/teamMembersApi';
+import { baseApi } from './services/baseApi';
 
 export const store = configureStore({
 	reducer: {
 		// Add your reducers here
 		auth: authSlice,
+		privilege: privilegeReducer,
 		// disposition: dispositionSlice,
 		example: exampleSlice,
-		[authApi.reducerPath]: authApi.reducer,
-		[companyApi.reducerPath]: companyApi.reducer,
-		[lineOfBusinessApi.reducerPath]: lineOfBusinessApi.reducer,
-		[roleApi.reducerPath]: roleApi.reducer,
-		[teamMembersApi.reducerPath]: teamMembersApi.reducer,
+		[baseApi.reducerPath]: baseApi.reducer,
 	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({
@@ -28,11 +20,7 @@ export const store = configureStore({
 				// Ignore these action types
 				ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
 			},
-		}).concat(authApi.middleware)
-			.concat(companyApi.middleware)
-			.concat(lineOfBusinessApi.middleware)
-			.concat(roleApi.middleware)
-			.concat(teamMembersApi.middleware),
+		}).concat(baseApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

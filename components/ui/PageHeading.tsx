@@ -11,7 +11,7 @@ export const PageHeading: React.FC<PageHeadingProps> = ({
 }) => {
 	return (
 		<h1
-			className={`font-lato not-italic font-semibold text-[24px] leading-[150%] dark:text-gray-100 ${className}`}
+			className={`font-lato not-italic font-semibold text-[20px] md:text-[22px] leading-[150%] dark:text-gray-100 ${className}`}
 			style={{ color: 'var(--text-primary)' }}
 		>
 			{text}

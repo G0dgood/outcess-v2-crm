@@ -3,17 +3,29 @@
  * Generates chart data based on data source and chart color
  */
 
-import { getOfflineDispositions, getSyncedDispositions } from './offlineDispositions';
+import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from './offlineDispositions';
+import { filterDispositionsByTimeRange } from './filterUtils';
 import type { ChartDataItem } from '@/components/dashboard/charts/types';
 
+interface SetupData {
+	dashboardSettings: {
+		dispositions?: Array<{ name: string; color?: string }>;
+		buckets?: Array<{ dispositions?: Array<{ name: string; color?: string }> }>;
+		callOutcomes?: Array<{ name: string }>;
+		dispositionSettings?: {
+			timeRangeView?: string;
+		};
+	};
+}
+
+interface DispositionItem {
+	dispositionData?: DispositionFieldEntry[];
+	[key: string]: unknown;
+}
+
 // Disposition field mappings (same as AddWidgetModal)
-export const DISPOSITION_FIELDS = [
-	{ value: 'Call Answered', label: 'Call Answered', fieldKey: 'callAnswered' },
-	{ value: 'Reason For Non Payment', label: 'Reason For Non Payment', fieldKey: 'reasonForNonPayment' },
-	{ value: 'Commitment Date', label: 'Commitment Date', fieldKey: 'commitmentDate' },
-	{ value: 'Amount To Pay', label: 'Amount To Pay', fieldKey: 'amountToPay' },
-	{ value: 'Reason For Not Watching', label: 'Reason For Not Watching', fieldKey: 'reasonForNotWatching' },
-];
+// Removed static DISPOSITION_FIELDS as per request to use dynamic data
+
 
 /**
  * Generate color variations from a base color
@@ -95,14 +107,11 @@ export const generateColorVariations = (baseColor: string, count: number): strin
 export const generateChartData = (
 	dataSource: string | string[],
 	chartColor: string | undefined,
-	setupData: {
-		dashboardSettings: {
-			dispositions?: Array<{ name: string; color?: string }>;
-			callOutcomes?: Array<{ name: string }>;
-		};
-	},
+	setupData: SetupData,
 	pendingDispositionsCount: number,
-	colors?: Record<string, string> // Map of data source to color
+	colors?: Record<string, string>, // Map of data source to color
+	providedDispositions?: DispositionItem[],
+	reportData?: any
 ): ChartDataItem[] => {
 	// Handle multiple data sources
 	if (Array.isArray(dataSource) && dataSource.length > 1) {
@@ -113,7 +122,7 @@ export const generateChartData = (
 			// Get color for this specific data source
 			const sourceColor = colors?.[source] || chartColor;
 			// Call the internal function to generate data for a single source
-			const sourceData = generateSingleSourceData(source, sourceColor, setupData, pendingDispositionsCount);
+			const sourceData = generateSingleSourceData(source, sourceColor, setupData, pendingDispositionsCount, providedDispositions, reportData);
 			
 			// Combine data by label, summing values
 			sourceData.forEach(item => {
@@ -132,7 +141,15 @@ export const generateChartData = (
 						itemColor = colorVariations[index % colorVariations.length] || item.color;
 					} else {
 						// Use default colors
-						const defaultColors = ['#FF6B6B', '#4ECDC4', '#A8E6CF', '#FFD93D', '#6BCF7F', '#95A5A6', '#E74C3C', '#3498DB'];
+						const defaultColors = [
+							'#FF6B6B',
+							'#4ECDC4',
+							'#A8E6CF', 
+							'#FFD93D', 
+							'#6BCF7F',
+							'#95A5A6', 
+							'#E74C3C',
+							'#3498DB'];
 						itemColor = defaultColors[index % defaultColors.length] || item.color;
 					}
 					labelMap.set(item.label, {
@@ -154,7 +171,7 @@ export const generateChartData = (
 	// Handle single data source (backward compatibility)
 	const singleSource = Array.isArray(dataSource) ? dataSource[0] : dataSource;
 	const sourceColor = colors?.[singleSource] || chartColor;
-	return generateSingleSourceData(singleSource, sourceColor, setupData, pendingDispositionsCount);
+	return generateSingleSourceData(singleSource, sourceColor, setupData, pendingDispositionsCount, providedDispositions, reportData);
 };
 
 /**
@@ -164,63 +181,114 @@ export const generateChartData = (
 const generateSingleSourceData = (
 	dataSource: string,
 	chartColor: string | undefined,
-	setupData: {
-		dashboardSettings: {
-			dispositions?: Array<{ name: string; color?: string }>;
-			callOutcomes?: Array<{ name: string }>;
-		};
-	},
-	pendingDispositionsCount: number
+	setupData: SetupData,
+	pendingDispositionsCount: number,
+	providedDispositions?: DispositionItem[],
+	reportData?: any
 ): ChartDataItem[] => {
-	const allOfflineDispositions = getOfflineDispositions();
-	const allSyncedDispositions = getSyncedDispositions();
-	const allDispositions = [...allOfflineDispositions, ...allSyncedDispositions];
-
-	// Handle disposition fields
-	const dispositionField = DISPOSITION_FIELDS.find(f => f.value === dataSource);
-	if (dispositionField) {
-		// Count unique values for this field
-		const valueCounts: Record<string, number> = {};
-		allDispositions.forEach(disp => {
-			const fieldValue = disp[dispositionField.fieldKey as keyof typeof disp];
-			if (fieldValue && fieldValue.toString().trim() !== '' && fieldValue !== '-') {
-				const value = fieldValue.toString();
-				valueCounts[value] = (valueCounts[value] || 0) + 1;
-			}
-		});
-
-		// Convert to chart data format
-		const entries = Object.entries(valueCounts);
-		const colors = chartColor
-			? generateColorVariations(chartColor, entries.length)
-			: ['#FF6B6B', '#4ECDC4', '#A8E6CF', '#FFD93D', '#6BCF7F', '#95A5A6', '#E74C3C', '#3498DB'];
-		return entries.map(([label, value], index) => ({
-			label,
-			value,
-			color: colors[index % colors.length]
-		}));
-	}
-
-		// Handle disposition categories
-		if (setupData.dashboardSettings.dispositions) {
-			const disposition = setupData.dashboardSettings.dispositions.find((d: { name: string; color?: string }) => d.name === dataSource);
-		if (disposition) {
-			// Count dispositions with this category
-			// Note: dispositionCategory may not exist in the disposition data structure
-			// This is a placeholder that would need to be adjusted based on actual data structure
-			const count = allDispositions.length; // Placeholder - adjust based on actual category matching
-			return [{ label: disposition.name, value: count, color: chartColor || disposition.color || '#FF6B6B' }];
+	// Check reportData first
+	if (reportData?.data?.breakdown) {
+		const val = reportData.data.breakdown[dataSource];
+		if (val && typeof val === 'object') {
+			const variations = generateColorVariations(chartColor || '', Object.keys(val).length);
+			return Object.entries(val).map(([label, value], i) => ({
+				label,
+				value: value as number,
+				color: variations[i]
+			}));
+		}
+		if (typeof val === 'number') {
+			return [{
+				label: dataSource,
+				value: val,
+				color: chartColor || '#FF6B6B'
+			}];
 		}
 	}
 
-		// Handle call outcomes
-		if (setupData.dashboardSettings.callOutcomes) {
-			const outcome = setupData.dashboardSettings.callOutcomes.find((o: { name: string }) => o.name === dataSource);
+	let allDispositions: DispositionItem[];
+	if (providedDispositions) {
+		allDispositions = providedDispositions;
+	} else {
+		const allOfflineDispositions = getOfflineDispositions();
+		const allSyncedDispositions = getSyncedDispositions();
+		allDispositions = [...allOfflineDispositions, ...allSyncedDispositions] as unknown as DispositionItem[];
+	}
+
+	// Filter by time range if specified
+	const timeRange = setupData.dashboardSettings?.dispositionSettings?.timeRangeView || 'daily';
+	const filteredDispositions = filterDispositionsByTimeRange(allDispositions, timeRange);
+
+	// Use filtered dispositions for counting
+	const dispositionsToCount = filteredDispositions;
+
+	// Handle disposition categories (Fields) - Aggregate values
+	// Gather dispositions from both direct and bucketed sources
+	const configuredDispositions: { name: string; color?: string }[] = [...(setupData.dashboardSettings.dispositions || [])];
+	if (setupData.dashboardSettings.buckets && Array.isArray(setupData.dashboardSettings.buckets)) {
+		setupData.dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
+			if (bucket && Array.isArray(bucket.dispositions)) {
+				bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
+					if (disp && disp.name && !configuredDispositions.some(d => d.name === disp.name)) {
+						configuredDispositions.push(disp);
+					}
+				});
+			}
+		});
+	}
+
+	const disposition = configuredDispositions.find((d: { name: string; color?: string }) => d.name === dataSource);
+		if (disposition) {
+			const counts: Record<string, number> = {};
+			
+			dispositionsToCount.forEach(disp => {
+				let value: string | undefined;
+
+				// Check dispositionData array
+				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
+					const field = disp.dispositionData.find((f: DispositionFieldEntry) => f.fieldName === disposition.name);
+					if (field) {
+						value = field.fieldValue?.toString().trim();
+					}
+				}
+
+				// Fallback for direct property access
+				if (!value) {
+					const directValue = disp[disposition.name as keyof typeof disp];
+					if (directValue) {
+						value = directValue.toString().trim();
+					}
+				}
+
+				if (value && value !== '-') {
+					counts[value] = (counts[value] || 0) + 1;
+				}
+			});
+
+			const labels = Object.keys(counts);
+			const fieldColors = generateColorVariations(chartColor || disposition.color || '#FF6B6B', labels.length);
+
+			return labels.map((label, index) => ({
+				label,
+				value: counts[label],
+				color: fieldColors[index]
+			}));
+		}
+
+	// Handle call outcomes (Specific Values) - Count occurrences
+	if (setupData.dashboardSettings.callOutcomes) {
+		const outcome = setupData.dashboardSettings.callOutcomes.find((o: { name: string }) => o.name === dataSource);
 		if (outcome) {
-			// Count call outcomes
-			// Note: callOutcome may not exist in the disposition data structure
-			// This is a placeholder that would need to be adjusted based on actual data structure
-			const count = allDispositions.length; // Placeholder - adjust based on actual outcome matching
+			// Count call outcomes (fieldValue matches outcome name)
+			const count = dispositionsToCount.filter(disp => {
+				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
+					return disp.dispositionData.some((f: DispositionFieldEntry) =>
+						f.fieldValue && f.fieldValue.toString().toLowerCase() === outcome.name.toLowerCase()
+					);
+				}
+				return false;
+			}).length;
+			
 			return [{ label: outcome.name, value: count, color: chartColor || '#4ECDC4' }];
 		}
 	}
@@ -231,54 +299,21 @@ const generateSingleSourceData = (
 	}
 
 	if (dataSource === 'Total Dispositions') {
-		return [{ label: 'Total', value: allDispositions.length, color: chartColor || '#6BCF7F' }];
+		return [{ label: 'Total', value: dispositionsToCount.length, color: chartColor || '#6BCF7F' }];
 	}
 
 	if (dataSource === 'Total Calls') {
-		// Count all calls (dispositions represent calls)
-		return [{ label: 'Total Calls', value: allDispositions.length, color: chartColor || '#3498DB' }];
+		return [{ label: 'Total Calls', value: dispositionsToCount.length, color: chartColor || '#3498DB' }];
 	}
 
 	if (dataSource === 'Completed Calls') {
-		// Count completed calls (dispositions that are not pending)
-		// Only OfflineDisposition has status, SyncedDisposition doesn't
-		const completed = allDispositions.filter(disp => {
+		const completed = dispositionsToCount.filter(disp => {
 			return 'status' in disp && disp.status !== 'pending';
 		}).length;
 		return [{ label: 'Completed', value: completed, color: chartColor || '#6BCF7F' }];
 	}
 
-	if (dataSource === 'Active Agents') {
-		// This would need to come from a different data source
-		// For now, return a placeholder
-		return [{ label: 'Active Agents', value: 0, color: chartColor || '#9B59B6' }];
-	}
-
-	if (dataSource === 'Average Call Duration') {
-		// This would need call duration data
-		// For now, return a placeholder
-		return [{ label: 'Average Duration', value: 0, color: chartColor || '#E67E22' }];
-	}
-
-	if (dataSource === 'Custom Data') {
-		// Return empty or placeholder data for custom
-		const colors = chartColor 
-			? generateColorVariations(chartColor, 3)
-			: ['#FF6B6B', '#4ECDC4', '#A8E6CF'];
-		return [
-			{ label: 'Custom 1', value: 0, color: colors[0] },
-			{ label: 'Custom 2', value: 0, color: colors[1] },
-			{ label: 'Custom 3', value: 0, color: colors[2] },
-		];
-	}
-
-	// Default fallback data
-	const colors = chartColor 
-		? generateColorVariations(chartColor, 3)
-		: ['#FF6B6B', '#4ECDC4', '#A8E6CF'];
-	return [
-		{ label: 'Data 1', value: 0, color: colors[0] },
-		{ label: 'Data 2', value: 0, color: colors[1] },
-		{ label: 'Data 3', value: 0, color: colors[2] },
-	];
+	// Remove static placeholders (Active Agents, Average Call Duration, Custom Data)
+	// Return empty array if no match found
+	return [];
 };

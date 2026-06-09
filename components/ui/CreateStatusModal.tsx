@@ -8,6 +8,11 @@ import Checkbox from './Checkbox';
 import IndividualRadio from './IndividualRadio';
 import ColorPicker from './ColorPicker';
 import { Cross2Icon } from '@radix-ui/react-icons';
+import { useCreateStatusMutation, useUpdateStatusMutation } from '@/store/services/statusApi';
+import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
+import { toastSuccess, toastError } from '@/utils/toastWithSound';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { useCampaign } from '@/contexts/CampaignContext';
 
 interface StatusFormData {
 	name: string;
@@ -15,26 +20,29 @@ interface StatusFormData {
 	roleSelection: 'all' | 'selected';
 	selectedRoles: string[];
 	color: string;
+	isHibernate: boolean;
+	duration: number;
+}
+
+interface RoleOption {
+	id: string;
+	label: string;
 }
 
 interface CreateStatusModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onCreate: (data: StatusFormData) => void;
 	initialData?: Partial<StatusFormData> | null;
+	statusId?: string;
 }
 
-const roleOptions = [
-	{ id: 'agents', label: 'Agents' },
-	{ id: 'supervisors', label: 'Supervisors' },
-	{ id: 'admin', label: 'Admin' },
-];
+// Removed static roleOptions
 
 export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 	isOpen,
 	onClose,
-	onCreate,
 	initialData,
+	statusId,
 }) => {
 	const [formData, setFormData] = useState<StatusFormData>({
 		name: '',
@@ -42,11 +50,43 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 		roleSelection: 'all',
 		selectedRoles: [],
 		color: '#6C8B7D',
+		isHibernate: false,
+		duration: 0,
 	});
 	const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
-	const isEditMode = !!initialData;
+	const { user } = useUserInfo();
+	const { selectedCampaignId } = useCampaign();
+	const companyId = user?.companyId || user?.company?._id;
+
+	const { data: rolesData } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', {
+		skip: !selectedCampaignId
+	});
+
+	const roleOptions: RoleOption[] = React.useMemo(() => {
+		if (!rolesData) return [];
+
+		const rawRoles = (Array.isArray(rolesData) ? rolesData :
+			(Array.isArray((rolesData as unknown as { data?: unknown })?.data) ? (rolesData as unknown as { data: unknown[] }).data :
+				(Array.isArray((rolesData as unknown as { roles?: unknown })?.roles) ? (rolesData as unknown as { roles: unknown[] }).roles :
+					(Array.isArray((rolesData as unknown as { docs?: unknown })?.docs) ? (rolesData as unknown as { docs: unknown[] }).docs :
+						[]))));
+
+		return (rawRoles as Role[])
+			.filter((role: Role) => (role._id || role.id))
+			.map((role: Role) => ({
+				id: (role._id || role.id)!,
+				label: role.roleName
+			}));
+	}, [rolesData]);
+
+	const [createStatus, { isLoading: isCreating }] = useCreateStatusMutation();
+	const [updateStatus, { isLoading: isUpdating }] = useUpdateStatusMutation();
+
+	const isSaving = isCreating || isUpdating;
+
+	const isEditMode = !!statusId;
 
 	useEffect(() => {
 		if (isOpen && initialData) {
@@ -56,6 +96,8 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 				roleSelection: initialData.roleSelection || 'all',
 				selectedRoles: initialData.selectedRoles || [],
 				color: initialData.color || '#6C8B7D',
+				isHibernate: initialData.isHibernate || false,
+				duration: initialData.duration || 0,
 			});
 		} else if (isOpen && !initialData) {
 			setFormData({
@@ -64,6 +106,8 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 				roleSelection: 'all',
 				selectedRoles: [],
 				color: '#6C8B7D',
+				isHibernate: false,
+				duration: 0,
 			});
 		}
 	}, [isOpen, initialData]);
@@ -117,9 +161,42 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 		}));
 	};
 
-	const handleCreate = () => {
+	const handleCreate = async () => {
 		if (formData.name.trim()) {
-			onCreate(formData);
+			try {
+				if (isEditMode && statusId) {
+					// Update existing status
+					await updateStatus({
+						id: statusId,
+						statusData: formData
+					}).unwrap();
+
+					toastSuccess('Status updated successfully');
+				} else {
+					// Create new status
+					if (!selectedCampaignId || selectedCampaignId === 'new') {
+						toastError('Please select a campaign first');
+						return;
+					}
+
+					if (companyId) {
+						await createStatus({
+							...formData,
+							companyId,
+							campaignId: selectedCampaignId
+						}).unwrap();
+
+						toastSuccess('Status created successfully');
+					} else {
+						toastError('Company ID missing, cannot create status');
+						return;
+					}
+				}
+				onClose();
+			} catch (error) {
+				console.error("Failed to save status:", error);
+				toastError('Failed to save status');
+			}
 		}
 	};
 
@@ -128,8 +205,8 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 			return 'Select roles';
 		}
 		const selectedLabels = roleOptions
-			.filter(role => formData.selectedRoles.includes(role.id))
-			.map(role => role.label)
+			.filter((role: RoleOption) => formData.selectedRoles.includes(role.id))
+			.map((role: RoleOption) => role.label)
 			.join(', ');
 		return selectedLabels;
 	};
@@ -138,24 +215,26 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
-			<div 
-				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+			<div
+				className="dark:bg-gray-800 shadow-lg w-full max-w-lg mx-4 h-[85vh] overflow-hidden flex flex-col rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
-				<div 
+				<div
 					className="flex justify-between items-center p-6 border-b dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<h2 
-						className="text-xl font-semibold dark:text-gray-100"
+					<h2
+						className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						{isEditMode ? 'Edit Status' : 'Create Status'}
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
-						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full"
 						style={{ color: 'var(--text-tertiary)' }}
 						onMouseEnter={(e) => {
 							e.currentTarget.style.color = 'var(--text-secondary)';
@@ -168,7 +247,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Form Content */}
@@ -195,10 +274,35 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 						onChange={(color) => setFormData(prev => ({ ...prev, color }))}
 					/>
 
+					<div className="flex items-center justify-between gap-4 p-4 border dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 rounded-[var(--radius)]">
+						<div className="flex-1">
+							<label className="text-[12px] font-medium text-gray-900 dark:text-gray-100 block mb-1">
+								Hibernate Status
+							</label>
+							<p className="text-[10px] text-gray-500 dark:text-gray-400">
+								Locks the platform entirely when this status is active.
+							</p>
+						</div>
+						<Checkbox
+							checked={formData.isHibernate}
+							onChange={(checked) => setFormData(prev => ({ ...prev, isHibernate: checked }))}
+							size="medium"
+						/>
+					</div>
+
+					<Input
+						label="Duration (minutes)"
+						type="number"
+						placeholder="E.g., 15"
+						value={formData.duration.toString()}
+						onChange={(value) => setFormData(prev => ({ ...prev, duration: parseInt(value) || 0 }))}
+						description="Maximum time allowed in this status before notifying supervisors. Set to 0 for unlimited."
+					/>
+
 					{/* Role Selection */}
 					<div>
-						<label 
-							className="block text-sm font-medium dark:text-gray-300 mb-3"
+						<label
+							className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-3"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							Role
@@ -223,10 +327,12 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 									<div className="ml-7 mt-2" ref={dropdownRef}>
 										<div className="dropdown-container">
 											<div className="dropdown-wrapper relative">
-												<button
+												<Button
+													variant="outline"
+													size="md"
 													type="button"
 													onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-													className="dropdown-trigger w-full"
+													className="dropdown-trigger w-full justify-between"
 												>
 													<span className={`dropdown-text ${formData.selectedRoles.length === 0 ? 'placeholder' : ''}`}>
 														{getRoleSelectionDisplay()}
@@ -246,23 +352,26 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 															strokeLinejoin="round"
 														/>
 													</svg>
-												</button>
+												</Button>
 												{isRoleDropdownOpen && (
 													<div className="dropdown-menu">
 														<div className="dropdown-options">
-															{roleOptions.map((role) => (
+															{roleOptions.map((role: RoleOption) => (
 																<label
 																	key={role.id}
 																	className="dropdown-option flex items-center gap-3 cursor-pointer"
 																	onClick={(e) => e.stopPropagation()}
 																>
-																	<Checkbox
-																		checked={formData.selectedRoles.includes(role.id)}
-																		onChange={() => handleRoleToggle(role.id)}
-																		size="small"
-																		label={role.label}
-																	/>
-
+																	<div className="flex items-center gap-2">
+																		<Checkbox
+																			checked={formData.selectedRoles.includes(role.id)}
+																			onChange={() => handleRoleToggle(role.id)}
+																			size="medium"
+																		/>
+																		<span className="text-[10px] md:text-[12px] dark:text-gray-300" style={{ color: 'var(--text-primary)' }}>
+																			{role.label}
+																		</span>
+																	</div>
 																</label>
 															))}
 														</div>
@@ -278,7 +387,7 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div 
+				<div
 					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
@@ -293,7 +402,8 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 						variant="primary"
 						size="md"
 						onClick={handleCreate}
-						disabled={!formData.name.trim()}
+						disabled={!formData.name.trim() || isSaving}
+						loading={isSaving}
 					>
 						{isEditMode ? 'Save' : 'Create Status'}
 					</Button>
@@ -304,4 +414,3 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 };
 
 export default CreateStatusModal;
-

@@ -10,19 +10,15 @@ interface ModulePermissionModalProps {
 	onClose: () => void;
 	onSave: (roles: string[]) => void;
 	selectedRoles: string[];
+	availableRoles: { id: string; label: string }[];
 }
-
-const roleOptions = [
-	{ id: 'admin', label: 'Admin' },
-	{ id: 'agent', label: 'Agent' },
-	{ id: 'supervisor', label: 'Supervisor' },
-];
 
 export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 	isOpen,
 	onClose,
 	onSave,
 	selectedRoles: initialSelectedRoles,
+	availableRoles,
 }) => {
 	const [selectedRoles, setSelectedRoles] = useState<string[]>(initialSelectedRoles);
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -95,7 +91,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 	if (!isOpen) return null;
 
 	const selectedRoleLabels = selectedRoles.map(roleId => {
-		const role = roleOptions.find(r => r.id === roleId);
+		const role = availableRoles.find(r => r.id === roleId);
 		return { id: roleId, label: role ? role.label : roleId };
 	});
 
@@ -111,7 +107,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="text-xl font-semibold dark:text-gray-100"
+						className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Module Permission
@@ -137,7 +133,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 				{/* Form Content */}
 				<div className="flex-1 p-6 space-y-4 overflow-y-auto">
 					<p
-						className="text-sm dark:text-gray-400"
+						className="text-[10px] md:text-[12px] dark:text-gray-400"
 						style={{ color: 'var(--text-tertiary)' }}
 					>
 						Select the roles that should have access to the module.
@@ -145,7 +141,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 
 					<div ref={dropdownRef} className="relative">
 						<label
-							className="block text-sm font-medium dark:text-gray-300 mb-2"
+							className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-2"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							Roles
@@ -169,7 +165,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 							<div className="flex flex-wrap gap-2 flex-1">
 								{selectedRoleLabels.length === 0 ? (
 									<span
-										className="text-sm dark:text-gray-400"
+										className="text-[10px] md:text-[12px] dark:text-gray-400"
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										Select roles
@@ -178,7 +174,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 									selectedRoleLabels.map((role) => (
 										<span
 											key={role.id}
-											className="inline-flex items-center gap-1 px-2 py-1 dark:bg-gray-600 dark:border-gray-500 text-sm dark:text-gray-300"
+											className="inline-flex items-center gap-1 px-2 py-1 dark:bg-gray-600 dark:border-gray-500 text-[10px] md:text-[12px] dark:text-gray-300"
 											style={{
 												backgroundColor: 'var(--bg-primary)',
 												borderColor: 'var(--light-gray)',
@@ -226,7 +222,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 								}}
 							>
 								<div className="py-2">
-									{roleOptions.map((role) => (
+									{availableRoles.map((role) => (
 										<label
 											key={role.id}
 											className="flex items-center gap-3 px-4 py-2 dark:hover:bg-gray-700 cursor-pointer"
@@ -244,7 +240,7 @@ export const ModulePermissionModal: React.FC<ModulePermissionModalProps> = ({
 												size="medium"
 											/>
 											<span
-												className="text-sm dark:text-gray-100"
+												className="text-[10px] md:text-[12px] dark:text-gray-100"
 												style={{ color: 'var(--text-primary)' }}
 											>
 												{role.label}

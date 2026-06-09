@@ -38,7 +38,8 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 		{ value: 'AUD', label: 'Australian Dollar - AUD' },
 	];
 
-	const currencyFormats: { [key: string]: string } = {
+	// Moved outside of component or useMemo could work, but since it's constant data:
+	const currencyFormats = React.useMemo<Record<string, string>>(() => ({
 		NGN: '₦ 1,224,067.34',
 		USD: '$ 1,224,067.34',
 		GBP: '£ 1,224,067.34',
@@ -46,7 +47,7 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 		JPY: '¥ 1,224,067',
 		CAD: 'C$ 1,224,067.34',
 		AUD: 'A$ 1,224,067.34',
-	};
+	}), []);
 
 	useEffect(() => {
 		if (isOpen && initialCurrency) {
@@ -56,7 +57,7 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 			setSelectedCurrency('');
 			setFormatPreview('');
 		}
-	}, [isOpen, initialCurrency]);
+	}, [isOpen, initialCurrency, currencyFormats]);
 
 	useEffect(() => {
 		if (selectedCurrency && currencyFormats[selectedCurrency]) {
@@ -64,7 +65,7 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 		} else {
 			setFormatPreview('');
 		}
-	}, [selectedCurrency]);
+	}, [selectedCurrency, currencyFormats]);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -132,9 +133,9 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
 			<div
-				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+				className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col rounded-[var(--radius)]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 			>
 				{/* Header */}
@@ -143,12 +144,14 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
-						className="text-xl font-semibold dark:text-gray-100"
+						className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
 						Add Currency
 					</h2>
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={onClose}
 						className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
 						style={{ color: 'var(--text-tertiary)' }}
@@ -163,7 +166,7 @@ export const AddCurrencyModal: React.FC<AddCurrencyModalProps> = ({
 						aria-label="Close"
 					>
 						<Cross2Icon className="w-5 h-5" />
-					</button>
+					</Button>
 				</div>
 
 				{/* Form Content */}

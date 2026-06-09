@@ -10,6 +10,9 @@ interface BottomNavProps {
 	backText?: string;
 	showBack?: boolean;
 	className?: string;
+	dashboardStep?: 'KPI Metric' | 'Call Disposition';
+	setDashboardStep?: React.Dispatch<React.SetStateAction<'KPI Metric' | 'Call Disposition'>>;
+	currentStep?: number;
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({
@@ -21,6 +24,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 	backText = "Back",
 	showBack = true,
 	className = '',
+	dashboardStep,
+	setDashboardStep,
+	currentStep,
 }) => {
 
 
@@ -34,42 +40,37 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 			}}
 		>
 			{showBack && onBack && (
-				<button
-					type="button"
+				<Button
+					variant="outline"
+					size="md"
 					onClick={onBack}
 					disabled={isLoading}
-					className="px-4 py-2 text-xs sm:text-sm font-inter font-semibold border dark:border-[#6C8B7D] dark:text-[#6C8B7D] bg-transparent dark:hover:bg-[#6C8B7D] dark:hover:text-white hover:border-[#6C8B7D] focus:outline-none focus:ring-2 focus:ring-[#6C8B7D] focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-					style={{
-						borderColor: '#6C8B7D',
-						color: '#6C8B7D'
-					}}
-					onMouseEnter={(e) => {
-						if (!isLoading) {
-							e.currentTarget.style.backgroundColor = '#6C8B7D';
-							e.currentTarget.style.color = 'white';
-						}
-					}}
-					onMouseLeave={(e) => {
-						if (!isLoading) {
-							e.currentTarget.style.backgroundColor = 'transparent';
-							e.currentTarget.style.color = '#6C8B7D';
-						}
-					}}
+					className="text-[8px] md:text-[10px]"
 				>
 					{backText}
-				</button>
+				</Button>
 			)}
 			{!showBack && <div />}
-			<Button
+
+			{dashboardStep === "KPI Metric" && currentStep === 2 ? <Button
+				variant="primary"
+				size="md"
+				onClick={() => setDashboardStep?.("Call Disposition")}
+				loading={isLoading}
+				disabled={disabled || isLoading}
+				className="text-[8px] md:text-[10px]"
+			>
+				{"Call Disposition"}
+			</Button> : <Button
 				variant="primary"
 				size="md"
 				onClick={onSave}
 				loading={isLoading}
 				disabled={disabled || isLoading}
-				className="text-xs sm:text-sm"
+				className="text-[8px] md:text-[10px]"
 			>
 				{buttonText}
-			</Button>
+			</Button>}
 		</div>
 	);
 };

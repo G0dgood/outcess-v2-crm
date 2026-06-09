@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from './Icon';
+import Button from './Button';
 
 interface SearchProps {
 	placeholder?: string;
@@ -36,8 +37,8 @@ const Search: React.FC<SearchProps> = ({
 	};
 
 	return (
-		<div 
-			className={`box-border flex flex-row items-center px-[14px] py-[10px] gap-2 w-full sm:w-[320px] md:w-[300px] lg:w-[400px] h-[40px] dark:bg-gray-800 border dark:border-gray-700 relative ${maxWidth} ${className} transition-colors duration-200`}
+		<div
+			className={`box-border flex flex-row items-center px-[14px] py-[10px] gap-2 w-full sm:w-[320px] md:w-[300px] lg:w-[400px] h-[40px] dark:bg-gray-800 border dark:border-gray-700 dark:focus-within:border-white relative ${maxWidth} ${className} transition-colors duration-200 rounded-[var(--radius)]`}
 			style={{
 				backgroundColor: 'var(--accent-white)',
 				borderColor: 'var(--light-gray)'
@@ -51,29 +52,33 @@ const Search: React.FC<SearchProps> = ({
 				onChange={(e) => onChange?.(e.target.value)}
 				onKeyPress={handleKeyPress}
 				disabled={disabled}
-				className={`search-input flex-1 text-sm font-normal leading-[150%] dark:text-gray-300 bg-transparent dark:placeholder:text-gray-500 focus:outline-none ${showClearButton && value ? 'pr-10' : ''}`}
+				className={`search-input flex-1 text-[10px] md:text-[12px] font-normal leading-[150%] dark:text-gray-300 bg-transparent dark:placeholder:text-gray-500 focus:outline-none ${showClearButton && value ? 'pr-10' : ''}`}
 				style={{
 					color: 'var(--text-secondary)',
 				}}
 				onFocus={(e) => {
 					e.target.style.color = 'var(--text-secondary)';
 				}}
+				suppressHydrationWarning
 			/>
 			{showClearButton && value && (
-				<button
+				<Button
+					variant="ghost"
+					size="sm"
 					onClick={handleClear}
-					className="flex items-center dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+					className="flex items-center dark:text-gray-500 dark:hover:text-gray-300 transition-colors p-1 h-auto"
 					style={{ color: 'var(--text-tertiary)' }}
-					onMouseEnter={(e) => {
+					onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
 						e.currentTarget.style.color = 'var(--text-secondary)';
 					}}
-					onMouseLeave={(e) => {
+					onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
 						e.currentTarget.style.color = 'var(--text-tertiary)';
 					}}
 					type="button"
+					title="Clear Search"
 				>
 					<Icon name="Close_round_light" size="sm" />
-				</button>
+				</Button>
 			)}
 		</div>
 	);
