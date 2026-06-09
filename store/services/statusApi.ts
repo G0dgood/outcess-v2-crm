@@ -52,7 +52,7 @@ export const statusApi = baseApi.injectEndpoints({
             query: (campaignId) => `api/v1/statuses/campaign/${campaignId}`,
             providesTags: ['Statuses'],
         }),
-        updateStatus: builder.mutation<any, { id: string; statusData: Partial<CreateStatusRequest> }>({
+        updateStatus: builder.mutation<unknown, { id: string; statusData: Partial<CreateStatusRequest> }>({
             query: ({ id, statusData }) => ({
                 url: `api/v1/statuses/${id}`,
                 method: 'PATCH',
@@ -60,7 +60,7 @@ export const statusApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Statuses'],
         }),
-        deleteStatus: builder.mutation<any, string>({
+        deleteStatus: builder.mutation<unknown, string>({
             query: (id) => ({
                 url: `api/v1/statuses/${id}`,
                 method: 'DELETE',

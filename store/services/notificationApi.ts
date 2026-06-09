@@ -14,7 +14,7 @@ export interface Notification {
     timestamp: string;
     isRead: boolean;
     createdAt?: string;
-    data?: any;
+    data?: unknown;
 }
 
 export interface CreateNotificationRequest {
@@ -28,7 +28,7 @@ export interface CreateNotificationRequest {
         campaignId?: string;
         userId?: string;
     };
-    data?: any;
+    data?: unknown;
 }
 
 export interface GetNotificationsResponse {
@@ -50,21 +50,21 @@ export const notificationApi = baseApi.injectEndpoints({
             query: (role) => `api/v1/notifications?role=${role}`,
             providesTags: ['Notification'],
         }),
-        markNotificationAsRead: builder.mutation<any, string>({
+        markNotificationAsRead: builder.mutation<unknown, string>({
             query: (id) => ({
                 url: `api/v1/notifications/${id}/read`,
                 method: 'PATCH',
             }),
             invalidatesTags: ['Notification'],
         }),
-        markAllNotificationsAsRead: builder.mutation<any, void>({
+        markAllNotificationsAsRead: builder.mutation<unknown, void>({
             query: () => ({
                 url: 'api/v1/notifications/read-all',
                 method: 'PATCH',
             }),
             invalidatesTags: ['Notification'],
         }),
-        createNotification: builder.mutation<any, CreateNotificationRequest>({
+        createNotification: builder.mutation<unknown, CreateNotificationRequest>({
             query: (notificationData) => ({
                 url: 'api/v1/notifications',
                 method: 'POST',
@@ -72,7 +72,7 @@ export const notificationApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Notification'],
         }),
-        deleteNotification: builder.mutation<any, string>({
+        deleteNotification: builder.mutation<unknown, string>({
             query: (id) => ({
                 url: `api/v1/notifications/${id}`,
                 method: 'DELETE',

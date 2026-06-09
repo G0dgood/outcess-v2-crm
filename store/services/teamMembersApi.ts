@@ -103,7 +103,7 @@ export interface TeamMemberFormData {
 
 export const teamMembersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    createTeamMember: builder.mutation<any, CreateTeamMemberRequest>({
+    createTeamMember: builder.mutation<unknown, CreateTeamMemberRequest>({
       query: (data) => ({
         url: "api/v1/team-members",
         method: "POST",
@@ -117,11 +117,11 @@ export const teamMembersApi = baseApi.injectEndpoints({
         } catch {}
       },
     }),
-    getTeamMembers: builder.query<any, void>({
+    getTeamMembers: builder.query<unknown, void>({
       query: () => "api/v1/team-members",
       providesTags: ["TeamMembers"],
     }),
-    getTeamMembersByCompanyId: builder.query<any, string>({
+    getTeamMembersByCompanyId: builder.query<unknown, string>({
       query: (companyId) => `api/v1/team-members/company/${companyId}`,
       providesTags: ["TeamMembers"],
     }),
@@ -134,7 +134,7 @@ export const teamMembersApi = baseApi.injectEndpoints({
       providesTags: ["TeamMembers"],
     }),
     getTeamMembersByCampaignIdAndRoleId: builder.query<
-      any,
+      unknown,
       { campaignId: string; roleId: string }
     >({
       query: ({ campaignId, roleId }) =>
@@ -150,19 +150,19 @@ export const teamMembersApi = baseApi.injectEndpoints({
       providesTags: ["TeamMembers"],
     }),
     getSupervisorsByCampaignId: builder.query<
-      any,
+      unknown,
       { companyId: string; campaignId: string }
     >({
       query: ({ companyId, campaignId }) =>
         `api/v1/roles/supervisors?companyId=${companyId}&campaignId=${campaignId}`,
       providesTags: ["TeamMembers"],
     }),
-    getTeamMemberById: builder.query<any, string>({
+    getTeamMemberById: builder.query<unknown, string>({
       query: (id) => `api/v1/team-members/${id}`,
       providesTags: ["TeamMembers"],
     }),
     updateTeamMemberStatus: builder.mutation<
-      any,
+      unknown,
       { id: string; status: string; reason?: string }
     >({
       query: ({ id, status, reason }) => ({
@@ -171,12 +171,13 @@ export const teamMembersApi = baseApi.injectEndpoints({
         body: { status, reason },
       }),
       invalidatesTags: ["TeamMembers"],
-      async onQueryStarted({ status, reason }, { dispatch, queryFulfilled }) {
+      async onQueryStarted({ status }, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
+          const statusData = data as { status?: StatusPayload };
           // Sync with auth slice if this is the current user
-          if (data && data.status) {
-            dispatch(updateUser({ status: data.status }));
+          if (statusData && statusData.status) {
+            dispatch(updateUser({ status: statusData.status }));
           } else {
             // Fallback if data doesn't have status object
             dispatch(updateUser({ status: { status } }));
@@ -185,7 +186,7 @@ export const teamMembersApi = baseApi.injectEndpoints({
       },
     }),
     updateTeamMember: builder.mutation<
-      any,
+      unknown,
       { id: string; data: Partial<TeamMember> }
     >({
       query: ({ id, data }) => ({
@@ -202,7 +203,7 @@ export const teamMembersApi = baseApi.injectEndpoints({
       },
     }),
     updateTeamMemberPassword: builder.mutation<
-      any,
+      unknown,
       { id: string; password: string }
     >({
       query: ({ id, password }) => ({
@@ -213,7 +214,7 @@ export const teamMembersApi = baseApi.injectEndpoints({
       invalidatesTags: ["TeamMembers"],
     }),
     adminResetTeamMemberPasswordById: builder.mutation<
-      any,
+      unknown,
       { id: string; password: string }
     >({
       query: ({ id, password }) => ({
@@ -223,7 +224,7 @@ export const teamMembersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["TeamMembers"],
     }),
-    deleteTeamMember: builder.mutation<any, string>({
+    deleteTeamMember: builder.mutation<unknown, string>({
       query: (id) => ({
         url: `api/v1/team-members/${id}`,
         method: "DELETE",
@@ -236,7 +237,7 @@ export const teamMembersApi = baseApi.injectEndpoints({
         } catch {}
       },
     }),
-    deleteManyTeamMembers: builder.mutation<any, DeleteManyTeamMembersRequest>({
+    deleteManyTeamMembers: builder.mutation<unknown, DeleteManyTeamMembersRequest>({
       query: (body) => ({
         url: "api/v1/team-members/many",
         method: "DELETE",
@@ -250,18 +251,18 @@ export const teamMembersApi = baseApi.injectEndpoints({
         } catch {}
       },
     }),
-    assignShiftHour: builder.mutation<
-      { message: string; modifiedCount: number },
+    assignShiftHourToTeamMembers: builder.mutation<
+      unknown,
       AssignShiftHourRequest
     >({
       query: (body) => ({
-        url: "api/v1/team-members/assign-shift-hour",
-        method: "POST",
+        url: "api/v1/team-members/assign-shift",
+        method: "PATCH",
         body,
       }),
       invalidatesTags: ["TeamMembers"],
     }),
-    bulkUploadTeamMembers: builder.mutation<any, FormData>({
+    bulkUploadTeamMembers: builder.mutation<unknown, FormData>({
       query: (formData) => ({
         url: "api/v1/team-members/bulk-upload",
         method: "POST",
@@ -287,6 +288,6 @@ export const {
   useAdminResetTeamMemberPasswordByIdMutation,
   useDeleteTeamMemberMutation,
   useDeleteManyTeamMembersMutation,
-  useAssignShiftHourMutation,
+  useAssignShiftHourToTeamMembersMutation,
   useBulkUploadTeamMembersMutation,
 } = teamMembersApi;

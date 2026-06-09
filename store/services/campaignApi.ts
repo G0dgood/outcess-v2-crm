@@ -138,7 +138,7 @@ export const campaignApi = baseApi.injectEndpoints({
       invalidatesTags: ["Campaign"],
     }),
     assignMemberToBucket: builder.mutation<
-      any,
+      unknown,
       {
         id: string;
         bucketId: string;
@@ -155,7 +155,7 @@ export const campaignApi = baseApi.injectEndpoints({
       invalidatesTags: ["Campaign"],
     }),
     removeMemberFromBucket: builder.mutation<
-      any,
+      unknown,
       { id: string; bucketId: string; memberId: string }
     >({
       query: ({ id, bucketId, memberId }) => ({
@@ -165,8 +165,8 @@ export const campaignApi = baseApi.injectEndpoints({
       invalidatesTags: ["Campaign"],
     }),
     updateBucketCustomerFields: builder.mutation<
-      any,
-      { id: string; bucketId: string; customerFields: any[] }
+      unknown,
+      { id: string; bucketId: string; customerFields: unknown[] }
     >({
       query: ({ id, bucketId, customerFields }) => ({
         url: `api/v1/campaign/${id}/buckets/${bucketId}/customer-fields`,

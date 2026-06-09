@@ -131,7 +131,7 @@ export default function LoginPage() {
 				// For userId login: { message: "...", teamMember: { ...userFields, token: "..." } }
 
 				const rawUser = (response.user || response.teamMember || response) as RawUser;
-				const token = (rawUser as any)?.token || response.token;
+				const token = rawUser?.token || response.token;
 
 				if (rawUser && token) {
 					// Normalize user object - ALWAYS use _id for consistent linking
@@ -148,7 +148,7 @@ export default function LoginPage() {
 					authContext.login(normalizedUser, { accessToken: token });
 
 					dispatch(loginAction({
-						user: normalizedUser as any, // Cast to any to avoid complex status object mismatch
+						user: normalizedUser as unknown as import('@/store/slices/authSlice').User,
 						tokens: { accessToken: token }
 					}));
 

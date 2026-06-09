@@ -1,17 +1,17 @@
 import { baseApi } from './baseApi';
 
 export interface CreateDispositionRequest {
-    fillDisposition: any[];
+    fillDisposition: unknown[];
     customerId?: string;
     agentId?: string;
     campaignId?: string;
     timestamp: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export interface CreateDispositionResponse {
     message: string;
-    disposition?: any;
+    disposition?: unknown;
     dispositionId?: string;
     timestamp: string;
     agentId?: string;
@@ -74,42 +74,42 @@ export const dispositionApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Disposition'],
         }),
-        getDispositionsByCampaign: builder.query<any, GetDispositionsRequest>({
+        getDispositionsByCampaign: builder.query<unknown, GetDispositionsRequest>({
             query: ({ campaignId, page = 1, limit = 20, search = "" }) => 
                 `api/v1/dispositions/${campaignId}?page=${page}&limit=${limit}&search=${search}`,
             providesTags: ['Disposition'],
         }),
-        getDispositionsByCustomer: builder.query<any, GetDispositionsByCustomerRequest>({
+        getDispositionsByCustomer: builder.query<unknown, GetDispositionsByCustomerRequest>({
             query: ({ campaignId, customerId, page = 1, limit = 20 }) => 
                 `api/v1/dispositions/${campaignId}?search=${customerId}&page=${page}&limit=${limit}`,
             providesTags: ['Disposition'],
         }),
-        getDispositionsByAgentId: builder.query<any, GetDispositionsByAgentIdRequest>({
+        getDispositionsByAgentId: builder.query<unknown, GetDispositionsByAgentIdRequest>({
             query: ({ campaignId, agentId, page = 1, limit = 20 }) => 
                 `api/v1/dispositions/${campaignId}?search=${agentId}&page=${page}&limit=${limit}`,
             providesTags: ['Disposition'],
         }),
-        getDispositionsByCampaignReport: builder.query<any, GetDispositionsReportRequest>({
+        getDispositionsByCampaignReport: builder.query<unknown, GetDispositionsReportRequest>({
             query: ({ campaignId, startDate, endDate, page = 1, limit = 20, search = "" }) => 
                 `api/v1/dispositions/${campaignId}/report?startDate=${startDate}&endDate=${endDate}&page=${page}&limit=${limit}&search=${search}`,
             providesTags: ['Disposition'],
         }),
-        getDispositionsByAgentReport: builder.query<any, GetDispositionsByAgentReportRequest>({
+        getDispositionsByAgentReport: builder.query<unknown, GetDispositionsByAgentReportRequest>({
             query: ({ campaignId, agentId, page = 1, limit = 20, startDate , endDate, search = ""  }) => 
                 `api/v1/dispositions/${campaignId}/agent/${agentId}/report?page=${page}&limit=${limit}&startDate=${startDate}&endDate=${endDate}&search=${search}`,
             providesTags: ['Disposition'],
         }),
-        getDashboardDispositionsByCampaignAndAgentIdReport: builder.query<any, GetDispositionsByAgentReportRequest>({
+        getDashboardDispositionsByCampaignAndAgentIdReport: builder.query<unknown, GetDispositionsByAgentReportRequest>({
             query: ({ campaignId, agentId, startDate, endDate }) => 
                 `api/v1/dispositions/${campaignId}/agent/${agentId}/dashboard-report?startDate=${startDate}&endDate=${endDate}`,
             providesTags: ['Disposition'],
         }),
-        getAllDashboardDispositionsByCampaignReport: builder.query<any, { campaignId: string, startDate: string, endDate: string }>({
+        getAllDashboardDispositionsByCampaignReport: builder.query<unknown, { campaignId: string, startDate: string, endDate: string }>({
             query: ({ campaignId, startDate, endDate }) => 
                 `api/v1/dispositions/${campaignId}/dashboard-report?startDate=${startDate}&endDate=${endDate}`,
             providesTags: ['Disposition'],
         }),
-        getLeaderboard: builder.query<any, GetLeaderboardRequest>({
+        getLeaderboard: builder.query<unknown, GetLeaderboardRequest>({
             query: ({ campaignId, timeFilter = 'weekly' }) => 
                 `api/v1/leaderboard/${campaignId}?timeFilter=${timeFilter}`,
             providesTags: ['Disposition'],
