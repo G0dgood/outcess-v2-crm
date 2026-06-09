@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Skeleton from '@/components/ui/Skeleton';
+import Skeleton from '@/components/ui/skeleton';
 
 interface MonthlyData {
 	month: string;
@@ -103,7 +103,7 @@ const PlatformGrowthChart: React.FC<PlatformGrowthChartProps> = ({
 				})}
 
 				{/* Bars for each month */}
-				{data.map((item, index) => {
+				{data?.map((item, index) => {
 					const groupX = getXPosition(index);
 					const businessesY = getYPosition(item.businesses);
 					const usersY = getYPosition(item.users);
