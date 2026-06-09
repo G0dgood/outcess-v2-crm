@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import Skeleton from "@/components/ui/Skeleton";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useCampaign } from "@/contexts/CampaignContext";
