@@ -14,7 +14,9 @@ export default function Setup() {
 	const { user, updateUser } = useUserInfo();
 	const [triggerGetUser] = useLazyGetUserByIdQuery();
 
-	const userId = user?.id || (user as { _id?: string } | null)?._id;
+	const userId = React.useMemo(() => {
+		return user?.id || (user as { _id?: string } | null)?._id;
+	}, [user]);
 
 	useEffect(() => {
 		const fetchUserData = async () => {

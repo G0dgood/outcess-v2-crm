@@ -1,5 +1,22 @@
 import { baseApi } from "./baseApi";
 
+export interface Campaign {
+  _id: string;
+  id?: string;
+  name: string;
+  campaignName?: string;
+  description?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  logo?: string;
+  industry?: string;
+  businessSize?: string;
+  timeZone?: string;
+  companyId?: string;
+  companyName?: string;
+  [key: string]: unknown;
+}
+
 export interface CreateCampaignRequest {
   name: string;
   description?: string;
@@ -64,16 +81,16 @@ export const campaignApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Campaign"],
     }),
-    getCampaign: builder.query<unknown, string>({
+    getCampaign: builder.query<Campaign, string>({
       query: (id) => `api/v1/campaign/${id}`,
       providesTags: ["Campaign"],
     }),
-    getCampaignByCompanyId: builder.query<unknown, string>({
+    getCampaignByCompanyId: builder.query<Campaign, string>({
       query: (companyId) => `api/v1/campaign/company/${companyId}`,
       providesTags: ["Campaign"],
     }),
     getCampaignByCompanyIdForheader: builder.query<
-      unknown,
+      { campaigns: Campaign[]; total: number },
       { companyId: string; page?: number; limit?: number }
     >({
       query: ({ companyId, page = 1, limit = 10 }) =>

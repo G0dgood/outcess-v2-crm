@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { useSocket } from '@/contexts/SocketContext';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -118,8 +118,8 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 	useEffect(() => {
 		if (!rolesData?.roles || !userPrivileges?.role) return;
 
-		const currentRoleId = userPrivileges.roleId || userPrivileges.role.id || (userPrivileges.role as any)._id;
-		const matchingRole = rolesData.roles.find((r: any) =>
+		const currentRoleId = userPrivileges.roleId || userPrivileges.role.id || (userPrivileges.role as { _id?: string })._id;
+		const matchingRole = rolesData.roles.find((r: { _id?: string; id?: string }) =>
 			(r._id || r.id) === currentRoleId
 		);
 
@@ -135,12 +135,15 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 			dispatch(setReduxPrivileges(updatedUserPrivileges));
 
 			if (user) {
+				const currentRole = typeof user.role === 'object' ? user.role : { roleName: '', permissions: [] };
+				const matchingRoleData = matchingRole as { roleName?: string; name?: string; permissions: RoleModulePermission[] };
 				updateUser({
 					...user,
 					role: {
-						...(user.role as any),
+						...currentRole,
+						roleName: currentRole.roleName || matchingRoleData.roleName || matchingRoleData.name || '',
 						permissions: matchingRole.permissions
-					} as any
+					}
 				});
 			}
 
@@ -176,10 +179,10 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 
 		socket.emit("joinCampaign", selectedCampaignId);
 
-		const handleUpdateRole = (data: any) => {
+		const handleUpdateRole = (data: { role: { _id?: string; id?: string; roleName: string; permissions: RoleModulePermission[] } }) => {
 			if (!userPrivileges || !userPrivileges.role) return;
 
-			const currentRoleId = userPrivileges.roleId || userPrivileges.role.id || (userPrivileges.role as any)._id;
+			const currentRoleId = userPrivileges.roleId || userPrivileges.role.id || (userPrivileges.role as { _id?: string })._id;
 			const updatedRoleId = data.role._id || data.role.id;
 
 			if (userPrivileges.role.roleName === data.role.roleName || (currentRoleId && updatedRoleId && currentRoleId === updatedRoleId)) {
@@ -198,9 +201,9 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 					updateUser({
 						...user,
 						role: {
-							...(user.role as any),
+							...(user.role as { roleName: string; permissions: RoleModulePermission[] }),
 							permissions: data.role.permissions
-						} as any
+						}
 					});
 				}
 

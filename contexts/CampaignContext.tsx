@@ -1,13 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useGetCampaignQuery } from '@/store/services/campaignApi';
+import { useGetCampaignQuery, Campaign } from '@/store/services/campaignApi';
 
 interface CampaignContextType {
     selectedCampaignId: string | null;
     setSelectedCampaignId: (id: string | null) => void;
     isLoading: boolean;
-    campaignData: any;
+    campaignData: Campaign | undefined;
 }
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined);

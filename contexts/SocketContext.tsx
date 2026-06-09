@@ -17,7 +17,7 @@ export interface SocketMessage {
 }
 
 // Event handler type
-export type SocketEventHandler = (message: any) => void;
+export type SocketEventHandler = (message: unknown) => void;
 
 // Socket configuration
 export interface SocketConfig {
@@ -47,7 +47,7 @@ interface SocketContextType {
 	reconnect: () => void;
 
 	// Message methods
-	emit: (event: string, data?: any) => void;
+	emit: (event: string, data?: unknown) => void;
 	send: (message: SocketMessage) => void;
 
 	// Event listeners
@@ -58,7 +58,7 @@ interface SocketContextType {
 	enableOfflineMode: () => void;
 	disableOfflineMode: () => void;
 	clearMessageQueue: () => void;
-	getQueuedMessages: () => any[];
+	getQueuedMessages: () => unknown[];
 	getQueueSize: () => number;
 
 	// Connection info
@@ -73,6 +73,12 @@ interface SocketProviderProps {
 	config?: Partial<SocketConfig>;
 }
 
+interface QueuedMessage {
+	event: string;
+	data: unknown;
+	timestamp?: number;
+}
+
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config }) => {
 	const [status, setStatus] = useState<SocketStatus>('disconnected');
 	const [socket, setSocket] = useState<Socket | null>(null);
@@ -83,9 +89,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 	const [isReconnected, setIsReconnected] = useState(false);
 	const { isAuthenticated } = useAuth();
 	const [networkSpeed, setNetworkSpeed] = useState<'fast' | 'slow' | 'unknown'>('unknown');
+	const networkSpeedRef = useRef<'fast' | 'slow' | 'unknown'>('unknown');
 
 	const socketRef = useRef<Socket | null>(null);
-	const messageQueueRef = useRef<any[]>([]);
+	const messageQueueRef = useRef<QueuedMessage[]>([]);
 	const isSyncingDispositionsRef = useRef(false);
 
 	const {
@@ -269,7 +276,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 		setTimeout(() => connect(), 100);
 	}, [disconnect, connect]);
 
-	const emit = useCallback((event: string, data?: any) => {
+	const emit = useCallback((event: string, data?: unknown) => {
 		if (socketRef.current?.connected) {
 			socketRef.current.emit(event, data);
 		} else if (offlineModeEnabled) {

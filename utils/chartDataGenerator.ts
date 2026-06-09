@@ -224,11 +224,11 @@ const generateSingleSourceData = (
 
 	// Handle disposition categories (Fields) - Aggregate values
 	// Gather dispositions from both direct and bucketed sources
-	const configuredDispositions: any[] = [...(setupData.dashboardSettings.dispositions || [])];
+	const configuredDispositions: { name: string; color?: string }[] = [...(setupData.dashboardSettings.dispositions || [])];
 	if (setupData.dashboardSettings.buckets && Array.isArray(setupData.dashboardSettings.buckets)) {
-		setupData.dashboardSettings.buckets.forEach((bucket: any) => {
+		setupData.dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
 			if (bucket && Array.isArray(bucket.dispositions)) {
-				bucket.dispositions.forEach((disp: any) => {
+				bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
 					if (disp && disp.name && !configuredDispositions.some(d => d.name === disp.name)) {
 						configuredDispositions.push(disp);
 					}

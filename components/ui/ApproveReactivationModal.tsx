@@ -53,10 +53,10 @@ export const ApproveReactivationModal: React.FC<ApproveReactivationModalProps> =
 				{reactivationReason && (
 					<div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl mb-8 text-left border border-gray-100 dark:border-gray-700">
 						<p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-							User's Reason for Request:
+							User&apos;s Reason for Request:
 						</p>
 						<p className="text-[14px] text-gray-700 dark:text-gray-300 italic">
-							"{reactivationReason}"
+							&quot;{reactivationReason}&quot;
 						</p>
 					</div>
 				)}

@@ -15,7 +15,18 @@ interface PendingReactivationsTableProps {
 	search?: string;
 }
 
-const PendingReactivationsTable: React.FC<PendingReactivationsTableProps> = ({ 
+interface PendingUser {
+	_id: string;
+	firstName: string;
+	lastName: string;
+	email: string;
+	companyName?: string;
+	reactivationReason?: string;
+	createdAt?: string;
+	updatedAt?: string;
+}
+
+const PendingReactivationsTable: React.FC<PendingReactivationsTableProps> = ({
 	hideTitle = false,
 	page = 1,
 	limit = 10,
@@ -27,12 +38,12 @@ const PendingReactivationsTable: React.FC<PendingReactivationsTableProps> = ({
 		search
 	});
 	const [approveReactivation, { isLoading: isApproving }] = useApproveReactivationMutation();
-	const [selectedUser, setSelectedUser] = useState<any>(null);
+	const [selectedUser, setSelectedUser] = useState<PendingUser | null>(null);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
-	const pendingUsers = reactivationsData?.users || [];
+	const pendingUsers = (reactivationsData?.users || []) as PendingUser[];
 
-	const handleApproveClick = (user: any) => {
+	const handleApproveClick = (user: PendingUser) => {
 		setSelectedUser(user);
 		setIsModalOpen(true);
 	};
@@ -98,7 +109,7 @@ const PendingReactivationsTable: React.FC<PendingReactivationsTableProps> = ({
 						) : pendingUsers.length === 0 ? (
 							<NoRecordFound colSpan={5} />
 						) : (
-							pendingUsers.map((user: any) => (
+							pendingUsers.map((user: PendingUser) => (
 								<tr
 									key={user._id}
 									className="dark:hover:bg-gray-700 transition-colors"

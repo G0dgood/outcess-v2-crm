@@ -4,15 +4,23 @@ import React, { createContext, useContext, useEffect, useState, useCallback, Rea
 
 // User interface
 export interface User {
+	_id: string;
 	id: string;
 	email: string;
 	name: string;
 	username?: string;
 	firstName?: string;
 	lastName?: string;
-	status?: string;
+	status?: string | {
+		status: string;
+		reason?: string;
+		color?: string;
+		isHibernate?: boolean;
+		duration?: number;
+		statusUpdatedAt?: string | Date;
+	};
 	avatar?: string;
-	role?: string | { roleName: string; permissions: any[] };
+	role?: string | { roleName: string; permissions: unknown[] };
 	isTeamMember?: boolean;
 	companyId?: string;
 	companyName?: string;
@@ -82,7 +90,6 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({
 	children,
-	apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '/api',
 	storageKey = 'outcess_auth',
 }) => {
 	const [user, setUser] = useState<User | null>(null);
@@ -134,7 +141,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 		} finally {
 			setIsLoading(false);
 		}
-	}, [storageKey]);
+	}, [storageKey, clearAuthData]);
 
 	// Save auth data to localStorage and handle session timeout
 	useEffect(() => {
@@ -158,7 +165,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 				setSessionTimeout(timeout);
 			}
 		}
-	}, [user, tokens, isMfaVerified, storageKey]);
+	}, [user, tokens, isMfaVerified, storageKey, logout, sessionTimeout]);
 
 	const setTokens = useCallback((tokenData: AuthTokens) => {
 		setTokensState(tokenData);

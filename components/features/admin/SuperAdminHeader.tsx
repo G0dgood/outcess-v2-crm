@@ -4,7 +4,6 @@ import React from 'react';
 import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
 import Button from '@/components/ui/Button';
 import ThemeToggle from '@/components/ui/ThemeToggle';
-import Icon from '@/components/ui/Icon';
 import NotificationBell from '@/components/ui/NotificationBell';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSocket } from '@/contexts/SocketContext';
@@ -21,7 +20,6 @@ interface SuperAdminHeaderProps {
 	userEmail?: string;
 	userAvatar?: string;
 	isOnline?: boolean;
-	onNotificationsClick?: () => void;
 	onEditProfileClick?: () => void;
 	onLogoutClick?: () => void;
 	onMobileMenuToggle?: () => void;
@@ -33,7 +31,6 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 	userEmail,
 	userAvatar,
 	isOnline = true,
-	onNotificationsClick,
 	onEditProfileClick,
 	onLogoutClick,
 	onMobileMenuToggle,

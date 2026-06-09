@@ -9,19 +9,28 @@ import moment from 'moment';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 
+interface Business {
+	id?: string;
+	_id?: string;
+	companyName: string;
+	status: string;
+	updatedAt?: string;
+	deactivationReason?: string;
+}
+
 const RegisteredBusinessesTable: React.FC = () => {
 	const router = useRouter();
 	const { data: companiesData, isLoading } = useGetAllCompaniesQuery({ page: 1, limit: 5 });
-	const [selectedBusiness, setSelectedBusiness] = useState<any>(null);
+	const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
 	const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
 
-	const businesses = companiesData?.companies || [];
+	const businesses = (companiesData?.companies || []) as Business[];
 
 	const handleView = (id: string) => {
 		router.push(`/superadmin/businesses/${id}`);
 	};
 
-	const handleShowReason = (business: any) => {
+	const handleShowReason = (business: Business) => {
 		setSelectedBusiness(business);
 		setIsReasonModalOpen(true);
 	};
@@ -58,7 +67,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 					) : businesses.length === 0 ? (
 						<NoRecordFound colSpan={4} />
 					) : (
-						businesses.map((business: any) => (
+						businesses.map((business: Business) => (
 							<tr
 								key={business._id || business.id}
 								className="dark:hover:bg-gray-700 transition-colors"
@@ -114,7 +123,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 									<Button
 										variant="ghost"
 										size="sm"
-										onClick={() => handleView(business._id || business.id)}
+										onClick={() => handleView(business._id || business.id || '')}
 										className="dark:text-blue-400 dark:hover:text-blue-300 text-[10px] md:text-[12px] font-medium transition-colors"
 										style={{ color: '#2563EB' }}
 										onMouseEnter={(e) => {
@@ -159,7 +168,7 @@ const RegisteredBusinessesTable: React.FC = () => {
 
 					<div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl mb-6 text-left border border-gray-100 dark:border-gray-700">
 						<p className="text-[14px] text-gray-700 dark:text-gray-300 italic">
-							"{selectedBusiness?.deactivationReason || 'No reason provided.'}"
+							&quot;{selectedBusiness?.deactivationReason || 'No reason provided.'}&quot;
 						</p>
 					</div>
 

@@ -10,11 +10,11 @@ import Checkbox from '@/components/ui/Checkbox';
 import Image from 'next/image';
 import LoginTopHeader from '@/components/ui/LoginTopHeader';
 import { useTheme } from '@/contexts/ThemeContext';
-import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useLoginMutation, useTeamMemberLoginMutation } from '@/store/services/authApi';
+import { usePrivilege, RoleModulePermission, UserPrivileges } from '@/contexts/PrivilegeContext';
+import { useLoginMutation, useTeamMemberLoginMutation, LoginResponse } from '@/store/services/authApi';
 import { login as loginAction } from '@/store/slices/authSlice';
 import { Button } from '@/components/ui/Button';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, User as AuthUser } from '@/contexts/AuthContext';
 import ReactivationRequestModal from '@/components/ui/ReactivationRequestModal';
 import { useRequestReactivationMutation } from '@/store/services/authApi';
 
@@ -27,6 +27,14 @@ interface ApiError {
 	message?: string;
 	error?: string;
 	status?: number | string;
+}
+
+interface RawUser extends Partial<AuthUser> {
+	_id: string;
+	id?: string;
+	email?: string;
+	name?: string;
+	token?: string;
 }
 
 export default function LoginPage() {
@@ -102,10 +110,9 @@ export default function LoginPage() {
 
 		if (Object.keys(newErrors).length === 0) {
 			try {
-				// Determine if input is email or userId
 				const isEmail = /\S+@\S+\.\S+/.test(formData.emailOrUserId);
 
-				let response;
+				let response: LoginResponse;
 
 				if (isEmail) {
 					response = await login({
@@ -122,16 +129,18 @@ export default function LoginPage() {
 				// Based on the provided response structure:
 				// For email login: { message: "...", user: { ...userFields, token: "..." } }
 				// For userId login: { message: "...", teamMember: { ...userFields, token: "..." } }
-				// The token is inside the user/teamMember object.
 
-				const user = response.user || response.teamMember || response;
-				const token = user?.token || response.token;
+				const rawUser = (response.user || response.teamMember || response) as RawUser;
+				const token = (rawUser as any)?.token || response.token;
 
-				if (user && token) {
+				if (rawUser && token) {
 					// Normalize user object - ALWAYS use _id for consistent linking
-					const normalizedUser = {
-						...user,
-						id: user._id || user.id,
+					const normalizedUser: AuthUser = {
+						...rawUser,
+						_id: rawUser._id,
+						id: rawUser._id || rawUser.id || '',
+						email: rawUser.email || '',
+						name: rawUser.name || (rawUser.firstName && rawUser.lastName ? `${rawUser.firstName} ${rawUser.lastName}` : ''),
 						isTeamMember: !!response.teamMember
 					};
 
@@ -139,16 +148,19 @@ export default function LoginPage() {
 					authContext.login(normalizedUser, { accessToken: token });
 
 					dispatch(loginAction({
-						user: normalizedUser,
+						user: normalizedUser as any, // Cast to any to avoid complex status object mismatch
 						tokens: { accessToken: token }
 					}));
 
 					// Update PrivilegeContext with the user's role and permissions
 					if (normalizedUser.role && typeof normalizedUser.role === 'object') {
-						const privileges = {
+						const privileges: UserPrivileges = {
 							userId: normalizedUser.id,
 							roleId: normalizedUser.role.roleName,
-							role: normalizedUser.role,
+							role: {
+								roleName: normalizedUser.role.roleName,
+								permissions: normalizedUser.role.permissions as RoleModulePermission[]
+							},
 						};
 						setUserPrivileges(privileges);
 						localStorage.setItem('userPrivileges', JSON.stringify(privileges));

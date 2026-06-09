@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { ExclamationTriangleIcon, TrashIcon } from '@radix-ui/react-icons';
 import Button from './Button';
 import Modal from './Modal';
-import { useCampaign } from '@/contexts/CampaignContext';
 
 interface AccountDeletionModalProps {
 	isOpen: boolean;

@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import Skeleton from "@/components/ui/Skeleton";
 import Button from "@/components/ui/Button";
@@ -13,13 +12,11 @@ import {
 	IdCardIcon,
 	EyeOpenIcon,
 	EyeClosedIcon,
-	MoonIcon,
-	SunIcon,
-	GearIcon
 } from "@radix-ui/react-icons";
+import { Separator } from "@/components/ui/separator";
 import PageHeading from "@/components/ui/PageHeading";
 import SubPageHeading from "@/components/ui/SubPageHeading";
-import Tabs, { TabItem } from "@/components/ui/Tabs";
+import Tabs from "@/components/ui/Tabs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCampaign } from "@/contexts/CampaignContext";
 
@@ -52,9 +49,8 @@ export default function SettingsPage() {
 	const [changePasswordApi] = useChangePasswordMutation();
 
 	const { campaignData } = useCampaign();
-	const { isDarkMode, toggleTheme } = useTheme();
+	const { isDarkMode } = useTheme();
 	const primaryColor = campaignData?.primaryColor || '#050711';
-	const secondaryColor = campaignData?.secondaryColor || '#6C8B7D';
 
 	const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'email' | 'payment' | 'preferences'>('profile');
 

@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import Pagination from '@/components/ui/Pagination';
-import { useGetPendingReactivationsQuery, useApproveReactivationMutation } from '@/store/services/companyApi';
+import { useGetPendingReactivationsQuery, useApproveReactivationMutation, PendingReactivationUser } from '@/store/services/companyApi';
 import { toast } from 'sonner';
 import moment from 'moment';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
@@ -24,7 +24,7 @@ const PendingReactivationsPage: React.FC = () => {
 	});
 
 	const [approveReactivation, { isLoading: isApproving }] = useApproveReactivationMutation();
-	const [selectedUser, setSelectedUser] = useState<any>(null);
+	const [selectedUser, setSelectedUser] = useState<PendingReactivationUser | null>(null);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	const pendingUsers = reactivationsData?.users || [];
@@ -35,7 +35,7 @@ const PendingReactivationsPage: React.FC = () => {
 		setCurrentPage(1);
 	}, [searchTerm]);
 
-	const handleApproveClick = (user: any) => {
+	const handleApproveClick = (user: PendingReactivationUser) => {
 		setSelectedUser(user);
 		setIsModalOpen(true);
 	};
@@ -117,7 +117,7 @@ const PendingReactivationsPage: React.FC = () => {
 								) : pendingUsers.length === 0 ? (
 									<NoRecordFound colSpan={5} />
 								) : (
-									pendingUsers.map((user: any) => (
+									pendingUsers.map((user: PendingReactivationUser) => (
 										<tr
 											key={user._id}
 											className="dark:hover:bg-gray-700 transition-colors"

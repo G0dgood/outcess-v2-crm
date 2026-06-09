@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useGetCampaignByCompanyIdQuery, useGetCampaignQuery } from '@/store/services/campaignApi';
+import { useGetCampaignByCompanyIdQuery, useGetCampaignQuery, Campaign } from '@/store/services/campaignApi';
 import { useCampaign } from './CampaignContext';
 import Icon from '@/components/ui/Icon';
 
@@ -239,11 +239,11 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const existingCampaign = selectedCampaignId ? specificCampaign : companyCampaign;
 	const isFetchingCampaign = selectedCampaignId ? isFetchingSpecificLOB : isFetchingCompanyLOB;
 
-	const populateData = useCallback((data: any) => {
+	const populateData = useCallback((data: unknown) => {
 		if (!data) return;
 
-		const source = data as { campaign?: unknown } | undefined;
-		const dataToUse = (source?.campaign as any) || (data as any);
+		const source = data as { campaign?: Campaign } | undefined;
+		const dataToUse = source?.campaign || (data as Campaign);
 
 		const safeParse = <T,>(data: unknown): Partial<T> => {
 			if (!data) return {};
@@ -262,8 +262,8 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			const customerBookSettings = safeParse<SetupData['customerBookSettings']>(dataToUse.customerBookSettings);
 			const roleManagementSettings = safeParse<SetupData['roleManagementSettings']>(dataToUse.roleManagementSettings);
 
-			const currentDispositions = Array.isArray(dataToUse.dashboardSettings?.dispositions)
-				? dataToUse.dashboardSettings.dispositions
+			const currentDispositions = Array.isArray((dataToUse.dashboardSettings as Record<string, unknown> | undefined)?.dispositions)
+				? (dataToUse.dashboardSettings as Record<string, unknown>).dispositions as DispositionCategory[]
 				: [];
 
 			let finalBuckets = Array.isArray(dashboardSettings?.buckets)
@@ -795,6 +795,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		dashboardStep,
 		validateStep,
 		isDirty,
+		resetDirty,
 		discardChanges,
 		onPersist,
 		registerPersist,

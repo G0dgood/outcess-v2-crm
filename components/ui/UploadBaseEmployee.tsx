@@ -76,8 +76,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
   const [isError] = useState(false);
   const [isLoading] = useState(false);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
-  type ApiError = { data?: { message?: string } };
-  const [error] = useState<ApiError | null>(null);
+
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -285,7 +284,7 @@ const UploadBase: React.FC<UploadBaseProps> = ({
                 >
                   <p>
                     <i className="fas fa-exclamation-circle mr-2" />{" "}
-                    {error?.data?.message || "Upload failed"}
+                    Upload failed
                   </p>
                   <button
                     onClick={onClickReset}

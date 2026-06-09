@@ -7,7 +7,7 @@ export interface User {
     email: string;
     name: string;
     avatar?: string;
-    role?: string;
+    role?: string | { roleName: string; permissions: any[] };
     isTeamMember?: boolean;
     companyId?: string;
     companyName?: string;
