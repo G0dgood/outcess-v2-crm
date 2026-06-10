@@ -5,18 +5,12 @@ import Input from '@/components/ui/Input';
 import { useUpdateSetupBookRecordsMutation } from '@/store/services/setupBookApi';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { toast } from 'sonner';
-
-interface FieldDefinition {
-	id: string;
-	name: string;
-	type: 'text' | 'phone' | 'email' | 'number' | 'date';
-	required: boolean;
-}
+import { CustomerField } from '@/types/dashboard';
 
 interface EditRecordModalProps {
 	isOpen: boolean;
 	record: Record<string, string | number | boolean | null> | null;
-	fieldDefinitions: FieldDefinition[];
+	fieldDefinitions: CustomerField[];
 	onClose: () => void;
 	onSave: (updatedRecord: Record<string, string | number | boolean | null>) => void;
 }
@@ -36,7 +30,7 @@ const EditRecordModal: React.FC<EditRecordModalProps> = ({
 }) => {
 	const [formData, setFormData] = useState<Record<string, string | number | boolean | null> | null>(null);
 	const { campaignData } = useCampaign();
-	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
+	const campaignId = campaignData?._id || campaignData?.id;
 	const [updateSetupBookRecords, { isLoading }] = useUpdateSetupBookRecordsMutation();
 
 	useEffect(() => {
