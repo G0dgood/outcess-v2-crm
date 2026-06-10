@@ -53,7 +53,7 @@ const CustomerBookPage: React.FC = () => {
 	}, [campaignData]);
 
 	const buckets = useMemo(() => {
-		return (campaignData?.dashboardSettings?.buckets || []) as BucketWithMembers[];
+		return (campaignData?.dashboardSettings?.buckets || []) as unknown as BucketWithMembers[];
 	}, [campaignData]);
 
 	const userId = String(user?.id || user?._id || '');
