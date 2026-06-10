@@ -7,22 +7,12 @@ import { Cross2Icon, PlusIcon, PersonIcon, ArchiveIcon, TrashIcon, ClockIcon } f
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import AssignMemberModal from '@/components/features/dashboard/AssignMemberModal';
 import { Bucket, AssignedMember } from '@/contexts/SetupContext';
+import { Campaign } from '@/store/services/campaignApi';
 
 interface ManageMembersModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	campaignData: {
-		campaign?: {
-			_id?: string;
-			id?: string;
-			dashboardSettings?: {
-				buckets?: Bucket[];
-			};
-		};
-		dashboardSettings?: {
-			buckets?: Bucket[];
-		};
-	};
+	campaignData: Campaign | undefined;
 }
 
 const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
@@ -36,9 +26,9 @@ const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
 	const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 	const [targetBucket, setTargetBucket] = useState<{ id: string; name: string } | null>(null);
 
-	const campaignId = (campaignData?.campaign?._id || campaignData?.campaign?.id || '') as string;
+	const campaignId = (campaignData?._id || campaignData?.id || '') as string;
 	const buckets = useMemo(() => {
-		return campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets || [];
+		return campaignData?.dashboardSettings?.buckets || [];
 	}, [campaignData]);
 
 	const handleRemove = async (bucketId: string, memberId: string, memberName: string) => {

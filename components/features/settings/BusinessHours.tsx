@@ -40,7 +40,7 @@ const BusinessHours = () => {
 	};
 
 	useEffect(() => {
-		const existing = campaignData?.campaign?.businessHours as BusinessHourData[] | BusinessHourData | undefined;
+		const existing = campaignData?.businessHours as BusinessHourData[] | BusinessHourData | undefined;
 		if (!existing) {
 			return;
 		}

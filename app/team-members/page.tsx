@@ -58,7 +58,7 @@ interface TeamMemberStatusUpdatePayload {
 const TeamMembersPage: React.FC = () => {
 	const { campaignData } = useCampaign();
 	const { user } = useUserInfo();
-	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
+	const campaignId = campaignData?._id || campaignData?.id;
 	const [supervisorFilter, setSupervisorFilter] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -289,7 +289,7 @@ const TeamMembersPage: React.FC = () => {
 	}, [supervisors, supervisorFilter]);
 
 	const shiftHourOptions = useMemo(() => {
-		const lobShiftHours = campaignData?.campaign?.shiftHours as
+		const lobShiftHours = campaignData?.shiftHours as
 			| { title?: string; shiftName?: string }[]
 			| { title?: string; shiftName?: string }
 			| undefined;

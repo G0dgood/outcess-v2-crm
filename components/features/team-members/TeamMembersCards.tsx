@@ -8,6 +8,8 @@ import EmptyState from '@/components/ui/EmptyState';
 import AssignBucketModal from './AssignBucketModal';
 import { Bucket } from '@/contexts/SetupContext';
 
+import { Campaign } from '@/store/services/campaignApi';
+
 interface TeamMember {
 	_id: string;
 	agentId: string;
@@ -30,20 +32,7 @@ interface TeamMembersCardsProps {
 	currentPage: number;
 	totalPages: number;
 	setCurrentPage: (page: number) => void;
-	campaignData: {
-		primaryColor?: string;
-		secondaryColor?: string;
-		campaign?: {
-			_id?: string;
-			id?: string;
-			dashboardSettings?: {
-				buckets?: Bucket[];
-			};
-		};
-		dashboardSettings?: {
-			buckets?: Bucket[];
-		};
-	};
+	campaignData: Campaign | undefined;
 	handleEditMemberClick: (member: TeamMember) => void;
 	handleDeleteMember: (id: string) => void;
 	setStatusModalMember: (member: TeamMember) => void;

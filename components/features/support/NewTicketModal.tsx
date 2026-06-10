@@ -85,7 +85,7 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 		}
 
 		const creatorId = user?.id || user?._id;
-		const companyId = user?.companyId || campaignData?.companyId || campaignData?.campaign?.companyId;
+		const companyId = user?.companyId || campaignData?.companyId;
 
 		if (!creatorId) {
 			toast.error('User information is missing. Please log in again.');

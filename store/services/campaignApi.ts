@@ -21,7 +21,7 @@ export interface Campaign {
     activeTab: string;
     widgets: unknown[];
     dispositions: unknown[];
-    buckets: unknown[];
+    buckets: Bucket[];
     callOutcomes: unknown[];
     leaderboardTargets?: {
       daily: number;
