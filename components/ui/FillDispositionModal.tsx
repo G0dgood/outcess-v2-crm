@@ -18,18 +18,17 @@ import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useCreateDispositionMutation } from '@/store/services/dispositionApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { DispositionCategory, Bucket } from '@/types/dashboard';
 
 interface FillDispositionModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onSave?: (data: DispositionFormState) => void;
-	initialData?: Partial<DispositionFormState>;
+	onSave: (data: Record<string, unknown>) => void;
+	initialData?: Record<string, string>;
 	customerId?: string;
 	customerName?: string;
-	customer?: {
-		id: string;
-		[key: string]: unknown;
-	} | null;
+	customer?: Record<string, unknown>;
 }
 
 interface ApiError {
@@ -39,17 +38,7 @@ interface ApiError {
 	};
 }
 
-export type DispositionFormState = Record<string, string | number | boolean | undefined>;
-
-interface DispositionField {
-	id: string;
-	name: string;
-	color: string;
-	fieldType: string;
-	dropdownOptions?: string[];
-	sortOrder?: string;
-	isRequired: boolean;
-}
+type DispositionFormState = Record<string, string>;
 
 // Helper to convert string to camelCase for state keys
 const toCamelCase = (str: string) => {
@@ -78,20 +67,20 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 	// Get dispositions from context
 	const dispositions = useMemo(() => {
-		const settings = campaignData?.campaign?.dashboardSettings;
+		const settings = campaignData?.dashboardSettings;
 		if (!settings) return [];
 
 		// 1. If direct dispositions exist, use them
 		if (settings.dispositions && settings.dispositions.length > 0) {
-			return settings.dispositions as DispositionField[];
+			return settings.dispositions as DispositionCategory[];
 		}
 
 		// 2. If buckets exist, check if this agent is assigned to a specific bucket
-		const buckets = settings.buckets || [];
+		const buckets = (settings.buckets || []) as Bucket[];
 		if (buckets.length > 0) {
 			const currentUserId = currentAgentId;
-			const assignedBucket = buckets.find((b: { assignedMembers?: Array<{ memberId: string | { _id?: string; id?: string } }>; dispositions?: DispositionField[] }) =>
-				b.assignedMembers?.some((m: { memberId: string | { _id?: string; id?: string } }) => {
+			const assignedBucket = buckets.find((b) =>
+				b.assignedMembers?.some((m) => {
 					const mId = typeof m.memberId === 'object' && m.memberId !== null
 						? (m.memberId._id || m.memberId.id)
 						: m.memberId;
@@ -100,15 +89,15 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 			);
 
 			if (assignedBucket && assignedBucket.dispositions && assignedBucket.dispositions.length > 0) {
-				return assignedBucket.dispositions as DispositionField[];
+				return assignedBucket.dispositions as DispositionCategory[];
 			}
 
 			// 3. Fallback: gather all unique dispositions across all buckets
-			const allDispositions: DispositionField[] = [];
+			const allDispositions: DispositionCategory[] = [];
 			const seenIds = new Set<string>();
-			buckets.forEach((b: { dispositions?: DispositionField[] }) => {
+			buckets.forEach((b) => {
 				if (b.dispositions) {
-					b.dispositions.forEach((disp: DispositionField) => {
+					b.dispositions.forEach((disp: DispositionCategory) => {
 						if (disp && disp.id && !seenIds.has(disp.id)) {
 							seenIds.add(disp.id);
 							allDispositions.push(disp);
@@ -313,7 +302,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 	if (!isOpen) return null;
 
-	const renderField = (field: DispositionField) => {
+	const renderField = (field: DispositionCategory) => {
 		const key = toCamelCase(field.name);
 
 		switch (field.fieldType) {

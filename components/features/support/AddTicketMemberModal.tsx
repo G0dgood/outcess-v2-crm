@@ -4,15 +4,13 @@ import { Dropdown } from '../../ui/Dropdown';
 import { Button } from '../../ui/Button';
 import { useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '../../../store/services/teamMembersApi';
 import { useUpdateTicketMutation, SupportTicket, PopulatedMember } from '../../../store/services/supportApi';
+import { Campaign } from '../../../store/services/campaignApi';
 
 interface AddTicketMemberModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	ticket: SupportTicket;
-	campaignData?: {
-		primaryColor?: string;
-		_id?: string;
-	};
+	campaignData?: Campaign;
 }
 
 export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({

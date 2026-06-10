@@ -35,22 +35,24 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 	const [logoFile, setLogoFile] = useState<File | null>(null);
 
 	// Fetch company details
-	const { data: companyData, isLoading } = useGetCompanyByIdQuery(campaignData?.campaign?.companyId);
+	const { data: companyData, isLoading } = useGetCompanyByIdQuery(campaignData?.companyId || '', { skip: !campaignData?.companyId });
 
 	useEffect(() => {
-		if (companyData?.company) {
-			const { company } = companyData;
-			setFormData(prev => ({
-				...prev,
-				companyName: company.companyName || '',
-				phoneNumber: company.phoneNumber || company.phone || '',
-				website: company.website || '',
-				state: company.state || '',
-				country: company.country || '',
-				timeZone: company.timeZone || prev.timeZone,
-				description: company.description || '',
-				logo: company.logo || '',
-			}));
+		if (companyData) {
+			const { company } = companyData as { company?: Record<string, any> };
+			if (company) {
+				setFormData(prev => ({
+					...prev,
+					companyName: company.companyName || '',
+					phoneNumber: company.phoneNumber || company.phone || '',
+					website: company.website || '',
+					state: company.state || '',
+					country: company.country || '',
+					timeZone: company.timeZone || prev.timeZone,
+					description: company.description || '',
+					logo: company.logo || '',
+				}));
+			}
 		}
 	}, [companyData]);
 
@@ -74,7 +76,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 			}
 
 			await updateCompany({
-				id: campaignData?.campaign?.companyId,
+				id: campaignData?.companyId || '',
 				data: payload
 			}).unwrap();
 

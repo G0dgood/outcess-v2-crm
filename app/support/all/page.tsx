@@ -21,7 +21,7 @@ const AllSupportPage = () => {
 	const router = useRouter();
 	const { canAccess } = usePrivilege();
 	const { campaignData } = useCampaign();
-	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
+	const campaignId = campaignData?._id || campaignData?.id;
 
 	const [searchQuery, setSearchQuery] = useState('');
 	const [activeTab, setActiveTab] = useState<'All Tickets' | 'New' | 'In Progress' | 'Resolved' | 'Closed' | 'Done'>('All Tickets');
@@ -35,7 +35,7 @@ const AllSupportPage = () => {
 
 
 	const { data: ticketsData, isLoading } = useGetTicketsByCampaignIdQuery({
-		campaignId,
+		campaignId: campaignId as string,
 		status: activeTab === 'All Tickets' ? undefined : activeTab,
 		page,
 		limit: itemsPerPage,

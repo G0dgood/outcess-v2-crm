@@ -48,7 +48,7 @@ const TeamSupportPage = () => {
   user?.companyId ||
   '';
 
- const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
+ const campaignId = campaignData?._id || campaignData?.id;
 
  const { data: supervisorsData } = useGetSupervisorsByCampaignIdQuery({
   companyId,

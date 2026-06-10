@@ -119,7 +119,7 @@ const SuperAdminSideNav: React.FC<SuperAdminSideNavProps> = ({
 
 	const currentActiveItem = getActiveItem();
 
-	const currentCampaign = campaignData?.campaign;
+	const currentCampaign = campaignData;
 	const headerLogo = currentCampaign?.logo;
 	const headerName = currentCampaign?.companyName || 'Outcess';
 

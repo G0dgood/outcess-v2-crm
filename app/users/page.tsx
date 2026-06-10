@@ -84,7 +84,7 @@ const UsersPage: React.FC = () => {
 	const { campaignData } = useCampaign();
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
-	const campaignId = campaignData?.campaign?._id || campaignData?._id || '';
+	const campaignId = campaignData?._id || '';
 	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersByCampaignIdQuery(
 		{ campaignId, page: currentPage, limit: itemsPerPage },
 		{ skip: !campaignId }
@@ -440,7 +440,7 @@ const UsersPage: React.FC = () => {
 										style={{ color: 'var(--text-tertiary)' }}
 									>
 										<div className="flex flex-wrap gap-1">
-											{(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)
+											{(campaignData?.dashboardSettings?.buckets)
 												?.filter((b: Bucket) =>
 													b.assignedMembers?.some((m: AssignedMember) => {
 														const mId = typeof m.memberId === 'object' && m.memberId !== null
@@ -460,7 +460,7 @@ const UsersPage: React.FC = () => {
 													</span>
 												))
 											}
-											{(!(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)?.some((b: Bucket) =>
+											{(!(campaignData?.dashboardSettings?.buckets)?.some((b: Bucket) =>
 												b.assignedMembers?.some((m: AssignedMember) => {
 													const mId = typeof m.memberId === 'object' && m.memberId !== null
 														? (m.memberId as { _id?: string; id?: string })._id || (m.memberId as { _id?: string; id?: string }).id

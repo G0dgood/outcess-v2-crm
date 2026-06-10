@@ -26,7 +26,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 }) => {
 	const { user } = useUserInfo();
 	const { campaignData } = useCampaign();
-	const campaignId = campaignData?.campaign?._id || campaignData?._id || '';
+	const campaignId = campaignData?._id || '';
 	const companyId = user?.companyId || user?.company?._id || '';
 
 	const [file, setFile] = useState<File | null>(null);
@@ -78,7 +78,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 		formData.append('companyId', companyId);
 
 		try {
-			const res = await bulkUpload(formData).unwrap();
+			const res = await bulkUpload(formData).unwrap() as any;
 			setResult(res.summary ? { ...res.summary, errors: res.errors } : res);
 			toast.success('Upload completed successfully');
 			setFile(null);
@@ -137,8 +137,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 
 							<div
 								className={`border-2 border-dashed p-10 flex flex-col items-center justify-center space-y-4 cursor-pointer transition-all duration-200 rounded-[var(--radius)] ${isDragging
-										? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 scale-[1.01]'
-										: 'border-[var(--light-gray)] hover:bg-gray-50 dark:hover:bg-gray-700/50'
+									? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 scale-[1.01]'
+									: 'border-[var(--light-gray)] hover:bg-gray-50 dark:hover:bg-gray-700/50'
 									}`}
 								onClick={() => fileInputRef.current?.click()}
 								onDragOver={handleDragOver}
