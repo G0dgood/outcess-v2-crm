@@ -483,6 +483,8 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			id: bucketId,
 			dispositions: [],
 			customerFields: defaultFields,
+			color: '',
+			name: ''
 		};
 
 		setSetupData(prev => ({

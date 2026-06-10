@@ -5,17 +5,11 @@ import Input from '@/components/ui/Input';
 import { useCreateSetupBookMutation } from '@/store/services/setupBookApi';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { toast } from 'sonner';
-
-interface FieldDefinition {
-	id: string;
-	name: string;
-	type: 'text' | 'phone' | 'email' | 'number' | 'date';
-	required: boolean;
-}
+import { CustomerField } from '@/types/dashboard';
 
 interface CreateRecordModalProps {
 	isOpen: boolean;
-	fieldDefinitions: FieldDefinition[];
+	fieldDefinitions: CustomerField[];
 	onClose: () => void;
 	bucketId?: string;
 }
@@ -34,8 +28,8 @@ const CreateRecordModal: React.FC<CreateRecordModalProps> = ({
 }) => {
 	const [formData, setFormData] = useState<Record<string, string | number | boolean>>({});
 	const { campaignData } = useCampaign();
-	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
-	const companyIdRaw = campaignData?.campaign?.companyId;
+	const campaignId = campaignData?._id || campaignData?.id;
+	const companyIdRaw = campaignData?.companyId;
 	const companyId = typeof companyIdRaw === 'object' && companyIdRaw !== null
 		? (companyIdRaw as { _id?: string; id?: string })._id || (companyIdRaw as { _id?: string; id?: string }).id
 		: companyIdRaw as string | undefined;

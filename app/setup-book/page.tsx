@@ -21,16 +21,10 @@ import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ALL_MY_BUCKETS, getUserAssignedBuckets, BucketWithMembers } from '@/utils/bucketUtils';
+import { CustomerField, Bucket } from '@/types/dashboard';
 
 import { SelectBucketModal } from '@/components/ui/SelectBucketModal';
 import { useRouter } from 'next/navigation';
-
-interface FieldDefinition {
-	id: string;
-	name: string;
-	type: 'text' | 'phone' | 'email' | 'number' | 'date';
-	required: boolean;
-}
 
 interface SetupBookRecord {
 	id: string;
@@ -54,10 +48,10 @@ const SetupBookPage: React.FC = () => {
 	const canDelete = canAccess('setupBook', 'delete');
 
 	const { campaignData } = useCampaign();
-	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
+	const campaignId = campaignData?._id || campaignData?.id;
 
-	const allConfiguredFieldsChunks = useMemo(() => campaignData?.campaign?.customerBookSettings?.configuredFields || [], [campaignData]);
-	const buckets = useMemo(() => (campaignData?.campaign?.dashboardSettings?.buckets || []) as BucketWithMembers[], [campaignData]);
+	const allConfiguredFieldsChunks = useMemo(() => campaignData?.customerBookSettings?.configuredFields || [], [campaignData]);
+	const buckets = useMemo(() => (campaignData?.dashboardSettings?.buckets || []) as BucketWithMembers[], [campaignData]);
 	const userId = String(user?.id || user?._id || '');
 	const hasFullBucketAccess = isAdmin || isSuperAdmin;
 
@@ -101,10 +95,10 @@ const SetupBookPage: React.FC = () => {
 	// Find fields for selected bucket (or union when viewing all assigned buckets)
 	const setupBookHeaderFields = useMemo(() => {
 		if (selectedBucketId === ALL_MY_BUCKETS) {
-			const fieldsMap = new Map<string, FieldDefinition>();
+			const fieldsMap = new Map<string, CustomerField>();
 			accessibleBuckets.forEach((bucket) => {
 				const config = allConfiguredFieldsChunks.find((c: { bucketId: string }) => c && c.bucketId === bucket.id);
-				(config?.fields || []).forEach((field: FieldDefinition) => {
+				(config?.fields || []).forEach((field: CustomerField) => {
 					if (field?.id) fieldsMap.set(field.id, field);
 				});
 			});
@@ -114,7 +108,7 @@ const SetupBookPage: React.FC = () => {
 		const currentBucketConfig = allConfiguredFieldsChunks.find(
 			(c: { bucketId: string }) => c && c.bucketId === selectedBucketId
 		);
-		return currentBucketConfig?.fields || [];
+		return (currentBucketConfig?.fields || []) as CustomerField[];
 	}, [selectedBucketId, accessibleBuckets, allConfiguredFieldsChunks]);
 
 	const activeUploadBucketId = selectedBucketId === ALL_MY_BUCKETS ? '' : selectedBucketId;
@@ -138,7 +132,7 @@ const SetupBookPage: React.FC = () => {
 	const [editingRecord, setEditingRecord] = useState<SetupBookRecord | null>(null);
 	const [deleteRecord, setDeleteRecord] = useState<{ id: string; name: string } | null>(null);
 	// Memoize field definitions to avoid infinite loops and unstable references
-	const fieldDefinitions: FieldDefinition[] = useMemo(() => setupBookHeaderFields, [setupBookHeaderFields]);
+	const fieldDefinitions: CustomerField[] = useMemo(() => setupBookHeaderFields, [setupBookHeaderFields]);
 
 	const { data: apiRecords, isLoading } = useGetSetupBookByCampaignIdQuery(
 		{
@@ -453,7 +447,7 @@ const SetupBookPage: React.FC = () => {
 								{showBucketColumn && (
 									<th>Bucket</th>
 								)}
-								{fieldDefinitions?.map((field: FieldDefinition, index: number) => (
+								{fieldDefinitions?.map((field: CustomerField, index: number) => (
 									<th key={field?.id ? `header-id-${field.id}` : `header-idx-${index}`}>
 										{field?.name}
 									</th>
@@ -488,7 +482,7 @@ const SetupBookPage: React.FC = () => {
 									{showBucketColumn && (
 										<td>{getBucketName(record)}</td>
 									)}
-									{fieldDefinitions?.map((field: FieldDefinition, index: number) => (
+									{fieldDefinitions?.map((field: CustomerField, index: number) => (
 										<td
 											key={`${record.id}-${field?.id ? `id-${field.id}` : `idx-${index}`}`}
 										>
