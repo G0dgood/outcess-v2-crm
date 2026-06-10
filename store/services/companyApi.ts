@@ -77,7 +77,11 @@ export interface SuperAdminDashboardStats {
     totalBusinesses: number;
     totalActiveBusinesses: number;
     totalUsers: number;
-    growthData: unknown;
+    growthData: {
+      month: string;
+      businesses: number;
+      users: number;
+    }[];
   };
 }
 
