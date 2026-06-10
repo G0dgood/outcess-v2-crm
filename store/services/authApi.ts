@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import { updateUser as updateUserAction } from "../slices/authSlice";
+import { updateUser as updateUserAction, User } from "../slices/authSlice";
 
 export interface RegisterRequest {
   firstName: string;
@@ -19,7 +19,7 @@ export interface RegisterRequest {
 
 export interface RegisterResponse {
   message: string;
-  user?: unknown;
+  user?: User;
   token?: string;
 }
 
@@ -31,13 +31,13 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   message: string;
-  user?: unknown;
-  teamMember?: unknown;
+  user?: User;
+  teamMember?: User;
   token?: string;
 }
 
 export interface UserResponse {
-  user: unknown;
+  user: User;
   message?: string;
 }
 

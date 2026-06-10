@@ -145,30 +145,35 @@ export default function SignUpPage() {
 
 				const response = await register(payload).unwrap();
 
-				if (response.user && (response.user.id || response.user._id)) {
-					// Normalize user object
-					const normalizedUser = {
-						...response.user,
-						id: response.user.id || response.user._id
-					};
+				if (response.user) {
+					const u = response.user as any;
+					if (u.id || u._id) {
+						// Normalize user object
+						const normalizedUser = {
+							...u,
+							id: u.id || u._id
+						};
 
-					// Store user and token in Redux using register action for atomic update
-					if (response.token) {
-						dispatch(registerAction({
-							user: normalizedUser,
-							tokens: { accessToken: response.token }
-						}));
-						localStorage.setItem('outcess-token', response.token);
-						localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
+						// Store user and token in Redux using register action for atomic update
+						if (response.token) {
+							dispatch(registerAction({
+								user: normalizedUser,
+								tokens: { accessToken: response.token }
+							}));
+							localStorage.setItem('outcess-token', response.token);
+							localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
+						} else {
+							// Fallback if no token (shouldn't happen for successful auth)
+							dispatch(setUser(normalizedUser));
+							localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
+						}
+
+						setUserId(normalizedUser.id);
+						toast.success('Account created successfully! Please verify company details.');
+						setStep(3);
 					} else {
-						// Fallback if no token (shouldn't happen for successful auth)
-						dispatch(setUser(normalizedUser));
-						localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
+						toast.error('Account created but user ID is missing.');
 					}
-
-					setUserId(normalizedUser.id);
-					toast.success('Account created successfully! Please verify company details.');
-					setStep(3);
 				} else {
 					toast.error('Account created but user ID is missing.');
 				}
