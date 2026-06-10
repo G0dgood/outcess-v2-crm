@@ -8,6 +8,7 @@ interface CampaignContextType {
     setSelectedCampaignId: (id: string | null) => void;
     isLoading: boolean;
     campaignData: Campaign | undefined;
+    
 }
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
