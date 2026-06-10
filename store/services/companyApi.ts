@@ -72,6 +72,15 @@ export interface ActivityLogsResponse {
   };
 }
 
+export interface SuperAdminDashboardStats {
+  stats: {
+    totalBusinesses: number;
+    totalActiveBusinesses: number;
+    totalUsers: number;
+    growthData: unknown;
+  };
+}
+
 export const companyApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createCompany: builder.mutation<
@@ -127,7 +136,7 @@ export const companyApi = baseApi.injectEndpoints({
       query: (companyId) => `api/v1/super-admin/companies/${companyId}/details`,
       providesTags: ["Company"],
     }),
-    getSuperAdminDashboardStats: builder.query<unknown, void>({
+    getSuperAdminDashboardStats: builder.query<SuperAdminDashboardStats, void>({
       query: () => "api/v1/super-admin/dashboard-stats",
     }),
     getPendingReactivations: builder.query<
