@@ -32,14 +32,7 @@ import Dropdown from '@/components/ui/Dropdown';
 import FieldPropertiesModal from '@/components/ui/FieldPropertiesModal';
 import { useSetup } from '@/contexts/SetupContext';
 import { SelectBucketModal } from '@/components/ui/SelectBucketModal';
-
-interface CustomerField {
-	id: string;
-	name: string;
-	type: string;
-	required: boolean;
-	options?: string[];
-}
+import { CustomerField } from '@/types/dashboard';
 
 interface FieldType {
 	id: string;
