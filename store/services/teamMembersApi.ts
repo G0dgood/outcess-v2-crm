@@ -113,6 +113,12 @@ export interface BulkUploadResponse {
   failed?: number;
 }
 
+export interface GetTeamMemberResponse {
+  teamMember?: ApiTeamMember;
+  data?: ApiTeamMember;
+  [key: string]: unknown;
+}
+
 export const teamMembersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createTeamMember: builder.mutation<unknown, CreateTeamMemberRequest>({
@@ -169,7 +175,7 @@ export const teamMembersApi = baseApi.injectEndpoints({
         `api/v1/roles/supervisors?companyId=${companyId}&campaignId=${campaignId}`,
       providesTags: ["TeamMembers"],
     }),
-    getTeamMemberById: builder.query<unknown, string>({
+    getTeamMemberById: builder.query<GetTeamMemberResponse, string>({
       query: (id) => `api/v1/team-members/${id}`,
       providesTags: ["TeamMembers"],
     }),

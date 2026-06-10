@@ -81,13 +81,13 @@ const EditUserPage: React.FC = () => {
 
 	useEffect(() => {
 		if (userResponse) {
-			const user = userResponse?.teamMember || userResponse.data || userResponse;
+			const userData = (userResponse?.teamMember || userResponse.data || userResponse) as ApiTeamMember;
 
-			let fName = user?.firstName || '';
-			let lName = user?.lastName || '';
+			let fName = userData?.firstName || '';
+			let lName = userData?.lastName || '';
 
-			if (!fName && !lName && user?.name) {
-				const parts = user?.name.split(' ');
+			if (!fName && !lName && userData?.name) {
+				const parts = userData?.name.split(' ');
 				fName = parts[0];
 				lName = parts.slice(1).join(' ');
 			}
@@ -95,16 +95,16 @@ const EditUserPage: React.FC = () => {
 			setFormData({
 				firstName: fName,
 				lastName: lName,
-				email: user?.email || '',
-				phone: user?.phone || '',
-				role: typeof user.role === 'object' ? (user?.role?._id || user?.role?.id) : (user?.role || ''),
-				status: user?.status === 'Active' ||
-					user?.status === 'active' ||
-					user?.loginStatus === 'Logged In' ||
-					user?.isActive === true ||
-					user?.status === true,
-				supervisorId: user?.supervisorId || '',
-				userId: user?.userId || '',
+				email: userData?.email || '',
+				phone: userData?.phone || '',
+				role: typeof userData.role === 'object' ? (userData?.role?._id || userData?.role?.id || '') : (userData?.role || ''),
+				status: userData?.status === 'Active' ||
+					userData?.status === 'active' ||
+					userData?.loginStatus === 'Logged In' ||
+					userData?.isActive === true ||
+					(userData?.status as unknown) === true,
+				supervisorId: userData?.supervisorId || '',
+				userId: userData?.userId || '',
 			});
 		}
 	}, [userResponse]);
