@@ -12,7 +12,6 @@ import {
 import AssignBucketModal from './AssignBucketModal';
 import { useRemoveMemberFromBucketMutation, Campaign } from '@/store/services/campaignApi';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
-import { Bucket } from '@/contexts/SetupContext';
 
 interface TeamMember {
 	_id: string;

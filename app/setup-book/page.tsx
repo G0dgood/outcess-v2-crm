@@ -21,7 +21,7 @@ import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ALL_MY_BUCKETS, getUserAssignedBuckets, BucketWithMembers } from '@/utils/bucketUtils';
-import { CustomerField, Bucket } from '@/types/dashboard';
+import { CustomerField } from '@/types/dashboard';
 
 import { SelectBucketModal } from '@/components/ui/SelectBucketModal';
 import { useRouter } from 'next/navigation';

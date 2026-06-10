@@ -6,7 +6,7 @@ import { useAssignMemberToBucketMutation } from '@/store/services/campaignApi';
 import Search from '@/components/ui/Search';
 import { Cross2Icon, CheckIcon, PlusIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
-import { AssignedMember, Bucket } from '@/contexts/SetupContext';
+import { AssignedMember } from '@/contexts/SetupContext';
 import { Campaign } from '@/store/services/campaignApi';
 
 interface AssignBucketModalProps {
