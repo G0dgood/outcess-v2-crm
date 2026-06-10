@@ -146,12 +146,12 @@ export default function SignUpPage() {
 				const response = await register(payload).unwrap();
 
 				if (response.user) {
-					const rawUser = response.user as Record<string, any>;
-					if (rawUser.id || rawUser._id) {
+					const u = response.user as any;
+					if (u.id || u._id) {
 						// Normalize user object
 						const normalizedUser = {
-							...response.user,
-							id: rawUser.id || rawUser._id
+							...u,
+							id: u.id || u._id
 						};
 
 						// Store user and token in Redux using register action for atomic update

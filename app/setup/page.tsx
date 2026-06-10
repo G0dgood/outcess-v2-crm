@@ -25,10 +25,10 @@ export default function Setup() {
 				try {
 					const response = await triggerGetUser(userId).unwrap();
 					if (response?.user) {
-						const rawUser = response.user as Record<string, any>;
+						const u = response.user as any;
 						const normalizedUser: User = {
-							...response.user,
-							id: rawUser.id || rawUser._id || ''
+							...u,
+							id: (u.id || u._id || '') as string
 						};
 						updateUser(normalizedUser);
 						localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
