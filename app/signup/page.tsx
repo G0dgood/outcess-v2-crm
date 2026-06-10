@@ -14,7 +14,7 @@ import { useRegisterMutation } from '@/store/services/authApi';
 import { useCreateCompanyMutation } from '@/store/services/companyApi';
 
 import { useDispatch } from 'react-redux';
-import { setUser, register as registerAction } from '@/store/slices/authSlice';
+import { setUser, register as registerAction, User } from '@/store/slices/authSlice';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { Button } from '@/components/ui/Button';
 
@@ -146,12 +146,12 @@ export default function SignUpPage() {
 				const response = await register(payload).unwrap();
 
 				if (response.user) {
-					const u = response.user as any;
-					if (u.id || u._id) {
+					const apiUser: User = response.user;
+					if (apiUser.id || apiUser._id) {
 						// Normalize user object
-						const normalizedUser = {
-							...u,
-							id: u.id || u._id
+						const normalizedUser: User = {
+							...apiUser,
+							id: apiUser.id || apiUser._id
 						};
 
 						// Store user and token in Redux using register action for atomic update

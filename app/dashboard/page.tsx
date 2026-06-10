@@ -48,7 +48,7 @@ import SortableChart from '@/components/dashboard/SortableChart';
 import WidgetCard from '@/components/dashboard/WidgetCard';
 import { ChartDataItem } from '@/components/dashboard/charts/types';
 import { Chart, Widget, CallOutcome, DashboardSettings } from '@/types/dashboard';
-import { useSetup, SetupData } from '@/contexts/SetupContext';
+import { useSetup } from '@/contexts/SetupContext';
 import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { EmptyState } from '@/components/empty-state';

@@ -6,7 +6,6 @@ import TeamMemberCard from '@/components/TeamMemberCard';
 import Pagination from '@/components/ui/Pagination';
 import EmptyState from '@/components/ui/EmptyState';
 import AssignBucketModal from './AssignBucketModal';
-import { Bucket } from '@/contexts/SetupContext';
 
 import { Campaign } from '@/store/services/campaignApi';
 
