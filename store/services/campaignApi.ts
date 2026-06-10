@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import type { Bucket } from "@/contexts/SetupContext";
+import type { Bucket, DashboardSettings } from "@/types/dashboard";
 
 export interface Campaign {
   _id: string;
@@ -15,23 +15,11 @@ export interface Campaign {
   timeZone?: string;
   companyId?: string;
   companyName?: string;
-  dashboardSettings?: {
-    dashboardName: string;
-    dashboardVisibility: string;
-    activeTab: string;
-    widgets: unknown[];
-    dispositions: unknown[];
-    buckets: Bucket[];
-    callOutcomes: unknown[];
+  dashboardSettings?: DashboardSettings & {
     leaderboardTargets?: {
       daily: number;
       weekly: number;
       monthly: number;
-    };
-    dispositionSettings: {
-      timeRangeView: string;
-      chartType: string;
-      charts: unknown[];
     };
   };
   customerBookSettings?: {
@@ -129,12 +117,14 @@ export const campaignApi = baseApi.injectEndpoints({
     }),
     getCampaign: builder.query<Campaign, string>({
       query: (id) => `api/v1/campaign/${id}`,
-      transformResponse: (response: { campaign: Campaign }) => response.campaign,
+      transformResponse: (response: { campaign: Campaign }) =>
+        response.campaign,
       providesTags: ["Campaign"],
     }),
     getCampaignByCompanyId: builder.query<Campaign, string>({
       query: (companyId) => `api/v1/campaign/company/${companyId}`,
-      transformResponse: (response: { campaign: Campaign }) => response.campaign,
+      transformResponse: (response: { campaign: Campaign }) =>
+        response.campaign,
       providesTags: ["Campaign"],
     }),
     getCampaignByCompanyIdForheader: builder.query<

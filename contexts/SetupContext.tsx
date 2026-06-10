@@ -5,6 +5,16 @@ import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetCampaignByCompanyIdQuery, useGetCampaignQuery, Campaign } from '@/store/services/campaignApi';
 import { useCampaign } from './CampaignContext';
 import Icon from '@/components/ui/Icon';
+import {
+	DispositionCategory,
+	AssignedMember,
+	Bucket,
+	Widget,
+	CallOutcome,
+	Chart,
+	CustomerField,
+	DashboardSettings
+} from '@/types/dashboard';
 
 interface SetupStep {
 	id: string;
@@ -15,71 +25,7 @@ interface SetupStep {
 	completed: boolean;
 }
 
-export interface DispositionCategory {
-	id: string;
-	name: string;
-	color: string;
-	fieldType: string;
-	dropdownOptions?: string[];
-	sortOrder?: string;
-	isRequired?: boolean;
-}
-
-export interface AssignedMember {
-	memberId: string | { _id?: string; id?: string };
-	memberName?: string;
-	duration?: number;
-}
-
-export interface Bucket {
-	color: string;
-	assignedMembers?: AssignedMember[];
-	id: string;
-	_id?: string;
-	name: string;
-	description?: string;
-	dispositions: DispositionCategory[];
-	customerFields?: CustomerField[];
-}
-
-export interface Widget {
-	id: string;
-	title: string;
-	value: number;
-	color: string;
-	callOutcome?: string;
-	subKey?: string;
-	dataSourceName?: string;
-}
-
-export interface CallOutcome {
-	id: string;
-	name: string;
-}
-
-export interface Chart {
-	id: string;
-	title: string;
-	type: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
-	dataSource: string | string[]; // Support both single and multiple data sources
-	timeRange: 'daily' | 'weekly' | 'monthly';
-	color?: string; // Base color for backward compatibility
-	colors?: Record<string, string>; // Map of data source to color for multiple data sources
-	position: {
-		x: number;
-		y: number;
-		width: number;
-		height: number;
-	};
-}
-
-interface CustomerField {
-	id: string;
-	name: string;
-	type: string;
-	required: boolean;
-	options?: string[]; // For dropdown, radio, checkbox fields
-}
+export type { DispositionCategory, AssignedMember, Bucket, Widget, CallOutcome, Chart, CustomerField, DashboardSettings };
 
 export interface SetupData {
 	campaignId?: string;
@@ -89,20 +35,7 @@ export interface SetupData {
 	timeZone: string;
 	industry: string;
 	businessSize: string;
-	dashboardSettings: {
-		dashboardName: string;
-		dashboardVisibility: 'all' | 'admin' | 'admin-supervisor' | 'custom';
-		activeTab: 'kpi' | 'disposition';
-		widgets: Widget[];
-		dispositions: DispositionCategory[];
-		buckets: Bucket[];
-		callOutcomes: CallOutcome[];
-		dispositionSettings: {
-			timeRangeView: 'daily' | 'weekly' | 'monthly';
-			chartType: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
-			charts: Chart[];
-		};
-	};
+	dashboardSettings: DashboardSettings;
 	customerBookSettings: {
 		configuredFields: { bucketId: string; fields: CustomerField[] }[];
 	};
@@ -263,7 +196,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			const roleManagementSettings = safeParse<SetupData['roleManagementSettings']>(dataToUse.roleManagementSettings);
 
 			const currentDispositions = Array.isArray((dataToUse.dashboardSettings as Record<string, unknown> | undefined)?.dispositions)
-				? (dataToUse.dashboardSettings as Record<string, unknown>).dispositions as DispositionCategory[]
+				? (dataToUse.dashboardSettings as unknown as Record<string, unknown>).dispositions as DispositionCategory[]
 				: [];
 
 			let finalBuckets = Array.isArray(dashboardSettings?.buckets)

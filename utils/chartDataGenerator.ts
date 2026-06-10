@@ -6,16 +6,10 @@
 import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from './offlineDispositions';
 import { filterDispositionsByTimeRange } from './filterUtils';
 import type { ChartDataItem } from '@/components/dashboard/charts/types';
+import { DashboardSettings } from '@/types/dashboard';
 
 interface SetupData {
-	dashboardSettings: {
-		dispositions?: Array<{ name: string; color?: string }>;
-		buckets?: Array<{ dispositions?: Array<{ name: string; color?: string }> }>;
-		callOutcomes?: Array<{ name: string }>;
-		dispositionSettings?: {
-			timeRangeView?: string;
-		};
-	};
+	dashboardSettings: DashboardSettings;
 }
 
 interface DispositionItem {

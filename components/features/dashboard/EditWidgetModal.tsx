@@ -6,7 +6,7 @@ import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
 import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
-import type { Widget } from '@/contexts/SetupContext';
+import { Widget } from '@/types/dashboard';
 import { useCampaign } from '@/contexts/CampaignContext';
 // import { useSocket } from '@/contexts/SocketContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
@@ -44,17 +44,17 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 
 	// API Data Fetching
 	const agentId = user?.id || user?._id || '';
-	const campaignId = campaignData?.campaign?._id || campaignData?._id || '';
+	const campaignId = campaignData?._id || campaignData?.id || '';
 	const startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
 	const endDate = new Date().toISOString().split('T')[0];
 
 	const { data: reportDataAgent } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
-		{ campaignId: campaignId, agentId, startDate, endDate },
+		{ campaignId, agentId, startDate, endDate },
 		{ skip: !campaignId || !agentId || !isOpen || isAdmin }
 	);
 
 	const { data: reportDataAdmin } = useGetAllDashboardDispositionsByCampaignReportQuery(
-		{ campaignId: campaignId, startDate, endDate },
+		{ campaignId, startDate, endDate },
 		{ skip: !campaignId || !isOpen || !isAdmin }
 	);
 
@@ -142,15 +142,15 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			});
 		}
 
-		if (campaignData?.campaign?.dashboardSettings?.callOutcomes) {
-			campaignData.campaign.dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
+		if (campaignData?.dashboardSettings?.callOutcomes) {
+			campaignData.dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
 				if (outcome?.name) {
 					optionsMap.set(outcome.name, { value: outcome.name, label: outcome.name });
 				}
 			});
 		}
 
-		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
+		const dashboardSettings = campaignData?.dashboardSettings;
 		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
 		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
 			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
@@ -173,10 +173,10 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 		}
 
 		return Array.from(optionsMap.values());
-	}, [campaignData?.campaign?.dashboardSettings, reportData]);
+	}, [campaignData?.dashboardSettings, reportData]);
 
 	useEffect(() => {
-		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
+		const dashboardSettings = campaignData?.dashboardSettings;
 		const lookupKey = selectedCategory || formData.dataSourceName;
 
 		// Find disposition from either direct or bucketed dispositions
@@ -268,11 +268,11 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 				dataSourceName: outcome.name,
 			}));
 		}
-	}, [formData.dataSourceName, campaignData?.campaign?.dashboardSettings, reportData, selectedSubKey, selectedCategory, isTitleManual]);
+	}, [formData.dataSourceName, campaignData?.dashboardSettings, reportData, selectedSubKey, selectedCategory, isTitleManual]);
 
 	const isValueAutoCalculated = useMemo(() => {
 		const source = formData.dataSourceName;
-		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
+		const dashboardSettings = campaignData?.dashboardSettings;
 		// Find in both direct and bucketed dispositions
 		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
 		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
