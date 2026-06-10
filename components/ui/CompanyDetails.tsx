@@ -39,7 +39,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 
 	useEffect(() => {
 		if (companyData) {
-			const { company } = companyData as { company?: Record<string, any> };
+			const { company } = companyData;
 			if (company) {
 				setFormData(prev => ({
 					...prev,

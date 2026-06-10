@@ -78,8 +78,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 		formData.append('companyId', companyId);
 
 		try {
-			const res = await bulkUpload(formData).unwrap() as any;
-			setResult(res.summary ? { ...res.summary, errors: res.errors } : res);
+			const res = await bulkUpload(formData).unwrap();
+			setResult(res.summary ? { ...res.summary, errors: res.errors } : (res as UploadResult));
 			toast.success('Upload completed successfully');
 			setFile(null);
 		} catch (error: unknown) {

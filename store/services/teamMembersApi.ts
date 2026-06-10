@@ -101,6 +101,18 @@ export interface TeamMemberFormData {
   password?: string;
 }
 
+export interface BulkUploadResponse {
+  summary?: {
+    total: number;
+    success: number;
+    failed: number;
+  };
+  errors?: { row: number; error: string }[];
+  total?: number;
+  success?: number;
+  failed?: number;
+}
+
 export const teamMembersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createTeamMember: builder.mutation<unknown, CreateTeamMemberRequest>({
@@ -237,7 +249,10 @@ export const teamMembersApi = baseApi.injectEndpoints({
         } catch {}
       },
     }),
-    deleteManyTeamMembers: builder.mutation<unknown, DeleteManyTeamMembersRequest>({
+    deleteManyTeamMembers: builder.mutation<
+      unknown,
+      DeleteManyTeamMembersRequest
+    >({
       query: (body) => ({
         url: "api/v1/team-members/many",
         method: "DELETE",
@@ -262,7 +277,7 @@ export const teamMembersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["TeamMembers"],
     }),
-    bulkUploadTeamMembers: builder.mutation<unknown, FormData>({
+    bulkUploadTeamMembers: builder.mutation<BulkUploadResponse, FormData>({
       query: (formData) => ({
         url: "api/v1/team-members/bulk-upload",
         method: "POST",

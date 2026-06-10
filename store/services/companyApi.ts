@@ -85,6 +85,24 @@ export interface SuperAdminDashboardStats {
   };
 }
 
+export interface Company {
+  _id: string;
+  companyName: string;
+  description?: string;
+  phone?: string;
+  phoneNumber?: string;
+  website?: string;
+  state?: string;
+  country?: string;
+  timeZone?: string;
+  logo?: string;
+  [key: string]: unknown;
+}
+
+export interface GetCompanyResponse {
+  company: Company;
+}
+
 export const companyApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createCompany: builder.mutation<
@@ -98,7 +116,7 @@ export const companyApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Company"],
     }),
-    getCompanyById: builder.query<unknown, string>({
+    getCompanyById: builder.query<GetCompanyResponse, string>({
       query: (id) => `api/v1/companies/${id}`,
       providesTags: ["Company"],
     }),
