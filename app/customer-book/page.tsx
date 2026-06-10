@@ -15,18 +15,11 @@ import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { BucketWithMembers, getUserAssignedBuckets } from '@/utils/bucketUtils';
 import AccessRestricted from '@/components/ui/AccessRestricted';
+import { CustomerField } from '@/types/dashboard';
 
 interface Customer {
 	id: string;
 	[key: string]: string | number | boolean | null | undefined;
-}
-
-interface CustomerField {
-	id: string;
-	name: string;
-	type: string;
-	required: boolean;
-	options?: string[];
 }
 
 interface ConfiguredField {
