@@ -7,7 +7,7 @@ import { RemoveTicketMemberModal } from './RemoveTicketMemberModal';
 
 interface TicketSidebarProps {
 	ticket: SupportTicket;
-	campaignData: {
+	campaignData?: {
 		primaryColor?: string;
 		_id?: string;
 	};

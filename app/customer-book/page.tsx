@@ -36,7 +36,7 @@ interface ConfiguredField {
 
 const CustomerBookPage: React.FC = () => {
 	const { campaignData } = useCampaign();
-	const campaignId = campaignData?.campaign?._id || campaignData?.campaign?.id;
+	const campaignId = campaignData?._id || campaignData?.id;
 	const [searchTerm, setSearchTerm] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
 	// const [currentPage, setCurrentPage] = useState(1);
@@ -49,11 +49,11 @@ const CustomerBookPage: React.FC = () => {
 	const canCreate = canAccess('customerBook', 'create');
 
 	const configuredFields = useMemo(() => {
-		return (campaignData?.campaign?.customerBookSettings?.configuredFields || []) as ConfiguredField[];
+		return (campaignData?.customerBookSettings?.configuredFields || []) as ConfiguredField[];
 	}, [campaignData]);
 
 	const buckets = useMemo(() => {
-		return (campaignData?.campaign?.dashboardSettings?.buckets || []) as BucketWithMembers[];
+		return (campaignData?.dashboardSettings?.buckets || []) as BucketWithMembers[];
 	}, [campaignData]);
 
 	const userId = String(user?.id || user?._id || '');

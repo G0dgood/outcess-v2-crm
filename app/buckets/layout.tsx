@@ -20,7 +20,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     <div id="page-wrapper" className={isMobileMenuOpen ? 'mobile-nav-open' : ''}>
       <OfflineBanner />
       <DashboardHeader
-        companyName={campaignData?.campaign?.companyName || campaignData?.companyName || ''}
+        companyName={campaignData?.companyName || ''}
         onMobileMenuToggle={toggleMobileMenu}
         isMobileMenuOpen={isMobileMenuOpen}
       />

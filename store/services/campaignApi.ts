@@ -1,4 +1,5 @@
 import { baseApi } from "./baseApi";
+import type { Bucket } from "@/contexts/SetupContext";
 
 export interface Campaign {
   _id: string;
@@ -33,7 +34,23 @@ export interface Campaign {
       charts: unknown[];
     };
   };
+  customerBookSettings?: {
+    configuredFields: {
+      bucketId: string;
+      fields: {
+        id: string;
+        name: string;
+        type: string;
+        required: boolean;
+        options?: string[];
+      }[];
+    }[];
+  };
+  shiftHours?: unknown;
   businessHours?: unknown;
+  roleManagementSettings?: {
+    modules: { name: string }[];
+  };
   [key: string]: unknown;
 }
 
@@ -50,6 +67,15 @@ export interface CreateCampaignRequest {
 export interface CreateCampaignResponse {
   message: string;
   campaign?: unknown;
+}
+
+export interface AssignMemberResponse {
+  campaign?: {
+    dashboardSettings: {
+      buckets: Bucket[];
+    };
+  };
+  existingBucket?: string;
 }
 
 export interface BusinessHourPayload {
@@ -158,7 +184,7 @@ export const campaignApi = baseApi.injectEndpoints({
       invalidatesTags: ["Campaign"],
     }),
     assignMemberToBucket: builder.mutation<
-      unknown,
+      AssignMemberResponse,
       {
         id: string;
         bucketId: string;
@@ -175,7 +201,7 @@ export const campaignApi = baseApi.injectEndpoints({
       invalidatesTags: ["Campaign"],
     }),
     removeMemberFromBucket: builder.mutation<
-      unknown,
+      AssignMemberResponse,
       { id: string; bucketId: string; memberId: string }
     >({
       query: ({ id, bucketId, memberId }) => ({

@@ -9,7 +9,7 @@ interface AddTicketMemberModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	ticket: SupportTicket;
-	campaignData: {
+	campaignData?: {
 		primaryColor?: string;
 		_id?: string;
 	};
