@@ -7,7 +7,7 @@ import Dropdown from '@/components/ui/Dropdown';
 import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
 import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from '@/utils/offlineDispositions';
-import type { Widget } from '@/contexts/SetupContext';
+import { Widget } from '@/types/dashboard';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
@@ -45,19 +45,19 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 
 	// API Data Fetching
 	const agentId = user?.id || user?._id || '';
-	const campaignId = campaignData?.campaign?._id || campaignData?._id || '';
+	const campaignId = campaignData?._id || campaignData?.id || '';
 	const startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
 	const endDate = new Date().toISOString().split('T')[0];
 
 	const { isAdmin } = usePrivilege();
 
 	const { data: reportDataAgent } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
-		{ campaignId: campaignId, agentId, startDate, endDate },
+		{ campaignId, agentId, startDate, endDate },
 		{ skip: !campaignId || !agentId || !isOpen || isAdmin }
 	);
 
 	const { data: reportDataAdmin } = useGetAllDashboardDispositionsByCampaignReportQuery(
-		{ campaignId: campaignId, startDate, endDate },
+		{ campaignId, startDate, endDate },
 		{ skip: !campaignId || !isOpen || !isAdmin }
 	);
 
@@ -65,7 +65,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 
 	// Calculate value based on selected disposition field
 	useEffect(() => {
-		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
+		const dashboardSettings = campaignData?.dashboardSettings;
 		const disposition = dashboardSettings?.dispositions?.find((d: { name: string }) => d.name === (selectedCategory || formData.dataSourceName));
 		const outcome = dashboardSettings?.callOutcomes?.find((o: { name: string }) => o.name === (selectedCategory || formData.dataSourceName));
 
@@ -154,7 +154,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 				dataSourceName: outcome.name,
 			}));
 		}
-	}, [formData.dataSourceName, campaignData?.campaign?.dashboardSettings, reportData, selectedSubKey, selectedCategory, isTitleManual]);
+	}, [formData.dataSourceName, campaignData?.dashboardSettings, reportData, selectedSubKey, selectedCategory, isTitleManual]);
 
 	// Build dropdown options from available data
 	const widgetTitleOptions = useMemo(() => {
@@ -166,15 +166,15 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 			});
 		}
 
-		if (campaignData?.campaign?.dashboardSettings?.callOutcomes) {
-			campaignData.campaign.dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
+		if (campaignData?.dashboardSettings?.callOutcomes) {
+			campaignData.dashboardSettings.callOutcomes.forEach((outcome: { name: string }) => {
 				if (outcome?.name) {
 					optionsMap.set(outcome.name, { value: outcome.name, label: outcome.name });
 				}
 			});
 		}
 
-		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
+		const dashboardSettings = campaignData?.dashboardSettings;
 		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
 		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
 			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
@@ -197,7 +197,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		}
 
 		return Array.from(optionsMap.values());
-	}, [campaignData?.campaign?.dashboardSettings, reportData]);
+	}, [campaignData?.dashboardSettings, reportData]);
 
 	const subKeyOptions = useMemo(() => {
 		const lookupKey = selectedCategory || formData.dataSourceName;
@@ -228,7 +228,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 	};
 
 	const isValueAutoCalculated = useMemo(() => {
-		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
+		const dashboardSettings = campaignData?.dashboardSettings;
 		const source = formData.dataSourceName;
 		const isDisposition = dashboardSettings?.dispositions?.some((d: { name: string }) => d.name === source);
 		const isOutcome = dashboardSettings?.callOutcomes?.some((o: { name: string }) => o.name === source);

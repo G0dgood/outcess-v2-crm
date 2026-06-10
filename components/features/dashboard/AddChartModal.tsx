@@ -59,19 +59,19 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 	const { user } = useUserInfo();
 
 	const agentId = user?.id || user?._id || '';
-	const campaignId = campaignData?.campaign?._id || campaignData?._id || '';
+	const campaignId = campaignData?._id || campaignData?.id || '';
 	const startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
 	const endDate = new Date().toISOString().split('T')[0];
 
 	const { isAdmin } = usePrivilege();
 
 	const { data: reportDataAgent } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
-		{ campaignId: campaignId, agentId, startDate, endDate },
+		{ campaignId, agentId, startDate, endDate },
 		{ skip: !campaignId || !agentId || !isOpen || isAdmin }
 	);
 
 	const { data: reportDataAdmin } = useGetAllDashboardDispositionsByCampaignReportQuery(
-		{ campaignId: campaignId, startDate, endDate },
+		{ campaignId, startDate, endDate },
 		{ skip: !campaignId || !isOpen || !isAdmin }
 	);
 
@@ -104,7 +104,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 			});
 		}
 
-		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
+		const dashboardSettings = campaignData?.dashboardSettings;
 
 		// Add disposition categories if available (direct and bucketed)
 		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
@@ -248,8 +248,8 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 			>
 				{/* Modal Header */}
 				<div
-				className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6 rounded-t-[var(--radius)]"
-				style={{ borderColor: 'var(--light-gray)' }}
+					className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6 rounded-t-[var(--radius)]"
+					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<div className="flex items-center gap-3">
 						<h2

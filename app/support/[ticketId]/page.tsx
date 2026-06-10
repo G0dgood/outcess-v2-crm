@@ -8,7 +8,7 @@ import Textarea from '@/components/ui/Textarea';
 import PageHeading from '@/components/ui/PageHeading';
 import {
 	useGetTicketByIdQuery,
-	useAddMessageMutation,
+	useAddTicketMessageMutation,
 	useUpdateTicketMutation,
 	useEscalateTicketMutation,
 	SupportTicket,
@@ -50,7 +50,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 		skip: !ticketId,
 	});
 
-	const [addMessage] = useAddMessageMutation();
+	const [addMessage] = useAddTicketMessageMutation();
 	const [updateTicket] = useUpdateTicketMutation();
 	const [escalateTicket] = useEscalateTicketMutation();
 
@@ -116,13 +116,8 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ ticket
 
 		try {
 			await addMessage({
-				id: ticketId,
-				data: {
-					senderId: user?.id || '',
-					senderType: user?.isTeamMember ? 'TeamMember' : 'User',
-					senderName: user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User',
-					message: newMessage.trim(),
-				},
+				ticketId,
+				message: newMessage.trim(),
 			}).unwrap();
 			setNewMessage('');
 

@@ -144,9 +144,8 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
  const { canAccess, isAdmin } = usePrivilege();
  const { isDarkMode } = useTheme();
 
- const currentCampaign = campaignData?.campaign;
- const headerLogo = currentCampaign?.logo;
- const headerName = currentCampaign?.companyName || 'Outcess';
+ const headerLogo = campaignData?.logo;
+ const headerName = campaignData?.companyName || 'Outcess';
 
  const navRef = useRef<HTMLElement>(null);
  const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);

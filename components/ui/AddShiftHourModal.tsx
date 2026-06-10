@@ -122,7 +122,7 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 	};
 
 	const dayOptions = (() => {
-		const businessHours = (campaignData as any)?.businessHours as
+		const businessHours = (campaignData as { businessHours?: unknown })?.businessHours as
 			| { name?: string; businessDays?: string[] }[]
 			| { name?: string; businessDays?: string[] }
 			| undefined;

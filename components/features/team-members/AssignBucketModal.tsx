@@ -7,6 +7,7 @@ import Search from '@/components/ui/Search';
 import { Cross2Icon, CheckIcon, PlusIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import { AssignedMember, Bucket } from '@/contexts/SetupContext';
+import { Campaign } from '@/store/services/campaignApi';
 
 interface AssignBucketModalProps {
 	isOpen: boolean;
@@ -16,18 +17,7 @@ interface AssignBucketModalProps {
 		fullName: string;
 		agentId: string;
 	} | null;
-	campaignData: {
-		campaign?: {
-			_id?: string;
-			id?: string;
-			dashboardSettings?: {
-				buckets?: Bucket[];
-			};
-		};
-		dashboardSettings?: {
-			buckets?: Bucket[];
-		};
-	};
+	campaignData: Campaign | undefined;
 }
 
 const AssignBucketModal: React.FC<AssignBucketModalProps> = ({
@@ -42,9 +32,9 @@ const AssignBucketModal: React.FC<AssignBucketModalProps> = ({
 	const [durationHours, setDurationHours] = useState<number | ''>('');
 	const [durationMinutes, setDurationMinutes] = useState<number | ''>('');
 
-	const campaignId = (campaignData?.campaign?._id || campaignData?.campaign?.id || '') as string;
+	const campaignId = (campaignData?._id || campaignData?.id || '') as string;
 	const buckets = useMemo(() => {
-		return campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets || [];
+		return campaignData?.dashboardSettings?.buckets || [];
 	}, [campaignData]);
 
 	const filteredBuckets = useMemo(() => {

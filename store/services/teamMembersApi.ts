@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import { roleApi } from "./roleApi";
+import { roleApi, GetRolesResponse } from "./roleApi";
 import { updateUser } from "../slices/authSlice";
 
 export interface TeamMember {
@@ -150,7 +150,7 @@ export const teamMembersApi = baseApi.injectEndpoints({
       providesTags: ["TeamMembers"],
     }),
     getSupervisorsByCampaignId: builder.query<
-      unknown,
+      GetRolesResponse,
       { companyId: string; campaignId: string }
     >({
       query: ({ companyId, campaignId }) =>

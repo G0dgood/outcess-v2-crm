@@ -8,7 +8,7 @@ import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useSocket } from '@/contexts/SocketContext';
-import type { Chart } from '@/contexts/SetupContext';
+import { Chart } from '@/types/dashboard';
 import { useCampaign } from '@/contexts/CampaignContext';
 
 interface EditChartModalProps {
@@ -98,7 +98,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 	// Build data source options
 	const dataSourceOptions = useMemo(() => {
 		const optionsMap = new Map<string, { value: string; label: string }>();
-		const dashboardSettings = campaignData?.campaign?.dashboardSettings;
+		const dashboardSettings = campaignData?.dashboardSettings;
 
 		// Add disposition categories if available (direct and bucketed)
 		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];

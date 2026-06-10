@@ -34,7 +34,7 @@ const ShiftHours = () => {
 	const [upsertShiftHour] = useUpsertShiftHourMutation();
 
 	useEffect(() => {
-		const businessHours = campaignData?.campaign?.businessHours as
+		const businessHours = campaignData?.businessHours as
 			| { name?: string; businessDays?: string[] }[]
 			| { name?: string; businessDays?: string[] }
 			| undefined;
@@ -59,7 +59,7 @@ const ShiftHours = () => {
 	}, [campaignData]);
 
 	useEffect(() => {
-		const existing = campaignData?.campaign?.shiftHours as
+		const existing = campaignData?.shiftHours as
 			| {
 				id?: string;
 				shiftName: string;

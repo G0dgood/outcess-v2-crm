@@ -10,7 +10,7 @@ import {
 	Cross2Icon
 } from '@radix-ui/react-icons';
 import AssignBucketModal from './AssignBucketModal';
-import { useRemoveMemberFromBucketMutation } from '@/store/services/campaignApi';
+import { useRemoveMemberFromBucketMutation, Campaign } from '@/store/services/campaignApi';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import { Bucket } from '@/contexts/SetupContext';
 
@@ -42,20 +42,7 @@ interface TeamMembersTableProps {
 	setCurrentPage: (value: number) => void;
 	totalPages: number;
 	isLoading: boolean;
-	campaignData: {
-		campaign?: {
-			_id?: string;
-			id?: string;
-			dashboardSettings?: {
-				buckets?: Bucket[];
-			};
-		};
-		dashboardSettings?: {
-			buckets?: Bucket[];
-		};
-		primaryColor?: string;
-		secondaryColor?: string;
-	};
+	campaignData: Campaign | undefined;
 	setStatusModalMember: (member: TeamMember) => void;
 }
 
@@ -77,7 +64,7 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
 	const handleRemoveBucket = async (memberId: string, bucketId: string, bucketName: string) => {
 		if (window.confirm(`Are you sure you want to remove this member from "${bucketName}"?`)) {
 			try {
-				const campaignId = (campaignData?.campaign?._id || campaignData?.campaign?.id || '') as string;
+				const campaignId = (campaignData?._id || campaignData?.id || '') as string;
 				await removeMemberFromBucket({ id: campaignId, bucketId, memberId }).unwrap();
 				toastSuccess(`Removed from ${bucketName}`);
 			} catch (error: unknown) {
@@ -200,7 +187,7 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
 											style={{ color: 'var(--text-tertiary)' }}
 										>
 											<div className="flex flex-wrap items-center gap-1.5">
-												{(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)
+												{campaignData?.dashboardSettings?.buckets
 													?.filter((b) =>
 														b.assignedMembers?.some((m) => {
 															const mId = typeof m.memberId === 'object' && m.memberId !== null
@@ -237,7 +224,7 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
 												>
 													<PlusIcon className="w-3 h-3" />
 												</button>
-												{(!(campaignData?.campaign?.dashboardSettings?.buckets || campaignData?.dashboardSettings?.buckets)?.some((b) =>
+												{(!campaignData?.dashboardSettings?.buckets?.some((b) =>
 													b.assignedMembers?.some((m) => {
 														const mId = typeof m.memberId === 'object' && m.memberId !== null
 															? (m.memberId as { _id?: string; id?: string })._id || (m.memberId as { _id?: string; id?: string }).id

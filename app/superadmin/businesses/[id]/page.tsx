@@ -34,24 +34,6 @@ interface TeamMembersData {
 	data?: TeamMemberResponse[];
 }
 
-interface ActivityLogResponse {
-	_id: string;
-	id?: string;
-	createdAt?: string;
-	timestamp?: string;
-	user?: unknown;
-	role?: string;
-	action?: string;
-	details?: string;
-	description?: string;
-	[key: string]: unknown;
-}
-
-interface ActivityLogsData {
-	activityLogs?: ActivityLogResponse[];
-	data?: ActivityLogResponse[];
-}
-
 export default function BusinessDetailPage({ params }: { params: Promise<{ id: string }> }) {
 	const { id } = usePromise(params);
 	const { campaignData } = useCampaign();
