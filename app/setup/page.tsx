@@ -8,6 +8,7 @@ import ReviewConfigurationPage from './review-configuration/page';
 import { useSetup } from '@/contexts/SetupContext';
 import { useLazyGetUserByIdQuery } from '@/store/services/authApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
+import { User } from '@/store/slices/authSlice';
 
 export default function Setup() {
 	const { currentStep } = useSetup();
@@ -15,7 +16,7 @@ export default function Setup() {
 	const [triggerGetUser] = useLazyGetUserByIdQuery();
 
 	const userId = React.useMemo(() => {
-		return user?.id || (user as { _id?: string } | null)?._id;
+		return user?.id || user?._id;
 	}, [user]);
 
 	useEffect(() => {
@@ -24,9 +25,10 @@ export default function Setup() {
 				try {
 					const response = await triggerGetUser(userId).unwrap();
 					if (response?.user) {
-						const normalizedUser = {
+						const rawUser = response.user as Record<string, any>;
+						const normalizedUser: User = {
 							...response.user,
-							id: response.user.id || response.user._id
+							id: rawUser.id || rawUser._id || ''
 						};
 						updateUser(normalizedUser);
 						localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
@@ -38,7 +40,7 @@ export default function Setup() {
 		};
 
 		fetchUserData();
-	}, [userId, triggerGetUser, updateUser, user]);
+	}, [userId, triggerGetUser, updateUser]);
 
 	return (
 		<div className="w-full">
