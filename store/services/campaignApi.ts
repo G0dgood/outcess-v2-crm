@@ -129,10 +129,12 @@ export const campaignApi = baseApi.injectEndpoints({
     }),
     getCampaign: builder.query<Campaign, string>({
       query: (id) => `api/v1/campaign/${id}`,
+      transformResponse: (response: { campaign: Campaign }) => response.campaign,
       providesTags: ["Campaign"],
     }),
     getCampaignByCompanyId: builder.query<Campaign, string>({
       query: (companyId) => `api/v1/campaign/company/${companyId}`,
+      transformResponse: (response: { campaign: Campaign }) => response.campaign,
       providesTags: ["Campaign"],
     }),
     getCampaignByCompanyIdForheader: builder.query<

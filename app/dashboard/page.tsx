@@ -77,7 +77,7 @@ const DashboardContent: React.FC = () => {
 	const showAddButtons = canCreate;
 
 	const dashboardSettings: DashboardSettings = useMemo(() => {
-		const source = setupData?.dashboardSettings || campaignData?.campaign?.dashboardSettings;
+		const source = setupData?.dashboardSettings || campaignData?.dashboardSettings;
 		return source || {
 			dashboardName: 'Dashboard',
 			dashboardVisibility: 'all',
@@ -96,7 +96,7 @@ const DashboardContent: React.FC = () => {
 	}, [campaignData, setupData]);
 
 	// Fetch Report Data
-	const campaignId = campaignData?._id || campaignData?.campaign?._id || setupData?.campaignId;
+	const campaignId = campaignData?._id || campaignData?.id || setupData?.campaignId;
 	const timeRange = dashboardSettings.dispositionSettings?.timeRangeView || 'daily';
 	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange]);
 
@@ -144,9 +144,9 @@ const DashboardContent: React.FC = () => {
 
 	const apiDispositions = useMemo(() => {
 		if (isAdmin) {
-			return lobReportData?.data || (Array.isArray(lobReportData) ? lobReportData : []);
+			return (lobReportData as { data?: unknown[] })?.data || (Array.isArray(lobReportData) ? lobReportData : []);
 		} else {
-			return agentReportData?.data || (Array.isArray(agentReportData) ? agentReportData : []);
+			return (agentReportData as { data?: unknown[] })?.data || (Array.isArray(agentReportData) ? agentReportData : []);
 		}
 	}, [isAdmin, lobReportData, agentReportData]);
 
@@ -167,7 +167,7 @@ const DashboardContent: React.FC = () => {
 		updateDashboardSettingsLocal(newSettings);
 		// If offline, skip server
 		if (isOffline) return;
-		const campaignId = campaignData?._id || campaignData?.campaign?._id || setupData?.campaignId;
+		const campaignId = campaignData?._id || campaignData?.id || setupData?.campaignId;
 		if (!campaignId) return;
 
 		await updateCampaign({
