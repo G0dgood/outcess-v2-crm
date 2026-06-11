@@ -75,7 +75,8 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 
 	const syncedDispositions: SyncedDispositionViewModel[] = React.useMemo(() => {
 		if (!apiData) return [];
-		const list = Array.isArray(apiData) ? apiData : (apiData.data || []);
+		const apiDataTyped = apiData as { data?: ApiDispositionItem[] } | ApiDispositionItem[];
+		const list = Array.isArray(apiDataTyped) ? apiDataTyped : (apiDataTyped.data || []);
 		return list?.map((item: ApiDispositionItem) => ({
 			id: item._id || item.id || '',
 			customerName: item.customer?.Name || item.customerName,

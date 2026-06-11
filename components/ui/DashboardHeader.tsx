@@ -388,7 +388,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					{(isAdmin || canAccess('dashboard', 'edit')) && (
 						<Dropdown
 							label=""
-							value={selectedLOBData?.campaign?._id || selectedLOBData?._id || ''}
+							value={selectedLOBData?._id || ''}
 							onChange={(value) => {
 								const stringValue = Array.isArray(value) ? value[0] : value;
 								if (!stringValue) return;

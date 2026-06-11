@@ -53,6 +53,7 @@ export interface AssignShiftHourRequest {
 }
 
 export interface ApiTeamMember {
+  isActive: boolean;
   _id?: string;
   id?: string;
   userId?: string;

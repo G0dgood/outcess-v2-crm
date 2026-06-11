@@ -18,7 +18,6 @@ import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useCreateDispositionMutation } from '@/store/services/dispositionApi';
-import { useUserInfo } from '@/contexts/UserInfoContext';
 import { DispositionCategory, Bucket } from '@/types/dashboard';
 
 interface FillDispositionModalProps {
@@ -38,7 +37,7 @@ interface ApiError {
 	};
 }
 
-type DispositionFormState = Record<string, string>;
+export type DispositionFormState = Record<string, string>;
 
 // Helper to convert string to camelCase for state keys
 const toCamelCase = (str: string) => {

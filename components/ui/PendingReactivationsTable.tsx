@@ -41,7 +41,8 @@ const PendingReactivationsTable: React.FC<PendingReactivationsTableProps> = ({
 	const [selectedUser, setSelectedUser] = useState<PendingUser | null>(null);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
-	const pendingUsers = (reactivationsData?.users || []) as PendingUser[];
+	const reactivationsDataTyped = (reactivationsData || {}) as { users?: PendingUser[] };
+	const pendingUsers = (reactivationsDataTyped.users || []) as PendingUser[];
 
 	const handleApproveClick = (user: PendingUser) => {
 		setSelectedUser(user);
