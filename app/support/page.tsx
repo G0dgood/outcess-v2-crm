@@ -133,7 +133,7 @@ const SupportPage = () => {
 								setPriorityFilter(val as string);
 								setPage(1);
 							}}
-							className="!mt-0"
+							className="mt-0!"
 						/>
 					</div>
 
