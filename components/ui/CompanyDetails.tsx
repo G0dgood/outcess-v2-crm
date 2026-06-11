@@ -5,6 +5,7 @@ import Button from './Button';
 import PageHeading from './PageHeading';
 import { useGetCompanyByIdQuery, useUpdateCompanyMutation } from '@/store/services/companyApi';
 import { useCampaign } from '@/contexts/CampaignContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import CompanyDetailsSkeleton from '@/components/skeletons/CompanyDetailsSkeleton';
 import CompanyProfile from './CompanyProfile';
@@ -17,6 +18,7 @@ interface CompanyDetailsProps {
 
 const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 	const { campaignData } = useCampaign();
+	const { user } = useAuth();
 	const [updateCompany, { isLoading: isUpdating }] = useUpdateCompanyMutation();
 
 	const [activeTab, setActiveTab] = useState<'company-detail' | 'business-hour'>('company-detail');
@@ -34,8 +36,9 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 	});
 	const [logoFile, setLogoFile] = useState<File | null>(null);
 
-	// Fetch company details
-	const { data: companyData, isLoading } = useGetCompanyByIdQuery(campaignData?.companyId || '', { skip: !campaignData?.companyId });
+	// Fetch company details - use user.companyId first, fallback to campaign
+	const companyId = user?.companyId || campaignData?.companyId;
+	const { data: companyData, isLoading } = useGetCompanyByIdQuery(companyId || '', { skip: !companyId });
 
 	useEffect(() => {
 		if (companyData) {
@@ -76,7 +79,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ className = '' }) => {
 			}
 
 			await updateCompany({
-				id: campaignData?.companyId || '',
+				id: companyId || '',
 				data: payload
 			}).unwrap();
 
