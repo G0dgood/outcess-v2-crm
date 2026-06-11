@@ -62,7 +62,7 @@ const TeamMembersPage: React.FC = () => {
 	const [supervisorFilter, setSupervisorFilter] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
-	const [teamMembersData, setTeamMembersData] = useState<TeamMember[]>([]);
+	const [teamMembersData, setTeamMembersData] = useState<{ displayMember: TeamMember; apiMember: ApiTeamMember }[]>([]);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 	const [statusModalMember, setStatusModalMember] = useState<TeamMember | null>(null);
@@ -70,7 +70,7 @@ const TeamMembersPage: React.FC = () => {
 	const [viewType, setViewType] = useState<'table' | 'card'>('card');
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 	const [isManageModalOpen, setIsManageModalOpen] = useState(false);
-	const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+	const [editingMember, setEditingMember] = useState<ApiTeamMember | null>(null);
 
 	// Handle search debouncing
 	useEffect(() => {
@@ -132,12 +132,15 @@ const TeamMembersPage: React.FC = () => {
 
 				setTeamMembersData((prevMembers) =>
 					prevMembers.map((member) =>
-						member._id === payload.teamMemberId
+						member.displayMember._id === payload.teamMemberId || member.displayMember.agentId === payload.teamMemberId
 							? {
 								...member,
-								status: newStatus,
-								statusColor: newColor,
-								reason: newReason,
+								displayMember: {
+									...member.displayMember,
+									status: newStatus,
+									statusColor: newColor,
+									reason: newReason,
+								}
 							}
 							: member
 					)
@@ -162,7 +165,7 @@ const TeamMembersPage: React.FC = () => {
 		if (teamMembersResponse) {
 			const membersList = teamMembersResponse.teamMembers || [];
 
-			const mappedMembers: TeamMember[] = membersList.map((member: unknown) => {
+			const mappedMembers = membersList.map((member: unknown) => {
 				const m = member as ApiTeamMember;
 
 				let status = 'Logged out';
@@ -183,7 +186,7 @@ const TeamMembersPage: React.FC = () => {
 					reason = m?.statusReason;
 				}
 
-				return {
+				const displayMember: TeamMember = {
 					_id: m?._id || m?.id || '',
 					agentId: m?.userId || 'N/A', // Prioritize userId from API response
 					fullName: m?.name || `${m?.firstName || ''} ${m?.lastName || ''}`.trim(),
@@ -197,6 +200,8 @@ const TeamMembersPage: React.FC = () => {
 					team: (typeof m?.team === 'object' ? m?.team?.name : m?.team) || 'Unassigned',
 					shiftHourTitle: m?.shiftHour?.title || ''
 				};
+
+				return { displayMember, apiMember: m };
 			});
 			setTeamMembersData(mappedMembers);
 		}
@@ -222,12 +227,15 @@ const TeamMembersPage: React.FC = () => {
 					: undefined;
 
 			setTeamMembersData(prevMembers => prevMembers.map(member => {
-				if (member._id === updateData.teamMemberId || member.agentId === updateData.teamMemberId) {
+				if (member.displayMember._id === updateData.teamMemberId || member.displayMember.agentId === updateData.teamMemberId) {
 					return {
 						...member,
-						status: newStatus,
-						statusColor: newColor,
-						reason: newReason,
+						displayMember: {
+							...member.displayMember,
+							status: newStatus,
+							statusColor: newColor,
+							reason: newReason,
+						}
 					};
 				}
 				return member;
@@ -303,7 +311,7 @@ const TeamMembersPage: React.FC = () => {
 		})();
 
 		const fromMembers = Array.from(
-			new Set(teamMembersData.map((m) => m.shiftHourTitle).filter(Boolean))
+			new Set(teamMembersData.map((m) => m.displayMember.shiftHourTitle).filter(Boolean))
 		) as string[];
 
 		const allTitles = Array.from(new Set([...fromLob, ...fromMembers]));
@@ -313,7 +321,7 @@ const TeamMembersPage: React.FC = () => {
 
 	const filteredMembers = useMemo(() => {
 		return teamMembersData.filter(member => {
-			const matchesShift = !shiftFilter || member.shiftHourTitle === shiftFilter;
+			const matchesShift = !shiftFilter || member.displayMember.shiftHourTitle === shiftFilter;
 			return matchesShift;
 		});
 	}, [teamMembersData, shiftFilter]);
@@ -344,7 +352,12 @@ const TeamMembersPage: React.FC = () => {
 			};
 
 			if (editingMember) {
-				await updateTeamMember({ id: editingMember._id, data: payload }).unwrap();
+				const memberId = editingMember._id || editingMember.id;
+				if (!memberId) {
+					toastError('Could not find team member ID');
+					return;
+				}
+				await updateTeamMember({ id: memberId, data: payload }).unwrap();
 				toastSuccess('Team member updated successfully');
 			} else {
 				await createTeamMember(payload).unwrap();
@@ -371,8 +384,12 @@ const TeamMembersPage: React.FC = () => {
 	};
 
 	const handleEditMemberClick = (member: TeamMember) => {
-		setEditingMember(member);
-		setIsAddModalOpen(true);
+		// Find the corresponding apiMember
+		const found = teamMembersData.find(m => m.displayMember._id === member._id || m.displayMember.agentId === member.agentId);
+		if (found) {
+			setEditingMember(found.apiMember);
+			setIsAddModalOpen(true);
+		}
 	};
 
 	useEffect(() => {
@@ -452,7 +469,7 @@ const TeamMembersPage: React.FC = () => {
 			{viewType === 'table' ? (
 				<TeamMembersTable
 					teamMembersResponse={teamMembersResponse}
-					currentMembers={currentMembers}
+					currentMembers={currentMembers.map(m => m.displayMember)}
 					itemsPerPage={itemsPerPage}
 					setItemsPerPage={setItemsPerPage}
 					currentPage={currentPage}
@@ -465,8 +482,8 @@ const TeamMembersPage: React.FC = () => {
 			) : (
 				<TeamMembersCards
 					isLoading={isLoading}
-					filteredMembers={filteredMembers}
-					currentMembers={currentMembers}
+					filteredMembers={filteredMembers.map(m => m.displayMember)}
+					currentMembers={currentMembers.map(m => m.displayMember)}
 					currentPage={currentPage}
 					totalPages={totalPages}
 					setCurrentPage={setCurrentPage}

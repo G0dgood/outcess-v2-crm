@@ -45,7 +45,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 	const [isFillDispositionModalOpen, setIsFillDispositionModalOpen] = useState(false);
 	const [isSMSModalOpen, setIsSMSModalOpen] = useState(false);
 	const [isDispositionHistoryModalOpen, setIsDispositionHistoryModalOpen] = useState(false);
-	const [selectedDispositionData, setSelectedDispositionData] = useState<Partial<DispositionFormState> | undefined>(undefined);
+	const [selectedDispositionData, setSelectedDispositionData] = useState<DispositionFormState | undefined>(undefined);
 	const [selectedDispositionHistoryItem, setSelectedDispositionHistoryItem] = useState<DispositionHistoryItem | null>(null);
 	const [fullComment, setFullComment] = useState<string | null>(null);
 	const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
@@ -118,7 +118,8 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 
 	// Combine synced and offline dispositions (no static data)
 	const combinedDispositions: DispositionHistoryItem[] = React.useMemo(() => {
-		const syncedList = apiData ? (Array.isArray(apiData) ? apiData : apiData.data || []) : [];
+		const apiDataTyped = apiData as { data?: ApiDispositionItem[] } | ApiDispositionItem[];
+		const syncedList = apiData ? (Array.isArray(apiDataTyped) ? apiDataTyped : apiDataTyped.data || []) : [];
 		const mappedSynced = syncedList.map((item: ApiDispositionItem) => ({
 			id: item._id || item.id || '',
 			date: new Date(item.timestamp || item.createdAt || item.syncedAt || '').toLocaleDateString(),

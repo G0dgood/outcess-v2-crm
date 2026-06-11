@@ -55,8 +55,9 @@ export const RealTimeUpdates: React.FC = () => {
     if (!socket) return;
 
     // Handle Role Updates
-    const handleRoleUpdated = (data: { id?: string; _id?: string; roleId?: string }) => {
-      if (data.roleId) {
+    const handleRoleUpdated = (data: unknown) => {
+      const roleData = data as { id?: string; _id?: string; roleId?: string };
+      if (roleData.roleId) {
         toastInfo('Your role permissions have been updated. Refreshing...');
         setTimeout(() => {
           window.location.reload();
@@ -64,20 +65,21 @@ export const RealTimeUpdates: React.FC = () => {
         return;
       }
 
-      if (data.id === user?.id || data._id === user?.id) {
-        updateUser(data);
-        dispatch(updateReduxUser(data));
+      if (roleData.id === user?.id || roleData._id === user?.id) {
+        updateUser(roleData);
+        dispatch(updateReduxUser(roleData));
       }
     };
 
     // Handle Team Member Status Updates
-    const handleTeamMemberStatusUpdate = (payload: TeamMemberStatusUpdatePayload) => {
-      const newStatus = typeof payload.status === 'object' ? payload.status.status : payload.status;
-      const memberName = payload.name || 'A team member';
+    const handleTeamMemberStatusUpdate = (payload: unknown) => {
+      const statusPayload = payload as TeamMemberStatusUpdatePayload;
+      const newStatus = typeof statusPayload.status === 'object' ? statusPayload.status.status : statusPayload.status;
+      const memberName = statusPayload.name || 'A team member';
 
       // Only notify if it's not the current user themselves (already handled by updateStatus mutation normally)
       const currentUserId = user?.id || user?._id;
-      if (payload.teamMemberId === currentUserId) return;
+      if (statusPayload.teamMemberId === currentUserId) return;
 
       // Show global notification
       toastSuccess(`${memberName} is now ${newStatus}`);
@@ -87,30 +89,32 @@ export const RealTimeUpdates: React.FC = () => {
     };
 
     // Handle Global Message Notifications
-    const handleGlobalMessage = (message: TicketMessage) => {
+    const handleGlobalMessage = (message: unknown) => {
+      const ticketMessage = message as TicketMessage;
       // Don't notify if it's from me
-      const senderId = typeof message.senderId === 'object' ? (message.senderId?._id || message.senderId?.id) : message.senderId;
+      const senderId = typeof ticketMessage.senderId === 'object' ? (ticketMessage.senderId?._id || ticketMessage.senderId?.id) : ticketMessage.senderId;
       const currentUserId = user?.id || user?._id;
 
       if (senderId && currentUserId && senderId.toString() === currentUserId.toString()) return;
 
       // Don't notify if we are already on that specific ticket page
-      const isOnTicketPage = pathname?.includes(`/support/${message.ticketId || ''}`);
+      const isOnTicketPage = pathname?.includes(`/support/${ticketMessage.ticketId || ''}`);
       if (isOnTicketPage) return;
 
       // Show toast with sound using the utility
-      toastInfo(`New message on ticket #${message.ticketDisplayId || 'Support'}`, {
-        description: message.message?.substring(0, 50) + (message.message?.length > 50 ? '...' : ''),
+      toastInfo(`New message on ticket #${ticketMessage.ticketDisplayId || 'Support'}`, {
+        description: ticketMessage.message?.substring(0, 50) + (ticketMessage.message?.length > 50 ? '...' : ''),
         action: {
           label: 'View',
-          onClick: () => window.location.href = `/support/${message.ticketId}`
+          onClick: () => window.location.href = `/support/${ticketMessage.ticketId}`
         }
       });
     };
 
     // Handle Status Expiration for Supervisors
-    const handleStatusExpired = (data: { name: string; status: string; elapsedMinutes: number; allowedMinutes: number }) => {
-      toastInfo(`${data.name} has been in ${data.status} for ${data.elapsedMinutes}m (Allowed: ${data.allowedMinutes}m)`, {
+    const handleStatusExpired = (data: unknown) => {
+      const statusData = data as { name: string; status: string; elapsedMinutes: number; allowedMinutes: number };
+      toastInfo(`${statusData.name} has been in ${statusData.status} for ${statusData.elapsedMinutes}m (Allowed: ${statusData.allowedMinutes}m)`, {
         icon: '⚠️',
       });
       playNotificationSound('error', 'notifications');

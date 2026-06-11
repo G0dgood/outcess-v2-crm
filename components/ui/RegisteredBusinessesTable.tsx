@@ -24,7 +24,8 @@ const RegisteredBusinessesTable: React.FC = () => {
 	const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
 	const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
 
-	const businesses = (companiesData?.companies || []) as Business[];
+	const companiesDataTyped = (companiesData || {}) as { companies?: Business[] };
+	const businesses = (companiesDataTyped.companies || []) as Business[];
 
 	const handleView = (id: string) => {
 		router.push(`/superadmin/businesses/${id}`);

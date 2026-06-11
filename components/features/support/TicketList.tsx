@@ -1,6 +1,7 @@
 import { Calendar, Flag, Trash } from 'lucide-react';
 import moment from 'moment';
 import { useDeleteTicketMutation, SupportTicket } from '@/store/services/supportApi';
+import { Campaign } from '@/store/services/campaignApi';
 import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
@@ -14,10 +15,7 @@ import EmptyState from '@/components/ui/EmptyState';
 interface TicketListProps {
 	tickets: SupportTicket[];
 	isLoading: boolean;
-	campaignData: {
-		primaryColor?: string;
-		_id?: string;
-	};
+	campaignData?: Campaign;
 	onOpenTicket: (id: string) => void;
 }
 

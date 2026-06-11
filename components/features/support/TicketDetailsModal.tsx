@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button';
 import Textarea from '@/components/ui/Textarea';
 import {
 	useGetTicketByIdQuery,
-	useAddMessageMutation,
+	useAddTicketMessageMutation,
 	useUpdateTicketMutation,
 	useEscalateTicketMutation,
 	PopulatedRole,
@@ -51,7 +51,7 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({ isOpen, onClose
 
 	const { data: ticketData, isLoading, refetch } = useGetTicketByIdQuery(ticketId);
 
-	const [addMessage, { isLoading: isSending }] = useAddMessageMutation();
+	const [addTicketMessage, { isLoading: isSending }] = useAddTicketMessageMutation();
 	const [updateTicket] = useUpdateTicketMutation();
 	const [escalateTicket] = useEscalateTicketMutation();
 
@@ -115,14 +115,9 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({ isOpen, onClose
 		if (!newMessage.trim() || isSending) return;
 
 		try {
-			await addMessage({
-				id: ticketId,
-				data: {
-					senderId: user?.id || '',
-					senderType: 'User',
-					senderName: user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User',
-					message: newMessage.trim(),
-				},
+			await addTicketMessage({
+				ticketId: ticketId,
+				message: newMessage.trim(),
 			}).unwrap();
 			setNewMessage('');
 		} catch {
@@ -293,8 +288,8 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({ isOpen, onClose
 										</div>
 										<div className={`space-y-1 ${isOwn ? 'items-end' : 'items-start'}`}>
 											<div className={`p-3 rounded-2xl text-[10px] md:text-[12px] transition-all ${isOwn
-													? 'text-white rounded-tr-none'
-													: 'bg-white dark:bg-gray-800 border dark:border-gray-700 text-gray-800 dark:text-gray-100 rounded-tl-none shadow-sm'
+												? 'text-white rounded-tr-none'
+												: 'bg-white dark:bg-gray-800 border dark:border-gray-700 text-gray-800 dark:text-gray-100 rounded-tl-none shadow-sm'
 												}`}
 												style={isOwn ? { backgroundColor: campaignData?.primaryColor || 'var(--primary)' } : {}}
 											>

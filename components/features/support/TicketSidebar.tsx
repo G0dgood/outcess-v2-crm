@@ -1,5 +1,6 @@
 import { Plus, X } from 'lucide-react';
 import { useUpdateTicketMutation, SupportTicket, PopulatedMember, PopulatedRole } from '../../../store/services/supportApi';
+import { Campaign } from '../../../store/services/campaignApi';
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { AddTicketMemberModal } from './AddTicketMemberModal';
@@ -219,7 +220,7 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, campaignDa
 				isOpen={isAddUserModalOpen}
 				onClose={() => setIsAddUserModalOpen(false)}
 				ticket={ticket}
-				campaignData={campaignData}
+				campaignData={campaignData as unknown as Campaign}
 			/>
 
 			<RemoveTicketMemberModal

@@ -23,7 +23,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 }) => {
 	const { user } = useUserInfo();
 	const { campaignData } = useCampaign();
-	const campaignId = campaignData?.campaign?._id || campaignData?._id || '';
+	const campaignId = campaignData?._id || '';
 	const companyId = user?.companyId || user?.company?._id || '';
 
 	const [formData, setFormData] = useState({

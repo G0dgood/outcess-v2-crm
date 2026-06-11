@@ -53,6 +53,7 @@ export interface AssignShiftHourRequest {
 }
 
 export interface ApiTeamMember {
+  isActive: boolean;
   _id?: string;
   id?: string;
   userId?: string;
@@ -99,6 +100,24 @@ export interface TeamMemberFormData {
   supervisorId: string;
   shiftHourId: string;
   password?: string;
+}
+
+export interface BulkUploadResponse {
+  summary?: {
+    total: number;
+    success: number;
+    failed: number;
+  };
+  errors?: { row: number; error: string }[];
+  total?: number;
+  success?: number;
+  failed?: number;
+}
+
+export interface GetTeamMemberResponse {
+  teamMember?: ApiTeamMember;
+  data?: ApiTeamMember;
+  [key: string]: unknown;
 }
 
 export const teamMembersApi = baseApi.injectEndpoints({
@@ -157,7 +176,7 @@ export const teamMembersApi = baseApi.injectEndpoints({
         `api/v1/roles/supervisors?companyId=${companyId}&campaignId=${campaignId}`,
       providesTags: ["TeamMembers"],
     }),
-    getTeamMemberById: builder.query<unknown, string>({
+    getTeamMemberById: builder.query<GetTeamMemberResponse, string>({
       query: (id) => `api/v1/team-members/${id}`,
       providesTags: ["TeamMembers"],
     }),
@@ -237,7 +256,10 @@ export const teamMembersApi = baseApi.injectEndpoints({
         } catch {}
       },
     }),
-    deleteManyTeamMembers: builder.mutation<unknown, DeleteManyTeamMembersRequest>({
+    deleteManyTeamMembers: builder.mutation<
+      unknown,
+      DeleteManyTeamMembersRequest
+    >({
       query: (body) => ({
         url: "api/v1/team-members/many",
         method: "DELETE",
@@ -262,7 +284,7 @@ export const teamMembersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["TeamMembers"],
     }),
-    bulkUploadTeamMembers: builder.mutation<unknown, FormData>({
+    bulkUploadTeamMembers: builder.mutation<BulkUploadResponse, FormData>({
       query: (formData) => ({
         url: "api/v1/team-members/bulk-upload",
         method: "POST",

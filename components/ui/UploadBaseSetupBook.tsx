@@ -77,9 +77,8 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
   bucketId,
 }) => {
   const { campaignData } = useCampaign();
-  const campaignId = campaignData?.campaign?._id;
-  const companyId = campaignData?.campaign
-    ?.companyId;
+  const campaignId = campaignData?._id;
+  const companyId = campaignData?.companyId;
 
 
 

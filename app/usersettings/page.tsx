@@ -5,7 +5,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useCampaign } from "@/contexts/CampaignContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useGetUserByIdQuery } from "@/store/services/authApi";
+import { useGetUserByIdQuery, useUpdateUserMutation, useChangePasswordMutation } from "@/store/services/authApi";
 import { useEffect } from "react";
 import {
 	PersonIcon,
@@ -37,6 +37,8 @@ export default function SettingsPage() {
 	const { data: userData, isLoading: isUserLoading } = useGetUserByIdQuery(user?.id || '', {
 		skip: !user?.id
 	});
+	const [updateUser, { isLoading: isUpdatingProfile }] = useUpdateUserMutation();
+	const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation();
 
 
 	const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'email' | 'preferences' | 'sound'>('profile');
@@ -60,11 +62,11 @@ export default function SettingsPage() {
 		if (userData?.user) {
 			setProfileData({
 				fullName: userData.user.firstName && userData.user.lastName
-					? `${userData.user.firstName} ${userData.user.lastName}`
-					: userData.user.name || '',
-				username: userData.user.username || '',
-				phone: userData.user.phone || '',
-				email: userData.user.email || '',
+					? `${userData.user.firstName as string} ${userData.user.lastName as string}`
+					: (userData.user.name as string) || '',
+				username: (userData.user.username as string) || '',
+				phone: (userData.user.phone as string) || '',
+				email: (userData.user.email as string) || '',
 			});
 		}
 	}, [userData]);
@@ -92,30 +94,28 @@ export default function SettingsPage() {
 	const handleProfileSave = async () => {
 		setIsProfileLoading(true);
 		try {
+			// Split full name into first and last name
+			const nameParts = profileData.fullName.trim().split(' ');
+			const firstName = nameParts[0] || '';
+			const lastName = nameParts.slice(1).join(' ') || '';
 
-			const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL as string) || 'http://localhost:5000/api/v1'}/api/v1/users/user/${user?.id}`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+			await updateUser({
+				id: user?.id || '',
+				data: {
+					firstName,
+					lastName,
+					username: profileData.username,
+					phone: profileData.phone,
+					email: profileData.email,
 				},
-				body: JSON.stringify(profileData),
-			});
+			}).unwrap();
 
-
-
-			const data = await response.json();
-
-			if (response.ok) {
-				toast.success('Profile updated successfully!');
-				setIsEditingProfile(false);
-			} else {
-				console.error('Profile update failed:', data);
-				toast.error(data.error || 'Failed to update profile');
-			}
-		} catch (error) {
+			toast.success('Profile updated successfully!');
+			setIsEditingProfile(false);
+		} catch (error: unknown) {
 			console.error('Error updating profile:', error);
-			toast.error('Failed to update profile. Please try again.');
+			const err = error as { data?: { error?: string; message?: string } };
+			toast.error(err?.data?.error || err?.data?.message || 'Failed to update profile. Please try again.');
 		} finally {
 			setIsProfileLoading(false);
 		}
@@ -126,11 +126,11 @@ export default function SettingsPage() {
 		if (userData?.user) {
 			setProfileData({
 				fullName: userData.user.firstName && userData.user.lastName
-					? `${userData.user.firstName} ${userData.user.lastName}`
-					: userData.user.name || '',
-				username: userData.user.username || '',
-				phone: userData.user.phone || '',
-				email: userData.user.email || '',
+					? `${userData.user.firstName as string} ${userData.user.lastName as string}`
+					: (userData.user.name as string) || '',
+				username: (userData.user.username as string) || '',
+				phone: (userData.user.phone as string) || '',
+				email: (userData.user.email as string) || '',
 			});
 		}
 		setIsEditingProfile(false);
@@ -145,38 +145,26 @@ export default function SettingsPage() {
 				return;
 			}
 
+			await changePassword({
+				userId: user?.id || '',
+				oldPassword: passwordData.currentPassword,
+				newPassword: passwordData.newPassword,
+			}).unwrap();
 
-
-			const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL as string) || 'http://localhost:5000/api/v1'}/api/v1/users/user/${user?.id}/password`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-				},
-				body: JSON.stringify(passwordData),
+			toast.success('Password updated successfully!');
+			setPasswordData({
+				currentPassword: '',
+				newPassword: '',
+				confirmPassword: '',
 			});
-
-
-
-			const data = await response.json();
-
-			if (response.ok) {
-				toast.success('Password updated successfully!');
-				setPasswordData({
-					currentPassword: '',
-					newPassword: '',
-					confirmPassword: '',
-				});
-				setShowPasswords({
-					current: false,
-					new: false,
-					confirm: false,
-				});
-			} else {
-				toast.error(data.error || 'Failed to update password');
-			}
-		} catch {
-			toast.error('Failed to update password. Please try again.');
+			setShowPasswords({
+				current: false,
+				new: false,
+				confirm: false,
+			});
+		} catch (error: unknown) {
+			const err = error as { data?: { error?: string; message?: string } };
+			toast.error(err?.data?.error || err?.data?.message || 'Failed to update password. Please try again.');
 		} finally {
 			setIsPasswordLoading(false);
 		}
@@ -392,10 +380,10 @@ export default function SettingsPage() {
 											</Button>
 											<Button
 												onClick={handleProfileSave}
-												disabled={isProfileLoading}
+												disabled={isProfileLoading || isUpdatingProfile}
 												style={{ backgroundColor: primaryColor }}
 											>
-												{isProfileLoading ? 'Saving...' : 'Save Changes'}
+												{isProfileLoading || isUpdatingProfile ? 'Updating...' : 'Save Changes'}
 											</Button>
 										</div>
 									)}
@@ -684,10 +672,10 @@ export default function SettingsPage() {
 
 								<Button
 									onClick={handlePasswordChange}
-									disabled={isPasswordLoading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+									disabled={isPasswordLoading || isChangingPassword || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
 									style={{ backgroundColor: primaryColor }}
 								>
-									{isPasswordLoading ? 'Updating...' : 'Update Password'}
+									{isPasswordLoading || isChangingPassword ? 'Updating...' : 'Update Password'}
 								</Button>
 							</div>
 						</div>

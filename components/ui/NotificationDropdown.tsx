@@ -161,12 +161,13 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
 		onClose();
 
+		const data = notification.data as { companyId?: string; userId?: string };
 		// Handle navigation based on notification type
-		if (notification.type === 'business_registration' && notification.data?.companyId) {
-			router.push(`/superadmin/businesses/${notification.data.companyId}`);
-		} else if (notification.type === 'user_created' && notification.data?.userId) {
-			if (notification.data.companyId) {
-				router.push(`/superadmin/businesses/${notification.data.companyId}`);
+		if (notification.type === 'business_registration' && data?.companyId) {
+			router.push(`/superadmin/businesses/${data.companyId}`);
+		} else if (notification.type === 'user_created' && data?.userId) {
+			if (data.companyId) {
+				router.push(`/superadmin/businesses/${data.companyId}`);
 			}
 		}
 	};
