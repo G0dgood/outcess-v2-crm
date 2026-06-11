@@ -62,7 +62,15 @@ export const supportApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getTickets: builder.query<
       { tickets: SupportTicket[]; total: number; totalPages: number },
-      Record<string, unknown> | void
+      {
+        status?: string;
+        priority?: string;
+        page?: number;
+        limit?: number;
+        startDate?: string;
+        endDate?: string;
+        [key: string]: unknown;
+      } | void
     >({
       query: (params) => ({
         url: "api/v1/support-tickets",
@@ -78,6 +86,8 @@ export const supportApi = baseApi.injectEndpoints({
         priority?: string;
         page?: number;
         limit?: number;
+        startDate?: string;
+        endDate?: string;
       }
     >({
       query: ({ campaignId, ...params }) => ({
