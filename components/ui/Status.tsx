@@ -267,6 +267,7 @@ const Status: React.FC<StatusProps> = ({ className = '' }) => {
 		return null;
 	}
 
+	// Show loading only if we're actually fetching and we don't have a campaign ID yet
 	if (isLoading || !selectedCampaignId) {
 		return <StatusSkeleton className={className} />;
 	}
