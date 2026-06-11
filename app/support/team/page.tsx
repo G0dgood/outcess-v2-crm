@@ -96,7 +96,7 @@ const TeamSupportPage = () => {
  }, { skip: !hasAccess || !supervisorFilter });
 
 
- console.log("ticketsData----->", ticketsData)
+
 
 
  if (!hasAccess) {
