@@ -13,9 +13,10 @@ import AccountDeactivationModal from '@/components/ui/AccountDeactivationModal';
 import AccountDeletionModal from '@/components/ui/AccountDeletionModal';
 import Button from '@/components/ui/Button';
 import Tabs from '@/components/ui/Tabs';
+import GeneralSettingsSkeleton from '@/components/skeletons/GeneralSettingsSkeleton';
 
 const GeneralSettings: React.FC = () => {
-	const { campaignData } = useCampaign();
+	const { campaignData, isLoading } = useCampaign();
 	const primaryColor = campaignData?.primaryColor || '#050711';
 	const [tooltipLength, setTooltipLength] = useState<number>(10);
 	const { user, logout } = useAuth();
@@ -123,6 +124,10 @@ const GeneralSettings: React.FC = () => {
 		{ id: 'configuration', label: 'Configuration' },
 		...(isAdmin ? [{ id: 'account', label: 'Account Management' }] : [])
 	];
+
+	if (isLoading) {
+		return <GeneralSettingsSkeleton />;
+	}
 
 	return (
 		<div className="space-y-6">
@@ -255,4 +260,3 @@ const GeneralSettings: React.FC = () => {
 };
 
 export default GeneralSettings;
-

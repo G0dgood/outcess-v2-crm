@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/Button';
 import { useAuth, User as AuthUser } from '@/contexts/AuthContext';
 import ReactivationRequestModal from '@/components/ui/ReactivationRequestModal';
 import { useRequestReactivationMutation } from '@/store/services/authApi';
+import PasswordHelpModal from '@/components/ui/PasswordHelpModal';
 
 interface ApiError {
 	data?: {
@@ -60,6 +61,7 @@ export default function LoginPage() {
 	const [deactivatedEmail, setDeactivatedEmail] = useState('');
 	const [deactivationReason, setDeactivationReason] = useState('');
 	const [requestReactivation, { isLoading: isRequestingReactivation }] = useRequestReactivationMutation();
+	const [isPasswordHelpModalOpen, setIsPasswordHelpModalOpen] = useState(false);
 
 	// Set browser tab title
 	React.useEffect(() => {
@@ -280,9 +282,7 @@ export default function LoginPage() {
 							onChange={handleInputChange('password')}
 							required
 							error={errors.password}
-							onHelpClick={() => {
-								alert('Password Requirements:\n• At least 8 characters\n• Mix of letters and numbers\n• Special characters recommended');
-							}}
+							onHelpClick={() => setIsPasswordHelpModalOpen(true)}
 						/>
 
 						<div className="login-options">
@@ -327,6 +327,11 @@ export default function LoginPage() {
 				email={deactivatedEmail}
 				deactivationReason={deactivationReason}
 				isLoading={isRequestingReactivation}
+			/>
+
+			<PasswordHelpModal
+				isOpen={isPasswordHelpModalOpen}
+				onClose={() => setIsPasswordHelpModalOpen(false)}
 			/>
 		</div>
 	);
