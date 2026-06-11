@@ -11,7 +11,7 @@ import { BackpackIcon, BarChartIcon, PersonIcon } from '@radix-ui/react-icons';
 export default function AdminDashboardPage() {
 	const { data: statsData, isLoading } = useGetSuperAdminDashboardStatsQuery();
 
-	console.log('statsData---->', statsData);
+
 
 	const summaryCards = useMemo(() => {
 		if (!statsData?.stats) return undefined;

@@ -338,7 +338,6 @@ const SMSPage: React.FC = () => {
 				isOpen={isSendSMSOpen}
 				onClose={() => setIsSendSMSOpen(false)}
 				onSend={(data) => {
-					console.log('Sending SMS:', data);
 					toastSuccess(`SMS queued for sending to ${data.phone}`);
 				}}
 			/>

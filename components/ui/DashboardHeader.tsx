@@ -283,7 +283,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 							}
 						}
 					}
-					console.log('Status updated to Logged out before session termination');
 
 					// Emit socket update for real-time tracking
 					if (socket && socket.connected) {

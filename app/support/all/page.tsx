@@ -43,9 +43,6 @@ const AllSupportPage = () => {
 	}, { skip: !campaignId || !hasAccess });
 
 
-	console.log("campaignId----->", campaignId)
-
-
 
 	if (!hasAccess) {
 		return <AccessDenied />;
