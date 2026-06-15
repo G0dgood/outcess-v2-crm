@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GearIcon, TrashIcon } from '@radix-ui/react-icons';
+import { GearIcon, PlusIcon, TrashIcon } from '@radix-ui/react-icons';
 import Pagination from '@/components/ui/Pagination';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useCampaign } from '@/contexts/CampaignContext';
@@ -111,6 +111,7 @@ export default function ConfigurationPage() {
 							}}
 							className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
 						>
+							<PlusIcon className="w-4 h-4" />
 							Campaigns
 						</Button>
 					)}
@@ -144,11 +145,11 @@ export default function ConfigurationPage() {
 							}}
 						>
 							<tr>
-								<th className="px-4 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Name</th>
-								<th className="px-4 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Progress</th>
-								<th className="px-4 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Status</th>
-								<th className="px-4 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Created At</th>
-								<th className="px-4 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Action</th>
+								<th>Name</th>
+								<th>Progress</th>
+								<th>Status</th>
+								<th>Created At</th>
+								<th>Action</th>
 							</tr>
 						</thead>
 						<tbody className="divide-y dark:divide-gray-700">

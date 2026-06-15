@@ -29,7 +29,7 @@ export type { DispositionCategory, AssignedMember, Bucket, Widget, CallOutcome, 
 
 export interface SetupData {
 	campaignId?: string;
-	companyName: string;
+	// companyName: string;
 	companyId: string;
 	campaignName: string;
 	timeZone: string;
@@ -99,6 +99,8 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const { user } = useUserInfo();
 	const { selectedCampaignId } = useCampaign();
 
+	console.log('user---->', user);
+
 	const [currentStep, setCurrentStep] = useState(1);
 	const [dashboardStep, setDashboardStep] = useState<'KPI Metric' | 'Call Disposition'>('KPI Metric');
 	const [isLoading, setIsLoading] = useState(false);
@@ -112,7 +114,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 
 	const [setupData, setSetupData] = useState<SetupData>({
 		campaignId: '',
-		companyName: '',
+		// companyName: '',
 		companyId: '',
 		campaignName: '',
 		timeZone: '',
@@ -217,7 +219,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			setSetupData(prev => ({
 				...prev,
 				campaignId: dataToUse._id,
-				companyName: dataToUse.companyName || prev.companyName,
+				// companyName: dataToUse.companyName || prev.companyName,
 				companyId: dataToUse.companyId || prev.companyId,
 				campaignName: dataToUse.campaignName || dataToUse.name || prev.campaignName,
 				timeZone: dataToUse.timeZone || prev.timeZone,
@@ -620,7 +622,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		switch (stepIndex) {
 			case 1:
 				return !!(
-					setupData.companyName.trim() &&
+					// setupData.companyName.trim() &&
 					setupData.campaignName.trim() &&
 					setupData.timeZone &&
 					setupData.industry &&
