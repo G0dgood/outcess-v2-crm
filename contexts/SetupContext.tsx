@@ -305,7 +305,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 
 	useEffect(() => {
 		const c = user?.company as { _id?: string; id?: string } | undefined;
-		const userCompanyId: string | undefined = c?._id ?? c?.id;
+		const userCompanyId: string | undefined = c?._id ?? c?.id ?? user?.companyId;
 		if (userCompanyId && !setupData.companyId) {
 			setSetupData(prev => ({ ...prev, companyId: userCompanyId }));
 		}
@@ -621,6 +621,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			case 1:
 				return !!(
 					setupData.companyName.trim() &&
+					setupData.campaignName.trim() &&
 					setupData.timeZone &&
 					setupData.industry &&
 					setupData.businessSize
