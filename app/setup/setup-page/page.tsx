@@ -16,6 +16,8 @@ export default function SetupPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [logoFile, setLogoFile] = useState<File | null>(setupData.logoFile || null);
 
+	console.log('setupData---->', setupData)
+
 	useEffect(() => {
 		setCurrentStep(1);
 	}, [setCurrentStep]);
@@ -61,7 +63,7 @@ export default function SetupPage() {
 
 		setLogoFile(file);
 		const logoUrl: string = URL.createObjectURL(file);
-		updateSetupData({ 
+		updateSetupData({
 			logoFile: file,
 			logo: logoUrl
 		});
@@ -72,7 +74,7 @@ export default function SetupPage() {
 	}
 
 	return (
-		<div className="w-full h-[70vh]">
+		<div className="w-full min-h-[70vh]">
 			<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 				<div>
 					<h1
@@ -101,7 +103,7 @@ export default function SetupPage() {
 			</div>
 
 			<div
-				className="dark:bg-gray-800 border dark:border-gray-700 w-full h-full rounded-[var(--radius)] overflow-hidden"
+				className="dark:bg-gray-800 border dark:border-gray-700 w-full h-full rounded-(--radius) overflow-hidden"
 				style={{
 					backgroundColor: 'var(--accent-white)',
 					borderColor: 'var(--light-gray)'
