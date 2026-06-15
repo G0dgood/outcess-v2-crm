@@ -16,18 +16,18 @@ export default function SetupPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [logoFile, setLogoFile] = useState<File | null>(setupData.logoFile || null);
 
-	console.log('setupData---->', setupData)
+	// console.log('setupData---->', setupData)
 
 	useEffect(() => {
 		setCurrentStep(1);
 	}, [setCurrentStep]);
 
-	useEffect(() => {
-		// Pre-populate company name from user profile if available
-		if (user?.company?.companyName && !setupData?.companyName) {
-			updateSetupData({ companyName: user?.company?.companyName });
-		}
-	}, [user?.company?.companyName, setupData.companyName, updateSetupData]);
+	// useEffect(() => {
+	// 	// Pre-populate company name from user profile if available
+	// 	if ((user?.company?.companyName || user?.companyName) && !setupData?.companyName) {
+	// 		updateSetupData({ companyName: user?.company?.companyName || user?.companyName || '' });
+	// 	}
+	// }, [user?.company?.companyName, user?.companyName, setupData.companyName, updateSetupData]);
 
 	useEffect(() => {
 		// Simulate initial loading for smooth transition or data fetching

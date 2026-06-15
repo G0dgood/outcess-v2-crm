@@ -240,7 +240,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           timeZone: setupData?.timeZone || '',
           industry: setupData?.industry || '',
           businessSize: setupData?.businessSize || '',
-          companyId: user?.company?.id || setupData?.companyId || '',
+          companyId: user?.company?.id || user?.companyId || setupData?.companyId || '',
           campaignName: setupData?.campaignName || '',
           progress,
         };
