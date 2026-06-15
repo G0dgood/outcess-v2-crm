@@ -29,7 +29,7 @@ export type { DispositionCategory, AssignedMember, Bucket, Widget, CallOutcome, 
 
 export interface SetupData {
 	campaignId?: string;
-	// companyName: string;
+	companyName: string;
 	companyId: string;
 	campaignName: string;
 	timeZone: string;
@@ -114,7 +114,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 
 	const [setupData, setSetupData] = useState<SetupData>({
 		campaignId: '',
-		// companyName: '',
+		companyName: '',
 		companyId: '',
 		campaignName: '',
 		timeZone: '',
@@ -219,7 +219,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			setSetupData(prev => ({
 				...prev,
 				campaignId: dataToUse._id,
-				// companyName: dataToUse.companyName || prev.companyName,
+				companyName: dataToUse.companyName || prev.companyName,
 				companyId: dataToUse.companyId || prev.companyId,
 				campaignName: dataToUse.campaignName || dataToUse.name || prev.campaignName,
 				timeZone: dataToUse.timeZone || prev.timeZone,
