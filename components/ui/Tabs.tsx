@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export interface TabItem {
   id: string;
@@ -23,8 +24,10 @@ const Tabs: React.FC<TabsProps> = ({
   activeColor = 'var(--primary)',
   className = '',
 }) => {
+  const { isDarkMode } = useTheme();
+
   return (
-    <div className={`border-b flex items-center gap-8 overflow-x-auto no-scrollbar relative ${className}`}>
+    <div className={`border-b dark:border-gray-700 flex items-center gap-8 overflow-x-auto no-scrollbar relative ${className}`} style={{ borderColor: 'var(--light-gray)' }}>
       {tabs.map((tab) => {
         const tabId = typeof tab === 'string' ? tab : tab.id;
         const tabLabel = typeof tab === 'string' ? tab : tab.label;

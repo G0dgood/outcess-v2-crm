@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ButtonProps {
 	children: React.ReactNode;
@@ -41,6 +42,7 @@ export const Button: React.FC<ButtonProps> = ({
 	onPointerDown,
 	title,
 }) => {
+	const { isDarkMode } = useTheme();
 	const baseClasses = 'inline-flex items-center justify-center font-inter font-semibold transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none whitespace-nowrap rounded-[var(--radius)]';
 
 	const sizeClasses = {
@@ -117,7 +119,7 @@ export const Button: React.FC<ButtonProps> = ({
 			return {
 				...baseStyle,
 				backgroundColor: baseStyle.backgroundColor ?? 'var(--text-primary)',
-				color: baseStyle.color ?? 'var(--accent-white)',
+				color: baseStyle.color ?? 'var(--text-inverse)',
 			};
 		}
 

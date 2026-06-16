@@ -18,6 +18,8 @@ interface InputProps {
 	onKeyPress?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 	autoComplete?: string;
 	description?: string;
+	min?: number | string;
+	max?: number | string;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -36,10 +38,12 @@ export const Input: React.FC<InputProps> = ({
 	onKeyPress,
 	autoComplete,
 	description,
+	min,
+	max,
 }) => {
 	const [showPassword, setShowPassword] = useState(false);
 	const isPassword = type === 'password';
-	
+
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		onChange?.(e.target.value);
 	};
@@ -76,6 +80,8 @@ export const Input: React.FC<InputProps> = ({
 					className={`input-field ${error ? 'error' : ''} ${inputClassName} ${isPassword ? 'pr-10' : ''}`}
 					required={required}
 					autoComplete={autoComplete}
+					min={min}
+					max={max}
 					suppressHydrationWarning
 				/>
 				{isPassword && (
