@@ -293,9 +293,14 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 					<Input
 						label="Duration (minutes)"
 						type="number"
+						min={0}
 						placeholder="E.g., 15"
 						value={formData.duration.toString()}
-						onChange={(value) => setFormData(prev => ({ ...prev, duration: parseInt(value) || 0 }))}
+						onChange={(value) => {
+							const parsedValue = parseInt(value);
+							const clampedValue = isNaN(parsedValue) ? 0 : Math.max(0, parsedValue);
+							setFormData(prev => ({ ...prev, duration: clampedValue }));
+						}}
 						description="Maximum time allowed in this status before notifying supervisors. Set to 0 for unlimited."
 					/>
 

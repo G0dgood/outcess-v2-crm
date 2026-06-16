@@ -117,7 +117,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		companyName: '',
 		companyId: '',
 		campaignName: '',
-		timeZone: '',
+		timeZone: 'UTC+1',
 		industry: '',
 		businessSize: '',
 		dashboardSettings: {
@@ -481,12 +481,12 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		];
 
 		const newBucket: Bucket = {
+			name: `Bucket ${(setupData.dashboardSettings.buckets?.length || 0) + 1}`,
+			color: '#050711',
 			...bucket,
 			id: bucketId,
 			dispositions: [],
-			customerFields: defaultFields,
-			color: '',
-			name: ''
+			customerFields: defaultFields
 		};
 
 		setSetupData(prev => ({
