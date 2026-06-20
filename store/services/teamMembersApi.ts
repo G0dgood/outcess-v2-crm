@@ -292,6 +292,16 @@ export const teamMembersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["TeamMembers"],
     }),
+    verifyTeamMemberPassword: builder.mutation<
+      { message: string },
+      { userId: string; password: string }
+    >({
+      query: (body) => ({
+        url: "api/v1/team-members/verify-password",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -312,4 +322,5 @@ export const {
   useDeleteManyTeamMembersMutation,
   useAssignShiftHourToTeamMembersMutation,
   useBulkUploadTeamMembersMutation,
+  useVerifyTeamMemberPasswordMutation,
 } = teamMembersApi;

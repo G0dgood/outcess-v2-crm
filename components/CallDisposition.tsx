@@ -342,29 +342,28 @@ export default function CallDisposition() {
 		setIsAssignMemberModalOpen(true);
 	};
 
-	const handleAssignMember = async (memberId: string, memberName: string, duration?: number) => {
+	const handleAssignMember = async (membersToAssign: { memberId: string, memberName: string }[], duration?: number) => {
 		if (!assigningToBucketId || !setupData.campaignId) return;
 
 		try {
 			const result = await assignMember({
 				id: setupData.campaignId,
 				bucketId: assigningToBucketId,
-				memberId,
-				memberName,
+				members: membersToAssign,
 				duration
 			}).unwrap();
 
 			if (result.campaign) {
 				updateDashboardSettings({ buckets: result.campaign.dashboardSettings.buckets });
 				if (result.existingBucket) {
-					toast.info(`${memberName} is also active in the "${result.existingBucket}" bucket.`);
+					toast.info(`Some members are also active in the "${result.existingBucket}" bucket.`);
 				} else {
-					toast.success(`Assigned ${memberName} to ${assigningToBucketName}`);
+					toast.success(`Assigned ${membersToAssign.length} member(s) to ${assigningToBucketName}`);
 				}
 			}
 		} catch (error: unknown) {
 			const err = error as { data?: { message?: string } };
-			toast.error(err.data?.message || "Failed to assign member");
+			toast.error(err.data?.message || "Failed to assign members");
 			throw error;
 		}
 	};

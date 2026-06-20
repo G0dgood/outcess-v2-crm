@@ -14,6 +14,8 @@ import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useGetDispositionsByCampaignReportQuery, useGetDispositionsByAgentReportQuery } from '@/store/services/dispositionApi';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
+import NewTicketModal from '@/components/features/support/NewTicketModal';
+import { getPrefillDataFromDisposition } from '@/utils/dispositionPrefill';
 
 interface ReportData {
 	id: string;
@@ -31,7 +33,15 @@ interface ReportItem {
 	id?: string;
 	agent?: {
 		name?: string;
+		[key: string]: unknown;
+	} | string;
+	customer?: {
+		Name?: string;
+		firstName?: string;
+		lastName?: string;
+		[key: string]: unknown;
 	};
+	customerName?: string;
 	timestamp?: string;
 	fillDisposition?: DispositionField[];
 	[key: string]: unknown;
@@ -66,6 +76,14 @@ const ReportPage: React.FC = () => {
 	const isAgent = !isAdmin;
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
+	const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
+	const [ticketPrefillData, setTicketPrefillData] = useState<{
+		title?: string;
+		description?: string;
+		priority?: 'Low' | 'Medium' | 'High';
+	} | undefined>(undefined);
+
+
 
 	const { data: lobApiData, isLoading: isLobLoading } = useGetDispositionsByCampaignReportQuery(
 		{
@@ -94,6 +112,44 @@ const ReportPage: React.FC = () => {
 
 	const apiData = (isAgent ? agentApiData : lobApiData) as ReportApiResponse | ReportItem[] | undefined;
 	const isLoading = isPrivilegeLoading || (isAgent ? isAgentLoading : isLobLoading);
+
+	const rawItems: ReportItem[] = useMemo(() => {
+		if (!apiData) return [];
+		let list: ReportItem[] = [];
+
+		if (Array.isArray(apiData)) {
+			list = apiData;
+		} else if ('data' in apiData && Array.isArray(apiData.data)) {
+			list = apiData.data;
+		}
+		return list;
+	}, [apiData]);
+
+	const handleCreateTicketFromReportRow = (id: string) => {
+		const rawItem = rawItems.find(item => (item._id || item.id) === id);
+		if (rawItem) {
+			const customerName = rawItem.customer?.Name || rawItem.customerName || (rawItem.customer ? `${rawItem.customer.firstName || ''} ${rawItem.customer.lastName || ''}`.trim() : '');
+			const agentName = typeof rawItem.agent === 'object' ? rawItem.agent?.name : rawItem.agent;
+			
+			const fillDispositionMapped = Array.isArray(rawItem.fillDisposition)
+				? rawItem.fillDisposition.map(field => ({
+					fieldId: '',
+					fieldName: field.fieldName,
+					fieldValue: field.fieldValue as string | number | boolean | undefined,
+					fieldType: ''
+				}))
+				: undefined;
+
+			const prefill = getPrefillDataFromDisposition({
+				customerName,
+				agent: agentName,
+				timestamp: rawItem.timestamp,
+				fillDisposition: fillDispositionMapped
+			});
+			setTicketPrefillData(prefill);
+			setIsNewTicketModalOpen(true);
+		}
+	};
 
 	const filterButtonRef = useRef<HTMLDivElement>(null);
 	const [tooltipLength, setTooltipLength] = useState(10);
@@ -135,9 +191,10 @@ const ReportPage: React.FC = () => {
 			const hour = d ? String(d.getHours()).padStart(2, '0') : '';
 			const minute = d ? String(d.getMinutes()).padStart(2, '0') : '';
 			const formatted = d ? `${year}-${month}-${day} ${hour}:${minute}` : '-';
+			const agentName = typeof item.agent === 'object' ? item.agent?.name : item.agent;
 			const row: ReportData = {
 				id: item._id || item.id || '',
-				'Agent Name': item.agent?.name || 'Unknown',
+				'Agent Name': agentName || 'Unknown',
 				'Date': formatted,
 			};
 
@@ -319,14 +376,21 @@ const ReportPage: React.FC = () => {
 						<thead>
 							<tr>
 								{dynamicHeaders.length > 0 ? (
-									dynamicHeaders.map(header => (
+									<>
+										{dynamicHeaders.map(header => (
+											<th
+												key={header}
+												className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider whitespace-nowrap"
+											>
+												{header}
+											</th>
+										))}
 										<th
-											key={header}
 											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider whitespace-nowrap"
 										>
-											{header}
+											Action
 										</th>
-									))
+									</>
 								) : (
 									<th
 										className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider whitespace-nowrap"
@@ -343,9 +407,9 @@ const ReportPage: React.FC = () => {
 							}}
 						>
 							{isLoading ? (
-								<SVGLoaderFetch colSpan={dynamicHeaders.length > 0 ? dynamicHeaders.length : 1} text={'Loading report data...'} />
+								<SVGLoaderFetch colSpan={dynamicHeaders.length > 0 ? dynamicHeaders.length + 1 : 1} text={'Loading report data...'} />
 							) : paginatedReports.length === 0 ? (
-								<NoRecordFound colSpan={dynamicHeaders.length > 0 ? dynamicHeaders.length : 1} />
+								<NoRecordFound colSpan={dynamicHeaders.length > 0 ? dynamicHeaders.length + 1 : 1} />
 							) :
 								(paginatedReports?.map((report) => (
 									<tr
@@ -374,6 +438,24 @@ const ReportPage: React.FC = () => {
 												)}
 											</td>
 										))}
+										<td className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px]">
+											<Button
+												variant="link"
+												size="sm"
+												onClick={() => handleCreateTicketFromReportRow(report.id)}
+												className="dark:text-gray-300 dark:hover:text-gray-200 hover:underline transition-colors font-medium p-0 h-auto"
+												style={{ color: '#F97316' }}
+												onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+													e.currentTarget.style.color = '#EA580C';
+												}}
+												onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+													e.currentTarget.style.color = '#F97316';
+												}}
+												title="Create Ticket from Disposition"
+											>
+												Create Ticket
+											</Button>
+										</td>
 									</tr>
 								))
 								)}
@@ -394,6 +476,16 @@ const ReportPage: React.FC = () => {
 					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
+
+			{/* New Ticket Modal */}
+			<NewTicketModal
+				isOpen={isNewTicketModalOpen}
+				onClose={() => {
+					setIsNewTicketModalOpen(false);
+					setTicketPrefillData(undefined);
+				}}
+				prefillData={ticketPrefillData}
+			/>
 		</div>
 	);
 };

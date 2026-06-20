@@ -35,6 +35,14 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [bulkUpload, { isLoading }] = useBulkUploadTeamMembersMutation();
 
+	const clearSelectedFile = () => {
+		setFile(null);
+		setResult(null);
+		if (fileInputRef.current) {
+			fileInputRef.current.value = '';
+		}
+	};
+
 	const validateAndSetFile = (selectedFile: File) => {
 		if (selectedFile.type !== 'text/csv' && !selectedFile.name.endsWith('.csv')) {
 			toast.error('Please upload a CSV file');
@@ -158,12 +166,43 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 								</div>
 								<div className="text-center">
 									<p className="text-[14px] font-medium dark:text-gray-200">
-										{file ? file.name : (isDragging ? 'Drop file here' : 'Click to select or drag and drop')}
+										{isDragging ? 'Drop file here' : 'Click to select or drag and drop'}
 									</p>
 									<p className="text-[12px] dark:text-gray-400" style={{ color: 'var(--text-tertiary)' }}>
 										Supported format: .csv
 									</p>
 								</div>
+								{file && (
+									<div
+										className="mt-4 flex items-center gap-2 px-4 py-2 rounded-[var(--radius)] w-full max-w-sm"
+										style={{ backgroundColor: 'var(--bg-primary)' }}
+										onClick={(e) => e.stopPropagation()}
+									>
+										<p
+											className="text-[10px] md:text-[12px] dark:text-green-400 flex-1 truncate text-left"
+											style={{ color: '#22C55E' }}
+										>
+											✓ {file.name}
+										</p>
+										<button
+											type="button"
+											onClick={(e) => {
+												e.stopPropagation();
+												clearSelectedFile();
+											}}
+											className="shrink-0 px-2 py-1 text-[10px] md:text-[12px] dark:hover:bg-gray-600 transition-colors rounded-[var(--radius)]"
+											style={{ color: 'var(--text-secondary)' }}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.backgroundColor = '#E2E8F0';
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.backgroundColor = 'transparent';
+											}}
+										>
+											Cancel
+										</button>
+									</div>
+								)}
 							</div>
 
 							<div className="bg-blue-50 dark:bg-blue-900/20 p-4 flex gap-3 rounded-[var(--radius)]">
@@ -225,7 +264,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 				>
 					{!result ? (
 						<>
-							<Button variant="outline" size="md" onClick={handleClose}>
+							<Button variant="outline" size="md" onClick={file ? clearSelectedFile : handleClose}>
 								Cancel
 							</Button>
 							<Button

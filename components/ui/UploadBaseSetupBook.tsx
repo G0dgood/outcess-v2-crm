@@ -119,12 +119,15 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
 
   const handleShow = () => setShow(true);
 
-  const onClickReset = () => {
-    reset(); // Reset the mutation state
+  const clearSelectedFile = () => {
+    reset();
     setProgress(0);
     setJSONData([]);
     setIsDragOver(false);
     setFileToUpload(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -318,7 +321,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
                 <UploadAlert
                   type="error"
                   message={(error as ApiError)?.data?.message || "Upload failed"}
-                  onClose={onClickReset}
+                  onClose={clearSelectedFile}
                 />
               )}
 
@@ -384,13 +387,33 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
                     ? "or click to browse files"
                     : "Please wait while we process your file"}
                 </p>
-                {jsonData.length > 0 && progress === 0 && (
-                  <p
-                    className="text-[10px] md:text-[12px] dark:text-green-400 mt-2"
-                    style={{ color: '#22C55E' }}
+                {fileToUpload && progress === 0 && (
+                  <div
+                    className="mt-4 flex items-center gap-2 px-4 py-2 rounded-[var(--radius)] w-full max-w-sm"
+                    style={{ backgroundColor: 'var(--bg-primary)' }}
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    ✓ File loaded successfully ({jsonData.length} records)
-                  </p>
+                    <p
+                      className="text-[10px] md:text-[12px] dark:text-green-400 flex-1 truncate"
+                      style={{ color: '#22C55E' }}
+                    >
+                      ✓ {fileToUpload.name} ({jsonData.length} records)
+                    </p>
+                    <button
+                      type="button"
+                      onClick={clearSelectedFile}
+                      className="shrink-0 px-2 py-1 text-[10px] md:text-[12px] dark:hover:bg-gray-600 transition-colors rounded-[var(--radius)]"
+                      style={{ color: 'var(--text-secondary)' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#E2E8F0';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -414,23 +437,25 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
               </div>
 
               <div className="flex justify-end gap-4 mt-4">
-                <button
-                  type="reset"
-                  onClick={onClickReset}
-                  className="px-4 py-2 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 transition-colors rounded-[var(--radius)]"
-                  style={{
-                    backgroundColor: 'var(--bg-primary)',
-                    color: 'var(--text-secondary)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#E2E8F0';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-                  }}
-                >
-                  Reset
-                </button>
+                {fileToUpload && (
+                  <button
+                    type="button"
+                    onClick={clearSelectedFile}
+                    className="px-4 py-2 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 transition-colors rounded-[var(--radius)]"
+                    style={{
+                      backgroundColor: 'var(--bg-primary)',
+                      color: 'var(--text-secondary)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#E2E8F0';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                    }}
+                  >
+                    Cancel
+                  </button>
+                )}
                 <button
                   type="submit"
                   disabled={isLoading || jsonData.length === 0}

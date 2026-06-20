@@ -48,19 +48,18 @@ const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
 		setIsAssignModalOpen(true);
 	};
 
-	const handleAssignMember = async (memberId: string, memberName: string, duration?: number) => {
+	const handleAssignMember = async (membersToAssign: { memberId: string; memberName: string }[], duration?: number) => {
 		if (!targetBucket || !campaignId) return;
 
 		try {
 			await assignMember({
 				id: campaignId,
 				bucketId: targetBucket.id,
-				memberId,
-				memberName,
+				members: membersToAssign,
 				duration
 			}).unwrap();
 
-			toastSuccess(`Assigned ${memberName} to ${targetBucket.name}`);
+			toastSuccess(`Assigned ${membersToAssign.length} member(s) to ${targetBucket.name}`);
 			setIsAssignModalOpen(false);
 		} catch (error: unknown) {
 			const err = error as { data?: { message?: string } };

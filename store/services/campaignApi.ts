@@ -180,9 +180,10 @@ export const campaignApi = baseApi.injectEndpoints({
       {
         id: string;
         bucketId: string;
-        memberId: string;
-        memberName: string;
+        memberId?: string;
+        memberName?: string;
         duration?: number;
+        members?: { memberId: string; memberName: string }[];
       }
     >({
       query: ({ id, bucketId, ...body }) => ({
