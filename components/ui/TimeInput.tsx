@@ -43,7 +43,7 @@ export const TimeInput: React.FC<TimeInputProps> = ({
 					onClick={(e) => {
 						if (!disabled) {
 							try {
-								(e.currentTarget as any).showPicker?.();
+								(e.currentTarget as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
 							} catch (err) {
 								console.error('showPicker failed:', err);
 							}
