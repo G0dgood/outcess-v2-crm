@@ -6,12 +6,10 @@ import LogoUpload from '@/components/ui/LogoUpload';
 import { businessSizeOptions, industryOptions, timeZoneOptions } from '@/components/Options';
 import { useSetup } from '@/contexts/SetupContext';
 import { SetupSkeleton } from '@/components/ui/SetupSkeleton';
-import { useUserInfo } from '@/contexts/UserInfoContext';
 import Button from '@/components/ui/Button';
 
 export default function SetupPage() {
 	const { setupData, updateSetupData, isDirty, onPersist, setCurrentStep } = useSetup();
-	const { user } = useUserInfo();
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isLoading, setIsLoading] = useState(true);
 	const [logoFile, setLogoFile] = useState<File | null>(setupData.logoFile || null);
