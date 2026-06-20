@@ -39,13 +39,20 @@ const ShiftHours = () => {
 			| { name?: string; businessDays?: string[] }
 			| undefined;
 
+		const labels: { [key: string]: string } = {
+			'monday-friday': 'Monday - Friday',
+			'monday-saturday': 'Monday - Saturday',
+			'monday-sunday': 'Monday - Sunday',
+			'tuesday-saturday': 'Tuesday - Saturday',
+			'custom': 'Custom',
+		};
+
 		if (!businessHours) {
+			setShiftDayLabels(labels);
 			return;
 		}
 
 		const list = Array.isArray(businessHours) ? businessHours : [businessHours];
-
-		const labels: { [key: string]: string } = {};
 
 		list.forEach((item, index) => {
 			if (item.businessDays && item.businessDays.length > 0) {

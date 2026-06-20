@@ -11,12 +11,49 @@ import { ArchiveIcon, IdCardIcon } from '@radix-ui/react-icons';
 import ManageMembersModal from '@/components/features/team-members/ManageMembersModal';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useState } from 'react';
+import { useSetup } from '@/contexts/SetupContext';
+import { useUpdateCampaignMutation } from '@/store/services/campaignApi';
+import { toast } from 'sonner';
 
 const BucketsPage = () => {
 	const { canAccess, isLoading } = usePrivilege();
 	const { campaignData } = useCampaign();
 	const [isManageModalOpen, setIsManageModalOpen] = useState(false);
 	const hasAccess = canAccess('buckets', 'view');
+
+	const { setupData, isDirty, resetDirty, discardChanges } = useSetup();
+	const [updateCampaign, { isLoading: isSaving }] = useUpdateCampaignMutation();
+
+	const handleSave = async () => {
+		const campaignId = campaignData?._id || campaignData?.id || setupData?.campaignId;
+		if (!campaignId) {
+			toast.error('Campaign ID is missing.');
+			return;
+		}
+
+		toast.loading('Saving changes...', { id: 'save-buckets-progress' });
+
+		try {
+			await updateCampaign({
+				id: campaignId,
+				data: {
+					dashboardSettings: setupData.dashboardSettings,
+					customerBookSettings: setupData.customerBookSettings,
+				},
+			}).unwrap();
+
+			toast.success('Buckets configuration saved successfully!', { id: 'save-buckets-progress' });
+			resetDirty();
+		} catch (err: unknown) {
+			console.error('Failed to save buckets:', err);
+			toast.error('Failed to save changes. Please try again.', { id: 'save-buckets-progress' });
+		}
+	};
+
+	const handleDiscard = () => {
+		discardChanges();
+		toast.info('Changes discarded.');
+	};
 
 	if (isLoading) {
 		return (
@@ -25,6 +62,7 @@ const BucketsPage = () => {
 					title="Buckets"
 					description="Organize and monitor call categories and team assignments."
 					icon={ArchiveIcon}
+					className="mb-0"
 				/>
 				<BucketsSkeleton />
 			</div>
@@ -50,6 +88,27 @@ const BucketsPage = () => {
 					className="mb-0"
 				/>
 				<div className="flex items-center gap-3">
+					{isDirty && (
+						<>
+							<Button
+								variant="outline"
+								size="md"
+								onClick={handleDiscard}
+								disabled={isSaving}
+							>
+								Discard
+							</Button>
+							<Button
+								variant="primary"
+								size="md"
+								onClick={handleSave}
+								disabled={isSaving}
+								loading={isSaving}
+							>
+								Save Changes
+							</Button>
+						</>
+					)}
 					<Button
 						variant="outline"
 						size="md"

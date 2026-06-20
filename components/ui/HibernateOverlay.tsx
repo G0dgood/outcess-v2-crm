@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import { MoonIcon } from '@radix-ui/react-icons';
-import { useUpdateTeamMemberStatusMutation } from '@/store/services/teamMembersApi';
+import { useUpdateTeamMemberStatusMutation, useVerifyTeamMemberPasswordMutation } from '@/store/services/teamMembersApi';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
 
 interface HibernateOverlayProps {
@@ -24,7 +24,13 @@ const HibernateOverlay: React.FC<HibernateOverlayProps> = ({
   userId
 }) => {
   const [timeLeft, setTimeLeft] = useState<string>('');
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
   const [updateStatus, { isLoading: isUpdating }] = useUpdateTeamMemberStatusMutation();
+  const [verifyPassword, { isLoading: isVerifying }] = useVerifyTeamMemberPasswordMutation();
 
   useEffect(() => {
     if (!duration || !statusUpdatedAt) return;
@@ -48,8 +54,19 @@ const HibernateOverlay: React.FC<HibernateOverlayProps> = ({
     return () => clearInterval(timer);
   }, [duration, statusUpdatedAt]);
 
-  const handleResume = async () => {
+  const handleResume = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!password) {
+      setErrorMsg('Password is required');
+      return;
+    }
+
+    setErrorMsg('');
     try {
+      // First verify password
+      await verifyPassword({ userId, password }).unwrap();
+
+      // Then update status to Online
       await updateStatus({
         id: userId,
         status: 'Online',
@@ -58,7 +75,9 @@ const HibernateOverlay: React.FC<HibernateOverlayProps> = ({
       toastSuccess('Platform resumed successfully');
     } catch (error) {
       console.error('Failed to resume platform:', error);
-      toastError('Failed to resume platform');
+      const err = error as { data?: { message?: string } };
+      setErrorMsg(err?.data?.message || 'Verification failed. Please try again.');
+      toastError(err?.data?.message || 'Failed to resume platform');
     }
   };
 
@@ -103,21 +122,87 @@ const HibernateOverlay: React.FC<HibernateOverlayProps> = ({
             )}
         </div>
 
-        <div className="space-y-4">
-            <Button
+        {showPasswordForm ? (
+          <form onSubmit={handleResume} className="space-y-6 text-left animate-in fade-in zoom-in duration-300">
+            <div className="space-y-2 text-center">
+              <h2 className="text-2xl font-bold text-white">Confirm Your Identity</h2>
+              <p className="text-gray-400 text-sm">
+                Please enter your password to exit hibernate and confirm you are the one using this system.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-gray-400">Password</label>
+              <div className="relative flex items-center">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrorMsg('');
+                  }}
+                  placeholder="••••••••"
+                  required
+                  className="w-full pl-4 pr-12 py-3 rounded-[var(--radius)] text-white border bg-white/5 border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 text-gray-400 hover:text-white transition-colors cursor-pointer p-1"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
+              {errorMsg && (
+                <p className="text-red-500 text-xs mt-1 font-medium">{errorMsg}</p>
+              )}
+            </div>
+
+            <div className="flex gap-4">
+              <Button
+                variant="outline"
+                size="lg"
+                type="button"
+                onClick={() => {
+                  setShowPasswordForm(false);
+                  setPassword('');
+                  setErrorMsg('');
+                }}
+                disabled={isVerifying || isUpdating}
+                className="w-1/2 rounded-[var(--radius)] py-4 text-gray-300 border-white/10 hover:bg-white/5 transition-all text-sm font-semibold"
+              >
+                Back
+              </Button>
+              <Button
                 variant="primary"
                 size="lg"
-                onClick={handleResume}
-                loading={isUpdating}
-                className="w-full rounded-[var(--radius)] py-6 text-lg font-bold shadow-2xl shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                type="submit"
+                loading={isVerifying || isUpdating}
+                className="w-1/2 rounded-[var(--radius)] py-4 text-sm font-semibold shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                Verify & Resume
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div className="space-y-4">
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => setShowPasswordForm(true)}
+              className="w-full rounded-[var(--radius)] py-6 text-lg font-bold shadow-2xl shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
-                Exit Hibernate & Resume
+              Exit Hibernate & Resume
             </Button>
             
             <p className="text-[12px] text-gray-500">
-                Resuming will switch your status back to <b>Online</b>.
+              Resuming will switch your status back to <b>Online</b>.
             </p>
-        </div>
+          </div>
+        )}
       </div>
       
       {/* Decorative background elements */}

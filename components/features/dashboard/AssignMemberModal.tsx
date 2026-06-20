@@ -15,7 +15,7 @@ interface AssignMemberModalProps {
 	bucketId: string;
 	bucketName: string;
 	campaignId: string;
-	onAssign: (memberId: string, memberName: string, duration?: number) => Promise<void>;
+	onAssign: (members: { memberId: string, memberName: string }[], duration?: number) => Promise<void>;
 }
 
 const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
@@ -108,11 +108,14 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 		setIsAssigning(true);
 
 		try {
-			// Iterate over selected members and call onAssign
-			await Promise.all(selectedMemberIds.map(id => {
+			const membersToAssign = selectedMemberIds.map(id => {
 				const member = members.find((m) => (m._id || m.id) === id);
-				return onAssign(id, member?.name || 'Unknown', totalMinutes > 0 ? totalMinutes : undefined);
-			}));
+				return {
+					memberId: id,
+					memberName: member?.name || 'Unknown'
+				};
+			});
+			await onAssign(membersToAssign, totalMinutes > 0 ? totalMinutes : undefined);
 			onClose();
 		} catch (error) {
 			console.error("Assignments failed:", error);

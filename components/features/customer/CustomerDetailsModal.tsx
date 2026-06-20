@@ -6,6 +6,8 @@ import FillDispositionModal, { DispositionFormState } from '@/components/ui/Fill
 import SMSModal from '@/components/ui/SMSModal';
 import DispositionHistoryModal from '@/components/ui/DispositionHistoryModal';
 import Modal from '@/components/ui/Modal';
+import NewTicketModal from '@/components/features/support/NewTicketModal';
+import { getPrefillDataFromDisposition } from '@/utils/dispositionPrefill';
 import { Cross2Icon, ChatBubbleIcon, ClipboardIcon, PersonIcon, EnvelopeClosedIcon, HomeIcon, MobileIcon } from '@radix-ui/react-icons';
 import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, DispositionHistoryItem } from '@/utils/offlineDispositions';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
@@ -53,6 +55,21 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 	const [shouldRender, setShouldRender] = useState(false);
 	const [offlineDispositions, setOfflineDispositions] = useState<OfflineDisposition[]>([]);
 	const { selectedCampaignId } = useCampaign();
+	const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
+	const [ticketPrefillData, setTicketPrefillData] = useState<{
+		title?: string;
+		description?: string;
+		priority?: 'Low' | 'Medium' | 'High';
+	} | undefined>(undefined);
+
+	const handleCreateTicket = (item: DispositionHistoryItem) => {
+		const prefill = getPrefillDataFromDisposition({
+			...item,
+			customerName: customer ? `${customer.firstName || ''} ${customer.lastName || ''}`.trim() : undefined
+		});
+		setTicketPrefillData(prefill);
+		setIsNewTicketModalOpen(true);
+	};
 
 	const { data: apiData, isLoading: isApiLoading } = useGetDispositionsByCustomerQuery(
 		{
@@ -518,7 +535,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 														</td>
 													);
 												})}
-												<td className="px-6 py-4 whitespace-nowrap">
+												<td className="px-6 py-4 whitespace-nowrap flex items-center gap-3">
 													<Button
 														variant="link"
 														size="sm"
@@ -534,6 +551,23 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 														title="View Disposition Details"
 													>
 														View Details
+													</Button>
+													<span style={{ color: 'var(--text-tertiary)' }}>|</span>
+													<Button
+														variant="link"
+														size="sm"
+														onClick={() => handleCreateTicket(item)}
+														className="dark:text-gray-300 dark:hover:text-gray-200 hover:underline transition-colors font-medium p-0 h-auto"
+														style={{ color: '#F97316' }}
+														onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+															e.currentTarget.style.color = '#EA580C';
+														}}
+														onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+															e.currentTarget.style.color = '#F97316';
+														}}
+														title="Create Ticket from Disposition"
+													>
+														Create Ticket
 													</Button>
 												</td>
 											</tr>
@@ -587,6 +621,16 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 					}}
 					dispositionItem={selectedDispositionHistoryItem}
 					customerId={customer?.id}
+				/>
+
+				{/* New Ticket Modal */}
+				<NewTicketModal
+					isOpen={isNewTicketModalOpen}
+					onClose={() => {
+						setIsNewTicketModalOpen(false);
+						setTicketPrefillData(undefined);
+					}}
+					prefillData={ticketPrefillData}
 				/>
 
 				<Modal

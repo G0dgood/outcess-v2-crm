@@ -127,24 +127,28 @@ export const AddShiftHourModal: React.FC<AddShiftHourModalProps> = ({
 			| { name?: string; businessDays?: string[] }
 			| undefined;
 
+		const fallbackOptions = [
+			{ value: 'monday-friday', label: 'Monday - Friday' },
+			{ value: 'monday-saturday', label: 'Monday - Saturday' },
+			{ value: 'monday-sunday', label: 'Monday - Sunday' },
+			{ value: 'tuesday-saturday', label: 'Tuesday - Saturday' },
+			{ value: 'custom', label: 'Custom' },
+		];
+
 		if (!businessHours) {
-			return [
-				{ value: 'monday-friday', label: 'Monday - Friday' },
-				{ value: 'monday-saturday', label: 'Monday - Saturday' },
-				{ value: 'monday-sunday', label: 'Monday - Sunday' },
-				{ value: 'tuesday-saturday', label: 'Tuesday - Saturday' },
-				{ value: 'custom', label: 'Custom' },
-			];
+			return fallbackOptions;
 		}
 
 		const list = Array.isArray(businessHours) ? businessHours : [businessHours];
 
-		return list
+		const mapped = list
 			.filter((item) => item.businessDays && item.businessDays.length > 0)
 			.map((item, index) => ({
 				value: item.businessDays!.join(','),
 				label: item.name || `Business Hour ${index + 1}`,
 			}));
+
+		return mapped.length > 0 ? mapped : fallbackOptions;
 	})();
 
 	if (!isOpen) return null;

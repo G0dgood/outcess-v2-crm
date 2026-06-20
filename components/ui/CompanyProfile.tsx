@@ -115,7 +115,7 @@ const CompanyProfile: React.FC<CompanyProfileProps> = ({
 			</div>
 
 			{/* Logo Upload Section */}
-			<div>
+			{/* <div>
 				<label
 					className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-2"
 					style={{ color: 'var(--text-secondary)' }}
@@ -130,7 +130,7 @@ const CompanyProfile: React.FC<CompanyProfileProps> = ({
 					}}
 					disabled={!isEditMode}
 				/>
-			</div>
+			</div> */}
 
 			{/* Action Buttons (when in edit mode) */}
 			{isEditMode && (

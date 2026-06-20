@@ -1783,6 +1783,22 @@ main {
   .notification-dropdown-container {
     background-color: #FFFFFF !important;
   }
+
+  /* Revert to correct theme colors in dark mode on mobile */
+  .dark .dropdown-trigger,
+  .dark .dropdown-option,
+  .dark .user-menu-item,
+  .dark .status-option,
+  .dark .notification-item-text {
+    color: var(--primary) !important;
+  }
+
+  .dark .dropdown-menu,
+  .dark .user-menu-container,
+  .dark .status-submenu-container,
+  .dark .notification-dropdown-container {
+    background-color: var(--accent-white) !important;
+  }
 }
 
 /* Header Dropdown Trigger (Profile) */

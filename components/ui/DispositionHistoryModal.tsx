@@ -7,6 +7,8 @@ import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, Disp
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useGetDispositionsByCustomerQuery, useGetDispositionsByAgentIdQuery } from '@/store/services/dispositionApi';
 import moment from 'moment';
+import NewTicketModal from '@/components/features/support/NewTicketModal';
+import { getPrefillDataFromDisposition } from '@/utils/dispositionPrefill';
 
 interface DispositionHistoryModalProps {
 	isOpen: boolean;
@@ -50,6 +52,18 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 }) => {
 	const { selectedCampaignId } = useCampaign();
 	const [offlineDispositions, setOfflineDispositions] = useState<OfflineDisposition[]>([]);
+	const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
+	const [ticketPrefillData, setTicketPrefillData] = useState<{
+		title?: string;
+		description?: string;
+		priority?: 'Low' | 'Medium' | 'High';
+	} | undefined>(undefined);
+
+	const handleCreateTicketFromDisposition = (item: SyncedDispositionViewModel | OfflineDisposition | DispositionHistoryItem) => {
+		const prefill = getPrefillDataFromDisposition(item);
+		setTicketPrefillData(prefill);
+		setIsNewTicketModalOpen(true);
+	};
 
 	const { data: customerData } = useGetDispositionsByCustomerQuery(
 		{
@@ -242,8 +256,18 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 											<span style={{ color: 'var(--text-primary)' }}>{String(synced.agent || '-')}</span>
 										</div>
 									</div>
-									<div className="mt-2 text-[8px] md:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
-										Synced: {new Date(synced.syncedAt!).toLocaleString()}
+									<div className="mt-3 flex items-center justify-between border-t dark:border-gray-700 pt-3">
+										<div className="text-[8px] md:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+											Synced: {new Date(synced.syncedAt!).toLocaleString()}
+										</div>
+										<Button
+											variant="outline"
+											size="sm"
+											className="h-7 text-[8px] md:text-[10px] border-[#F97316] text-[#F97316] hover:bg-[#F97316]/10 px-2 py-0.5"
+											onClick={() => handleCreateTicketFromDisposition(synced)}
+										>
+											Create Ticket
+										</Button>
 									</div>
 								</div>
 							))}
@@ -290,8 +314,18 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 											<span style={{ color: 'var(--text-primary)' }}>{new Date(offline.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
 										</div>
 									</div>
-									<div className="mt-2 text-[8px] md:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
-										Created: {new Date(offline.createdAt).toLocaleString()}
+									<div className="mt-3 flex items-center justify-between border-t dark:border-gray-700 pt-3">
+										<div className="text-[8px] md:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+											Created: {new Date(offline.createdAt).toLocaleString()}
+										</div>
+										<Button
+											variant="outline"
+											size="sm"
+											className="h-7 text-[8px] md:text-[10px] border-[#F97316] text-[#F97316] hover:bg-[#F97316]/10 px-2 py-0.5"
+											onClick={() => handleCreateTicketFromDisposition(offline)}
+										>
+											Create Ticket
+										</Button>
 									</div>
 								</div>
 							))}
@@ -401,11 +435,23 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 
 				{/* Footer */}
 				<div
-					className="flex justify-end items-center p-6 border-t dark:border-gray-700 shrink-0"
+					className="flex justify-between items-center p-6 border-t dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
+					{dispositionItem ? (
+						<Button
+							variant="primary"
+							size="md"
+							style={{ backgroundColor: '#F97316', color: '#FFFFFF', borderColor: '#F97316' }}
+							onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#EA580C'}
+							onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F97316'}
+							onClick={() => handleCreateTicketFromDisposition(dispositionItem)}
+						>
+							Create Ticket
+						</Button>
+					) : <div />}
 					<Button
-						variant="primary"
+						variant="outline"
 						size="md"
 						onClick={onClose}
 					>
@@ -413,6 +459,15 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 					</Button>
 				</div>
 			</div>
+			{/* New Ticket Modal */}
+			<NewTicketModal
+				isOpen={isNewTicketModalOpen}
+				onClose={() => {
+					setIsNewTicketModalOpen(false);
+					setTicketPrefillData(undefined);
+				}}
+				prefillData={ticketPrefillData}
+			/>
 		</div>
 	);
 };

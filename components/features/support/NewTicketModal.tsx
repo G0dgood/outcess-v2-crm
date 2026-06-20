@@ -13,6 +13,11 @@ import { Cross2Icon } from '@radix-ui/react-icons';
 interface NewTicketModalProps {
 	isOpen: boolean;
 	onClose: () => void;
+	prefillData?: {
+		title?: string;
+		description?: string;
+		priority?: 'Low' | 'Medium' | 'High';
+	};
 }
 
 interface TeamMember {
@@ -25,7 +30,7 @@ interface TeamMember {
 	role?: string | { _id?: string; id?: string; roleName?: string; name?: string };
 }
 
-const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
+const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose, prefillData }) => {
 	const { user } = useAuth();
 	const { campaignData, selectedCampaignId } = useCampaign();
 	const [title, setTitle] = useState('');
@@ -47,6 +52,18 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose }) => {
 		setPriority('Low');
 		setAssignedToIds([]);
 	};
+
+	useEffect(() => {
+		if (isOpen) {
+			if (prefillData) {
+				setTitle(prefillData.title || '');
+				setDescription(prefillData.description || '');
+				setPriority(prefillData.priority || 'Low');
+			} else {
+				resetForm();
+			}
+		}
+	}, [isOpen, prefillData]);
 
 	useEffect(() => {
 		if (isOpen) {
