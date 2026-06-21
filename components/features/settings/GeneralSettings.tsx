@@ -14,6 +14,8 @@ import AccountDeletionModal from '@/components/ui/AccountDeletionModal';
 import Button from '@/components/ui/Button';
 import Tabs from '@/components/ui/Tabs';
 import GeneralSettingsSkeleton from '@/components/skeletons/GeneralSettingsSkeleton';
+import { useApiError } from '@/hooks/useApiError';
+import { useDeleteAccountMutation } from '@/store/services/authApi';
 
 const GeneralSettings: React.FC = () => {
 	const { campaignData, isLoading } = useCampaign();
@@ -26,8 +28,14 @@ const GeneralSettings: React.FC = () => {
 	const [activeTab, setActiveTab] = useState('configuration');
 
 	// Deletion states
-	const [isDeleting, setIsDeleting] = useState(false);
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+	const [apiError, setApiError] = useState<{ isError: boolean; error: unknown }>({ isError: false, error: null });
+
+	useApiError(apiError.isError, apiError.error, 'An error occurred. Please try again.');
+
+	const [deleteAccount, { isLoading: isDeleting, isError: isDeleteError, error: deleteError }] = useDeleteAccountMutation();
+
+	useApiError(isDeleteError, deleteError, 'Failed to delete account');
 
 
 	// Check if user is admin
@@ -58,6 +66,7 @@ const GeneralSettings: React.FC = () => {
 	const handleDeactivate = async (reason: string) => {
 		if (!user?.id) return;
 		setIsDeactivating(true);
+		setApiError({ isError: false, error: null });
 		try {
 			const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL as string) || 'http://localhost:5000/api/v1'}/api/v1/users/deactivate`, {
 				method: 'POST',
@@ -77,11 +86,11 @@ const GeneralSettings: React.FC = () => {
 					router.push('/');
 				}, 2000);
 			} else {
-				toast.error(data.message || 'Failed to deactivate account');
+				setApiError({ isError: true, error: data });
 			}
 		} catch (error) {
 			console.error('Error deactivating account:', error);
-			toast.error('An error occurred. Please try again.');
+			setApiError({ isError: true, error });
 		} finally {
 			setIsDeactivating(false);
 		}
@@ -89,33 +98,17 @@ const GeneralSettings: React.FC = () => {
 
 	const handleDeleteAccount = async (confirmationText: string) => {
 		if (!user?.id) return;
-		setIsDeleting(true);
 		try {
-			const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL as string) || 'http://localhost:5000/api/v1'}/api/v1/users/delete-account`, {
-				method: 'DELETE',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-				},
-				body: JSON.stringify({ confirmationText }),
-			});
-
-			const data = (await response.json()) as { message?: string };
-
-			if (response.ok) {
-				toast.success('Account and all associated data deleted successfully.');
-				setTimeout(() => {
-					logout();
-					router.push('/');
-				}, 1500);
-			} else {
-				toast.error(data.message || 'Failed to delete account');
-			}
+			await deleteAccount({ confirmationText }).unwrap();
+			toast.success('Account and all associated data deleted successfully.');
+			setTimeout(() => {
+				logout();
+				router.push('/');
+			}, 1500);
 		} catch (error) {
 			console.error('Error deleting account:', error);
-			toast.error('An error occurred during deletion. Please try again.');
+			// useApiError hook handles the error UI reactively
 		} finally {
-			setIsDeleting(false);
 			setIsDeleteModalOpen(false);
 		}
 	};

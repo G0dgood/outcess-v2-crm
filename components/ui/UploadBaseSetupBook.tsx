@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useCampaign } from "@/contexts/CampaignContext";
 import { useCreateSetupBookMutation } from "@/store/services/setupBookApi";
 import UploadAlert from "@/components/ui/UploadAlert";
+import { useApiError } from "@/hooks/useApiError";
 
 interface UploadBaseProps {
   isOpen?: boolean;
@@ -90,6 +91,8 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
 
   const [createSetupBook, { isLoading, isSuccess, isError, error, reset }] = useCreateSetupBookMutation();
+
+  useApiError(isError, error, "An error occurred while uploading records");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -260,13 +263,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
         onUploadComplete(jsonData, fileToUpload);
       }
     } catch (err: unknown) {
-      const apiError = err as ApiError;
       setProgress(0);
-
-      toast.error("Upload Failed", {
-        description: apiError?.data?.message || "An error occurred while uploading records",
-        duration: 5000,
-      });
     }
   };
 

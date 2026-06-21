@@ -42,6 +42,7 @@ interface User {
 		shiftHourId?: string;
 		title?: string;
 	};
+	supervisor?: string;
 }
 
 interface StatusPayload {
@@ -77,6 +78,8 @@ interface ApiTeamMember {
 		title?: string;
 	};
 	loginStatus?: string;
+	supervisor?: string | { name?: string };
+	supervisorId?: string;
 }
 
 const UsersPage: React.FC = () => {
@@ -105,7 +108,6 @@ const UsersPage: React.FC = () => {
 			{ name: 'role' },
 			{ name: 'userId' },
 			{ name: 'password' },
-			{ name: 'supervisorId' },
 		];
 	}, []);
 
@@ -120,7 +122,7 @@ const UsersPage: React.FC = () => {
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
 	const [showInfoBanner, setShowInfoBanner] = useState(true);
 	const [users, setUsers] = useState<User[]>([]);
-	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Shift Hour', 'Bucket', 'Login Status', 'Actions'];
+	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Supervisor', 'Shift Hour', 'Bucket', 'Login Status', 'Actions'];
 	const totalColumns = tableHeaders.length + 1;
 
 	useEffect(() => {
@@ -199,6 +201,15 @@ const UsersPage: React.FC = () => {
 					loginStatus = m.loginStatus || 'Logged Out';
 				}
 
+				let supervisorName = 'Unassigned';
+				if (m.supervisor) {
+					if (typeof m.supervisor === 'object') {
+						supervisorName = m.supervisor.name || 'Unassigned';
+					} else {
+						supervisorName = m.supervisor;
+					}
+				}
+
 				return {
 					id: m._id || m.id || '',
 					userId: m?.userId || '',
@@ -218,6 +229,7 @@ const UsersPage: React.FC = () => {
 							title: m.shiftHour.title,
 						}
 						: undefined,
+					supervisor: supervisorName,
 				};
 			});
 			setUsers(mappedUsers);
@@ -431,6 +443,7 @@ const UsersPage: React.FC = () => {
 									<td>{user.email}</td>
 									<td>{user.phone}</td>
 									<td>{user.role}</td>
+									<td>{user.supervisor || 'Unassigned'}</td>
 									<td
 									>
 										{user.shiftHour?.title ? user.shiftHour.title : 'No shift assigned'}
@@ -588,6 +601,10 @@ const UsersPage: React.FC = () => {
 							setIsDrawerOpen(false);
 						}}
 						onBulkDeleteSuccess={() => {
+							setSelectedUsers(new Set());
+							setIsDrawerOpen(false);
+						}}
+						onBulkAssignSupervisorSuccess={() => {
 							setSelectedUsers(new Set());
 							setIsDrawerOpen(false);
 						}}

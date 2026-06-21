@@ -195,14 +195,7 @@ const EditUserPage: React.FC = () => {
 			});
 	}, [teamMembersData, supervisorsResponse, userId]);
 
-	const shouldShowSupervisor = useMemo(() => {
-		if (!formData?.role) return false;
-
-		const selected = roleOptions.find((opt) => opt.value === formData.role);
-		const label = selected?.label.toLowerCase() || '';
-
-		return label === 'agent' || label === 'supervisor' || label.includes('supervisor');
-	}, [formData?.role, roleOptions]);
+	const shouldShowSupervisor = true;
 
 	const handleInputChange = (field: string) => (value: string | boolean) => {
 		setFormData(prev => ({ ...prev, [field]: value }));

@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PersonIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import Icon from '@/components/ui/Icon';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
-import { useDeleteManyTeamMembersMutation } from '@/store/services/teamMembersApi';
+import {
+  useDeleteManyTeamMembersMutation,
+  useGetSupervisorsByCampaignIdQuery,
+  useGetTeamMembersByCampaignIdQuery,
+  useAssignSupervisorToTeamMembersMutation,
+  ApiTeamMember
+} from '@/store/services/teamMembersApi';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCampaign } from '@/contexts/CampaignContext';
+import { Dropdown } from '@/components/ui/Dropdown';
 
 interface User {
   id: string;
@@ -21,6 +30,7 @@ interface SelectedUsersDrawerContentProps {
   users: User[];
   onClose: () => void;
   onBulkDeleteSuccess?: () => void;
+  onBulkAssignSupervisorSuccess?: () => void;
   onEdit?: (user: User) => void;
   onDelete?: (user: User) => void;
 }
@@ -30,11 +40,83 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
   users,
   onClose,
   onBulkDeleteSuccess,
+  onBulkAssignSupervisorSuccess,
   onEdit,
   onDelete,
 }) => {
   const [deleteManyTeamMembers, { isLoading: isDeletingMany }] = useDeleteManyTeamMembersMutation();
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  const { user } = useAuth();
+  const { campaignData } = useCampaign();
+  const companyId = user?.companyId || '';
+  const campaignId = campaignData?._id || '';
+
+  const { data: supervisorsResponse, isLoading: isSupervisorsLoading } = useGetSupervisorsByCampaignIdQuery(
+    { companyId, campaignId },
+    { skip: !companyId || !campaignId }
+  );
+
+  const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
+    { campaignId, limit: 1000 },
+    { skip: !campaignId }
+  );
+
+  const [assignSupervisor, { isLoading: isAssigningSupervisor }] = useAssignSupervisorToTeamMembersMutation();
+  const [selectedSupervisorId, setSelectedSupervisorId] = useState<string>('');
+
+  const supervisorOptions = useMemo(() => {
+    if (!teamMembersData) return [];
+    const rawMembers = teamMembersData.teamMembers || (Array.isArray(teamMembersData) ? teamMembersData : []);
+
+    const supervisorRoleIds = new Set<string>();
+    if (supervisorsResponse && Array.isArray(supervisorsResponse.roles)) {
+      supervisorsResponse.roles.forEach((r: any) => {
+        if (r._id) supervisorRoleIds.add(r._id.toString());
+        if (r.id) supervisorRoleIds.add(r.id.toString());
+      });
+    }
+
+    return rawMembers
+      .filter((m: ApiTeamMember) => {
+        const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
+        const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
+
+        const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) ||
+          (roleName && roleName.toLowerCase().includes('supervisor'));
+
+        const isSelected = selectedUsers.has(m._id || m.id || '');
+
+        return isSupervisorRole && !isSelected;
+      })
+      .map((m: ApiTeamMember) => {
+        const fullName = m.firstName && m.lastName
+          ? `${m.firstName} ${m.lastName}`
+          : m.name || (m as { fullName?: string }).fullName || 'Unknown Member';
+        const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : 'Supervisor';
+        return {
+          value: m._id || m.id || '',
+          label: `${fullName} (${roleName})`
+        };
+      });
+  }, [teamMembersData, supervisorsResponse, selectedUsers]);
+
+  const handleAssignSupervisor = async () => {
+    try {
+      const idsToAssign = Array.from(selectedUsers);
+      await assignSupervisor({
+        supervisorId: selectedSupervisorId || null,
+        teamMemberIds: idsToAssign,
+      }).unwrap();
+      toast.success('Supervisor assigned successfully');
+      setSelectedSupervisorId('');
+      if (onBulkAssignSupervisorSuccess) {
+        onBulkAssignSupervisorSuccess();
+      }
+    } catch {
+      toast.error('Failed to assign supervisor');
+    }
+  };
 
   const handleBulkDelete = async () => {
     try {
@@ -122,6 +204,45 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Bulk Supervisor Assignment Card */}
+            <div
+              className="p-4 border rounded-lg space-y-3 mb-6 transition-all"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                borderColor: 'var(--light-gray)'
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <PersonIcon className="w-4 h-4 text-blue-500" />
+                <h3
+                  className="text-[12px] font-semibold"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Assign to Supervisor
+                </h3>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Dropdown
+                  label="Select Supervisor"
+                  placeholder={isSupervisorsLoading ? "Loading supervisors..." : "Choose a supervisor"}
+                  options={supervisorOptions}
+                  value={selectedSupervisorId}
+                  onChange={(val) => setSelectedSupervisorId(val as string)}
+                  disabled={isSupervisorsLoading || isAssigningSupervisor}
+                />
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleAssignSupervisor}
+                  disabled={!selectedSupervisorId || isAssigningSupervisor}
+                  loading={isAssigningSupervisor}
+                  className="w-full mt-1 py-2 text-[10px] md:text-[12px] font-medium"
+                >
+                  Assign Selected Users
+                </Button>
+              </div>
+            </div>
+
             {users
               .filter(user => selectedUsers.has(user.id))
               .map((user) => {
