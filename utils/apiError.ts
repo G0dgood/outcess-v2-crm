@@ -15,20 +15,18 @@ export const extractErrorMessage = (
 ): string => {
   if (
     typeof error?.data === "object" &&
-    error.data &&
-    "message" in error.data &&
-    typeof (error.data as ApiErrorData).message === "string"
+    error.data
   ) {
-    return (error.data as ApiErrorData).message as string;
-  }
-
-  if (
-    typeof error?.data === "object" &&
-    error.data &&
-    "error" in error.data &&
-    typeof (error.data as ApiErrorData).error === "string"
-  ) {
-    return (error.data as ApiErrorData).error as string;
+    const errorData = error.data as ApiErrorData;
+    if (typeof errorData.message === "string" && typeof errorData.error === "string") {
+      return `${errorData.message}: ${errorData.error}`;
+    }
+    if (typeof errorData.message === "string") {
+      return errorData.message;
+    }
+    if (typeof errorData.error === "string") {
+      return errorData.error;
+    }
   }
 
   if (typeof error?.data === "string") {

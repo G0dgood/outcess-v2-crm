@@ -19,6 +19,12 @@ export interface SMSConfig {
   assignedName: string;
   companyId: string;
   createdAt?: string;
+  messageType?: "standard" | "flash";
+  sendLater?: boolean;
+  sendtime?: string;
+  forcednd?: boolean;
+  countryPrefix?: string;
+  message?: string;
 }
 
 export interface SMSLog {
@@ -31,6 +37,10 @@ export interface SMSLog {
   configId?: string;
   campaignId?: string;
   createdAt: string;
+  sendtime?: string;
+  flash?: number;
+  forcednd?: number;
+  senderId?: string;
 }
 
 export interface SMSCampaign {
@@ -110,6 +120,16 @@ export const smsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["SMS"],
     }),
+    checkSMSBalance: builder.mutation<
+      { message: string; balance: string | number },
+      { configId?: string; apiKey?: string }
+    >({
+      query: (data) => ({
+        url: "api/v1/sms/balance",
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -120,4 +140,5 @@ export const {
   useDeleteSMSConfigMutation,
   useGetSMSLogsQuery,
   useCreateSMSLogMutation,
+  useCheckSMSBalanceMutation,
 } = smsApi;

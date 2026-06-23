@@ -20,6 +20,13 @@ export interface EmailConfig {
   assignedId: string;
   assignedName: string;
   companyId: string;
+  secure?: boolean;
+  tenantId?: string;
+  clientId?: string;
+  clientSecret?: string;
+  refreshToken?: string;
+  accessToken?: string;
+  tokenExpiresAt?: string;
 }
 
 export interface EmailLog {
@@ -77,6 +84,14 @@ export const emailApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Email"],
     }),
+    exchangeOutlookCode: builder.mutation<{ message: string; config: EmailConfig }, { id: string; code: string; redirectUri: string }>({
+      query: ({ id, code, redirectUri }) => ({
+        url: `api/v1/email/config/${id}/oauth-exchange`,
+        method: "POST",
+        body: { code, redirectUri },
+      }),
+      invalidatesTags: ["Email"],
+    }),
   }),
 });
 
@@ -87,4 +102,5 @@ export const {
   useDeleteEmailConfigMutation,
   useGetEmailLogsQuery,
   useCreateEmailLogMutation,
+  useExchangeOutlookCodeMutation,
 } = emailApi;

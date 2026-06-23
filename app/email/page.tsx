@@ -9,7 +9,7 @@ import Checkbox from '@/components/ui/Checkbox';
 import PageHeading from '@/components/ui/PageHeading';
 import { Dropdown } from '@/components/ui/Dropdown';
 import Tabs from '@/components/ui/Tabs';
-import { EnvelopeClosedIcon, EnvelopeOpenIcon, Cross2Icon, GearIcon, TrashIcon, PlusIcon } from '@radix-ui/react-icons';
+import { EnvelopeClosedIcon, EnvelopeOpenIcon, Cross2Icon, GearIcon, TrashIcon, PlusIcon, EyeOpenIcon, EyeNoneIcon } from '@radix-ui/react-icons';
 import Icon from '@/components/ui/Icon';
 import StatusBadge from '@/components/ui/StatusBadge';
 import Input from '@/components/ui/Input';
@@ -32,6 +32,7 @@ import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { toastSuccess } from '@/utils/toastWithSound';
 import { toast } from 'sonner';
 import { Bucket } from '@/contexts/SetupContext';
+import { extractErrorMessage, ApiError } from '@/utils/apiError';
 
 interface EmailCampaign {
 	_id: string;
@@ -94,8 +95,8 @@ const EmailPage: React.FC = () => {
 	const { data: configsData, isLoading: isConfigsLoading } = useGetEmailConfigsQuery(companyId, { skip: !companyId });
 	const configsList = useMemo(() => configsData?.configs || [], [configsData]);
 
-	const [createEmailConfig] = useCreateEmailConfigMutation();
-	const [updateEmailConfig] = useUpdateEmailConfigMutation();
+	const [createEmailConfig, { isLoading: isCreatingConfig }] = useCreateEmailConfigMutation();
+	const [updateEmailConfig, { isLoading: isUpdatingConfig }] = useUpdateEmailConfigMutation();
 	const [deleteEmailConfig] = useDeleteEmailConfigMutation();
 
 	// Email Logs states
@@ -109,9 +110,10 @@ const EmailPage: React.FC = () => {
 	const totalItems = logsData?.pagination?.total || 0;
 	const totalPages = logsData?.pagination?.totalPages || 1;
 
-	const [createEmailLog] = useCreateEmailLogMutation();
+	const [createEmailLog, { isLoading: isSendingEmail }] = useCreateEmailLogMutation();
 
 	const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+	const [showClientSecret, setShowClientSecret] = useState(false);
 	const [editingConfig, setEditingConfig] = useState<EmailConfigType | null>(null);
 	const [configForm, setConfigForm] = useState({
 		name: '',
@@ -123,7 +125,36 @@ const EmailPage: React.FC = () => {
 		fromEmail: '',
 		assignType: 'campaign' as 'campaign' | 'bucket',
 		assignedId: '',
+		secure: false,
+		tenantId: '',
+		clientId: '',
+		clientSecret: '',
+		refreshToken: '',
 	});
+
+	const [showPassword, setShowPassword] = useState(false);
+
+	const [redirectUri, setRedirectUri] = useState<string>('');
+
+	useEffect(() => {
+		if (typeof window !== 'undefined') {
+			setRedirectUri(process.env.NEXT_PUBLIC_MICROSOFT_REDIRECT_URI || `${window.location.origin}/email/callback`);
+		}
+	}, []);
+
+	const handleCopyRedirectUri = () => {
+		if (redirectUri) {
+			navigator.clipboard.writeText(redirectUri);
+			toast.success('Redirect URI copied to clipboard!');
+		}
+	};
+
+	useEffect(() => {
+		if (!isConfigModalOpen) {
+			setShowClientSecret(false);
+			setShowPassword(false);
+		}
+	}, [isConfigModalOpen]);
 
 	// Set default config if available
 	useEffect(() => {
@@ -182,8 +213,9 @@ const EmailPage: React.FC = () => {
 				toastSuccess(`Email sent successfully to ${formData.to} ${fromDisplay}`);
 				setIsComposeOpen(false);
 				setFormData(prev => ({ ...prev, to: '', subject: '', message: '' }));
-			} catch {
-				toast.error('Failed to send email');
+			} catch (err) {
+				const errorMsg = extractErrorMessage(err as ApiError, 'Failed to send email');
+				toast.error(errorMsg);
 			}
 		}
 	};
@@ -202,6 +234,11 @@ const EmailPage: React.FC = () => {
 				fromEmail: config.fromEmail,
 				assignType: config.assignType,
 				assignedId: config.assignedId,
+				secure: config.secure || false,
+				tenantId: config.tenantId || '',
+				clientId: config.clientId || '',
+				clientSecret: config.clientSecret || '',
+				refreshToken: config.refreshToken || '',
 			});
 		} else {
 			setEditingConfig(null);
@@ -215,12 +252,17 @@ const EmailPage: React.FC = () => {
 				fromEmail: '',
 				assignType: 'campaign',
 				assignedId: campaigns[0]?._id || '',
+				secure: false,
+				tenantId: '',
+				clientId: '',
+				clientSecret: '',
+				refreshToken: '',
 			});
 		}
 		setIsConfigModalOpen(true);
 	};
 
-	const handleConfigFormChange = (field: string, value: string | number) => {
+	const handleConfigFormChange = (field: string, value: string | number | boolean) => {
 		setConfigForm(prev => {
 			const updated = { ...prev, [field]: value };
 			if (field === 'assignType') {
@@ -236,6 +278,18 @@ const EmailPage: React.FC = () => {
 		if (!configForm.name || !configForm.fromEmail || !configForm.assignedId) {
 			toast.error('Please fill in all required fields');
 			return;
+		}
+
+		if (configForm.provider === 'SMTP') {
+			if (!configForm.host || !configForm.port || !configForm.username || !configForm.password) {
+				toast.error('Please fill in all SMTP fields');
+				return;
+			}
+		} else if (configForm.provider === 'Microsoft Outlook') {
+			if (!configForm.tenantId || !configForm.clientId || !configForm.clientSecret) {
+				toast.error('Please fill in all Microsoft Outlook API credentials');
+				return;
+			}
 		}
 
 		let assignedName = '';
@@ -264,8 +318,56 @@ const EmailPage: React.FC = () => {
 			}
 			setIsConfigModalOpen(false);
 			setEditingConfig(null);
-		} catch {
-			toast.error('Failed to save configuration');
+		} catch (err) {
+			const errorMsg = extractErrorMessage(err as ApiError, 'Failed to save configuration');
+			toast.error(errorMsg);
+		}
+	};
+
+	const handleConnectOutlook = async () => {
+		if (!configForm.name || !configForm.fromEmail || !configForm.assignedId) {
+			toast.error('Please fill in all required fields (Name, From Email, Scope)');
+			return;
+		}
+		if (!configForm.tenantId || !configForm.clientId || !configForm.clientSecret) {
+			toast.error('Please fill in Tenant ID, Client ID, and Client Secret first');
+			return;
+		}
+
+		let assignedName = '';
+		if (configForm.assignType === 'campaign') {
+			const camp = campaigns.find((c: EmailCampaign) => c._id === configForm.assignedId);
+			assignedName = camp?.campaignName || camp?.name || 'Unknown Campaign';
+		} else {
+			const bkt = buckets.find((b) => b.id === configForm.assignedId);
+			assignedName = bkt ? `${bkt.campaignName} -> ${bkt.name}` : 'Unknown Bucket';
+		}
+
+		try {
+			let savedConfigId = '';
+			if (editingConfig && editingConfig._id) {
+				await updateEmailConfig({
+					id: editingConfig._id,
+					data: { ...configForm, assignedName }
+				}).unwrap();
+				savedConfigId = editingConfig._id;
+			} else {
+				const res = await createEmailConfig({
+					...configForm,
+					assignedName,
+					companyId,
+				}).unwrap();
+				savedConfigId = res.config._id || '';
+			}
+
+			const activeRedirectUri = redirectUri || (typeof window !== 'undefined' ? `${window.location.origin}/email/callback` : '');
+			const authUrl = `https://login.microsoftonline.com/${configForm.tenantId}/oauth2/v2.0/authorize?client_id=${configForm.clientId}&response_type=code&redirect_uri=${encodeURIComponent(activeRedirectUri)}&response_mode=query&scope=${encodeURIComponent('offline_access Mail.Send User.Read')}&state=${savedConfigId}`;
+			
+			toast.loading('Redirecting to Microsoft authentication page...');
+			window.location.href = authUrl;
+		} catch (err) {
+			const errorMsg = extractErrorMessage(err as ApiError, 'Failed to save configuration before redirect');
+			toast.error(errorMsg);
 		}
 	};
 
@@ -273,8 +375,9 @@ const EmailPage: React.FC = () => {
 		try {
 			await deleteEmailConfig(id).unwrap();
 			toast.success('Configuration deleted');
-		} catch {
-			toast.error('Failed to delete configuration');
+		} catch (err) {
+			const errorMsg = extractErrorMessage(err as ApiError, 'Failed to delete configuration');
+			toast.error(errorMsg);
 		}
 	};
 
@@ -576,7 +679,7 @@ const EmailPage: React.FC = () => {
 
 			{/* Compose Email Modal */}
 			{isComposeOpen && (
-				<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={() => setIsComposeOpen(false)}>
+				<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={() => !isSendingEmail && setIsComposeOpen(false)}>
 					<div
 						className="dark:bg-gray-800 shadow-lg w-full max-w-lg mx-4 rounded-[var(--radius)] overflow-hidden"
 						style={{ backgroundColor: 'var(--accent-white)' }}
@@ -596,7 +699,8 @@ const EmailPage: React.FC = () => {
 							</h2>
 							<button
 								onClick={() => setIsComposeOpen(false)}
-								className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full"
+								disabled={isSendingEmail}
+								className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								<Cross2Icon className="w-5 h-5" />
@@ -658,6 +762,7 @@ const EmailPage: React.FC = () => {
 								variant="outline"
 								size="md"
 								onClick={() => setIsComposeOpen(false)}
+								disabled={isSendingEmail}
 							>
 								Cancel
 							</Button>
@@ -666,6 +771,7 @@ const EmailPage: React.FC = () => {
 								size="md"
 								onClick={handleSendEmail}
 								disabled={!formData.to || !formData.subject || !formData.message}
+								loading={isSendingEmail}
 							>
 								Send Email
 							</Button>
@@ -867,7 +973,7 @@ const EmailPage: React.FC = () => {
 
 			{/* Email Config Modal */}
 			{isConfigModalOpen && (
-				<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={() => setIsConfigModalOpen(false)}>
+				<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={() => !(isCreatingConfig || isUpdatingConfig) && setIsConfigModalOpen(false)}>
 					<div
 						className="dark:bg-gray-800 shadow-lg w-full max-w-md mx-4 rounded-[var(--radius)] overflow-hidden"
 						style={{ backgroundColor: 'var(--accent-white)' }}
@@ -887,7 +993,8 @@ const EmailPage: React.FC = () => {
 							</h2>
 							<button
 								onClick={() => setIsConfigModalOpen(false)}
-								className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full"
+								disabled={isCreatingConfig || isUpdatingConfig}
+								className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
 								style={{ color: 'var(--text-tertiary)' }}
 							>
 								<Cross2Icon className="w-5 h-5" />
@@ -909,6 +1016,7 @@ const EmailPage: React.FC = () => {
 								value={configForm.provider}
 								options={[
 									{ value: 'SMTP', label: 'SMTP Server' },
+									{ value: 'Microsoft Outlook', label: 'Microsoft Outlook API' },
 									{ value: 'SendGrid', label: 'SendGrid API' },
 									{ value: 'Mailgun', label: 'Mailgun API' },
 									{ value: 'AWS SES', label: 'AWS SES' },
@@ -939,39 +1047,181 @@ const EmailPage: React.FC = () => {
 										value={configForm.port ? String(configForm.port) : ''}
 										onChange={(val) => handleConfigFormChange('port', parseInt(val) || 587)}
 									/>
+									<div className="flex items-center mt-2 mb-3">
+										<Checkbox
+											id="configSecure"
+											checked={configForm.secure}
+											onChange={(checked) => handleConfigFormChange('secure', checked)}
+											label="Use Secure Connection (SSL/TLS)"
+											size="small"
+										/>
+									</div>
+									<Input
+										label="Username / SMTP Email"
+										placeholder="e.g. user@domain.com"
+										value={configForm.username}
+										onChange={(val) => handleConfigFormChange('username', val)}
+									/>
+									<div className="flex flex-col gap-1">
+										<label className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
+											Password
+										</label>
+										<div className="relative flex items-center">
+											<input
+												type={showPassword ? 'text' : 'password'}
+												placeholder="••••••••••••••••"
+												value={configForm.password}
+												onChange={(e) => handleConfigFormChange('password', e.target.value)}
+												className="w-full px-4 py-2 pr-10 border rounded-[var(--radius)] text-[12px] focus:outline-hidden dark:bg-gray-700"
+												style={{
+													borderColor: 'var(--light-gray)',
+													color: 'var(--text-primary)',
+												}}
+											/>
+											<button
+												type="button"
+												onClick={() => setShowPassword(!showPassword)}
+												className="absolute right-3 p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer"
+												title={showPassword ? 'Hide' : 'Show'}
+											>
+												{showPassword ? (
+													<EyeNoneIcon className="w-4 h-4" />
+												) : (
+													<EyeOpenIcon className="w-4 h-4" />
+												)}
+											</button>
+										</div>
+									</div>
+								</>
+							) : configForm.provider === 'Microsoft Outlook' ? (
+								<>
+									<Input
+										label="Tenant ID *"
+										placeholder="Enter Microsoft Azure Tenant ID"
+										value={configForm.tenantId}
+										onChange={(val) => handleConfigFormChange('tenantId', val)}
+										required
+									/>
+									<Input
+										label="Client ID *"
+										placeholder="Enter Application (Client) ID"
+										value={configForm.clientId}
+										onChange={(val) => handleConfigFormChange('clientId', val)}
+										required
+									/>
+									<div className="flex flex-col gap-1">
+										<label className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
+											Client Secret *
+										</label>
+										<div className="relative flex items-center">
+											<input
+												type={showClientSecret ? 'text' : 'password'}
+												placeholder="••••••••••••••••"
+												value={configForm.clientSecret}
+												onChange={(e) => handleConfigFormChange('clientSecret', e.target.value)}
+												className="w-full px-4 py-2 pr-10 border rounded-[var(--radius)] text-[12px] focus:outline-hidden dark:bg-gray-700"
+												style={{
+													borderColor: 'var(--light-gray)',
+													color: 'var(--text-primary)',
+												}}
+											/>
+											<button
+												type="button"
+												onClick={() => setShowClientSecret(!showClientSecret)}
+												className="absolute right-3 p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer"
+												title={showClientSecret ? 'Hide' : 'Show'}
+											>
+												{showClientSecret ? (
+													<EyeNoneIcon className="w-4 h-4" />
+												) : (
+													<EyeOpenIcon className="w-4 h-4" />
+												)}
+											</button>
+										</div>
+									</div>
+									<div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 rounded-lg text-xs space-y-1 my-2">
+										<p className="font-semibold text-blue-800 dark:text-blue-300">
+											⚠️ Required Azure App Registration Step:
+										</p>
+										<p className="text-gray-600 dark:text-gray-400 text-[11px] leading-relaxed">
+											You must register this exact Redirect URI in your Azure Portal (under <strong>Authentication ➔ Web Platform ➔ Redirect URIs</strong>):
+										</p>
+										<div className="flex items-center gap-2 mt-1 bg-white dark:bg-gray-800 p-2 rounded-md border dark:border-gray-700">
+											<code className="text-[10px] select-all break-all text-gray-800 dark:text-gray-200 flex-1 font-mono">
+												{redirectUri || 'Loading...'}
+											</code>
+											{redirectUri && (
+												<button
+													type="button"
+													onClick={handleCopyRedirectUri}
+													className="text-[10px] text-blue-600 hover:text-blue-800 font-semibold cursor-pointer shrink-0"
+												>
+													Copy
+												</button>
+											)}
+										</div>
+									</div>
+									<div className="pt-2">
+										<Button
+											variant="muted-sage-green"
+											size="md"
+											fullWidth={true}
+											onClick={handleConnectOutlook}
+											disabled={isCreatingConfig || isUpdatingConfig}
+										>
+											Connect Microsoft Account
+										</Button>
+										<p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5 text-center px-1">
+											Clicking will save the credentials and redirect you to Microsoft's secure login screen to link your account.
+										</p>
+									</div>
 								</>
 							) : (
-								<Input
-									label="API Endpoint / Host"
-									placeholder="e.g. api.sendgrid.com"
-									value={configForm.host}
-									onChange={(val) => handleConfigFormChange('host', val)}
-								/>
+								<>
+									<Input
+										label="API Endpoint / Host"
+										placeholder="e.g. api.sendgrid.com"
+										value={configForm.host}
+										onChange={(val) => handleConfigFormChange('host', val)}
+									/>
+									<Input
+										label="Username / API Key"
+										placeholder="Enter API username or Key Identifier"
+										value={configForm.username}
+										onChange={(val) => handleConfigFormChange('username', val)}
+									/>
+									<div className="flex flex-col gap-1">
+										<label className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
+											Password / Secret Token
+										</label>
+										<div className="relative flex items-center">
+											<input
+												type={showPassword ? 'text' : 'password'}
+												placeholder="••••••••••••••••"
+												value={configForm.password}
+												onChange={(e) => handleConfigFormChange('password', e.target.value)}
+												className="w-full px-4 py-2 pr-10 border rounded-[var(--radius)] text-[12px] focus:outline-hidden dark:bg-gray-700"
+												style={{
+													borderColor: 'var(--light-gray)',
+													color: 'var(--text-primary)',
+												}}
+											/>
+											<button
+												type="button"
+												onClick={() => setShowPassword(!showPassword)}
+												className="absolute right-3 p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer"
+												title={showPassword ? 'Hide' : 'Show'}
+											>
+												{showPassword ? (
+													<EyeNoneIcon className="w-4 h-4" />
+												) : (
+													<EyeOpenIcon className="w-4 h-4" />
+												)}
+											</button>
+										</div>
+									</div>
+								</>
 							)}
-
-							<Input
-								label="Username / API Key"
-								placeholder="Enter API username or Key Identifier"
-								value={configForm.username}
-								onChange={(val) => handleConfigFormChange('username', val)}
-							/>
-
-							<div className="flex flex-col gap-1">
-								<label className="text-[10px] md:text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-									Password / Secret Token
-								</label>
-								<input
-									type="password"
-									placeholder="••••••••••••••••"
-									value={configForm.password}
-									onChange={(e) => handleConfigFormChange('password', e.target.value)}
-									className="w-full px-4 py-2 border rounded-[var(--radius)] text-[12px] focus:outline-hidden dark:bg-gray-700"
-									style={{
-										borderColor: 'var(--light-gray)',
-										color: 'var(--text-primary)',
-									}}
-								/>
-							</div>
 
 							<Dropdown
 								label="Assign To Scope *"
@@ -1012,6 +1262,7 @@ const EmailPage: React.FC = () => {
 								variant="outline"
 								size="md"
 								onClick={() => setIsConfigModalOpen(false)}
+								disabled={isCreatingConfig || isUpdatingConfig}
 							>
 								Cancel
 							</Button>
@@ -1019,6 +1270,7 @@ const EmailPage: React.FC = () => {
 								variant="primary"
 								size="md"
 								onClick={handleSaveConfig}
+								loading={isCreatingConfig || isUpdatingConfig}
 							>
 								{editingConfig ? 'Save Changes' : 'Create Config'}
 							</Button>
