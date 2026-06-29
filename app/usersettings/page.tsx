@@ -7,6 +7,7 @@ import { useCampaign } from "@/contexts/CampaignContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGetUserByIdQuery, useUpdateUserMutation, useChangePasswordMutation } from "@/store/services/authApi";
 import { useEffect } from "react";
+import { useApiError } from "@/hooks/useApiError";
 import {
 	PersonIcon,
 	LockClosedIcon,
@@ -37,8 +38,11 @@ export default function SettingsPage() {
 	const { data: userData, isLoading: isUserLoading } = useGetUserByIdQuery(user?.id || '', {
 		skip: !user?.id
 	});
-	const [updateUser, { isLoading: isUpdatingProfile }] = useUpdateUserMutation();
-	const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation();
+	const [updateUser, { isLoading: isUpdatingProfile, isError: isUpdateError, error: updateError }] = useUpdateUserMutation();
+	const [changePassword, { isLoading: isChangingPassword, isError: isChangePasswordError, error: changePasswordError }] = useChangePasswordMutation();
+
+	useApiError(isUpdateError, updateError, 'Failed to update profile. Please try again.');
+	useApiError(isChangePasswordError, changePasswordError, 'Failed to update password. Please try again.');
 
 
 	const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'email' | 'preferences' | 'sound'>('profile');
@@ -114,8 +118,7 @@ export default function SettingsPage() {
 			setIsEditingProfile(false);
 		} catch (error: unknown) {
 			console.error('Error updating profile:', error);
-			const err = error as { data?: { error?: string; message?: string } };
-			toast.error(err?.data?.error || err?.data?.message || 'Failed to update profile. Please try again.');
+			// useApiError hook handles the error UI reactively
 		} finally {
 			setIsProfileLoading(false);
 		}
@@ -163,8 +166,7 @@ export default function SettingsPage() {
 				confirm: false,
 			});
 		} catch (error: unknown) {
-			const err = error as { data?: { error?: string; message?: string } };
-			toast.error(err?.data?.error || err?.data?.message || 'Failed to update password. Please try again.');
+			// useApiError hook handles the error UI reactively
 		} finally {
 			setIsPasswordLoading(false);
 		}

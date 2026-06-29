@@ -112,7 +112,7 @@ const CustomerBookPage: React.FC = () => {
 			if (Array.isArray(data) && data.length > 0) {
 				// Dynamically extract headers from the first item, excluding internal fields like _id, id, __v
 				const firstItem = data[0] as Record<string, unknown>;
-				const headers = Object.keys(firstItem).filter(key => !['_id', 'id', '__v', 'companyId', 'campaignId'].includes(key) && key.toLowerCase() !== 'searchid');
+				const headers = Object.keys(firstItem).filter(key => !['_id', 'id', '__v', 'companyId', 'campaignId'].includes(key) && key.toLowerCase() !== 'searchid' && key.toLowerCase() !== 'bucketid');
 				setTableHeaders(headers);
 
 				const mappedCustomers: Customer[] = data?.map((item) => {

@@ -20,6 +20,7 @@ interface InputProps {
 	description?: string;
 	min?: number | string;
 	max?: number | string;
+	readOnly?: boolean;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -40,6 +41,7 @@ export const Input: React.FC<InputProps> = ({
 	description,
 	min,
 	max,
+	readOnly = false,
 }) => {
 	const [showPassword, setShowPassword] = useState(false);
 	const isPassword = type === 'password';
@@ -77,6 +79,7 @@ export const Input: React.FC<InputProps> = ({
 					onKeyPress={onKeyPress}
 					placeholder={placeholder}
 					disabled={disabled}
+					readOnly={readOnly}
 					className={`input-field ${error ? 'error' : ''} ${inputClassName} ${isPassword ? 'pr-10' : ''}`}
 					required={required}
 					autoComplete={autoComplete}

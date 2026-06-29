@@ -81,7 +81,6 @@ const SMSTable: React.FC<SMSTableProps> = ({
 										size="medium"
 									/>
 								</th>
-								<th>ID</th>
 								<th>Contact Name</th>
 								<th>Phone Number</th>
 								<th>Message</th>
@@ -98,9 +97,9 @@ const SMSTable: React.FC<SMSTableProps> = ({
 							}}
 						>
 							{isLoading ? (
-								<SVGLoaderFetch colSpan={8} text="Loading logs..." />
+								<SVGLoaderFetch colSpan={7} text="Loading logs..." />
 							) : smsList.length === 0 ? (
-								<NoRecordFound colSpan={8} />
+								<NoRecordFound colSpan={7} />
 							) : smsList.map((sms) => {
 								const directionColors = getDirectionColor(sms.direction);
 								return (
@@ -121,9 +120,6 @@ const SMSTable: React.FC<SMSTableProps> = ({
 												onChange={(checked) => onSelectSMS(sms._id || '', checked)}
 												size="medium"
 											/>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap dark:text-gray-100 text-xs" style={{ color: 'var(--text-primary)' }}>
-											{sms._id}
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap dark:text-gray-100" style={{ color: 'var(--text-primary)' }}>
 											{sms.contactName || '-'}

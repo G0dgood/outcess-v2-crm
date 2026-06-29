@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import Icon from '@/components/ui/Icon';
 import { useCreateRoleMutation, RolePermission } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
+import { useApiError } from '@/hooks/useApiError';
 import { toast } from 'sonner';
 import { useSetup } from '@/contexts/SetupContext';
 
@@ -36,7 +37,9 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
 		name: '',
 		description: '',
 	});
-	const [createRole, { isLoading }] = useCreateRoleMutation();
+	const [createRole, { isLoading, isError, error }] = useCreateRoleMutation();
+
+	useApiError(isError, error, 'Failed to create role');
 	const { user } = useUserInfo();
 	const { setupData } = useSetup();
 
@@ -99,9 +102,8 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
 				onSuccess?.();
 				onClose();
 			} catch (error) {
-				const apiError = error as ApiError;
 				console.error('Failed to create role:', error);
-				toast.error(apiError?.data?.message || apiError?.message || 'Failed to create role');
+				// useApiError hook handles the error UI reactively
 			}
 		}
 	};

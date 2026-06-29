@@ -119,7 +119,11 @@ export const Button: React.FC<ButtonProps> = ({
 			return {
 				...baseStyle,
 				backgroundColor: baseStyle.backgroundColor ?? 'var(--text-primary)',
-				color: baseStyle.color ?? (isDarkMode ? '#050711' : 'var(--text-inverse)'),
+				color: baseStyle.color ?? (
+					baseStyle.backgroundColor
+						? 'var(--text-inverse)'
+						: (isDarkMode ? '#050711' : 'var(--text-inverse)')
+				),
 			};
 		}
 

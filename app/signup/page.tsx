@@ -11,7 +11,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { useRegisterMutation } from '@/store/services/authApi';
-import { useCreateCompanyMutation } from '@/store/services/companyApi';
+import { useCreateCompanyMutation, useUpdateCompanyMutation } from '@/store/services/companyApi';
+import { useApiError } from '@/hooks/useApiError';
 
 import { useDispatch } from 'react-redux';
 import { setUser, register as registerAction, User } from '@/store/slices/authSlice';
@@ -24,8 +25,14 @@ export default function SignUpPage() {
 	const dispatch = useDispatch();
 	const { isDarkMode } = useTheme();
 	const primaryColor = '#050711';
-	const [register] = useRegisterMutation();
-	const [createCompany] = useCreateCompanyMutation();
+	const [register, { isError: isRegisterError, error: registerError }] = useRegisterMutation();
+	const [createCompany, { isError: isCreateCompanyError, error: createCompanyError }] = useCreateCompanyMutation();
+	const [updateCompany, { isError: isUpdateCompanyError, error: updateCompanyError }] = useUpdateCompanyMutation();
+
+	useApiError(isRegisterError, registerError, 'Failed to register account');
+	useApiError(isCreateCompanyError, createCompanyError, 'Failed to save company details');
+	useApiError(isUpdateCompanyError, updateCompanyError, 'Failed to save company details');
+	const [companyId, setCompanyId] = useState<string | null>(null);
 	const [formData, setFormData] = useState({
 		firstname: '',
 		lastname: '',
@@ -60,7 +67,16 @@ export default function SignUpPage() {
 		}
 	};
 
-	const validateStep1 = () => {
+	const validateCompanyStep = () => {
+		const newErrors: Record<string, string> = {};
+		if (!formData.companyname.trim()) {
+			newErrors.companyname = 'Company name is required';
+		}
+		setErrors(newErrors);
+		return Object.keys(newErrors).length === 0;
+	};
+
+	const validateNameUsernameStep = () => {
 		const newErrors: Record<string, string> = {};
 		if (!formData.firstname.trim()) {
 			newErrors.firstname = 'First name is required';
@@ -84,10 +100,39 @@ export default function SignUpPage() {
 		return Object.keys(newErrors).length === 0;
 	};
 
-	const handleNext = (e: React.FormEvent) => {
+	const handleNext = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (validateStep1()) {
-			setStep(2);
+		if (step === 1) {
+			if (!validateCompanyStep()) return;
+			setIsLoading(true);
+			try {
+				const payload = {
+					companyName: formData.companyname,
+					description: formData.companydescription,
+				};
+				if (companyId) {
+					await updateCompany({ id: companyId, data: payload }).unwrap();
+					setStep(2);
+				} else {
+					const response = await createCompany({ ...payload, userId: "" }).unwrap();
+					const comp = response.company as { _id?: string; id?: string } | undefined;
+					const cid = comp?._id || comp?.id;
+					if (cid) {
+						setCompanyId(cid);
+						setStep(2);
+					} else {
+						toast.error("Failed to retrieve company ID.");
+					}
+				}
+			} catch (err: unknown) {
+				// useApiError hook handles the error UI reactively
+			} finally {
+				setIsLoading(false);
+			}
+		} else if (step === 2) {
+			if (validateNameUsernameStep()) {
+				setStep(3);
+			}
 		}
 	};
 
@@ -132,7 +177,7 @@ export default function SignUpPage() {
 		if (Object.keys(newErrors).length === 0) {
 			setIsLoading(true);
 			try {
-				const payload = {
+				const registerPayload = {
 					firstName: formData.firstname,
 					lastName: formData.lastname,
 					username: formData.username,
@@ -141,17 +186,20 @@ export default function SignUpPage() {
 					role: formData.role,
 					phone: formData.phone,
 					agreeToTerms: formData.agreetoterms,
+					companyId: companyId || undefined,
 				};
 
-				const response = await register(payload).unwrap();
+				const response = await register(registerPayload).unwrap();
 
 				if (response.user) {
 					const apiUser: User = response.user;
-					if (apiUser.id || apiUser._id) {
+					const finalUserId = apiUser.id || apiUser._id;
+					
+					if (finalUserId) {
 						// Normalize user object
 						const normalizedUser: User = {
 							...apiUser,
-							id: apiUser.id || apiUser._id
+							id: finalUserId
 						};
 
 						// Store user and token in Redux using register action for atomic update
@@ -163,14 +211,14 @@ export default function SignUpPage() {
 							localStorage.setItem('outcess-token', response.token);
 							localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
 						} else {
-							// Fallback if no token (shouldn't happen for successful auth)
 							dispatch(setUser(normalizedUser));
 							localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
 						}
 
-						setUserId(normalizedUser.id);
-						toast.success('Account created successfully! Please verify company details.');
-						setStep(3);
+						toast.success('Account created successfully!');
+						setSelectedCampaignId('new');
+						localStorage.removeItem('outcess-setup-data');
+						router.push('/signup/success');
 					} else {
 						toast.error('Account created but user ID is missing.');
 					}
@@ -178,7 +226,7 @@ export default function SignUpPage() {
 					toast.error('Account created but user ID is missing.');
 				}
 			} catch (err: unknown) {
-				toast.error((err as { data?: { message?: string } })?.data?.message || 'Failed to create account');
+				// useApiError hook handles the error UI reactively
 			} finally {
 				setIsLoading(false);
 			}
@@ -187,43 +235,9 @@ export default function SignUpPage() {
 		}
 	};
 
-	const handleCompanyCreation = async (e: React.FormEvent) => {
-		e.preventDefault();
-
-		if (!formData.companyname.trim()) {
-			setErrors({ companyname: 'Company name is required' });
-			return;
-		}
-
-		if (!userId) {
-			toast.error('User ID is missing. Please restart registration.');
-			return;
-		}
-
-		setIsLoading(true);
-		try {
-			const payload = {
-				companyName: formData.companyname,
-				description: formData.companydescription,
-				userId: userId,
-			};
-
-			await createCompany(payload).unwrap();
-			toast.success('Company profile created successfully!');
-			setSelectedCampaignId('new');
-			localStorage.removeItem('outcess-setup-data');
-			router.push('/signup/success');
-		} catch (err: unknown) {
-			toast.error((err as { data?: { message?: string } })?.data?.message || 'Failed to create company profile');
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
 	const getSubmitHandler = (e: React.FormEvent) => {
-		if (step === 1) return handleNext(e);
-		if (step === 2) return handleUserRegistration(e);
-		if (step === 3) return handleCompanyCreation(e);
+		if (step === 1 || step === 2) return handleNext(e);
+		if (step === 3) return handleUserRegistration(e);
 	};
 
 	return (
@@ -244,15 +258,39 @@ export default function SignUpPage() {
 				<div className="login-form-container max-h-[720px] overflow-y-auto no-scrollbar pr-2">
 					<div className="login-header">
 						<h1 className="welcome-title font-lato not-italic" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }}>
-							{step === 3 ? 'Company Details' : 'Create Account'}
+							{step === 1 ? 'Company Details' : 'Create Account'}
 						</h1>
 						<p className="font-lato not-italic font-normal text-base leading-[150%] text-[#6D7280] dark:text-gray-400">
-							{step === 3 ? 'Tell us more about your company.' : 'Join Outcess CRM to get started.'}
+							{step === 1 ? 'Tell us more about your company.' : 'Join Outcess CRM to get started.'}
 						</p>
 					</div>
 
 					<form onSubmit={getSubmitHandler} className="login-form" noValidate>
 						{step === 1 && (
+							<>
+								<Input
+									label="Company Name"
+									name="companyname"
+									id="companyname_step1"
+									placeholder="Enter company name"
+									value={formData.companyname}
+									onChange={handleInputChange('companyname')}
+									required
+									error={errors.companyname}
+								/>
+
+								<Textarea
+									label="Company Description"
+									name="companydescription"
+									placeholder="Describe your company"
+									value={formData.companydescription}
+									onChange={handleInputChange('companydescription')}
+									rows={4}
+								/>
+							</>
+						)}
+
+						{step === 2 && (
 							<div className="space-y-4 ">
 								<Input
 									label="First Name"
@@ -291,7 +329,7 @@ export default function SignUpPage() {
 							</div>
 						)}
 
-						{step === 2 && (
+						{step === 3 && (
 							<div className="space-y-4">
 								<Input
 									label="Email Address"
@@ -349,7 +387,7 @@ export default function SignUpPage() {
 							</div>
 						)}
 
-						{step === 2 && (
+						{step === 3 && (
 							<div className="terms-container mb-4">
 								<div className="terms-checkbox flex items-center gap-2">
 									<Checkbox
@@ -368,32 +406,8 @@ export default function SignUpPage() {
 							</div>
 						)}
 
-						{step === 3 && (
-							<>
-								<Input
-									label="Company Name"
-									name="companyname"
-									id="companyname_step3"
-									placeholder="Enter company name"
-									value={formData.companyname}
-									onChange={handleInputChange('companyname')}
-									required
-									error={errors.companyname}
-								/>
-
-								<Textarea
-									label="Company Description"
-									name="companydescription"
-									placeholder="Describe your company"
-									value={formData.companydescription}
-									onChange={handleInputChange('companydescription')}
-									rows={4}
-								/>
-							</>
-						)}
-
 						<div style={{ display: 'flex', gap: '10px' }} className="flex flex-row justify-between items-center">
-							{step === 2 && (
+							{step > 1 && (
 								<Button
 									type="button"
 									variant="outline"
@@ -410,9 +424,8 @@ export default function SignUpPage() {
 								style={{ flex: 1 }}
 								className="flex items-center gap-2 px-2 !py-4 text-[10px] md:text-[12px] sm:px-4 sm:py-2"
 							>
-								{step === 1 ? 'Next' : (
-									step === 2 ? (isLoading ? 'Creating Account...' : 'Create Account') :
-										(isLoading ? 'Creating Company...' : 'Finish Setup')
+								{step === 1 || step === 2 ? 'Next' : (
+									isLoading ? 'Creating Account...' : 'Create Account'
 								)}
 							</Button>
 						</div>

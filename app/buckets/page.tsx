@@ -88,27 +88,23 @@ const BucketsPage = () => {
 					className="mb-0"
 				/>
 				<div className="flex items-center gap-3">
-					{isDirty && (
-						<>
-							<Button
-								variant="outline"
-								size="md"
-								onClick={handleDiscard}
-								disabled={isSaving}
-							>
-								Discard
-							</Button>
-							<Button
-								variant="primary"
-								size="md"
-								onClick={handleSave}
-								disabled={isSaving}
-								loading={isSaving}
-							>
-								Save Changes
-							</Button>
-						</>
-					)}
+					<Button
+						variant="outline"
+						size="md"
+						onClick={handleDiscard}
+						disabled={!isDirty || isSaving}
+					>
+						Discard
+					</Button>
+					<Button
+						variant="primary"
+						size="md"
+						onClick={handleSave}
+						disabled={!isDirty || isSaving}
+						loading={isSaving}
+					>
+						Save Changes
+					</Button>
 					<Button
 						variant="outline"
 						size="md"

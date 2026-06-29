@@ -22,6 +22,7 @@ import {
 	useUpdateSMSConfigMutation,
 	useDeleteSMSConfigMutation,
 	useGetSMSLogsQuery,
+	useCreateSMSLogMutation,
 	SMSConfig as SMSConfigType,
 	SMSLog as SMSLogType,
 	SMSCampaign,
@@ -75,6 +76,7 @@ const SMSPage: React.FC = () => {
 	const [createSMSConfig] = useCreateSMSConfigMutation();
 	const [updateSMSConfig] = useUpdateSMSConfigMutation();
 	const [deleteSMSConfig] = useDeleteSMSConfigMutation();
+	const [createSMSLog] = useCreateSMSLogMutation();
 
 	// SMS Logs states
 	const { data: logsData, isLoading: isLogsLoading } = useGetSMSLogsQuery({
@@ -96,6 +98,12 @@ const SMSPage: React.FC = () => {
 		apiKey: '',
 		assignType: 'campaign' as 'campaign' | 'bucket',
 		assignedId: '',
+		messageType: 'standard' as 'standard' | 'flash',
+		sendLater: false,
+		sendtime: '',
+		forcednd: true,
+		countryPrefix: '+234',
+		message: '',
 	});
 
 	const handleSelectAll = (checked: boolean) => {
@@ -135,6 +143,12 @@ const SMSPage: React.FC = () => {
 				apiKey: config.apiKey || '',
 				assignType: config.assignType,
 				assignedId: config.assignedId,
+				messageType: config.messageType || 'standard',
+				sendLater: config.sendLater || false,
+				sendtime: config.sendtime || '',
+				forcednd: config.forcednd !== undefined ? config.forcednd : true,
+				countryPrefix: config.countryPrefix || '+234',
+				message: config.message || '',
 			});
 		} else {
 			setEditingConfig(null);
@@ -146,6 +160,12 @@ const SMSPage: React.FC = () => {
 				apiKey: '',
 				assignType: 'campaign',
 				assignedId: campaigns[0]?._id || '',
+				messageType: 'standard',
+				sendLater: false,
+				sendtime: '',
+				forcednd: true,
+				countryPrefix: '+234',
+				message: '',
 			});
 		}
 		setIsConfigModalOpen(true);
@@ -167,6 +187,11 @@ const SMSPage: React.FC = () => {
 	const handleSaveConfig = async () => {
 		if (!configForm.name || !configForm.senderId || !configForm.assignedId) {
 			toast.error('Please fill in all required fields');
+			return;
+		}
+
+		if (configForm.provider === 'MultiTexter' && configForm.senderId.length > 11) {
+			toast.error('The sender name must not be greater than 11 characters.');
 			return;
 		}
 
@@ -337,8 +362,24 @@ const SMSPage: React.FC = () => {
 			<SMSModal
 				isOpen={isSendSMSOpen}
 				onClose={() => setIsSendSMSOpen(false)}
-				onSend={(data) => {
-					toastSuccess(`SMS queued for sending to ${data.phone}`);
+				onSend={async (data) => {
+					try {
+						const campaignId = campaignData?._id || '';
+						await createSMSLog({
+							phoneNumber: data.phone,
+							message: data.message,
+							direction: 'outbound',
+							companyId,
+							campaignId: campaignId || undefined,
+							configId: data.configId || undefined,
+						}).unwrap();
+						toast.success('SMS sent successfully');
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					} catch (err: any) {
+						const errorMsg = err?.data?.error || err?.data?.message || 'Failed to send SMS';
+						toast.error(errorMsg);
+						throw err;
+					}
 				}}
 			/>
 		</div>

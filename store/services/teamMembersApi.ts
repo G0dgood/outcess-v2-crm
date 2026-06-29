@@ -52,6 +52,11 @@ export interface AssignShiftHourRequest {
   teamMemberIds: string[];
 }
 
+export interface AssignSupervisorRequest {
+  supervisorId: string | null;
+  teamMemberIds: string[];
+}
+
 export interface ApiTeamMember {
   isActive: boolean;
   _id?: string;
@@ -284,6 +289,17 @@ export const teamMembersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["TeamMembers"],
     }),
+    assignSupervisorToTeamMembers: builder.mutation<
+      unknown,
+      AssignSupervisorRequest
+    >({
+      query: (body) => ({
+        url: "api/v1/team-members/assign-supervisor",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["TeamMembers"],
+    }),
     bulkUploadTeamMembers: builder.mutation<BulkUploadResponse, FormData>({
       query: (formData) => ({
         url: "api/v1/team-members/bulk-upload",
@@ -321,6 +337,7 @@ export const {
   useDeleteTeamMemberMutation,
   useDeleteManyTeamMembersMutation,
   useAssignShiftHourToTeamMembersMutation,
+  useAssignSupervisorToTeamMembersMutation,
   useBulkUploadTeamMembersMutation,
   useVerifyTeamMemberPasswordMutation,
 } = teamMembersApi;

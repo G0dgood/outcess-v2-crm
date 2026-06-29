@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useCreateTicketMutation } from '@/store/services/supportApi';
 import { useAuth } from '@/contexts/AuthContext';
+import { useApiError } from '@/hooks/useApiError';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { toast } from 'sonner';
 import { SupportTicketForm } from './SupportTicketForm';
@@ -38,7 +39,9 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose, prefil
 	const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Low');
 	const [assignedToIds, setAssignedToIds] = useState<string[]>([]);
 
-	const [createTicket, { isLoading }] = useCreateTicketMutation();
+	const [createTicket, { isLoading, isError, error }] = useCreateTicketMutation();
+
+	useApiError(isError, error, 'Failed to create ticket');
 
 	const { data: teamMembers } = useGetTeamMembersByCampaignIdQuery({ campaignId: selectedCampaignId || '', limit: 1000 });
 
@@ -156,8 +159,7 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose, prefil
 			resetForm();
 			onClose();
 		} catch (error: unknown) {
-			const err = error as { data?: { message?: string } };
-			toast.error(err.data?.message || 'Failed to create ticket');
+			// useApiError hook handles the error UI reactively
 		}
 	};
 

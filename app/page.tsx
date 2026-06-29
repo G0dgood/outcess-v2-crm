@@ -13,6 +13,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { usePrivilege, RoleModulePermission, UserPrivileges } from '@/contexts/PrivilegeContext';
 import { useLoginMutation, useTeamMemberLoginMutation, LoginResponse } from '@/store/services/authApi';
 import { login as loginAction } from '@/store/slices/authSlice';
+import { useApiError } from '@/hooks/useApiError';
 import { Button } from '@/components/ui/Button';
 import { useAuth, User as AuthUser } from '@/contexts/AuthContext';
 import ReactivationRequestModal from '@/components/ui/ReactivationRequestModal';
@@ -42,8 +43,26 @@ export default function LoginPage() {
 	const router = useRouter();
 	const dispatch = useDispatch();
 	const authContext = useAuth();
-	const [login] = useLoginMutation();
-	const [teamMemberLogin] = useTeamMemberLoginMutation();
+	const [login, { isError: isLoginError, error: loginError }] = useLoginMutation();
+	const [teamMemberLogin, { isError: isTmError, error: tmError }] = useTeamMemberLoginMutation();
+
+	// Filter out the 403 deactivated / pending reactivation states so they don't trigger toast alerts
+	const shouldShowLoginError = isLoginError && !(
+		loginError && 
+		typeof loginError === 'object' && 
+		'status' in loginError && 
+		(loginError as ApiError).status === 403
+	);
+
+	const shouldShowTmError = isTmError && !(
+		tmError && 
+		typeof tmError === 'object' && 
+		'status' in tmError && 
+		(tmError as ApiError).status === 403
+	);
+
+	useApiError(shouldShowLoginError, loginError, 'Invalid email or password');
+	useApiError(shouldShowTmError, tmError, 'Invalid email or password');
 	const { isDarkMode } = useTheme();
 	const { setUserPrivileges } = usePrivilege();
 	const primaryColor = '#050711';
@@ -60,7 +79,9 @@ export default function LoginPage() {
 	const [isDeactivatedModalOpen, setIsDeactivatedModalOpen] = useState(false);
 	const [deactivatedEmail, setDeactivatedEmail] = useState('');
 	const [deactivationReason, setDeactivationReason] = useState('');
-	const [requestReactivation, { isLoading: isRequestingReactivation }] = useRequestReactivationMutation();
+	const [requestReactivation, { isLoading: isRequestingReactivation, isError: isReactError, error: reactError }] = useRequestReactivationMutation();
+
+	useApiError(isReactError, reactError, 'Failed to send reactivation request');
 	const [isPasswordHelpModalOpen, setIsPasswordHelpModalOpen] = useState(false);
 
 	// Set browser tab title
@@ -184,7 +205,6 @@ export default function LoginPage() {
 				}
 			} catch (err: unknown) {
 				console.error('Login error:', err);
-				let errorMessage = 'Invalid email or password';
 
 				if (err && typeof err === 'object') {
 					const apiError = err as ApiError;
@@ -204,22 +224,8 @@ export default function LoginPage() {
 						setIsLoading(false);
 						return;
 					}
-
-					// Handle RTK Query FetchBaseQueryError with data.message
-					if ('data' in apiError && apiError.data?.message) {
-						errorMessage = apiError.data.message;
-					}
-					// Handle RTK Query SerializedError or standard Error
-					else if ('message' in apiError && apiError.message) {
-						errorMessage = apiError.message;
-					}
-					// Handle RTK Query FetchBaseQueryError string error
-					else if ('error' in apiError && typeof apiError.error === 'string') {
-						errorMessage = apiError.error;
-					}
 				}
 
-				toast.error(errorMessage);
 				setIsLoading(false);
 			}
 		} else {
@@ -237,7 +243,7 @@ export default function LoginPage() {
 			toast.success('Reactivation request sent successfully!');
 			setIsDeactivatedModalOpen(false);
 		} catch (error: unknown) {
-			toast.error((error as { data?: { message?: string } })?.data?.message || 'Failed to send reactivation request');
+			// useApiError hook handles the error UI reactively
 		}
 	};
 

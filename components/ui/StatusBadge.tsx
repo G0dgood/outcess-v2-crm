@@ -12,20 +12,13 @@ const getStatusColors = (status: string) => {
     normalized === 'success' ||
     normalized === 'completed' ||
     normalized === 'active' ||
-    normalized === 'approved'
+    normalized === 'approved' ||
+    normalized === 'sent'
   ) {
     return {
       bg: 'rgba(34, 197, 94, 0.1)',
       text: '#22C55E',
       border: 'rgba(34, 197, 94, 0.2)',
-    };
-  }
-
-  if (normalized === 'sent') {
-    return {
-      bg: 'rgba(59, 130, 246, 0.1)',
-      text: '#3B82F6',
-      border: 'rgba(59, 130, 246, 0.2)',
     };
   }
 

@@ -16,6 +16,7 @@ interface TextareaProps {
 	resize?: 'none' | 'both' | 'horizontal' | 'vertical';
 	onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 	name?: string;
+	readOnly?: boolean;
 }
 
 export const Textarea: React.FC<TextareaProps> = ({
@@ -32,6 +33,7 @@ export const Textarea: React.FC<TextareaProps> = ({
 	resize = 'vertical',
 	onKeyDown,
 	name,
+	readOnly = false,
 }) => {
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		onChange?.(e.target.value);
@@ -55,6 +57,7 @@ export const Textarea: React.FC<TextareaProps> = ({
 				onChange={handleChange}
 				placeholder={placeholder}
 				disabled={disabled}
+				readOnly={readOnly}
 				rows={rows}
 				className={`input-field ${error ? 'error' : ''} ${resizeClass} ${inputClassName}`}
 				required={required}

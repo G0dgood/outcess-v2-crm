@@ -13,6 +13,9 @@ import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, Disp
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useGetDispositionsByCustomerQuery } from '@/store/services/dispositionApi';
+import { useCreateSMSLogMutation } from '@/store/services/smsApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { toast } from 'sonner';
 
 interface CustomerDetailsModalProps {
 	isOpen: boolean;
@@ -56,6 +59,9 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 	const [offlineDispositions, setOfflineDispositions] = useState<OfflineDisposition[]>([]);
 	const { selectedCampaignId } = useCampaign();
 	const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
+	const { user } = useUserInfo();
+	const companyId = user?.companyId || user?.company?._id || '';
+	const [createSMSLog] = useCreateSMSLogMutation();
 	const [ticketPrefillData, setTicketPrefillData] = useState<{
 		title?: string;
 		description?: string;
@@ -329,7 +335,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 								<div className="p-6">
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 										{Object.entries(customer)
-											.filter(([key]) => !['id', '_id', 'companyId', 'campaignId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid')
+											.filter(([key]) => !['id', '_id', 'companyId', 'campaignId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid' && key.toLowerCase() !== 'bucketid')
 											.map(([key, value]) => {
 												let IconComponent = PersonIcon;
 												const lowerKey = key.toLowerCase();
@@ -598,7 +604,19 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 					}}
 					initialData={selectedDispositionData}
 					customerId={customer?.id}
-					customerName={customer ? `${String(customer?.firstName || '')} ${String(customer?.lastName || '')}`.trim() : undefined}
+					customerName={(() => {
+						if (!customer) return undefined;
+						if (customer.firstName || customer.lastName) {
+							return `${String(customer.firstName || '')} ${String(customer.lastName || '')}`.trim();
+						}
+						const nameKey = Object.keys(customer).find(k => {
+							const l = k.toLowerCase();
+							return l === 'name' || l.includes('fullname') || l.includes('full name') || l.includes('displayname') || l.includes('display name') || l.includes('contactname') || l.includes('contact name');
+						});
+						if (nameKey) return String(customer[nameKey]);
+						const fallbackKey = Object.keys(customer).find(k => k.toLowerCase().includes('name'));
+						return fallbackKey ? String(customer[fallbackKey]) : undefined;
+					})()}
 					customer={customer}
 				/>
 
@@ -606,10 +624,45 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 				<SMSModal
 					isOpen={isSMSModalOpen}
 					onClose={() => setIsSMSModalOpen(false)}
-					onSend={() => {
-						// Implement send SMS logic here 
+					onSend={async (data) => {
+						try {
+							const contactName = (() => {
+								if (!customer) return undefined;
+								if (customer.firstName || customer.lastName) {
+									return `${String(customer.firstName || '')} ${String(customer.lastName || '')}`.trim();
+								}
+								const nameKey = Object.keys(customer).find(k => {
+									const l = k.toLowerCase();
+									return l === 'name' || l.includes('fullname') || l.includes('full name') || l.includes('displayname') || l.includes('display name') || l.includes('contactname') || l.includes('contact name');
+								});
+								if (nameKey) return String(customer[nameKey]);
+								const fallbackKey = Object.keys(customer).find(k => k.toLowerCase().includes('name'));
+								return fallbackKey ? String(customer[fallbackKey]) : undefined;
+							})();
+
+							await createSMSLog({
+								phoneNumber: data.phone,
+								message: data.message,
+								direction: 'outbound',
+								companyId,
+								campaignId: selectedCampaignId || undefined,
+								configId: data.configId || undefined,
+								contactName: contactName || undefined,
+							}).unwrap();
+							toast.success('SMS sent successfully');
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						} catch (err: any) {
+							const errorMsg = err?.data?.error || err?.data?.message || 'Failed to send SMS';
+							toast.error(errorMsg);
+							throw err;
+						}
 					}}
-					initialPhone={customer?.phone ? String(customer.phone) : undefined}
+					initialPhone={(() => {
+						if (!customer) return undefined;
+						const phoneKey = Object.keys(customer).find(k => k.toLowerCase().includes('phone') || k.toLowerCase().includes('mobile'));
+						return phoneKey ? String(customer[phoneKey]) : undefined;
+					})()}
+					hideGatewaySelect={true}
 				/>
 
 				{/* Disposition History Modal */}
