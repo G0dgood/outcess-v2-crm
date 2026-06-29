@@ -73,6 +73,7 @@ const SMSConfigModal: React.FC<SMSConfigModalProps> = ({
 			}).unwrap();
 			setBalance(String(res.balance));
 			toast.success('Balance checked successfully');
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} catch (err: any) {
 			const errorMsg = err?.data?.error || err?.data?.message || 'Failed to check balance';
 			toast.error(errorMsg);

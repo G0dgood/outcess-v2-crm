@@ -71,6 +71,7 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
 
     const supervisorRoleIds = new Set<string>();
     if (supervisorsResponse && Array.isArray(supervisorsResponse.roles)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       supervisorsResponse.roles.forEach((r: any) => {
         if (r._id) supervisorRoleIds.add(r._id.toString());
         if (r.id) supervisorRoleIds.add(r.id.toString());

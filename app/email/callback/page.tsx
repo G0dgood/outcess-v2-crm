@@ -36,6 +36,7 @@ function OutlookCallbackInner() {
 
 				toast.success('Successfully connected Microsoft Outlook account!');
 				router.push('/email');
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			} catch (err: any) {
 				const errorMsg = err?.data?.error || err?.data?.message || 'Failed to connect Outlook account';
 				toast.error(errorMsg);

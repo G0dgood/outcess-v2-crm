@@ -650,6 +650,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 								contactName: contactName || undefined,
 							}).unwrap();
 							toast.success('SMS sent successfully');
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 						} catch (err: any) {
 							const errorMsg = err?.data?.error || err?.data?.message || 'Failed to send SMS';
 							toast.error(errorMsg);

@@ -1172,7 +1172,7 @@ const EmailPage: React.FC = () => {
 											Connect Microsoft Account
 										</Button>
 										<p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5 text-center px-1">
-											Clicking will save the credentials and redirect you to Microsoft's secure login screen to link your account.
+											Clicking will save the credentials and redirect you to Microsoft&apos;s secure login screen to link your account.
 										</p>
 									</div>
 								</>
