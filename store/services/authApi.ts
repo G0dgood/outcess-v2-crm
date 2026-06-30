@@ -128,12 +128,13 @@ export const authApi = baseApi.injectEndpoints({
       void,
       { userId: string; oldPassword?: string; newPassword: string }
     >({
-      query: (body) => ({
-        url: "api/v1/users/reset-password", // Assuming reset-password or change-password
-        method: "POST",
+      query: ({ userId, ...body }) => ({
+        url: `api/v1/users/user/${userId}/password`,
+        method: "PATCH",
         body,
       }),
     }),
+
     requestReactivation: builder.mutation<
       { message: string },
       { email: string; reason: string }
