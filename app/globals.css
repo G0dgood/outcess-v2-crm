@@ -228,6 +228,7 @@
   --text-secondary: var(--dark-slate-gray);
   --text-tertiary: var(--slate-gray);
   --text-inverse: var(--black);
+  --pale-mint-green: #064e3b;
 
   /* Shadow Colors (adjusted for dark mode) */
   --shadow-color: #000000;
@@ -381,7 +382,7 @@ body {
   /* Space for icons */
   border: 1px solid var(--light-gray);
   border-radius: var(--radius);
-  background-color: #ffffff;
+  background-color: var(--accent-white);
   color: var(--primary);
   font-size: 14px;
   line-height: 1.5;

@@ -39,8 +39,13 @@ const EditUserPage: React.FC = () => {
 	const primaryColor = campaignData?.primaryColor || '#050711';
 
 	const { data: userResponse, isLoading: isUserLoading } = useGetTeamMemberByIdQuery(userId);
-	const { data: rolesData } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', {
-		skip: !selectedCampaignId
+
+	const userDataObj = userResponse?.teamMember || userResponse?.data || userResponse;
+	const userCampaignId = (userDataObj as any)?.campaignId || '';
+	const queryCampaignId = userCampaignId || selectedCampaignId || '';
+
+	const { data: rolesData } = useGetRolesByCampaignIdQuery(queryCampaignId, {
+		skip: !queryCampaignId
 	});
 
 	const [updateTeamMember] = useUpdateTeamMemberMutation();
@@ -70,13 +75,13 @@ const EditUserPage: React.FC = () => {
 		'';
 
 	const { data: supervisorsResponse } = useGetSupervisorsByCampaignIdQuery(
-		{ companyId, campaignId: selectedCampaignId || '' },
-		{ skip: !companyId || !selectedCampaignId }
+		{ companyId, campaignId: queryCampaignId },
+		{ skip: !companyId || !queryCampaignId }
 	);
 
 	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
-		{ campaignId: selectedCampaignId || '', limit: 1000 },
-		{ skip: !selectedCampaignId }
+		{ campaignId: queryCampaignId, limit: 1000 },
+		{ skip: !queryCampaignId }
 	);
 
 	useEffect(() => {

@@ -128,7 +128,7 @@ const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
 										</div>
 										<button
 											onClick={() => handleOpenAssign(bucket.id, bucket.name)}
-											className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all text-[10px] font-bold"
+											className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all text-[10px] font-bold"
 										>
 											<PlusIcon className="w-3 h-3" />
 											ADD MEMBER

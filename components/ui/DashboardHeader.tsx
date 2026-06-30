@@ -162,10 +162,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 		socket.on("statusListUpdated", handleStatusListUpdate);
 		socket.on("notificationUpdated", handleNotificationUpdate);
+		socket.on("notification", handleNotificationUpdate);
 
 		return () => {
 			socket.off("statusListUpdated", handleStatusListUpdate);
 			socket.off("notificationUpdated", handleNotificationUpdate);
+			socket.off("notification", handleNotificationUpdate);
 		};
 	}, [socket, selectedCampaignId, dispatch, refetchNotifications]);
 
