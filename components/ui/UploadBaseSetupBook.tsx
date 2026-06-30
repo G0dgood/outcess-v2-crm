@@ -89,6 +89,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
   const [jsonData, setJSONData] = useState<CsvRow[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const [createSetupBook, { isLoading, isSuccess, isError, error, reset }] = useCreateSetupBookMutation();
 
@@ -208,6 +209,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
   };
 
   const handleDragAreaClick = () => {
+    if (isUploading || isLoading) return;
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
@@ -215,8 +217,9 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
 
   const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!fileToUpload) return;
+    if (!fileToUpload || isUploading || isLoading) return;
 
+    setIsUploading(true);
     try {
       setProgress(30);
 
@@ -232,6 +235,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
           duration: 5000,
         });
         setProgress(0);
+        setIsUploading(false);
         return;
       }
 
@@ -241,6 +245,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
           duration: 5000,
         });
         setProgress(0);
+        setIsUploading(false);
         return;
       }
 
@@ -264,6 +269,8 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
       }
     } catch (err: unknown) {
       setProgress(0);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -437,17 +444,23 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
                 {fileToUpload && (
                   <button
                     type="button"
+                    disabled={isUploading || isLoading}
                     onClick={clearSelectedFile}
-                    className="px-4 py-2 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 transition-colors rounded-[var(--radius)]"
+                    className="px-4 py-2 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 transition-colors rounded-[var(--radius)] disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       backgroundColor: 'var(--bg-primary)',
-                      color: 'var(--text-secondary)'
+                      color: 'var(--text-secondary)',
+                      cursor: (isUploading || isLoading) ? 'not-allowed' : 'pointer'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#E2E8F0';
+                      if (!(isUploading || isLoading)) {
+                        e.currentTarget.style.backgroundColor = '#E2E8F0';
+                      }
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                      if (!(isUploading || isLoading)) {
+                        e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                      }
                     }}
                   >
                     Cancel
@@ -455,29 +468,40 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
                 )}
                 <button
                   type="submit"
-                  disabled={isLoading || jsonData.length === 0}
-                  className={`px-4 py-2 text-white transition-opacity rounded-[var(--radius)] ${isLoading || jsonData.length === 0
+                  disabled={isUploading || isLoading || jsonData.length === 0}
+                  className={`px-4 py-2 text-white transition-opacity rounded-[var(--radius)] ${(isUploading || isLoading) || jsonData.length === 0
                     ? "dark:bg-gray-600 cursor-not-allowed"
                     : ""
                     }`}
-                  style={!isLoading && jsonData.length > 0 ? {
+                  style={!(isUploading || isLoading) && jsonData.length > 0 ? {
                     backgroundColor: primaryColor,
+                    cursor: 'pointer'
                   } : {
                     backgroundColor: '#9CA3AF',
                     cursor: 'not-allowed'
                   }}
                   onMouseEnter={(e) => {
-                    if (!isLoading && jsonData.length > 0) {
+                    if (!(isUploading || isLoading) && jsonData.length > 0) {
                       e.currentTarget.style.opacity = '0.9';
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!isLoading && jsonData.length > 0) {
+                    if (!(isUploading || isLoading) && jsonData.length > 0) {
                       e.currentTarget.style.opacity = '1';
                     }
                   }}
                 >
-                  {isLoading ? "Uploading..." : "Upload"}
+                  {(isUploading || isLoading) ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Uploading...
+                    </span>
+                  ) : (
+                    "Upload"
+                  )}
                 </button>
               </div>
             </form>
