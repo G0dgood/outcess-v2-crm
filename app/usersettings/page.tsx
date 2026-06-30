@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import packageInfo from "../../package.json";
 import Skeleton from "@/components/ui/Skeleton";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -19,6 +20,7 @@ import {
 	SpeakerLoudIcon
 } from "@radix-ui/react-icons";
 import SoundSettings from "@/components/ui/SoundSettings";
+import AppVersionInfo from "@/components/ui/AppVersionInfo";
 import PageHeading from "@/components/ui/PageHeading";
 import SubPageHeading from "@/components/ui/SubPageHeading";
 import BackButton from "@/components/ui/BackButton";
@@ -754,6 +756,9 @@ export default function SettingsPage() {
 									/>
 								</button>
 							</div>
+
+							{/* App Version Info */}
+							<AppVersionInfo primaryColor={primaryColor} />
 						</div>
 					</div>
 				)}
@@ -785,6 +790,11 @@ export default function SettingsPage() {
 					</div>
 				)}
 
+			</div>
+
+			{/* Version Footer */}
+			<div className="text-center text-[11px] text-gray-400 dark:text-gray-500 mt-4">
+				Outcess CRM • Version {packageInfo.version}
 			</div>
 
 		</div>
