@@ -114,6 +114,9 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		skip: !selectedCampaignId
 	});
 
+	console.log('rolesData--->', rolesData)
+	console.log('selectedCampaignId--->', selectedCampaignId)
+
 	// Reactively update user privileges when roles data changes
 	useEffect(() => {
 		if (!rolesData?.roles || !userPrivileges?.role) return;
@@ -241,9 +244,14 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 	};
 
 	const canAccess = (moduleId: ModuleId, action?: PermissionAction): boolean => {
-		if (!userPrivileges) return false;
+		if (!userPrivileges) {
+			console.log(`[canAccess] No userPrivileges — denying ${moduleId}`);
+			return false;
+		}
 		if (isAdmin) return true;
 		const modulePermission = findModulePermission(moduleId);
+		console.log(`[canAccess] moduleId="${moduleId}" action="${action}" found=`, modulePermission ? { moduleName: modulePermission.moduleName, access: modulePermission.access, view: modulePermission.permissions?.view } : 'NOT FOUND',
+			'allModuleNames=', userPrivileges.role?.permissions?.map(p => p.moduleName));
 		if (modulePermission) {
 			if (!modulePermission.access) return false;
 			if (!action) return true;

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import packageInfo from "../../package.json";
 import Skeleton from "@/components/ui/Skeleton";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -19,11 +20,13 @@ import {
 	SpeakerLoudIcon
 } from "@radix-ui/react-icons";
 import SoundSettings from "@/components/ui/SoundSettings";
+import AppVersionInfo from "@/components/ui/AppVersionInfo";
 import PageHeading from "@/components/ui/PageHeading";
 import SubPageHeading from "@/components/ui/SubPageHeading";
 import BackButton from "@/components/ui/BackButton";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
+import Tabs from "@/components/ui/Tabs";
 
 
 
@@ -58,6 +61,7 @@ export default function SettingsPage() {
 	const [profileData, setProfileData] = useState({
 		fullName: '',
 		username: '',
+		userId: '',
 		phone: '',
 		email: '',
 	});
@@ -69,6 +73,7 @@ export default function SettingsPage() {
 					? `${userData.user.firstName as string} ${userData.user.lastName as string}`
 					: (userData.user.name as string) || '',
 				username: (userData.user.username as string) || '',
+				userId: (userData.user.userId as string) || '',
 				phone: (userData.user.phone as string) || '',
 				email: (userData.user.email as string) || '',
 			});
@@ -132,6 +137,7 @@ export default function SettingsPage() {
 					? `${userData.user.firstName as string} ${userData.user.lastName as string}`
 					: (userData.user.name as string) || '',
 				username: (userData.user.username as string) || '',
+				userId: (userData.user.userId as string) || '',
 				phone: (userData.user.phone as string) || '',
 				email: (userData.user.email as string) || '',
 			});
@@ -279,55 +285,18 @@ export default function SettingsPage() {
 				}}
 			>
 				{/* Navigation Tabs */}
-				<div
-					className="border-b dark:border-gray-700 mb-8"
-					style={{ borderColor: 'var(--light-gray)' }}
-				>
-					<nav className="-mb-px flex space-x-1">
-						{[
-							{ id: 'profile', label: 'Profile', icon: PersonIcon },
-							{ id: 'password', label: 'Password', icon: LockClosedIcon },
-							{ id: 'preferences', label: 'Preferences', icon: GearIcon },
-							{ id: 'sound', label: 'Sound', icon: SpeakerLoudIcon },
-							// { id: 'email', label: 'Email', icon: Mail }, 
-						].map(({ id, label, icon: IconComponent }) => (
-							<Button
-								key={id}
-								variant="ghost"
-								size="sm"
-								onClick={() => setActiveSection(id as 'profile' | 'password' | 'email' | 'preferences' | 'sound')}
-								className={`relative flex items-center space-x-2 py-3 px-4 font-medium text-[10px] md:text-[12px] transition-all duration-200 !rounded-none ${activeSection === id
-									? 'dark:text-gray-100'
-									: 'dark:text-gray-400 dark:hover:text-gray-300'
-									}`}
-								style={activeSection === id ? {
-									color: 'var(--text-primary)'
-								} : {
-									color: 'var(--text-tertiary)'
-								}}
-								onMouseEnter={(e) => {
-									if (activeSection !== id) {
-										e.currentTarget.style.color = 'var(--text-primary)';
-									}
-								}}
-								onMouseLeave={(e) => {
-									if (activeSection !== id) {
-										e.currentTarget.style.color = 'var(--text-tertiary)';
-									}
-								}}
-							>
-								<IconComponent className="h-4 w-4 transition-colors" />
-								<span>{label}</span>
-								{activeSection === id && (
-									<span
-										className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t"
-										style={{ backgroundColor: primaryColor }}
-									/>
-								)}
-							</Button>
-						))}
-					</nav>
-				</div>
+				<Tabs
+					tabs={[
+						{ id: 'profile', label: 'Profile', icon: <PersonIcon className="h-4 w-4" /> },
+						{ id: 'password', label: 'Password', icon: <LockClosedIcon className="h-4 w-4" /> },
+						{ id: 'preferences', label: 'Preferences', icon: <GearIcon className="h-4 w-4" /> },
+						{ id: 'sound', label: 'Sound', icon: <SpeakerLoudIcon className="h-4 w-4" /> },
+					]}
+					activeTab={activeSection}
+					onTabChange={(tabId) => setActiveSection(tabId as 'profile' | 'password' | 'email' | 'preferences' | 'sound')}
+					activeColor={primaryColor}
+					className="mb-8"
+				/>
 
 				{/* Profile Section */}
 				{activeSection === 'profile' && (
@@ -422,13 +391,13 @@ export default function SettingsPage() {
 												className="font-medium dark:text-gray-400"
 												style={{ color: 'var(--text-tertiary)' }}
 											>
-												Username:
+												User ID:
 											</span>
 											<p
 												className="dark:text-gray-100"
 												style={{ color: 'var(--text-primary)' }}
 											>
-												{profileData.username || 'Not set'}
+												{profileData.userId || 'Not set'}
 											</p>
 										</div>
 										<div>
@@ -483,19 +452,18 @@ export default function SettingsPage() {
 
 									<div className="space-y-2">
 										<label
-											htmlFor="username"
+											htmlFor="userId"
 											className="text-[10px] md:text-[12px] font-medium dark:text-gray-300"
 											style={{ color: 'var(--text-secondary)' }}
 										>
-											Username
+											User ID
 										</label>
 										<Input
 											label=""
 											type="text"
-											value={profileData.username}
-											onChange={(value) => setProfileData({ ...profileData, username: value })}
-											disabled={!isEditingProfile}
-											className="disabled:bg-gray-50"
+											value={profileData.userId}
+											disabled
+											className="disabled:bg-gray-50 dark:disabled:bg-gray-800"
 										/>
 									</div>
 
@@ -754,6 +722,9 @@ export default function SettingsPage() {
 									/>
 								</button>
 							</div>
+
+							{/* App Version Info */}
+							<AppVersionInfo primaryColor={primaryColor} />
 						</div>
 					</div>
 				)}
@@ -785,6 +756,11 @@ export default function SettingsPage() {
 					</div>
 				)}
 
+			</div>
+
+			{/* Version Footer */}
+			<div className="text-center text-[11px] text-gray-400 dark:text-gray-500 mt-4">
+				Outcess CRM • Version {packageInfo.version}
 			</div>
 
 		</div>

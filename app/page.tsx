@@ -177,12 +177,14 @@ export default function LoginPage() {
 
 					// Update PrivilegeContext with the user's role and permissions
 					if (normalizedUser.role && typeof normalizedUser.role === 'object') {
+						const roleObj = normalizedUser.role as { _id?: string; id?: string; roleName: string; permissions: RoleModulePermission[] };
 						const privileges: UserPrivileges = {
 							userId: normalizedUser.id,
-							roleId: normalizedUser.role.roleName,
+							roleId: roleObj._id || roleObj.id || roleObj.roleName,
 							role: {
-								roleName: normalizedUser.role.roleName,
-								permissions: normalizedUser.role.permissions as RoleModulePermission[]
+								...roleObj,
+								roleName: roleObj.roleName,
+								permissions: roleObj.permissions as RoleModulePermission[]
 							},
 						};
 						setUserPrivileges(privileges);

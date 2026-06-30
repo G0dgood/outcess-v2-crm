@@ -64,69 +64,69 @@ interface SubNavItem {
 }
 
 const settingsSubItems = [
-  { id: 'general-settings-tab', label: 'General', icon: 'settings', path: '/settings?tab=settings' },
-  { id: 'status-tab', label: 'Status', icon: 'id-card', path: '/settings?tab=status' },
-  { id: 'permission-tab', label: 'Permission', icon: 'chart', path: '/settings?tab=permission' },
-  { id: 'company-details-tab', label: 'Company Details', icon: 'settings', path: '/settings?tab=company-details', restrictedToAdmin: true },
-  { id: 'roles-tab', label: 'Roles', icon: 'book', path: '/settings?tab=roles' },
-  { id: 'supervisors-tab', label: 'Supervisors', icon: 'users', path: '/settings?tab=supervisors' },
-  { id: 'audit-logs-tab', label: 'Audit Logs', icon: 'clock', path: '/settings?tab=audit-logs' },
+ { id: 'general-settings-tab', label: 'General', icon: 'settings', path: '/settings?tab=settings' },
+ { id: 'status-tab', label: 'Status', icon: 'id-card', path: '/settings?tab=status' },
+ { id: 'permission-tab', label: 'Permission', icon: 'chart', path: '/settings?tab=permission' },
+ { id: 'company-details-tab', label: 'Company Details', icon: 'settings', path: '/settings?tab=company-details', restrictedToAdmin: true },
+ { id: 'roles-tab', label: 'Roles', icon: 'book', path: '/settings?tab=roles' },
+ { id: 'supervisors-tab', label: 'Supervisors', icon: 'users', path: '/settings?tab=supervisors' },
+ { id: 'audit-logs-tab', label: 'Audit Logs', icon: 'clock', path: '/settings?tab=audit-logs' },
 ];
 
 const supportSubItems = [
-  { id: 'support-mine', label: 'Support', icon: 'support', path: '/support', privilege: { module: 'support', action: 'view' } },
-  { id: 'support-team', label: 'Team Support', icon: 'users', path: '/support/team', privilege: { module: 'support', action: 'view' } },
-  { id: 'support-all', label: 'All Support', icon: 'support', path: '/support/all', privilege: { module: 'allSupport', action: 'view' } },
+ { id: 'support-mine', label: 'Support', icon: 'support', path: '/support', privilege: { module: 'support', action: 'view' } },
+ { id: 'support-team', label: 'Team Support', icon: 'users', path: '/support/team', privilege: { module: 'support', action: 'view' } },
+ { id: 'support-all', label: 'All Support', icon: 'support', path: '/support/all', privilege: { module: 'allSupport', action: 'view' } },
 ];
 
 const integrationSubItems = [
-  { id: 'integration-sms', label: 'SMS', icon: 'sms', path: '/sms' },
-  { id: 'integration-email', label: 'Emails', icon: 'mail', path: '/email' }
+ { id: 'integration-sms', label: 'SMS', icon: 'sms', path: '/sms' },
+ { id: 'integration-email', label: 'Emails', icon: 'mail', path: '/email' }
 ];
 
 const navItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'grid', path: '/dashboard' },
-  { id: 'customer-book', label: 'Customer Book', icon: 'book', path: '/customer-book' },
-  { id: 'users', label: 'Users', icon: 'users', path: '/users' },
-  { id: 'team-members', label: 'Team Members', icon: 'group', path: '/team-members' },
-  { id: 'integration', label: 'Integration', icon: 'integration', path: '/sms' },
-  { id: 'setup-book', label: 'Setup Book', icon: 'settings-book', path: '/setup-book' },
-  { id: 'report', label: 'Report', icon: 'chart', path: '/report' },
-  { id: 'leaderboard', label: 'Leaderboard', icon: 'star', path: '/leaderboard' },
-  { id: 'buckets', label: 'Buckets', icon: 'grid', path: '/buckets' },
-  { id: 'configuration', label: 'Campaigns', icon: 'configuration', path: '/configuration' },
-  { id: 'support', label: 'Support', icon: 'support', path: '/support' },
-  { id: 'settings', label: 'Settings', icon: 'settings', path: '/settings' }
+ { id: 'dashboard', label: 'Dashboard', icon: 'grid', path: '/dashboard' },
+ { id: 'customer-book', label: 'Customer Book', icon: 'book', path: '/customer-book' },
+ { id: 'users', label: 'Users', icon: 'users', path: '/users' },
+ { id: 'team-members', label: 'Team Members', icon: 'group', path: '/team-members' },
+ { id: 'integration', label: 'Integration', icon: 'integration', path: '/sms' },
+ { id: 'setup-book', label: 'Setup Book', icon: 'settings-book', path: '/setup-book' },
+ { id: 'report', label: 'Report', icon: 'chart', path: '/report' },
+ { id: 'leaderboard', label: 'Leaderboard', icon: 'star', path: '/leaderboard' },
+ { id: 'buckets', label: 'Buckets', icon: 'grid', path: '/buckets' },
+ { id: 'configuration', label: 'Campaigns', icon: 'configuration', path: '/configuration' },
+ { id: 'support', label: 'Support', icon: 'support', path: '/support' },
+ { id: 'settings', label: 'Settings', icon: 'settings', path: '/settings' }
 ];
 
 const moduleMapping: Record<string, ModuleId> = {
-  'dashboard': 'dashboard',
-  'customer-book': 'customerBook',
-  'users': 'userManagement',
-  'team-members': 'teamMembers',
-  'integration': 'customerSMS',
-  'setup-book': 'setupBook',
-  'report': 'report',
-  'leaderboard': 'leaderboard',
-  'buckets': 'buckets',
-  'configuration': 'campaignPlan',
-  'support': 'support',
-  'settings': 'systemSetting',
+ 'dashboard': 'dashboard',
+ 'customer-book': 'customerBook',
+ 'users': 'userManagement',
+ 'team-members': 'teamMembers',
+ 'integration': 'customerSMS',
+ 'setup-book': 'setupBook',
+ 'report': 'report',
+ 'leaderboard': 'leaderboard',
+ 'buckets': 'buckets',
+ 'configuration': 'campaignPlan',
+ 'support': 'support',
+ 'settings': 'systemSetting',
 };
 
 const subModuleMapping: Record<string, ModuleId> = {
-  'general-settings-tab': 'systemSetting',
-  'status-tab': 'status',
-  'permission-tab': 'permission',
-  'company-details-tab': 'systemSetting',
-  'roles-tab': 'roles',
-  'supervisors-tab': 'userManagement',
-  'audit-logs-tab': 'auditLog',
-  'support-mine': 'support',
-  'support-team': 'teamMemberSupport',
-  'support-all': 'allSupport',
-  'integration-sms': 'customerSMS',
-  'integration-email': 'customerSMS',
+ 'general-settings-tab': 'systemSetting',
+ 'status-tab': 'status',
+ 'permission-tab': 'permission',
+ 'company-details-tab': 'systemSetting',
+ 'roles-tab': 'roles',
+ 'supervisors-tab': 'userManagement',
+ 'audit-logs-tab': 'auditLog',
+ 'support-mine': 'support',
+ 'support-team': 'teamMemberSupport',
+ 'support-all': 'allSupport',
+ 'integration-sms': 'customerSMS',
+ 'integration-email': 'customerSMS',
 };
 
 const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
@@ -146,6 +146,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 
  const headerLogo = campaignData?.logo;
  const headerName = campaignData?.companyName || 'Outcess';
+
 
  const navRef = useRef<HTMLElement>(null);
  const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
@@ -170,46 +171,46 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 
  // Update browser tab title dynamically
  useEffect(() => {
-   if (typeof document === 'undefined') return;
+  if (typeof document === 'undefined') return;
 
-   const currentNavItem = navItems.find(item => {
-     if (item.path === '/dashboard') {
-       return pathname === '/dashboard';
-     }
-     return pathname?.startsWith(item.path);
-   });
-
-   let title = 'Outcess CRM';
-
-   if (currentNavItem) {
-     if (currentNavItem.id === 'settings') {
-       const tab = searchParams?.get('tab');
-       const subItem = settingsSubItems.find(s => s.path.includes(`tab=${tab}`));
-       if (subItem) {
-         title = `${subItem.label} Settings | Outcess CRM`;
-       } else {
-         title = 'Settings | Outcess CRM';
-       }
-     } else if (currentNavItem.id === 'support') {
-       const subItem = supportSubItems.find(s => s.path === pathname);
-       if (subItem) {
-         title = `${subItem.label} | Outcess CRM`;
-       } else {
-         title = 'Support | Outcess CRM';
-       }
-     } else if (currentNavItem.id === 'integration') {
-       const subItem = integrationSubItems.find(s => s.path === pathname);
-       if (subItem) {
-         title = `${subItem.label} | Outcess CRM`;
-       } else {
-         title = 'Integration | Outcess CRM';
-       }
-     } else {
-       title = `${currentNavItem.label} | Outcess CRM`;
-     }
+  const currentNavItem = navItems.find(item => {
+   if (item.path === '/dashboard') {
+    return pathname === '/dashboard';
    }
+   return pathname?.startsWith(item.path);
+  });
 
-   document.title = title;
+  let title = 'Outcess CRM';
+
+  if (currentNavItem) {
+   if (currentNavItem.id === 'settings') {
+    const tab = searchParams?.get('tab');
+    const subItem = settingsSubItems.find(s => s.path.includes(`tab=${tab}`));
+    if (subItem) {
+     title = `${subItem.label} Settings | Outcess CRM`;
+    } else {
+     title = 'Settings | Outcess CRM';
+    }
+   } else if (currentNavItem.id === 'support') {
+    const subItem = supportSubItems.find(s => s.path === pathname);
+    if (subItem) {
+     title = `${subItem.label} | Outcess CRM`;
+    } else {
+     title = 'Support | Outcess CRM';
+    }
+   } else if (currentNavItem.id === 'integration') {
+    const subItem = integrationSubItems.find(s => s.path === pathname);
+    if (subItem) {
+     title = `${subItem.label} | Outcess CRM`;
+    } else {
+     title = 'Integration | Outcess CRM';
+    }
+   } else {
+    title = `${currentNavItem.label} | Outcess CRM`;
+   }
+  }
+
+  document.title = title;
  }, [pathname, searchParams]);
 
  // Handle click outside to close menus when collapsed
@@ -261,9 +262,9 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
   }
 
   if (pathname?.startsWith('/sms') || pathname?.startsWith('/email') || pathname?.startsWith('/integration')) {
-    setIsIntegrationExpanded(true);
+   setIsIntegrationExpanded(true);
   } else {
-    setIsIntegrationExpanded(false);
+   setIsIntegrationExpanded(false);
   }
  }, [pathname, isCollapsed]);
 
@@ -328,16 +329,16 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
     router.push('/support');
    }
   } else if (item.id === 'integration') {
-    e?.stopPropagation();
-    setIsIntegrationExpanded(!isIntegrationExpanded);
-    if (isCollapsed && e) {
-     const rect = e.currentTarget.getBoundingClientRect();
-     setIntegrationMenuPos({ top: rect.top, left: rect.right });
-    }
-    if (!isCollapsed && !isIntegrationExpanded && !pathname?.startsWith('/sms') && !pathname?.startsWith('/email')) {
-     router.push('/sms');
-    }
-   } else {
+   e?.stopPropagation();
+   setIsIntegrationExpanded(!isIntegrationExpanded);
+   if (isCollapsed && e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setIntegrationMenuPos({ top: rect.top, left: rect.right });
+   }
+   if (!isCollapsed && !isIntegrationExpanded && !pathname?.startsWith('/sms') && !pathname?.startsWith('/email')) {
+    router.push('/sms');
+   }
+  } else {
    setIsSettingsExpanded(false);
    setIsSupportExpanded(false);
    setIsIntegrationExpanded(false);
@@ -405,17 +406,20 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
     className={`dark:bg-gray-900 ${isCollapsed ? 'w-[70px]' : 'w-64'} border-r dark:border-gray-700 ${isMobileOpen ? 'flex' : 'hidden'} md:flex flex-col relative h-full transition-all duration-300 ${className}`}
     style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
    >
-    <div className="flex-1 py-4 px-2 overflow-y-auto overflow-x-hidden">
-     <div className={`mb-6 flex items-center ${isCollapsed ? 'justify-center' : 'px-4 gap-2'}`}>
-      {headerLogo ? (
-       <div className="relative h-8 w-auto min-w-[32px] rounded-[var(--radius)] overflow-hidden">
-        <Image src={headerLogo} alt="Logo" height={32} width={100} className="h-8 w-auto object-contain" unoptimized priority />
-       </div>
-      ) : <Icon name="outcessHalf" size="lg" className="dark:inline-block" />}
-      {!isCollapsed && <span className="font-semibold text-[18px] md:text-[20px] leading-7 flex items-center text-[#050711]" style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>{headerName}</span>}
-     </div>
+    {/* Fixed Logo Header at the Top */}
+    <div className={`h-[70px] px-4 flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'} border-b dark:border-gray-800 shrink-0`} style={{ borderColor: 'var(--light-gray)' }}>
+     {headerLogo ? (
+      <div className="relative h-8 w-auto min-w-[32px] rounded-[var(--radius)] overflow-hidden">
+       <Image src={headerLogo} alt="Logo" height={32} width={100} className="h-8 w-auto object-contain" unoptimized priority />
+      </div>
+     ) : <Icon name="outcessHalf" size="lg" className="dark:inline-block" />}
+     {!isCollapsed && <span className="font-semibold text-[18px] md:text-[20px] leading-7 flex items-center text-[#050711] truncate" style={{ color: 'var(--text-primary)', ...plusJakartaStyle }}>{headerName}</span>}
+    </div>
 
-     <div className="space-y-2">
+    {/* Scrollable Nav Items */}
+    <div className="flex-1 py-4 px-2 overflow-y-auto overflow-x-hidden">
+
+     <div className="space-y-1.5">
       {visibleNavItems.map((item) => {
        const isActive = activeItem === item.id;
        const isSettings = item.id === 'settings';
@@ -426,7 +430,7 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
        const itemContent = (
         <button
          onClick={(e) => handleItemClick(item, e)}
-         className={`cursor-pointer w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 transition-all duration-200 rounded-[var(--radius)] ${isActive || isExpanded ? (isDarkMode ? 'text-black' : 'text-white') : 'dark:text-gray-300 hover:text-white'} hover-bg-custom`}
+         className={`cursor-pointer w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-2 transition-all duration-200 rounded-[var(--radius)] ${isActive || isExpanded ? (isDarkMode ? 'text-black' : 'text-white') : 'dark:text-gray-300 hover:text-white'} hover-bg-custom`}
          style={{
           backgroundColor: (isActive || isExpanded) ? 'var(--primary)' : 'transparent',
           color: (isActive || isExpanded) ? (isDarkMode ? '#000000' : 'white') : 'var(--text-secondary)',
