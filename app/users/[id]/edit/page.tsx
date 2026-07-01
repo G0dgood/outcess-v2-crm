@@ -41,7 +41,7 @@ const EditUserPage: React.FC = () => {
 	const { data: userResponse, isLoading: isUserLoading } = useGetTeamMemberByIdQuery(userId);
 
 	const userDataObj = userResponse?.teamMember || userResponse?.data || userResponse;
-	const userCampaignId = (userDataObj as any)?.campaignId || '';
+	const userCampaignId = (userDataObj as { campaignId?: string })?.campaignId || '';
 	const queryCampaignId = userCampaignId || selectedCampaignId || '';
 
 	const { data: rolesData } = useGetRolesByCampaignIdQuery(queryCampaignId, {
