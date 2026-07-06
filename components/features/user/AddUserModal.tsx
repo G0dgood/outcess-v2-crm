@@ -284,6 +284,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 
 					<Dropdown
 						label="Role"
+						redirect="settings?tab=roles"
 						placeholder="Select Role"
 						options={roleOptions}
 						value={formData.role}

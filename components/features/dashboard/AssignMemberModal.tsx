@@ -183,7 +183,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 								<SVGLoaderFetch asTable={false} text="Loading members..." />
 							) : filteredMembers.length === 0 ? (
 								<div className="p-4 text-center">
-									<NoRecordFound asTable={false} />
+									<NoRecordFound asTable={false} redirect='users' />
 								</div>
 							) : (
 								<div className="divide-y dark:divide-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
