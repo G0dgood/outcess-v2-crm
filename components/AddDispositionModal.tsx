@@ -8,6 +8,8 @@ import Icon from '@/components/ui/Icon';
 import ColorPicker from '@/components/ui/ColorPicker';
 import { PlusIcon } from '@radix-ui/react-icons';
 
+import { NestedOption } from '@/types/dashboard';
+
 interface AddDispositionModalProps {
 	isOpen: boolean;
 	onClose: () => void;
@@ -16,6 +18,7 @@ interface AddDispositionModalProps {
 		fieldType: string;
 		fieldLabel: string;
 		dropdownOptions: string[];
+		nestedOptions?: NestedOption[];
 		sortOrder: string;
 		isRequired: boolean;
 		color: string;
@@ -24,6 +27,7 @@ interface AddDispositionModalProps {
 		fieldType: string;
 		fieldLabel: string;
 		dropdownOptions: string[];
+		nestedOptions: NestedOption[];
 		sortOrder: string;
 		isRequired: boolean;
 		color: string;
@@ -47,12 +51,174 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 }) => {
 	if (!isOpen) return null;
 
+	const addNestedOption = (targetParentId: string | null) => {
+		const newOption: NestedOption = {
+			id: `opt-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+			value: '',
+			subOptions: []
+		};
+
+		const addRecursively = (list: NestedOption[]): NestedOption[] => {
+			if (!targetParentId) {
+				return [...list, newOption];
+			}
+			return list.map(opt => {
+				if (opt.id === targetParentId) {
+					return {
+						...opt,
+						subOptions: [...(opt.subOptions || []), newOption]
+					};
+				} else if (opt.subOptions && opt.subOptions.length > 0) {
+					return {
+						...opt,
+						subOptions: addRecursively(opt.subOptions)
+					};
+				}
+				return opt;
+			});
+		};
+
+		setDispositionForm(prev => ({
+			...prev,
+			nestedOptions: addRecursively(prev.nestedOptions || [])
+		}));
+	};
+
+	const updateNestedOption = (id: string, value: string) => {
+		const updateRecursively = (list: NestedOption[]): NestedOption[] => {
+			return list.map(opt => {
+				if (opt.id === id) {
+					return { ...opt, value };
+				} else if (opt.subOptions && opt.subOptions.length > 0) {
+					return {
+						...opt,
+						subOptions: updateRecursively(opt.subOptions)
+					};
+				}
+				return opt;
+			});
+		};
+
+		setDispositionForm(prev => ({
+			...prev,
+			nestedOptions: updateRecursively(prev.nestedOptions || [])
+		}));
+	};
+
+	const updateNestedOptionSubLabel = (id: string, subLabel: string) => {
+		const updateRecursively = (list: NestedOption[]): NestedOption[] => {
+			return list.map(opt => {
+				if (opt.id === id) {
+					return { ...opt, subLabel };
+				} else if (opt.subOptions && opt.subOptions.length > 0) {
+					return {
+						...opt,
+						subOptions: updateRecursively(opt.subOptions)
+					};
+				}
+				return opt;
+			});
+		};
+
+		setDispositionForm(prev => ({
+			...prev,
+			nestedOptions: updateRecursively(prev.nestedOptions || [])
+		}));
+	};
+
+	const deleteNestedOption = (id: string) => {
+		const deleteRecursively = (list: NestedOption[]): NestedOption[] => {
+			return list
+				.filter(opt => opt.id !== id)
+				.map(opt => {
+					if (opt.subOptions && opt.subOptions.length > 0) {
+						return {
+							...opt,
+							subOptions: deleteRecursively(opt.subOptions)
+						};
+					}
+					return opt;
+				});
+		};
+
+		setDispositionForm(prev => ({
+			...prev,
+			nestedOptions: deleteRecursively(prev.nestedOptions || [])
+		}));
+	};
+
+	const renderOptionNode = (opt: NestedOption, depth: number = 0) => {
+		return (
+			<div key={opt.id} className="mt-3" style={{ paddingLeft: depth > 0 ? '1.5rem' : '0', borderLeft: depth > 0 ? '2px dashed var(--light-gray)' : 'none' }}>
+				<div className="flex items-center gap-2">
+					<Input
+						label=""
+						placeholder={`Option (Level ${depth + 1})`}
+						value={opt.value}
+						onChange={(val) => updateNestedOption(opt.id, val)}
+						className="flex-1"
+					/>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => addNestedOption(opt.id)}
+						className="h-9 px-3 py-1 flex items-center gap-1 border-gray-300 hover:bg-gray-50 text-gray-700"
+						title="Add sub-option"
+					>
+						<PlusIcon className="w-3.5 h-3.5" />
+						<span className="text-[10px] md:text-[11px]">Sub</span>
+					</Button>
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={() => deleteNestedOption(opt.id)}
+						className="dark:text-red-400 dark:hover:text-red-300 p-2 h-auto rounded-full"
+						style={{ color: '#DC2626' }}
+						title="Remove Option"
+					>
+						<Icon name="Trash_light" size="sm" />
+					</Button>
+				</div>
+				{opt.subOptions && opt.subOptions.length > 0 && (
+					<div className="mt-2 pl-4 max-w-sm">
+						<Input
+							label=""
+							placeholder="Sub-dropdown Label (e.g. Second disposition)"
+							value={opt.subLabel || ''}
+							onChange={(val) => updateNestedOptionSubLabel(opt.id, val)}
+							className="text-[11px]"
+						/>
+					</div>
+				)}
+				{opt.subOptions && opt.subOptions.length > 0 && (
+					<div className="mt-1">
+						{opt.subOptions.map(subOpt => renderOptionNode(subOpt, depth + 1))}
+						<div className="mt-2" style={{ paddingLeft: `${(depth + 1) * 1.5}rem` }}>
+							<Button
+								variant="link"
+								size="sm"
+								onClick={() => addNestedOption(opt.id)}
+								className="dark:text-blue-400 font-inter text-[10px] md:text-[11px] hover:underline flex items-center gap-1 p-0 h-auto"
+								style={{ color: '#2563EB' }}
+								type="button"
+							>
+								<PlusIcon className="w-3.5 h-3.5" style={{ color: '#2563EB' }} />
+								{`Add Option to "${opt.value || 'this level'}"`}
+							</Button>
+						</div>
+					</div>
+				)}
+			</div>
+		);
+	};
+
 	const defaultFieldTypeOptions = [
 		{ value: 'single-radio', label: 'SingleRadio' },
 		{ value: 'radio-group', label: 'RadioGroup' },
 		{ value: 'single-checkbox', label: 'Checkbox' },
 		{ value: 'multiple-checkbox', label: 'MultipleCheckbox' },
 		{ value: 'dropdown', label: 'Dropdown' },
+		{ value: 'multi-dropdown', label: 'Multi Dropdown' },
 		{ value: 'number', label: 'Number' },
 		{ value: 'phone', label: 'Phone' },
 		{ value: 'email', label: 'Email' },
@@ -188,6 +354,49 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 									/>
 									Add Option
 								</Button>
+							</div>
+						</div>
+					)}
+
+					{dispositionForm.fieldType === 'multi-dropdown' && (
+						<div>
+							<label
+								className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 mb-2 block"
+								style={{ color: 'var(--text-primary)' }}
+							>
+								Cascading Dropdown Structure (Nested Options)
+							</label>
+							<div className="space-y-3 p-4 border border-dashed border-gray-200 dark:border-gray-700 rounded-[var(--radius)] bg-gray-50/50 dark:bg-gray-900/10">
+								{(dispositionForm.nestedOptions || []).map(opt => renderOptionNode(opt, 0))}
+								
+								{(!dispositionForm.nestedOptions || dispositionForm.nestedOptions.length === 0) && (
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => addNestedOption(null)}
+										className="w-full flex items-center justify-center gap-1 py-4 border-dashed border-2 hover:bg-gray-100/50 border-gray-300"
+										type="button"
+									>
+										<PlusIcon className="w-4 h-4 text-gray-500" />
+										<span className="text-[12px] font-medium text-gray-600">Add Cascading Dropdown Option</span>
+									</Button>
+								)}
+
+								{dispositionForm.nestedOptions && dispositionForm.nestedOptions.length > 0 && (
+									<div className="mt-3">
+										<Button
+											variant="link"
+											size="sm"
+											onClick={() => addNestedOption(null)}
+											className="dark:text-blue-400 font-inter text-[10px] md:text-[12px] hover:underline flex items-center gap-1 p-0 h-auto"
+											style={{ color: '#2563EB' }}
+											type="button"
+										>
+											<PlusIcon className="w-4 h-4" style={{ color: '#2563EB' }} />
+											Add Root Option
+										</Button>
+									</div>
+								)}
 							</div>
 						</div>
 					)}

@@ -7,6 +7,7 @@ import AddDispositionModal from './AddDispositionModal';
 import AddBucketModal from './AddBucketModal';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
 import { useSetup, Bucket, DispositionCategory } from '@/contexts/SetupContext';
+import { NestedOption } from '@/types/dashboard';
 import {
 	ArchiveIcon,
 	PlusIcon,
@@ -85,6 +86,7 @@ export default function CallDisposition() {
 		fieldType: 'dropdown',
 		fieldLabel: '',
 		dropdownOptions: [''],
+		nestedOptions: [] as NestedOption[],
 		sortOrder: 'entered',
 		isRequired: false,
 		color: '#050711'
@@ -191,6 +193,7 @@ export default function CallDisposition() {
 		{ value: 'number', label: 'Number' },
 		{ value: 'date', label: 'Date' },
 		{ value: 'dropdown', label: 'Dropdown' },
+		{ value: 'multi-dropdown', label: 'Multi Dropdown' },
 		{ value: 'single-radio', label: 'Single Radio' },
 		{ value: 'radio-group', label: 'Radio Group' },
 		{ value: 'single-checkbox', label: 'Checkbox' },
@@ -273,13 +276,13 @@ export default function CallDisposition() {
 	// Disposition Actions
 	const handleAddDisposition = () => {
 		if (!activeBucketId) return;
-		setDispositionForm({ fieldType: 'dropdown', fieldLabel: '', dropdownOptions: [''], sortOrder: 'entered', isRequired: false, color: '#EF4444' });
+		setDispositionForm({ fieldType: 'dropdown', fieldLabel: '', dropdownOptions: [''], nestedOptions: [], sortOrder: 'entered', isRequired: false, color: '#EF4444' });
 		setIsAddDispositionModalOpen(true);
 	};
 
 	const handleEditDisposition = (d: DispositionCategory) => {
 		setEditingDisposition(d);
-		setDispositionForm({ fieldType: d.fieldType, fieldLabel: d.name, dropdownOptions: d.dropdownOptions || [''], sortOrder: d.sortOrder || 'entered', isRequired: d.isRequired || false, color: d.color });
+		setDispositionForm({ fieldType: d.fieldType, fieldLabel: d.name, dropdownOptions: d.dropdownOptions || [''], nestedOptions: d.nestedOptions || [], sortOrder: d.sortOrder || 'entered', isRequired: d.isRequired || false, color: d.color });
 		setIsEditDispositionModalOpen(true);
 	};
 
@@ -316,6 +319,7 @@ export default function CallDisposition() {
 				color: dispositionForm.color,
 				fieldType: dispositionForm.fieldType,
 				dropdownOptions: dispositionForm.dropdownOptions,
+				nestedOptions: dispositionForm.nestedOptions,
 				sortOrder: dispositionForm.sortOrder,
 				isRequired: dispositionForm.isRequired
 			});
@@ -327,6 +331,7 @@ export default function CallDisposition() {
 				color: dispositionForm.color,
 				fieldType: dispositionForm.fieldType,
 				dropdownOptions: dispositionForm.dropdownOptions,
+				nestedOptions: dispositionForm.nestedOptions,
 				sortOrder: dispositionForm.sortOrder,
 				isRequired: dispositionForm.isRequired
 			});

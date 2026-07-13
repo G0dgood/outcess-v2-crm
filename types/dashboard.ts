@@ -1,9 +1,17 @@
+export interface NestedOption {
+  id: string;
+  value: string;
+  subLabel?: string;
+  subOptions?: NestedOption[];
+}
+
 export interface DispositionCategory {
   id: string;
   name: string;
   color: string;
   fieldType: string;
   dropdownOptions?: string[];
+  nestedOptions?: NestedOption[];
   sortOrder?: string;
   isRequired?: boolean;
 }

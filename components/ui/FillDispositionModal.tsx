@@ -18,7 +18,7 @@ import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useCreateDispositionMutation } from '@/store/services/dispositionApi';
-import { DispositionCategory, Bucket } from '@/types/dashboard';
+import { DispositionCategory, Bucket, NestedOption } from '@/types/dashboard';
 
 interface FillDispositionModalProps {
 	isOpen: boolean;
@@ -299,6 +299,53 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 		}
 	};
 
+	const renderCascadingDropdowns = (field: DispositionCategory) => {
+		const key = toCamelCase(field.name);
+		const currentVal = formData[key] || '';
+		const selectedPath = currentVal ? currentVal.split(' > ') : [];
+
+		const dropdownsToRender: React.ReactNode[] = [];
+		let currentLevelOptions: NestedOption[] = field.nestedOptions || [];
+		let level = 0;
+		let currentSubLabel = '';
+
+		while (true) {
+			const currentLevelVal = selectedPath[level] || '';
+			const options = currentLevelOptions.map(opt => ({ value: opt.value, label: opt.value }));
+			const currentLevel = level;
+
+			dropdownsToRender.push(
+				<Dropdown
+					key={`${field.id}-level-${level}`}
+					label={level === 0 ? field.name : (currentSubLabel || `Sub-option for "${selectedPath[level - 1]}"`)}
+					placeholder="Select option"
+					options={options}
+					value={currentLevelVal}
+					onChange={(val) => {
+						const stringVal = Array.isArray(val) ? val[0] : val;
+						const newPath = [...selectedPath.slice(0, currentLevel), stringVal].filter(Boolean);
+						handleInputChange(key)(newPath.join(' > '));
+					}}
+				/>
+			);
+
+			const selectedOpt = currentLevelOptions.find(opt => opt.value === currentLevelVal);
+			if (selectedOpt && selectedOpt.subOptions && selectedOpt.subOptions.length > 0) {
+				currentSubLabel = selectedOpt.subLabel || '';
+				currentLevelOptions = selectedOpt.subOptions;
+				level++;
+			} else {
+				break;
+			}
+		}
+
+		return (
+			<div key={field.id} className="col-span-1 md:col-span-2 border border-dashed border-gray-200 dark:border-gray-700 p-4 rounded-lg bg-gray-50/50 dark:bg-gray-900/10 space-y-4">
+				{dropdownsToRender}
+			</div>
+		);
+	};
+
 	if (!isOpen) return null;
 
 	const renderField = (field: DispositionCategory) => {
@@ -316,6 +363,9 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 						onChange={(value) => handleInputChange(key)(Array.isArray(value) ? value.join(',') : value)}
 					/>
 				);
+
+			case 'multi-dropdown':
+				return renderCascadingDropdowns(field);
 
 			case 'radio-select':
 			case 'radio-group':
