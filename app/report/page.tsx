@@ -14,8 +14,6 @@ import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useGetDispositionsByCampaignReportQuery, useGetDispositionsByAgentReportQuery } from '@/store/services/dispositionApi';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
-import NewTicketModal from '@/components/features/support/NewTicketModal';
-import { getPrefillDataFromDisposition } from '@/utils/dispositionPrefill';
 
 interface ReportData {
 	id: string;
@@ -76,12 +74,6 @@ const ReportPage: React.FC = () => {
 	const isAgent = !isAdmin;
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
-	const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
-	const [ticketPrefillData, setTicketPrefillData] = useState<{
-		title?: string;
-		description?: string;
-		priority?: 'Low' | 'Medium' | 'High';
-	} | undefined>(undefined);
 
 
 
@@ -130,7 +122,7 @@ const ReportPage: React.FC = () => {
 		if (rawItem) {
 			const customerName = rawItem.customer?.Name || rawItem.customerName || (rawItem.customer ? `${rawItem.customer.firstName || ''} ${rawItem.customer.lastName || ''}`.trim() : '');
 			const agentName = typeof rawItem.agent === 'object' ? rawItem.agent?.name : rawItem.agent;
-			
+
 			const fillDispositionMapped = Array.isArray(rawItem.fillDisposition)
 				? rawItem.fillDisposition.map(field => ({
 					fieldId: '',
@@ -385,11 +377,6 @@ const ReportPage: React.FC = () => {
 												{header}
 											</th>
 										))}
-										<th
-											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider whitespace-nowrap"
-										>
-											Action
-										</th>
 									</>
 								) : (
 									<th
@@ -407,9 +394,9 @@ const ReportPage: React.FC = () => {
 							}}
 						>
 							{isLoading ? (
-								<SVGLoaderFetch colSpan={dynamicHeaders.length > 0 ? dynamicHeaders.length + 1 : 1} text={'Loading report data...'} />
+								<SVGLoaderFetch colSpan={dynamicHeaders.length > 0 ? dynamicHeaders.length : 1} text={'Loading report data...'} />
 							) : paginatedReports.length === 0 ? (
-								<NoRecordFound colSpan={dynamicHeaders.length > 0 ? dynamicHeaders.length + 1 : 1} />
+								<NoRecordFound colSpan={dynamicHeaders.length > 0 ? dynamicHeaders.length : 1} />
 							) :
 								(paginatedReports?.map((report) => (
 									<tr
@@ -438,24 +425,6 @@ const ReportPage: React.FC = () => {
 												)}
 											</td>
 										))}
-										<td className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px]">
-											<Button
-												variant="link"
-												size="sm"
-												onClick={() => handleCreateTicketFromReportRow(report.id)}
-												className="dark:text-gray-300 dark:hover:text-gray-200 hover:underline transition-colors font-medium p-0 h-auto"
-												style={{ color: '#F97316' }}
-												onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-													e.currentTarget.style.color = '#EA580C';
-												}}
-												onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-													e.currentTarget.style.color = '#F97316';
-												}}
-												title="Create Ticket from Disposition"
-											>
-												Create Ticket
-											</Button>
-										</td>
 									</tr>
 								))
 								)}
@@ -476,16 +445,6 @@ const ReportPage: React.FC = () => {
 					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
-
-			{/* New Ticket Modal */}
-			<NewTicketModal
-				isOpen={isNewTicketModalOpen}
-				onClose={() => {
-					setIsNewTicketModalOpen(false);
-					setTicketPrefillData(undefined);
-				}}
-				prefillData={ticketPrefillData}
-			/>
 		</div>
 	);
 };

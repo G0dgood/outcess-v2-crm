@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import { Button } from './Button';
 
 interface DropdownOption {
 	value: string;
@@ -249,9 +250,9 @@ export const Dropdown: React.FC<DropdownProps> = ({
 										<p className="dropdown-empty-title">No options available</p>
 										<div>
 											{redirect && (
-												<button className="text-xs bg-black text-white! px-3 py-3 rounded" onClick={handleOptionClick}>
-													click here to add a new option
-												</button>
+												<Button variant="primary" size="sm" onClick={handleOptionClick}>
+													click to add a new option
+												</Button>
 											)}
 										</div>
 									</div>

@@ -2,6 +2,7 @@
 import { FaceIcon } from '@radix-ui/react-icons';
 import { SVGLoader } from './SVGLoader';
 import { useRouter } from 'next/navigation';
+import { Button } from './ui/Button';
 
 const timeZoneOptions = [
 	{ value: 'UTC-12', label: 'UTC-12 (Baker Island)' },
@@ -78,9 +79,11 @@ const NoRecordFound = ({ colSpan, asTable = true, redirect }: { colSpan?: number
 				No record found
 			</p>
 			{redirect && (
-				<button onClick={() => router.push(`/${redirect}`)} className="bg-black text-white text-base px-3 py-1 rounded-md mt-4">
-					Add some
-				</button>
+				<div className="mt-4">
+					<Button variant="primary" size="sm" onClick={() => router.push(`/${redirect}`)}>
+						Add
+					</Button>
+				</div>
 			)}
 		</div>
 	);
