@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import AccessRestricted from '@/components/ui/AccessRestricted';
 import { ALL_MY_BUCKETS, getUserAssignedBuckets, BucketWithMembers } from '@/utils/bucketUtils';
 import { CustomerField } from '@/types/dashboard';
 
@@ -334,7 +335,7 @@ const SetupBookPage: React.FC = () => {
 	}, [isDrawerOpen]);
 
 	if (!canAccessModule) {
-		return null;
+		return <AccessRestricted />;
 	}
 
 	if (!hasFullBucketAccess && accessibleBuckets.length === 0) {

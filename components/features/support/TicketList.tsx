@@ -119,7 +119,8 @@ const TicketList: React.FC<TicketListProps> = ({
 	}
 
 	return (
-		<div className="flex flex-col border overflow-visible dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm rounded-[var(--radius)] overflow-hidden">
+		<div className="w-full overflow-x-auto scrollbar-thin">
+			<div className="flex flex-col border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm rounded-[var(--radius)] overflow-hidden md:min-w-[950px]">
 			{/* Grid Header */}
 			<div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b dark:border-gray-700">
 				<div className="col-span-4 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
@@ -242,6 +243,7 @@ const TicketList: React.FC<TicketListProps> = ({
 				ticket={assigningTicket as SupportTicket}
 				campaignData={campaignData}
 			/>
+			</div>
 		</div>
 	);
 };

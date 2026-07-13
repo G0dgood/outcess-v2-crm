@@ -1808,13 +1808,13 @@ main {
 }
 
 .dark .header-dropdown-trigger:hover {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  border-color: #ffffff !important;
+  background-color: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--light-gray) !important;
 }
 
 .dark .header-dropdown-trigger:hover * {
-  color: #000000 !important;
+  color: var(--text-primary) !important;
 }
 
 button {

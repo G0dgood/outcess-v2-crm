@@ -18,6 +18,7 @@ import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { toast } from 'sonner';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useSocket } from '@/contexts/SocketContext';
+import AccessRestricted from '@/components/ui/AccessRestricted';
 import SelectedUsersDrawerContent from './SelectedUsersDrawerContent';
 import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
 import LoginStatusInfoBanner from '@/components/ui/LoginStatusInfoBanner';
@@ -88,12 +89,13 @@ const UsersPage: React.FC = () => {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const campaignId = campaignData?._id || '';
+	const { canAccess } = usePrivilege();
+	const canAccessModule = canAccess('teamMembers', 'view');
 	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersByCampaignIdQuery(
 		{ campaignId, page: currentPage, limit: itemsPerPage },
-		{ skip: !campaignId }
+		{ skip: !campaignId || !canAccessModule }
 	);
 	const [deleteTeamMember] = useDeleteTeamMemberMutation();
-	const { canAccess } = usePrivilege();
 	const { socket } = useSocket();
 	const canCreate = canAccess('teamMembers', 'create');
 	const canEdit = canAccess('teamMembers', 'edit');
@@ -324,6 +326,10 @@ const UsersPage: React.FC = () => {
 
 
 
+
+	if (!canAccessModule) {
+		return <AccessRestricted />;
+	}
 
 	return (
 		<div>

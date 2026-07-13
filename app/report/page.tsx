@@ -11,6 +11,7 @@ import PageHeading from '@/components/ui/PageHeading';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import AccessRestricted from '@/components/ui/AccessRestricted';
 import { useGetDispositionsByCampaignReportQuery, useGetDispositionsByAgentReportQuery } from '@/store/services/dispositionApi';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
@@ -246,7 +247,7 @@ const ReportPage: React.FC = () => {
 	const paginatedReports = reportData;
 
 	if (!canView) {
-		return null;
+		return <AccessRestricted />;
 	}
 
 	return (

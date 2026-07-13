@@ -180,7 +180,7 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 						onChange={(val) => updateNestedOption(opt.id, val)}
 						className="flex-1"
 					/>
-					{depth > 0 && (
+					{depth === 0 && (
 						<div className="flex items-center gap-1 shrink-0 bg-gray-50 dark:bg-gray-800 px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 h-9">
 							<Toggle
 								checked={!!opt.autoSelect}

@@ -11,6 +11,7 @@ import { toastSuccess } from '@/utils/toastWithSound';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
+import AccessRestricted from '@/components/ui/AccessRestricted';
 import {
 	useCreateTeamMemberMutation,
 	useUpdateTeamMemberMutation,
@@ -399,7 +400,7 @@ const TeamMembersPage: React.FC = () => {
 	}, [currentPage, totalPages]);
 
 	if (!canAccessModule) {
-		return null;
+		return <AccessRestricted />;
 	}
 
 	return (

@@ -186,17 +186,18 @@ const CustomerBookPage: React.FC = () => {
 								buttonColor={campaignData?.primaryColor}
 							/>
 						)}
-						<div className="flex   items-center justify-end sm:justify-start gap-2 sm:gap-3 whitespace-nowrap">
-							<Button
-								variant="muted-sage-green-outline"
-								size="md"
-								onClick={handleAddCustomer}
-								className="px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
-								disabled={!canCreate}
-							>
-								Add Customer
-							</Button>
-						</div>
+						{canCreate && (
+							<div className="flex   items-center justify-end sm:justify-start gap-2 sm:gap-3 whitespace-nowrap">
+								<Button
+									variant="muted-sage-green-outline"
+									size="md"
+									onClick={handleAddCustomer}
+									className="px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+								>
+									Add Customer
+								</Button>
+							</div>
+						)}
 					</div>
 					<div
 						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
