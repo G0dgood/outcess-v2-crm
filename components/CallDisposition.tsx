@@ -21,6 +21,24 @@ import AssignMemberModal from '@/components/features/dashboard/AssignMemberModal
 import { toast } from 'sonner';
 import Icon from '@/components/ui/Icon';
 import {
+	DndContext,
+	closestCenter,
+	KeyboardSensor,
+	PointerSensor,
+	useSensor,
+	useSensors,
+	DragEndEvent
+} from '@dnd-kit/core';
+import {
+	arrayMove,
+	SortableContext,
+	sortableKeyboardCoordinates,
+	rectSortingStrategy,
+	useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical } from 'lucide-react';
+import {
 	useAssignMemberToBucketMutation,
 	useRemoveMemberFromBucketMutation
 } from '@/store/services/campaignApi';
@@ -43,6 +61,73 @@ type ChartComponentType = React.ComponentType<{
 	data: ChartData<keyof ChartTypeRegistry>;
 	options: ChartOptions<keyof ChartTypeRegistry>;
 }>;
+
+interface SortableDispositionCardProps {
+	d: DispositionCategory;
+	handleEditDisposition: (d: DispositionCategory) => void;
+	handleDeleteDispositionClick: (d: DispositionCategory) => void;
+}
+
+const SortableDispositionCard = ({ d, handleEditDisposition, handleDeleteDispositionClick }: SortableDispositionCardProps) => {
+	const {
+		attributes,
+		listeners,
+		setNodeRef,
+		transform,
+		transition,
+		isDragging,
+	} = useSortable({ id: d.id });
+
+	const style: React.CSSProperties = {
+		transform: CSS.Transform.toString(transform),
+		transition,
+		zIndex: isDragging ? 20 : 'auto',
+		position: isDragging ? 'relative' : undefined,
+		opacity: isDragging ? 0.6 : 1,
+	};
+
+	return (
+		<div
+			ref={setNodeRef}
+			style={style}
+			className="p-4 border dark:border-gray-700 rounded-[var(--radius)] hover:shadow-sm transition-all bg-white dark:bg-gray-900/50 group flex flex-col justify-between"
+		>
+			<div>
+				<div className="flex items-center justify-between mb-3">
+					<div className="flex items-center gap-2 min-w-0">
+						<button
+							type="button"
+							className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded transition-colors mr-1 shrink-0"
+							{...attributes}
+							{...listeners}
+							title="Drag to reorder"
+						>
+							<GripVertical size={14} className="text-gray-400" />
+						</button>
+						<div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: d.color }} />
+						<span className="text-[12px] font-medium text-gray-700 dark:text-gray-200 truncate">{d.name}</span>
+					</div>
+					<div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+						<button onClick={() => handleEditDisposition(d)} className="p-1 hover:text-primary text-gray-400">
+							<Pencil1Icon className="w-3.5 h-3.5" />
+						</button>
+						<button onClick={() => handleDeleteDispositionClick(d)} className="p-1 hover:text-red-500 text-gray-400">
+							<TrashIcon className="w-3.5 h-3.5" />
+						</button>
+					</div>
+				</div>
+				<div className="flex items-center gap-3 mt-auto">
+					<span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 uppercase font-semibold">
+						{d.fieldType}
+					</span>
+					{d.isRequired && (
+						<span className="text-[10px] text-red-500 font-medium">* Required</span>
+					)}
+				</div>
+			</div>
+		</div>
+	);
+};
 
 export default function CallDisposition() {
 	const {
@@ -107,6 +192,30 @@ export default function CallDisposition() {
 		[buckets, activeBucketId]);
 
 	const dispositions = activeBucket?.dispositions || [];
+
+	const sensors = useSensors(
+		useSensor(PointerSensor),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		})
+	);
+
+	const handleDragEnd = (event: DragEndEvent) => {
+		const { active, over } = event;
+
+		if (over && active.id !== over.id && activeBucketId) {
+			const oldIndex = dispositions.findIndex((d) => d.id === active.id);
+			const newIndex = dispositions.findIndex((d) => d.id === over.id);
+
+			const reordered = arrayMove(dispositions, oldIndex, newIndex);
+
+			updateDashboardSettings({
+				buckets: buckets.map(b =>
+					b.id === activeBucketId ? { ...b, dispositions: reordered } : b
+				)
+			});
+		}
+	};
 
 	useEffect(() => {
 		const chartType = dispositionSettings.chartType || 'pie';
@@ -531,38 +640,27 @@ export default function CallDisposition() {
 
 						<div className="p-6 overflow-y-auto">
 							{dispositions.length > 0 ? (
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-									{dispositions.map(d => (
-										<div
-											key={d.id}
-											className="p-4 border dark:border-gray-700 rounded-[var(--radius)] hover:shadow-sm transition-all bg-white dark:bg-gray-900/50 group"
-											style={{ borderColor: 'var(--light-gray)' }}
-										>
-											<div className="flex items-center justify-between mb-3">
-												<div className="flex items-center gap-2">
-													<div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: d.color }} />
-													<span className="text-[12px] font-medium text-gray-700 dark:text-gray-200">{d.name}</span>
-												</div>
-												<div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-													<button onClick={() => handleEditDisposition(d)} className="p-1 hover:text-primary text-gray-400">
-														<Pencil1Icon className="w-3.5 h-3.5" />
-													</button>
-													<button onClick={() => handleDeleteDispositionClick(d)} className="p-1 hover:text-red-500 text-gray-400">
-														<TrashIcon className="w-3.5 h-3.5" />
-													</button>
-												</div>
-											</div>
-											<div className="flex items-center gap-3">
-												<span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 uppercase font-semibold">
-													{d.fieldType}
-												</span>
-												{d.isRequired && (
-													<span className="text-[10px] text-red-500 font-medium">* Required</span>
-												)}
-											</div>
+								<DndContext
+									sensors={sensors}
+									collisionDetection={closestCenter}
+									onDragEnd={handleDragEnd}
+								>
+									<SortableContext
+										items={dispositions.map(d => d.id)}
+										strategy={rectSortingStrategy}
+									>
+										<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+											{dispositions.map(d => (
+												<SortableDispositionCard
+													key={d.id}
+													d={d}
+													handleEditDisposition={handleEditDisposition}
+													handleDeleteDispositionClick={handleDeleteDispositionClick}
+												/>
+											))}
 										</div>
-									))}
-								</div>
+									</SortableContext>
+								</DndContext>
 							) : (
 								<EmptyState
 									icon={ArchiveIcon}

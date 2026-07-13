@@ -159,7 +159,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 			if (tokens.expiresIn) {
 				if (sessionTimeout) clearTimeout(sessionTimeout);
 				const timeout = setTimeout(() => {
-					console.log('Session expired, logging out...');
 					logout();
 				}, tokens.expiresIn * 1000);
 				setSessionTimeout(timeout);

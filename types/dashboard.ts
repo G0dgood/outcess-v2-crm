@@ -3,6 +3,7 @@ export interface NestedOption {
   value: string;
   subLabel?: string;
   subOptions?: NestedOption[];
+  autoSelect?: boolean;
 }
 
 export interface DispositionCategory {

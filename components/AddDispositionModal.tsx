@@ -9,6 +9,7 @@ import ColorPicker from '@/components/ui/ColorPicker';
 import { PlusIcon } from '@radix-ui/react-icons';
 
 import { NestedOption } from '@/types/dashboard';
+import { Toggle } from '@/components/ui/Toggle';
 
 interface AddDispositionModalProps {
 	isOpen: boolean;
@@ -105,6 +106,27 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 		}));
 	};
 
+	const updateNestedOptionAutoSelect = (id: string, autoSelect: boolean) => {
+		const updateRecursively = (list: NestedOption[]): NestedOption[] => {
+			return list.map(opt => {
+				if (opt.id === id) {
+					return { ...opt, autoSelect };
+				} else if (opt.subOptions && opt.subOptions.length > 0) {
+					return {
+						...opt,
+						subOptions: updateRecursively(opt.subOptions)
+					};
+				}
+				return opt;
+			});
+		};
+
+		setDispositionForm(prev => ({
+			...prev,
+			nestedOptions: updateRecursively(prev.nestedOptions || [])
+		}));
+	};
+
 	const updateNestedOptionSubLabel = (id: string, subLabel: string) => {
 		const updateRecursively = (list: NestedOption[]): NestedOption[] => {
 			return list.map(opt => {
@@ -158,6 +180,16 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 						onChange={(val) => updateNestedOption(opt.id, val)}
 						className="flex-1"
 					/>
+					{depth > 0 && (
+						<div className="flex items-center gap-1 shrink-0 bg-gray-50 dark:bg-gray-800 px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 h-9">
+							<Toggle
+								checked={!!opt.autoSelect}
+								onChange={(checked) => updateNestedOptionAutoSelect(opt.id, checked)}
+								size="sm"
+							/>
+							<span className="text-[10px] font-medium text-gray-500 select-none whitespace-nowrap">Auto-show</span>
+						</div>
+					)}
 					<Button
 						variant="outline"
 						size="sm"

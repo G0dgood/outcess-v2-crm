@@ -37,6 +37,7 @@ export interface OfflineDisposition {
 	updatedAt: string;
 	syncedAt?: string;
 	dispositionData: DispositionFieldEntry[];
+	fillDisposition?: DispositionFieldEntry[];
 }
 
 const STORAGE_KEY = 'offline_dispositions';
@@ -209,6 +210,7 @@ export interface SyncedDisposition {
 	agent?: string;
 	agentId?: string;
 	dispositionData: DispositionFieldEntry[];
+	fillDisposition?: DispositionFieldEntry[];
 }
 
 export const saveSyncedDisposition = (

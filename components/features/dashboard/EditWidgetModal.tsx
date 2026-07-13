@@ -234,8 +234,9 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			const syncedDispositions = getSyncedDispositions();
 			const allDispositions = [...offlineDispositions, ...syncedDispositions];
 			const count = allDispositions.filter(disp => {
-				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-					const field = disp.dispositionData.find((f: DispositionFieldEntry) => f.fieldName === disposition.name);
+				const fields = disp.dispositionData || disp.fillDisposition;
+				if (fields && Array.isArray(fields)) {
+					const field = fields.find((f: DispositionFieldEntry) => f.fieldName === disposition.name);
 					if (field) {
 						return field.fieldValue && field.fieldValue.toString().trim() !== '' && field.fieldValue !== '-';
 					}
@@ -254,8 +255,9 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			const syncedDispositions = getSyncedDispositions();
 			const allDispositions = [...offlineDispositions, ...syncedDispositions];
 			const count = allDispositions.filter(disp => {
-				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-					return disp.dispositionData.some(f =>
+				const fields = disp.dispositionData || disp.fillDisposition;
+				if (fields && Array.isArray(fields)) {
+					return fields.some(f =>
 						f.fieldValue && f.fieldValue.toString().toLowerCase() === outcome.name.toLowerCase()
 					);
 				}

@@ -145,16 +145,10 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
  const { isDarkMode } = useTheme();
 
  const headerLogo = campaignData?.logo;
-console.log("--- LOGO DEBUG START ---");
-console.log("Type of headerLogo:", typeof headerLogo);
-console.log("Is it an array?:", Array.isArray(headerLogo));
 
-// Put the label first, object second
-console.log("Raw object inspect:", headerLogo);
 
-// Put the label first, stringify second
-console.log("Stringified object:\n", JSON.stringify(headerLogo, null, 2));
-console.log("--- LOGO DEBUG END ---");
+
+
  const headerName = campaignData?.companyName || 'Outcess';
 
 

@@ -356,9 +356,10 @@ const DashboardContent: React.FC = () => {
 		// Calculate disposition field counts
 		const calculateDispositionFieldCount = (fieldName: string): number => {
 			return filteredDispositions.filter(disp => {
-				// Check dispositionData array
-				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-					const field = disp.dispositionData.find((f: DispositionFieldEntry) => f.fieldName === fieldName);
+				// Check dispositionData or fillDisposition array
+				const fields = disp.dispositionData || disp.fillDisposition;
+				if (fields && Array.isArray(fields)) {
+					const field = fields.find((f: DispositionFieldEntry) => f.fieldName === fieldName);
 					if (field) {
 						const value = field.fieldValue;
 						return value && value.toString().trim() !== '' && value !== '-';
@@ -477,8 +478,9 @@ const DashboardContent: React.FC = () => {
 
 			if (isCallOutcome) {
 				const count = filteredDispositions.filter(disp => {
-					if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-						return disp.dispositionData.some((f: DispositionFieldEntry) =>
+					const fields = disp.dispositionData || disp.fillDisposition;
+					if (fields && Array.isArray(fields)) {
+						return fields.some((f: DispositionFieldEntry) =>
 							f.fieldValue && f.fieldValue.toString().toLowerCase() === sourceKey.toLowerCase()
 						);
 					}

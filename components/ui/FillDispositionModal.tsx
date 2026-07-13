@@ -324,6 +324,19 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					onChange={(val) => {
 						const stringVal = Array.isArray(val) ? val[0] : val;
 						const newPath = [...selectedPath.slice(0, currentLevel), stringVal].filter(Boolean);
+						
+						// Cascade down autoSelect options
+						let activeOpt = currentLevelOptions.find(opt => opt.value === stringVal);
+						while (activeOpt && activeOpt.subOptions && activeOpt.subOptions.length > 0) {
+							const autoChild = activeOpt.subOptions.find(opt => opt.autoSelect);
+							if (autoChild) {
+								newPath.push(autoChild.value);
+								activeOpt = autoChild;
+							} else {
+								break;
+							}
+						}
+
 						handleInputChange(key)(newPath.join(' > '));
 					}}
 				/>

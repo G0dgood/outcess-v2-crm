@@ -238,9 +238,10 @@ const generateSingleSourceData = (
 			dispositionsToCount.forEach(disp => {
 				let value: string | undefined;
 
-				// Check dispositionData array
-				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-					const field = disp.dispositionData.find((f: DispositionFieldEntry) => f.fieldName === disposition.name);
+				// Check dispositionData or fillDisposition array
+				const fields = disp.dispositionData || disp.fillDisposition;
+				if (fields && Array.isArray(fields)) {
+					const field = fields.find((f: DispositionFieldEntry) => f.fieldName === disposition.name);
 					if (field) {
 						value = field.fieldValue?.toString().trim();
 					}
@@ -275,8 +276,9 @@ const generateSingleSourceData = (
 		if (outcome) {
 			// Count call outcomes (fieldValue matches outcome name)
 			const count = dispositionsToCount.filter(disp => {
-				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-					return disp.dispositionData.some((f: DispositionFieldEntry) =>
+				const fields = disp.dispositionData || disp.fillDisposition;
+				if (fields && Array.isArray(fields)) {
+					return fields.some((f: DispositionFieldEntry) =>
 						f.fieldValue && f.fieldValue.toString().toLowerCase() === outcome.name.toLowerCase()
 					);
 				}
