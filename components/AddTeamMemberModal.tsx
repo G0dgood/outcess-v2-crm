@@ -137,6 +137,7 @@ const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 						<Dropdown
 							label="Role"
+							redirect="settings?tab=roles"
 							placeholder="Select a role"
 							options={roles}
 							value={formData.role}
@@ -144,6 +145,7 @@ const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
 						/>
 						<Dropdown
 							label="Supervisor (Optional)"
+							redirect="settings?tab=supervisors"
 							placeholder="Select a supervisor"
 							options={supervisors}
 							value={formData.supervisorId}

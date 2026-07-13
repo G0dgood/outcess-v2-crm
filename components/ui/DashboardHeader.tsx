@@ -389,6 +389,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					{(isAdmin || canAccess('dashboard', 'edit')) && (
 						<Dropdown
 							label=""
+							redirect='setup'
 							value={selectedLOBData?._id || ''}
 							onChange={(value) => {
 								const stringValue = Array.isArray(value) ? value[0] : value;
