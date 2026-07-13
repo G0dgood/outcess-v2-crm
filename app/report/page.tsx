@@ -105,43 +105,7 @@ const ReportPage: React.FC = () => {
 	const apiData = (isAgent ? agentApiData : lobApiData) as ReportApiResponse | ReportItem[] | undefined;
 	const isLoading = isPrivilegeLoading || (isAgent ? isAgentLoading : isLobLoading);
 
-	const rawItems: ReportItem[] = useMemo(() => {
-		if (!apiData) return [];
-		let list: ReportItem[] = [];
 
-		if (Array.isArray(apiData)) {
-			list = apiData;
-		} else if ('data' in apiData && Array.isArray(apiData.data)) {
-			list = apiData.data;
-		}
-		return list;
-	}, [apiData]);
-
-	const handleCreateTicketFromReportRow = (id: string) => {
-		const rawItem = rawItems.find(item => (item._id || item.id) === id);
-		if (rawItem) {
-			const customerName = rawItem.customer?.Name || rawItem.customerName || (rawItem.customer ? `${rawItem.customer.firstName || ''} ${rawItem.customer.lastName || ''}`.trim() : '');
-			const agentName = typeof rawItem.agent === 'object' ? rawItem.agent?.name : rawItem.agent;
-
-			const fillDispositionMapped = Array.isArray(rawItem.fillDisposition)
-				? rawItem.fillDisposition.map(field => ({
-					fieldId: '',
-					fieldName: field.fieldName,
-					fieldValue: field.fieldValue as string | number | boolean | undefined,
-					fieldType: ''
-				}))
-				: undefined;
-
-			const prefill = getPrefillDataFromDisposition({
-				customerName,
-				agent: agentName,
-				timestamp: rawItem.timestamp,
-				fillDisposition: fillDispositionMapped
-			});
-			setTicketPrefillData(prefill);
-			setIsNewTicketModalOpen(true);
-		}
-	};
 
 	const filterButtonRef = useRef<HTMLDivElement>(null);
 	const [tooltipLength, setTooltipLength] = useState(10);
