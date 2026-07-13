@@ -57,10 +57,11 @@ export const notificationApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Notification'],
         }),
-        markAllNotificationsAsRead: builder.mutation<unknown, void>({
-            query: () => ({
+        markAllNotificationsAsRead: builder.mutation<unknown, { campaignId?: string; userId?: string; role?: string }>({
+            query: (params) => ({
                 url: 'api/v1/notifications/read-all',
                 method: 'PATCH',
+                params,
             }),
             invalidatesTags: ['Notification'],
         }),
