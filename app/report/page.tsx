@@ -158,10 +158,15 @@ const ReportPage: React.FC = () => {
 			const minute = d ? String(d.getMinutes()).padStart(2, '0') : '';
 			const formatted = d ? `${year}-${month}-${day} ${hour}:${minute}` : '-';
 			const agentName = typeof item.agent === 'object' ? item.agent?.name : item.agent;
+			const customerSearchId = item.customer 
+				? (Object.entries(item.customer).find(([key]) => key.toLowerCase() === 'searchid')?.[1] as string)
+				: undefined;
+
 			const row: ReportData = {
 				id: item._id || item.id || '',
 				'Agent Name': agentName || 'Unknown',
 				'Date': formatted,
+				'Search ID': customerSearchId || (item.customerId as string) || '-',
 			};
 
 			// Flatten customer fields
@@ -198,7 +203,7 @@ const ReportPage: React.FC = () => {
 		if (reportData.length === 0) return [];
 		const headers = new Set<string>();
 		// Default headers that should always be present
-		const priorityHeaders = ['Agent Name', 'Date'];
+		const priorityHeaders = ['Agent Name', 'Date', 'Search ID'];
 
 		// Add all keys from all items
 		reportData.forEach(item => {
@@ -275,9 +280,14 @@ const ReportPage: React.FC = () => {
 		const formatted = d ? `${year}-${month}-${day} ${hour}:${minute}` : '-';
 		const agentName = typeof item.agent === 'object' ? item.agent?.name : item.agent;
 
+		const customerSearchId = item.customer 
+			? (Object.entries(item.customer).find(([key]) => key.toLowerCase() === 'searchid')?.[1] as string)
+			: undefined;
+
 		const row: Record<string, unknown> = {
 			'Agent Name': agentName || 'Unknown',
 			'Date': formatted,
+			'Search ID': customerSearchId || (item.customerId as string) || '-',
 		};
 
 		// Flatten customer fields
