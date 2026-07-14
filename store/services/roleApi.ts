@@ -26,6 +26,7 @@ export interface Role {
   teamMemberCount?: number;
   createdAt?: string;
   updatedAt?: string;
+  allBucketAccess?: boolean;
 }
 
 export interface CreateRoleRequest {
@@ -34,6 +35,8 @@ export interface CreateRoleRequest {
   companyId: string;
   campaignId?: string;
   permissions: RolePermission[];
+  supervisorTitle?: string;
+  allBucketAccess?: boolean;
 }
 
 export interface CreateRoleResponse {
@@ -100,7 +103,7 @@ export const roleApi = baseApi.injectEndpoints({
     }),
     updateRole: builder.mutation<
       Role,
-      { id: string; roleData: Partial<CreateRoleRequest> }
+      { id: string; roleData: Partial<Role> }
     >({
       query: ({ id, roleData }) => ({
         url: `api/v1/roles/${id}`,

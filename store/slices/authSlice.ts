@@ -7,7 +7,7 @@ export interface User {
   email: string;
   name: string;
   avatar?: string;
-  role?: string | { roleName: string; permissions: unknown[] };
+  role?: string | { roleName: string; permissions: unknown[]; allBucketAccess?: boolean };
   isTeamMember?: boolean;
   companyId?: string;
   companyName?: string;

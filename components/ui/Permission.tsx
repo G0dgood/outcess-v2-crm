@@ -74,7 +74,6 @@ const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) =
 
 	const [updateRole] = useUpdateRoleMutation();
 	const [updatingRoleIds, setUpdatingRoleIds] = useState<string[]>([]);
-
 	const handleSaveRole = async (role: PermissionRole) => {
 		const roleId = role._id || role.id!;
 		if (updatingRoleIds.includes(roleId)) return;
@@ -86,7 +85,8 @@ const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) =
 				description: role?.description,
 				companyId: role?.companyId,
 				campaignId: role?.campaignId,
-				permissions: role?.permissions || []
+				permissions: role?.permissions || [],
+				allBucketAccess: role?.allBucketAccess
 			};
 			await updateRole({ id: roleId, roleData }).unwrap();
 			toastSuccess('Permissions updated successfully');
@@ -142,7 +142,9 @@ const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) =
 		const roleId = role._id || role.id;
 		const original = originalRolesPermissions.find(r => (r._id || r.id) === roleId);
 		if (!original) return false;
-		return !arePermissionsEqual(original.permissions || [], role.permissions || []);
+		const permissionsChanged = !arePermissionsEqual(original.permissions || [], role.permissions || []);
+		const allBucketAccessChanged = !!original.allBucketAccess !== !!role.allBucketAccess;
+		return permissionsChanged || allBucketAccessChanged;
 	};
 
 	const handleAccessToggle = (roleId: string, permissionId: string, value: boolean) => {
@@ -162,6 +164,19 @@ const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) =
 							}
 							: p
 					)
+				};
+			}
+			return role;
+		}));
+	};
+
+	const handleAllBucketAccessToggle = (roleId: string, value: boolean) => {
+		setRolesPermissions(prev => prev.map(role => {
+			const currentRoleId = role._id || role.id;
+			if (currentRoleId === roleId) {
+				return {
+					...role,
+					allBucketAccess: value
 				};
 			}
 			return role;
@@ -264,7 +279,12 @@ const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) =
 									</span>
 								</div>
 
-								<div className="flex items-center gap-4">
+								<div className="flex items-center gap-6">
+									<Toggle
+										label="Data Analyst (All Bucket Access)"
+										checked={!!role.allBucketAccess}
+										onChange={(checked) => handleAllBucketAccessToggle(roleId, checked)}
+									/>
 									{isRoleDirty(role) && (
 										<Button
 											onClick={() => {

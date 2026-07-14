@@ -1,20 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
-import { useCreateSupervisorRoleMutation } from '@/store/services/roleApi';
+import { useCreateSupervisorRoleMutation, useUpdateRoleMutation } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
 import { extractErrorMessage, ApiError } from '@/utils/apiError';
+
+interface SupervisorRole {
+  _id?: string;
+  id?: string;
+  roleName?: string;
+  description?: string;
+  supervisorTitle?: string;
+}
 
 interface CreateSupervisorRoleModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	campaignId?: string;
 	onSuccess?: () => void;
+	editingRole?: SupervisorRole | null;
 }
 
 const CreateSupervisorRoleModal: React.FC<CreateSupervisorRoleModalProps> = ({
@@ -22,13 +31,29 @@ const CreateSupervisorRoleModal: React.FC<CreateSupervisorRoleModalProps> = ({
 	onClose,
 	campaignId,
 	onSuccess,
+	editingRole = null,
 }) => {
 	const { user } = useUserInfo();
-	const [createSupervisorRole, { isLoading }] = useCreateSupervisorRoleMutation();
+	const [createSupervisorRole, { isLoading: isCreating }] = useCreateSupervisorRoleMutation();
+	const [updateRole, { isLoading: isUpdating }] = useUpdateRoleMutation();
+	const isLoading = isCreating || isUpdating;
 
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
 	const [titleError, setTitleError] = useState('');
+
+	useEffect(() => {
+		if (isOpen) {
+			if (editingRole) {
+				setTitle(editingRole.supervisorTitle || '');
+				setDescription(editingRole.description || '');
+			} else {
+				setTitle('');
+				setDescription('');
+			}
+			setTitleError('');
+		}
+	}, [isOpen, editingRole]);
 
 	const handleClose = () => {
 		setTitle('');
@@ -57,24 +82,34 @@ const CreateSupervisorRoleModal: React.FC<CreateSupervisorRoleModalProps> = ({
 		}
 
 		try {
-			await createSupervisorRole({
-				roleName: 'Supervisor',
-				supervisorTitle: trimmedTitle,
-				description: description.trim(),
-				isSupervisor: true,
-				companyId,
-				campaignId: campaignId || undefined,
-			}).unwrap();
-
-			toast.success('Supervisor role created successfully');
-			setTitle('');
-			setDescription('');
-			setTitleError('');
+			if (editingRole) {
+				const roleId = editingRole._id || editingRole.id;
+				if (!roleId) throw new Error('Role ID is missing');
+				await updateRole({
+					id: roleId,
+					roleData: {
+						supervisorTitle: trimmedTitle,
+						description: description.trim(),
+					}
+				}).unwrap();
+				toast.success('Supervisor role updated successfully');
+			} else {
+				await createSupervisorRole({
+					roleName: 'Supervisor',
+					supervisorTitle: trimmedTitle,
+					description: description.trim(),
+					isSupervisor: true,
+					companyId,
+					campaignId: campaignId || undefined,
+				}).unwrap();
+				toast.success('Supervisor role created successfully');
+			}
+			handleClose();
 			onSuccess?.();
-			onClose();
 		} catch (error) {
-			console.error('Failed to create supervisor role:', error);
-			const message = extractErrorMessage(error as ApiError, 'Failed to create supervisor role');
+			const action = editingRole ? 'update' : 'create';
+			console.error(`Failed to ${action} supervisor role:`, error);
+			const message = extractErrorMessage(error as ApiError, `Failed to ${action} supervisor role`);
 			toast.error(message);
 		}
 	};
@@ -83,7 +118,7 @@ const CreateSupervisorRoleModal: React.FC<CreateSupervisorRoleModalProps> = ({
 		<Modal
 			isOpen={isOpen}
 			onClose={handleClose}
-			title="Create Supervisor Role"
+			title={editingRole ? "Edit Supervisor Role" : "Create Supervisor Role"}
 			size="md"
 			position="center"
 		>
@@ -119,7 +154,7 @@ const CreateSupervisorRoleModal: React.FC<CreateSupervisorRoleModalProps> = ({
 						disabled={isLoading}
 						className="text-[10px] md:text-[12px]"
 					>
-						{isLoading ? 'Creating...' : 'Create'}
+						{isLoading ? (editingRole ? 'Saving...' : 'Creating...') : (editingRole ? 'Save Changes' : 'Create')}
 					</Button>
 				</div>
 			</div>

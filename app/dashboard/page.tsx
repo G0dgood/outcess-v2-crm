@@ -98,6 +98,10 @@ const DashboardContent: React.FC = () => {
 	const timeRange = dashboardSettings.dispositionSettings?.timeRangeView || 'daily';
 	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange]);
 
+	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
+	const isSupervisor = userRoleName?.toLowerCase() === 'supervisor';
+	const isCampaignView = isAdmin || isSupervisor;
+
 	const { data: reportDataAgent, refetch: refetchAgentReport, isFetching: isFetchingAgentReport } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
 		{
 			campaignId: campaignId || '',
@@ -105,7 +109,7 @@ const DashboardContent: React.FC = () => {
 			startDate: dateRange.startDate || '',
 			endDate: dateRange.endDate || ''
 		},
-		{ skip: !campaignId || !user || !dateRange.startDate || isAdmin }
+		{ skip: !campaignId || !user || !dateRange.startDate || isCampaignView }
 	);
 
 	const { data: reportDataAdmin, refetch: refetchAdminReport, isFetching: isFetchingAdminReport } = useGetAllDashboardDispositionsByCampaignReportQuery(
@@ -114,18 +118,20 @@ const DashboardContent: React.FC = () => {
 			startDate: dateRange.startDate || '',
 			endDate: dateRange.endDate || ''
 		},
-		{ skip: !campaignId || !dateRange.startDate || !isAdmin }
+		{ skip: !campaignId || !dateRange.startDate || !isCampaignView }
 	);
 
-	const reportData = isAdmin ? reportDataAdmin : reportDataAgent;
+	const reportData = isCampaignView ? reportDataAdmin : reportDataAgent;
 
 	const { data: lobReportData, refetch: refetchLobReport, isFetching: isFetchingLobReport } = useGetDispositionsByCampaignReportQuery(
 		{
 			campaignId: campaignId || '',
 			startDate: dateRange.startDate || '',
 			endDate: dateRange.endDate || '',
+			page: 1,
+			limit: 10000,
 		},
-		{ skip: !campaignId || !isAdmin || !dateRange.startDate }
+		{ skip: !campaignId || !isCampaignView || !dateRange.startDate }
 	);
 
 	const { data: agentReportData, refetch: refetchAgentDispositions, isFetching: isFetchingAgentDispositions } = useGetDispositionsByAgentReportQuery(
@@ -137,21 +143,21 @@ const DashboardContent: React.FC = () => {
 			page: 1,
 			limit: 10000,
 		},
-		{ skip: !campaignId || isAdmin || !user?._id || !dateRange.startDate }
+		{ skip: !campaignId || isCampaignView || !user?._id || !dateRange.startDate }
 	);
 
 	const apiDispositions = useMemo(() => {
-		if (isAdmin) {
+		if (isCampaignView) {
 			return (lobReportData as { data?: unknown[] })?.data || (Array.isArray(lobReportData) ? lobReportData : []);
 		} else {
 			return (agentReportData as { data?: unknown[] })?.data || (Array.isArray(agentReportData) ? agentReportData : []);
 		}
-	}, [isAdmin, lobReportData, agentReportData]);
+	}, [isCampaignView, lobReportData, agentReportData]);
 
 	const isRefreshing = isFetchingAgentReport || isFetchingAdminReport || isFetchingLobReport || isFetchingAgentDispositions;
 
 	const handleRefresh = () => {
-		if (isAdmin) {
+		if (isCampaignView) {
 			refetchAdminReport();
 			refetchLobReport();
 		} else {
@@ -445,7 +451,8 @@ const DashboardContent: React.FC = () => {
 
 			// Update total dispositions widget value
 			if (sourceKey === 'Total Dispositions' || sourceKey === 'Total Calls') {
-				return { ...widget, value: filteredDispositions.length };
+				const apiTotal = reportData?.data?.totalDispositions !== undefined ? Number(reportData.data.totalDispositions) : filteredDispositions.length;
+				return { ...widget, value: apiTotal };
 			}
 
 			// Check if widget title corresponds to a disposition field

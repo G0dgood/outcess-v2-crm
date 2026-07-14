@@ -9,7 +9,7 @@ import CreateCustomRoleModal from '@/components/ui/CreateCustomRoleModal';
 import DeleteRoleModal from './DeleteRoleModal';
 import SubPageHeading from '@/components/ui/SubPageHeading';
 import PageHeading from '@/components/ui/PageHeading';
-import { TrashIcon, CopyIcon, Component1Icon } from '@radix-ui/react-icons';
+import { TrashIcon, CopyIcon, Component1Icon, Pencil1Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 
@@ -30,12 +30,19 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 	const { data: rolesData, isLoading, refetch } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', { skip: !selectedCampaignId });
 	const { canAccess } = usePrivilege();
 	const canDelete = canAccess('userManagement', 'delete');
+	const canCreate = canAccess('userManagement', 'create');
 	const [deleteRole] = useDeleteRoleMutation();
 
 	const [roles, setRoles] = useState<Role[]>([]);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+	const [editingRole, setEditingRole] = useState<Role | null>(null);
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [roleToDelete, setRoleToDelete] = useState<{ id: string; name: string } | null>(null);
+
+	const handleEditRoleClick = (role: Role) => {
+		setEditingRole(role);
+		setIsCreateModalOpen(true);
+	};
 
 	useEffect(() => {
 		if (rolesData) {
@@ -45,10 +52,11 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 						(Array.isArray((rolesData as unknown as { docs?: unknown[] }).docs) ? (rolesData as unknown as { docs?: unknown[] }).docs :
 							[]))));
 
-			const mappedRoles: Role[] = ((rawRoles as { _id?: string; id?: string; roleName: string; userCount?: number; teamMemberCount?: number }[]) || []).map((role) => ({
+			const mappedRoles: Role[] = ((rawRoles as { _id?: string; id?: string; roleName: string; description?: string; userCount?: number; teamMemberCount?: number }[]) || []).map((role) => ({
 				id: role?._id || role.id || '',
 				name: role?.roleName,
-				userCount: role?.teamMemberCount ?? role?.userCount ?? 0
+				userCount: role?.teamMemberCount ?? role?.userCount ?? 0,
+				description: role?.description
 			}));
 			setRoles(mappedRoles);
 		}
@@ -148,6 +156,20 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 									>
 										<CopyIcon className="w-4 h-4 text-blue-500" />
 									</Button>
+									{canCreate && (
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+												e.stopPropagation();
+												handleEditRoleClick(role);
+											}}
+											className="p-1.5 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700 h-auto"
+											title="Edit Custom Role"
+										>
+											<Pencil1Icon className="w-4 h-4 text-green-600 dark:text-green-500" />
+										</Button>
+									)}
 									{canDelete && (
 										<Button
 											variant="ghost"
@@ -191,8 +213,12 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 			{/* Create Custom Role Modal */}
 			<CreateCustomRoleModal
 				isOpen={isCreateModalOpen}
-				onClose={() => setIsCreateModalOpen(false)}
+				onClose={() => {
+					setIsCreateModalOpen(false);
+					setEditingRole(null);
+				}}
 				onSuccess={refetch}
+				editingRole={editingRole}
 			/>
 
 			{/* Delete Role Modal */}

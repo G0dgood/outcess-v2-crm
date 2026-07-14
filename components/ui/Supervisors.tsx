@@ -10,7 +10,7 @@ import PageHeading from './PageHeading';
 import SubPageHeading from './SubPageHeading';
 import Button from './Button';
 import DeleteRoleModal from '@/components/features/role/DeleteRoleModal';
-import { TrashIcon, CopyIcon, PersonIcon } from '@radix-ui/react-icons';
+import { TrashIcon, CopyIcon, PersonIcon, Pencil1Icon } from '@radix-ui/react-icons';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { toast } from 'sonner';
 import CreateSupervisorRoleModal from './CreateSupervisorRoleModal';
@@ -57,6 +57,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
     : [];
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<SupervisorRole | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<{ id: string; name: string } | null>(null);
   const [deleteRole] = useDeleteRoleMutation();
@@ -65,6 +66,11 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
   const canDeleteSupervisorRole = canAccess('userManagement', 'delete');
 
   const handleOpenCreateModal = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleEditRoleClick = (role: SupervisorRole) => {
+    setEditingRole(role);
     setIsCreateModalOpen(true);
   };
 
@@ -168,6 +174,20 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
                     >
                       <CopyIcon className="w-4 h-4 text-blue-500" />
                     </Button>
+                    {canCreateSupervisorRole && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditRoleClick(role);
+                        }}
+                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-700 h-auto"
+                        title="Edit Supervisor Role"
+                      >
+                        <Pencil1Icon className="w-4 h-4 text-green-600 dark:text-green-500" />
+                      </Button>
+                    )}
                     {canDeleteSupervisorRole && (
                       <Button
                         variant="ghost"
@@ -205,9 +225,13 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = '' }) => {
 
       <CreateSupervisorRoleModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setEditingRole(null);
+        }}
         campaignId={campaignId}
         onSuccess={refetch}
+        editingRole={editingRole}
       />
 
       <DeleteRoleModal

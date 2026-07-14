@@ -33,6 +33,7 @@ export interface UserRole {
 	permissions: RoleModulePermission[];
 	id?: string;
 	description?: string;
+	allBucketAccess?: boolean;
 }
 
 export interface UserPrivileges {

@@ -12,9 +12,16 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import AccessRestricted from '@/components/ui/AccessRestricted';
-import { useGetDispositionsByCampaignReportQuery, useGetDispositionsByAgentReportQuery } from '@/store/services/dispositionApi';
+import { 
+	useGetDispositionsByCampaignReportQuery, 
+	useGetDispositionsByAgentReportQuery,
+	useLazyGetDispositionsByCampaignReportQuery,
+	useLazyGetDispositionsByAgentReportQuery 
+} from '@/store/services/dispositionApi';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
+import { toastWarning, toastError } from '@/utils/toastWithSound';
+import CSVDownloadButton from '@/components/ui/CSVDownloadButton';
 
 interface ReportData {
 	id: string;
@@ -72,7 +79,9 @@ const ReportPage: React.FC = () => {
 		return { startDate: `${today}T00:00:00.000Z`, endDate: `${today}T23:59:59.999Z` };
 	});
 
-	const isAgent = !isAdmin;
+	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
+	const isSupervisor = userRoleName?.toLowerCase() === 'supervisor';
+	const isAgent = !isAdmin && !isSupervisor;
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -105,8 +114,8 @@ const ReportPage: React.FC = () => {
 
 	const apiData = (isAgent ? agentApiData : lobApiData) as ReportApiResponse | ReportItem[] | undefined;
 	const isLoading = isPrivilegeLoading || (isAgent ? isAgentLoading : isLobLoading);
-
-
+	const [triggerGetCampaignReport] = useLazyGetDispositionsByCampaignReportQuery();
+	const [triggerGetAgentReport] = useLazyGetDispositionsByAgentReportQuery();
 
 	const filterButtonRef = useRef<HTMLDivElement>(null);
 	const [tooltipLength, setTooltipLength] = useState(10);
@@ -155,11 +164,28 @@ const ReportPage: React.FC = () => {
 				'Date': formatted,
 			};
 
+			// Flatten customer fields
+			if (item.customer && typeof item.customer === 'object') {
+				Object.entries(item.customer).forEach(([key, value]) => {
+					if (!['id', '_id', 'companyId', 'campaignId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid' && key.toLowerCase() !== 'bucketid') {
+						row[key] = value;
+					}
+				});
+			}
+
 			// Flatten fillDisposition
 			if (Array.isArray(item.fillDisposition)) {
 				item.fillDisposition.forEach((field: DispositionField) => {
 					if (field.fieldName) {
-						row[field.fieldName] = field.fieldValue;
+						const val = field.fieldValue;
+						if (typeof val === 'string' && val.includes(' > ')) {
+							const levels = val.split(' > ');
+							levels.forEach((lvl, index) => {
+								row[`${field.fieldName} - Level ${index + 1}`] = lvl;
+							});
+						} else {
+							row[field.fieldName] = val;
+						}
 					}
 				});
 			}
@@ -211,9 +237,75 @@ const ReportPage: React.FC = () => {
 		};
 	}, [isFilterOpen]);
 
-	const handleDownload = () => {
-		// Implement download functionality
-		// This could export data as CSV, PDF, or Excel
+	const fetchAllReportsToExport = async (): Promise<ReportItem[]> => {
+		const queryParams = {
+			campaignId: selectedCampaignId || '',
+			startDate: dateRange.startDate,
+			endDate: dateRange.endDate,
+			page: 1,
+			limit: 10000,
+			search: searchTerm
+		};
+
+		let response: ReportApiResponse | ReportItem[] | undefined;
+		if (isAgent) {
+			response = (await triggerGetAgentReport({
+				...queryParams,
+				agentId: user?._id || user?.id || ''
+			}).unwrap()) as ReportApiResponse | ReportItem[];
+		} else {
+			response = (await triggerGetCampaignReport(queryParams).unwrap()) as ReportApiResponse | ReportItem[];
+		}
+
+		if (Array.isArray(response)) {
+			return response;
+		} else if (response && 'data' in response && Array.isArray(response.data)) {
+			return response.data;
+		}
+		return [];
+	};
+
+	const formatReportItem = (item: ReportItem) => {
+		const d = item.timestamp ? new Date(item.timestamp) : null;
+		const year = d ? d.getFullYear() : '';
+		const month = d ? String(d.getMonth() + 1).padStart(2, '0') : '';
+		const day = d ? String(d.getDate()).padStart(2, '0') : '';
+		const hour = d ? String(d.getHours()).padStart(2, '0') : '';
+		const minute = d ? String(d.getMinutes()).padStart(2, '0') : '';
+		const formatted = d ? `${year}-${month}-${day} ${hour}:${minute}` : '-';
+		const agentName = typeof item.agent === 'object' ? item.agent?.name : item.agent;
+
+		const row: Record<string, unknown> = {
+			'Agent Name': agentName || 'Unknown',
+			'Date': formatted,
+		};
+
+		// Flatten customer fields
+		if (item.customer && typeof item.customer === 'object') {
+			Object.entries(item.customer).forEach(([key, value]) => {
+				if (!['id', '_id', 'companyId', 'campaignId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid' && key.toLowerCase() !== 'bucketid') {
+					row[key] = value;
+				}
+			});
+		}
+
+		if (Array.isArray(item.fillDisposition)) {
+			item.fillDisposition.forEach((field: DispositionField) => {
+				if (field.fieldName) {
+					const val = field.fieldValue;
+					if (typeof val === 'string' && val.includes(' > ')) {
+						const levels = val.split(' > ');
+						levels.forEach((lvl, index) => {
+							row[`${field.fieldName} - Level ${index + 1}`] = lvl;
+						});
+					} else {
+						row[field.fieldName] = val;
+					}
+				}
+			});
+		}
+
+		return row;
 	};
 
 	const handleFilter = () => {
@@ -297,14 +389,14 @@ const ReportPage: React.FC = () => {
 							</div>
 						)}
 					</div>
-					<Button
+					<CSVDownloadButton
+						fetchData={fetchAllReportsToExport}
+						formatItem={formatReportItem}
+						fileName={`disposition_report_${new Date().toISOString().slice(0, 10)}.csv`}
 						variant="primary"
 						size="md"
-						onClick={handleDownload}
-						className="flex items-center gap-2 px-2 py-2  sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
-					>
-						Download
-					</Button>
+						className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+					/>
 				</div>
 			</div>
 

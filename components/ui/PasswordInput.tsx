@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toastInfo } from '@/utils/toastWithSound';
 
 interface PasswordInputProps {
 	label: string;
@@ -46,7 +47,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
 			onHelpClick();
 		} else {
 			// Default help behavior - could show a tooltip or modal
-			alert('Password requirements:\n• At least 8 characters\n• Mix of letters and numbers\n• Special characters recommended');
+			toastInfo('Password requirements:\n• At least 8 characters\n• Mix of letters and numbers\n• Special characters recommended');
 		}
 	};
 

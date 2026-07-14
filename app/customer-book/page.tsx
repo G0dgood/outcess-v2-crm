@@ -123,6 +123,7 @@ const CustomerBookPage: React.FC = () => {
 					};
 				});
 				setCustomers(mappedCustomers);
+				setSearchTerm('');
 			} else {
 				setCustomers([]);
 			}
@@ -213,6 +214,11 @@ const CustomerBookPage: React.FC = () => {
 							>
 								<thead>
 									<tr>
+										<th
+											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider"
+										>
+											Actions
+										</th>
 										{tableHeaders.map((header) => (
 											<th
 												key={header}
@@ -221,11 +227,6 @@ const CustomerBookPage: React.FC = () => {
 												{header}
 											</th>
 										))}
-										<th
-											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider"
-										>
-											Actions
-										</th>
 									</tr>
 								</thead>
 								<tbody
@@ -243,15 +244,6 @@ const CustomerBookPage: React.FC = () => {
 											key={customer.id}
 											style={{ borderColor: 'var(--light-gray)' }}
 										>
-											{tableHeaders?.map((header) => (
-												<td
-													key={`${customer.id}-${header}`}
-													className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
-													style={{ color: 'var(--text-primary)' }}
-												>
-													{customer[header]}
-												</td>
-											))}
 											<td className="px-6 py-4 whitespace-nowrap">
 												<Button
 													variant="ghost"
@@ -264,6 +256,16 @@ const CustomerBookPage: React.FC = () => {
 													<ArrowRightIcon className="w-5 h-5" />
 												</Button>
 											</td>
+											{tableHeaders?.map((header) => (
+												<td
+													key={`${customer.id}-${header}`}
+													className="px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													{customer[header]}
+												</td>
+											))}
+
 										</tr>
 									))}
 								</tbody>

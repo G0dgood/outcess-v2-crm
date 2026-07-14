@@ -157,6 +157,21 @@ export default function CallDisposition() {
 	const [isAssignMemberModalOpen, setIsAssignMemberModalOpen] = useState(false);
 	const [assigningToBucketId, setAssigningToBucketId] = useState<string | null>(null);
 	const [assigningToBucketName, setAssigningToBucketName] = useState<string>('');
+	const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+
+	const handleRestoreDisposition = (id: string) => {
+		if (activeBucketId) {
+			updateDispositionInBucket(activeBucketId, id, { isArchived: false });
+			toast.success("Disposition restored successfully");
+		}
+	};
+
+	const handlePermanentDeleteDisposition = (id: string) => {
+		if (activeBucketId) {
+			deleteDispositionFromBucket(activeBucketId, id);
+			toast.success("Disposition permanently deleted");
+		}
+	};
 
 	const [assignMember] = useAssignMemberToBucketMutation();
 	const [removeMember] = useRemoveMemberFromBucketMutation();
@@ -191,7 +206,13 @@ export default function CallDisposition() {
 		buckets?.find(b => b.id === activeBucketId),
 		[buckets, activeBucketId]);
 
-	const dispositions = activeBucket?.dispositions || [];
+	const allDispositions = activeBucket?.dispositions || [];
+	const dispositions = useMemo(() => {
+		return allDispositions.filter(d => !d.isArchived);
+	}, [allDispositions]);
+	const archivedDispositions = useMemo(() => {
+		return allDispositions.filter(d => d.isArchived === true);
+	}, [allDispositions]);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -207,11 +228,15 @@ export default function CallDisposition() {
 			const oldIndex = dispositions.findIndex((d) => d.id === active.id);
 			const newIndex = dispositions.findIndex((d) => d.id === over.id);
 
-			const reordered = arrayMove(dispositions, oldIndex, newIndex);
+			const reorderedActive = arrayMove(dispositions, oldIndex, newIndex);
+			const finalDispositions = [
+				...reorderedActive,
+				...archivedDispositions
+			];
 
 			updateDashboardSettings({
 				buckets: buckets.map(b =>
-					b.id === activeBucketId ? { ...b, dispositions: reordered } : b
+					b.id === activeBucketId ? { ...b, dispositions: finalDispositions } : b
 				)
 			});
 		}
@@ -406,7 +431,8 @@ export default function CallDisposition() {
 			deleteBucket(itemToDelete.id);
 		} else {
 			if (activeBucketId) {
-				deleteDispositionFromBucket(activeBucketId, itemToDelete.id);
+				updateDispositionInBucket(activeBucketId, itemToDelete.id, { isArchived: true });
+				toast.success("Disposition moved to archive");
 			}
 		}
 		setIsDeleteModalOpen(false);
@@ -600,6 +626,16 @@ export default function CallDisposition() {
 									<IdCardIcon className="w-4 h-4" />
 									Manage Members
 								</Button>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => setIsArchiveModalOpen(true)}
+									disabled={!activeBucketId}
+									className="flex items-center gap-2"
+								>
+									<ArchiveIcon className="w-4 h-4" />
+									Archive ({archivedDispositions.length})
+								</Button>
 								<Button variant="primary" size="sm" onClick={handleAddDisposition} disabled={!activeBucketId}>
 									Add Disposition
 								</Button>
@@ -760,6 +796,14 @@ export default function CallDisposition() {
 				onDropdownOptionChange={(idx, val) => setDispositionForm(prev => ({ ...prev, dropdownOptions: prev.dropdownOptions.map((o, i) => i === idx ? val : o) }))}
 			/>
 
+			<ArchiveModal
+				isOpen={isArchiveModalOpen}
+				onClose={() => setIsArchiveModalOpen(false)}
+				archivedDispositions={archivedDispositions}
+				onRestore={handleRestoreDisposition}
+				onDeletePermanently={handlePermanentDeleteDisposition}
+			/>
+
 			<DeleteRecordModal
 				isOpen={isDeleteModalOpen}
 				onClose={() => { setIsDeleteModalOpen(false); setItemToDelete(null); }}
@@ -778,3 +822,84 @@ export default function CallDisposition() {
 		</div>
 	);
 }
+
+interface ArchiveModalProps {
+	isOpen: boolean;
+	onClose: () => void;
+	archivedDispositions: DispositionCategory[];
+	onRestore: (dispositionId: string) => void;
+	onDeletePermanently: (dispositionId: string) => void;
+}
+
+const ArchiveModal: React.FC<ArchiveModalProps> = ({
+	isOpen,
+	onClose,
+	archivedDispositions,
+	onRestore,
+	onDeletePermanently
+}) => {
+	if (!isOpen) return null;
+
+	return (
+		<div className="fixed inset-0 z-55 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+			<div className="bg-white dark:bg-gray-800 border dark:border-gray-700 w-full max-w-md rounded-[var(--radius)] shadow-xl flex flex-col max-h-[80vh]">
+				{/* Header */}
+				<div className="p-5 border-b dark:border-gray-700 flex items-center justify-between">
+					<div className="flex items-center gap-2">
+						<ArchiveIcon className="w-4 h-4 text-primary" />
+						<h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Archived Dispositions</h3>
+					</div>
+					<button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+						<Icon name="Close_round_light" size="md" />
+					</button>
+				</div>
+
+				{/* Body */}
+				<div className="flex-1 overflow-y-auto p-5 space-y-3">
+					{archivedDispositions.length > 0 ? (
+						archivedDispositions.map((d) => (
+							<div
+								key={d.id}
+								className="flex items-center justify-between p-3 rounded-[var(--radius)] border dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/10"
+							>
+								<div className="flex items-center gap-2 min-w-0">
+									<div className="w-3 h-3 rounded-[2px] shrink-0" style={{ backgroundColor: d.color }} />
+									<span className="text-[12px] font-medium text-gray-800 dark:text-gray-200 truncate">{d.name}</span>
+								</div>
+								<div className="flex items-center gap-1 shrink-0">
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => onRestore(d.id)}
+										className="h-7 text-[10px] px-2"
+									>
+										Restore
+									</Button>
+									<button
+										onClick={() => onDeletePermanently(d.id)}
+										className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+										title="Delete Permanently"
+									>
+										<TrashIcon className="w-3.5 h-3.5" />
+									</button>
+								</div>
+							</div>
+						))
+					) : (
+						<div className="py-8 text-center text-gray-400 dark:text-gray-500">
+							<ArchiveIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+							<p className="text-[11px]">No archived dispositions in this bucket.</p>
+						</div>
+					)}
+				</div>
+
+				{/* Footer */}
+				<div className="p-4 border-t dark:border-gray-700 flex justify-end">
+					<Button variant="outline" size="sm" onClick={onClose}>
+						Close
+					</Button>
+				</div>
+			</div>
+		</div>
+	);
+};

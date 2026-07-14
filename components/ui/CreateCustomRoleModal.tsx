@@ -5,16 +5,24 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { useCreateRoleMutation, RolePermission } from '@/store/services/roleApi';
+import { useCreateRoleMutation, useUpdateRoleMutation, RolePermission } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useSetup } from '@/contexts/SetupContext';
 import { toast } from 'sonner';
 
+interface Role {
+	id: string;
+	name: string;
+	userCount: number;
+	description?: string;
+}
+
 interface CreateCustomRoleModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onSuccess?: () => void;
+	editingRole?: Role | null;
 }
 
 export interface ApiError {
@@ -28,10 +36,12 @@ const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 	isOpen,
 	onClose,
 	onSuccess,
+	editingRole = null,
 }) => {
 	const [roleName, setRoleName] = useState('');
 	const [roleDescription, setRoleDescription] = useState('');
 	const [createRole] = useCreateRoleMutation();
+	const [updateRole] = useUpdateRoleMutation();
 	const { user } = useUserInfo();
 	const { selectedCampaignId } = useCampaign();
 	const { setupData } = useSetup();
@@ -39,9 +49,15 @@ const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 	useEffect(() => {
 		if (isOpen) {
 			document.body.style.overflow = 'hidden';
+			if (editingRole) {
+				setRoleName(editingRole.name || '');
+				setRoleDescription(editingRole.description || '');
+			} else {
+				setRoleName('');
+				setRoleDescription('');
+			}
 		} else {
 			document.body.style.overflow = 'unset';
-			// Reset form when modal closes
 			setRoleName('');
 			setRoleDescription('');
 		}
@@ -60,7 +76,7 @@ const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 			document.body.style.overflow = 'unset';
 			document.removeEventListener('keydown', handleEscape);
 		};
-	}, [isOpen, onClose]);
+	}, [isOpen, onClose, editingRole]);
 
 	const handleCreate = async () => {
 		if (roleName.trim()) {
@@ -77,34 +93,46 @@ const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 			}
 
 			try {
-				const modules = setupData.roleManagementSettings?.modules || [];
-				const defaultPermissions: RolePermission[] = modules.map((module: { name: string }) => ({
-					id: '',
-					moduleName: module.name,
-					access: false,
-					permissions: {
-						view: false,
-						edit: false,
-						delete: false,
-						create: false,
-					},
-				}));
+				if (editingRole) {
+					await updateRole({
+						id: editingRole.id,
+						roleData: {
+							roleName: roleName.toLowerCase(),
+							description: roleDescription,
+						}
+					}).unwrap();
+					toast.success('Custom role updated successfully');
+				} else {
+					const modules = setupData.roleManagementSettings?.modules || [];
+					const defaultPermissions: RolePermission[] = modules.map((module: { name: string }) => ({
+						id: '',
+						moduleName: module.name,
+						access: false,
+						permissions: {
+							view: false,
+							edit: false,
+							delete: false,
+							create: false,
+						},
+					}));
 
-				await createRole({
-					roleName: roleName.toLowerCase(),
-					description: roleDescription,
-					companyId: companyId,
-					campaignId: selectedCampaignId || undefined,
-					permissions: defaultPermissions
-				}).unwrap();
+					await createRole({
+						roleName: roleName.toLowerCase(),
+						description: roleDescription,
+						companyId: companyId,
+						campaignId: selectedCampaignId || undefined,
+						permissions: defaultPermissions
+					}).unwrap();
 
-				toast.success('Custom role created successfully');
+					toast.success('Custom role created successfully');
+				}
 				onSuccess?.();
 				onClose();
 			} catch (error: unknown) {
-				console.error('Failed to create custom role:', JSON.stringify(error, null, 2));
+				const action = editingRole ? 'update' : 'create';
+				console.error(`Failed to ${action} custom role:`, JSON.stringify(error, null, 2));
 				const apiError = error as ApiError;
-				const errorMessage = apiError?.data?.message || apiError?.message || 'Failed to create custom role';
+				const errorMessage = apiError?.data?.message || apiError?.message || `Failed to ${action} custom role`;
 				toast.error(errorMessage);
 			}
 		}
@@ -133,7 +161,7 @@ const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 						className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 						style={{ color: 'var(--text-primary)' }}
 					>
-						Create Custom Role
+						{editingRole ? 'Edit Custom Role' : 'Create Custom Role'}
 					</h2>
 					<Button
 						variant="ghost"
@@ -191,7 +219,7 @@ const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 						onClick={handleCreate}
 						disabled={!roleName.trim()}
 					>
-						Create
+						{editingRole ? 'Save Changes' : 'Create'}
 					</Button>
 				</div>
 			</div>
@@ -200,4 +228,3 @@ const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 };
 
 export default CreateCustomRoleModal;
-

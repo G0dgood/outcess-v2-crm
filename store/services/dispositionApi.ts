@@ -178,6 +178,8 @@ export const {
   useGetDispositionsByAgentIdQuery,
   useGetDispositionsByCampaignReportQuery,
   useGetDispositionsByAgentReportQuery,
+  useLazyGetDispositionsByCampaignReportQuery,
+  useLazyGetDispositionsByAgentReportQuery,
   useGetDashboardDispositionsByCampaignAndAgentIdReportQuery,
   useGetAllDashboardDispositionsByCampaignReportQuery,
   useGetLeaderboardQuery,

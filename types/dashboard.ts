@@ -15,6 +15,7 @@ export interface DispositionCategory {
   nestedOptions?: NestedOption[];
   sortOrder?: string;
   isRequired?: boolean;
+  isArchived?: boolean;
 }
 
 export interface AssignedMember {

@@ -20,7 +20,7 @@ export interface User {
 		statusUpdatedAt?: string | Date;
 	};
 	avatar?: string;
-	role?: string | { roleName: string; permissions: unknown[] };
+	role?: string | { roleName: string; permissions: unknown[]; allBucketAccess?: boolean };
 	isTeamMember?: boolean;
 	companyId?: string;
 	companyName?: string;

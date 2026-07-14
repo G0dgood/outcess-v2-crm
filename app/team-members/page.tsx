@@ -291,11 +291,19 @@ const TeamMembersPage: React.FC = () => {
 			});
 	}, [campaignMembersResponse, supervisorsData]);
 
+	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
+	const isSupervisor = userRoleName?.toLowerCase() === 'supervisor';
+
 	useEffect(() => {
-		if (supervisors.length > 0 && !supervisorFilter) {
+		if (isSupervisor) {
+			const currentUserId = user?._id || user?.id;
+			if (currentUserId && supervisorFilter !== currentUserId) {
+				setSupervisorFilter(currentUserId);
+			}
+		} else if (supervisors.length > 0 && !supervisorFilter) {
 			setSupervisorFilter(supervisors[0].value);
 		}
-	}, [supervisors, supervisorFilter]);
+	}, [supervisors, supervisorFilter, isSupervisor, user]);
 
 	const shiftHourOptions = useMemo(() => {
 		const lobShiftHours = campaignData?.shiftHours as
@@ -447,6 +455,7 @@ const TeamMembersPage: React.FC = () => {
 						label="Supervisor"
 						options={supervisors}
 						value={supervisorFilter}
+						disabled={isSupervisor}
 						onChange={(val) => {
 							if (Array.isArray(val)) return;
 							setSupervisorFilter(val);
