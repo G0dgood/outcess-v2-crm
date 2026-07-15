@@ -95,6 +95,62 @@ export const generateColorVariations = (baseColor: string, count: number): strin
 };
 
 /**
+ * Aggregates chart data:
+ * 1. Groups nested categories by root-level (e.g. "Unreachable > No Answer" -> "Unreachable").
+ * 2. Sorts descending and limits to top 5 categories, combining the rest into "Others".
+ */
+const cleanChartData = (
+	data: ChartDataItem[],
+	baseColor: string | undefined
+): ChartDataItem[] => {
+	if (!data || data.length === 0) return [];
+
+	// 1. Root-level category aggregation (split by " > ")
+	const aggregatedMap = new Map<string, number>();
+	data.forEach(item => {
+		const rootLabel = item.label.includes(' > ')
+			? item.label.split(' > ')[0].trim()
+			: item.label;
+		aggregatedMap.set(rootLabel, (aggregatedMap.get(rootLabel) || 0) + item.value);
+	});
+
+	// Convert back to ChartDataItem[]
+	let processed = Array.from(aggregatedMap.entries()).map(([label, value]) => ({
+		label,
+		value,
+		color: ''
+	}));
+
+	// 2. Sort descending by value
+	processed.sort((a, b) => b.value - a.value);
+
+	// 3. Limit to top 5 categories, group the rest as "Others" (max 6 total categories)
+	const maxCategories = 6;
+	if (processed.length > maxCategories) {
+		const topItems = processed.slice(0, maxCategories - 1);
+		const remainingItems = processed.slice(maxCategories - 1);
+		const othersValue = remainingItems.reduce((acc, item) => acc + item.value, 0);
+
+		if (othersValue > 0) {
+			topItems.push({
+				label: 'Others',
+				value: othersValue,
+				color: ''
+			});
+		}
+		processed = topItems;
+	}
+
+	// 4. Generate color variations based on the final list size
+	const finalColors = generateColorVariations(baseColor || '#FF6B6B', processed.length);
+	processed.forEach((item, index) => {
+		item.color = finalColors[index] || baseColor || '#FF6B6B';
+	});
+
+	return processed;
+};
+
+/**
  * Generate chart data based on dataSource(s)
  * Supports both single string and array of strings for multiple data sources
  */
@@ -184,12 +240,12 @@ const generateSingleSourceData = (
 	if (reportData?.data?.breakdown) {
 		const val = reportData.data.breakdown[dataSource];
 		if (val && typeof val === 'object') {
-			const variations = generateColorVariations(chartColor || '', Object.keys(val).length);
-			return Object.entries(val).map(([label, value], i) => ({
+			const rawData = Object.entries(val).map(([label, value]) => ({
 				label,
 				value: value as number,
-				color: variations[i]
+				color: ''
 			}));
+			return cleanChartData(rawData, chartColor);
 		}
 		if (typeof val === 'number') {
 			return [{
@@ -261,13 +317,12 @@ const generateSingleSourceData = (
 			});
 
 			const labels = Object.keys(counts);
-			const fieldColors = generateColorVariations(chartColor || disposition.color || '#FF6B6B', labels.length);
-
-			return labels.map((label, index) => ({
+			const rawData = labels.map((label) => ({
 				label,
 				value: counts[label],
-				color: fieldColors[index]
+				color: ''
 			}));
+			return cleanChartData(rawData, chartColor || disposition.color);
 		}
 
 	// Handle call outcomes (Specific Values) - Count occurrences

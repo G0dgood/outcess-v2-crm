@@ -6,6 +6,7 @@ import Dropdown from '@/components/ui/Dropdown';
 import AddDispositionModal from './AddDispositionModal';
 import AddBucketModal from './AddBucketModal';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
+import ConfirmChangeTypeModal from '@/components/ui/ConfirmChangeTypeModal';
 import { useSetup, Bucket, DispositionCategory } from '@/contexts/SetupContext';
 import { NestedOption } from '@/types/dashboard';
 import {
@@ -37,7 +38,7 @@ import {
 	useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, RefreshCw } from 'lucide-react';
 import {
 	useAssignMemberToBucketMutation,
 	useRemoveMemberFromBucketMutation
@@ -66,9 +67,10 @@ interface SortableDispositionCardProps {
 	d: DispositionCategory;
 	handleEditDisposition: (d: DispositionCategory) => void;
 	handleDeleteDispositionClick: (d: DispositionCategory) => void;
+	handleChangeTypeClick: (d: DispositionCategory) => void;
 }
 
-const SortableDispositionCard = ({ d, handleEditDisposition, handleDeleteDispositionClick }: SortableDispositionCardProps) => {
+const SortableDispositionCard = ({ d, handleEditDisposition, handleDeleteDispositionClick, handleChangeTypeClick }: SortableDispositionCardProps) => {
 	const {
 		attributes,
 		listeners,
@@ -108,6 +110,13 @@ const SortableDispositionCard = ({ d, handleEditDisposition, handleDeleteDisposi
 						<span className="text-[12px] font-medium text-gray-700 dark:text-gray-200 truncate">{d.name}</span>
 					</div>
 					<div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+						<button
+							onClick={() => handleChangeTypeClick(d)}
+							className="p-1 hover:text-amber-500 text-gray-400 transition-colors"
+							title="Change Field Type"
+						>
+							<RefreshCw className="w-3 h-3" />
+						</button>
 						<button onClick={() => handleEditDisposition(d)} className="p-1 hover:text-primary text-gray-400">
 							<Pencil1Icon className="w-3.5 h-3.5" />
 						</button>
@@ -146,6 +155,9 @@ export default function CallDisposition() {
 	const [isAddDispositionModalOpen, setIsAddDispositionModalOpen] = useState(false);
 	const [isEditDispositionModalOpen, setIsEditDispositionModalOpen] = useState(false);
 	const [editingDisposition, setEditingDisposition] = useState<DispositionCategory | null>(null);
+	const [allowTypeChange, setAllowTypeChange] = useState(false);
+	const [isConfirmChangeTypeOpen, setIsConfirmChangeTypeOpen] = useState(false);
+	const [changeTypeTarget, setChangeTypeTarget] = useState<DispositionCategory | null>(null);
 
 	const [isAddBucketModalOpen, setIsAddBucketModalOpen] = useState(false);
 	const [isEditBucketModalOpen, setIsEditBucketModalOpen] = useState(false);
@@ -415,9 +427,33 @@ export default function CallDisposition() {
 	};
 
 	const handleEditDisposition = (d: DispositionCategory) => {
+		setAllowTypeChange(false);
 		setEditingDisposition(d);
 		setDispositionForm({ fieldType: d.fieldType, fieldLabel: d.name, dropdownOptions: d.dropdownOptions || [''], nestedOptions: d.nestedOptions || [], sortOrder: d.sortOrder || 'entered', isRequired: d.isRequired || false, color: d.color });
 		setIsEditDispositionModalOpen(true);
+	};
+
+	const handleChangeTypeClick = (d: DispositionCategory) => {
+		setChangeTypeTarget(d);
+		setIsConfirmChangeTypeOpen(true);
+	};
+
+	const handleConfirmChangeType = () => {
+		if (changeTypeTarget) {
+			setAllowTypeChange(true);
+			setEditingDisposition(changeTypeTarget);
+			setDispositionForm({
+				fieldType: changeTypeTarget.fieldType,
+				fieldLabel: changeTypeTarget.name,
+				dropdownOptions: changeTypeTarget.dropdownOptions || [''],
+				nestedOptions: changeTypeTarget.nestedOptions || [],
+				sortOrder: changeTypeTarget.sortOrder || 'entered',
+				isRequired: changeTypeTarget.isRequired || false,
+				color: changeTypeTarget.color
+			});
+			setIsEditDispositionModalOpen(true);
+			setChangeTypeTarget(null);
+		}
 	};
 
 	const handleDeleteDispositionClick = (d: DispositionCategory) => {
@@ -439,7 +475,7 @@ export default function CallDisposition() {
 		setItemToDelete(null);
 	};
 
-	const handleSaveDisposition = () => {
+	const handleSaveDisposition = (isArchived?: boolean) => {
 		if (!activeBucketId) return;
 
 		// Basic Validation
@@ -449,6 +485,7 @@ export default function CallDisposition() {
 		}
 
 		if (editingDisposition) {
+			// Update active disposition
 			updateDispositionInBucket(activeBucketId, editingDisposition.id, {
 				name: dispositionForm.fieldLabel,
 				color: dispositionForm.color,
@@ -456,21 +493,79 @@ export default function CallDisposition() {
 				dropdownOptions: dispositionForm.dropdownOptions,
 				nestedOptions: dispositionForm.nestedOptions,
 				sortOrder: dispositionForm.sortOrder,
-				isRequired: dispositionForm.isRequired
+				isRequired: dispositionForm.isRequired,
+				isArchived: editingDisposition.isArchived
 			});
+
+			// If this disposition is active and has a linked archived backup copy, update the backup copy too!
+			if (!editingDisposition.isArchived) {
+				const backupCopy = activeBucket?.dispositions?.find(
+					d => d.backupOfId === editingDisposition.id || d.id === editingDisposition.backupId
+				);
+				if (backupCopy) {
+					updateDispositionInBucket(activeBucketId, backupCopy.id, {
+						name: dispositionForm.fieldLabel,
+						color: dispositionForm.color,
+						fieldType: dispositionForm.fieldType,
+						dropdownOptions: dispositionForm.dropdownOptions,
+						nestedOptions: dispositionForm.nestedOptions,
+						sortOrder: dispositionForm.sortOrder,
+						isRequired: dispositionForm.isRequired
+					});
+				}
+			}
+
 			toast.success("Disposition updated successfully");
 			setIsEditDispositionModalOpen(false);
 		} else {
-			addDispositionToBucket(activeBucketId, {
-				name: dispositionForm.fieldLabel,
-				color: dispositionForm.color,
-				fieldType: dispositionForm.fieldType,
-				dropdownOptions: dispositionForm.dropdownOptions,
-				nestedOptions: dispositionForm.nestedOptions,
-				sortOrder: dispositionForm.sortOrder,
-				isRequired: dispositionForm.isRequired
-			});
-			toast.success("New disposition added");
+			if (isArchived) {
+				// Simply archive the new disposition
+				addDispositionToBucket(activeBucketId, {
+					name: dispositionForm.fieldLabel,
+					color: dispositionForm.color,
+					fieldType: dispositionForm.fieldType,
+					dropdownOptions: dispositionForm.dropdownOptions,
+					nestedOptions: dispositionForm.nestedOptions,
+					sortOrder: dispositionForm.sortOrder,
+					isRequired: dispositionForm.isRequired,
+					isArchived: true
+				});
+				toast.success("Disposition saved to archive");
+			} else {
+				// Create the new active disposition AND also automatically archive a linked backup copy!
+				const activeId = `dsp-${Date.now()}`;
+				const archivedId = `dsp-${Date.now()}-archived`;
+
+				// Add active disposition
+				addDispositionToBucket(activeBucketId, {
+					id: activeId,
+					name: dispositionForm.fieldLabel,
+					color: dispositionForm.color,
+					fieldType: dispositionForm.fieldType,
+					dropdownOptions: dispositionForm.dropdownOptions,
+					nestedOptions: dispositionForm.nestedOptions,
+					sortOrder: dispositionForm.sortOrder,
+					isRequired: dispositionForm.isRequired,
+					isArchived: false,
+					backupId: archivedId
+				});
+
+				// Add archived copy
+				addDispositionToBucket(activeBucketId, {
+					id: archivedId,
+					name: dispositionForm.fieldLabel,
+					color: dispositionForm.color,
+					fieldType: dispositionForm.fieldType,
+					dropdownOptions: dispositionForm.dropdownOptions,
+					nestedOptions: dispositionForm.nestedOptions,
+					sortOrder: dispositionForm.sortOrder,
+					isRequired: dispositionForm.isRequired,
+					isArchived: true,
+					backupOfId: activeId
+				});
+
+				toast.success("New disposition added and backup copy archived");
+			}
 			setIsAddDispositionModalOpen(false);
 		}
 		setEditingDisposition(null);
@@ -692,6 +787,7 @@ export default function CallDisposition() {
 													d={d}
 													handleEditDisposition={handleEditDisposition}
 													handleDeleteDispositionClick={handleDeleteDispositionClick}
+													handleChangeTypeClick={handleChangeTypeClick}
 												/>
 											))}
 										</div>
@@ -783,6 +879,7 @@ export default function CallDisposition() {
 				onSave={handleSaveDisposition}
 				onAddDropdownOption={() => setDispositionForm(prev => ({ ...prev, dropdownOptions: [...prev.dropdownOptions, ''] }))}
 				onDropdownOptionChange={(idx, val) => setDispositionForm(prev => ({ ...prev, dropdownOptions: prev.dropdownOptions.map((o, i) => i === idx ? val : o) }))}
+				allowTypeChange={true}
 			/>
 			<AddDispositionModal
 				isOpen={isEditDispositionModalOpen}
@@ -794,6 +891,7 @@ export default function CallDisposition() {
 				onSave={handleSaveDisposition}
 				onAddDropdownOption={() => setDispositionForm(prev => ({ ...prev, dropdownOptions: [...prev.dropdownOptions, ''] }))}
 				onDropdownOptionChange={(idx, val) => setDispositionForm(prev => ({ ...prev, dropdownOptions: prev.dropdownOptions.map((o, i) => i === idx ? val : o) }))}
+				allowTypeChange={allowTypeChange}
 			/>
 
 			<ArchiveModal
@@ -809,6 +907,13 @@ export default function CallDisposition() {
 				onClose={() => { setIsDeleteModalOpen(false); setItemToDelete(null); }}
 				onConfirm={handleConfirmDelete}
 				recordName={itemToDelete?.name || ''}
+			/>
+
+			<ConfirmChangeTypeModal
+				isOpen={isConfirmChangeTypeOpen}
+				onClose={() => { setIsConfirmChangeTypeOpen(false); setChangeTypeTarget(null); }}
+				onConfirm={handleConfirmChangeType}
+				dispositionName={changeTypeTarget?.name || ''}
 			/>
 
 			<AssignMemberModal
@@ -875,13 +980,14 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
 									>
 										Restore
 									</Button>
-									<button
+									<Button
+										variant="outline"
+										size="sm"
 										onClick={() => onDeletePermanently(d.id)}
-										className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
-										title="Delete Permanently"
+										className="h-7 text-[10px] px-2 border-red-200 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
 									>
-										<TrashIcon className="w-3.5 h-3.5" />
-									</button>
+										Delete
+									</Button>
 								</div>
 							</div>
 						))

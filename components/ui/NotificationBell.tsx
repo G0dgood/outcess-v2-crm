@@ -36,6 +36,10 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
 		setIsNotificationsModalOpen(true);
 	};
 
+	const handleCloseModal = React.useCallback(() => {
+		setIsNotificationsModalOpen(false);
+	}, []);
+
 	return (
 		<>
 			<div className="relative">
@@ -65,7 +69,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
 			{isNotificationsModalOpen && (
 				<NotificationsModal
 					isOpen={isNotificationsModalOpen}
-					onClose={() => setIsNotificationsModalOpen(false)}
+					onClose={handleCloseModal}
 					notifications={notifications}
 					onMarkAsRead={onMarkAsRead}
 				/>

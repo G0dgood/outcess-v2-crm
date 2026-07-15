@@ -8,6 +8,7 @@ import { Notification, useMarkAllNotificationsAsReadMutation } from '@/store/ser
 import Pagination from './Pagination';
 import Search from './Search';
 import { useCampaign } from '@/contexts/CampaignContext';
+import { toast } from 'sonner';
 
 interface NotificationsModalProps {
 	isOpen: boolean;
@@ -29,15 +30,20 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 	const [markAllAsRead] = useMarkAllNotificationsAsReadMutation();
 
 	// Close modal on pathname changes
+	const initialPathname = React.useRef(pathname);
 	useEffect(() => {
-		onClose();
+		if (pathname !== initialPathname.current) {
+			onClose();
+		}
 	}, [pathname, onClose]);
 
 	const handleReadAll = async () => {
 		try {
 			await markAllAsRead({ campaignId: selectedCampaignId || '' }).unwrap();
+			toast.success('All notifications marked as read');
 		} catch (err) {
 			console.error('Failed to mark all as read:', err);
+			toast.error('Failed to mark notifications as read');
 		}
 	};
 
@@ -130,8 +136,6 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 		if (!notification.isRead && onMarkAsRead) {
 			onMarkAsRead(notification.id);
 		}
-
-		onClose();
 
 		const data = notification.data as { companyId?: string; userId?: string; ticketId?: string; teamMemberId?: string };
 		// Handle navigation based on notification type

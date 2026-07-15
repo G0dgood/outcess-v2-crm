@@ -675,6 +675,7 @@ const DashboardContent: React.FC = () => {
 									inputClassName="!py-[7px] !leading-5 !text-[8px] md:text-[10px] sm:!text-[10px] md:text-[12px]  flex-none "
 									options={[
 										{ value: 'daily', label: 'Daily' },
+										{ value: 'yesterday', label: 'Yesterday' },
 										{ value: 'weekly', label: 'Weekly' },
 										{ value: 'monthly', label: 'Monthly' },
 										{ value: 'yearly', label: 'Yearly' },
@@ -684,7 +685,7 @@ const DashboardContent: React.FC = () => {
 									onChange={(value) => updateDashboardSettings({
 										dispositionSettings: {
 											...dashboardSettings.dispositionSettings,
-											timeRangeView: value as unknown as 'daily' | 'weekly' | 'monthly',
+											timeRangeView: value as 'daily' | 'yesterday' | 'weekly' | 'monthly' | 'yearly' | 'all',
 										}
 									})}
 								/>

@@ -16,6 +16,8 @@ export interface DispositionCategory {
   sortOrder?: string;
   isRequired?: boolean;
   isArchived?: boolean;
+  backupId?: string;
+  backupOfId?: string;
 }
 
 export interface AssignedMember {
@@ -93,7 +95,7 @@ export interface DashboardSettings {
   buckets: Bucket[];
   callOutcomes: CallOutcome[];
   dispositionSettings: {
-    timeRangeView: "daily" | "weekly" | "monthly";
+    timeRangeView: "daily" | "yesterday" | "weekly" | "monthly" | "yearly" | "all";
     chartType:
       | "bar"
       | "line"

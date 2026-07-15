@@ -26,6 +26,12 @@ export const filterDispositionsByTimeRange = <T extends DateFilterable>(disposit
                 return date.getDate() === now.getDate() && 
                        date.getMonth() === now.getMonth() && 
                        date.getFullYear() === now.getFullYear();
+            case 'yesterday':
+                const yesterday = new Date();
+                yesterday.setDate(now.getDate() - 1);
+                return date.getDate() === yesterday.getDate() && 
+                       date.getMonth() === yesterday.getMonth() && 
+                       date.getFullYear() === yesterday.getFullYear();
             case 'weekly':
                 const oneWeekAgo = new Date();
                 oneWeekAgo.setDate(now.getDate() - 7);
@@ -55,6 +61,14 @@ export const getDateRangeFromTimeRange = (timeRange: string): { startDate?: stri
         case 'daily':
             // Already set to start of today
             break;
+        case 'yesterday':
+            const yesterdayStart = new Date();
+            yesterdayStart.setDate(now.getDate() - 1);
+            yesterdayStart.setHours(0, 0, 0, 0);
+            const yesterdayEnd = new Date();
+            yesterdayEnd.setDate(now.getDate() - 1);
+            yesterdayEnd.setHours(23, 59, 59, 999);
+            return { startDate: yesterdayStart.toISOString(), endDate: yesterdayEnd.toISOString() };
         case 'weekly':
             // Last 7 days
             startDate = new Date();

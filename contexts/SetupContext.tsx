@@ -68,7 +68,7 @@ interface SetupContextType {
 	addBucket: (bucket: Omit<Bucket, 'id' | 'dispositions'>) => void;
 	updateBucket: (bucketId: string, updates: Partial<Bucket>) => void;
 	deleteBucket: (bucketId: string) => void;
-	addDispositionToBucket: (bucketId: string, disposition: Omit<DispositionCategory, 'id'>) => void;
+	addDispositionToBucket: (bucketId: string, disposition: Omit<DispositionCategory, 'id'> & { id?: string }) => void;
 	updateDispositionInBucket: (bucketId: string, dispositionId: string, updates: Partial<DispositionCategory>) => void;
 	deleteDispositionFromBucket: (bucketId: string, dispositionId: string) => void;
 	updateBucketCustomerFields: (bucketId: string, fields: CustomerField[]) => void;
@@ -528,10 +528,10 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		setIsDirty(true);
 	}, []);
 
-	const addDispositionToBucket = useCallback((bucketId: string, disposition: Omit<DispositionCategory, 'id'>) => {
+	const addDispositionToBucket = useCallback((bucketId: string, disposition: Omit<DispositionCategory, 'id'> & { id?: string }) => {
 		const newDisposition: DispositionCategory = {
 			...disposition,
-			id: `dsp-${Date.now()}`,
+			id: disposition.id || `dsp-${Date.now()}`,
 		};
 		setSetupData(prev => ({
 			...prev,
