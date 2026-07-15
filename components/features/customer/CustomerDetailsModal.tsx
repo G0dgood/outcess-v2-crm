@@ -16,6 +16,7 @@ import { useGetDispositionsByCustomerQuery } from '@/store/services/dispositionA
 import { useCreateSMSLogMutation } from '@/store/services/smsApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
+import { icons } from 'lucide-react';
 
 interface CustomerDetailsModalProps {
 	isOpen: boolean;
@@ -57,7 +58,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 	const [isAnimating, setIsAnimating] = useState(false);
 	const [shouldRender, setShouldRender] = useState(false);
 	const [offlineDispositions, setOfflineDispositions] = useState<OfflineDisposition[]>([]);
-	const { selectedCampaignId } = useCampaign();
+	const { selectedCampaignId, campaignData } = useCampaign();
 	const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
 	const { user } = useUserInfo();
 	const companyId = user?.companyId || user?.company?._id || '';
@@ -337,6 +338,15 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 										{Object.entries(customer)
 											.filter(([key]) => !['id', '_id', 'companyId', 'campaignId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid' && key.toLowerCase() !== 'bucketid')
 											.map(([key, value]) => {
+												const customFieldConfig = (campaignData?.customerBookSettings?.configuredFields || [])
+													.flatMap(c => c?.fields || [])
+													.find(f => f && f.name === key);
+
+												let CustomIcon = null;
+												if (customFieldConfig?.icon) {
+													CustomIcon = (icons as any)[customFieldConfig.icon];
+												}
+
 												let IconComponent = PersonIcon;
 												const lowerKey = key.toLowerCase();
 												if (lowerKey.includes('phone')) IconComponent = MobileIcon;
@@ -350,7 +360,11 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 														className="flex items-start gap-4 pb-5 border-b dark:border-gray-700"
 														style={{ borderColor: 'var(--light-gray)' }}
 													>
-														<IconComponent className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+														{CustomIcon ? (
+															<CustomIcon className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+														) : (
+															<IconComponent className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+														)}
 														<div className="flex-1">
 															<label
 																className="block text-[8px] md:text-[10px] font-medium dark:text-gray-400 uppercase tracking-wider mb-2"

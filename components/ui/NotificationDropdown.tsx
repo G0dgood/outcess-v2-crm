@@ -7,7 +7,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { playNotificationSound, SoundType } from '@/utils/soundEffects';
 import { setNavigating } from '@/utils/navigationState';
 import { useCampaign } from '@/contexts/CampaignContext';
-import { Notification, NotificationUser } from '@/store/services/notificationApi';
+import { Notification, NotificationUser, useMarkAllNotificationsAsReadMutation } from '@/store/services/notificationApi';
+import { toast } from 'sonner';
 
 interface NotificationDropdownProps {
 	isOpen: boolean;
@@ -37,6 +38,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	const { selectedCampaignId } = useCampaign();
 	const previousLobId = useRef(selectedCampaignId);
 	const isInitialOpen = useRef(true);
+	const [markAllAsRead] = useMarkAllNotificationsAsReadMutation();
 
 	// Track navigation to prevent sounds during page switches
 	useEffect(() => {
@@ -159,8 +161,6 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			onMarkAsRead(notification.id);
 		}
 
-		onClose();
-
 		const data = notification.data as { companyId?: string; userId?: string };
 		// Handle navigation based on notification type
 		if (notification.type === 'business_registration' && data?.companyId) {
@@ -169,6 +169,16 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			if (data.companyId) {
 				router.push(`/superadmin/businesses/${data.companyId}`);
 			}
+		}
+	};
+
+	const handleMarkAllAsRead = async () => {
+		try {
+			await markAllAsRead({ campaignId: selectedCampaignId || '' }).unwrap();
+			toast.success('All notifications marked as read');
+		} catch (err) {
+			console.error('Failed to mark all as read:', err);
+			toast.error('Failed to mark notifications as read');
 		}
 	};
 
@@ -197,23 +207,33 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 						>
 							Notification ({notifications.filter(n => !n.isRead).length})
 						</h3>
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={onClose}
-							className="dark:text-gray-300 dark:hover:text-gray-100 transition-colors rounded-[var(--radius)]"
-							style={{ color: 'var(--text-primary)' }}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.color = 'var(--text-primary)';
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.color = 'var(--text-primary)';
-							}}
-						>
-							<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-							</svg>
-						</Button>
+						<div className="flex items-center gap-2">
+							{notifications.some(n => !n.isRead) && (
+								<button
+									onClick={handleMarkAllAsRead}
+									className="text-[10px] md:text-[11px] text-blue-500 hover:text-blue-600 font-bold px-2 py-1 rounded transition-colors"
+								>
+									Mark all as read
+								</button>
+							)}
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={onClose}
+								className="dark:text-gray-300 dark:hover:text-gray-100 transition-colors rounded-[var(--radius)] p-1!"
+								style={{ color: 'var(--text-primary)' }}
+								onMouseEnter={(e) => {
+									e.currentTarget.style.color = 'var(--text-primary)';
+								}}
+								onMouseLeave={(e) => {
+									e.currentTarget.style.color = 'var(--text-primary)';
+								}}
+							>
+								<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+								</svg>
+							</Button>
+						</div>
 					</div>
 
 					{/* Notifications List */}

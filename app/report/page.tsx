@@ -203,12 +203,12 @@ const ReportPage: React.FC = () => {
 		if (reportData.length === 0) return [];
 		const headers = new Set<string>();
 		// Default headers that should always be present
-		const priorityHeaders = ['Agent Name', 'Date', 'Search ID'];
+		const priorityHeaders = ['Agent Name', 'Date'];
 
-		// Add all keys from all items
+		// Add all keys from all items except Search ID
 		reportData.forEach(item => {
 			Object.keys(item).forEach(key => {
-				if (key !== 'id' && key !== '_id') {
+				if (key !== 'id' && key !== '_id' && key !== 'Search ID') {
 					headers.add(key);
 				}
 			});

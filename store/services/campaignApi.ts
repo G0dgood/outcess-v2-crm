@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import type { Bucket, DashboardSettings } from "@/types/dashboard";
+import type { Bucket, DashboardSettings, CustomerField } from "@/types/dashboard";
 
 export interface Campaign {
   _id: string;
@@ -25,13 +25,7 @@ export interface Campaign {
   customerBookSettings?: {
     configuredFields: {
       bucketId: string;
-      fields: {
-        id: string;
-        name: string;
-        type: string;
-        required: boolean;
-        options?: string[];
-      }[];
+      fields: CustomerField[];
     }[];
   };
   shiftHours?: unknown;

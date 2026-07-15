@@ -16,6 +16,8 @@ export interface DispositionCategory {
   sortOrder?: string;
   isRequired?: boolean;
   isArchived?: boolean;
+  backupId?: string;
+  backupOfId?: string;
 }
 
 export interface AssignedMember {
@@ -30,6 +32,7 @@ export interface CustomerField {
   type: string;
   required: boolean;
   options?: string[]; // For dropdown, radio, checkbox fields
+  icon?: string;
   [key: string]: unknown;
 }
 
@@ -93,7 +96,7 @@ export interface DashboardSettings {
   buckets: Bucket[];
   callOutcomes: CallOutcome[];
   dispositionSettings: {
-    timeRangeView: "daily" | "weekly" | "monthly";
+    timeRangeView: "daily" | "yesterday" | "weekly" | "monthly" | "yearly" | "all";
     chartType:
       | "bar"
       | "line"

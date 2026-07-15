@@ -198,7 +198,16 @@ const TeamSupportPage = () => {
        className="flex items-center gap-2 h-10 px-4 text-[10px] md:text-[12px] bg-white dark:bg-gray-800"
        onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
       >
-       {dateFilter?.filterType ? (dateFilter.filterType === 'all' ? 'All Time' : dateFilter.filterType) : "This Week"}
+       {dateFilter?.filterType ? (
+        {
+         today: 'Today',
+         yesterday: 'Yesterday',
+         last7days: 'Last 7 Days',
+         last30days: 'Last 30 Days',
+         all: 'All Time',
+         dateRange: 'Date Range'
+        }[dateFilter.filterType] || dateFilter.filterType
+       ) : "This Week"}
       </Button>
       {isDateFilterOpen && (
        <div className="absolute top-full right-0 mt-2 z-50">
