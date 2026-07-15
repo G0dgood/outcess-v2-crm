@@ -530,6 +530,7 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 		{ value: 'multi-line-text', label: 'Multi Line Text' },
 		{ value: 'date', label: 'Date' },
 		{ value: 'date-time', label: 'Date & Time' },
+		{ value: 'autosuggest', label: 'Auto Suggestion' }
 	];
 	const computedFieldTypeOptions = fieldTypeOptions && fieldTypeOptions.length > 0 ? fieldTypeOptions : defaultFieldTypeOptions;
 
@@ -652,6 +653,135 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 									Add Option
 								</Button>
 							</div>
+						</div>
+					)}
+
+					{dispositionForm.fieldType === 'autosuggest' && (
+						<div className="space-y-4">
+							<div>
+								<div className="flex justify-between items-center mb-2">
+									<label
+										className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 block"
+										style={{ color: 'var(--text-primary)' }}
+									>
+										Upload Suggestions List
+									</label>
+									<button
+										type="button"
+										onClick={() => {
+											const content = "suggestions\nAccident\nalready applied for loan extension";
+											const blob = new Blob([content], { type: 'text/csv' });
+											const url = URL.createObjectURL(blob);
+											const link = document.createElement('a');
+											link.href = url;
+											link.download = 'suggestions-sample.csv';
+											document.body.appendChild(link);
+											link.click();
+											document.body.removeChild(link);
+											URL.revokeObjectURL(url);
+										}}
+										className="text-[10px] text-blue-500 hover:text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 hover:underline"
+									>
+										Download Sample
+									</button>
+								</div>
+								<div
+									className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-900/10 transition-colors"
+									style={{ borderColor: 'var(--light-gray)' }}
+									onClick={() => document.getElementById('suggestions-file-input')?.click()}
+								>
+									<p className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-secondary)' }}>
+										Click to upload a suggestions file (.txt or .csv)
+									</p>
+									<p className="text-[8px] md:text-[10px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
+										Suggestions should be separated by newlines
+									</p>
+									<input
+										id="suggestions-file-input"
+										type="file"
+										accept=".txt,.csv"
+										className="hidden"
+										onChange={(e) => {
+											const file = e.target.files?.[0];
+											if (file) {
+												const reader = new FileReader();
+												reader.onload = (event) => {
+													const text = event.target?.result as string;
+													let lines = text
+														.split(/\r?\n/)
+														.map(l => l.trim())
+														.filter(l => l.length > 0);
+													
+													// If the first line is the header "suggestions", exclude it
+													if (lines.length > 0 && lines[0].toLowerCase() === 'suggestions') {
+														lines = lines.slice(1);
+													}
+													
+													const newLocal = lines.map((line, i) => ({
+														id: `opt-item-${i}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+														value: line
+													}));
+													setLocalOptions(newLocal);
+													setDispositionForm(prev => ({
+														...prev,
+														dropdownOptions: lines
+													}));
+												};
+												reader.readAsText(file);
+											}
+										}}
+									/>
+								</div>
+							</div>
+
+							{localOptions.length > 0 && (
+								<div>
+									<div className="flex justify-between items-center mb-2">
+										<label
+											className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
+											style={{ color: 'var(--text-primary)' }}
+										>
+											Suggestions ({localOptions.length})
+										</label>
+										<button
+											type="button"
+											onClick={() => {
+												setLocalOptions([]);
+												setDispositionForm(prev => ({ ...prev, dropdownOptions: [] }));
+											}}
+											className="text-[10px] text-red-500 hover:text-red-600 font-medium"
+										>
+											Clear All
+										</button>
+									</div>
+									<div className="max-h-[150px] overflow-y-auto border rounded p-2 bg-gray-50/50 dark:bg-gray-900/10 space-y-1" style={{ borderColor: 'var(--light-gray)' }}>
+										{localOptions.slice(0, 100).map((opt) => (
+											<div key={opt.id} className="text-[10px] md:text-[12px] py-1 px-2 border-b last:border-0 dark:border-gray-700 flex justify-between items-center" style={{ borderColor: 'var(--light-gray)' }}>
+												<span className="truncate pr-2" style={{ color: 'var(--text-primary)' }}>{opt.value}</span>
+												<button
+													type="button"
+													onClick={() => {
+														const newLocal = localOptions.filter(o => o.id !== opt.id);
+														setLocalOptions(newLocal);
+														setDispositionForm(prev => ({
+															...prev,
+															dropdownOptions: newLocal.map(o => o.value)
+														}));
+													}}
+													className="text-[10px] text-red-500 hover:text-red-700 font-medium"
+												>
+													Delete
+												</button>
+											</div>
+										))}
+										{localOptions.length > 100 && (
+											<div className="text-[9px] md:text-[11px] text-center p-2 text-gray-500">
+												...and {localOptions.length - 100} more suggestions
+											</div>
+										)}
+									</div>
+								</div>
+							)}
 						</div>
 					)}
 

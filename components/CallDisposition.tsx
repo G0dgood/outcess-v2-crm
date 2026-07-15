@@ -348,7 +348,8 @@ export default function CallDisposition() {
 		{ value: 'single-line-text', label: 'Single Line Text' },
 		{ value: 'multi-line-text', label: 'Multi Line Text' },
 		{ value: 'email', label: 'Email' },
-		{ value: 'date-time', label: 'Date/Time' }
+		{ value: 'date-time', label: 'Date/Time' },
+		{ value: 'autosuggest', label: 'Auto Suggestion' }
 	];
 
 	const chartData = {

@@ -12,6 +12,7 @@ import SingleCheckbox from './SingleCheckbox';
 import MultipleCheckbox from './MultipleCheckbox';
 import { Cross2Icon, CalendarIcon, ClockIcon, PersonIcon, MobileIcon, EnvelopeClosedIcon, HomeIcon, FileTextIcon } from '@radix-ui/react-icons';
 import EmptyState from './EmptyState';
+import Autosuggestions from '@/components/ Autosuggestions';
 import { useSocket } from '@/contexts/SocketContext';
 import { saveOfflineDisposition, saveSyncedDisposition, DispositionFieldEntry } from '@/utils/offlineDispositions';
 import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
@@ -365,6 +366,25 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 		const key = toCamelCase(field.name);
 
 		switch (field.fieldType) {
+			case 'autosuggest':
+				return (
+					<div key={field.id} className="col-span-1 md:col-span-2">
+						<label
+							className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-1"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							{field.name}
+							{field.isRequired && <span className="text-red-500 ml-1">*</span>}
+						</label>
+						<Autosuggestions
+							suggestions={field.dropdownOptions || []}
+							value={String(formData[key] || '')}
+							onChange={handleInputChange(key)}
+							required={field.isRequired}
+						/>
+					</div>
+				);
+
 			case 'dropdown':
 				return (
 					<Dropdown
