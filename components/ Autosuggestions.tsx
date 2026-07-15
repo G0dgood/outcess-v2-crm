@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -19,7 +19,7 @@ const Autosuggestions: React.FC<AutosuggestionsProps> = ({
 	setComment,
 	required = false
 }) => {
-	const { user } = useAuth() as any;
+	const { user } = useAuth() as { user?: { firstname?: string; name?: string } };
 	const firstName = (user?.firstname || user?.name?.split(' ')[0] || 'User') as string;
 
 	const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
@@ -197,7 +197,7 @@ const Autosuggestions: React.FC<AutosuggestionsProps> = ({
 						<div className="dropdown-empty-state !p-3">
 							<div className="dropdown-empty-text">
 								<p className="dropdown-empty-title">
-									No suggestions for you {firstName}, you're on your own!
+									No suggestions for you {firstName}, you&apos;re on your own!
 								</p>
 							</div>
 						</div>

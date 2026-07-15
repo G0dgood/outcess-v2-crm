@@ -37,7 +37,7 @@ const fieldTypeOptions = [
 ];
 
 const LucideIcon = ({ name, size = 16, className = '' }: { name: string; size?: number; className?: string }) => {
-	const IconComponent = (icons as any)[name] || HelpCircle;
+	const IconComponent = (icons as Record<string, React.ComponentType<{ size?: number; className?: string }>>)[name] || HelpCircle;
 	return <IconComponent size={size} className={className} />;
 };
 
