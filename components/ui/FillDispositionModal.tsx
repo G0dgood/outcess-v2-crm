@@ -729,7 +729,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 										let CustomIcon = null;
 										if (customFieldConfig?.icon) {
-											CustomIcon = (icons as any)[customFieldConfig.icon];
+											CustomIcon = (icons as Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>>)[customFieldConfig.icon];
 										}
 
 										let IconComponent = PersonIcon;
