@@ -18,6 +18,7 @@ import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useCreateDispositionMutation } from '@/store/services/dispositionApi';
+import { icons } from 'lucide-react';
 import { DispositionCategory, Bucket, NestedOption } from '@/types/dashboard';
 
 interface FillDispositionModalProps {
@@ -700,6 +701,15 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 								{Object.entries(customer)
 									.filter(([key]) => !['id', '_id', 'companyId', 'campaignId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid')
 									.map(([key, value]) => {
+										const customFieldConfig = (campaignData?.customerBookSettings?.configuredFields || [])
+											.flatMap(c => c?.fields || [])
+											.find(f => f && f.name === key);
+
+										let CustomIcon = null;
+										if (customFieldConfig?.icon) {
+											CustomIcon = (icons as any)[customFieldConfig.icon];
+										}
+
 										let IconComponent = PersonIcon;
 										const lowerKey = key.toLowerCase();
 										if (lowerKey.includes('phone')) IconComponent = MobileIcon;
@@ -709,7 +719,11 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 										return (
 											<div key={key} className="flex items-start gap-4">
-												<IconComponent className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+												{CustomIcon ? (
+													<CustomIcon className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+												) : (
+													<IconComponent className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+												)}
 												<div>
 													<label
 														className="block text-[8px] md:text-[10px] font-medium dark:text-gray-400 uppercase tracking-wider mb-1"

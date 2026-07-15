@@ -32,6 +32,7 @@ export interface CustomerField {
   type: string;
   required: boolean;
   options?: string[]; // For dropdown, radio, checkbox fields
+  icon?: string;
   [key: string]: unknown;
 }
 

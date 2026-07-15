@@ -249,11 +249,11 @@ const CustomerBookPage: React.FC = () => {
 													variant="ghost"
 													size="sm"
 													onClick={() => canView ? handleViewCustomer(customer) : undefined}
-													className="dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
-													style={{ color: 'var(--text-secondary)' }}
+													className="transition-all !rounded-full w-8 h-8 !p-0 flex items-center justify-center border border-transparent hover:border-[#6C8B7D] hover:bg-[#6C8B7D]/10 dark:hover:bg-[#6C8B7D]/20"
+													style={{ color: campaignData?.primaryColor || '#6C8B7D' }}
 													disabled={!canView}
 												>
-													<ArrowRightIcon className="w-5 h-5" />
+													<ArrowRightIcon className="w-4 h-4" />
 												</Button>
 											</td>
 											{tableHeaders?.map((header) => (
