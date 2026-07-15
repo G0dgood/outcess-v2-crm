@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from '@/contexts/AuthContext';
 
 interface AutosuggestionsProps {
@@ -27,6 +28,37 @@ const Autosuggestions: React.FC<AutosuggestionsProps> = ({
 	const [input, setInput] = useState(value);
 	const containerRef = useRef<HTMLDivElement>(null);
 
+	const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, bottom: 0 });
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
+	const updateCoords = useCallback(() => {
+		if (containerRef.current) {
+			const rect = containerRef.current.getBoundingClientRect();
+			setCoords({
+				top: rect.top,
+				left: rect.left,
+				width: rect.width,
+				bottom: rect.bottom
+			});
+		}
+	}, []);
+
+	useEffect(() => {
+		if (showSuggestions && input) {
+			updateCoords();
+			window.addEventListener('resize', updateCoords);
+			window.addEventListener('scroll', updateCoords, true);
+		}
+		return () => {
+			window.removeEventListener('resize', updateCoords);
+			window.removeEventListener('scroll', updateCoords, true);
+		};
+	}, [showSuggestions, input, updateCoords]);
+
 	useEffect(() => {
 		setInput(value);
 	}, [value]);
@@ -34,9 +66,14 @@ const Autosuggestions: React.FC<AutosuggestionsProps> = ({
 	// Close suggestions dropdown when clicking outside
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
-			if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-				setShowSuggestions(false);
+			const target = event.target as HTMLElement;
+			if (containerRef.current && containerRef.current.contains(target)) {
+				return;
 			}
+			if (target.closest('.dropdown-menu')) {
+				return;
+			}
+			setShowSuggestions(false);
 		};
 		document.addEventListener("mousedown", handleClickOutside);
 		return () => {
@@ -99,41 +136,10 @@ const Autosuggestions: React.FC<AutosuggestionsProps> = ({
 		}
 	};
 
-	const SuggestionsListComponent = () => {
-		return filteredSuggestions.length ? (
-			<ul className="absolute z-50 mt-1 max-h-40 w-full overflow-y-auto rounded-md shadow-lg border text-[10px] md:text-[12px] dark:border-gray-700 bg-white dark:bg-gray-800 divide-y dark:divide-gray-700">
-				{filteredSuggestions.map((suggestion, index) => {
-					let className = "relative cursor-pointer select-none py-2 px-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors";
-					if (index === activeSuggestionIndex) {
-						className += " bg-gray-50 dark:bg-gray-700";
-					}
-					return (
-						<li
-							className={className}
-							key={suggestion}
-							onClick={() => handleSelectSuggestion(suggestion)}
-						>
-							{suggestion}
-						</li>
-					);
-				})}
-			</ul>
-		) : (
-			<div className="absolute z-50 mt-1 p-3 rounded-md shadow-lg border text-[10px] md:text-[12px] dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400 w-full italic">
-				No suggestions for you {firstName}, you're on your own!
-			</div>
-		);
-	};
-
 	return (
 		<div ref={containerRef} className="relative w-full">
 			<input
-				className="w-full px-3 py-2 border dark:border-gray-600 rounded text-[10px] md:text-[12px] dark:bg-gray-700 dark:text-gray-300 dark:placeholder:text-gray-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500 transition-all"
-				style={{
-					borderColor: 'var(--light-gray)',
-					backgroundColor: 'var(--accent-white)',
-					color: 'var(--text-primary)'
-				}}
+				className="dropdown-trigger rounded-[var(--radius)] pr-10 w-full"
 				type="text"
 				onChange={handleInputChange}
 				onKeyDown={handleKeyDown}
@@ -142,7 +148,63 @@ const Autosuggestions: React.FC<AutosuggestionsProps> = ({
 				required={required}
 				placeholder="Type or select a suggestion..."
 			/>
-			{showSuggestions && input && <SuggestionsListComponent />}
+			<svg
+				className={`dropdown-chevron ${showSuggestions && input ? 'open' : ''} absolute right-4 top-1/2 -translate-y-1/2`}
+				width="12"
+				height="12"
+				viewBox="0 0 12 12"
+				fill="none"
+				style={{ pointerEvents: 'none' }}
+			>
+				<path
+					d="M3 4.5L6 7.5L9 4.5"
+					stroke="currentColor"
+					strokeWidth="1.5"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+				/>
+			</svg>
+
+			{showSuggestions && input && mounted && typeof document !== 'undefined' && createPortal(
+				<div
+					className="dropdown-menu rounded-[var(--radius)]"
+					style={{
+						position: 'fixed',
+						top: `${coords.bottom + 4}px`,
+						left: `${coords.left}px`,
+						width: `${coords.width}px`,
+						zIndex: 10000,
+					}}
+				>
+					{filteredSuggestions.length ? (
+						<div className="dropdown-options" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+							{filteredSuggestions.map((suggestion, index) => {
+								const isSelected = index === activeSuggestionIndex;
+								return (
+									<button
+										key={suggestion}
+										type="button"
+										className={`dropdown-option ${isSelected ? 'selected' : ''}`}
+										onClick={() => handleSelectSuggestion(suggestion)}
+										style={{ width: '100%', textAlign: 'left' }}
+									>
+										{suggestion}
+									</button>
+								);
+							})}
+						</div>
+					) : (
+						<div className="dropdown-empty-state !p-3">
+							<div className="dropdown-empty-text">
+								<p className="dropdown-empty-title">
+									No suggestions for you {firstName}, you're on your own!
+								</p>
+							</div>
+						</div>
+					)}
+				</div>,
+				document.body
+			)}
 		</div>
 	);
 };

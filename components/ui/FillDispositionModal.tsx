@@ -73,7 +73,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 		// 1. If direct dispositions exist, use them
 		if (settings.dispositions && settings.dispositions.length > 0) {
-			return settings.dispositions as DispositionCategory[];
+			return (settings.dispositions as DispositionCategory[]).filter(d => !d.isArchived);
 		}
 
 		// 2. If buckets exist, check if this agent is assigned to a specific bucket
@@ -90,7 +90,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 			);
 
 			if (assignedBucket && assignedBucket.dispositions && assignedBucket.dispositions.length > 0) {
-				return assignedBucket.dispositions as DispositionCategory[];
+				return (assignedBucket.dispositions as DispositionCategory[]).filter(d => !d.isArchived);
 			}
 
 			// 3. Fallback: gather all unique dispositions across all buckets
@@ -107,7 +107,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 				}
 			});
 			if (allDispositions.length > 0) {
-				return allDispositions;
+				return allDispositions.filter(d => !d.isArchived);
 			}
 		}
 
@@ -556,26 +556,27 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 			case 'date-time':
 				return (
-					<div key={field.id}>
+					<div key={field.id} className="col-span-1 md:col-span-2">
 						<label
 							className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-2"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							{field.name}
+							{field.isRequired && <span className="text-red-500 ml-1">*</span>}
 						</label>
 						<div className="grid grid-cols-2 gap-3">
-							<div className="input-container relative">
-								<input
-									type="date"
+							<div className="relative">
+								<DateInput
+									label=""
 									placeholder="DD/MM/YY"
 									value={String(formData[`${key}_date`] || '')}
-									onChange={(e) => handleInputChange(`${key}_date`)(e.target.value)}
-									className="input-field pr-10"
+									onChange={(val) => handleInputChange(`${key}_date`)(val)}
+									inputClassName="pr-10"
 								/>
 								<button
 									type="button"
 									onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-										const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+										const input = e.currentTarget.previousElementSibling?.querySelector('input');
 										if (input) {
 											try {
 												(input as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
@@ -585,24 +586,25 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 											}
 										}
 									}}
-									className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
+									className="absolute right-3 top-[10px] cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									<CalendarIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
 								</button>
 							</div>
-							<div className="input-container relative">
-								<input
-									type="time"
+							<div className="relative">
+								<Input
+									label=""
 									placeholder="HH:MM"
+									type="time"
 									value={String(formData[`${key}_time`] || '')}
-									onChange={(e) => handleInputChange(`${key}_time`)(e.target.value)}
-									className="input-field pr-10"
+									onChange={handleInputChange(`${key}_time`)}
+									inputClassName="pr-10"
 								/>
 								<button
 									type="button"
 									onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-										const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+										const input = e.currentTarget.previousElementSibling?.querySelector('input');
 										if (input) {
 											try {
 												(input as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
@@ -612,7 +614,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 											}
 										}
 									}}
-									className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
+									className="absolute right-3 top-[10px] cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									<ClockIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
