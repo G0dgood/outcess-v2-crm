@@ -76,9 +76,10 @@ export interface Chart {
     | "scatter"
     | "bubble";
   dataSource: string | string[]; // Support both single and multiple data sources
-  timeRange: "daily" | "weekly" | "monthly";
+  timeRange: "daily" | "yesterday" | "weekly" | "monthly";
   color?: string; // Base color for backward compatibility
   colors?: Record<string, string>; // Map of data source to color for multiple data sources
+  size: "small" | "medium" | "large"; // Chart size
   position: {
     x: number;
     y: number;
@@ -96,7 +97,13 @@ export interface DashboardSettings {
   buckets: Bucket[];
   callOutcomes: CallOutcome[];
   dispositionSettings: {
-    timeRangeView: "daily" | "yesterday" | "weekly" | "monthly" | "yearly" | "all";
+    timeRangeView:
+      | "daily"
+      | "yesterday"
+      | "weekly"
+      | "monthly"
+      | "yearly"
+      | "all";
     chartType:
       | "bar"
       | "line"

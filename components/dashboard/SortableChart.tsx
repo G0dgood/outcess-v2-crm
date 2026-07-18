@@ -52,6 +52,18 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 		opacity: isDragging ? 0.5 : 1,
 	};
 
+	// Determine height based on size
+	const getChartHeight = () => {
+		switch (chart.size) {
+			case 'large':
+				return 'h-[500px]';
+			case 'medium':
+			case 'small':
+			default:
+				return 'h-80';
+		}
+	};
+
 	const renderChart = () => {
 		switch (chart.type) {
 			case 'pie':
@@ -152,7 +164,7 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 				</div>
 			</div>
 
-			<div className="p-6 h-80">
+			<div className={`p-4 ${getChartHeight()}`}>
 				<div className="flex flex-col items-center justify-center h-full">
 					{renderChart()}
 

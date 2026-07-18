@@ -6,7 +6,7 @@ import Dropdown from '@/components/ui/Dropdown';
 import Button from '@/components/ui/Button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useCreateTeamMemberMutation, useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
-import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery, Role } from '@/store/services/roleApi';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
@@ -39,7 +39,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 	});
 
 	// API Hooks
-	const { data: rolesResponse } = useGetRolesByCampaignIdQuery(campaignId, { skip: !campaignId });
+	const { data: rolesResponse } = useGetRolesByCompanyIdQuery(companyId, { skip: !companyId });
 
 	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
 		{ campaignId, limit: 1000 },

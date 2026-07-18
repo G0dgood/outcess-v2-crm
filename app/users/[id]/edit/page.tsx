@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
-import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
 import Skeleton from '@/components/ui/Skeleton';
 import Tabs from '@/components/ui/Tabs';
 
@@ -28,7 +28,9 @@ interface Role {
 	id?: string;
 	roleName: string;
 	supervisorTitle?: string;
+	user: string;
 }
+
 
 const EditUserPage: React.FC = () => {
 	const router = useRouter();
@@ -36,6 +38,11 @@ const EditUserPage: React.FC = () => {
 	const userId = params.id as string;
 	const { campaignData, selectedCampaignId } = useCampaign();
 	const { user } = useUserInfo();
+	const companyId =
+		(user?.company as { _id?: string; id?: string } | undefined)?._id ||
+		(user?.company as { _id?: string; id?: string } | undefined)?.id ||
+		user?.companyId ||
+		'';
 	const primaryColor = campaignData?.primaryColor || '#050711';
 
 	const { data: userResponse, isLoading: isUserLoading } = useGetTeamMemberByIdQuery(userId);
@@ -44,8 +51,8 @@ const EditUserPage: React.FC = () => {
 	const userCampaignId = (userDataObj as { campaignId?: string })?.campaignId || '';
 	const queryCampaignId = userCampaignId || selectedCampaignId || '';
 
-	const { data: rolesData } = useGetRolesByCampaignIdQuery(queryCampaignId, {
-		skip: !queryCampaignId
+	const { data: rolesData } = useGetRolesByCompanyIdQuery(companyId || '', {
+		skip: !companyId
 	});
 
 	const [updateTeamMember] = useUpdateTeamMemberMutation();
@@ -68,11 +75,7 @@ const EditUserPage: React.FC = () => {
 		userId: '',
 	});
 
-	const companyId =
-		(user?.company as { _id?: string; id?: string } | undefined)?._id ||
-		(user?.company as { _id?: string; id?: string } | undefined)?.id ||
-		user?.companyId ||
-		'';
+
 
 
 

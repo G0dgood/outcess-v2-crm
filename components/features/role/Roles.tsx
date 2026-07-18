@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useCampaign } from '@/contexts/CampaignContext';
-import { useGetRolesByCampaignIdQuery, useDeleteRoleMutation } from '@/store/services/roleApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { useGetRolesByCompanyIdQuery, useDeleteRoleMutation } from '@/store/services/roleApi';
 import RolesSkeleton from '@/components/skeletons/RolesSkeleton';
 import Button from '@/components/ui/Button';
 import CreateCustomRoleModal from '@/components/ui/CreateCustomRoleModal';
@@ -27,8 +27,9 @@ interface RolesProps {
 }
 
 const Roles: React.FC<RolesProps> = ({ className = '' }) => {
-	const { selectedCampaignId } = useCampaign();
-	const { data: rolesData, isLoading, refetch } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', { skip: !selectedCampaignId });
+	const { user } = useUserInfo();
+	const companyId = user?.company?._id || user?.companyId;
+	const { data: rolesData, isLoading, refetch } = useGetRolesByCompanyIdQuery(companyId || '', { skip: !companyId });
 	const { canAccess } = usePrivilege();
 	const canDelete = canAccess('userManagement', 'delete');
 	const canCreate = canAccess('userManagement', 'create');
@@ -103,7 +104,7 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 						text="Roles"
 					/>
 					<SubPageHeading
-						text="Following are the roles available. You can also create custom roles."
+						text="Following are the roles available across this company. New roles are shared with every campaign."
 					/>
 				</div>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
@@ -213,7 +214,7 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 				<EmptyState
 					icon={Component1Icon}
 					title="No Roles Found"
-					description="There are currently no custom roles defined for this campaign. You can create custom roles to manage granular permissions for your team."
+					description="There are currently no custom roles defined for this company. Create one here and it will be available across every campaign."
 					actionLabel="Create Custom Role"
 					onAction={handleCreateCustomRole}
 				/>

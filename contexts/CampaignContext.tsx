@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useGetCampaignQuery, useGetCampaignByCompanyIdQuery, useGetCampaignByCompanyIdForheaderQuery, Campaign } from '@/store/services/campaignApi';
 import { useAuth } from './AuthContext';
+import { useSelector } from 'react-redux';
+import { selectIsAdmin, selectUserPrivileges } from '@/store/slices/privilegeSlice';
 
 interface CampaignContextType {
     selectedCampaignId: string | null;
@@ -21,6 +23,17 @@ interface CampaignProviderProps {
 export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, initialCampaignId }) => {
     const [selectedCampaignId, setSelectedCampaignIdState] = useState<string | null>(initialCampaignId || null);
     const { user } = useAuth();
+    const isAdmin = useSelector(selectIsAdmin);
+    const userPrivileges = useSelector(selectUserPrivileges);
+
+    // Check if user has dashboard edit permission
+    const hasDashboardEditPermission = () => {
+        if (!userPrivileges?.role?.permissions) return false;
+        const dashboardPermission = userPrivileges.role.permissions.find(
+            (p) => p.moduleName.toLowerCase().replace(/\s+/g, '') === 'dashboard'
+        );
+        return dashboardPermission?.access && dashboardPermission.permissions.edit;
+    };
 
     // Get all campaigns for the company
     const { data: campaignsData } = useGetCampaignByCompanyIdForheaderQuery(
@@ -36,9 +49,10 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, in
 
     useEffect(() => {
         const userRoleName = typeof user?.role === 'object' ? user.role?.roleName : user?.role;
-        const isUserAdmin = userRoleName === 'Administrator' || userRoleName === 'admin';
+        const isUserAdmin = isAdmin || userRoleName === 'Administrator' || userRoleName === 'admin';
+        const hasEditDashboard = hasDashboardEditPermission();
 
-        if (!isUserAdmin && typeof user?.campaignId === 'string') {
+        if (!isUserAdmin && !hasEditDashboard && typeof user?.campaignId === 'string') {
             setSelectedCampaignIdState(user.campaignId);
             return;
         }
@@ -58,7 +72,7 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, in
                 setSelectedCampaignIdState(campaignId);
             }
         }
-    }, [companyCampaign, campaignsData, user]);
+    }, [companyCampaign, campaignsData, user, userPrivileges, isAdmin]);
 
     const setSelectedCampaignId = (id: string | null) => {
         setSelectedCampaignIdState(id);

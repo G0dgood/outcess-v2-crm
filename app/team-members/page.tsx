@@ -17,7 +17,7 @@ import {
 	useUpdateTeamMemberMutation,
 	useDeleteTeamMemberMutation
 } from '@/store/services/teamMembersApi';
-import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery, Role } from '@/store/services/roleApi';
 import TeamMembersCards from '@/components/features/team-members/TeamMembersCards';
 import { toastError } from '@/utils/toastWithSound';
 import PageHeader from '@/components/ui/PageHeader';
@@ -112,7 +112,7 @@ const TeamMembersPage: React.FC = () => {
 	const [updateTeamMember] = useUpdateTeamMemberMutation();
 	const [deleteTeamMember] = useDeleteTeamMemberMutation();
 
-	const { data: rolesData } = useGetRolesByCampaignIdQuery(campaignId || '', { skip: !campaignId });
+	const { data: rolesData } = useGetRolesByCompanyIdQuery(companyId || '', { skip: !companyId });
 
 	const supervisorId = supervisorFilter;
 

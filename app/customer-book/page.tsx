@@ -35,7 +35,7 @@ const CustomerBookPage: React.FC = () => {
 	// const [currentPage, setCurrentPage] = useState(1);
 	const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
 	const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-	const { canAccess, isAdmin, isSuperAdmin } = usePrivilege();
+	const { canAccess, isAdmin, isSuperAdmin, allBucketAccess } = usePrivilege();
 	const { user } = useAuth();
 	const canAccessModule = canAccess('customerBook');
 	const canView = canAccess('customerBook', 'view');
@@ -50,7 +50,7 @@ const CustomerBookPage: React.FC = () => {
 	}, [campaignData]);
 
 	const userId = String(user?.id || user?._id || '');
-	const hasFullBucketAccess = isAdmin || isSuperAdmin;
+	const hasFullBucketAccess = isAdmin || isSuperAdmin || allBucketAccess;
 
 	const accessibleBuckets = useMemo(
 		() => (hasFullBucketAccess ? buckets : getUserAssignedBuckets(userId, buckets)),

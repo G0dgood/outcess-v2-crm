@@ -613,7 +613,8 @@ const DashboardContent: React.FC = () => {
 			dataSource: chart.dataSource,
 			timeRange: chart.timeRange,
 			color: chart.color,
-			colors: chart.colors
+			colors: chart.colors,
+			size: chart.size
 		};
 		updateChart(chart.id, updates);
 		setIsEditChartModalOpen(false);
@@ -808,17 +809,27 @@ const DashboardContent: React.FC = () => {
 									strategy={verticalListSortingStrategy}
 								>
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-										{dashboardSettings?.dispositionSettings.charts.map((chart: Chart) => (
-											<SortableChart
-												key={chart.id}
-												chart={chart}
-												generateChartData={generateChartDataWrapper}
-												onRemoveChart={handleRemoveChart}
-												onEditChart={handleEditChart}
-												canEdit={canEdit}
-												canDelete={canDelete}
-											/>
-										))}
+										{dashboardSettings?.dispositionSettings.charts.map((chart: Chart) => {
+											// Default to 'small' if size is not set
+											const size = chart.size || 'small';
+											// Determine column span based on size
+											const colSpanClass =
+												size === 'small'
+													? 'col-span-1'
+													: 'col-span-1 md:col-span-2';
+											return (
+												<div key={chart.id} className={colSpanClass}>
+													<SortableChart
+														chart={{ ...chart, size }}
+														generateChartData={generateChartDataWrapper}
+														onRemoveChart={handleRemoveChart}
+														onEditChart={handleEditChart}
+														canEdit={canEdit}
+														canDelete={canDelete}
+													/>
+												</div>
+											);
+										})}
 									</div>
 								</SortableContext>
 							) : (

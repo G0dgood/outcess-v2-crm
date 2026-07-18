@@ -125,7 +125,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 
 	useEffect(() => {
-		if (!isAdmin && typeof reduxUser?.campaignId === 'string' && selectedCampaignId !== reduxUser.campaignId) {
+		if (!isAdmin && !canAccess('dashboard', 'edit') && typeof reduxUser?.campaignId === 'string' && selectedCampaignId !== reduxUser.campaignId) {
 			setSelectedCampaignId(reduxUser.campaignId);
 			return;
 		}
@@ -144,7 +144,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				setSelectedCampaignId(options[0].value);
 			}
 		}
-	}, [campaignData, selectedCampaignId, setSelectedCampaignId, isAdmin, reduxUser]);
+	}, [campaignData, selectedCampaignId, setSelectedCampaignId, isAdmin, reduxUser, canAccess]);
 
 	// Socket integration for Campaign updates
 	useEffect(() => {

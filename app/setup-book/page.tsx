@@ -41,7 +41,7 @@ interface ApiError {
 
 const SetupBookPage: React.FC = () => {
 	const router = useRouter();
-	const { canAccess, isAdmin, isSuperAdmin } = usePrivilege();
+	const { canAccess, isAdmin, isSuperAdmin, allBucketAccess } = usePrivilege();
 	const { user } = useAuth();
 	const canAccessModule = canAccess('setupBook');
 	const canCreate = canAccess('setupBook', 'create');
@@ -54,7 +54,7 @@ const SetupBookPage: React.FC = () => {
 	const allConfiguredFieldsChunks = useMemo(() => campaignData?.customerBookSettings?.configuredFields || [], [campaignData]);
 	const buckets = useMemo(() => (campaignData?.dashboardSettings?.buckets || []) as BucketWithMembers[], [campaignData]);
 	const userId = String(user?.id || user?._id || '');
-	const hasFullBucketAccess = isAdmin || isSuperAdmin;
+	const hasFullBucketAccess = isAdmin || isSuperAdmin || allBucketAccess;
 
 	const accessibleBuckets = useMemo(
 		() => (hasFullBucketAccess ? buckets : getUserAssignedBuckets(userId, buckets)),

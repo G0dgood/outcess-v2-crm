@@ -9,7 +9,7 @@ import {
   useAssignSupervisorToTeamMembersMutation,
   ApiTeamMember
 } from '@/store/services/teamMembersApi';
-import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { Dropdown } from '@/components/ui/Dropdown';
@@ -53,9 +53,9 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
   const campaignId = campaignData?._id || '';
   const selectedCampaignId = campaignId;
 
-  const { data: rolesResponse, isLoading: isRolesLoading } = useGetRolesByCampaignIdQuery(
-    selectedCampaignId || '',
-    { skip: !selectedCampaignId }
+  const { data: rolesResponse, isLoading: isRolesLoading } = useGetRolesByCompanyIdQuery(
+    companyId || '',
+    { skip: !companyId }
   );
 
   const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(

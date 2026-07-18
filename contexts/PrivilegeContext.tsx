@@ -5,7 +5,7 @@ import { useSocket } from '@/contexts/SocketContext';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toastInfo } from '@/utils/toastWithSound';
-import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
 
 // Permission/Module types
 export type ModuleId =
@@ -110,10 +110,11 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 	const { socket } = useSocket();
 	const { selectedCampaignId } = useCampaign();
 	const { user, updateUser } = useAuth();
+	const companyId = user?.companyId || (user?.company as { _id?: string })?._id || '';
 
-	// Add reactive query for roles in this Campaign
-	const { data: rolesData } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', {
-		skip: !selectedCampaignId
+	// Add reactive query for roles in this Company
+	const { data: rolesData } = useGetRolesByCompanyIdQuery(companyId, {
+		skip: !companyId
 	});
 
 

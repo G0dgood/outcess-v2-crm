@@ -9,7 +9,7 @@ import IndividualRadio from './IndividualRadio';
 import ColorPicker from './ColorPicker';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useCreateStatusMutation, useUpdateStatusMutation } from '@/store/services/statusApi';
-import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery, Role } from '@/store/services/roleApi';
 import { toastSuccess, toastError } from '@/utils/toastWithSound';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useCampaign } from '@/contexts/CampaignContext';
@@ -60,8 +60,8 @@ export const CreateStatusModal: React.FC<CreateStatusModalProps> = ({
 	const { selectedCampaignId } = useCampaign();
 	const companyId = user?.companyId || user?.company?._id;
 
-	const { data: rolesData } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', {
-		skip: !selectedCampaignId
+	const { data: rolesData } = useGetRolesByCompanyIdQuery(companyId || '', {
+		skip: !companyId
 	});
 
 	const roleOptions: RoleOption[] = React.useMemo(() => {

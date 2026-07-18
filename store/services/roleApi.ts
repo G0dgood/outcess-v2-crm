@@ -88,10 +88,14 @@ export const roleApi = baseApi.injectEndpoints({
     }),
     getPermissionWithPrivilege: builder.query<
       GetPermissionTemplatesResponse,
-      string
+      { campaignId?: string; companyId?: string }
     >({
-      query: (campaignId) =>
-        `api/v1/roles/permissions/keys?campaignId=${campaignId}`,
+      query: ({ campaignId, companyId }) => {
+        const params = new URLSearchParams();
+        if (campaignId) params.append("campaignId", campaignId);
+        if (companyId) params.append("companyId", companyId);
+        return `api/v1/roles/permissions/keys?${params.toString()}`;
+      },
       providesTags: ["PermissionTemplates"],
     }),
     updateRole: builder.mutation<

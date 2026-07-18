@@ -13,16 +13,17 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import AccessRestricted from '@/components/ui/AccessRestricted';
-import { 
-	useGetDispositionsByCampaignReportQuery, 
+import {
+	useGetDispositionsByCampaignReportQuery,
 	useGetDispositionsByAgentReportQuery,
 	useLazyGetDispositionsByCampaignReportQuery,
-	useLazyGetDispositionsByAgentReportQuery 
+	useLazyGetDispositionsByAgentReportQuery
 } from '@/store/services/dispositionApi';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
 import { toastWarning, toastError } from '@/utils/toastWithSound';
 import CSVDownloadButton from '@/components/ui/CSVDownloadButton';
+import { BucketWithMembers, getUserAssignedBuckets } from '@/utils/bucketUtils';
 
 interface ReportData {
 	id: string;
@@ -63,7 +64,7 @@ interface ReportApiResponse {
 const ReportPage: React.FC = () => {
 	const { campaignData, selectedCampaignId } = useCampaign();
 	const { user } = useUserInfo();
-	const { canAccess, isAdmin, isLoading: isPrivilegeLoading } = usePrivilege();
+	const { canAccess, isAdmin, isLoading: isPrivilegeLoading, allBucketAccess, isSuperAdmin } = usePrivilege();
 	const canView = canAccess('report', 'view');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -86,6 +87,17 @@ const ReportPage: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
 	const [selectedBucketId, setSelectedBucketId] = useState<string>('');
+
+	const userId = String(user?._id || user?.id || '');
+	const hasFullBucketAccess = isAdmin || isSuperAdmin || allBucketAccess;
+
+	const allBuckets = useMemo(() => {
+		return (campaignData?.dashboardSettings?.buckets || []) as unknown as BucketWithMembers[];
+	}, [campaignData]);
+
+	const accessibleBuckets = useMemo(() => {
+		return hasFullBucketAccess ? allBuckets : getUserAssignedBuckets(userId, allBuckets);
+	}, [allBuckets, userId, hasFullBucketAccess]);
 
 
 
@@ -131,6 +143,25 @@ const ReportPage: React.FC = () => {
 		setCurrentPage(1);
 	}, [searchTerm, selectedBucketId]);
 
+	// Reset selected bucket if it's not accessible
+	useEffect(() => {
+		if (accessibleBuckets.length > 0 && selectedBucketId) {
+			const isAccessible = hasFullBucketAccess
+				? true
+				: accessibleBuckets.some(b => (b.id || b._id) === selectedBucketId);
+
+			if (!isAccessible) {
+				const firstBucket = accessibleBuckets[0];
+				const bucketId = firstBucket?.id ?? firstBucket?._id ?? '';
+				setSelectedBucketId(bucketId);
+			}
+		} else if (accessibleBuckets.length > 0 && !selectedBucketId) {
+			const firstBucket = accessibleBuckets[0];
+			const bucketId = firstBucket?.id ?? firstBucket?._id ?? '';
+			setSelectedBucketId(bucketId);
+		}
+	}, [accessibleBuckets, selectedBucketId, hasFullBucketAccess]);
+
 	useEffect(() => {
 		const savedLength = localStorage.getItem('report_tooltip_length');
 		if (savedLength) {
@@ -162,7 +193,7 @@ const ReportPage: React.FC = () => {
 			const minute = d ? String(d.getMinutes()).padStart(2, '0') : '';
 			const formatted = d ? `${year}-${month}-${day} ${hour}:${minute}` : '-';
 			const agentName = typeof item.agent === 'object' ? item.agent?.name : item.agent;
-			const customerSearchId = item.customer 
+			const customerSearchId = item.customer
 				? (Object.entries(item.customer).find(([key]) => key.toLowerCase() === 'searchid')?.[1] as string)
 				: undefined;
 
@@ -285,7 +316,7 @@ const ReportPage: React.FC = () => {
 		const formatted = d ? `${year}-${month}-${day} ${hour}:${minute}` : '-';
 		const agentName = typeof item.agent === 'object' ? item.agent?.name : item.agent;
 
-		const customerSearchId = item.customer 
+		const customerSearchId = item.customer
 			? (Object.entries(item.customer).find(([key]) => key.toLowerCase() === 'searchid')?.[1] as string)
 			: undefined;
 
@@ -377,15 +408,14 @@ const ReportPage: React.FC = () => {
 						showClearButton={true}
 					/>
 					{(() => {
-						const buckets = campaignData?.dashboardSettings?.buckets || [];
-						return buckets.length > 0 ? (
+						return accessibleBuckets.length > 0 ? (
 							<div className="w-full sm:w-48">
 								<Dropdown
 									label=""
 									placeholder="Select a Bucket"
 									options={[
-										{ value: '', label: 'All Buckets' },
-										...buckets.map((b: { id?: string; _id?: string; name: string }) => ({ value: b.id || b._id || '', label: b.name }))
+										...(hasFullBucketAccess ? [{ value: '', label: 'All Buckets' }] : []),
+										...accessibleBuckets.map((b: { id?: string; _id?: string; name: string }) => ({ value: b.id || b._id || '', label: b.name }))
 									]}
 									value={selectedBucketId}
 									onChange={(val) => {

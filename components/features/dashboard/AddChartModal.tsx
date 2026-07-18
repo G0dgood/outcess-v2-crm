@@ -21,6 +21,7 @@ interface AddChartModalProps {
 		type: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
 		dataSource: string | string[]; // Support both single and multiple data sources
 		timeRange: 'daily' | 'weekly' | 'monthly';
+		size: 'small' | 'medium' | 'large';
 		color?: string;
 		colors?: Record<string, string>; // Map of data source to color
 		position: {
@@ -47,6 +48,12 @@ const timeRangeOptions = [
 	{ value: 'daily', label: 'Daily' },
 	{ value: 'weekly', label: 'Weekly' },
 	{ value: 'monthly', label: 'Monthly' },
+];
+
+const sizeOptions = [
+	{ value: 'small', label: 'Small' },
+	{ value: 'medium', label: 'Medium' },
+	{ value: 'large', label: 'Large' },
 ];
 
 export const AddChartModal: React.FC<AddChartModalProps> = ({
@@ -82,6 +89,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		type: 'pie' as const,
 		dataSource: [] as string[], // Changed to array to support multiple data sources
 		timeRange: 'daily' as const,
+		size: 'small' as const,
 		color: '#050711',
 		colors: {} as Record<string, string>, // Map of data source to color
 		position: {
@@ -207,6 +215,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 				type: 'pie',
 				dataSource: [],
 				timeRange: 'daily',
+				size: 'small',
 				color: '#050711',
 				colors: {},
 				position: {
@@ -226,6 +235,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 			type: 'pie',
 			dataSource: [],
 			timeRange: 'daily',
+			size: 'small',
 			color: '#050711',
 			colors: {},
 			position: {
@@ -369,6 +379,14 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 						options={timeRangeOptions}
 						value={formData.timeRange}
 						onChange={handleInputChange('timeRange')}
+						required
+					/>
+					<Dropdown
+						label="Size"
+						placeholder="Select size"
+						options={sizeOptions}
+						value={formData.size}
+						onChange={handleInputChange('size')}
 						required
 					/>
 				</div>

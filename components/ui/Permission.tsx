@@ -8,6 +8,7 @@ import PageHeading from './PageHeading';
 import SubPageHeading from './SubPageHeading';
 import Button from './Button';
 import { useCampaign } from '@/contexts/CampaignContext';
+import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetPermissionWithPrivilegeQuery, useUpdateRoleMutation, RolePermission, Role as ApiRole, Role } from '@/store/services/roleApi';
 import { toastError, toastSuccess } from '@/utils/toastWithSound';
 import PermissionSkeleton from '@/components/skeletons/PermissionSkeleton';
@@ -43,17 +44,26 @@ const mapRolePermissionToItem = (p: RolePermission): PermissionItem => {
 
 interface PermissionProps {
 	className?: string;
-	campaignId?: string;
+	campaignId?: string | null;
 }
 
 const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) => {
 	const { selectedCampaignId } = useCampaign();
-	const targetId = campaignId || selectedCampaignId;
+	const { user } = useUserInfo();
+	const companyId = user?.company?._id || user?.companyId;
+
+	const targetCampaignId = campaignId ?? selectedCampaignId;
 
 	// Note: API returns { roles: Role[] } now
-	const { data: permissionData, isLoading } = useGetPermissionWithPrivilegeQuery(targetId || '', {
-		skip: !targetId
-	});
+	const { data: permissionData, isLoading } = useGetPermissionWithPrivilegeQuery(
+		{
+			campaignId: targetCampaignId ?? undefined,
+			companyId: !targetCampaignId ? (companyId ?? undefined) : undefined
+		},
+		{
+			skip: !targetCampaignId && !companyId
+		}
+	);
 
 	// State now holds the roles with their permissions
 	const [rolesPermissions, setRolesPermissions] = useState<PermissionRole[]>([]);
@@ -245,11 +255,11 @@ const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) =
 						title="No Roles Found"
 						description={
 							<>
-								No roles or permission data has been set up yet for this campaign. Create roles in the{' '}
+								No roles or permission data has been set up yet for this company. Create roles in the{' '}
 								<span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
 									Setup Book
 								</span>{' '}
-								to manage team member permissions here.
+								to manage team member permissions across every campaign.
 							</>
 						}
 					/>
