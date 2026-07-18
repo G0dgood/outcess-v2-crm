@@ -8,6 +8,7 @@ import DateFilter from '@/components/ui/DateFilter';
 import { MixerHorizontalIcon } from '@radix-ui/react-icons';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import PageHeading from '@/components/ui/PageHeading';
+import Dropdown from '@/components/ui/Dropdown';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -84,6 +85,7 @@ const ReportPage: React.FC = () => {
 	const isAgent = !isAdmin && !isSupervisor;
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
+	const [selectedBucketId, setSelectedBucketId] = useState<string>('');
 
 
 
@@ -94,7 +96,8 @@ const ReportPage: React.FC = () => {
 			endDate: dateRange.endDate,
 			page: currentPage,
 			limit: itemsPerPage,
-			search: searchTerm
+			search: searchTerm,
+			bucketId: selectedBucketId
 		},
 		{ skip: !selectedCampaignId || isAgent || isPrivilegeLoading }
 	);
@@ -107,7 +110,8 @@ const ReportPage: React.FC = () => {
 			limit: itemsPerPage,
 			startDate: dateRange.startDate,
 			endDate: dateRange.endDate,
-			search: searchTerm
+			search: searchTerm,
+			bucketId: selectedBucketId
 		},
 		{ skip: !selectedCampaignId || !isAgent || !(user?._id || user?.id) || isPrivilegeLoading }
 	);
@@ -125,7 +129,7 @@ const ReportPage: React.FC = () => {
 
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [searchTerm]);
+	}, [searchTerm, selectedBucketId]);
 
 	useEffect(() => {
 		const savedLength = localStorage.getItem('report_tooltip_length');
@@ -249,7 +253,8 @@ const ReportPage: React.FC = () => {
 			endDate: dateRange.endDate,
 			page: 1,
 			limit: 10000,
-			search: searchTerm
+			search: searchTerm,
+			bucketId: selectedBucketId
 		};
 
 		let response: ReportApiResponse | ReportItem[] | undefined;
@@ -362,15 +367,35 @@ const ReportPage: React.FC = () => {
 
 			{/* Search and Actions */}
 			<div className="my-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-				<Search
-					placeholder="Search"
-					value={searchTerm}
-					onChange={setSearchTerm}
-					className="w-full sm:w-auto"
-					maxWidth="w-full"
-					// onSearch={(value) =>  }
-					showClearButton={true}
-				/>
+				<div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-stretch sm:items-center">
+					<Search
+						placeholder="Search"
+						value={searchTerm}
+						onChange={setSearchTerm}
+						className="w-full sm:w-auto"
+						maxWidth="w-full"
+						showClearButton={true}
+					/>
+					{(() => {
+						const buckets = campaignData?.dashboardSettings?.buckets || [];
+						return buckets.length > 0 ? (
+							<div className="w-full sm:w-48">
+								<Dropdown
+									label=""
+									placeholder="Select a Bucket"
+									options={[
+										{ value: '', label: 'All Buckets' },
+										...buckets.map((b: { id?: string; _id?: string; name: string }) => ({ value: b.id || b._id || '', label: b.name }))
+									]}
+									value={selectedBucketId}
+									onChange={(val) => {
+										setSelectedBucketId(Array.isArray(val) ? val[0] || '' : val);
+									}}
+								/>
+							</div>
+						) : null;
+					})()}
+				</div>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
 					<div ref={filterButtonRef} className="relative">
 						<Button

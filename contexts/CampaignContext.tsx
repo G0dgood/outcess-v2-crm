@@ -35,6 +35,14 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, in
     );
 
     useEffect(() => {
+        const userRoleName = typeof user?.role === 'object' ? user.role?.roleName : user?.role;
+        const isUserAdmin = userRoleName === 'Administrator' || userRoleName === 'admin';
+
+        if (!isUserAdmin && typeof user?.campaignId === 'string') {
+            setSelectedCampaignIdState(user.campaignId);
+            return;
+        }
+
         const saved = localStorage.getItem('selectedCampaignId');
         if (saved) {
             setSelectedCampaignIdState(saved);
@@ -50,7 +58,7 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, in
                 setSelectedCampaignIdState(campaignId);
             }
         }
-    }, [companyCampaign, campaignsData]);
+    }, [companyCampaign, campaignsData, user]);
 
     const setSelectedCampaignId = (id: string | null) => {
         setSelectedCampaignIdState(id);

@@ -7,6 +7,9 @@ import AddDispositionModal from './AddDispositionModal';
 import AddBucketModal from './AddBucketModal';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
 import ConfirmChangeTypeModal from '@/components/ui/ConfirmChangeTypeModal';
+import Modal from '@/components/ui/Modal';
+import Input from '@/components/ui/Input';
+import Autosuggestions from '@/components/ Autosuggestions';
 import { useSetup, Bucket, DispositionCategory } from '@/contexts/SetupContext';
 import { NestedOption } from '@/types/dashboard';
 import {
@@ -38,7 +41,7 @@ import {
 	useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, RefreshCw } from 'lucide-react';
+import { GripVertical, RefreshCw, Eye } from 'lucide-react';
 import {
 	useAssignMemberToBucketMutation,
 	useRemoveMemberFromBucketMutation
@@ -68,9 +71,10 @@ interface SortableDispositionCardProps {
 	handleEditDisposition: (d: DispositionCategory) => void;
 	handleDeleteDispositionClick: (d: DispositionCategory) => void;
 	handleChangeTypeClick: (d: DispositionCategory) => void;
+	handlePreviewDisposition: (d: DispositionCategory) => void;
 }
 
-const SortableDispositionCard = ({ d, handleEditDisposition, handleDeleteDispositionClick, handleChangeTypeClick }: SortableDispositionCardProps) => {
+const SortableDispositionCard = ({ d, handleEditDisposition, handleDeleteDispositionClick, handleChangeTypeClick, handlePreviewDisposition }: SortableDispositionCardProps) => {
 	const {
 		attributes,
 		listeners,
@@ -110,6 +114,13 @@ const SortableDispositionCard = ({ d, handleEditDisposition, handleDeleteDisposi
 						<span className="text-[12px] font-medium text-gray-700 dark:text-gray-200 truncate">{d.name}</span>
 					</div>
 					<div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+						<button
+							onClick={() => handlePreviewDisposition(d)}
+							className="p-1 hover:text-blue-500 text-gray-400 transition-colors"
+							title="Preview Field"
+						>
+							<Eye className="w-3 h-3" />
+						</button>
 						<button
 							onClick={() => handleChangeTypeClick(d)}
 							className="p-1 hover:text-amber-500 text-gray-400 transition-colors"
@@ -170,6 +181,9 @@ export default function CallDisposition() {
 	const [assigningToBucketId, setAssigningToBucketId] = useState<string | null>(null);
 	const [assigningToBucketName, setAssigningToBucketName] = useState<string>('');
 	const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+
+	const [previewDisposition, setPreviewDisposition] = useState<DispositionCategory | null>(null);
+	const [previewValue, setPreviewValue] = useState<string>('');
 
 	const handleRestoreDisposition = (id: string) => {
 		if (activeBucketId) {
@@ -789,6 +803,7 @@ export default function CallDisposition() {
 													handleEditDisposition={handleEditDisposition}
 													handleDeleteDispositionClick={handleDeleteDispositionClick}
 													handleChangeTypeClick={handleChangeTypeClick}
+													handlePreviewDisposition={(d) => { setPreviewDisposition(d); setPreviewValue(''); }}
 												/>
 											))}
 										</div>
@@ -925,6 +940,284 @@ export default function CallDisposition() {
 				campaignId={setupData.campaignId || ''}
 				onAssign={handleAssignMember}
 			/>
+
+			{/* Disposition Preview Modal */}
+			<Modal
+				isOpen={!!previewDisposition}
+				onClose={() => setPreviewDisposition(null)}
+				title="Field Preview"
+				size="lg"
+			>
+				{previewDisposition && (
+					<div className="p-6 space-y-5">
+						{/* Field info header */}
+						<div className="flex items-center gap-3 pb-4 border-b" style={{ borderColor: 'var(--light-gray)' }}>
+							<div className="w-4 h-4 rounded" style={{ backgroundColor: previewDisposition.color }} />
+							<div>
+								<p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{previewDisposition.name}</p>
+								<p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+									Type: <span className="font-medium capitalize">{previewDisposition.fieldType.replace(/-/g, ' ')}</span>
+									{previewDisposition.isRequired && <span className="text-red-500 ml-2">• Required</span>}
+								</p>
+							</div>
+						</div>
+
+						{/* Interactive preview */}
+						<div className="p-5 rounded-lg border" style={{ borderColor: 'var(--light-gray)', backgroundColor: 'var(--bg-primary)' }}>
+							<p className="text-[10px] uppercase tracking-wider font-semibold mb-4" style={{ color: 'var(--text-tertiary)' }}>Agent View Preview</p>
+
+							{(() => {
+								const field = previewDisposition;
+								switch (field.fieldType) {
+									case 'dropdown':
+										return (
+											<Dropdown
+												label={field.name}
+												placeholder="Select an option"
+												options={(field.dropdownOptions || []).map(opt => ({ value: opt, label: opt }))}
+												value={previewValue}
+												onChange={(val) => setPreviewValue(Array.isArray(val) ? val[0] : val)}
+												required={field.isRequired}
+											/>
+										);
+
+									case 'autosuggest':
+										return (
+											<div className="w-full">
+												<label className="block text-[12px] font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+													{field.name}
+													{field.isRequired && <span className="text-red-500 ml-1">*</span>}
+												</label>
+												<Autosuggestions
+													suggestions={field.dropdownOptions || []}
+													value={previewValue}
+													onChange={setPreviewValue}
+													required={field.isRequired}
+												/>
+											</div>
+										);
+
+									case 'multi-dropdown':
+										return (
+											<div className="space-y-3">
+												{(field.nestedOptions || []).length > 0 ? (
+													<>
+														<Dropdown
+															label={field.name}
+															placeholder="Select option"
+															options={(field.nestedOptions || []).map(opt => ({ value: opt.value, label: opt.value }))}
+															value={previewValue}
+															onChange={(val) => setPreviewValue(Array.isArray(val) ? val[0] : val)}
+														/>
+														{previewValue && (() => {
+															const selected = (field.nestedOptions || []).find(o => o.value === previewValue);
+															if (selected?.subOptions && selected.subOptions.length > 0) {
+																return (
+																	<Dropdown
+																		label={selected.subLabel || `Sub-option for "${previewValue}"`}
+																		placeholder="Select sub-option"
+																		options={selected.subOptions.map(s => ({ value: s.value, label: s.value }))}
+																		value=""
+																		onChange={() => {}}
+																	/>
+																);
+															}
+															return null;
+														})()}
+													</>
+												) : (
+													<p className="text-xs text-gray-400 italic">No nested options configured yet.</p>
+												)}
+											</div>
+										);
+
+									case 'radio-select':
+									case 'radio-group':
+										return (
+											<div>
+												<label className="block text-[12px] font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+													{field.name}
+													{field.isRequired && <span className="text-red-500 ml-1">*</span>}
+												</label>
+												<div className="space-y-2">
+													{(field.dropdownOptions || []).map((opt, i) => (
+														<label key={i} className="flex items-center gap-2 cursor-pointer group">
+															<input
+																type="radio"
+																name="preview-radio"
+																value={opt}
+																checked={previewValue === opt}
+																onChange={() => setPreviewValue(opt)}
+																className="accent-[var(--secondary)]"
+															/>
+															<span className="text-[12px] group-hover:text-[var(--text-primary)] transition-colors" style={{ color: 'var(--text-secondary)' }}>{opt}</span>
+														</label>
+													))}
+												</div>
+											</div>
+										);
+
+									case 'single-radio':
+										return (
+											<label className="flex items-center gap-2 cursor-pointer">
+												<input
+													type="radio"
+													checked={previewValue === 'true'}
+													onChange={() => setPreviewValue(previewValue === 'true' ? 'false' : 'true')}
+													className="accent-[var(--secondary)]"
+												/>
+												<span className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>{field.name}</span>
+											</label>
+										);
+
+									case 'checkbox':
+									case 'multiple-checkbox':
+										return (
+											<div>
+												<label className="block text-[12px] font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+													{field.name}
+													{field.isRequired && <span className="text-red-500 ml-1">*</span>}
+												</label>
+												<div className="space-y-2">
+													{(field.dropdownOptions || []).map((opt, i) => (
+														<label key={i} className="flex items-center gap-2 cursor-pointer group">
+															<input
+																type="checkbox"
+																checked={previewValue.split(',').includes(opt)}
+																onChange={(e) => {
+																	const vals = previewValue ? previewValue.split(',').filter(Boolean) : [];
+																	if (e.target.checked) vals.push(opt);
+																	else vals.splice(vals.indexOf(opt), 1);
+																	setPreviewValue(vals.join(','));
+																}}
+																className="accent-[var(--secondary)]"
+															/>
+															<span className="text-[12px] group-hover:text-[var(--text-primary)] transition-colors" style={{ color: 'var(--text-secondary)' }}>{opt}</span>
+														</label>
+													))}
+												</div>
+											</div>
+										);
+
+									case 'single-checkbox':
+										return (
+											<label className="flex items-center gap-2 cursor-pointer">
+												<input
+													type="checkbox"
+													checked={previewValue === 'true'}
+													onChange={() => setPreviewValue(previewValue === 'true' ? 'false' : 'true')}
+													className="accent-[var(--secondary)]"
+												/>
+												<span className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>{field.name}</span>
+											</label>
+										);
+
+									case 'number':
+										return (
+											<Input
+												label={field.name}
+												placeholder="Enter a number"
+												value={previewValue}
+												onChange={setPreviewValue}
+												type="number"
+											/>
+										);
+
+									case 'phone':
+										return (
+											<Input
+												label={field.name}
+												placeholder="Enter phone number"
+												value={previewValue}
+												onChange={setPreviewValue}
+												type="tel"
+											/>
+										);
+
+									case 'email':
+										return (
+											<Input
+												label={field.name}
+												placeholder="Enter email address"
+												value={previewValue}
+												onChange={setPreviewValue}
+												type="email"
+											/>
+										);
+
+									case 'date':
+										return (
+											<Input
+												label={field.name}
+												placeholder="DD/MM/YYYY"
+												value={previewValue}
+												onChange={setPreviewValue}
+												type="date"
+											/>
+										);
+
+									case 'multi-line-text':
+										return (
+											<div>
+												<label className="block text-[12px] font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+													{field.name}
+													{field.isRequired && <span className="text-red-500 ml-1">*</span>}
+												</label>
+												<textarea
+													rows={4}
+													value={previewValue}
+													onChange={(e) => setPreviewValue(e.target.value)}
+													placeholder="Enter text..."
+													className="w-full rounded-[var(--radius)] border px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[var(--secondary)] dark:bg-gray-800 dark:text-white"
+													style={{ borderColor: 'var(--light-gray)', color: 'var(--text-primary)' }}
+												/>
+											</div>
+										);
+
+									case 'date-time':
+										return (
+											<div>
+												<label className="block text-[12px] font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+													{field.name}
+													{field.isRequired && <span className="text-red-500 ml-1">*</span>}
+												</label>
+												<div className="grid grid-cols-2 gap-3">
+													<Input label="" placeholder="DD/MM/YYYY" value="" onChange={() => {}} type="date" />
+													<Input label="" placeholder="HH:MM" value="" onChange={() => {}} type="time" />
+												</div>
+											</div>
+										);
+
+									default:
+										// text and any other type
+										return (
+											<Input
+												label={field.name}
+												placeholder="Enter text"
+												value={previewValue}
+												onChange={setPreviewValue}
+											/>
+										);
+								}
+							})()}
+						</div>
+
+						{/* Options summary */}
+						{(previewDisposition.dropdownOptions && previewDisposition.dropdownOptions.length > 0 && !['radio-select', 'radio-group', 'checkbox', 'multiple-checkbox'].includes(previewDisposition.fieldType)) && (
+							<div className="pt-3 border-t" style={{ borderColor: 'var(--light-gray)' }}>
+								<p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: 'var(--text-tertiary)' }}>Configured Options ({previewDisposition.dropdownOptions.length})</p>
+								<div className="max-h-24 overflow-y-auto flex flex-wrap gap-1.5 p-2 rounded-md border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/10">
+									{previewDisposition.dropdownOptions.map((opt, i) => (
+										<span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-sm" style={{ color: 'var(--text-secondary)' }}>
+											{opt}
+										</span>
+									))}
+								</div>
+							</div>
+						)}
+					</div>
+				)}
+			</Modal>
 		</div>
 	);
 }

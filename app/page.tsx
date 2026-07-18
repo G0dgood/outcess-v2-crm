@@ -43,26 +43,8 @@ export default function LoginPage() {
 	const router = useRouter();
 	const dispatch = useDispatch();
 	const authContext = useAuth();
-	const [login, { isError: isLoginError, error: loginError }] = useLoginMutation();
-	const [teamMemberLogin, { isError: isTmError, error: tmError }] = useTeamMemberLoginMutation();
-
-	// Filter out the 403 deactivated / pending reactivation states so they don't trigger toast alerts
-	const shouldShowLoginError = isLoginError && !(
-		loginError && 
-		typeof loginError === 'object' && 
-		'status' in loginError && 
-		(loginError as ApiError).status === 403
-	);
-
-	const shouldShowTmError = isTmError && !(
-		tmError && 
-		typeof tmError === 'object' && 
-		'status' in tmError && 
-		(tmError as ApiError).status === 403
-	);
-
-	useApiError(shouldShowLoginError, loginError, 'Invalid email or password');
-	useApiError(shouldShowTmError, tmError, 'Invalid email or password');
+	const [login] = useLoginMutation();
+	const [teamMemberLogin] = useTeamMemberLoginMutation();
 	const { isDarkMode } = useTheme();
 	const { setUserPrivileges } = usePrivilege();
 	const primaryColor = '#050711';
@@ -138,10 +120,24 @@ export default function LoginPage() {
 				let response: LoginResponse;
 
 				if (isEmail) {
-					response = await login({
-						email: formData.emailOrUserId,
-						password: formData.password,
-					}).unwrap();
+					// Try user (admin) login first
+					try {
+						response = await login({
+							email: formData.emailOrUserId,
+							password: formData.password,
+						}).unwrap();
+					} catch (userLoginErr: unknown) {
+						// If account is deactivated/pending (403), don't fallback — re-throw
+						const apiErr = userLoginErr as ApiError;
+						if (apiErr?.status === 403) {
+							throw userLoginErr;
+						}
+						// User login failed — try team member login with email
+						response = await teamMemberLogin({
+							email: formData.emailOrUserId,
+							password: formData.password,
+						}).unwrap();
+					}
 				} else {
 					response = await teamMemberLogin({
 						userId: formData.emailOrUserId,
@@ -228,6 +224,10 @@ export default function LoginPage() {
 					}
 				}
 
+				// Show error toast only after all login attempts have failed
+				const apiError2 = err as ApiError;
+				const errorMessage = apiError2?.data?.message || 'Invalid email or password';
+				toast.error(errorMessage);
 				setIsLoading(false);
 			}
 		} else {

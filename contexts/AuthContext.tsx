@@ -23,6 +23,7 @@ export interface User {
 	role?: string | { roleName: string; permissions: unknown[]; allBucketAccess?: boolean };
 	isTeamMember?: boolean;
 	companyId?: string;
+	campaignId?: string;
 	companyName?: string;
 	phone?: string;
 	createdAt?: string;

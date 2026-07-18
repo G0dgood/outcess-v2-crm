@@ -11,7 +11,7 @@ import { ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
+import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
 import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
 import Skeleton from '@/components/ui/Skeleton';
 import Tabs from '@/components/ui/Tabs';
@@ -74,10 +74,7 @@ const EditUserPage: React.FC = () => {
 		user?.companyId ||
 		'';
 
-	const { data: supervisorsResponse } = useGetSupervisorsByCampaignIdQuery(
-		{ companyId, campaignId: queryCampaignId },
-		{ skip: !companyId || !queryCampaignId }
-	);
+
 
 	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
 		{ campaignId: queryCampaignId, limit: 1000 },
@@ -123,7 +120,7 @@ const EditUserPage: React.FC = () => {
 							[]))))
 			: [];
 
-		const baseOptions = rawRoles
+		return rawRoles
 			.filter((role: unknown): role is { _id?: string; id?: string } => {
 				const r = role as { _id?: string; id?: string };
 				return !!(r._id || r.id);
@@ -136,57 +133,16 @@ const EditUserPage: React.FC = () => {
 					status: (r.supervisorTitle || r.roleName?.toLowerCase().includes('supervisor')) ? 'supervisor' : undefined
 				};
 			});
-
-		if (!supervisorsResponse || !Array.isArray(supervisorsResponse.roles)) {
-			return baseOptions;
-		}
-
-		const supervisorRoles = supervisorsResponse.roles as {
-			_id?: string;
-			id?: string;
-			roleName?: string;
-			supervisorTitle?: string;
-		}[];
-
-		const supervisorOptions = supervisorRoles
-			.map((role) => ({
-				value: (role._id || role.id || '') as string,
-				label: (role.supervisorTitle || role.roleName || '') as string,
-				status: 'supervisor'
-			}))
-			.filter((opt) => opt.value && opt.label);
-
-		const existingValues = new Set(baseOptions.map((opt) => opt.value));
-
-		return [
-			...baseOptions,
-			...supervisorOptions.filter((opt) => !existingValues.has(opt.value)),
-		];
-	}, [rolesData, supervisorsResponse]);
+	}, [rolesData]);
 
 	const supervisorOptions = useMemo(() => {
 		if (!teamMembersData) return [];
 		const rawMembers = teamMembersData.teamMembers || (Array.isArray(teamMembersData) ? teamMembersData : []);
 
-		const supervisorRoleIds = new Set<string>();
-		if (supervisorsResponse && Array.isArray(supervisorsResponse.roles)) {
-			supervisorsResponse.roles.forEach((r: Role) => {
-				if (r._id) supervisorRoleIds.add(r._id.toString());
-				if (r.id) supervisorRoleIds.add(r.id.toString());
-			});
-		}
-
 		return rawMembers
 			.filter((m: ApiTeamMember) => {
-				const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
-				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
-
-				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) ||
-					(roleName && roleName.toLowerCase().includes('supervisor'));
-
 				const isSelf = (m._id || m.id) === userId;
-
-				return isSupervisorRole && !isSelf;
+				return m.isSupervisor === true && !isSelf;
 			})
 			.map((m: ApiTeamMember) => {
 				const fullName = m.firstName && m.lastName
@@ -198,7 +154,7 @@ const EditUserPage: React.FC = () => {
 					label: `${fullName} (${roleName})`
 				};
 			});
-	}, [teamMembersData, supervisorsResponse, userId]);
+	}, [teamMembersData, userId]);
 
 	const shouldShowSupervisor = true;
 

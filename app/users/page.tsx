@@ -7,7 +7,9 @@ import Search from '@/components/ui/Search';
 import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import Checkbox from '@/components/ui/Checkbox';
-import { useGetTeamMembersByCampaignIdQuery, useDeleteTeamMemberMutation } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByCampaignIdQuery, useDeleteTeamMemberMutation, useUpdateTeamMemberMutation } from '@/store/services/teamMembersApi';
+import Toggle from '@/components/ui/Toggle';
+import Modal from '@/components/ui/Modal';
 import PageHeading from '@/components/ui/PageHeading';
 import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import AddUserModal from '@/components/features/user/AddUserModal';
@@ -44,6 +46,7 @@ interface User {
 		title?: string;
 	};
 	supervisor?: string;
+	isSupervisor?: boolean;
 }
 
 interface StatusPayload {
@@ -81,6 +84,7 @@ interface ApiTeamMember {
 	loginStatus?: string;
 	supervisor?: string | { name?: string };
 	supervisorId?: string;
+	isSupervisor?: boolean;
 }
 
 const UsersPage: React.FC = () => {
@@ -96,6 +100,27 @@ const UsersPage: React.FC = () => {
 		{ skip: !campaignId || !canAccessModule }
 	);
 	const [deleteTeamMember] = useDeleteTeamMemberMutation();
+	const [updateTeamMember] = useUpdateTeamMemberMutation();
+	const [confirmSupervisorModal, setConfirmSupervisorModal] = useState<{
+		isOpen: boolean;
+		userId: string;
+		isSupervisor: boolean;
+	} | null>(null);
+
+	const handleConfirmToggleSupervisor = async () => {
+		if (!confirmSupervisorModal) return;
+		const { userId, isSupervisor } = confirmSupervisorModal;
+		setConfirmSupervisorModal(null);
+		try {
+			await updateTeamMember({
+				id: userId,
+				data: { isSupervisor }
+			}).unwrap();
+			toast.success(`User supervisor status updated successfully`);
+		} catch (error) {
+			toast.error('Failed to update supervisor status');
+		}
+	};
 	const { socket } = useSocket();
 	const canCreate = canAccess('teamMembers', 'create');
 	const canEdit = canAccess('teamMembers', 'edit');
@@ -124,7 +149,7 @@ const UsersPage: React.FC = () => {
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
 	const [showInfoBanner, setShowInfoBanner] = useState(true);
 	const [users, setUsers] = useState<User[]>([]);
-	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Supervisor', 'Shift Hour', 'Bucket', 'Login Status', 'Actions'];
+	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Is Supervisor', 'Supervisor', 'Shift Hour', 'Bucket', 'Login Status', 'Actions'];
 	const totalColumns = tableHeaders.length + 1;
 
 	useEffect(() => {
@@ -231,6 +256,7 @@ const UsersPage: React.FC = () => {
 							title: m.shiftHour.title,
 						}
 						: undefined,
+					isSupervisor: !!m.isSupervisor,
 					supervisor: supervisorName,
 				};
 			});
@@ -449,6 +475,13 @@ const UsersPage: React.FC = () => {
 									<td>{user.email}</td>
 									<td>{user.phone}</td>
 									<td>{user.role}</td>
+									<td>
+										<Toggle
+											checked={!!user.isSupervisor}
+											onChange={(checked) => setConfirmSupervisorModal({ isOpen: true, userId: user.id, isSupervisor: checked })}
+											size="sm"
+										/>
+									</td>
 									<td>{user.supervisor || 'Unassigned'}</td>
 									<td
 									>
@@ -624,6 +657,38 @@ const UsersPage: React.FC = () => {
 				loginStatus={statusModalUser?.loginStatus || ''}
 				status={statusModalUser?.status}
 			/>
+
+			{confirmSupervisorModal?.isOpen && (
+				<Modal
+					isOpen={confirmSupervisorModal.isOpen}
+					onClose={() => setConfirmSupervisorModal(null)}
+					title="Confirm Supervisor Status"
+					size="sm"
+				>
+					<div className="p-6">
+						<p className="mb-6 font-inter text-[12px] md:text-[14px] leading-relaxed dark:text-gray-300" style={{ color: 'var(--text-secondary)' }}>
+							Are you sure you want to change this user&apos;s supervisor status to <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{confirmSupervisorModal.isSupervisor ? 'Supervisor' : 'Non-Supervisor'}</span>?
+						</p>
+						<div className="flex justify-end gap-3">
+							<Button
+								variant="ghost"
+								onClick={() => setConfirmSupervisorModal(null)}
+								className="px-4 py-2 border rounded font-medium text-[12px] hover:bg-gray-50 transition-colors"
+								style={{ borderColor: 'var(--light-gray)', color: 'var(--text-secondary)' }}
+							>
+								Cancel
+							</Button>
+							<Button
+								variant="primary"
+								onClick={handleConfirmToggleSupervisor}
+								className="px-4 py-2 rounded font-medium text-[12px] transition-colors"
+							>
+								Confirm
+							</Button>
+						</div>
+					</div>
+				</Modal>
+			)}
 		</div>
 	);
 };

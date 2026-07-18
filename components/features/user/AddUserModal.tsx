@@ -5,7 +5,7 @@ import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
 import Button from '@/components/ui/Button';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { useCreateTeamMemberMutation, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
+import { useCreateTeamMemberMutation, useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
 import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
@@ -40,10 +40,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 
 	// API Hooks
 	const { data: rolesResponse } = useGetRolesByCampaignIdQuery(campaignId, { skip: !campaignId });
-	const { data: supervisorsResponse } = useGetSupervisorsByCampaignIdQuery(
-		{ companyId, campaignId },
-		{ skip: !companyId || !campaignId }
-	);
+
 	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
 		{ campaignId, limit: 1000 },
 		{ skip: !campaignId }
@@ -70,60 +67,26 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 	}, [isOpen]);
 
 	const roleOptions = useMemo(() => {
-		const baseRoles = rolesResponse?.roles || [];
-		const baseOptions = baseRoles.map((role: Role) => ({
+		const baseRoles = rolesResponse
+			? (Array.isArray(rolesResponse) ? rolesResponse :
+				(Array.isArray((rolesResponse as unknown as { data: unknown[] })?.data) ? (rolesResponse as unknown as { data: unknown[] }).data :
+					(Array.isArray((rolesResponse as unknown as { roles: unknown[] })?.roles) ? (rolesResponse as unknown as { roles: unknown[] }).roles :
+						(Array.isArray((rolesResponse as unknown as { docs: unknown[] })?.docs) ? (rolesResponse as unknown as { docs: unknown[] }).docs :
+							[]))))
+			: [];
+		return baseRoles.map((role: any) => ({
 			value: (role._id || role.id || '') as string,
 			label: (role.roleName || '') as string,
 		}));
-
-		if (!supervisorsResponse || !Array.isArray(supervisorsResponse.roles)) {
-			return baseOptions;
-		}
-
-		const supervisorRoles = supervisorsResponse.roles as {
-			_id?: string;
-			id?: string;
-			roleName?: string;
-			supervisorTitle?: string;
-		}[];
-
-		const supervisorOptions = supervisorRoles
-			.map((role) => ({
-				value: (role._id || role.id || '') as string,
-				label: (role.supervisorTitle || role.roleName || '') as string,
-			}))
-			.filter((opt) => opt.value && opt.label);
-
-		const existingValues = new Set(baseOptions.map((opt) => opt.value));
-		const merged = [
-			...baseOptions,
-			...supervisorOptions.filter((opt) => !existingValues.has(opt.value)),
-		];
-
-		return merged;
-	}, [rolesResponse, supervisorsResponse]);
+	}, [rolesResponse]);
 
 	const supervisorOptions = useMemo(() => {
 		if (!teamMembersData) return [];
 		const rawMembers = teamMembersData.teamMembers || (Array.isArray(teamMembersData) ? teamMembersData : []);
 
-		const supervisorRoleIds = new Set<string>();
-		if (supervisorsResponse && Array.isArray(supervisorsResponse.roles)) {
-			supervisorsResponse.roles.forEach((r: Role) => {
-				if (r._id) supervisorRoleIds.add(r._id.toString());
-				if (r.id) supervisorRoleIds.add(r.id.toString());
-			});
-		}
-
 		return rawMembers
 			.filter((m: ApiTeamMember) => {
-				const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
-				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
-
-				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) ||
-					(roleName && roleName.toLowerCase().includes('supervisor'));
-
-				return isSupervisorRole;
+				return m.isSupervisor === true;
 			})
 			.map((m: ApiTeamMember) => {
 				const fullName = m.firstName && m.lastName
@@ -135,7 +98,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 					label: `${fullName} (${roleName})`
 				};
 			});
-	}, [teamMembersData, supervisorsResponse]);
+	}, [teamMembersData]);
 
 	const handleInputChange = (field: string) => (value: string | string[]) => {
 		const stringValue = Array.isArray(value) ? value[0] : value;

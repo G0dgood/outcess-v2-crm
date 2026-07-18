@@ -14,6 +14,7 @@ export interface TeamMember {
   companyId?: string;
   supervisorId?: string | null;
   userId?: string;
+  isSupervisor?: boolean;
 }
 
 export interface StatusPayload {
@@ -83,6 +84,7 @@ export interface ApiTeamMember {
     title?: string;
   };
   shiftHourId?: string;
+  isSupervisor?: boolean;
 }
 
 export interface PaginatedTeamMembersResponse {
@@ -173,14 +175,7 @@ export const teamMembersApi = baseApi.injectEndpoints({
         `api/v1/team-members/supervisor/${supervisorId}?page=${page}&limit=${limit}${search ? `&search=${encodeURIComponent(search)}` : ""}`,
       providesTags: ["TeamMembers"],
     }),
-    getSupervisorsByCampaignId: builder.query<
-      GetRolesResponse,
-      { companyId: string; campaignId: string }
-    >({
-      query: ({ companyId, campaignId }) =>
-        `api/v1/roles/supervisors?companyId=${companyId}&campaignId=${campaignId}`,
-      providesTags: ["TeamMembers"],
-    }),
+
     getTeamMemberById: builder.query<GetTeamMemberResponse, string>({
       query: (id) => `api/v1/team-members/${id}`,
       providesTags: ["TeamMembers"],
@@ -328,7 +323,7 @@ export const {
   useGetTeamMembersByCampaignIdQuery,
   useGetTeamMembersByCampaignIdAndRoleIdQuery,
   useGetTeamMembersBySupervisorIdQuery,
-  useGetSupervisorsByCampaignIdQuery,
+
   useGetTeamMemberByIdQuery,
   useUpdateTeamMemberMutation,
   useUpdateTeamMemberStatusMutation,

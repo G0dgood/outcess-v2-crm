@@ -48,6 +48,7 @@ export interface GetDispositionsReportRequest {
   page?: number;
   limit?: number;
   search?: string;
+  bucketId?: string;
 }
 
 export interface GetDispositionsByAgentReportRequest {
@@ -58,6 +59,7 @@ export interface GetDispositionsByAgentReportRequest {
   startDate?: string;
   endDate?: string;
   search?: string;
+  bucketId?: string;
 }
 
 export interface GetLeaderboardRequest {
@@ -127,8 +129,12 @@ export const dispositionApi = baseApi.injectEndpoints({
         page = 1,
         limit = 20,
         search = "",
-      }) =>
-        `api/v1/dispositions/${campaignId}/report?startDate=${startDate}&endDate=${endDate}&page=${page}&limit=${limit}&search=${search}`,
+        bucketId = "",
+      }) => {
+        let url = `api/v1/dispositions/${campaignId}/report?startDate=${startDate}&endDate=${endDate}&page=${page}&limit=${limit}&search=${search}`;
+        if (bucketId) url += `&bucketId=${bucketId}`;
+        return url;
+      },
       providesTags: ["Disposition"],
     }),
     getDispositionsByAgentReport: builder.query<
@@ -143,8 +149,12 @@ export const dispositionApi = baseApi.injectEndpoints({
         startDate,
         endDate,
         search = "",
-      }) =>
-        `api/v1/dispositions/${campaignId}/agent/${agentId}/report?page=${page}&limit=${limit}&startDate=${startDate}&endDate=${endDate}&search=${search}`,
+        bucketId = "",
+      }) => {
+        let url = `api/v1/dispositions/${campaignId}/agent/${agentId}/report?page=${page}&limit=${limit}&startDate=${startDate}&endDate=${endDate}&search=${search}`;
+        if (bucketId) url += `&bucketId=${bucketId}`;
+        return url;
+      },
       providesTags: ["Disposition"],
     }),
     getDashboardDispositionsByCampaignAndAgentIdReport: builder.query<

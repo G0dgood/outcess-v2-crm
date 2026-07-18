@@ -18,6 +18,7 @@ import EmptyState from '@/components/ui/EmptyState';
 interface Role {
 	id: string;
 	name: string;
+	description?: string;
 	userCount: number;
 }
 
@@ -127,13 +128,13 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)',
-								boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+								// boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
 							}}
 							onMouseEnter={(e) => {
-								e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+								// e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
 							}}
 							onMouseLeave={(e) => {
-								e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
+								// e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
 							}}
 						>
 							<div className="flex justify-between items-start mb-2">
@@ -186,6 +187,14 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 									)}
 								</div>
 							</div>
+							{role?.description && (
+								<p
+									className="text-[10px] md:text-[11px] mb-3 line-clamp-2 dark:text-gray-400"
+									style={{ color: 'var(--text-secondary)' }}
+								>
+									{role.description}
+								</p>
+							)}
 							<div className="flex justify-between items-end">
 								<p
 									className="text-[10px] md:text-[12px] dark:text-gray-400"

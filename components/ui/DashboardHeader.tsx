@@ -94,6 +94,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				email: reduxUser.email,
 				avatar: reduxUser.avatar,
 				companyId: reduxUser.companyId || reduxUser.company?._id,
+				campaignId: reduxUser.campaignId,
 			}
 			: null;
 
@@ -124,6 +125,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 
 	useEffect(() => {
+		if (!isAdmin && typeof reduxUser?.campaignId === 'string' && selectedCampaignId !== reduxUser.campaignId) {
+			setSelectedCampaignId(reduxUser.campaignId);
+			return;
+		}
+
 		const data = campaignData as { campaigns?: { _id: string; campaignName: string; status?: string }[] } | undefined;
 		if (data && Array.isArray(data.campaigns)) {
 			const options = data?.campaigns?.map((lob) => ({
@@ -138,7 +144,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				setSelectedCampaignId(options[0].value);
 			}
 		}
-	}, [campaignData, selectedCampaignId, setSelectedCampaignId]);
+	}, [campaignData, selectedCampaignId, setSelectedCampaignId, isAdmin, reduxUser]);
 
 	// Socket integration for Campaign updates
 	useEffect(() => {

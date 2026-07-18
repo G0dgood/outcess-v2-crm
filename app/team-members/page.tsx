@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import Search from '@/components/ui/Search';
 import Dropdown from '@/components/ui/Dropdown';
 import { useCampaign } from '@/contexts/CampaignContext';
-import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember, TeamMemberFormData } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersBySupervisorIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember, TeamMemberFormData } from '@/store/services/teamMembersApi';
 import { useSocket } from '@/contexts/SocketContext';
 import TeamMembersTable from '@/components/features/team-members/TeamMembersTable';
 import { toastSuccess } from '@/utils/toastWithSound';
@@ -99,12 +99,7 @@ const TeamMembersPage: React.FC = () => {
 		user?.companyId ||
 		'';
 
-	const { data: supervisorsData } = useGetSupervisorsByCampaignIdQuery(
-		{ companyId, campaignId: campaignId || '' },
-		{
-			skip: !companyId || !campaignId
-		}
-	);
+
 	const { data: campaignMembersResponse } = useGetTeamMembersByCampaignIdQuery(
 		{ campaignId: campaignId || '', limit: 1000 },
 		{ skip: !campaignId }
@@ -261,23 +256,9 @@ const TeamMembersPage: React.FC = () => {
 		if (!campaignMembersResponse) return [];
 		const rawMembers = campaignMembersResponse.teamMembers || (Array.isArray(campaignMembersResponse) ? campaignMembersResponse : []);
 
-		const supervisorRoleIds = new Set<string>();
-		if (supervisorsData && Array.isArray(supervisorsData.roles)) {
-			supervisorsData.roles.forEach((r: Role) => {
-				if (r._id) supervisorRoleIds.add(r._id.toString());
-				if (r.id) supervisorRoleIds.add(r.id.toString());
-			});
-		}
-
 		return rawMembers
 			.filter((m: ApiTeamMember) => {
-				const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
-				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
-
-				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) ||
-					(roleName && roleName.toLowerCase().includes('supervisor'));
-
-				return isSupervisorRole;
+				return m.isSupervisor === true;
 			})
 			.map((m: ApiTeamMember) => {
 				const fullName = m.firstName && m.lastName
@@ -289,10 +270,9 @@ const TeamMembersPage: React.FC = () => {
 					label: `${fullName} (${roleName})`
 				};
 			});
-	}, [campaignMembersResponse, supervisorsData]);
+	}, [campaignMembersResponse]);
 
-	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
-	const isSupervisor = userRoleName?.toLowerCase() === 'supervisor';
+	const isSupervisor = user?.isSupervisor === true;
 
 	useEffect(() => {
 		if (isSupervisor) {

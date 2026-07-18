@@ -69,7 +69,6 @@ const settingsSubItems = [
  { id: 'permission-tab', label: 'Permission', icon: 'chart', path: '/settings?tab=permission' },
  { id: 'company-details-tab', label: 'Company Details', icon: 'settings', path: '/settings?tab=company-details', restrictedToAdmin: true },
  { id: 'roles-tab', label: 'Roles', icon: 'book', path: '/settings?tab=roles' },
- { id: 'supervisors-tab', label: 'Supervisors', icon: 'users', path: '/settings?tab=supervisors' },
  { id: 'audit-logs-tab', label: 'Audit Logs', icon: 'clock', path: '/settings?tab=audit-logs' },
 ];
 
@@ -120,7 +119,6 @@ const subModuleMapping: Record<string, ModuleId> = {
  'permission-tab': 'permission',
  'company-details-tab': 'systemSetting',
  'roles-tab': 'roles',
- 'supervisors-tab': 'userManagement',
  'audit-logs-tab': 'auditLog',
  'support-mine': 'support',
  'support-team': 'teamMemberSupport',
@@ -149,7 +147,8 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
 
 
 
- const headerName = campaignData?.companyName || 'Outcess';
+  const rawCampaignName = campaignData?.name || campaignData?.campaignName || 'Outcess';
+  const headerName = rawCampaignName.length > 15 ? rawCampaignName.slice(0, 15) + '...' : rawCampaignName;
 
 
  const navRef = useRef<HTMLElement>(null);

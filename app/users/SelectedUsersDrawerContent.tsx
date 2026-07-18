@@ -5,11 +5,11 @@ import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 import {
   useDeleteManyTeamMembersMutation,
-  useGetSupervisorsByCampaignIdQuery,
   useGetTeamMembersByCampaignIdQuery,
   useAssignSupervisorToTeamMembersMutation,
   ApiTeamMember
 } from '@/store/services/teamMembersApi';
+import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { Dropdown } from '@/components/ui/Dropdown';
@@ -51,10 +51,11 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
   const { campaignData } = useCampaign();
   const companyId = user?.companyId || '';
   const campaignId = campaignData?._id || '';
+  const selectedCampaignId = campaignId;
 
-  const { data: supervisorsResponse, isLoading: isSupervisorsLoading } = useGetSupervisorsByCampaignIdQuery(
-    { companyId, campaignId },
-    { skip: !companyId || !campaignId }
+  const { data: rolesResponse, isLoading: isRolesLoading } = useGetRolesByCampaignIdQuery(
+    selectedCampaignId || '',
+    { skip: !selectedCampaignId }
   );
 
   const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
@@ -69,26 +70,10 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
     if (!teamMembersData) return [];
     const rawMembers = teamMembersData.teamMembers || (Array.isArray(teamMembersData) ? teamMembersData : []);
 
-    const supervisorRoleIds = new Set<string>();
-    if (supervisorsResponse && Array.isArray(supervisorsResponse.roles)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      supervisorsResponse.roles.forEach((r: any) => {
-        if (r._id) supervisorRoleIds.add(r._id.toString());
-        if (r.id) supervisorRoleIds.add(r.id.toString());
-      });
-    }
-
     return rawMembers
       .filter((m: ApiTeamMember) => {
-        const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
-        const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
-
-        const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) ||
-          (roleName && roleName.toLowerCase().includes('supervisor'));
-
         const isSelected = selectedUsers.has(m._id || m.id || '');
-
-        return isSupervisorRole && !isSelected;
+        return m.isSupervisor === true && !isSelected;
       })
       .map((m: ApiTeamMember) => {
         const fullName = m.firstName && m.lastName
@@ -100,7 +85,7 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
           label: `${fullName} (${roleName})`
         };
       });
-  }, [teamMembersData, supervisorsResponse, selectedUsers]);
+  }, [teamMembersData, selectedUsers]);
 
   const handleAssignSupervisor = async () => {
     try {
@@ -225,11 +210,11 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
               <div className="flex flex-col gap-2">
                 <Dropdown
                   label="Select Supervisor"
-                  placeholder={isSupervisorsLoading ? "Loading supervisors..." : "Choose a supervisor"}
+                  placeholder={isRolesLoading ? "Loading supervisors..." : "Choose a supervisor"}
                   options={supervisorOptions}
                   value={selectedSupervisorId}
                   onChange={(val) => setSelectedSupervisorId(val as string)}
-                  disabled={isSupervisorsLoading || isAssigningSupervisor}
+                  disabled={isRolesLoading || isAssigningSupervisor}
                 />
                 <Button
                   variant="primary"
