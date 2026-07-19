@@ -22,6 +22,7 @@ import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useSocket } from '@/contexts/SocketContext';
 import AccessRestricted from '@/components/ui/AccessRestricted';
 import SelectedUsersDrawerContent from './SelectedUsersDrawerContent';
+import TransferMembersModal from '@/components/features/team-members/TransferMembersModal';
 import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
 import LoginStatusInfoBanner from '@/components/ui/LoginStatusInfoBanner';
 import SampleCsvDownloader from '@/components/ui/SampleCsvDownloader';
@@ -99,6 +100,11 @@ const UsersPage: React.FC = () => {
 		{ campaignId, page: currentPage, limit: itemsPerPage },
 		{ skip: !campaignId || !canAccessModule }
 	);
+
+	// Reset paging when the campaign changes so the list refreshes from page 1.
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [campaignId]);
 	const [deleteTeamMember] = useDeleteTeamMemberMutation();
 	const [updateTeamMember] = useUpdateTeamMemberMutation();
 	const [confirmSupervisorModal, setConfirmSupervisorModal] = useState<{
@@ -147,8 +153,10 @@ const UsersPage: React.FC = () => {
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 	const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
+	const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 	const [showInfoBanner, setShowInfoBanner] = useState(true);
 	const [users, setUsers] = useState<User[]>([]);
+	const companyId = campaignData?.companyId || '';
 	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Is Supervisor', 'Supervisor', 'Shift Hour', 'Bucket', 'Login Status', 'Actions'];
 	const totalColumns = tableHeaders.length + 1;
 
@@ -272,6 +280,17 @@ const UsersPage: React.FC = () => {
 		user.role.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
+	// Members of the current campaign, shaped for the Transfer modal.
+	const transferMemberOptions = useMemo(() => {
+		return users
+			.map((u) => ({
+				id: u.id,
+				name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email || 'Unknown Member',
+				email: u.email,
+			}))
+			.filter((m) => m.id);
+	}, [users]);
+
 	const totalPages = teamMembersResponse?.pagination?.totalPages || 1;
 	// When using backend pagination, filteredUsers is already the current page of data from the API
 	// However, the component also has a local search filter. 
@@ -383,6 +402,16 @@ const UsersPage: React.FC = () => {
 						fileName="sample_users.csv"
 						className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
 					/>
+					{canEdit && (
+						<Button
+							variant="outline"
+							size="md"
+							onClick={() => setIsTransferModalOpen(true)}
+							className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+						>
+							Transfer
+						</Button>
+					)}
 					{canCreate && (
 						<>
 							<Button
@@ -656,6 +685,18 @@ const UsersPage: React.FC = () => {
 				onClose={() => setStatusModalUser(null)}
 				loginStatus={statusModalUser?.loginStatus || ''}
 				status={statusModalUser?.status}
+			/>
+
+			<TransferMembersModal
+				isOpen={isTransferModalOpen}
+				onClose={() => {
+					setIsTransferModalOpen(false);
+					setSelectedUsers(new Set());
+				}}
+				members={transferMemberOptions}
+				currentCampaignId={campaignId}
+				companyId={companyId}
+				preselectedIds={Array.from(selectedUsers)}
 			/>
 
 			{confirmSupervisorModal?.isOpen && (

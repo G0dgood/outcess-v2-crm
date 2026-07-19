@@ -17,7 +17,7 @@ import {
 	useUpdateTeamMemberMutation,
 	useDeleteTeamMemberMutation
 } from '@/store/services/teamMembersApi';
-import { useGetRolesByCompanyIdQuery, Role } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
 import TeamMembersCards from '@/components/features/team-members/TeamMembersCards';
 import { toastError } from '@/utils/toastWithSound';
 import PageHeader from '@/components/ui/PageHeader';
@@ -26,6 +26,7 @@ import ViewToggle from '@/components/ui/ViewToggle';
 import AddTeamMemberModal from '@/components/AddTeamMemberModal';
 import { PersonIcon, IdCardIcon } from '@radix-ui/react-icons';
 import ManageMembersModal from '@/components/features/team-members/ManageMembersModal';
+import TransferMembersModal from '@/components/features/team-members/TransferMembersModal';
 
 interface TeamMember {
 	_id: string;
@@ -71,6 +72,7 @@ const TeamMembersPage: React.FC = () => {
 	const [viewType, setViewType] = useState<'table' | 'card'>('card');
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 	const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+	const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 	const [editingMember, setEditingMember] = useState<ApiTeamMember | null>(null);
 
 	// Handle search debouncing
@@ -82,6 +84,11 @@ const TeamMembersPage: React.FC = () => {
 
 		return () => clearTimeout(timer);
 	}, [searchTerm]);
+
+	// Reset paging when the campaign changes so the list refreshes from page 1.
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [campaignId]);
 
 	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersBySupervisorIdQuery(
 		{
@@ -274,16 +281,35 @@ const TeamMembersPage: React.FC = () => {
 
 	const isSupervisor = user?.isSupervisor === true;
 
+	// Members of the current campaign, shaped for the Transfer modal.
+	const transferMemberOptions = useMemo(() => {
+		return teamMembersData
+			.map(({ apiMember }) => {
+				const name = apiMember.name
+					|| apiMember.fullName
+					|| `${apiMember.firstName || ''} ${apiMember.lastName || ''}`.trim()
+					|| 'Unknown Member';
+				return { id: apiMember._id || apiMember.id || '', name, email: apiMember.email };
+			})
+			.filter((m) => m.id);
+	}, [teamMembersData]);
+
 	useEffect(() => {
 		if (isSupervisor) {
 			const currentUserId = user?._id || user?.id;
 			if (currentUserId && supervisorFilter !== currentUserId) {
 				setSupervisorFilter(currentUserId);
 			}
-		} else if (supervisors.length > 0 && !supervisorFilter) {
-			setSupervisorFilter(supervisors[0].value);
+		} else if (campaignMembersResponse) {
+			// Once the current campaign's members have loaded, make sure the selected
+			// supervisor belongs to this campaign; otherwise reset (e.g. after switching
+			// campaigns) so the list refreshes instead of showing the previous campaign.
+			const stillValid = supervisors.some((s) => s.value === supervisorFilter);
+			if (!stillValid) {
+				setSupervisorFilter(supervisors.length > 0 ? supervisors[0].value : '');
+			}
 		}
-	}, [supervisors, supervisorFilter, isSupervisor, user]);
+	}, [supervisors, supervisorFilter, isSupervisor, user, campaignMembersResponse]);
 
 	const shiftHourOptions = useMemo(() => {
 		const lobShiftHours = campaignData?.shiftHours as
@@ -414,6 +440,16 @@ const TeamMembersPage: React.FC = () => {
 						<IdCardIcon className="w-4 h-4" />
 						Manage Members
 					</Button>
+					{!isSupervisor && (
+						<Button
+							variant="outline"
+							size="md"
+							onClick={() => setIsTransferModalOpen(true)}
+							className="flex items-center gap-2"
+						>
+							Transfer
+						</Button>
+					)}
 					<Button variant="primary" size="md" onClick={() => { setEditingMember(null); setIsAddModalOpen(true); }}>
 						Add Team Member
 					</Button>
@@ -513,6 +549,14 @@ const TeamMembersPage: React.FC = () => {
 				isOpen={isManageModalOpen}
 				onClose={() => setIsManageModalOpen(false)}
 				campaignData={campaignData}
+			/>
+
+			<TransferMembersModal
+				isOpen={isTransferModalOpen}
+				onClose={() => setIsTransferModalOpen(false)}
+				members={transferMemberOptions}
+				currentCampaignId={campaignId || ''}
+				companyId={companyId || ''}
 			/>
 		</div>
 	);

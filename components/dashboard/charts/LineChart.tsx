@@ -2,86 +2,100 @@
 
 import React from 'react';
 import type { ChartProps } from './types';
+import { useChartSize } from './useChartSize';
 
 export const LineChart: React.FC<ChartProps> = ({ data }) => {
-	const rawMax = Math.max(...data.map(item => item.value));
-	const maxValue = rawMax > 0 ? rawMax : 1;
-	const chartHeight = 200;
-	const chartWidth = 300;
-	const pointSpacing = data.length > 1 ? chartWidth / (data.length - 1) : 0;
+	const { ref, width: W, height: H } = useChartSize<HTMLDivElement>();
 
-	const getX = (index: number) => data.length > 1 ? index * pointSpacing : chartWidth / 2;
+	const hasData = data && data.length > 0;
+	const maxValue = hasData ? Math.max(...data.map((item) => item.value)) || 1 : 1;
 
-	const points = data.map((item, index) => {
-		const x = getX(index);
-		const y = chartHeight - (item.value / maxValue) * chartHeight;
-		return `${x},${y}`;
-	}).join(' ');
+	const topPad = 20;
+	const bottomPad = 24;
+	const sidePad = 12;
+	const plotWidth = Math.max(0, W - sidePad * 2);
+	const plotHeight = Math.max(0, H - topPad - bottomPad);
+	const baselineY = topPad + plotHeight;
+	const ready = W > 0 && H > 0 && plotHeight > 0;
+
+	const n = hasData ? data.length : 0;
+	const step = n > 1 ? plotWidth / (n - 1) : 0;
+	const getX = (i: number) => (n > 1 ? sidePad + i * step : sidePad + plotWidth / 2);
+	const getY = (v: number) => baselineY - (v / maxValue) * plotHeight;
+
+	const band = n > 0 ? plotWidth / n : 0;
+	const maxChars = Math.max(3, Math.floor((band || plotWidth) / 5));
+	const truncate = (text: string) => {
+		const t = String(text ?? '');
+		return t.length > maxChars ? `${t.slice(0, Math.max(1, maxChars - 1))}…` : t;
+	};
+
+	const lineColor = data[0]?.color || 'var(--primary)';
+	const points = hasData ? data.map((item, i) => `${getX(i)},${getY(item.value)}`).join(' ') : '';
+	const dataKey = hasData ? `${data.length}:${data.reduce((s, d) => s + d.value, 0)}` : 'empty';
 
 	return (
-		<div className="w-full h-full flex items-center justify-center">
-			<svg className="w-full h-full" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
-				{/* Grid lines */}
-				{Array.from({ length: 5 }, (_, i) => (
-					<line
-						key={i}
-						x1="0"
-						y1={(chartHeight / 4) * i}
-						x2={chartWidth}
-						y2={(chartHeight / 4) * i}
-						stroke="#e5e7eb"
-						strokeWidth="1"
-					/>
-				))}
-
-				{/* Line */}
-				<polyline
-					points={points}
-					fill="none"
-					stroke={data[0]?.color || '#3b82f6'}
-					strokeWidth="3"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-				/>
-
-				{/* Points */}
-				{data.map((item, index) => {
-					const x = getX(index);
-					const y = chartHeight - (item.value / maxValue) * chartHeight;
-
-					return (
-						<g key={index}>
-							<circle
-								cx={x}
-								cy={y}
-								r="6"
-								fill={item.color || '#3b82f6'}
-								stroke="white"
-								strokeWidth="2"
+		<div ref={ref} className="flex-1 w-full min-h-0 relative overflow-hidden">
+			{!hasData ? (
+				<div className="absolute inset-0 flex items-center justify-center">
+					<span className="text-[10px] italic" style={{ color: 'var(--text-tertiary)' }}>
+						No data
+					</span>
+				</div>
+			) : ready ? (
+				<svg width={W} height={H} className="block">
+					{/* gridlines */}
+					{Array.from({ length: 5 }, (_, i) => {
+						const gy = topPad + (plotHeight / 4) * i;
+						return (
+							<line
+								key={i}
+								x1={sidePad}
+								y1={gy}
+								x2={W - sidePad}
+								y2={gy}
+								stroke="var(--light-gray)"
+								strokeWidth={1}
 							/>
-							<text
-								x={x}
-								y={chartHeight + 15}
-								textAnchor="middle"
-								className="text-[8px] md:text-[10px] fill-gray-600"
-							>
-								{item.label}
-							</text>
-							<text
-								x={x}
-								y={y - 10}
-								textAnchor="middle"
-								className="text-[8px] md:text-[10px] fill-gray-800 font-medium"
-							>
-								{item.value}
-							</text>
-						</g>
-					);
-				})}
-			</svg>
+						);
+					})}
+
+					<g key={dataKey}>
+						<polyline
+							points={points}
+							fill="none"
+							stroke={lineColor}
+							strokeWidth={2}
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							pathLength={1}
+							className="chart-line"
+						/>
+
+						{data.map((item, index) => {
+							const x = getX(index);
+							const y = getY(item.value);
+							const delay = `${index * 60 + 500}ms`;
+							return (
+								<g key={index} className="chart-fade" style={{ animationDelay: delay }}>
+									<circle cx={x} cy={y} r={4} fill={item.color || lineColor} stroke="var(--accent-white)" strokeWidth={2}>
+										<title>{`${item.label}: ${item.value}`}</title>
+									</circle>
+									<text x={x} y={y - 9} textAnchor="middle" fontSize={10} fontWeight={600} style={{ fill: 'var(--text-secondary)' }}>
+										{item.value}
+									</text>
+									<text x={x} y={baselineY + 15} textAnchor="middle" fontSize={9} style={{ fill: 'var(--text-tertiary)' }}>
+										{truncate(item.label)}
+										<title>{item.label}</title>
+									</text>
+								</g>
+							);
+						})}
+					</g>
+				</svg>
+			) : null}
 		</div>
 	);
 };
 
 export default LineChart;
-

@@ -1827,3 +1827,42 @@ button {
   border: 1px solid var(--light-gray) !important;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
 }
+/* Dashboard chart entrance animations */
+@keyframes chartBarGrow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes chartPop {
+  from { opacity: 0; transform: scale(0.82); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes chartFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes chartDraw {
+  to { stroke-dashoffset: 0; }
+}
+.chart-bar {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: chartBarGrow 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.chart-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: chartPop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.chart-fade {
+  animation: chartFadeIn 0.5s ease both;
+}
+.chart-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: chartDraw 0.9s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chart-bar, .chart-pop, .chart-fade, .chart-line {
+    animation: none;
+  }
+}

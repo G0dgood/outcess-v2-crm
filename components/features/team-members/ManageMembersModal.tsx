@@ -25,21 +25,30 @@ const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
 
 	const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 	const [targetBucket, setTargetBucket] = useState<{ id: string; name: string } | null>(null);
+	const [memberToRemove, setMemberToRemove] = useState<{ bucketId: string; bucketName: string; memberId: string; memberName: string } | null>(null);
+	const [isRemoving, setIsRemoving] = useState(false);
 
 	const campaignId = (campaignData?._id || campaignData?.id || '') as string;
 	const buckets = useMemo(() => {
 		return campaignData?.dashboardSettings?.buckets || [];
 	}, [campaignData]);
 
-	const handleRemove = async (bucketId: string, memberId: string, memberName: string) => {
-		if (window.confirm(`Remove ${memberName} from this bucket?`)) {
-			try {
-				await removeMember({ id: campaignId, bucketId, memberId }).unwrap();
-				toastSuccess(`Removed ${memberName} from bucket`);
-			} catch (error: unknown) {
-				const err = error as { data?: { message?: string } };
-				toastError(err?.data?.message || 'Failed to remove member');
-			}
+	const handleRemove = (bucketId: string, bucketName: string, memberId: string, memberName: string) => {
+		setMemberToRemove({ bucketId, bucketName, memberId, memberName });
+	};
+
+	const confirmRemove = async () => {
+		if (!memberToRemove) return;
+		setIsRemoving(true);
+		try {
+			await removeMember({ id: campaignId, bucketId: memberToRemove.bucketId, memberId: memberToRemove.memberId }).unwrap();
+			toastSuccess(`Removed ${memberToRemove.memberName} from bucket`);
+			setMemberToRemove(null);
+		} catch (error: unknown) {
+			const err = error as { data?: { message?: string } };
+			toastError(err?.data?.message || 'Failed to remove member');
+		} finally {
+			setIsRemoving(false);
 		}
 	};
 
@@ -168,7 +177,7 @@ const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
 																</div>
 															</div>
 															<button
-																onClick={() => handleRemove(bucket?.id, mId, member?.memberName || 'Unknown')}
+																onClick={() => handleRemove(bucket?.id, bucket?.name, mId, member?.memberName || 'Unknown')}
 																className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
 																title="Remove from Bucket"
 															>
@@ -206,6 +215,54 @@ const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
 					campaignId={campaignId || ''}
 					onAssign={handleAssignMember}
 				/>
+			)}
+
+			{/* Remove-from-bucket confirmation */}
+			{memberToRemove && (
+				<div
+					className="fixed inset-0 bg-[#0b0d1293]/50 dark:bg-black/60 flex items-center justify-center z-[70]"
+					onClick={(e) => {
+						if (e.target === e.currentTarget && !isRemoving) setMemberToRemove(null);
+					}}
+				>
+					<div
+						className="dark:bg-gray-800 w-full max-w-sm mx-4 rounded-[var(--radius)] shadow-2xl border dark:border-gray-700 p-6 text-center"
+						style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
+						onClick={(e) => e.stopPropagation()}
+					>
+						<div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-4 text-red-500">
+							<TrashIcon className="w-6 h-6" />
+						</div>
+						<h3 className="text-[17px] font-semibold text-gray-900 dark:text-gray-100 mb-2">
+							Remove Member
+						</h3>
+						<p className="text-[13px] text-gray-500 dark:text-gray-400 mb-6">
+							Are you sure you want to remove <span className="font-semibold text-gray-900 dark:text-gray-100">{memberToRemove.memberName}</span> from the <span className="font-semibold text-gray-900 dark:text-gray-100">{memberToRemove.bucketName}</span> bucket?
+						</p>
+						<div className="flex gap-3">
+							<Button
+								variant="outline"
+								size="md"
+								fullWidth
+								onClick={() => setMemberToRemove(null)}
+								disabled={isRemoving}
+								className="h-10 text-[13px]"
+							>
+								Cancel
+							</Button>
+							<Button
+								variant="danger"
+								size="md"
+								fullWidth
+								onClick={confirmRemove}
+								loading={isRemoving}
+								className="h-10 text-[13px]"
+							>
+								Remove
+							</Button>
+						</div>
+					</div>
+				</div>
 			)}
 		</div>
 	);

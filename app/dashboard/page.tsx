@@ -8,7 +8,8 @@ import EditChartModal from '@/components/features/dashboard/EditChartModal';
 import AddWidgetModal from '@/components/features/dashboard/AddWidgetModal';
 import EditWidgetModal from '@/components/features/dashboard/EditWidgetModal';
 import DeleteWidgetModal from '@/components/ui/DeleteWidgetModal';
-import { PlusIcon, Pencil1Icon, ReloadIcon } from '@radix-ui/react-icons';
+import { PlusIcon, Pencil1Icon, ReloadIcon, UpdateIcon } from '@radix-ui/react-icons';
+import { toast } from 'sonner';
 import AccessRestricted from '@/components/ui/AccessRestricted';
 import { useUpdateCampaignMutation } from '@/store/services/campaignApi';
 import { useCampaign } from '@/contexts/CampaignContext';
@@ -41,9 +42,9 @@ import {
 	getOfflineDispositions,
 	getSyncedDispositions,
 	getPendingDispositionsCount,
-	syncPendingDispositions,
 	DispositionFieldEntry
 } from '@/utils/offlineDispositions';
+import { useSyncDispositions } from '@/hooks/useSyncDispositions';
 import SortableChart from '@/components/dashboard/SortableChart';
 import WidgetCard from '@/components/dashboard/WidgetCard';
 import { ChartDataItem } from '@/components/dashboard/charts/types';
@@ -63,7 +64,8 @@ const DashboardContent: React.FC = () => {
 	const { setupData, addChart: addChartLocal, updateChart: updateChartLocal, updateChartsOrder: updateChartsOrderLocal, updateDashboardSettings: updateDashboardSettingsLocal } = useSetup();
 	const [updateCampaign] = useUpdateCampaignMutation();
 	const isLoading = isLobLoading;
-	const { isOnline, isConnected, isOffline, send } = useSocket();
+	const { isOnline, isConnected, isOffline } = useSocket();
+	const { syncNow, isSyncing } = useSyncDispositions();
 	const { canAccess, isAdmin } = usePrivilege();
 	const { user } = useUserInfo();
 	const canAccessDashboard = canAccess('dashboard');
@@ -99,7 +101,9 @@ const DashboardContent: React.FC = () => {
 	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange]);
 
 	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
-	const isSupervisor = userRoleName?.toLowerCase() === 'supervisor';
+	// Treat the isSupervisor flag as authoritative (a team lead may have any role name),
+	// falling back to the role name for older records.
+	const isSupervisor = user?.isSupervisor === true || userRoleName?.toLowerCase() === 'supervisor';
 	const isCampaignView = isAdmin || isSupervisor;
 
 	const { data: reportDataAgent, refetch: refetchAgentReport, isFetching: isFetchingAgentReport } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
@@ -123,27 +127,29 @@ const DashboardContent: React.FC = () => {
 
 	const reportData = isCampaignView ? reportDataAdmin : reportDataAgent;
 
+	// Fetched over all time (no date filter) so each chart can filter by its own
+	// per-chart time range. Widgets still filter this client-side by the dashboard range.
 	const { data: lobReportData, refetch: refetchLobReport, isFetching: isFetchingLobReport } = useGetDispositionsByCampaignReportQuery(
 		{
 			campaignId: campaignId || '',
-			startDate: dateRange.startDate || '',
-			endDate: dateRange.endDate || '',
+			startDate: '',
+			endDate: '',
 			page: 1,
 			limit: 10000,
 		},
-		{ skip: !campaignId || !isCampaignView || !dateRange.startDate }
+		{ skip: !campaignId || !isCampaignView }
 	);
 
 	const { data: agentReportData, refetch: refetchAgentDispositions, isFetching: isFetchingAgentDispositions } = useGetDispositionsByAgentReportQuery(
 		{
 			campaignId: campaignId || '',
 			agentId: user?._id || '',
-			startDate: dateRange.startDate || '',
-			endDate: dateRange.endDate || '',
+			startDate: '',
+			endDate: '',
 			page: 1,
 			limit: 10000,
 		},
-		{ skip: !campaignId || isCampaignView || !user?._id || !dateRange.startDate }
+		{ skip: !campaignId || isCampaignView || !user?._id }
 	);
 
 	const apiDispositions = useMemo(() => {
@@ -333,14 +339,29 @@ const DashboardContent: React.FC = () => {
 
 	// Sync pending dispositions when coming back online
 	useEffect(() => {
-		if (isOnline && isConnected && send) {
-			syncPendingDispositions(send).then((result) => {
+		if (isOnline && isConnected) {
+			syncNow().then((result) => {
 				if (result.success > 0) {
 					setPendingDispositionsCount(getPendingDispositionsCount());
 				}
 			});
 		}
-	}, [isOnline, isConnected, send]);
+	}, [isOnline, isConnected, syncNow]);
+
+	// Manual sync triggered from the dashboard "Sync" button
+	const handleSyncNow = async () => {
+		const result = await syncNow();
+		setPendingDispositionsCount(getPendingDispositionsCount());
+		if (result.success > 0 && result.failed === 0) {
+			toast.success(`Synced ${result.success} pending disposition(s)`);
+		} else if (result.success > 0 && result.failed > 0) {
+			toast.warning(`Synced ${result.success}, ${result.failed} still pending`);
+		} else if (result.failed > 0) {
+			toast.error(`Could not sync ${result.failed} disposition(s). Will retry.`);
+		} else {
+			toast.info('No pending dispositions to sync');
+		}
+	};
 
 	const combinedDispositions = useMemo(() => {
 		const offline = getOfflineDispositions();
@@ -555,8 +576,11 @@ const DashboardContent: React.FC = () => {
 		}
 	}, [canEdit, dashboardSettings.dispositionSettings.charts]);
 
-	const generateChartDataWrapper = useCallback((dataSource: string | string[], chartColor?: string, colors?: Record<string, string>): ChartDataItem[] => {
-		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, combinedDispositions, reportData);
+	const generateChartDataWrapper = useCallback((dataSource: string | string[], chartColor?: string, colors?: Record<string, string>, chartTimeRange?: string): ChartDataItem[] => {
+		// When a chart has its own time range, filter the (all-time) dispositions
+		// client-side by that range instead of using the dashboard-scoped breakdown.
+		const reportForChart = chartTimeRange ? undefined : reportData;
+		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, combinedDispositions, reportForChart, chartTimeRange);
 	}, [dashboardSettings, pendingDispositionsCount, combinedDispositions, reportData]);
 
 	const handleConfirmDelete = useCallback(() => {
@@ -691,6 +715,22 @@ const DashboardContent: React.FC = () => {
 									})}
 								/>
 							</div>
+							{pendingDispositionsCount > 0 && (
+								<Button
+									variant="outline"
+									size="md"
+									onClick={handleSyncNow}
+									disabled={isSyncing}
+									className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
+									title={`${pendingDispositionsCount} pending disposition(s) to sync`}
+								>
+									<UpdateIcon className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+									<span className="hidden sm:inline">{isSyncing ? 'Syncing…' : 'Sync'}</span>
+									<span className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-amber-500 text-white text-[8px] md:text-[9px] font-bold">
+										{pendingDispositionsCount}
+									</span>
+								</Button>
+							)}
 							<Button
 								variant="primary"
 								size="md"
@@ -824,6 +864,7 @@ const DashboardContent: React.FC = () => {
 														generateChartData={generateChartDataWrapper}
 														onRemoveChart={handleRemoveChart}
 														onEditChart={handleEditChart}
+														onTimeRangeChange={(chartId, timeRange) => updateChart(chartId, { timeRange: timeRange as Chart['timeRange'] })}
 														canEdit={canEdit}
 														canDelete={canDelete}
 													/>

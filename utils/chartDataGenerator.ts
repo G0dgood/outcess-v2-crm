@@ -161,7 +161,8 @@ export const generateChartData = (
 	pendingDispositionsCount: number,
 	colors?: Record<string, string>, // Map of data source to color
 	providedDispositions?: DispositionItem[],
-	reportData?: any
+	reportData?: any,
+	chartTimeRange?: string // Optional per-chart time range override
 ): ChartDataItem[] => {
 	// Handle multiple data sources
 	if (Array.isArray(dataSource) && dataSource.length > 1) {
@@ -172,7 +173,7 @@ export const generateChartData = (
 			// Get color for this specific data source
 			const sourceColor = colors?.[source] || chartColor;
 			// Call the internal function to generate data for a single source
-			const sourceData = generateSingleSourceData(source, sourceColor, setupData, pendingDispositionsCount, providedDispositions, reportData);
+			const sourceData = generateSingleSourceData(source, sourceColor, setupData, pendingDispositionsCount, providedDispositions, reportData, chartTimeRange);
 			
 			// Combine data by label, summing values
 			sourceData.forEach(item => {
@@ -221,7 +222,7 @@ export const generateChartData = (
 	// Handle single data source (backward compatibility)
 	const singleSource = Array.isArray(dataSource) ? dataSource[0] : dataSource;
 	const sourceColor = colors?.[singleSource] || chartColor;
-	return generateSingleSourceData(singleSource, sourceColor, setupData, pendingDispositionsCount, providedDispositions, reportData);
+	return generateSingleSourceData(singleSource, sourceColor, setupData, pendingDispositionsCount, providedDispositions, reportData, chartTimeRange);
 };
 
 /**
@@ -234,7 +235,8 @@ const generateSingleSourceData = (
 	setupData: SetupData,
 	pendingDispositionsCount: number,
 	providedDispositions?: DispositionItem[],
-	reportData?: any
+	reportData?: any,
+	chartTimeRange?: string
 ): ChartDataItem[] => {
 	// Check reportData first
 	if (reportData?.data?.breakdown) {
@@ -265,8 +267,8 @@ const generateSingleSourceData = (
 		allDispositions = [...allOfflineDispositions, ...allSyncedDispositions] as unknown as DispositionItem[];
 	}
 
-	// Filter by time range if specified
-	const timeRange = setupData.dashboardSettings?.dispositionSettings?.timeRangeView || 'daily';
+	// Filter by time range — a per-chart range takes priority over the dashboard's.
+	const timeRange = chartTimeRange || setupData.dashboardSettings?.dispositionSettings?.timeRangeView || 'daily';
 	const filteredDispositions = filterDispositionsByTimeRange(allDispositions, timeRange);
 
 	// Use filtered dispositions for counting

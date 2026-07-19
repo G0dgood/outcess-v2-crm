@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import moment from 'moment';
 import Button from '@/components/ui/Button';
 import Search from '@/components/ui/Search';
 import Pagination from '@/components/ui/Pagination';
@@ -69,20 +70,19 @@ const ReportPage: React.FC = () => {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 
-	const formatDate = (date: Date) => {
-		const year = date.getFullYear();
-		const month = String(date.getMonth() + 1).padStart(2, '0');
-		const day = String(date.getDate()).padStart(2, '0');
-		return `${year}-${month}-${day}`;
-	};
-
 	const [dateRange, setDateRange] = useState<{ startDate: string; endDate: string }>(() => {
-		const today = formatDate(new Date());
-		return { startDate: `${today}T00:00:00.000Z`, endDate: `${today}T23:59:59.999Z` };
+		// Local start/end of today, converted to UTC instants (matches how createdAt is stored)
+		const start = new Date();
+		start.setHours(0, 0, 0, 0);
+		const end = new Date();
+		end.setHours(23, 59, 59, 999);
+		return { startDate: start.toISOString(), endDate: end.toISOString() };
 	});
 
 	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
-	const isSupervisor = userRoleName?.toLowerCase() === 'supervisor';
+	// Treat the isSupervisor flag as authoritative (a team lead may have any role name),
+	// falling back to the role name for older records.
+	const isSupervisor = user?.isSupervisor === true || userRoleName?.toLowerCase() === 'supervisor';
 	const isAgent = !isAdmin && !isSupervisor;
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -185,13 +185,9 @@ const ReportPage: React.FC = () => {
 		}
 
 		return list.map((item: ReportItem) => {
-			const d = item.timestamp ? new Date(item.timestamp) : null;
-			const year = d ? d.getFullYear() : '';
-			const month = d ? String(d.getMonth() + 1).padStart(2, '0') : '';
-			const day = d ? String(d.getDate()).padStart(2, '0') : '';
-			const hour = d ? String(d.getHours()).padStart(2, '0') : '';
-			const minute = d ? String(d.getMinutes()).padStart(2, '0') : '';
-			const formatted = d ? `${year}-${month}-${day} ${hour}:${minute}` : '-';
+			const formatted = item.timestamp && moment(item.timestamp).isValid()
+				? moment(item.timestamp).format('YYYY-MM-DD HH:mm')
+				: '-';
 			const agentName = typeof item.agent === 'object' ? item.agent?.name : item.agent;
 			const customerSearchId = item.customer
 				? (Object.entries(item.customer).find(([key]) => key.toLowerCase() === 'searchid')?.[1] as string)
@@ -217,15 +213,7 @@ const ReportPage: React.FC = () => {
 			if (Array.isArray(item.fillDisposition)) {
 				item.fillDisposition.forEach((field: DispositionField) => {
 					if (field.fieldName) {
-						const val = field.fieldValue;
-						if (typeof val === 'string' && val.includes(' > ')) {
-							const levels = val.split(' > ');
-							levels.forEach((lvl, index) => {
-								row[`${field.fieldName} - Level ${index + 1}`] = lvl;
-							});
-						} else {
-							row[field.fieldName] = val;
-						}
+						row[field.fieldName] = field.fieldValue;
 					}
 				});
 			}
@@ -307,13 +295,9 @@ const ReportPage: React.FC = () => {
 	};
 
 	const formatReportItem = (item: ReportItem) => {
-		const d = item.timestamp ? new Date(item.timestamp) : null;
-		const year = d ? d.getFullYear() : '';
-		const month = d ? String(d.getMonth() + 1).padStart(2, '0') : '';
-		const day = d ? String(d.getDate()).padStart(2, '0') : '';
-		const hour = d ? String(d.getHours()).padStart(2, '0') : '';
-		const minute = d ? String(d.getMinutes()).padStart(2, '0') : '';
-		const formatted = d ? `${year}-${month}-${day} ${hour}:${minute}` : '-';
+		const formatted = item.timestamp && moment(item.timestamp).isValid()
+			? moment(item.timestamp).format('YYYY-MM-DD HH:mm')
+			: '-';
 		const agentName = typeof item.agent === 'object' ? item.agent?.name : item.agent;
 
 		const customerSearchId = item.customer
@@ -338,15 +322,7 @@ const ReportPage: React.FC = () => {
 		if (Array.isArray(item.fillDisposition)) {
 			item.fillDisposition.forEach((field: DispositionField) => {
 				if (field.fieldName) {
-					const val = field.fieldValue;
-					if (typeof val === 'string' && val.includes(' > ')) {
-						const levels = val.split(' > ');
-						levels.forEach((lvl, index) => {
-							row[`${field.fieldName} - Level ${index + 1}`] = lvl;
-						});
-					} else {
-						row[field.fieldName] = val;
-					}
+					row[field.fieldName] = field.fieldValue;
 				}
 			});
 		}
@@ -457,7 +433,7 @@ const ReportPage: React.FC = () => {
 					<CSVDownloadButton
 						fetchData={fetchAllReportsToExport}
 						formatItem={formatReportItem}
-						fileName={`disposition_report_${new Date().toISOString().slice(0, 10)}.csv`}
+						fileName={`disposition_report_${moment().format('YYYY-MM-DD')}.csv`}
 						variant="primary"
 						size="md"
 						className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"

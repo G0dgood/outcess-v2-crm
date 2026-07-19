@@ -21,6 +21,7 @@ interface FieldData {
 	type: string;
 	required: boolean;
 	icon?: string;
+	showTotal?: boolean;
 }
 
 const fieldTypeOptions = [
@@ -120,6 +121,7 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 	const [selectedType, setSelectedType] = useState(fieldType);
 	const [isRequired, setIsRequired] = useState(false);
 	const [selectedIcon, setSelectedIcon] = useState('');
+	const [showTotal, setShowTotal] = useState(false);
 	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
 	// Reset form when modal opens
@@ -130,11 +132,13 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 				setSelectedType(initialData.type);
 				setIsRequired(initialData.required);
 				setSelectedIcon(initialData.icon || '');
+				setShowTotal(!!initialData.showTotal);
 			} else {
 				setFieldName('');
 				setSelectedType(fieldType);
 				setIsRequired(false);
 				setSelectedIcon('');
+				setShowTotal(false);
 			}
 		}
 	}, [isOpen, fieldType, initialData]);
@@ -146,7 +150,8 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 			name: fieldName.trim(),
 			type: selectedType,
 			required: isRequired,
-			icon: selectedIcon || undefined
+			icon: selectedIcon || undefined,
+			showTotal
 		};
 
 		onAddField(fieldData);
@@ -392,6 +397,24 @@ export const FieldPropertiesModal: React.FC<FieldPropertiesModalProps> = ({
 							onChange={setIsRequired}
 							label={isRequired ? 'Required' : 'Optional'}
 						/>
+					</div>
+
+					{/* Sum column total in Customer Book */}
+					<div>
+						<label
+							className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 mb-2 block"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							Show column total (₦)
+						</label>
+						<Toggle
+							checked={showTotal}
+							onChange={setShowTotal}
+							label={showTotal ? 'Total shown' : 'No total'}
+						/>
+						<p className="text-[10px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
+							Sums this column in the Customer Book and shows the total (₦) at the bottom.
+						</p>
 					</div>
 
 					{/* Preview */}

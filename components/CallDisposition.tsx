@@ -215,7 +215,9 @@ export default function CallDisposition() {
 		nestedOptions: [] as NestedOption[],
 		sortOrder: 'entered',
 		isRequired: false,
-		color: '#050711'
+		color: '#050711',
+		subFields: [] as DispositionCategory[],
+		optionSubFields: {} as Record<string, DispositionCategory[]>
 	});
 
 	const [isChartReady, setIsChartReady] = useState(false);
@@ -437,14 +439,14 @@ export default function CallDisposition() {
 	// Disposition Actions
 	const handleAddDisposition = () => {
 		if (!activeBucketId) return;
-		setDispositionForm({ fieldType: 'dropdown', fieldLabel: '', dropdownOptions: [''], nestedOptions: [], sortOrder: 'entered', isRequired: false, color: '#EF4444' });
+		setDispositionForm({ fieldType: 'dropdown', fieldLabel: '', dropdownOptions: [''], nestedOptions: [], sortOrder: 'entered', isRequired: false, color: '#EF4444', subFields: [], optionSubFields: {} });
 		setIsAddDispositionModalOpen(true);
 	};
 
 	const handleEditDisposition = (d: DispositionCategory) => {
 		setAllowTypeChange(false);
 		setEditingDisposition(d);
-		setDispositionForm({ fieldType: d.fieldType, fieldLabel: d.name, dropdownOptions: d.dropdownOptions || [''], nestedOptions: d.nestedOptions || [], sortOrder: d.sortOrder || 'entered', isRequired: d.isRequired || false, color: d.color });
+		setDispositionForm({ fieldType: d.fieldType, fieldLabel: d.name, dropdownOptions: d.dropdownOptions || [''], nestedOptions: d.nestedOptions || [], sortOrder: d.sortOrder || 'entered', isRequired: d.isRequired || false, color: d.color, subFields: d.subFields || [], optionSubFields: d.optionSubFields || {} });
 		setIsEditDispositionModalOpen(true);
 	};
 
@@ -464,7 +466,9 @@ export default function CallDisposition() {
 				nestedOptions: changeTypeTarget.nestedOptions || [],
 				sortOrder: changeTypeTarget.sortOrder || 'entered',
 				isRequired: changeTypeTarget.isRequired || false,
-				color: changeTypeTarget.color
+				color: changeTypeTarget.color,
+				subFields: changeTypeTarget.subFields || [],
+				optionSubFields: changeTypeTarget.optionSubFields || {}
 			});
 			setIsEditDispositionModalOpen(true);
 			setChangeTypeTarget(null);
@@ -509,6 +513,8 @@ export default function CallDisposition() {
 				nestedOptions: dispositionForm.nestedOptions,
 				sortOrder: dispositionForm.sortOrder,
 				isRequired: dispositionForm.isRequired,
+				subFields: dispositionForm.subFields,
+				optionSubFields: dispositionForm.optionSubFields,
 				isArchived: editingDisposition.isArchived
 			});
 
@@ -525,7 +531,9 @@ export default function CallDisposition() {
 						dropdownOptions: dispositionForm.dropdownOptions,
 						nestedOptions: dispositionForm.nestedOptions,
 						sortOrder: dispositionForm.sortOrder,
-						isRequired: dispositionForm.isRequired
+						isRequired: dispositionForm.isRequired,
+						subFields: dispositionForm.subFields,
+						optionSubFields: dispositionForm.optionSubFields
 					});
 				}
 			}
@@ -543,6 +551,8 @@ export default function CallDisposition() {
 					nestedOptions: dispositionForm.nestedOptions,
 					sortOrder: dispositionForm.sortOrder,
 					isRequired: dispositionForm.isRequired,
+					subFields: dispositionForm.subFields,
+					optionSubFields: dispositionForm.optionSubFields,
 					isArchived: true
 				});
 				toast.success("Disposition saved to archive");
@@ -561,6 +571,8 @@ export default function CallDisposition() {
 					nestedOptions: dispositionForm.nestedOptions,
 					sortOrder: dispositionForm.sortOrder,
 					isRequired: dispositionForm.isRequired,
+					subFields: dispositionForm.subFields,
+					optionSubFields: dispositionForm.optionSubFields,
 					isArchived: false,
 					backupId: archivedId
 				});
@@ -575,6 +587,8 @@ export default function CallDisposition() {
 					nestedOptions: dispositionForm.nestedOptions,
 					sortOrder: dispositionForm.sortOrder,
 					isRequired: dispositionForm.isRequired,
+					subFields: dispositionForm.subFields,
+					optionSubFields: dispositionForm.optionSubFields,
 					isArchived: true,
 					backupOfId: activeId
 				});

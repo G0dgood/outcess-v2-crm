@@ -152,7 +152,7 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
             >
               <TrashIcon className="w-3.5 h-3.5" />
               Delete
-            </Button> 
+            </Button>
           )}
           <Button
             variant="ghost"

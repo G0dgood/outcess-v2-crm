@@ -91,7 +91,8 @@ const CustomerBookPage: React.FC = () => {
 			id: field.id,
 			name: field.name,
 			type: mapFieldType(field.type),
-			required: field.required
+			required: field.required,
+			showTotal: field.showTotal === true,
 		}));
 	}, [configuredFields, accessibleBuckets, hasFullBucketAccess]);
 
@@ -115,11 +116,15 @@ const CustomerBookPage: React.FC = () => {
 				const headers = Object.keys(firstItem).filter(key => !['_id', 'id', '__v', 'companyId', 'campaignId'].includes(key) && key.toLowerCase() !== 'searchid' && key.toLowerCase() !== 'bucketid');
 				setTableHeaders(headers);
 
-				const mappedCustomers: Customer[] = data?.map((item) => {
+				const mappedCustomers: Customer[] = data?.map((item, index) => {
 					const record = item as Record<string, unknown>;
+					// Prefer the unique _id (set `id` AFTER the spread so a shared CSV `id`
+					// column can't override it), and keep a guaranteed-unique row key so
+					// duplicate records (e.g. multiple loans) each render as their own row.
 					return {
-						id: (record?.id as string) || (record?._id as string),
-						...(record as Record<string, string | number | boolean | null | undefined>)
+						...(record as Record<string, string | number | boolean | null | undefined>),
+						id: (record?._id as string) || (record?.id as string) || `row-${index}`,
+						_rowKey: `${(record?._id as string) || (record?.id as string) || 'row'}-${index}`,
 					};
 				});
 				setCustomers(mappedCustomers);
@@ -143,6 +148,32 @@ const CustomerBookPage: React.FC = () => {
 	};
 
 	const filteredCustomers = customers;
+
+	// Headers whose column should be summed and totalled (₦) at the bottom.
+	const totalHeaders = useMemo(() => {
+		const names = new Set(
+			fieldDefinitions
+				.filter((f) => f.showTotal)
+				.map((f) => f.name?.toLowerCase())
+		);
+		return new Set(tableHeaders.filter((h) => names.has(h.toLowerCase())));
+	}, [fieldDefinitions, tableHeaders]);
+
+	// Column sums for the totalled headers across the currently shown rows.
+	const columnTotals = useMemo(() => {
+		const totals: Record<string, number> = {};
+		totalHeaders.forEach((header) => {
+			totals[header] = customers.reduce((sum, c) => {
+				const raw = String(c[header] ?? '').replace(/[^0-9.-]/g, '');
+				const num = parseFloat(raw);
+				return sum + (isNaN(num) ? 0 : num);
+			}, 0);
+		});
+		return totals;
+	}, [totalHeaders, customers]);
+
+	const formatNaira = (value: number) =>
+		`₦${value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 	const handleAddCustomer = () => {
 		setIsAddCustomerModalOpen(true);
@@ -239,9 +270,9 @@ const CustomerBookPage: React.FC = () => {
 										<SVGLoaderFetch colSpan={tableHeaders.length + 1} text="Searching customer..." />
 									) : filteredCustomers?.length === 0 ? (
 										<NoRecordFound colSpan={tableHeaders.length + 1} />
-									) : filteredCustomers?.map((customer) => (
+									) : filteredCustomers?.map((customer, index) => (
 										<tr
-											key={customer.id}
+											key={(customer._rowKey as string) || `${customer.id}-${index}`}
 											style={{ borderColor: 'var(--light-gray)' }}
 										>
 											<td className="px-6 py-4 whitespace-nowrap">
@@ -269,6 +300,27 @@ const CustomerBookPage: React.FC = () => {
 										</tr>
 									))}
 								</tbody>
+								{totalHeaders.size > 0 && customers.length > 0 && (
+									<tfoot>
+										<tr
+											className="font-semibold border-t-2"
+											style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--light-gray)' }}
+										>
+											<td className="px-6 py-4 whitespace-nowrap text-[13px] md:text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+												Total
+											</td>
+											{tableHeaders?.map((header) => (
+												<td
+													key={`total-${header}`}
+													className="px-6 py-4 whitespace-nowrap text-[13px] md:text-[15px] font-semibold"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													{totalHeaders.has(header) ? formatNaira(columnTotals[header] || 0) : ''}
+												</td>
+											))}
+										</tr>
+									</tfoot>
+								)}
 							</table>
 						</div>
 					</div>

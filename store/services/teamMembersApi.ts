@@ -58,6 +58,20 @@ export interface AssignSupervisorRequest {
   teamMemberIds: string[];
 }
 
+export interface TransferCampaignRequest {
+  teamMemberIds: string[];
+  targetCampaignId: string;
+  roleId: string;
+}
+
+export interface TransferCampaignResponse {
+  message: string;
+  transferredCount: number;
+  skippedCount: number;
+  transferred: string[];
+  skipped: { memberId: string; reason: string }[];
+}
+
 export interface ApiTeamMember {
   isActive: boolean;
   _id?: string;
@@ -295,6 +309,17 @@ export const teamMembersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["TeamMembers"],
     }),
+    transferTeamMembersToCampaign: builder.mutation<
+      TransferCampaignResponse,
+      TransferCampaignRequest
+    >({
+      query: (body) => ({
+        url: "api/v1/team-members/transfer-campaign",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["TeamMembers"],
+    }),
     bulkUploadTeamMembers: builder.mutation<BulkUploadResponse, FormData>({
       query: (formData) => ({
         url: "api/v1/team-members/bulk-upload",
@@ -333,6 +358,7 @@ export const {
   useDeleteManyTeamMembersMutation,
   useAssignShiftHourToTeamMembersMutation,
   useAssignSupervisorToTeamMembersMutation,
+  useTransferTeamMembersToCampaignMutation,
   useBulkUploadTeamMembersMutation,
   useVerifyTeamMemberPasswordMutation,
 } = teamMembersApi;

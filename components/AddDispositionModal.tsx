@@ -9,8 +9,9 @@ import ColorPicker from '@/components/ui/ColorPicker';
 import { PlusIcon } from '@radix-ui/react-icons';
 import { GripVertical, ChevronDown, ChevronRight } from 'lucide-react';
 
-import { NestedOption } from '@/types/dashboard';
+import { NestedOption, DispositionCategory } from '@/types/dashboard';
 import { Toggle } from '@/components/ui/Toggle';
+import { SubFieldList, isChoiceType } from '@/components/features/disposition/SubFieldEditor';
 
 import {
 	DndContext,
@@ -42,6 +43,8 @@ interface AddDispositionModalProps {
 		sortOrder: string;
 		isRequired: boolean;
 		color: string;
+		subFields: DispositionCategory[];
+		optionSubFields: Record<string, DispositionCategory[]>;
 	};
 	setDispositionForm: React.Dispatch<React.SetStateAction<{
 		fieldType: string;
@@ -51,6 +54,8 @@ interface AddDispositionModalProps {
 		sortOrder: string;
 		isRequired: boolean;
 		color: string;
+		subFields: DispositionCategory[];
+		optionSubFields: Record<string, DispositionCategory[]>;
 	}>>;
 	fieldTypeOptions: Array<{ value: string; label: string }>;
 	onSave: (isArchived?: boolean) => void;
@@ -831,6 +836,44 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 									</div>
 								)}
 							</div>
+						</div>
+					)}
+
+					{/* Sub-fields tied to a specific option of this field */}
+					{isChoiceType(dispositionForm.fieldType) && (dispositionForm.dropdownOptions || []).some(o => o.trim() !== '') && (
+						<div className="space-y-3 pt-2 border-t dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
+							<label className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 block" style={{ color: 'var(--text-primary)' }}>
+								Fields tied to an option
+							</label>
+							{(dispositionForm.dropdownOptions || []).filter(o => o.trim() !== '').map((opt) => (
+								<div key={opt} className="rounded border p-2" style={{ borderColor: 'var(--light-gray)' }}>
+									<span className="text-[11px] font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>
+										When &quot;{opt}&quot; is selected
+									</span>
+									<SubFieldList
+										fields={dispositionForm.optionSubFields?.[opt]}
+										onChange={(subs) => setDispositionForm(prev => ({
+											...prev,
+											optionSubFields: { ...(prev.optionSubFields || {}), [opt]: subs },
+										}))}
+										addLabel="Add field to this option"
+									/>
+								</div>
+							))}
+						</div>
+					)}
+
+					{/* Sub-fields shown once this field is answered (Multi Dropdown handles its own nesting) */}
+					{dispositionForm.fieldType !== 'multi-dropdown' && (
+						<div className="space-y-2 pt-2 border-t dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
+							<label className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 block" style={{ color: 'var(--text-primary)' }}>
+								Sub-fields (shown after this field is answered)
+							</label>
+							<SubFieldList
+								fields={dispositionForm.subFields}
+								onChange={(subs) => setDispositionForm(prev => ({ ...prev, subFields: subs }))}
+								addLabel="Add sub-field"
+							/>
 						</div>
 					)}
 

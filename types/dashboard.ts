@@ -18,6 +18,12 @@ export interface DispositionCategory {
   isArchived?: boolean;
   backupId?: string;
   backupOfId?: string;
+  // Fields tied to this field. Shown at fill time once this field has a value.
+  // Fully recursive — a sub-field can carry its own subFields / optionSubFields.
+  subFields?: DispositionCategory[];
+  // Fields tied to a specific option of a choice field (dropdown/radio/checkbox),
+  // keyed by the option value. Shown when the agent selects that option.
+  optionSubFields?: Record<string, DispositionCategory[]>;
 }
 
 export interface AssignedMember {
