@@ -189,6 +189,14 @@ export const teamMembersApi = baseApi.injectEndpoints({
         `api/v1/team-members/supervisor/${supervisorId}?page=${page}&limit=${limit}${search ? `&search=${encodeURIComponent(search)}` : ""}`,
       providesTags: ["TeamMembers"],
     }),
+    getSupervisorsByCampaignId: builder.query<
+      PaginatedTeamMembersResponse,
+      string
+    >({
+      query: (campaignId) =>
+        `api/v1/team-members/campaign/${campaignId}/supervisors`,
+      providesTags: ["TeamMembers"],
+    }),
 
     getTeamMemberById: builder.query<GetTeamMemberResponse, string>({
       query: (id) => `api/v1/team-members/${id}`,
@@ -348,6 +356,7 @@ export const {
   useGetTeamMembersByCampaignIdQuery,
   useGetTeamMembersByCampaignIdAndRoleIdQuery,
   useGetTeamMembersBySupervisorIdQuery,
+  useGetSupervisorsByCampaignIdQuery,
 
   useGetTeamMemberByIdQuery,
   useUpdateTeamMemberMutation,
