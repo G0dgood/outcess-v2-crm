@@ -6,8 +6,9 @@ import Input from '@/components/ui/Input';
 import Dropdown from '@/components/ui/Dropdown';
 import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
-import { Widget } from '@/types/dashboard';
+import { Widget, DispositionCategory, NestedOption } from '@/types/dashboard';
 import { useCampaign } from '@/contexts/CampaignContext';
+import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
 // import { useSocket } from '@/contexts/SocketContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -101,16 +102,71 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 
 	const subKeyOptions = useMemo(() => {
 		const lookupKey = selectedCategory || formData.dataSourceName;
-		if (!reportData?.data?.breakdown || !lookupKey) return [];
-		const reportValue = reportData.data.breakdown[lookupKey];
-		if (typeof reportValue === 'object' && reportValue !== null) {
-			return Object.keys(reportValue).map(key => ({
-				value: key,
-				label: key,
-			}));
+		if (!lookupKey) return [];
+
+		const optionsMap = new Map<string, { value: string; label: string }>();
+
+		// 1. From API breakdown data
+		if (reportData?.data?.breakdown?.[lookupKey]) {
+			const reportValue = reportData.data.breakdown[lookupKey];
+			if (typeof reportValue === 'object' && reportValue !== null) {
+				Object.keys(reportValue).forEach(key => {
+					optionsMap.set(key, { value: key, label: key });
+				});
+			}
 		}
-		return [];
-	}, [reportData, formData.dataSourceName, selectedCategory]);
+
+		// 2. From Campaign Dashboard Settings (Direct dispositions and Buckets)
+		const dashboardSettings = campaignData?.dashboardSettings;
+		const allDispositions: DispositionCategory[] = [...(dashboardSettings?.dispositions || [])];
+		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
+			dashboardSettings.buckets.forEach((bucket: { dispositions?: DispositionCategory[] }) => {
+				if (bucket && Array.isArray(bucket.dispositions)) {
+					bucket.dispositions.forEach((disp: DispositionCategory) => {
+						if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
+							allDispositions.push(disp);
+						}
+					});
+				}
+			});
+		}
+
+		const matchingDisp = allDispositions.find(d => d.name === lookupKey);
+		if (matchingDisp) {
+			const collectNested = (opts?: NestedOption[]) => {
+				if (!opts || !Array.isArray(opts)) return;
+				opts.forEach(opt => {
+					if (opt.value) {
+						optionsMap.set(opt.value, { value: opt.value, label: opt.value });
+					}
+					if (opt.subLabel && !optionsMap.has(opt.subLabel)) {
+						optionsMap.set(opt.subLabel, { value: opt.subLabel, label: `Label: ${opt.subLabel}` });
+					}
+					if (opt.subOptions) {
+						collectNested(opt.subOptions);
+					}
+				});
+			};
+
+			collectNested(matchingDisp.nestedOptions);
+
+			if (matchingDisp.dropdownOptions && Array.isArray(matchingDisp.dropdownOptions)) {
+				matchingDisp.dropdownOptions.forEach(opt => {
+					if (opt && opt.trim()) {
+						optionsMap.set(opt.trim(), { value: opt.trim(), label: opt.trim() });
+					}
+				});
+			}
+
+			if (matchingDisp.optionSubFields && typeof matchingDisp.optionSubFields === 'object') {
+				Object.keys(matchingDisp.optionSubFields).forEach(optKey => {
+					optionsMap.set(optKey, { value: optKey, label: optKey });
+				});
+			}
+		}
+
+		return Array.from(optionsMap.values());
+	}, [reportData, formData.dataSourceName, selectedCategory, campaignData?.dashboardSettings]);
 
 	const handleDataSourceChange = (value: string) => {
 		setSelectedCategory(value);
@@ -151,23 +207,36 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 		}
 
 		const dashboardSettings = campaignData?.dashboardSettings;
-		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
-		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
-			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
-				if (bucket && Array.isArray(bucket.dispositions)) {
-					bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
-						if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
-							allDispositions.push(disp);
-						}
-					});
-				}
-			});
-		}
+		const allDispositions = getAllCampaignDispositions(dashboardSettings);
 
 		if (allDispositions.length > 0) {
-			allDispositions.forEach((disposition: { name: string }) => {
+			allDispositions.forEach((disposition: DispositionCategory) => {
 				if (disposition?.name) {
 					optionsMap.set(disposition.name, { value: disposition.name, label: disposition.name });
+
+					const collectNested = (opts?: NestedOption[]) => {
+						if (!opts || !Array.isArray(opts)) return;
+						opts.forEach(opt => {
+							if (opt.value) {
+								optionsMap.set(opt.value, { value: opt.value, label: `${disposition.name} -> ${opt.value}` });
+							}
+							if (opt.subLabel && !optionsMap.has(opt.subLabel)) {
+								optionsMap.set(opt.subLabel, { value: opt.subLabel, label: `${disposition.name} Header: ${opt.subLabel}` });
+							}
+							if (opt.subOptions) {
+								collectNested(opt.subOptions);
+							}
+						});
+					};
+					collectNested(disposition.nestedOptions);
+
+					if (disposition.dropdownOptions && Array.isArray(disposition.dropdownOptions)) {
+						disposition.dropdownOptions.forEach(opt => {
+							if (opt && opt.trim()) {
+								optionsMap.set(opt.trim(), { value: opt.trim(), label: `${disposition.name} -> ${opt.trim()}` });
+							}
+						});
+					}
 				}
 			});
 		}
@@ -176,23 +245,11 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 	}, [campaignData?.dashboardSettings, reportData]);
 
 	useEffect(() => {
-		const dashboardSettings = campaignData?.dashboardSettings;
 		const lookupKey = selectedCategory || formData.dataSourceName;
+		if (!lookupKey) return;
 
-		// Find disposition from either direct or bucketed dispositions
-		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
-		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
-			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
-				if (bucket && Array.isArray(bucket.dispositions)) {
-					bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
-						if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
-							allDispositions.push(disp);
-						}
-					});
-				}
-			});
-		}
-		const disposition = allDispositions.find((d: { name: string }) => d.name === lookupKey);
+		const dashboardSettings = campaignData?.dashboardSettings;
+		const allConfigured = getAllCampaignDispositions(dashboardSettings);
 		const outcome = dashboardSettings?.callOutcomes?.find((o: { name: string }) => o.name === lookupKey);
 
 		if (reportData?.data?.breakdown && lookupKey && reportData.data.breakdown[lookupKey] !== undefined) {
@@ -229,47 +286,38 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			return;
 		}
 
-		if (disposition) {
-			const offlineDispositions = getOfflineDispositions();
-			const syncedDispositions = getSyncedDispositions();
-			const allDispositions = [...offlineDispositions, ...syncedDispositions];
-			const count = allDispositions.filter(disp => {
-				const fields = disp.dispositionData || disp.fillDisposition;
-				if (fields && Array.isArray(fields)) {
-					const field = fields.find((f: DispositionFieldEntry) => f.fieldName === disposition.name);
-					if (field) {
-						return field.fieldValue && field.fieldValue.toString().trim() !== '' && field.fieldValue !== '-';
-					}
-				}
-				const fieldValue = disp[disposition.name as keyof typeof disp];
-				return fieldValue && fieldValue.toString().trim() !== '' && fieldValue !== '-';
-			}).length;
-			setFormData(prev => ({
-				...prev,
-				title: isTitleManual ? prev.title : disposition.name,
-				value: count,
-				dataSourceName: disposition.name,
-			}));
-		} else if (outcome) {
-			const offlineDispositions = getOfflineDispositions();
-			const syncedDispositions = getSyncedDispositions();
-			const allDispositions = [...offlineDispositions, ...syncedDispositions];
-			const count = allDispositions.filter(disp => {
-				const fields = disp.dispositionData || disp.fillDisposition;
-				if (fields && Array.isArray(fields)) {
-					return fields.some(f =>
-						f.fieldValue && f.fieldValue.toString().toLowerCase() === outcome.name.toLowerCase()
+		const offlineDispositions = getOfflineDispositions();
+		const syncedDispositions = getSyncedDispositions();
+		const allDispositions = [...offlineDispositions, ...syncedDispositions];
+		const targetKey = selectedSubKey || lookupKey;
+
+		const count = allDispositions.filter(disp => {
+			const fields = disp.dispositionData || disp.fillDisposition;
+			if (fields && Array.isArray(fields)) {
+				return fields.some((f: DispositionFieldEntry) => {
+					if (!f.fieldName || f.fieldValue === undefined || f.fieldValue === null) return false;
+					const dispDef = allConfigured.find(d => d.name === f.fieldName);
+					const levels = resolveMultiDropdownLevels(f.fieldName, String(f.fieldValue), dispDef);
+					return levels.some(lvl =>
+						lvl.header.toLowerCase() === targetKey.toLowerCase() ||
+						lvl.value.toLowerCase() === targetKey.toLowerCase() ||
+						f.fieldName.toLowerCase() === targetKey.toLowerCase()
 					);
-				}
-				return false;
-			}).length;
-			setFormData(prev => ({
-				...prev,
-				title: isTitleManual ? prev.title : outcome.name,
-				value: count,
-				dataSourceName: outcome.name,
-			}));
-		}
+				});
+			}
+			if (outcome && fields && Array.isArray(fields)) {
+				return (fields as DispositionFieldEntry[]).some((f: DispositionFieldEntry) => f.fieldValue && f.fieldValue.toString().toLowerCase() === outcome.name.toLowerCase());
+			}
+			return false;
+		}).length;
+
+		setFormData(prev => ({
+			...prev,
+			title: isTitleManual ? prev.title : (selectedSubKey ? `${lookupKey} - ${selectedSubKey}` : lookupKey),
+			value: count,
+			subKey: selectedSubKey ? `${lookupKey}:::${selectedSubKey}` : prev.subKey,
+			dataSourceName: lookupKey,
+		}));
 	}, [formData.dataSourceName, campaignData?.dashboardSettings, reportData, selectedSubKey, selectedCategory, isTitleManual]);
 
 	const isValueAutoCalculated = useMemo(() => {

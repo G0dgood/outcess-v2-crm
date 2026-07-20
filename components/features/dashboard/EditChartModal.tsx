@@ -8,7 +8,7 @@ import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useSocket } from '@/contexts/SocketContext';
-import { Chart } from '@/types/dashboard';
+import { Chart, DispositionCategory, NestedOption } from '@/types/dashboard';
 import { useCampaign } from '@/contexts/CampaignContext';
 
 interface EditChartModalProps {
@@ -109,11 +109,11 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		const dashboardSettings = campaignData?.dashboardSettings;
 
 		// Add disposition categories if available (direct and bucketed)
-		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
+		const allDispositions: DispositionCategory[] = [...(dashboardSettings?.dispositions || [])];
 		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
-			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
+			dashboardSettings.buckets.forEach((bucket: { dispositions?: DispositionCategory[] }) => {
 				if (bucket && Array.isArray(bucket.dispositions)) {
-					bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
+					bucket.dispositions.forEach((disp: DispositionCategory) => {
 						if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
 							allDispositions.push(disp);
 						}
@@ -123,9 +123,34 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		}
 
 		if (allDispositions.length > 0) {
-			allDispositions.forEach((disposition: { name: string }) => {
+			allDispositions.forEach((disposition: DispositionCategory) => {
 				if (disposition?.name) {
 					optionsMap.set(disposition.name, { value: disposition.name, label: disposition.name });
+
+					const collectNested = (opts?: NestedOption[]) => {
+						if (!opts || !Array.isArray(opts)) return;
+						opts.forEach(opt => {
+							if (opt.value) {
+								optionsMap.set(opt.value, { value: opt.value, label: `${disposition.name} -> ${opt.value}` });
+							}
+							if (opt.subLabel && !optionsMap.has(opt.subLabel)) {
+								optionsMap.set(opt.subLabel, { value: opt.subLabel, label: `${disposition.name} Label: ${opt.subLabel}` });
+							}
+							if (opt.subOptions) {
+								collectNested(opt.subOptions);
+							}
+						});
+					};
+
+					collectNested(disposition.nestedOptions);
+
+					if (disposition.dropdownOptions && Array.isArray(disposition.dropdownOptions)) {
+						disposition.dropdownOptions.forEach(opt => {
+							if (opt && opt.trim()) {
+								optionsMap.set(opt.trim(), { value: opt.trim(), label: `${disposition.name} -> ${opt.trim()}` });
+							}
+						});
+					}
 				}
 			});
 		}

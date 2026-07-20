@@ -12,6 +12,7 @@ import { GripVertical, ChevronDown, ChevronRight } from 'lucide-react';
 import { NestedOption, DispositionCategory } from '@/types/dashboard';
 import { Toggle } from '@/components/ui/Toggle';
 import { SubFieldList, isChoiceType } from '@/components/features/disposition/SubFieldEditor';
+import { useSocket } from '@/contexts/SocketContext';
 
 import {
 	DndContext,
@@ -188,6 +189,7 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 	onDropdownOptionChange,
 	allowTypeChange = false
 }) => {
+	const { socket, isConnected, isOffline } = useSocket();
 	const [localOptions, setLocalOptions] = useState<{ id: string; value: string }[]>([]);
 	const [collapsedNodeIds, setCollapsedNodeIds] = useState<Set<string>>(new Set());
 
@@ -203,7 +205,7 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 		});
 	};
 
-	// Initialize local options when modal opens
+	// Initialize local options when modal opens & handle socket room
 	useEffect(() => {
 		if (isOpen) {
 			setLocalOptions(
@@ -213,7 +215,21 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 				}))
 			);
 		}
-	}, [isOpen]);
+	}, [isOpen, dispositionForm.dropdownOptions]);
+
+	const handleSave = (isArchived?: boolean) => {
+		if (socket && isConnected) {
+			socket.emit('disposition_saved', {
+				action: title.toLowerCase().includes('edit') ? 'update' : 'create',
+				dispositionName: dispositionForm.fieldLabel,
+				fieldType: dispositionForm.fieldType,
+				isRequired: dispositionForm.isRequired,
+				isArchived,
+				timestamp: Date.now()
+			});
+		}
+		onSave(isArchived);
+	};
 
 	// Sensors for dnd-kit
 	const sensors = useSensors(
@@ -558,12 +574,28 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 					className="flex justify-between items-center p-6 border-b dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
-					<h2
-						className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
-						style={{ color: 'var(--text-primary)' }}
-					>
-						{title}
-					</h2>
+					<div className="flex items-center gap-2.5">
+						<h2
+							className="font-inter text-[12px] md:text-[14px] font-semibold dark:text-gray-100"
+							style={{ color: 'var(--text-primary)' }}
+						>
+							{title}
+						</h2>
+						<span
+							className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+								isConnected && !isOffline
+									? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40'
+									: 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40'
+							}`}
+						>
+							<span
+								className={`w-1.5 h-1.5 rounded-full ${
+									isConnected && !isOffline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+								}`}
+							/>
+							{isConnected && !isOffline ? 'Live' : 'Offline'}
+						</span>
+					</div>
 					<Button
 						variant="ghost"
 						size="sm"
@@ -932,7 +964,7 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 						<Button
 							variant="outline"
 							size="md"
-							onClick={() => onSave(true)}
+							onClick={() => handleSave(true)}
 							className="border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/10"
 						>
 							Archive
@@ -941,7 +973,7 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 					<Button
 						variant="primary"
 						size="md"
-						onClick={() => onSave(false)}
+						onClick={() => handleSave(false)}
 					>
 						{title.toLowerCase().includes('edit') ? 'Save Changes' : 'Save Disposition'}
 					</Button>

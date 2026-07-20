@@ -8,6 +8,7 @@ import Icon from './Icon';
 import Dropdown from './Dropdown';
 import UserDropdown from './UserDropdown';
 import StatusBadge from './StatusBadge';
+import UserRoleBadge from './UserRoleBadge';
 import LogoutConfirmationModal from './LogoutConfirmationModal';
 import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
 import ThemeToggle from './ThemeToggle';
@@ -78,6 +79,17 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 	// Get user from Redux store
 	const reduxUser = useSelector((state: { auth: { user: User | null } }) => state.auth.user);
+
+	const roleRaw = reduxUser?.role;
+	const displayRole = (
+		typeof roleRaw === 'object'
+			? (roleRaw as { roleName?: string; name?: string })?.roleName || (roleRaw as { roleName?: string; name?: string })?.name
+			: typeof roleRaw === 'string' && roleRaw.trim()
+				? roleRaw
+				: reduxUser?.isSupervisor
+					? 'Supervisor'
+					: 'Member'
+	) || (reduxUser?.isSupervisor ? 'Supervisor' : 'Member');
 
 	// Determine the effective user to display
 	const displayUser =
@@ -442,7 +454,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					)}
 
 					{/* LOB Dropdown - Only for Administrator or users with Dashboard Edit permission */}
-
+					{/* User Role Badge */}
+					{mounted && displayRole && (
+						<UserRoleBadge role={displayRole} className="hidden sm:inline-flex" />
+					)}
 					{/* Dark/Light Mode Toggle */}
 					<ThemeToggle />
 
@@ -481,6 +496,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 						onToggle={handleNotificationToggle}
 						isNavigating={isNavigating.current}
 					/>
+
+
 
 					{/* User Dropdown */}
 					<UserDropdown

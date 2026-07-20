@@ -25,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip
 import { toastWarning, toastError } from '@/utils/toastWithSound';
 import CSVDownloadButton from '@/components/ui/CSVDownloadButton';
 import { BucketWithMembers, getUserAssignedBuckets } from '@/utils/bucketUtils';
+import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
 
 interface ReportData {
 	id: string;
@@ -174,6 +175,10 @@ const ReportPage: React.FC = () => {
 
 
 
+	const configuredDispositions = useMemo(() => {
+		return getAllCampaignDispositions(campaignData?.dashboardSettings);
+	}, [campaignData?.dashboardSettings]);
+
 	const reportData: ReportData[] = useMemo(() => {
 		if (!apiData) return [];
 		let list: ReportItem[] = [];
@@ -209,11 +214,15 @@ const ReportPage: React.FC = () => {
 				});
 			}
 
-			// Flatten fillDisposition
+			// Flatten fillDisposition (expand multi-dropdown levels into distinct header columns)
 			if (Array.isArray(item.fillDisposition)) {
 				item.fillDisposition.forEach((field: DispositionField) => {
-					if (field.fieldName) {
-						row[field.fieldName] = field.fieldValue;
+					if (field.fieldName && field.fieldValue !== undefined && field.fieldValue !== null) {
+						const dispDef = configuredDispositions.find(d => d.name === field.fieldName);
+						const levels = resolveMultiDropdownLevels(field.fieldName, String(field.fieldValue), dispDef);
+						levels.forEach(lvl => {
+							row[lvl.header] = lvl.value;
+						});
 					}
 				});
 			}
@@ -321,8 +330,12 @@ const ReportPage: React.FC = () => {
 
 		if (Array.isArray(item.fillDisposition)) {
 			item.fillDisposition.forEach((field: DispositionField) => {
-				if (field.fieldName) {
-					row[field.fieldName] = field.fieldValue;
+				if (field.fieldName && field.fieldValue !== undefined && field.fieldValue !== null) {
+					const dispDef = configuredDispositions.find(d => d.name === field.fieldName);
+					const levels = resolveMultiDropdownLevels(field.fieldName, String(field.fieldValue), dispDef);
+					levels.forEach(lvl => {
+						row[lvl.header] = lvl.value;
+					});
 				}
 			});
 		}

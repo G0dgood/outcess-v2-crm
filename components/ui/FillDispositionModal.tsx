@@ -76,6 +76,8 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 			return (settings.dispositions as DispositionCategory[]).filter(d => !d.isArchived);
 		}
 
+		console.log('campaignData?.dashboardSettings', campaignData?.dashboardSettings)
+
 		// 2. If buckets exist, check if this agent is assigned to a specific bucket
 		const buckets = (settings.buckets || []) as Bucket[];
 		if (buckets.length > 0) {
@@ -359,7 +361,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					onChange={(val) => {
 						const stringVal = Array.isArray(val) ? val[0] : val;
 						const newPath = [...selectedPath.slice(0, currentLevel), stringVal].filter(Boolean);
-						
+
 						// Cascade down if the first-level option has autoSelect enabled
 						const activeOpt = currentLevelOptions.find(opt => opt.value === stringVal);
 						if (currentLevel === 0 && activeOpt && activeOpt.autoSelect) {

@@ -13,6 +13,7 @@ import { useSyncDispositions } from '@/hooks/useSyncDispositions';
 import { useSocket } from '@/contexts/SocketContext';
 import { UpdateIcon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
+import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
 
 interface DispositionHistoryModalProps {
 	isOpen: boolean;
@@ -135,6 +136,11 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 		},
 		{ skip: !isOpen || !agentId || !selectedCampaignId }
 	);
+
+	const { campaignData } = useCampaign();
+	const configuredDispositions = React.useMemo(() => {
+		return getAllCampaignDispositions(campaignData?.dashboardSettings);
+	}, [campaignData?.dashboardSettings]);
 
 	const apiData = customerId ? customerData : agentData;
 
@@ -297,12 +303,17 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 										)}
 									</div>
 									<div className="grid grid-cols-2 gap-4 text-[10px] md:text-[12px]">
-										{synced?.dispositionData?.map((field: DispositionFieldEntry) => (
-											<div key={field?.fieldId}>
-												<span style={{ color: 'var(--text-tertiary)' }}>{field?.fieldName}: </span>
-												<span style={{ color: 'var(--text-primary)' }}>{String(field?.fieldValue || '-')}</span>
-											</div>
-										))}
+										{synced?.dispositionData?.flatMap((field: DispositionFieldEntry) => {
+											if (!field?.fieldName) return [];
+											const dispDef = configuredDispositions.find(d => d.name === field.fieldName);
+											const levels = resolveMultiDropdownLevels(field.fieldName, String(field.fieldValue), dispDef);
+											return levels.map((lvl, idx) => (
+												<div key={`${field.fieldId || field.fieldName}-${idx}`}>
+													<span style={{ color: 'var(--text-tertiary)' }}>{lvl.header}: </span>
+													<span style={{ color: 'var(--text-primary)' }}>{lvl.value}</span>
+												</div>
+											));
+										})}
 										<div>
 											<span style={{ color: 'var(--text-tertiary)' }}>Date: </span>
 											<span style={{ color: 'var(--text-primary)' }}>{new Date(synced.syncedAt).toLocaleDateString()}</span>
@@ -374,12 +385,17 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 										)}
 									</div>
 									<div className="grid grid-cols-2 gap-4 text-[10px] md:text-[12px]">
-										{offline.dispositionData?.map((field) => (
-											<div key={field.fieldId}>
-												<span style={{ color: 'var(--text-tertiary)' }}>{field.fieldName}: </span>
-												<span style={{ color: 'var(--text-primary)' }}>{String(field.fieldValue || '-')}</span>
-											</div>
-										))}
+										{offline.dispositionData?.flatMap((field) => {
+											if (!field?.fieldName) return [];
+											const dispDef = configuredDispositions.find(d => d.name === field.fieldName);
+											const levels = resolveMultiDropdownLevels(field.fieldName, String(field.fieldValue), dispDef);
+											return levels.map((lvl, idx) => (
+												<div key={`${field.fieldId || field.fieldName}-${idx}`}>
+													<span style={{ color: 'var(--text-tertiary)' }}>{lvl.header}: </span>
+													<span style={{ color: 'var(--text-primary)' }}>{lvl.value}</span>
+												</div>
+											));
+										})}
 										<div>
 											<span style={{ color: 'var(--text-tertiary)' }}>Date: </span>
 											<span style={{ color: 'var(--text-primary)' }}>{new Date(offline.createdAt).toLocaleDateString()}</span>
