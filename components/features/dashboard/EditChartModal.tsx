@@ -35,6 +35,12 @@ const timeRangeOptions = [
 	{ value: 'monthly', label: 'Monthly' },
 ];
 
+const sizeOptions = [
+	{ value: 'small', label: 'Small' },
+	{ value: 'medium', label: 'Medium' },
+	{ value: 'large', label: 'Large' },
+];
+
 export const EditChartModal: React.FC<EditChartModalProps> = ({
 	isOpen,
 	onClose,
@@ -48,6 +54,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		type: 'pie',
 		dataSource: [] as string[],
 		timeRange: 'daily',
+		size: 'small',
 		color: '#050711',
 		colors: {} as Record<string, string>,
 		position: {
@@ -83,6 +90,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 				type: chart?.type || 'pie',
 				dataSource,
 				timeRange: chart?.timeRange || 'daily',
+				size: chart?.size || 'small',
 				color: chart?.color || '#050711',
 				colors,
 				position: chart?.position || {
@@ -238,6 +246,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 				type: chart?.type || 'pie',
 				dataSource,
 				timeRange: chart?.timeRange || 'daily',
+				size: chart?.size || 'small',
 				color: chart?.color || '#050711',
 				colors,
 				position: chart?.position || {
@@ -333,13 +342,21 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 				)}
 
 				<Dropdown
-					label="Time Range"
-					placeholder="Select time range"
-					options={timeRangeOptions}
-					value={formData.timeRange}
-					onChange={handleInputChange('timeRange')}
-					required
-				/>
+				label="Time Range"
+				placeholder="Select time range"
+				options={timeRangeOptions}
+				value={formData.timeRange}
+				onChange={handleInputChange('timeRange')}
+				required
+			/>
+			<Dropdown
+				label="Size"
+				placeholder="Select size"
+				options={sizeOptions}
+				value={formData.size}
+				onChange={handleInputChange('size')}
+				required
+			/>
 			</div>
 
 			{/* Footer */}

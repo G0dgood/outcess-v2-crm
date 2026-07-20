@@ -13,10 +13,11 @@ import {
 	useGetStatusesByCampaignIdQuery,
 	useDeleteStatusMutation
 } from '@/store/services/statusApi';
-import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery, Role } from '@/store/services/roleApi';
 import { NoRecordFound } from '../Options';
 import StatusSkeleton from '@/components/skeletons/StatusSkeleton';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toastInfo } from '@/utils/toastWithSound';
 
 interface RawStatus {
@@ -53,14 +54,16 @@ interface StatusProps {
 const Status: React.FC<StatusProps> = ({ className = '' }) => {
 	const [statuses, setStatuses] = useState<StatusItem[]>([]);
 	const { selectedCampaignId } = useCampaign();
+	const { user } = useUserInfo();
+	const companyId = user?.companyId || user?.company?._id;
 	const { canAccess } = usePrivilege();
 	const canView = canAccess('systemSetting', 'view');
 	const canCreate = canAccess('systemSetting', 'create');
 	const canEdit = canAccess('systemSetting', 'edit');
 	const canDelete = canAccess('systemSetting', 'delete');
 
-	const { data: rolesData } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', {
-		skip: !selectedCampaignId
+	const { data: rolesData } = useGetRolesByCompanyIdQuery(companyId || '', {
+		skip: !companyId
 	});
 
 	const roleLabels = React.useMemo(() => {

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Roles from '@/components/features/role/Roles';
-import Supervisors from '@/components/ui/Supervisors';
 import GeneralSettings from '@/components/features/settings/GeneralSettings';
 import CompanyDetails from '@/components/ui/CompanyDetails';
 import Status from '@/components/ui/Status';
@@ -11,7 +10,7 @@ import Permission from '@/components/ui/Permission';
 import AuditLogs from '@/components/ui/AuditLogs';
 import { usePrivilege, ModuleId } from '@/contexts/PrivilegeContext';
 
-type SettingsTab = 'settings' | 'fields' | 'status' | 'permission' | 'company-details' | 'roles' | 'supervisors' | 'audit-logs';
+type SettingsTab = 'settings' | 'fields' | 'status' | 'permission' | 'company-details' | 'roles' | 'audit-logs';
 
 const subModuleMapping: Record<string, ModuleId> = {
 	'settings': 'systemSetting',
@@ -19,7 +18,6 @@ const subModuleMapping: Record<string, ModuleId> = {
 	'permission': 'permission',
 	'company-details': 'systemSetting',
 	'roles': 'roles',
-	'supervisors': 'userManagement',
 	'audit-logs': 'systemSetting',
 };
 
@@ -30,7 +28,7 @@ const SettingsPage: React.FC = () => {
 
 	useEffect(() => {
 		const tab = searchParams.get('tab') as SettingsTab;
-		if (tab && ['settings', 'fields', 'status', 'permission', 'company-details', 'roles', 'supervisors', 'audit-logs'].includes(tab)) {
+		if (tab && ['settings', 'fields', 'status', 'permission', 'company-details', 'roles', 'audit-logs'].includes(tab)) {
 			setActiveTab(tab);
 		} else {
 			// Default to 'settings' if no tab is specified or invalid tab
@@ -55,8 +53,6 @@ const SettingsPage: React.FC = () => {
 				return <GeneralSettings />;
 			case 'roles':
 				return <Roles />;
-			case 'supervisors':
-				return <Supervisors />;
 			case 'status':
 				return <Status />;
 			case 'permission':

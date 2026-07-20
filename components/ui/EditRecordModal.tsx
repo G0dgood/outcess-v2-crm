@@ -77,13 +77,13 @@ const EditRecordModal: React.FC<EditRecordModalProps> = ({
 			onClick={onClose}
 		>
 			<div
-				className="dark:bg-gray-800 w-full max-w-2xl mx-4 shadow-lg rounded-[var(--radius)] overflow-hidden"
+				className="dark:bg-gray-800 w-full max-w-2xl mx-4 shadow-lg rounded-[var(--radius)] overflow-hidden flex flex-col max-h-[90vh]"
 				style={{ backgroundColor: 'var(--accent-white)' }}
 				onClick={(e) => e.stopPropagation()}
 			>
 				{/* Modal Header */}
 				<div
-					className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6"
+					className="flex justify-between items-center border-b dark:border-gray-700 pb-4 p-6 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<h2
@@ -104,7 +104,7 @@ const EditRecordModal: React.FC<EditRecordModalProps> = ({
 				</div>
 
 				{/* Modal Form */}
-				<div className="p-6 space-y-4">
+				<div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
 					{fieldDefinitions.map((field, index) => (
 						<Input
 							key={field.id || `field-${index}`}
@@ -120,7 +120,7 @@ const EditRecordModal: React.FC<EditRecordModalProps> = ({
 
 				{/* Modal Footer */}
 				<div
-					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700"
+					className="flex justify-end gap-3 p-6 border-t dark:border-gray-700 shrink-0"
 					style={{ borderColor: 'var(--light-gray)' }}
 				>
 					<Button

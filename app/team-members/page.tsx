@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import Search from '@/components/ui/Search';
 import Dropdown from '@/components/ui/Dropdown';
 import { useCampaign } from '@/contexts/CampaignContext';
-import { useGetTeamMembersBySupervisorIdQuery, useGetSupervisorsByCampaignIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember, TeamMemberFormData } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersBySupervisorIdQuery, useGetTeamMembersByCampaignIdQuery, ApiTeamMember, TeamMemberFormData } from '@/store/services/teamMembersApi';
 import { useSocket } from '@/contexts/SocketContext';
 import TeamMembersTable from '@/components/features/team-members/TeamMembersTable';
 import { toastSuccess } from '@/utils/toastWithSound';
@@ -17,7 +17,7 @@ import {
 	useUpdateTeamMemberMutation,
 	useDeleteTeamMemberMutation
 } from '@/store/services/teamMembersApi';
-import { useGetRolesByCampaignIdQuery, Role } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
 import TeamMembersCards from '@/components/features/team-members/TeamMembersCards';
 import { toastError } from '@/utils/toastWithSound';
 import PageHeader from '@/components/ui/PageHeader';
@@ -26,6 +26,7 @@ import ViewToggle from '@/components/ui/ViewToggle';
 import AddTeamMemberModal from '@/components/AddTeamMemberModal';
 import { PersonIcon, IdCardIcon } from '@radix-ui/react-icons';
 import ManageMembersModal from '@/components/features/team-members/ManageMembersModal';
+import TransferMembersModal from '@/components/features/team-members/TransferMembersModal';
 
 interface TeamMember {
 	_id: string;
@@ -71,6 +72,7 @@ const TeamMembersPage: React.FC = () => {
 	const [viewType, setViewType] = useState<'table' | 'card'>('card');
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 	const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+	const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 	const [editingMember, setEditingMember] = useState<ApiTeamMember | null>(null);
 
 	// Handle search debouncing
@@ -82,6 +84,11 @@ const TeamMembersPage: React.FC = () => {
 
 		return () => clearTimeout(timer);
 	}, [searchTerm]);
+
+	// Reset paging when the campaign changes so the list refreshes from page 1.
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [campaignId]);
 
 	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersBySupervisorIdQuery(
 		{
@@ -99,12 +106,7 @@ const TeamMembersPage: React.FC = () => {
 		user?.companyId ||
 		'';
 
-	const { data: supervisorsData } = useGetSupervisorsByCampaignIdQuery(
-		{ companyId, campaignId: campaignId || '' },
-		{
-			skip: !companyId || !campaignId
-		}
-	);
+
 	const { data: campaignMembersResponse } = useGetTeamMembersByCampaignIdQuery(
 		{ campaignId: campaignId || '', limit: 1000 },
 		{ skip: !campaignId }
@@ -117,7 +119,7 @@ const TeamMembersPage: React.FC = () => {
 	const [updateTeamMember] = useUpdateTeamMemberMutation();
 	const [deleteTeamMember] = useDeleteTeamMemberMutation();
 
-	const { data: rolesData } = useGetRolesByCampaignIdQuery(campaignId || '', { skip: !campaignId });
+	const { data: rolesData } = useGetRolesByCompanyIdQuery(companyId || '', { skip: !companyId });
 
 	const supervisorId = supervisorFilter;
 
@@ -261,23 +263,9 @@ const TeamMembersPage: React.FC = () => {
 		if (!campaignMembersResponse) return [];
 		const rawMembers = campaignMembersResponse.teamMembers || (Array.isArray(campaignMembersResponse) ? campaignMembersResponse : []);
 
-		const supervisorRoleIds = new Set<string>();
-		if (supervisorsData && Array.isArray(supervisorsData.roles)) {
-			supervisorsData.roles.forEach((r: Role) => {
-				if (r._id) supervisorRoleIds.add(r._id.toString());
-				if (r.id) supervisorRoleIds.add(r.id.toString());
-			});
-		}
-
 		return rawMembers
 			.filter((m: ApiTeamMember) => {
-				const roleId = typeof m.role === 'object' ? m.role?._id || m.role?.id : m.role;
-				const roleName = typeof m.role === 'object' ? m.role?.roleName || m.role?.name : '';
-
-				const isSupervisorRole = (roleId && supervisorRoleIds.has(roleId.toString())) ||
-					(roleName && roleName.toLowerCase().includes('supervisor'));
-
-				return isSupervisorRole;
+				return m.isSupervisor === true;
 			})
 			.map((m: ApiTeamMember) => {
 				const fullName = m.firstName && m.lastName
@@ -289,10 +277,22 @@ const TeamMembersPage: React.FC = () => {
 					label: `${fullName} (${roleName})`
 				};
 			});
-	}, [campaignMembersResponse, supervisorsData]);
+	}, [campaignMembersResponse]);
 
-	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
-	const isSupervisor = userRoleName?.toLowerCase() === 'supervisor';
+	const isSupervisor = user?.isSupervisor === true;
+
+	// Members of the current campaign, shaped for the Transfer modal.
+	const transferMemberOptions = useMemo(() => {
+		return teamMembersData
+			.map(({ apiMember }) => {
+				const name = apiMember.name
+					|| apiMember.fullName
+					|| `${apiMember.firstName || ''} ${apiMember.lastName || ''}`.trim()
+					|| 'Unknown Member';
+				return { id: apiMember._id || apiMember.id || '', name, email: apiMember.email };
+			})
+			.filter((m) => m.id);
+	}, [teamMembersData]);
 
 	useEffect(() => {
 		if (isSupervisor) {
@@ -300,10 +300,16 @@ const TeamMembersPage: React.FC = () => {
 			if (currentUserId && supervisorFilter !== currentUserId) {
 				setSupervisorFilter(currentUserId);
 			}
-		} else if (supervisors.length > 0 && !supervisorFilter) {
-			setSupervisorFilter(supervisors[0].value);
+		} else if (campaignMembersResponse) {
+			// Once the current campaign's members have loaded, make sure the selected
+			// supervisor belongs to this campaign; otherwise reset (e.g. after switching
+			// campaigns) so the list refreshes instead of showing the previous campaign.
+			const stillValid = supervisors.some((s) => s.value === supervisorFilter);
+			if (!stillValid) {
+				setSupervisorFilter(supervisors.length > 0 ? supervisors[0].value : '');
+			}
 		}
-	}, [supervisors, supervisorFilter, isSupervisor, user]);
+	}, [supervisors, supervisorFilter, isSupervisor, user, campaignMembersResponse]);
 
 	const shiftHourOptions = useMemo(() => {
 		const lobShiftHours = campaignData?.shiftHours as
@@ -434,6 +440,16 @@ const TeamMembersPage: React.FC = () => {
 						<IdCardIcon className="w-4 h-4" />
 						Manage Members
 					</Button>
+					{!isSupervisor && (
+						<Button
+							variant="outline"
+							size="md"
+							onClick={() => setIsTransferModalOpen(true)}
+							className="flex items-center gap-2"
+						>
+							Transfer
+						</Button>
+					)}
 					<Button variant="primary" size="md" onClick={() => { setEditingMember(null); setIsAddModalOpen(true); }}>
 						Add Team Member
 					</Button>
@@ -533,6 +549,14 @@ const TeamMembersPage: React.FC = () => {
 				isOpen={isManageModalOpen}
 				onClose={() => setIsManageModalOpen(false)}
 				campaignData={campaignData}
+			/>
+
+			<TransferMembersModal
+				isOpen={isTransferModalOpen}
+				onClose={() => setIsTransferModalOpen(false)}
+				members={transferMemberOptions}
+				currentCampaignId={campaignId || ''}
+				companyId={companyId || ''}
 			/>
 		</div>
 	);

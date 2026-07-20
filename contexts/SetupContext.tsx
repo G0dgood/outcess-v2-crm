@@ -330,12 +330,13 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const addChart = useCallback((chart: Omit<Chart, 'id'>) => {
 		const newChart: Chart = {
 			...chart,
+			size: chart.size || 'small',
 			id: `chart-${Date.now()}`
 		};
 
 		const calculatePosition = (existingCharts: Chart[]) => {
-			const chartWidth = chart.position.width;
-			const chartHeight = chart.position.height;
+			const chartWidth = newChart.position.width;
+			const chartHeight = newChart.position.height;
 			const padding = 20;
 			const maxColumns = 2;
 

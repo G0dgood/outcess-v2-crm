@@ -114,6 +114,36 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 		return [];
 	}, [campaignData, currentAgentId]);
 
+	// A field's value counts as "answered" for revealing its sub-fields.
+	const valuePresent = (val: string | undefined) =>
+		val !== undefined && String(val).trim() !== '' && val !== 'false';
+
+	// Which of a choice field's options are currently selected (handles single value,
+	// comma / pipe separated multi-selects, and cascading "A > B" paths).
+	const getSelectedOptions = (field: DispositionCategory, val: string | undefined): string[] => {
+		if (!field.optionSubFields || val === undefined) return [];
+		const parts = String(val).split(/\s*(?:,|>|\|)\s*/).map(s => s.trim()).filter(Boolean);
+		return Object.keys(field.optionSubFields).filter(opt => val === opt || parts.includes(opt));
+	};
+
+	// Recursively collect every field that should currently be visible, in order.
+	const flattenVisibleFields = (fields: DispositionCategory[]): DispositionCategory[] => {
+		const out: DispositionCategory[] = [];
+		for (const f of fields) {
+			out.push(f);
+			const val = formData[toCamelCase(f.name)];
+			if (!valuePresent(val)) continue;
+			if (f.subFields?.length) out.push(...flattenVisibleFields(f.subFields));
+			if (f.optionSubFields) {
+				getSelectedOptions(f, val).forEach(opt => {
+					const subs = f.optionSubFields?.[opt];
+					if (subs?.length) out.push(...flattenVisibleFields(subs));
+				});
+			}
+		}
+		return out;
+	};
+
 	// Reset or update form when modal opens/closes
 	useEffect(() => {
 		if (isOpen) {
@@ -175,9 +205,12 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	};
 
 	const handleSaveAndPost = async () => {
+		// Only currently-visible fields (parents answered / options selected) are validated & saved.
+		const visibleFields = flattenVisibleFields(dispositions);
+
 		// Basic validation
 		const missingFields: string[] = [];
-		dispositions.forEach((d) => {
+		visibleFields.forEach((d) => {
 			if (d.isRequired) {
 				const key = toCamelCase(d.name);
 				if (d.fieldType === 'date-time') {
@@ -197,8 +230,8 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 			return;
 		}
 
-		// Transform formData to array structure
-		const dispositionData: DispositionFieldEntry[] = dispositions.map(d => {
+		// Transform formData to array structure (visible fields only)
+		const dispositionData: DispositionFieldEntry[] = visibleFields.map(d => {
 			const key = toCamelCase(d.name);
 			let value: string | number | boolean | undefined;
 
@@ -640,6 +673,23 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 		}
 	};
 
+	// Render a field, then recursively render its sub-fields once it is answered,
+	// and any option-tied sub-fields for the option(s) currently selected.
+	const renderFieldTree = (field: DispositionCategory): React.ReactNode => {
+		const val = formData[toCamelCase(field.name)];
+		const answered = valuePresent(val);
+		return (
+			<React.Fragment key={field.id}>
+				{renderField(field)}
+				{answered && field.subFields?.map((sf) => renderFieldTree(sf))}
+				{answered && field.optionSubFields &&
+					getSelectedOptions(field, val).flatMap((opt) =>
+						(field.optionSubFields?.[opt] || []).map((sf) => renderFieldTree(sf))
+					)}
+			</React.Fragment>
+		);
+	};
+
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
 			<div
@@ -768,7 +818,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					)}
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 						{dispositions?.length > 0 ? (
-							dispositions?.map((field) => renderField(field))
+							dispositions?.map((field) => renderFieldTree(field))
 						) : (
 							<div className="col-span-2">
 								<EmptyState

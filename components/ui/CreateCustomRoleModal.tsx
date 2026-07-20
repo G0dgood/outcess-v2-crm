@@ -7,7 +7,6 @@ import Textarea from '@/components/ui/Textarea';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useCreateRoleMutation, useUpdateRoleMutation, RolePermission } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useCampaign } from '@/contexts/CampaignContext';
 import { useSetup } from '@/contexts/SetupContext';
 import { toast } from 'sonner';
 
@@ -43,7 +42,6 @@ const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 	const [createRole] = useCreateRoleMutation();
 	const [updateRole] = useUpdateRoleMutation();
 	const { user } = useUserInfo();
-	const { selectedCampaignId } = useCampaign();
 	const { setupData } = useSetup();
 
 	useEffect(() => {
@@ -87,11 +85,6 @@ const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 				return;
 			}
 
-			if (!selectedCampaignId || selectedCampaignId === 'new') {
-				toast.error('Please select a campaign first');
-				return;
-			}
-
 			try {
 				if (editingRole) {
 					await updateRole({
@@ -120,7 +113,6 @@ const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 						roleName: roleName.toLowerCase(),
 						description: roleDescription,
 						companyId: companyId,
-						campaignId: selectedCampaignId || undefined,
 						permissions: defaultPermissions
 					}).unwrap();
 
@@ -194,7 +186,7 @@ const CreateCustomRoleModal: React.FC<CreateCustomRoleModalProps> = ({
 					/>
 					<Textarea
 						label="Role Description"
-						placeholder="Describe the purpose and responsibilities of this role"
+						placeholder="Describe the purpose and responsibilities of this role across the company"
 						value={roleDescription}
 						onChange={setRoleDescription}
 						rows={4}

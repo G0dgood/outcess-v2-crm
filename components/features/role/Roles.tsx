@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useCampaign } from '@/contexts/CampaignContext';
-import { useGetRolesByCampaignIdQuery, useDeleteRoleMutation } from '@/store/services/roleApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
+import { useGetRolesByCompanyIdQuery, useDeleteRoleMutation } from '@/store/services/roleApi';
 import RolesSkeleton from '@/components/skeletons/RolesSkeleton';
 import Button from '@/components/ui/Button';
 import CreateCustomRoleModal from '@/components/ui/CreateCustomRoleModal';
@@ -18,6 +18,7 @@ import EmptyState from '@/components/ui/EmptyState';
 interface Role {
 	id: string;
 	name: string;
+	description?: string;
 	userCount: number;
 }
 
@@ -26,8 +27,9 @@ interface RolesProps {
 }
 
 const Roles: React.FC<RolesProps> = ({ className = '' }) => {
-	const { selectedCampaignId } = useCampaign();
-	const { data: rolesData, isLoading, refetch } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', { skip: !selectedCampaignId });
+	const { user } = useUserInfo();
+	const companyId = user?.company?._id || user?.companyId;
+	const { data: rolesData, isLoading, refetch } = useGetRolesByCompanyIdQuery(companyId || '', { skip: !companyId });
 	const { canAccess } = usePrivilege();
 	const canDelete = canAccess('userManagement', 'delete');
 	const canCreate = canAccess('userManagement', 'create');
@@ -102,7 +104,7 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 						text="Roles"
 					/>
 					<SubPageHeading
-						text="Following are the roles available. You can also create custom roles."
+						text="Following are the roles available across this company. New roles are shared with every campaign."
 					/>
 				</div>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
@@ -127,13 +129,13 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)',
-								boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+								// boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
 							}}
 							onMouseEnter={(e) => {
-								e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+								// e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
 							}}
 							onMouseLeave={(e) => {
-								e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
+								// e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
 							}}
 						>
 							<div className="flex justify-between items-start mb-2">
@@ -186,6 +188,14 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 									)}
 								</div>
 							</div>
+							{role?.description && (
+								<p
+									className="text-[10px] md:text-[11px] mb-3 line-clamp-2 dark:text-gray-400"
+									style={{ color: 'var(--text-secondary)' }}
+								>
+									{role.description}
+								</p>
+							)}
 							<div className="flex justify-between items-end">
 								<p
 									className="text-[10px] md:text-[12px] dark:text-gray-400"
@@ -204,7 +214,7 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 				<EmptyState
 					icon={Component1Icon}
 					title="No Roles Found"
-					description="There are currently no custom roles defined for this campaign. You can create custom roles to manage granular permissions for your team."
+					description="There are currently no custom roles defined for this company. Create one here and it will be available across every campaign."
 					actionLabel="Create Custom Role"
 					onAction={handleCreateCustomRole}
 				/>
