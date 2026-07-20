@@ -11,7 +11,7 @@ import { ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
-import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
+import { useGetTeamMemberByIdQuery, useUpdateTeamMemberMutation, useAdminResetTeamMemberPasswordByIdMutation, useGetSupervisorsByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
 import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
 import Skeleton from '@/components/ui/Skeleton';
 import Tabs from '@/components/ui/Tabs';
@@ -79,8 +79,10 @@ const EditUserPage: React.FC = () => {
 
 
 
-	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
-		{ campaignId: queryCampaignId, limit: 1000 },
+	// Supervisor options come from the dedicated server-side endpoint
+	// (members flagged `isSupervisor === true`), the single source of truth.
+	const { data: teamMembersData } = useGetSupervisorsByCampaignIdQuery(
+		queryCampaignId,
 		{ skip: !queryCampaignId }
 	);
 
@@ -143,10 +145,7 @@ const EditUserPage: React.FC = () => {
 		const rawMembers = teamMembersData.teamMembers || (Array.isArray(teamMembersData) ? teamMembersData : []);
 
 		return rawMembers
-			.filter((m: ApiTeamMember) => {
-				const isSelf = (m._id || m.id) === userId;
-				return m.isSupervisor === true && !isSelf;
-			})
+			.filter((m: ApiTeamMember) => (m._id || m.id) !== userId)
 			.map((m: ApiTeamMember) => {
 				const fullName = m.firstName && m.lastName
 					? `${m.firstName} ${m.lastName}`

@@ -11,6 +11,9 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Autosuggestions from '@/components/ Autosuggestions';
 import { useSetup, Bucket, DispositionCategory } from '@/contexts/SetupContext';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { getUserAssignedBuckets, BucketWithMembers } from '@/utils/bucketUtils';
 import { NestedOption } from '@/types/dashboard';
 import {
 	ArchiveIcon,
@@ -162,6 +165,21 @@ export default function CallDisposition() {
 	} = useSetup();
 	const { dispositionSettings, buckets } = setupData.dashboardSettings;
 
+	// Scope which buckets are visible: admins / super-admins / roles with
+	// allBucketAccess see every bucket; everyone else (e.g. a supervisor) only
+	// sees buckets they are assigned to. Mirrors customer-book / setup-book / report.
+	const { isAdmin, isSuperAdmin, allBucketAccess } = usePrivilege();
+	const { user } = useAuth();
+	const userId = String(user?.id || user?._id || '');
+	const hasFullBucketAccess = isAdmin || isSuperAdmin || allBucketAccess;
+	const accessibleBuckets = useMemo(
+		() =>
+			hasFullBucketAccess
+				? buckets
+				: (getUserAssignedBuckets(userId, (buckets || []) as unknown as BucketWithMembers[]) as unknown as Bucket[]),
+		[buckets, userId, hasFullBucketAccess]
+	);
+
 	const [activeBucketId, setActiveBucketId] = useState<string | null>(null);
 	const [isAddDispositionModalOpen, setIsAddDispositionModalOpen] = useState(false);
 	const [isEditDispositionModalOpen, setIsEditDispositionModalOpen] = useState(false);
@@ -225,10 +243,10 @@ export default function CallDisposition() {
 
 	// Set initial active bucket
 	useEffect(() => {
-		if (buckets?.length > 0 && !activeBucketId) {
-			setActiveBucketId(buckets[0].id);
+		if (accessibleBuckets?.length > 0 && !activeBucketId) {
+			setActiveBucketId(accessibleBuckets[0].id);
 		}
-	}, [buckets, activeBucketId]);
+	}, [accessibleBuckets, activeBucketId]);
 
 	const activeBucket = useMemo(() =>
 		buckets?.find(b => b.id === activeBucketId),
@@ -670,8 +688,8 @@ export default function CallDisposition() {
 					</div>
 
 					<div className="flex-1 overflow-y-auto p-2 space-y-1">
-						{buckets?.length > 0 ? (
-							buckets?.map((bucket: Bucket) => (
+						{accessibleBuckets?.length > 0 ? (
+							accessibleBuckets?.map((bucket: Bucket) => (
 								<div
 									key={bucket?.id}
 									onClick={() => setActiveBucketId(bucket?.id)}

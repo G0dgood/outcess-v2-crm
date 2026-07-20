@@ -176,6 +176,20 @@ const TicketList: React.FC<TicketListProps> = ({
 								<p className="text-[11px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
 									{ticket?.description || 'No description provided'}
 								</p>
+
+								{/* Participants (compact) — shown on narrow screens where the column is hidden */}
+								<div className="flex md:hidden items-center gap-2 mt-2">
+									<span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+										Participants
+									</span>
+									<ParticipantAvatars
+										requester={requester}
+										assignees={assignees}
+										creatorName={ticket.creatorName}
+										onAssign={() => setAssigningTicket(ticket)}
+										status={ticket.status}
+									/>
+								</div>
 							</div>
 						</div>
 

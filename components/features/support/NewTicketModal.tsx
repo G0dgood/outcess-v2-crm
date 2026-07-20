@@ -51,8 +51,6 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose, prefil
 		? `${user.firstName} ${user.lastName}`
 		: user?.name || user?.username || 'Unknown User';
 
-	console.log('teamMembers--->', teamMembers)
-
 	const resetForm = () => {
 		setTitle('');
 		setDescription('');
