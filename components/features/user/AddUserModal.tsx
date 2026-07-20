@@ -74,7 +74,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 						(Array.isArray((rolesResponse as unknown as { docs: unknown[] })?.docs) ? (rolesResponse as unknown as { docs: unknown[] }).docs :
 							[]))))
 			: [];
-		return baseRoles.map((role: any) => ({
+		return (baseRoles as Role[]).map((role) => ({
 			value: (role._id || role.id || '') as string,
 			label: (role.roleName || '') as string,
 		}));

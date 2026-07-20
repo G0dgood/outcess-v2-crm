@@ -7,7 +7,7 @@ import Dropdown from '@/components/ui/Dropdown';
 import { useGetTicketsBySupervisorIdQuery } from '@/store/services/supportApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCampaign } from '@/contexts/CampaignContext';
-import { useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
 import PageHeading from '@/components/ui/PageHeading';
 import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
@@ -78,10 +78,10 @@ const TeamSupportPage = () => {
    const rawMembers = teamMembersData.teamMembers || (Array.isArray(teamMembersData) ? teamMembersData : []);
 
    const options = rawMembers
-    .filter((m: any) => {
+    .filter((m: ApiTeamMember) => {
      return m.isSupervisor === true;
     })
-    .map((m: any) => {
+    .map((m: ApiTeamMember) => {
      const fullName = m.firstName && m.lastName
       ? `${m.firstName} ${m.lastName}`
       : m.name || m.fullName || 'Unknown Member';
