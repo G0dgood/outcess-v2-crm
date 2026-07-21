@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import Input from '@/components/ui/Input';
@@ -17,7 +17,6 @@ import { useSocket } from '@/contexts/SocketContext';
 import {
 	DndContext,
 	closestCenter,
-	KeyboardSensor,
 	PointerSensor,
 	useSensor,
 	useSensors,
@@ -26,7 +25,6 @@ import {
 import {
 	arrayMove,
 	SortableContext,
-	sortableKeyboardCoordinates,
 	verticalListSortingStrategy,
 	useSortable
 } from '@dnd-kit/sortable';
@@ -185,8 +183,8 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 	setDispositionForm,
 	fieldTypeOptions,
 	onSave,
-	onAddDropdownOption,
-	onDropdownOptionChange,
+	onAddDropdownOption: _onAddDropdownOption,
+	onDropdownOptionChange: _onDropdownOptionChange,
 	allowTypeChange = false
 }) => {
 	const { socket, isConnected, isOffline } = useSocket();

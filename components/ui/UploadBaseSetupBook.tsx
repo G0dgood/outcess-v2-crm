@@ -271,7 +271,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
       if (onUploadComplete) {
         onUploadComplete(jsonData, fileToUpload);
       }
-    } catch (err: unknown) {
+    } catch (_err: unknown) {
       setProgress(0);
     } finally {
       setIsUploading(false);

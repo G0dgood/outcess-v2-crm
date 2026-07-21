@@ -255,7 +255,7 @@ export default function CallDisposition() {
 		buckets?.find(b => b.id === activeBucketId),
 		[buckets, activeBucketId]);
 
-	const allDispositions = activeBucket?.dispositions || [];
+	const allDispositions = useMemo(() => activeBucket?.dispositions || [], [activeBucket?.dispositions]);
 	const dispositions = useMemo(() => {
 		return allDispositions.filter(d => !d.isArchived);
 	}, [allDispositions]);
