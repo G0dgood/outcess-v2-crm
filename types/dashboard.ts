@@ -47,6 +47,9 @@ export interface Bucket {
   assignedMembers?: AssignedMember[];
   id: string;
   _id?: string;
+  // Campaign this bucket belongs to. Used to prevent bucket cross-contamination
+  // between campaigns.
+  campaignId?: string;
   name: string;
   description?: string;
   dispositions: DispositionCategory[];

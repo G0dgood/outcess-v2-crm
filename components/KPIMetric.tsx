@@ -7,7 +7,8 @@ import Input from '@/components/ui/Input';
 import Icon from '@/components/ui/Icon';
 import ColorPicker from '@/components/ui/ColorPicker';
 import EmptyState from '@/components/ui/EmptyState';
-import { MixIcon } from '@radix-ui/react-icons';
+import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
+import { MixIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 
 interface Widget {
     id: string;
@@ -69,7 +70,9 @@ export default function KPIMetric({
     const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
     const [isEditWidgetModalOpen, setIsEditWidgetModalOpen] = useState(false);
     const [isOutcomesModalOpen, setIsOutcomesModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
+    const [deletingWidget, setDeletingWidget] = useState<Widget | null>(null);
     const [newOutcome, setNewOutcome] = useState('');
     const [widgetForm, setWidgetForm] = useState({
         title: '',
@@ -90,6 +93,20 @@ export default function KPIMetric({
             color: widget.color
         });
         setIsEditWidgetModalOpen(true);
+    };
+
+    const handleDeleteWidgetClick = (widget: Widget) => {
+        setDeletingWidget(widget);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleConfirmDeleteWidget = () => {
+        if (deletingWidget) {
+            const updatedWidgets = widgets.filter(w => w.id !== deletingWidget.id);
+            onWidgetsChange(updatedWidgets);
+        }
+        setIsDeleteModalOpen(false);
+        setDeletingWidget(null);
     };
 
     const handleSaveWidget = () => {
@@ -182,26 +199,27 @@ export default function KPIMetric({
                             >
                                 {widget.title}
                             </h3>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditWidget(widget)}
-                                className="p-1 h-auto"
-                                style={{ color: 'var(--text-tertiary)' }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.color = 'var(--text-secondary)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.color = 'var(--text-tertiary)';
-                                }}
-                                title="Edit Widget"
-                            >
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                    <path d="M8 4C8.55228 4 9 3.55228 9 3C9 2.44772 8.55228 2 8 2C7.44772 2 7 2.44772 7 3C7 3.55228 7.44772 4 8 4Z" fill="currentColor" />
-                                    <path d="M8 9C8.55228 9 9 8.55228 9 8C9 7.44772 8.55228 7 8 7C7.44772 7 7 7.44772 7 8C7 8.55228 7.44772 9 8 9Z" fill="currentColor" />
-                                    <path d="M8 14C8.55228 14 9 13.5523 9 13C9 12.4477 8.55228 12 8 12C7.44772 12 7 12.4477 7 13C7 13.5523 7.44772 14 8 14Z" fill="currentColor" />
-                                </svg>
-                            </Button>
+                            <div className="flex items-center gap-1">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditWidget(widget)}
+                                    className="p-1 h-auto"
+                                    style={{ color: 'var(--text-tertiary)' }}
+                                    title="Edit Metric"
+                                >
+                                    <Pencil1Icon className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteWidgetClick(widget)}
+                                    className="p-1 h-auto text-red-500 hover:text-red-700"
+                                    title="Delete KPI Metric"
+                                >
+                                    <TrashIcon className="w-4 h-4" />
+                                </Button>
+                            </div>
                         </div>
                         <div
                             className="text-3xl font-bold"
@@ -243,6 +261,12 @@ export default function KPIMetric({
                 onAddOutcome={handleAddOutcome}
                 onUpdateOutcome={handleUpdateOutcome}
                 onDeleteOutcome={handleDeleteOutcome}
+            />
+            <DeleteRecordModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => { setIsDeleteModalOpen(false); setDeletingWidget(null); }}
+                onConfirm={handleConfirmDeleteWidget}
+                recordName={deletingWidget?.title || ''}
             />
         </div>
     );

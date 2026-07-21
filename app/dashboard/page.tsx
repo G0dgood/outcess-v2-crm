@@ -62,7 +62,7 @@ interface CombinedDispositionItem {
 }
 
 const DashboardContent: React.FC = () => {
-	const { campaignData, isLoading: isLobLoading } = useCampaign();
+	const { campaignData, selectedCampaignId, isLoading: isLobLoading } = useCampaign();
 	const { setupData, addChart: addChartLocal, updateChart: updateChartLocal, updateChartsOrder: updateChartsOrderLocal, updateDashboardSettings: updateDashboardSettingsLocal } = useSetup();
 	const [updateCampaign] = useUpdateCampaignMutation();
 	const isLoading = isLobLoading;
@@ -366,15 +366,15 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const combinedDispositions = useMemo(() => {
-		const offline = getOfflineDispositions();
+		const offline = getOfflineDispositions(selectedCampaignId || undefined);
 		// If we have API data, use it as the source of "synced" data
 		// Otherwise fallback to local synced data
 		// Note: apiDispositions might be empty array, which is valid. 
 		// Check if it's an array to confirm it's loaded.
-		const synced = Array.isArray(apiDispositions) ? apiDispositions : getSyncedDispositions();
+		const synced = Array.isArray(apiDispositions) ? apiDispositions : getSyncedDispositions(undefined, selectedCampaignId || undefined);
 		return [...offline, ...synced] as CombinedDispositionItem[];
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [apiDispositions, pendingDispositionsCount]);
+	}, [apiDispositions, pendingDispositionsCount, selectedCampaignId]);
 
 	// Get widgets from context and update values dynamically based on disposition data
 	const widgets = useMemo(() => {

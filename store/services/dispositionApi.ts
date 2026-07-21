@@ -49,6 +49,7 @@ export interface GetDispositionsReportRequest {
   limit?: number;
   search?: string;
   bucketId?: string;
+  agentId?: string;
 }
 
 export interface GetDispositionsByAgentReportRequest {
@@ -130,9 +131,11 @@ export const dispositionApi = baseApi.injectEndpoints({
         limit = 20,
         search = "",
         bucketId = "",
+        agentId = "",
       }) => {
         let url = `api/v1/dispositions/${campaignId}/report?startDate=${startDate}&endDate=${endDate}&page=${page}&limit=${limit}&search=${search}`;
         if (bucketId) url += `&bucketId=${bucketId}`;
+        if (agentId) url += `&agentId=${agentId}`;
         return url;
       },
       providesTags: ["Disposition"],

@@ -3,8 +3,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useGetCampaignQuery, useGetCampaignByCompanyIdQuery, useGetCampaignByCompanyIdForheaderQuery, Campaign } from '@/store/services/campaignApi';
 import { useAuth } from './AuthContext';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { selectIsAdmin, selectUserPrivileges } from '@/store/slices/privilegeSlice';
+import { dispositionApi } from '@/store/services/dispositionApi';
+import { campaignApi } from '@/store/services/campaignApi';
+import { setupBookApi } from '@/store/services/setupBookApi';
+import { teamMembersApi } from '@/store/services/teamMembersApi';
+import { roleApi } from '@/store/services/roleApi';
+import { statusApi } from '@/store/services/statusApi';
+import { supportApi } from '@/store/services/supportApi';
 
 interface CampaignContextType {
     selectedCampaignId: string | null;
@@ -74,6 +81,8 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, in
         }
     }, [companyCampaign, campaignsData, user, userPrivileges, isAdmin]);
 
+    const dispatch = useDispatch();
+
     const setSelectedCampaignId = (id: string | null) => {
         setSelectedCampaignIdState(id);
         if (typeof window !== 'undefined') {
@@ -82,7 +91,15 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, in
             } else {
                 localStorage.removeItem('selectedCampaignId');
             }
+            window.dispatchEvent(new CustomEvent('campaignChanged', { detail: { campaignId: id } }));
         }
+        dispatch(dispositionApi.util.resetApiState());
+        dispatch(campaignApi.util.resetApiState());
+        dispatch(setupBookApi.util.resetApiState());
+        dispatch(teamMembersApi.util.resetApiState());
+        dispatch(roleApi.util.resetApiState());
+        dispatch(statusApi.util.resetApiState());
+        dispatch(supportApi.util.resetApiState());
     };
 
     const { data: campaignData, isLoading, isFetching } = useGetCampaignQuery(

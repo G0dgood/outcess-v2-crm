@@ -26,6 +26,11 @@ import {
 import EmptyState from '@/components/ui/EmptyState';
 import AssignMemberModal from '@/components/features/dashboard/AssignMemberModal';
 import { toast } from 'sonner';
+import {
+	useAssignMemberToBucketMutation,
+	useRemoveMemberFromBucketMutation,
+	useDeleteBucketFromCampaignMutation
+} from '@/store/services/campaignApi';
 import Icon from '@/components/ui/Icon';
 import {
 	DndContext,
@@ -45,10 +50,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, RefreshCw, Eye } from 'lucide-react';
-import {
-	useAssignMemberToBucketMutation,
-	useRemoveMemberFromBucketMutation
-} from '@/store/services/campaignApi';
+
 import {
 	Chart as ChartJS,
 	CategoryScale,
@@ -219,6 +221,7 @@ export default function CallDisposition() {
 
 	const [assignMember] = useAssignMemberToBucketMutation();
 	const [removeMember] = useRemoveMemberFromBucketMutation();
+	const [deleteBucketMutation] = useDeleteBucketFromCampaignMutation();
 
 	const [bucketForm, setBucketForm] = useState({
 		name: '',
@@ -498,10 +501,18 @@ export default function CallDisposition() {
 		setIsDeleteModalOpen(true);
 	};
 
-	const handleConfirmDelete = () => {
+	const handleConfirmDelete = async () => {
 		if (!itemToDelete) return;
 		if (itemToDelete.type === 'bucket') {
+			try {
+				if (setupData.campaignId) {
+					await deleteBucketMutation({ id: setupData.campaignId, bucketId: itemToDelete.id }).unwrap();
+				}
+			} catch (e) {
+				console.error("Backend delete bucket error:", e);
+			}
 			deleteBucket(itemToDelete.id);
+			toast.success("Bucket deleted successfully");
 		} else {
 			if (activeBucketId) {
 				updateDispositionInBucket(activeBucketId, itemToDelete.id, { isArchived: true });
@@ -725,11 +736,9 @@ export default function CallDisposition() {
 										<button onClick={(e) => { e.stopPropagation(); handleEditBucket(bucket); }} className="p-1 hover:text-primary text-gray-400">
 											<Pencil1Icon className="w-3.5 h-3.5" />
 										</button>
-										{buckets.length > 1 && (
-											<button onClick={(e) => { e.stopPropagation(); handleDeleteBucketClick(bucket); }} className="p-1 hover:text-red-500 text-gray-400">
-												<TrashIcon className="w-3.5 h-3.5" />
-											</button>
-										)}
+										<button onClick={(e) => { e.stopPropagation(); handleDeleteBucketClick(bucket); }} className="p-1 hover:text-red-500 text-gray-400" title="Delete Bucket">
+											<TrashIcon className="w-3.5 h-3.5" />
+										</button>
 									</div>
 								</div>
 							))
