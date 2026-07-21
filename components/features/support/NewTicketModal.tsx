@@ -160,7 +160,7 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose, prefil
 			toast.success('Ticket created successfully');
 			resetForm();
 			onClose();
-		} catch (_error: unknown) {
+		} catch {
 			// useApiError hook handles the error UI reactively
 		}
 	};

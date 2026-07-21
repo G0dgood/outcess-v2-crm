@@ -32,9 +32,7 @@ const CompanyProfile: React.FC<CompanyProfileProps> = ({
 	isEditMode,
 	setIsEditMode,
 	handleSave,
-	isUpdating,
-	logoFile: _logoFile,
-	setLogoFile: _setLogoFile
+	isUpdating
 }) => {
 	return (
 		<div className="space-y-6">

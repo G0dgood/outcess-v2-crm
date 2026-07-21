@@ -46,8 +46,6 @@ export default function SignUpPage() {
 		role: "admin",
 		agreetoterms: false,
 	});
-
-	const [userId, setUserId] = useState<string | null>(null);
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -124,7 +122,7 @@ export default function SignUpPage() {
 						toast.error("Failed to retrieve company ID.");
 					}
 				}
-			} catch (err: unknown) {
+			} catch {
 				// useApiError hook handles the error UI reactively
 			} finally {
 				setIsLoading(false);
@@ -225,7 +223,7 @@ export default function SignUpPage() {
 				} else {
 					toast.error('Account created but user ID is missing.');
 				}
-			} catch (err: unknown) {
+			} catch {
 				// useApiError hook handles the error UI reactively
 			} finally {
 				setIsLoading(false);

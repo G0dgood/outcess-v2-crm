@@ -183,8 +183,6 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 	setDispositionForm,
 	fieldTypeOptions,
 	onSave,
-	onAddDropdownOption: _onAddDropdownOption,
-	onDropdownOptionChange: _onDropdownOptionChange,
 	allowTypeChange = false
 }) => {
 	const { socket, isConnected, isOffline } = useSocket();

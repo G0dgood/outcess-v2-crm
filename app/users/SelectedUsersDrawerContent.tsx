@@ -51,9 +51,7 @@ const SelectedUsersDrawerContent: React.FC<SelectedUsersDrawerContentProps> = ({
   const { campaignData } = useCampaign();
   const companyId = user?.companyId || '';
   const campaignId = campaignData?._id || '';
-  const selectedCampaignId = campaignId;
-
-  const { data: rolesResponse, isLoading: isRolesLoading } = useGetRolesByCompanyIdQuery(
+  const { isLoading: isRolesLoading } = useGetRolesByCompanyIdQuery(
     companyId || '',
     { skip: !companyId }
   );
