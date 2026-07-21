@@ -17,14 +17,12 @@ import { useRouter } from 'next/navigation';
 import SupportSkeleton from '@/components/skeletons/SupportSkeleton';
 import Tabs, { TabItem } from '@/components/ui/Tabs';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useUserInfo } from '@/contexts/UserInfoContext';
 import { Clock, Inbox, CheckCircle2, XCircle } from 'lucide-react';
 import AccessDenied from '@/components/ui/AccessDenied';
 
 const TeamSupportPage = () => {
  const router = useRouter();
  const { user } = useAuth();
- const { user: userInfo } = useUserInfo();
  const { canAccess, isAdmin } = usePrivilege();
  const { campaignData } = useCampaign();
 
