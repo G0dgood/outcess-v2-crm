@@ -624,7 +624,18 @@ export default function CallDisposition() {
 
 				toast.success("New disposition added and backup copy archived");
 			}
-			setIsAddDispositionModalOpen(false);
+			// Keep the modal open for adding more dispositions, just reset the form fields.
+			setDispositionForm({
+				fieldType: 'dropdown',
+				fieldLabel: '',
+				dropdownOptions: [''],
+				nestedOptions: [] as NestedOption[],
+				sortOrder: 'entered',
+				isRequired: false,
+				color: '#050711',
+				subFields: [] as DispositionCategory[],
+				optionSubFields: {} as Record<string, DispositionCategory[]>
+			});
 		}
 		setEditingDisposition(null);
 	};

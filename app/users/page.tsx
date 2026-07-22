@@ -113,6 +113,8 @@ const UsersPage: React.FC = () => {
 		isSupervisor: boolean;
 	} | null>(null);
 
+	const { socket } = useSocket();
+
 	const handleConfirmToggleSupervisor = async () => {
 		if (!confirmSupervisorModal) return;
 		const { userId, isSupervisor } = confirmSupervisorModal;
@@ -123,11 +125,13 @@ const UsersPage: React.FC = () => {
 				data: { isSupervisor }
 			}).unwrap();
 			toast.success(`User supervisor status updated successfully`);
+			if (socket) {
+				socket.emit('supervisorStatusUpdated', { userId, isSupervisor, campaignId });
+			}
 		} catch {
 			toast.error('Failed to update supervisor status');
 		}
 	};
-	const { socket } = useSocket();
 	const canCreate = canAccess('teamMembers', 'create');
 	const canEdit = canAccess('teamMembers', 'edit');
 	const canDelete = canAccess('teamMembers', 'delete');
