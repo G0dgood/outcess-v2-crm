@@ -5,6 +5,8 @@ import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetCampaignByCompanyIdQuery, useGetCampaignQuery, Campaign } from '@/store/services/campaignApi';
 import { useCampaign } from './CampaignContext';
 import Icon from '@/components/ui/Icon';
+import { useSocket } from '@/contexts/SocketContext';
+import { toast } from 'sonner';
 import {
 	DispositionCategory,
 	AssignedMember,
@@ -98,6 +100,7 @@ interface SetupProviderProps {
 export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const { user } = useUserInfo();
 	const { selectedCampaignId } = useCampaign();
+	const { socket } = useSocket();
 
 	const [currentStep, setCurrentStep] = useState(1);
 	const [dashboardStep, setDashboardStep] = useState<'KPI Metric' | 'Call Disposition'>('KPI Metric');
@@ -310,6 +313,41 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			setSetupData(prev => ({ ...prev, companyId: userCompanyId }));
 		}
 	}, [user, setupData.companyId]);
+
+	// Socket Room connection for real-time campaign settings syncing
+	useEffect(() => {
+		if (socket && setupData.campaignId) {
+			socket.emit("joinCampaign", setupData.campaignId);
+		}
+	}, [socket, setupData.campaignId]);
+
+	// Listen to real-time campaign updates
+	useEffect(() => {
+		if (!socket) return;
+
+		const handleCampaignUpdated = (updatedCampaign: any) => {
+			const campaignObj = updatedCampaign?.campaign || updatedCampaign;
+			if (campaignObj?._id !== setupData.campaignId) return;
+
+			// If local state is dirty, inform the user that changes from another instance were synced
+			setIsDirty(prevDirty => {
+				if (prevDirty) {
+					toast.info("Campaign settings updated from another tab/session", {
+						description: "Your workspace has been synchronized.",
+						duration: 4000
+					});
+				}
+				return false;
+			});
+
+			populateData(campaignObj);
+		};
+
+		socket.on("campaignUpdated", handleCampaignUpdated);
+		return () => {
+			socket.off("campaignUpdated", handleCampaignUpdated);
+		};
+	}, [socket, setupData.campaignId, populateData]);
 
 	const updateSetupData = useCallback((data: Partial<SetupData>) => {
 		setSetupData(prev => ({ ...prev, ...data }));
