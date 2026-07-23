@@ -98,6 +98,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 	const [tokens, setTokensState] = useState<AuthTokens | null>(null);
 	const [isMfaVerified, setIsMfaVerified] = useState(false);
 	const [sessionTimeout, setSessionTimeout] = useState<NodeJS.Timeout | null>(null);
+	const [showTokenExpiredModal, setShowTokenExpiredModal] = useState(false);
+
+	useEffect(() => {
+		if (typeof window === 'undefined') return;
+
+		const handleTokenExpired = () => {
+			setShowTokenExpiredModal(true);
+		};
+
+		window.addEventListener('token-expired', handleTokenExpired);
+		return () => {
+			window.removeEventListener('token-expired', handleTokenExpired);
+		};
+	}, []);
 
 	const clearAuthData = useCallback(() => {
 		setUser(null);
@@ -231,6 +245,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 	return (
 		<AuthContext.Provider value={contextValue}>
 			{children}
+
+			{showTokenExpiredModal && (
+				<div className="fixed inset-0 bg-[#0b0d1293]/50 dark:bg-black/50 flex items-center justify-center z-[9999]">
+					<div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-sm w-full mx-4 shadow-xl border dark:border-gray-700 text-center animate-fade-in">
+						<div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-4 text-red-600">
+							<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+							</svg>
+						</div>
+						<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Token Expired</h3>
+						<p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+							Your session has expired. Please click OK to log out and sign in again.
+						</p>
+						<button
+							onClick={() => {
+								setShowTokenExpiredModal(false);
+								if (typeof window !== 'undefined') {
+									(window as any).__tokenExpiredModalShowing = false;
+								}
+								logout();
+							}}
+							className="w-full py-2 px-4 text-white font-medium rounded-md transition-colors"
+							style={{ backgroundColor: 'var(--primary, #4F46E5)' }}
+						>
+							OK
+						</button>
+					</div>
+				</div>
+			)}
 		</AuthContext.Provider>
 	);
 };
