@@ -7,7 +7,9 @@ import Search from '@/components/ui/Search';
 import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import Checkbox from '@/components/ui/Checkbox';
-import { useGetTeamMembersByCampaignIdQuery, useDeleteTeamMemberMutation } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByCampaignIdQuery, useDeleteTeamMemberMutation, useUpdateTeamMemberMutation } from '@/store/services/teamMembersApi';
+import Toggle from '@/components/ui/Toggle';
+import Modal from '@/components/ui/Modal';
 import PageHeading from '@/components/ui/PageHeading';
 import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import AddUserModal from '@/components/features/user/AddUserModal';
@@ -18,7 +20,9 @@ import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { toast } from 'sonner';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useSocket } from '@/contexts/SocketContext';
+import AccessRestricted from '@/components/ui/AccessRestricted';
 import SelectedUsersDrawerContent from './SelectedUsersDrawerContent';
+import TransferMembersModal from '@/components/features/team-members/TransferMembersModal';
 import StatusDetailsModal from '@/components/ui/StatusDetailsModal';
 import LoginStatusInfoBanner from '@/components/ui/LoginStatusInfoBanner';
 import SampleCsvDownloader from '@/components/ui/SampleCsvDownloader';
@@ -43,6 +47,7 @@ interface User {
 		title?: string;
 	};
 	supervisor?: string;
+	isSupervisor?: boolean;
 }
 
 interface StatusPayload {
@@ -80,6 +85,7 @@ interface ApiTeamMember {
 	loginStatus?: string;
 	supervisor?: string | { name?: string };
 	supervisorId?: string;
+	isSupervisor?: boolean;
 }
 
 const UsersPage: React.FC = () => {
@@ -88,13 +94,44 @@ const UsersPage: React.FC = () => {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 	const campaignId = campaignData?._id || '';
+	const { canAccess } = usePrivilege();
+	const canAccessModule = canAccess('teamMembers', 'view');
 	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersByCampaignIdQuery(
 		{ campaignId, page: currentPage, limit: itemsPerPage },
-		{ skip: !campaignId }
+		{ skip: !campaignId || !canAccessModule }
 	);
+
+	// Reset paging when the campaign changes so the list refreshes from page 1.
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [campaignId]);
 	const [deleteTeamMember] = useDeleteTeamMemberMutation();
-	const { canAccess } = usePrivilege();
+	const [updateTeamMember] = useUpdateTeamMemberMutation();
+	const [confirmSupervisorModal, setConfirmSupervisorModal] = useState<{
+		isOpen: boolean;
+		userId: string;
+		isSupervisor: boolean;
+	} | null>(null);
+
 	const { socket } = useSocket();
+
+	const handleConfirmToggleSupervisor = async () => {
+		if (!confirmSupervisorModal) return;
+		const { userId, isSupervisor } = confirmSupervisorModal;
+		setConfirmSupervisorModal(null);
+		try {
+			await updateTeamMember({
+				id: userId,
+				data: { isSupervisor }
+			}).unwrap();
+			toast.success(`User supervisor status updated successfully`);
+			if (socket) {
+				socket.emit('supervisorStatusUpdated', { userId, isSupervisor, campaignId });
+			}
+		} catch {
+			toast.error('Failed to update supervisor status');
+		}
+	};
 	const canCreate = canAccess('teamMembers', 'create');
 	const canEdit = canAccess('teamMembers', 'edit');
 	const canDelete = canAccess('teamMembers', 'delete');
@@ -120,9 +157,11 @@ const UsersPage: React.FC = () => {
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 	const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
+	const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 	const [showInfoBanner, setShowInfoBanner] = useState(true);
 	const [users, setUsers] = useState<User[]>([]);
-	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Supervisor', 'Shift Hour', 'Bucket', 'Login Status', 'Actions'];
+	const companyId = campaignData?.companyId || '';
+	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Is Supervisor', 'Supervisor', 'Shift Hour', 'Bucket', 'Login Status', 'Actions'];
 	const totalColumns = tableHeaders.length + 1;
 
 	useEffect(() => {
@@ -229,6 +268,7 @@ const UsersPage: React.FC = () => {
 							title: m.shiftHour.title,
 						}
 						: undefined,
+					isSupervisor: !!m.isSupervisor,
 					supervisor: supervisorName,
 				};
 			});
@@ -243,6 +283,17 @@ const UsersPage: React.FC = () => {
 		user.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
 		user.role.toLowerCase().includes(searchTerm.toLowerCase())
 	);
+
+	// Members of the current campaign, shaped for the Transfer modal.
+	const transferMemberOptions = useMemo(() => {
+		return users
+			.map((u) => ({
+				id: u.id,
+				name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email || 'Unknown Member',
+				email: u.email,
+			}))
+			.filter((m) => m.id);
+	}, [users]);
 
 	const totalPages = teamMembersResponse?.pagination?.totalPages || 1;
 	// When using backend pagination, filteredUsers is already the current page of data from the API
@@ -325,6 +376,10 @@ const UsersPage: React.FC = () => {
 
 
 
+	if (!canAccessModule) {
+		return <AccessRestricted />;
+	}
+
 	return (
 		<div>
 			{/* Title and Action Buttons */}
@@ -351,6 +406,16 @@ const UsersPage: React.FC = () => {
 						fileName="sample_users.csv"
 						className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
 					/>
+					{canEdit && (
+						<Button
+							variant="outline"
+							size="md"
+							onClick={() => setIsTransferModalOpen(true)}
+							className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+						>
+							Transfer
+						</Button>
+					)}
 					{canCreate && (
 						<>
 							<Button
@@ -443,6 +508,13 @@ const UsersPage: React.FC = () => {
 									<td>{user.email}</td>
 									<td>{user.phone}</td>
 									<td>{user.role}</td>
+									<td>
+										<Toggle
+											checked={!!user.isSupervisor}
+											onChange={(checked) => setConfirmSupervisorModal({ isOpen: true, userId: user.id, isSupervisor: checked })}
+											size="sm"
+										/>
+									</td>
 									<td>{user.supervisor || 'Unassigned'}</td>
 									<td
 									>
@@ -618,6 +690,50 @@ const UsersPage: React.FC = () => {
 				loginStatus={statusModalUser?.loginStatus || ''}
 				status={statusModalUser?.status}
 			/>
+
+			<TransferMembersModal
+				isOpen={isTransferModalOpen}
+				onClose={() => {
+					setIsTransferModalOpen(false);
+					setSelectedUsers(new Set());
+				}}
+				members={transferMemberOptions}
+				currentCampaignId={campaignId}
+				companyId={companyId}
+				preselectedIds={Array.from(selectedUsers)}
+			/>
+
+			{confirmSupervisorModal?.isOpen && (
+				<Modal
+					isOpen={confirmSupervisorModal.isOpen}
+					onClose={() => setConfirmSupervisorModal(null)}
+					title="Confirm Supervisor Status"
+					size="sm"
+				>
+					<div className="p-6">
+						<p className="mb-6 font-inter text-[12px] md:text-[14px] leading-relaxed dark:text-gray-300" style={{ color: 'var(--text-secondary)' }}>
+							Are you sure you want to change this user&apos;s supervisor status to <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{confirmSupervisorModal.isSupervisor ? 'Supervisor' : 'Non-Supervisor'}</span>?
+						</p>
+						<div className="flex justify-end gap-3">
+							<Button
+								variant="ghost"
+								onClick={() => setConfirmSupervisorModal(null)}
+								className="px-4 py-2 border rounded font-medium text-[12px] hover:bg-gray-50 transition-colors"
+								style={{ borderColor: 'var(--light-gray)', color: 'var(--text-secondary)' }}
+							>
+								Cancel
+							</Button>
+							<Button
+								variant="primary"
+								onClick={handleConfirmToggleSupervisor}
+								className="px-4 py-2 rounded font-medium text-[12px] transition-colors"
+							>
+								Confirm
+							</Button>
+						</div>
+					</div>
+				</Modal>
+			)}
 		</div>
 	);
 };

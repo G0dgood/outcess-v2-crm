@@ -5,6 +5,7 @@ import { Button } from '../../ui/Button';
 import { useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '../../../store/services/teamMembersApi';
 import { useUpdateTicketMutation, SupportTicket, PopulatedMember } from '../../../store/services/supportApi';
 import { Campaign } from '../../../store/services/campaignApi';
+import { toast } from 'sonner';
 
 interface AddTicketMemberModalProps {
 	isOpen: boolean;
@@ -20,12 +21,21 @@ export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({
 	campaignData
 }) => {
 	const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
-	const [updateTicket] = useUpdateTicketMutation();
+	const [updateTicket, { isLoading: isUpdating }] = useUpdateTicketMutation();
 
-	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery({
-		campaignId: ticket?.campaignId,
-		limit: 100,
-	}, { skip: !isOpen });
+	const effectiveCampaignId = String(
+		(typeof ticket?.campaignId === 'object'
+			? (ticket?.campaignId as { _id?: string; id?: string })?._id || (ticket?.campaignId as { _id?: string; id?: string })?.id
+			: ticket?.campaignId) || campaignData?._id || campaignData?.id || ''
+	);
+
+	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
+		{
+			campaignId: effectiveCampaignId,
+			limit: 100,
+		},
+		{ skip: !isOpen || !effectiveCampaignId }
+	);
 
 	const getRoleLabel = (role: string | { roleName?: string; name?: string } | undefined): string => {
 		if (!role) return 'Agent';
@@ -43,28 +53,43 @@ export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({
 	};
 
 	const handleAddMembers = async () => {
-		if (selectedMemberIds.length === 0) return;
+		if (selectedMemberIds.length === 0 || !ticket?._id) return;
 
-		const currentAssignees = ticket?.assignedToIds || [];
-		const currentIds = currentAssignees.map((a) => typeof a === 'string' ? a : a._id);
+		try {
+			const currentAssignees = ticket?.assignedToIds || [];
+			const currentIds = currentAssignees
+				.map((a) => (typeof a === 'string' ? a : String(a._id || a.id || '')))
+				.filter(Boolean);
 
-		// Merge new IDs, avoiding duplicates
-		const newAssigneeIds = Array.from(new Set([...currentIds, ...selectedMemberIds]));
+			// Merge new IDs, avoiding duplicates
+			const newAssigneeIds = Array.from(new Set([...currentIds, ...selectedMemberIds]));
 
-		await updateTicket({
-			id: ticket._id,
-			data: { assignedToIds: newAssigneeIds }
-		});
+			await updateTicket({
+				id: ticket._id,
+				data: { assignedToIds: newAssigneeIds }
+			}).unwrap();
 
-		setSelectedMemberIds([]);
-		onClose();
+			toast.success('Member(s) invited to ticket successfully');
+			setSelectedMemberIds([]);
+			onClose();
+		} catch (error: unknown) {
+			console.error('Failed to add ticket member:', error);
+			const err = error as { data?: { message?: string } };
+			toast.error(err?.data?.message || 'Failed to add member to ticket');
+		}
 	};
 
-	const availableMembers = (teamMembersData?.teamMembers || [])
-		.filter((member: ApiTeamMember) => {
-			const memberId = member._id || member.id;
-			return !!(memberId && !ticket?.assignedToIds?.some((a) => (typeof a === 'string' ? a : a._id) === memberId));
+	const rawMembers = (teamMembersData as { teamMembers?: ApiTeamMember[]; data?: ApiTeamMember[] })?.teamMembers || (teamMembersData as { data?: ApiTeamMember[] })?.data || (Array.isArray(teamMembersData) ? teamMembersData : []);
+	const membersList = Array.isArray(rawMembers) ? rawMembers : [];
+
+	const availableMembers = membersList.filter((member: ApiTeamMember) => {
+		const memberId = String(member._id || member.id || '');
+		if (!memberId) return false;
+		return !ticket?.assignedToIds?.some((a) => {
+			const existingId = typeof a === 'string' ? a : String(a._id || a.id || '');
+			return existingId === memberId;
 		});
+	});
 
 	return (
 		<Modal
@@ -82,7 +107,7 @@ export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({
 					placeholder="Search and select teammates..."
 					multiple={true}
 					options={availableMembers.map((member: ApiTeamMember) => ({
-						value: member._id || member.id || '',
+						value: String(member._id || member.id || ''),
 						label: `${getMemberName(member)} (${getRoleLabel(member.role)})`
 					}))}
 					value={selectedMemberIds}
@@ -105,9 +130,9 @@ export const AddTicketMemberModal: React.FC<AddTicketMemberModalProps> = ({
 						className="flex-1 text-white"
 						style={{ backgroundColor: campaignData?.primaryColor || 'var(--primary)' }}
 						onClick={handleAddMembers}
-						disabled={selectedMemberIds.length === 0}
+						disabled={selectedMemberIds.length === 0 || isUpdating}
 					>
-						Confirm
+						{isUpdating ? 'Inviting...' : 'Confirm'}
 					</Button>
 				</div>
 			</div>

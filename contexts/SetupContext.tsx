@@ -5,6 +5,8 @@ import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetCampaignByCompanyIdQuery, useGetCampaignQuery, Campaign } from '@/store/services/campaignApi';
 import { useCampaign } from './CampaignContext';
 import Icon from '@/components/ui/Icon';
+import { useSocket } from '@/contexts/SocketContext';
+import { toast } from 'sonner';
 import {
 	DispositionCategory,
 	AssignedMember,
@@ -68,7 +70,7 @@ interface SetupContextType {
 	addBucket: (bucket: Omit<Bucket, 'id' | 'dispositions'>) => void;
 	updateBucket: (bucketId: string, updates: Partial<Bucket>) => void;
 	deleteBucket: (bucketId: string) => void;
-	addDispositionToBucket: (bucketId: string, disposition: Omit<DispositionCategory, 'id'>) => void;
+	addDispositionToBucket: (bucketId: string, disposition: Omit<DispositionCategory, 'id'> & { id?: string }) => void;
 	updateDispositionInBucket: (bucketId: string, dispositionId: string, updates: Partial<DispositionCategory>) => void;
 	deleteDispositionFromBucket: (bucketId: string, dispositionId: string) => void;
 	updateBucketCustomerFields: (bucketId: string, fields: CustomerField[]) => void;
@@ -98,6 +100,7 @@ interface SetupProviderProps {
 export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const { user } = useUserInfo();
 	const { selectedCampaignId } = useCampaign();
+	const { socket } = useSocket();
 
 	const [currentStep, setCurrentStep] = useState(1);
 	const [dashboardStep, setDashboardStep] = useState<'KPI Metric' | 'Call Disposition'>('KPI Metric');
@@ -203,9 +206,17 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				? dashboardSettings.buckets
 				: ([]);
 
+			// Enforce bucket ownership: drop any bucket stamped for a different
+			// campaign (cross-contamination) and stamp the rest with this campaign's
+			// id so they can never leak into another campaign's save payload.
+			finalBuckets = finalBuckets
+				.filter(b => !b?.campaignId || String(b.campaignId) === String(dataToUse._id))
+				.map(b => ({ ...b, campaignId: dataToUse._id }));
+
 			if (currentDispositions.length > 0 && finalBuckets.length === 0) {
 				finalBuckets = [{
-					id: 'bucket-general',
+					id: `bucket-general-${dataToUse._id}`,
+					campaignId: dataToUse._id,
 					name: 'General Dispositions',
 					description: 'Default bucket for existing dispositions',
 					dispositions: currentDispositions,
@@ -256,42 +267,34 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	}, [existingCampaign, populateData]);
 
 	useEffect(() => {
-		if (existingCampaign && !isDirty) {
-			populateData(existingCampaign);
+		if (selectedCampaignId) {
+			setIsDirty(false);
 		}
-	}, [existingCampaign, populateData, isDirty]);
+	}, [selectedCampaignId]);
 
 	useEffect(() => {
-		if (typeof window !== 'undefined') {
-			const savedData = localStorage.getItem('outcess-setup-data');
-			if (savedData) {
-				try {
-					const parsedData = JSON.parse(savedData);
-					setSetupData(prev => ({
-						...prev,
-						...parsedData,
-						dashboardSettings: {
-							...prev?.dashboardSettings,
-							...(parsedData.dashboardSettings || {}),
-							dashboardName: parsedData.dashboardSettings?.dashboardName || prev?.dashboardSettings?.dashboardName,
-							callOutcomes: parsedData.dashboardSettings?.callOutcomes || prev?.dashboardSettings?.callOutcomes,
-							widgets: parsedData.dashboardSettings?.widgets || prev?.dashboardSettings?.widgets,
-							dispositions: parsedData.dashboardSettings?.dispositions || prev?.dashboardSettings?.dispositions,
-							buckets: parsedData.dashboardSettings?.buckets || prev?.dashboardSettings?.buckets,
-						}
-					}));
-				} catch {
-				}
+		if (existingCampaign) {
+			const campaignObj = (existingCampaign as { campaign?: Campaign })?.campaign || (existingCampaign as Campaign);
+			if (!isDirty || (campaignObj?._id && campaignObj._id !== setupData.campaignId)) {
+				populateData(existingCampaign);
+				setIsDirty(false);
 			}
+		}
+	}, [existingCampaign, populateData, isDirty, setupData.campaignId, selectedCampaignId]);
+
+	// Clean up legacy global setup data key to prevent stale cross-campaign bucket bleeding
+	useEffect(() => {
+		if (typeof window !== 'undefined') {
+			localStorage.removeItem('outcess-setup-data');
 			setIsInitialized(true);
 		}
 	}, []);
 
 	useEffect(() => {
-		if (typeof window !== 'undefined' && isInitialized) {
+		if (typeof window !== 'undefined' && isInitialized && isDirty && setupData.campaignId) {
 			const save = () => {
 				try {
-					localStorage.setItem('outcess-setup-data', JSON.stringify(setupData));
+					localStorage.setItem(`outcess-setup-data_${setupData.campaignId}`, JSON.stringify(setupData));
 				} catch {
 				}
 			};
@@ -301,7 +304,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 				setTimeout(save, 0);
 			}
 		}
-	}, [setupData, isInitialized]);
+	}, [setupData, isInitialized, isDirty]);
 
 	useEffect(() => {
 		const c = user?.company as { _id?: string; id?: string } | undefined;
@@ -310,6 +313,41 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			setSetupData(prev => ({ ...prev, companyId: userCompanyId }));
 		}
 	}, [user, setupData.companyId]);
+
+	// Socket Room connection for real-time campaign settings syncing
+	useEffect(() => {
+		if (socket && setupData.campaignId) {
+			socket.emit("joinCampaign", setupData.campaignId);
+		}
+	}, [socket, setupData.campaignId]);
+
+	// Listen to real-time campaign updates
+	useEffect(() => {
+		if (!socket) return;
+
+		const handleCampaignUpdated = (updatedCampaign: any) => {
+			const campaignObj = updatedCampaign?.campaign || updatedCampaign;
+			if (campaignObj?._id !== setupData.campaignId) return;
+
+			// If local state is dirty, inform the user that changes from another instance were synced
+			setIsDirty(prevDirty => {
+				if (prevDirty) {
+					toast.info("Campaign settings updated from another tab/session", {
+						description: "Your workspace has been synchronized.",
+						duration: 4000
+					});
+				}
+				return false;
+			});
+
+			populateData(campaignObj);
+		};
+
+		socket.on("campaignUpdated", handleCampaignUpdated);
+		return () => {
+			socket.off("campaignUpdated", handleCampaignUpdated);
+		};
+	}, [socket, setupData.campaignId, populateData]);
 
 	const updateSetupData = useCallback((data: Partial<SetupData>) => {
 		setSetupData(prev => ({ ...prev, ...data }));
@@ -330,12 +368,13 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const addChart = useCallback((chart: Omit<Chart, 'id'>) => {
 		const newChart: Chart = {
 			...chart,
+			size: chart.size || 'small',
 			id: `chart-${Date.now()}`
 		};
 
 		const calculatePosition = (existingCharts: Chart[]) => {
-			const chartWidth = chart.position.width;
-			const chartHeight = chart.position.height;
+			const chartWidth = newChart.position.width;
+			const chartHeight = newChart.position.height;
 			const padding = 20;
 			const maxColumns = 2;
 
@@ -491,7 +530,8 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			...prev,
 			dashboardSettings: {
 				...prev.dashboardSettings,
-				buckets: [...(prev.dashboardSettings.buckets || []), newBucket]
+				// Stamp the owning campaign so this bucket can never leak into another.
+				buckets: [...(prev.dashboardSettings.buckets || []), { ...newBucket, campaignId: prev.campaignId }]
 			},
 			customerBookSettings: {
 				...prev.customerBookSettings,
@@ -528,10 +568,10 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		setIsDirty(true);
 	}, []);
 
-	const addDispositionToBucket = useCallback((bucketId: string, disposition: Omit<DispositionCategory, 'id'>) => {
+	const addDispositionToBucket = useCallback((bucketId: string, disposition: Omit<DispositionCategory, 'id'> & { id?: string }) => {
 		const newDisposition: DispositionCategory = {
 			...disposition,
-			id: `dsp-${Date.now()}`,
+			id: disposition.id || `dsp-${Date.now()}`,
 		};
 		setSetupData(prev => ({
 			...prev,

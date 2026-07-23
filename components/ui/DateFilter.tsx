@@ -34,21 +34,21 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 	const fromDateInputRef = useRef<HTMLInputElement>(null);
 	const toDateInputRef = useRef<HTMLInputElement>(null);
 
-	const formatDate = (date: Date) => {
-		const year = date.getFullYear();
-		const month = String(date.getMonth() + 1).padStart(2, '0');
-		const day = String(date.getDate()).padStart(2, '0');
-		return `${year}-${month}-${day}`;
+	// Build the UTC instant for the *local* start/end of a given day, so the range
+	// matches how createdAt (stored in UTC) maps to the user's calendar day.
+	// Accepts a Date or a 'YYYY-MM-DD' string (from the custom date-range inputs).
+	const toStartOfDayISO = (date: Date | string) => {
+		if (!date) return '';
+		const d = typeof date === 'string' ? new Date(`${date}T00:00:00`) : new Date(date);
+		d.setHours(0, 0, 0, 0);
+		return d.toISOString();
 	};
 
-	const toStartOfDayISO = (dateStr: string) => {
-		if (!dateStr) return '';
-		return `${dateStr}T00:00:00.000Z`;
-	};
-
-	const toEndOfDayISO = (dateStr: string) => {
-		if (!dateStr) return '';
-		return `${dateStr}T23:59:59.999Z`;
+	const toEndOfDayISO = (date: Date | string) => {
+		if (!date) return '';
+		const d = typeof date === 'string' ? new Date(`${date}T00:00:00`) : new Date(date);
+		d.setHours(23, 59, 59, 999);
+		return d.toISOString();
 	};
 
 	const handleApply = () => {
@@ -58,28 +58,26 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 
 		switch (selectedFilter) {
 			case 'today':
-				const todayStr = formatDate(today);
-				start = toStartOfDayISO(todayStr);
-				end = toEndOfDayISO(todayStr);
+				start = toStartOfDayISO(today);
+				end = toEndOfDayISO(today);
 				break;
 			case 'yesterday':
 				const yesterday = new Date(today);
 				yesterday.setDate(today.getDate() - 1);
-				const yesterdayStr = formatDate(yesterday);
-				start = toStartOfDayISO(yesterdayStr);
-				end = toEndOfDayISO(yesterdayStr);
+				start = toStartOfDayISO(yesterday);
+				end = toEndOfDayISO(yesterday);
 				break;
 			case 'last7days':
 				const last7 = new Date(today);
 				last7.setDate(today.getDate() - 7);
-				start = toStartOfDayISO(formatDate(last7));
-				end = toEndOfDayISO(formatDate(today));
+				start = toStartOfDayISO(last7);
+				end = toEndOfDayISO(today);
 				break;
 			case 'last30days':
 				const last30 = new Date(today);
 				last30.setDate(today.getDate() - 30);
-				start = toStartOfDayISO(formatDate(last30));
-				end = toEndOfDayISO(formatDate(today));
+				start = toStartOfDayISO(last30);
+				end = toEndOfDayISO(today);
 				break;
 			case 'dateRange':
 				if (fromDate && toDate) {

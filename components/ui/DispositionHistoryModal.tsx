@@ -9,6 +9,11 @@ import { useGetDispositionsByCustomerQuery, useGetDispositionsByAgentIdQuery } f
 import moment from 'moment';
 import NewTicketModal from '@/components/features/support/NewTicketModal';
 import { getPrefillDataFromDisposition } from '@/utils/dispositionPrefill';
+import { useSyncDispositions } from '@/hooks/useSyncDispositions';
+import { useSocket } from '@/contexts/SocketContext';
+import { UpdateIcon } from '@radix-ui/react-icons';
+import { toast } from 'sonner';
+import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
 
 interface DispositionHistoryModalProps {
 	isOpen: boolean;
@@ -51,8 +56,55 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 	agentId,
 }) => {
 	const { selectedCampaignId } = useCampaign();
+	const { syncNow, syncOne, isSyncing } = useSyncDispositions();
+	const { isOnline, isConnected } = useSocket();
 	const [offlineDispositions, setOfflineDispositions] = useState<OfflineDisposition[]>([]);
 	const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
+	const [syncingId, setSyncingId] = useState<string | null>(null);
+
+	const hasPending = offlineDispositions.some((d) => d.status === 'pending');
+
+	const handleSync = async () => {
+		const result = await syncNow();
+		if (result.success > 0) {
+			refreshDispositions();
+		}
+		if (result.success > 0 && result.failed === 0) {
+			toast.success(`Synced ${result.success} pending disposition(s)`);
+		} else if (result.success > 0 && result.failed > 0) {
+			toast.warning(`Synced ${result.success}, ${result.failed} still pending`);
+		} else if (result.failed > 0) {
+			toast.error(`Could not sync ${result.failed} disposition(s). Will retry.`);
+		} else {
+			toast.info('No pending dispositions to sync');
+		}
+	};
+
+	const handleSyncOne = async (id: string) => {
+		setSyncingId(id);
+		try {
+			const result = await syncOne(id);
+			if (result.success > 0) {
+				refreshDispositions();
+				toast.success('Disposition synced');
+			} else if (result.failed > 0) {
+				toast.error('Could not sync disposition. Will retry.');
+			}
+		} finally {
+			setSyncingId(null);
+		}
+	};
+
+	// Auto-sync pending dispositions when the network comes back while the
+	// history table is open (the list refreshes via OFFLINE_DISPOSITIONS_EVENT).
+	useEffect(() => {
+		if (isOpen && isOnline && isConnected && hasPending) {
+			syncNow().then((result) => {
+				if (result.success > 0) refreshDispositions();
+			});
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isOpen, isOnline, isConnected, hasPending, syncNow]);
 	const [ticketPrefillData, setTicketPrefillData] = useState<{
 		title?: string;
 		description?: string;
@@ -65,7 +117,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 		setIsNewTicketModalOpen(true);
 	};
 
-	const { data: customerData } = useGetDispositionsByCustomerQuery(
+	const { data: customerData, refetch: refetchCustomer } = useGetDispositionsByCustomerQuery(
 		{
 			campaignId: selectedCampaignId || '',
 			customerId: customerId || '',
@@ -75,7 +127,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 		{ skip: !isOpen || !customerId || !selectedCampaignId }
 	);
 
-	const { data: agentData } = useGetDispositionsByAgentIdQuery(
+	const { data: agentData, refetch: refetchAgent } = useGetDispositionsByAgentIdQuery(
 		{
 			campaignId: selectedCampaignId || '',
 			agentId: agentId || '',
@@ -85,7 +137,21 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 		{ skip: !isOpen || !agentId || !selectedCampaignId }
 	);
 
+	const { campaignData } = useCampaign();
+	const configuredDispositions = React.useMemo(() => {
+		return getAllCampaignDispositions(campaignData?.dashboardSettings);
+	}, [campaignData?.dashboardSettings]);
+
 	const apiData = customerId ? customerData : agentData;
+
+	// Refresh the disposition list from the server after a sync.
+	const refreshDispositions = () => {
+		if (customerId) {
+			refetchCustomer();
+		} else if (agentId) {
+			refetchAgent();
+		}
+	};
 
 	const syncedDispositions: SyncedDispositionViewModel[] = React.useMemo(() => {
 		if (!apiData) return [];
@@ -222,7 +288,7 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 								>
 									<div className="flex items-center justify-between mb-3">
 										<span
-											className="text-[8px] md:text-[10px] font-medium px-2 py-1 "
+											className="text-[8px] md:text-[10px] font-medium px-2 py-1 rounded-full"
 											style={{
 												backgroundColor: '#D1FAE5',
 												color: '#065F46'
@@ -237,12 +303,17 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 										)}
 									</div>
 									<div className="grid grid-cols-2 gap-4 text-[10px] md:text-[12px]">
-										{synced?.dispositionData?.map((field: DispositionFieldEntry) => (
-											<div key={field?.fieldId}>
-												<span style={{ color: 'var(--text-tertiary)' }}>{field?.fieldName}: </span>
-												<span style={{ color: 'var(--text-primary)' }}>{String(field?.fieldValue || '-')}</span>
-											</div>
-										))}
+										{synced?.dispositionData?.flatMap((field: DispositionFieldEntry) => {
+											if (!field?.fieldName) return [];
+											const dispDef = configuredDispositions.find(d => d.name === field.fieldName);
+											const levels = resolveMultiDropdownLevels(field.fieldName, String(field.fieldValue), dispDef);
+											return levels.map((lvl, idx) => (
+												<div key={`${field.fieldId || field.fieldName}-${idx}`}>
+													<span style={{ color: 'var(--text-tertiary)' }}>{lvl.header}: </span>
+													<span style={{ color: 'var(--text-primary)' }}>{lvl.value}</span>
+												</div>
+											));
+										})}
 										<div>
 											<span style={{ color: 'var(--text-tertiary)' }}>Date: </span>
 											<span style={{ color: 'var(--text-primary)' }}>{new Date(synced.syncedAt).toLocaleDateString()}</span>
@@ -283,15 +354,30 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 									}}
 								>
 									<div className="flex items-center justify-between mb-3">
-										<span
-											className="text-[8px] md:text-[10px] font-medium px-2 py-1 "
-											style={{
-												backgroundColor: offline.status === 'pending' ? '#FEF3C7' : '#D1FAE5',
-												color: offline.status === 'pending' ? '#92400E' : '#065F46'
-											}}
-										>
-											{offline.status === 'pending' ? '⏳ Pending Sync' : '✓ Synced'}
-										</span>
+										<div className="flex items-center gap-2">
+											<span
+												className="text-[8px] md:text-[10px] font-medium px-2 py-1 rounded-full"
+												style={{
+													backgroundColor: offline.status === 'pending' ? '#FEF3C7' : '#D1FAE5',
+													color: offline.status === 'pending' ? '#92400E' : '#065F46'
+												}}
+											>
+												{offline.status === 'pending' ? '⏳ Pending Sync' : '✓ Synced'}
+											</span>
+											{offline.status === 'pending' && (
+												<Button
+													variant="outline"
+													size="sm"
+													disabled={isSyncing || syncingId === offline.id}
+													className="h-6 text-[8px] md:text-[10px] px-2 py-0 flex items-center gap-1"
+													onClick={() => handleSyncOne(offline.id)}
+													title="Sync this disposition now"
+												>
+													<UpdateIcon className={`w-3 h-3 ${syncingId === offline.id ? 'animate-spin' : ''}`} />
+													{syncingId === offline.id ? 'Syncing…' : 'Sync'}
+												</Button>
+											)}
+										</div>
 										{offline.customerName && (
 											<span className="text-[10px] md:text-[12px]" style={{ color: 'var(--text-secondary)' }}>
 												{offline.customerName}
@@ -299,12 +385,17 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 										)}
 									</div>
 									<div className="grid grid-cols-2 gap-4 text-[10px] md:text-[12px]">
-										{offline.dispositionData?.map((field) => (
-											<div key={field.fieldId}>
-												<span style={{ color: 'var(--text-tertiary)' }}>{field.fieldName}: </span>
-												<span style={{ color: 'var(--text-primary)' }}>{String(field.fieldValue || '-')}</span>
-											</div>
-										))}
+										{offline.dispositionData?.flatMap((field) => {
+											if (!field?.fieldName) return [];
+											const dispDef = configuredDispositions.find(d => d.name === field.fieldName);
+											const levels = resolveMultiDropdownLevels(field.fieldName, String(field.fieldValue), dispDef);
+											return levels.map((lvl, idx) => (
+												<div key={`${field.fieldId || field.fieldName}-${idx}`}>
+													<span style={{ color: 'var(--text-tertiary)' }}>{lvl.header}: </span>
+													<span style={{ color: 'var(--text-primary)' }}>{lvl.value}</span>
+												</div>
+											));
+										})}
 										<div>
 											<span style={{ color: 'var(--text-tertiary)' }}>Date: </span>
 											<span style={{ color: 'var(--text-primary)' }}>{new Date(offline.createdAt).toLocaleDateString()}</span>
@@ -448,6 +539,17 @@ export const DispositionHistoryModal: React.FC<DispositionHistoryModalProps> = (
 							onClick={() => handleCreateTicketFromDisposition(dispositionItem)}
 						>
 							Create Ticket
+						</Button>
+					) : hasPending ? (
+						<Button
+							variant="outline"
+							size="md"
+							onClick={handleSync}
+							disabled={isSyncing}
+							className="flex items-center gap-2"
+						>
+							<UpdateIcon className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+							{isSyncing ? 'Syncing…' : 'Sync Pending'}
 						</Button>
 					) : <div />}
 					<Button

@@ -114,8 +114,17 @@ const AddBucketModal: React.FC<AddBucketModalProps> = ({
 								<input
 									type="color"
 									value={bucketForm.color}
-									onInput={(e) => setBucketForm(prev => ({ ...prev, color: e.currentTarget.value }))}
-									className="w-8 h-8 rounded-full border-none p-0 bg-transparent cursor-pointer"
+									onInput={(e) => {
+									const nextColor = e.currentTarget.value;
+									setBucketForm(prev => ({ ...prev, color: nextColor }));
+									}}
+									className="w-8 h-8 border-none p-0 bg-transparent cursor-pointer rounded-full!
+									[&::-webkit-color-swatch-wrapper]:p-0 
+									[&::-webkit-color-swatch]:border-none 
+									[&::-webkit-color-swatch]:rounded-full 
+									[&::-moz-color-swatch]:border-none 
+									[&::-moz-color-swatch]:rounded-full
+									"
 								/>
 								<span className="text-[10px] text-gray-500 font-mono uppercase">{bucketForm.color}</span>
 							</div>

@@ -23,7 +23,8 @@ interface SortableChartProps {
 	chart: Chart;
 	onRemoveChart: (chartId: string) => void;
 	onEditChart: (chartId: string) => void;
-	generateChartData: (dataSource: string | string[], chartColor?: string, colors?: Record<string, string>) => ChartDataItem[];
+	onTimeRangeChange?: (chartId: string, timeRange: string) => void;
+	generateChartData: (dataSource: string | string[], chartColor?: string, colors?: Record<string, string>, timeRange?: string) => ChartDataItem[];
 	canEdit?: boolean;
 	canDelete?: boolean;
 }
@@ -32,11 +33,12 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 	chart,
 	onRemoveChart,
 	onEditChart,
+	onTimeRangeChange,
 	generateChartData,
 	canEdit = true,
 	canDelete = true,
 }) => {
-	const chartData = generateChartData(chart.dataSource, chart.color, chart.colors);
+	const chartData = generateChartData(chart.dataSource, chart.color, chart.colors, chart.timeRange);
 	const {
 		attributes,
 		listeners,
@@ -50,6 +52,18 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 		transform: CSS.Transform.toString(transform),
 		transition,
 		opacity: isDragging ? 0.5 : 1,
+	};
+
+	// Determine height based on size
+	const getChartHeight = () => {
+		switch (chart.size) {
+			case 'large':
+				return 'h-[500px]';
+			case 'medium':
+			case 'small':
+			default:
+				return 'h-80';
+		}
 	};
 
 	const renderChart = () => {
@@ -75,7 +89,9 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 		}
 	};
 
-	const showLegend = ['pie', 'doughnut', 'polarArea', 'radar', 'scatter', 'bubble', 'bar', 'line'].includes(chart.type);
+	// Only the radial part-to-whole charts (no inline SVG labels) need the legend.
+	// Bar, line, scatter, bubble and radar draw their own labels inside the chart.
+	const showLegend = ['pie', 'doughnut', 'polarArea'].includes(chart.type);
 
 	return (
 		<div
@@ -108,10 +124,10 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 						<Dropdown
 							label=""
 							value={chart.timeRange}
-							onChange={() => {
-							}}
+							onChange={(value) => onTimeRangeChange?.(chart.id, Array.isArray(value) ? value[0] : value)}
 							options={[
 								{ value: 'daily', label: 'Daily' },
+								{ value: 'yesterday', label: 'Yesterday' },
 								{ value: 'weekly', label: 'Weekly' },
 								{ value: 'monthly', label: 'Monthly' },
 							]}
@@ -152,10 +168,12 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 				</div>
 			</div>
 
-			<div className="p-6 h-80">
+			<div className={`p-4 ${getChartHeight()}`}>
 				<div className="flex flex-col items-center justify-center h-full">
 					{renderChart()}
 
+					{/* Legend only for radial charts (pie/doughnut/polarArea) that have no
+					    inline labels — the other chart types label themselves. */}
 					{showLegend && (
 						<div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 mt-6 w-full px-4 mb-5">
 							{chartData?.map((item, index) => (

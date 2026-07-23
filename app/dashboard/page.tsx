@@ -8,7 +8,8 @@ import EditChartModal from '@/components/features/dashboard/EditChartModal';
 import AddWidgetModal from '@/components/features/dashboard/AddWidgetModal';
 import EditWidgetModal from '@/components/features/dashboard/EditWidgetModal';
 import DeleteWidgetModal from '@/components/ui/DeleteWidgetModal';
-import { PlusIcon, Pencil1Icon, ReloadIcon } from '@radix-ui/react-icons';
+import { PlusIcon, Pencil1Icon, ReloadIcon, UpdateIcon } from '@radix-ui/react-icons';
+import { toast } from 'sonner';
 import AccessRestricted from '@/components/ui/AccessRestricted';
 import { useUpdateCampaignMutation } from '@/store/services/campaignApi';
 import { useCampaign } from '@/contexts/CampaignContext';
@@ -20,6 +21,8 @@ import {
 	useGetDispositionsByAgentReportQuery
 } from '@/store/services/dispositionApi';
 import { filterDispositionsByTimeRange, getDateRangeFromTimeRange } from '@/utils/filterUtils';
+import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
+import { DispositionCategory, NestedOption } from '@/types/dashboard';
 import {
 	DndContext,
 	closestCenter,
@@ -41,9 +44,9 @@ import {
 	getOfflineDispositions,
 	getSyncedDispositions,
 	getPendingDispositionsCount,
-	syncPendingDispositions,
 	DispositionFieldEntry
 } from '@/utils/offlineDispositions';
+import { useSyncDispositions } from '@/hooks/useSyncDispositions';
 import SortableChart from '@/components/dashboard/SortableChart';
 import WidgetCard from '@/components/dashboard/WidgetCard';
 import { ChartDataItem } from '@/components/dashboard/charts/types';
@@ -59,11 +62,12 @@ interface CombinedDispositionItem {
 }
 
 const DashboardContent: React.FC = () => {
-	const { campaignData, isLoading: isLobLoading } = useCampaign();
+	const { campaignData, selectedCampaignId, isLoading: isLobLoading } = useCampaign();
 	const { setupData, addChart: addChartLocal, updateChart: updateChartLocal, updateChartsOrder: updateChartsOrderLocal, updateDashboardSettings: updateDashboardSettingsLocal } = useSetup();
 	const [updateCampaign] = useUpdateCampaignMutation();
 	const isLoading = isLobLoading;
-	const { isOnline, isConnected, isOffline, send } = useSocket();
+	const { isOnline, isConnected, isOffline } = useSocket();
+	const { syncNow, isSyncing } = useSyncDispositions();
 	const { canAccess, isAdmin } = usePrivilege();
 	const { user } = useUserInfo();
 	const canAccessDashboard = canAccess('dashboard');
@@ -98,6 +102,12 @@ const DashboardContent: React.FC = () => {
 	const timeRange = dashboardSettings.dispositionSettings?.timeRangeView || 'daily';
 	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange]);
 
+	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
+	// Treat the isSupervisor flag as authoritative (a team lead may have any role name),
+	// falling back to the role name for older records.
+	const isSupervisor = user?.isSupervisor === true || userRoleName?.toLowerCase() === 'supervisor';
+	const isCampaignView = isAdmin || isSupervisor;
+
 	const { data: reportDataAgent, refetch: refetchAgentReport, isFetching: isFetchingAgentReport } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
 		{
 			campaignId: campaignId || '',
@@ -105,7 +115,7 @@ const DashboardContent: React.FC = () => {
 			startDate: dateRange.startDate || '',
 			endDate: dateRange.endDate || ''
 		},
-		{ skip: !campaignId || !user || !dateRange.startDate || isAdmin }
+		{ skip: !campaignId || !user || !dateRange.startDate || isCampaignView }
 	);
 
 	const { data: reportDataAdmin, refetch: refetchAdminReport, isFetching: isFetchingAdminReport } = useGetAllDashboardDispositionsByCampaignReportQuery(
@@ -114,44 +124,48 @@ const DashboardContent: React.FC = () => {
 			startDate: dateRange.startDate || '',
 			endDate: dateRange.endDate || ''
 		},
-		{ skip: !campaignId || !dateRange.startDate || !isAdmin }
+		{ skip: !campaignId || !dateRange.startDate || !isCampaignView }
 	);
 
-	const reportData = isAdmin ? reportDataAdmin : reportDataAgent;
+	const reportData = isCampaignView ? reportDataAdmin : reportDataAgent;
 
+	// Fetched over all time (no date filter) so each chart can filter by its own
+	// per-chart time range. Widgets still filter this client-side by the dashboard range.
 	const { data: lobReportData, refetch: refetchLobReport, isFetching: isFetchingLobReport } = useGetDispositionsByCampaignReportQuery(
 		{
 			campaignId: campaignId || '',
-			startDate: dateRange.startDate || '',
-			endDate: dateRange.endDate || '',
+			startDate: '',
+			endDate: '',
+			page: 1,
+			limit: 10000,
 		},
-		{ skip: !campaignId || !isAdmin || !dateRange.startDate }
+		{ skip: !campaignId || !isCampaignView }
 	);
 
 	const { data: agentReportData, refetch: refetchAgentDispositions, isFetching: isFetchingAgentDispositions } = useGetDispositionsByAgentReportQuery(
 		{
 			campaignId: campaignId || '',
 			agentId: user?._id || '',
-			startDate: dateRange.startDate || '',
-			endDate: dateRange.endDate || '',
+			startDate: '',
+			endDate: '',
 			page: 1,
 			limit: 10000,
 		},
-		{ skip: !campaignId || isAdmin || !user?._id || !dateRange.startDate }
+		{ skip: !campaignId || isCampaignView || !user?._id }
 	);
 
 	const apiDispositions = useMemo(() => {
-		if (isAdmin) {
+		if (isCampaignView) {
 			return (lobReportData as { data?: unknown[] })?.data || (Array.isArray(lobReportData) ? lobReportData : []);
 		} else {
 			return (agentReportData as { data?: unknown[] })?.data || (Array.isArray(agentReportData) ? agentReportData : []);
 		}
-	}, [isAdmin, lobReportData, agentReportData]);
+	}, [isCampaignView, lobReportData, agentReportData]);
 
 	const isRefreshing = isFetchingAgentReport || isFetchingAdminReport || isFetchingLobReport || isFetchingAgentDispositions;
 
 	const handleRefresh = () => {
-		if (isAdmin) {
+		if (isCampaignView) {
 			refetchAdminReport();
 			refetchLobReport();
 		} else {
@@ -327,25 +341,40 @@ const DashboardContent: React.FC = () => {
 
 	// Sync pending dispositions when coming back online
 	useEffect(() => {
-		if (isOnline && isConnected && send) {
-			syncPendingDispositions(send).then((result) => {
+		if (isOnline && isConnected) {
+			syncNow().then((result) => {
 				if (result.success > 0) {
 					setPendingDispositionsCount(getPendingDispositionsCount());
 				}
 			});
 		}
-	}, [isOnline, isConnected, send]);
+	}, [isOnline, isConnected, syncNow]);
+
+	// Manual sync triggered from the dashboard "Sync" button
+	const handleSyncNow = async () => {
+		const result = await syncNow();
+		setPendingDispositionsCount(getPendingDispositionsCount());
+		if (result.success > 0 && result.failed === 0) {
+			toast.success(`Synced ${result.success} pending disposition(s)`);
+		} else if (result.success > 0 && result.failed > 0) {
+			toast.warning(`Synced ${result.success}, ${result.failed} still pending`);
+		} else if (result.failed > 0) {
+			toast.error(`Could not sync ${result.failed} disposition(s). Will retry.`);
+		} else {
+			toast.info('No pending dispositions to sync');
+		}
+	};
 
 	const combinedDispositions = useMemo(() => {
-		const offline = getOfflineDispositions();
+		const offline = getOfflineDispositions(selectedCampaignId || undefined);
 		// If we have API data, use it as the source of "synced" data
 		// Otherwise fallback to local synced data
 		// Note: apiDispositions might be empty array, which is valid. 
 		// Check if it's an array to confirm it's loaded.
-		const synced = Array.isArray(apiDispositions) ? apiDispositions : getSyncedDispositions();
+		const synced = Array.isArray(apiDispositions) ? apiDispositions : getSyncedDispositions(undefined, selectedCampaignId || undefined);
 		return [...offline, ...synced] as CombinedDispositionItem[];
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [apiDispositions, pendingDispositionsCount]);
+	}, [apiDispositions, pendingDispositionsCount, selectedCampaignId]);
 
 	// Get widgets from context and update values dynamically based on disposition data
 	const widgets = useMemo(() => {
@@ -353,16 +382,24 @@ const DashboardContent: React.FC = () => {
 		const timeRange = dashboardSettings.dispositionSettings?.timeRangeView || 'daily';
 		const filteredDispositions = filterDispositionsByTimeRange(combinedDispositions, timeRange);
 
+		const configuredDispositions = getAllCampaignDispositions(dashboardSettings);
+
 		// Calculate disposition field counts
 		const calculateDispositionFieldCount = (fieldName: string): number => {
 			return filteredDispositions.filter(disp => {
-				// Check dispositionData array
-				if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-					const field = disp.dispositionData.find((f: DispositionFieldEntry) => f.fieldName === fieldName);
-					if (field) {
-						const value = field.fieldValue;
-						return value && value.toString().trim() !== '' && value !== '-';
-					}
+				// Check dispositionData or fillDisposition array
+				const fields = disp.dispositionData || disp.fillDisposition;
+				if (fields && Array.isArray(fields)) {
+					return fields.some((f: DispositionFieldEntry) => {
+						if (!f.fieldName || f.fieldValue === undefined || f.fieldValue === null) return false;
+						const dispDef = configuredDispositions.find(d => d.name === f.fieldName);
+						const levels = resolveMultiDropdownLevels(f.fieldName, String(f.fieldValue), dispDef);
+						return levels.some(lvl =>
+							lvl.header.toLowerCase() === fieldName.toLowerCase() ||
+							lvl.value.toLowerCase() === fieldName.toLowerCase() ||
+							f.fieldName.toLowerCase() === fieldName.toLowerCase()
+						);
+					});
 				}
 
 				// Fallback for direct property access (legacy support)
@@ -444,29 +481,31 @@ const DashboardContent: React.FC = () => {
 
 			// Update total dispositions widget value
 			if (sourceKey === 'Total Dispositions' || sourceKey === 'Total Calls') {
-				return { ...widget, value: filteredDispositions.length };
+				const apiTotal = reportData?.data?.totalDispositions !== undefined ? Number(reportData.data.totalDispositions) : filteredDispositions.length;
+				return { ...widget, value: apiTotal };
 			}
 
 			// Check if widget title corresponds to a disposition field
-			// We check if the widget title matches any disposition name in the settings
-			// Find in both direct and bucketed dispositions
-			const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
-			if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
-				dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
-					if (bucket && Array.isArray(bucket.dispositions)) {
-						bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
-							if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
-								allDispositions.push(disp);
-							}
-						});
-					}
-				});
-			}
+			const allDispositions = getAllCampaignDispositions(dashboardSettings);
 			const isDispositionField = allDispositions.some(
-				(d: { name: string; color?: string }) => d.name === sourceKey
+				(d: DispositionCategory) => d.name === sourceKey
 			);
+			const isSubOptionOrLabel = allDispositions.some((d: DispositionCategory) => {
+				let found = false;
+				const checkNested = (opts?: NestedOption[]) => {
+					if (!opts) return;
+					opts.forEach(opt => {
+						if (opt.value?.toLowerCase() === sourceKey.toLowerCase() || opt.subLabel?.toLowerCase() === sourceKey.toLowerCase()) {
+							found = true;
+						}
+						if (opt.subOptions) checkNested(opt.subOptions);
+					});
+				};
+				checkNested(d.nestedOptions);
+				return found;
+			});
 
-			if (isDispositionField) {
+			if (isDispositionField || isSubOptionOrLabel) {
 				return { ...widget, value: calculateDispositionFieldCount(sourceKey) };
 			}
 
@@ -477,8 +516,9 @@ const DashboardContent: React.FC = () => {
 
 			if (isCallOutcome) {
 				const count = filteredDispositions.filter(disp => {
-					if (disp.dispositionData && Array.isArray(disp.dispositionData)) {
-						return disp.dispositionData.some((f: DispositionFieldEntry) =>
+					const fields = disp.dispositionData || disp.fillDisposition;
+					if (fields && Array.isArray(fields)) {
+						return fields.some((f: DispositionFieldEntry) =>
 							f.fieldValue && f.fieldValue.toString().toLowerCase() === sourceKey.toLowerCase()
 						);
 					}
@@ -546,8 +586,11 @@ const DashboardContent: React.FC = () => {
 		}
 	}, [canEdit, dashboardSettings.dispositionSettings.charts]);
 
-	const generateChartDataWrapper = useCallback((dataSource: string | string[], chartColor?: string, colors?: Record<string, string>): ChartDataItem[] => {
-		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, combinedDispositions, reportData);
+	const generateChartDataWrapper = useCallback((dataSource: string | string[], chartColor?: string, colors?: Record<string, string>, chartTimeRange?: string): ChartDataItem[] => {
+		// When a chart has its own time range, filter the (all-time) dispositions
+		// client-side by that range instead of using the dashboard-scoped breakdown.
+		const reportForChart = chartTimeRange ? undefined : reportData;
+		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, combinedDispositions, reportForChart, chartTimeRange);
 	}, [dashboardSettings, pendingDispositionsCount, combinedDispositions, reportData]);
 
 	const handleConfirmDelete = useCallback(() => {
@@ -604,7 +647,8 @@ const DashboardContent: React.FC = () => {
 			dataSource: chart.dataSource,
 			timeRange: chart.timeRange,
 			color: chart.color,
-			colors: chart.colors
+			colors: chart.colors,
+			size: chart.size
 		};
 		updateChart(chart.id, updates);
 		setIsEditChartModalOpen(false);
@@ -666,6 +710,7 @@ const DashboardContent: React.FC = () => {
 									inputClassName="!py-[7px] !leading-5 !text-[8px] md:text-[10px] sm:!text-[10px] md:text-[12px]  flex-none "
 									options={[
 										{ value: 'daily', label: 'Daily' },
+										{ value: 'yesterday', label: 'Yesterday' },
 										{ value: 'weekly', label: 'Weekly' },
 										{ value: 'monthly', label: 'Monthly' },
 										{ value: 'yearly', label: 'Yearly' },
@@ -675,11 +720,27 @@ const DashboardContent: React.FC = () => {
 									onChange={(value) => updateDashboardSettings({
 										dispositionSettings: {
 											...dashboardSettings.dispositionSettings,
-											timeRangeView: value as unknown as 'daily' | 'weekly' | 'monthly',
+											timeRangeView: value as 'daily' | 'yesterday' | 'weekly' | 'monthly' | 'yearly' | 'all',
 										}
 									})}
 								/>
 							</div>
+							{pendingDispositionsCount > 0 && (
+								<Button
+									variant="outline"
+									size="md"
+									onClick={handleSyncNow}
+									disabled={isSyncing}
+									className="flex items-center gap-2 px-2 py-2 text-[8px] md:text-[10px] sm:px-4 sm:py-2"
+									title={`${pendingDispositionsCount} pending disposition(s) to sync`}
+								>
+									<UpdateIcon className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+									<span className="hidden sm:inline">{isSyncing ? 'Syncing…' : 'Sync'}</span>
+									<span className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-amber-500 text-white text-[8px] md:text-[9px] font-bold">
+										{pendingDispositionsCount}
+									</span>
+								</Button>
+							)}
 							<Button
 								variant="primary"
 								size="md"
@@ -798,17 +859,28 @@ const DashboardContent: React.FC = () => {
 									strategy={verticalListSortingStrategy}
 								>
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-										{dashboardSettings?.dispositionSettings.charts.map((chart: Chart) => (
-											<SortableChart
-												key={chart.id}
-												chart={chart}
-												generateChartData={generateChartDataWrapper}
-												onRemoveChart={handleRemoveChart}
-												onEditChart={handleEditChart}
-												canEdit={canEdit}
-												canDelete={canDelete}
-											/>
-										))}
+										{dashboardSettings?.dispositionSettings.charts.map((chart: Chart) => {
+											// Default to 'small' if size is not set
+											const size = chart.size || 'small';
+											// Determine column span based on size
+											const colSpanClass =
+												size === 'small'
+													? 'col-span-1'
+													: 'col-span-1 md:col-span-2';
+											return (
+												<div key={chart.id} className={colSpanClass}>
+													<SortableChart
+														chart={{ ...chart, size }}
+														generateChartData={generateChartDataWrapper}
+														onRemoveChart={handleRemoveChart}
+														onEditChart={handleEditChart}
+														onTimeRangeChange={(chartId, timeRange) => updateChart(chartId, { timeRange: timeRange as Chart['timeRange'] })}
+														canEdit={canEdit}
+														canDelete={canDelete}
+													/>
+												</div>
+											);
+										})}
 									</div>
 								</SortableContext>
 							) : (

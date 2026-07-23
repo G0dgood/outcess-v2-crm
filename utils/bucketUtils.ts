@@ -3,18 +3,19 @@ export interface BucketWithMembers {
 	name: string;
 	color?: string;
 	assignedMembers?: Array<{
-		memberId: string | { _id?: string; id?: string };
+		memberId: string | { _id?: string; id?: string; email?: string; userId?: string };
 		memberName?: string;
+		email?: string;
 	}>;
 	[key: string]: unknown;
 }
 
 export const resolveMemberId = (
-	memberId: string | { _id?: string; id?: string } | null | undefined
+	memberId: string | { _id?: string; id?: string; email?: string; userId?: string } | null | undefined
 ): string => {
 	if (!memberId) return '';
 	if (typeof memberId === 'object') {
-		return String(memberId._id || memberId.id || '');
+		return String(memberId._id || memberId.id || memberId.userId || memberId.email || '');
 	}
 	return String(memberId);
 };
@@ -24,9 +25,12 @@ export const isUserAssignedToBucket = (
 	bucket: BucketWithMembers
 ): boolean => {
 	if (!userId || !bucket.assignedMembers?.length) return false;
-	return bucket.assignedMembers.some(
-		(m) => resolveMemberId(m.memberId) === String(userId)
-	);
+	const userStr = String(userId).trim().toLowerCase();
+	return bucket.assignedMembers.some((m) => {
+		const mId = resolveMemberId(m.memberId).trim().toLowerCase();
+		const mEmail = (m.email || (typeof m.memberId === 'object' ? m.memberId?.email : '') || '').trim().toLowerCase();
+		return mId === userStr || (mEmail !== '' && mEmail === userStr);
+	});
 };
 
 export const getUserAssignedBuckets = (

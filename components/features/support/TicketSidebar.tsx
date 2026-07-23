@@ -1,5 +1,6 @@
 import { Plus, X } from 'lucide-react';
 import { useUpdateTicketMutation, SupportTicket, PopulatedMember, PopulatedRole } from '../../../store/services/supportApi';
+import { useGetTeamMembersByCampaignIdQuery } from '../../../store/services/teamMembersApi';
 import { Campaign } from '../../../store/services/campaignApi';
 import React, { useState } from 'react';
 import Image from 'next/image';
@@ -20,6 +21,20 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, campaignDa
 	const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
 
 	const [updateTicket, { isLoading: isUpdating }] = useUpdateTicketMutation();
+
+	const effectiveCampaignId = String(
+		(typeof ticket?.campaignId === 'object'
+			? (ticket?.campaignId as { _id?: string; id?: string })?._id || (ticket?.campaignId as { _id?: string; id?: string })?.id
+			: ticket?.campaignId) || campaignData?._id || ''
+	);
+
+	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
+		{ campaignId: effectiveCampaignId, limit: 100 },
+		{ skip: !effectiveCampaignId }
+	);
+
+	const rawMembers = (teamMembersData as { teamMembers?: PopulatedMember[]; data?: PopulatedMember[] })?.teamMembers || (teamMembersData as { data?: PopulatedMember[] })?.data || (Array.isArray(teamMembersData) ? teamMembersData : []);
+	const teamMembersList = Array.isArray(rawMembers) ? rawMembers : [];
 
 
 	const getRoleLabel = (role: PopulatedRole | string | undefined): string => {
@@ -142,15 +157,30 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, campaignDa
 						<p className="text-[11px] text-gray-400 italic">No members assigned.</p>
 					) : (
 						ticket?.assignedToIds?.map((assignee) => {
-							if (typeof assignee === 'string') return null;
+							const idStr = typeof assignee === 'string' ? assignee : String(assignee?._id || assignee?.id || '');
+							if (!idStr) return null;
+
+							const matchedMember = typeof assignee === 'string'
+								? teamMembersList.find((m) => String(m._id || m.id || '') === assignee)
+								: undefined;
+
+							const resolvedAssignee: PopulatedMember = typeof assignee === 'object' && assignee !== null
+								? assignee
+								: matchedMember || {
+									_id: idStr,
+									name: 'Team Member',
+									firstName: 'Team',
+									lastName: 'Member'
+								};
+
 							return (
-								<div key={assignee?._id} className="flex items-center justify-between group">
+								<div key={idStr} className="flex items-center justify-between group">
 									<div className="flex items-center gap-3">
 										<div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden shadow-sm relative">
-											{typeof assignee === 'object' && assignee?.avatar ? (
+											{resolvedAssignee?.avatar ? (
 												<Image
-													src={assignee.avatar}
-													alt={getNameLabel(assignee)}
+													src={resolvedAssignee.avatar}
+													alt={getNameLabel(resolvedAssignee)}
 													width={32}
 													height={32}
 													className="w-full h-full object-cover"
@@ -160,17 +190,17 @@ export const TicketSidebar: React.FC<TicketSidebarProps> = ({ ticket, campaignDa
 													className="w-full h-full flex items-center justify-center text-[10px] font-bold text-white uppercase"
 													style={{ backgroundColor: campaignData?.primaryColor || 'var(--primary)' }}
 												>
-													{(assignee?.firstName?.[0] || (typeof assignee?.name === 'string' ? assignee?.name?.[0] : '') || '?')}
+													{(resolvedAssignee?.firstName?.[0] || (typeof resolvedAssignee?.name === 'string' ? resolvedAssignee?.name?.[0] : '') || '?')}
 												</div>
 											)}
 										</div>
 										<span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-											{getNameLabel(assignee)}
+											{getNameLabel(resolvedAssignee)}
 										</span>
 									</div>
 									{ticket?.status !== 'Closed' && (
 										<button
-											onClick={() => handleRemoveMember(assignee)}
+											onClick={() => handleRemoveMember(resolvedAssignee)}
 											className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all"
 										>
 											<X className="w-3 h-3 text-red-500" />

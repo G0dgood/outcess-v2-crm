@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useCampaign } from "@/contexts/CampaignContext";
 import { useCreateSetupBookMutation } from "@/store/services/setupBookApi";
 import UploadAlert from "@/components/ui/UploadAlert";
+import Checkbox from "@/components/ui/Checkbox";
 import { useApiError } from "@/hooks/useApiError";
 
 interface UploadBaseProps {
@@ -90,6 +91,8 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  // Allow rows with duplicate IDs (e.g. one customer with multiple loans sharing a Search ID).
+  const [allowDuplicates, setAllowDuplicates] = useState(false);
 
   const [createSetupBook, { isLoading, isSuccess, isError, error, reset }] = useCreateSetupBookMutation();
 
@@ -252,6 +255,7 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
       formData.append('companyId', companyId);
       formData.append('campaignId', campaignId);
       formData.append('bucketId', bucketId);
+      formData.append('allowDuplicates', String(allowDuplicates));
       formData.append('file', fileToUpload);
 
       await createSetupBook(formData).unwrap();
@@ -267,7 +271,12 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
       if (onUploadComplete) {
         onUploadComplete(jsonData, fileToUpload);
       }
-    } catch (err: unknown) {
+
+      // Reset / close the modal automatically after 1 second
+      setTimeout(() => {
+        handleClose();
+      }, 1000);
+    } catch {
       setProgress(0);
     } finally {
       setIsUploading(false);
@@ -429,6 +438,16 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
                 onChange={handleFileInputChange}
                 style={{ display: "none" }}
               />
+
+              <div className="mt-3">
+                <Checkbox
+                  id="allow-duplicates"
+                  checked={allowDuplicates}
+                  onChange={setAllowDuplicates}
+                  label="Allow same data (upload records with duplicate IDs, e.g. multiple loans per customer)"
+                  size="medium"
+                />
+              </div>
 
               <div
                 className="w-full dark:bg-gray-700 rounded-full h-3 overflow-hidden mt-2"

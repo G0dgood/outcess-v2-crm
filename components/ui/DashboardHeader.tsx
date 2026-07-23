@@ -8,6 +8,7 @@ import Icon from './Icon';
 import Dropdown from './Dropdown';
 import UserDropdown from './UserDropdown';
 import StatusBadge from './StatusBadge';
+import UserRoleBadge from './UserRoleBadge';
 import LogoutConfirmationModal from './LogoutConfirmationModal';
 import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
 import ThemeToggle from './ThemeToggle';
@@ -79,6 +80,17 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	// Get user from Redux store
 	const reduxUser = useSelector((state: { auth: { user: User | null } }) => state.auth.user);
 
+	const roleRaw = reduxUser?.role;
+	const displayRole = (
+		typeof roleRaw === 'object'
+			? (roleRaw as { roleName?: string; name?: string })?.roleName || (roleRaw as { roleName?: string; name?: string })?.name
+			: typeof roleRaw === 'string' && roleRaw.trim()
+				? roleRaw
+				: reduxUser?.isSupervisor
+					? 'Supervisor'
+					: 'Member'
+	) || (reduxUser?.isSupervisor ? 'Supervisor' : 'Member');
+
 	// Determine the effective user to display
 	const displayUser =
 		mounted && reduxUser
@@ -94,6 +106,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				email: reduxUser.email,
 				avatar: reduxUser.avatar,
 				companyId: reduxUser.companyId || reduxUser.company?._id,
+				campaignId: reduxUser.campaignId,
 			}
 			: null;
 
@@ -124,6 +137,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 
 	useEffect(() => {
+		if (!isAdmin && !canAccess('dashboard', 'edit') && typeof reduxUser?.campaignId === 'string' && selectedCampaignId !== reduxUser.campaignId) {
+			setSelectedCampaignId(reduxUser.campaignId);
+			return;
+		}
+
 		const data = campaignData as { campaigns?: { _id: string; campaignName: string; status?: string }[] } | undefined;
 		if (data && Array.isArray(data.campaigns)) {
 			const options = data?.campaigns?.map((lob) => ({
@@ -138,7 +156,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				setSelectedCampaignId(options[0].value);
 			}
 		}
-	}, [campaignData, selectedCampaignId, setSelectedCampaignId]);
+	}, [campaignData, selectedCampaignId, setSelectedCampaignId, isAdmin, reduxUser, canAccess]);
 
 	// Socket integration for Campaign updates
 	useEffect(() => {
@@ -389,6 +407,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					{(isAdmin || canAccess('dashboard', 'edit')) && (
 						<Dropdown
 							label=""
+							redirect='setup'
 							value={selectedLOBData?._id || ''}
 							onChange={(value) => {
 								const stringValue = Array.isArray(value) ? value[0] : value;
@@ -435,7 +454,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					)}
 
 					{/* LOB Dropdown - Only for Administrator or users with Dashboard Edit permission */}
-
+					{/* User Role Badge */}
+					{mounted && displayRole && (
+						<UserRoleBadge role={displayRole} className="hidden sm:inline-flex" />
+					)}
 					{/* Dark/Light Mode Toggle */}
 					<ThemeToggle />
 
@@ -474,6 +496,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 						onToggle={handleNotificationToggle}
 						isNavigating={isNavigating.current}
 					/>
+
+
 
 					{/* User Dropdown */}
 					<UserDropdown

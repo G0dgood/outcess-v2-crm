@@ -17,6 +17,7 @@ import Textarea from '@/components/ui/Textarea';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
+import AccessRestricted from '@/components/ui/AccessRestricted';
 import { useGetCampaignByCompanyIdForheaderQuery } from '@/store/services/campaignApi';
 import {
 	useGetEmailConfigsQuery,
@@ -394,7 +395,7 @@ const EmailPage: React.FC = () => {
 	}, [isComposeOpen, viewingEmail, isConfigModalOpen]);
 
 	if (!canAccessModule) {
-		return null;
+		return <AccessRestricted />;
 	}
 
 	return (

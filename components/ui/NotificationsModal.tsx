@@ -3,11 +3,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { PersonIcon, Cross2Icon } from '@radix-ui/react-icons';
-import { useRouter } from 'next/navigation';
-import { Notification } from '@/store/services/notificationApi';
+import { useRouter, usePathname } from 'next/navigation';
+import { Notification, useMarkAllNotificationsAsReadMutation } from '@/store/services/notificationApi';
 import Pagination from './Pagination';
 import Search from './Search';
 import { useCampaign } from '@/contexts/CampaignContext';
+import { toast } from 'sonner';
 
 interface NotificationsModalProps {
 	isOpen: boolean;
@@ -22,9 +23,30 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 	notifications,
 	onMarkAsRead
 }) => {
-	const { campaignData } = useCampaign();
+	const { campaignData, selectedCampaignId } = useCampaign();
 	const router = useRouter();
+	const pathname = usePathname();
 	const primaryColor = campaignData?.primaryColor || '#050711';
+	const [markAllAsRead] = useMarkAllNotificationsAsReadMutation();
+
+	// Close modal on pathname changes
+	const initialPathname = React.useRef(pathname);
+	useEffect(() => {
+		if (pathname !== initialPathname.current) {
+			onClose();
+		}
+	}, [pathname, onClose]);
+
+	const handleReadAll = async () => {
+		try {
+			await markAllAsRead({ campaignId: selectedCampaignId || '' }).unwrap();
+			toast.success('All notifications marked as read');
+		} catch (err) {
+			console.error('Failed to mark all as read:', err);
+			toast.error('Failed to mark notifications as read');
+		}
+	};
+
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
@@ -115,9 +137,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 			onMarkAsRead(notification.id);
 		}
 
-		onClose();
-
-		const data = notification.data as { companyId?: string; userId?: string };
+		const data = notification.data as { companyId?: string; userId?: string; ticketId?: string; teamMemberId?: string };
 		// Handle navigation based on notification type
 		if (notification.type === 'business_registration' && data?.companyId) {
 			router.push(`/superadmin/businesses/${data.companyId}`);
@@ -125,6 +145,10 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 			if (data.companyId) {
 				router.push(`/superadmin/businesses/${data.companyId}`);
 			}
+		} else if (data?.ticketId) {
+			router.push(`/support/${data.ticketId}`);
+		} else if (data?.teamMemberId) {
+			router.push(`/team-members`);
 		}
 	};
 
@@ -167,7 +191,17 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 								{unreadCount > 0 && ` • ${unreadCount} unread`}
 							</p>
 						</div>
-						<button
+						<div className="flex items-center gap-3">
+							{unreadCount > 0 && (
+								<button
+									onClick={handleReadAll}
+									className="px-4 py-1.5 text-[10px] md:text-[11px] font-bold text-white hover:opacity-95 active:scale-95 transition-all rounded-[var(--radius)] cursor-pointer"
+									style={{ backgroundColor: primaryColor }}
+								>
+									Read all
+								</button>
+							)}
+							<button
 							onClick={onClose}
 							className="p-2 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
 							style={{ color: 'var(--text-tertiary)' }}
@@ -184,6 +218,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
 							<Cross2Icon className="w-5 h-5" />
 						</button>
 					</div>
+				</div>
 				</div>
 
 				{/* Search and Filters */}

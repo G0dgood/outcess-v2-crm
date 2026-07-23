@@ -8,14 +8,19 @@ import DispositionHistoryModal from '@/components/ui/DispositionHistoryModal';
 import Modal from '@/components/ui/Modal';
 import NewTicketModal from '@/components/features/support/NewTicketModal';
 import { getPrefillDataFromDisposition } from '@/utils/dispositionPrefill';
-import { Cross2Icon, ChatBubbleIcon, ClipboardIcon, PersonIcon, EnvelopeClosedIcon, HomeIcon, MobileIcon } from '@radix-ui/react-icons';
-import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, DispositionHistoryItem } from '@/utils/offlineDispositions';
+import { Cross2Icon, ChatBubbleIcon, ClipboardIcon, PersonIcon, EnvelopeClosedIcon, HomeIcon, MobileIcon, UpdateIcon } from '@radix-ui/react-icons';
+import { getOfflineDispositions, OfflineDisposition, DispositionFieldEntry, DispositionHistoryItem, OFFLINE_DISPOSITIONS_EVENT } from '@/utils/offlineDispositions';
+import { useSyncDispositions } from '@/hooks/useSyncDispositions';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
+import Pagination from '@/components/ui/Pagination';
+import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useGetDispositionsByCustomerQuery } from '@/store/services/dispositionApi';
 import { useCreateSMSLogMutation } from '@/store/services/smsApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
+import { icons } from 'lucide-react';
+import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
 
 interface CustomerDetailsModalProps {
 	isOpen: boolean;
@@ -46,7 +51,8 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 
 
 
-	const [pageSize] = useState(3);
+	const [pageSize, setPageSize] = useState(5);
+	const [currentPage, setCurrentPage] = useState(1);
 	const [isFillDispositionModalOpen, setIsFillDispositionModalOpen] = useState(false);
 	const [isSMSModalOpen, setIsSMSModalOpen] = useState(false);
 	const [isDispositionHistoryModalOpen, setIsDispositionHistoryModalOpen] = useState(false);
@@ -57,7 +63,9 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 	const [isAnimating, setIsAnimating] = useState(false);
 	const [shouldRender, setShouldRender] = useState(false);
 	const [offlineDispositions, setOfflineDispositions] = useState<OfflineDisposition[]>([]);
-	const { selectedCampaignId } = useCampaign();
+	const { syncOne, isSyncing } = useSyncDispositions();
+	const [syncingId, setSyncingId] = useState<string | null>(null);
+	const { selectedCampaignId, campaignData } = useCampaign();
 	const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
 	const { user } = useUserInfo();
 	const companyId = user?.companyId || user?.company?._id || '';
@@ -77,7 +85,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 		setIsNewTicketModalOpen(true);
 	};
 
-	const { data: apiData, isLoading: isApiLoading } = useGetDispositionsByCustomerQuery(
+	const { data: apiData, isLoading: isApiLoading, refetch: refetchDispositions } = useGetDispositionsByCustomerQuery(
 		{
 			campaignId: selectedCampaignId || '',
 			customerId: customer?.id || '',
@@ -87,14 +95,38 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 		{ skip: !isOpen || !customer?.id || !selectedCampaignId }
 	);
 
-	// Load offline dispositions for this customer
+	// Load offline dispositions for this customer (and refresh when the offline store changes, e.g. after a sync)
 	useEffect(() => {
-		if (isOpen && customer?.id) {
+		if (!isOpen || !customer?.id) return;
+
+		const loadOffline = () => {
 			const allOffline = getOfflineDispositions();
 			const customerOffline = allOffline.filter(d => d.customerId === customer.id);
 			setOfflineDispositions(customerOffline);
-		}
+		};
+
+		loadOffline();
+		window.addEventListener(OFFLINE_DISPOSITIONS_EVENT, loadOffline);
+		return () => window.removeEventListener(OFFLINE_DISPOSITIONS_EVENT, loadOffline);
 	}, [isOpen, customer?.id, isFillDispositionModalOpen]);
+
+	const handleSyncOne = async (id: string) => {
+		setSyncingId(id);
+		try {
+			const result = await syncOne(id);
+			if (result.success > 0) {
+				// Refresh the history table so the synced record replaces the pending row
+				const allOffline = getOfflineDispositions();
+				setOfflineDispositions(customer?.id ? allOffline.filter(d => d.customerId === customer.id) : allOffline);
+				await refetchDispositions();
+				toast.success('Disposition synced');
+			} else if (result.failed > 0) {
+				toast.error('Could not sync disposition. Will retry.');
+			}
+		} finally {
+			setSyncingId(null);
+		}
+	};
 
 	useEffect(() => {
 		if (isOpen) {
@@ -173,15 +205,43 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 		return [...mappedSynced, ...mappedOffline].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 	}, [apiData, offlineDispositions]);
 
+	// Client-side pagination over the combined (API + offline) history
+	const totalItems = combinedDispositions.length;
+	const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+	const paginatedDispositions = React.useMemo(
+		() => combinedDispositions.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+		[combinedDispositions, currentPage, pageSize]
+	);
+
+	// Keep the current page valid when the data size or page size changes
+	useEffect(() => {
+		if (currentPage > totalPages) setCurrentPage(totalPages);
+	}, [currentPage, totalPages]);
+
+	// Reset to the first page when switching customers or reopening the modal
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [customer?.id, isOpen]);
+
+	const configuredDispositions = React.useMemo(() => {
+		return getAllCampaignDispositions(campaignData?.dashboardSettings);
+	}, [campaignData?.dashboardSettings]);
+
 	const dynamicHeaders = React.useMemo(() => {
 		const headers = new Set<string>();
 		combinedDispositions.forEach(item => {
 			item.dispositionData?.forEach((field: DispositionFieldEntry) => {
-				if (field.fieldName) headers.add(field.fieldName);
+				if (field.fieldName && field.fieldValue !== undefined && field.fieldValue !== null) {
+					const dispDef = configuredDispositions.find(d => d.name === field.fieldName);
+					const levels = resolveMultiDropdownLevels(field.fieldName, String(field.fieldValue), dispDef);
+					levels.forEach(lvl => {
+						headers.add(lvl.header);
+					});
+				}
 			});
 		});
 		return Array.from(headers);
-	}, [combinedDispositions]);
+	}, [combinedDispositions, configuredDispositions]);
 
 	const handleViewDetails = (dispositionId: string) => {
 		const disposition = combinedDispositions.find(item => item.id === dispositionId);
@@ -337,6 +397,15 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 										{Object.entries(customer)
 											.filter(([key]) => !['id', '_id', 'companyId', 'campaignId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid' && key.toLowerCase() !== 'bucketid')
 											.map(([key, value]) => {
+												const customFieldConfig = (campaignData?.customerBookSettings?.configuredFields || [])
+													.flatMap(c => c?.fields || [])
+													.find(f => f && f.name === key);
+
+												let CustomIcon = null;
+												if (customFieldConfig?.icon) {
+													CustomIcon = (icons as Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>>)[customFieldConfig.icon];
+												}
+
 												let IconComponent = PersonIcon;
 												const lowerKey = key.toLowerCase();
 												if (lowerKey.includes('phone')) IconComponent = MobileIcon;
@@ -350,7 +419,11 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 														className="flex items-start gap-4 pb-5 border-b dark:border-gray-700"
 														style={{ borderColor: 'var(--light-gray)' }}
 													>
-														<IconComponent className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+														{CustomIcon ? (
+															<CustomIcon className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+														) : (
+															<IconComponent className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+														)}
 														<div className="flex-1">
 															<label
 																className="block text-[8px] md:text-[10px] font-medium dark:text-gray-400 uppercase tracking-wider mb-2"
@@ -401,6 +474,18 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 									</Button>
 								)}
 							</div>
+
+							{totalItems > 0 && (
+								<TablePaginationHeader
+									totalItems={totalItems}
+									itemsPerPage={pageSize}
+									onItemsPerPageChange={(value) => {
+										setPageSize(value);
+										setCurrentPage(1);
+									}}
+									label="Dispositions"
+								/>
+							)}
 
 							<div className="overflow-x-auto">
 								<table
@@ -467,7 +552,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 											<SVGLoaderFetch colSpan={5 + dynamicHeaders.length} text={''} />
 										) : combinedDispositions.length === 0 ? (
 											<NoRecordFound colSpan={5 + dynamicHeaders.length} />
-										) : combinedDispositions?.slice(0, pageSize).map((item) => (
+										) : paginatedDispositions.map((item) => (
 											<tr
 												key={item.id}
 												className="dark:hover:bg-gray-700 transition-colors"
@@ -482,7 +567,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 												<td className="px-6 py-4 whitespace-nowrap">
 													{item.isOffline ? (
 														<span
-															className="inline-flex items-center px-2 py-1 text-[8px] md:text-[10px] font-medium "
+															className="inline-flex items-center px-2 py-1 text-[8px] md:text-[10px] font-medium rounded-full"
 															style={{
 																backgroundColor: item.offlineStatus === 'pending' ? '#FEF3C7' :
 																	item.offlineStatus === 'synced' ? '#D1FAE5' : '#FEE2E2',
@@ -496,7 +581,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 														</span>
 													) : (
 														<span
-															className="inline-flex items-center px-2 py-1 text-[8px] md:text-[10px] font-medium "
+															className="inline-flex items-center px-2 py-1 text-[8px] md:text-[10px] font-medium rounded-full"
 															style={{
 																backgroundColor: '#E0E7FF',
 																color: '#3730A3'
@@ -525,23 +610,49 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 													{item.agent}
 												</td>
 												{dynamicHeaders?.map((header) => {
-													const field = item.dispositionData?.find((f: DispositionFieldEntry) => f.fieldName === header);
+													let cellVal = '-';
+													item.dispositionData?.forEach((f: DispositionFieldEntry) => {
+														if (!f.fieldName || f.fieldValue === undefined || f.fieldValue === null) return;
+														const dispDef = configuredDispositions.find(d => d.name === f.fieldName);
+														const levels = resolveMultiDropdownLevels(f.fieldName, String(f.fieldValue), dispDef);
+														const matchingLevel = levels.find(l => l.header === header);
+														if (matchingLevel) {
+															cellVal = matchingLevel.value;
+														}
+													});
+
 													const isComment = header.toLowerCase().includes('comment');
-													const value = field ? String(field.fieldValue || '-') : '-';
-													const displayValue = isComment && value.length > 20 ? `${value.substring(0, 20)}...` : value;
+													const displayValue = isComment && cellVal.length > 20 ? `${cellVal.substring(0, 20)}...` : cellVal;
 
 													return (
 														<td
 															key={header}
-															className={`px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100 ${isComment && value.length > 20 ? 'cursor-pointer hover:underline text-orange-500' : ''}`}
-															style={{ color: isComment && value.length > 20 ? '#F97316' : 'var(--text-primary)' }}
-															onClick={() => isComment && value.length > 20 ? handleCommentClick(value) : undefined}
+															className={`px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100 ${isComment && cellVal.length > 20 ? 'cursor-pointer hover:underline text-orange-500' : ''}`}
+															style={{ color: isComment && cellVal.length > 20 ? '#F97316' : 'var(--text-primary)' }}
+															onClick={() => isComment && cellVal.length > 20 ? handleCommentClick(cellVal) : undefined}
 														>
 															{displayValue}
 														</td>
 													);
 												})}
 												<td className="px-6 py-4 whitespace-nowrap flex items-center gap-3">
+													{item.isOffline && item.offlineStatus === 'pending' && (
+														<>
+															<Button
+																variant="link"
+																size="sm"
+																onClick={() => handleSyncOne(item.id)}
+																disabled={isSyncing || syncingId === item.id}
+																className="flex items-center gap-1 hover:underline transition-colors font-medium p-0 h-auto"
+																style={{ color: '#F97316' }}
+																title="Sync this disposition now"
+															>
+																<UpdateIcon className={`w-3 h-3 ${syncingId === item.id ? 'animate-spin' : ''}`} />
+																{syncingId === item.id ? 'Syncing…' : 'Sync'}
+															</Button>
+															<span style={{ color: 'var(--text-tertiary)' }}>|</span>
+														</>
+													)}
 													<Button
 														variant="link"
 														size="sm"
@@ -581,6 +692,16 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 									</tbody>
 								</table>
 							</div>
+
+							{totalItems > 0 && totalPages > 1 && (
+								<div className="p-4 border-t dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
+									<Pagination
+										currentPage={currentPage}
+										totalPages={totalPages}
+										onPageChange={setCurrentPage}
+									/>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>

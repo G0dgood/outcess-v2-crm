@@ -69,7 +69,6 @@ const settingsSubItems = [
  { id: 'permission-tab', label: 'Permission', icon: 'chart', path: '/settings?tab=permission' },
  { id: 'company-details-tab', label: 'Company Details', icon: 'settings', path: '/settings?tab=company-details', restrictedToAdmin: true },
  { id: 'roles-tab', label: 'Roles', icon: 'book', path: '/settings?tab=roles' },
- { id: 'supervisors-tab', label: 'Supervisors', icon: 'users', path: '/settings?tab=supervisors' },
  { id: 'audit-logs-tab', label: 'Audit Logs', icon: 'clock', path: '/settings?tab=audit-logs' },
 ];
 
@@ -87,12 +86,12 @@ const integrationSubItems = [
 const navItems: NavItem[] = [
  { id: 'dashboard', label: 'Dashboard', icon: 'grid', path: '/dashboard' },
  { id: 'customer-book', label: 'Customer Book', icon: 'book', path: '/customer-book' },
+ { id: 'setup-book', label: 'Setup Book', icon: 'settings-book', path: '/setup-book' },
+ { id: 'leaderboard', label: 'Leaderboard', icon: 'star', path: '/leaderboard' },
+ { id: 'report', label: 'Report', icon: 'chart', path: '/report' },
  { id: 'users', label: 'Users', icon: 'users', path: '/users' },
  { id: 'team-members', label: 'Team Members', icon: 'group', path: '/team-members' },
  { id: 'integration', label: 'Integration', icon: 'integration', path: '/sms' },
- { id: 'setup-book', label: 'Setup Book', icon: 'settings-book', path: '/setup-book' },
- { id: 'report', label: 'Report', icon: 'chart', path: '/report' },
- { id: 'leaderboard', label: 'Leaderboard', icon: 'star', path: '/leaderboard' },
  { id: 'buckets', label: 'Buckets', icon: 'grid', path: '/buckets' },
  { id: 'configuration', label: 'Campaigns', icon: 'configuration', path: '/configuration' },
  { id: 'support', label: 'Support', icon: 'support', path: '/support' },
@@ -102,12 +101,12 @@ const navItems: NavItem[] = [
 const moduleMapping: Record<string, ModuleId> = {
  'dashboard': 'dashboard',
  'customer-book': 'customerBook',
+ 'setup-book': 'setupBook',
+ 'leaderboard': 'leaderboard',
+ 'report': 'report',
  'users': 'userManagement',
  'team-members': 'teamMembers',
  'integration': 'customerSMS',
- 'setup-book': 'setupBook',
- 'report': 'report',
- 'leaderboard': 'leaderboard',
  'buckets': 'buckets',
  'configuration': 'campaignPlan',
  'support': 'support',
@@ -120,7 +119,6 @@ const subModuleMapping: Record<string, ModuleId> = {
  'permission-tab': 'permission',
  'company-details-tab': 'systemSetting',
  'roles-tab': 'roles',
- 'supervisors-tab': 'userManagement',
  'audit-logs-tab': 'auditLog',
  'support-mine': 'support',
  'support-team': 'teamMemberSupport',
@@ -145,7 +143,12 @@ const DashboardSideNav: React.FC<DashboardSideNavProps> = ({
  const { isDarkMode } = useTheme();
 
  const headerLogo = campaignData?.logo;
- const headerName = campaignData?.companyName || 'Outcess';
+
+
+
+
+ const rawCampaignName = campaignData?.name || campaignData?.campaignName || 'Outcess';
+ const headerName = rawCampaignName.length > 15 ? rawCampaignName.slice(0, 15) + '...' : rawCampaignName;
 
 
  const navRef = useRef<HTMLElement>(null);

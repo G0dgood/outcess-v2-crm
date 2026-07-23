@@ -9,6 +9,7 @@ import { ChatBubbleIcon, PlusIcon } from '@radix-ui/react-icons';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
+import AccessRestricted from '@/components/ui/AccessRestricted';
 import { useGetCampaignByCompanyIdForheaderQuery } from '@/store/services/campaignApi';
 import SMSMessageModal from '@/components/features/sms/SMSMessageModal';
 import SMSTable from '@/components/features/sms/SMSTable';
@@ -27,7 +28,6 @@ import {
 	SMSLog as SMSLogType,
 	SMSCampaign,
 } from '@/store/services/smsApi';
-import { toastSuccess } from '@/utils/toastWithSound';
 import { toast } from 'sonner';
 
 const SMSPage: React.FC = () => {
@@ -236,7 +236,7 @@ const SMSPage: React.FC = () => {
 	};
 
 	if (!canAccessModule) {
-		return null;
+		return <AccessRestricted />;
 	}
 
 	return (

@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
+import { Button } from './Button';
 
 interface DropdownOption {
 	value: string;
@@ -22,12 +24,15 @@ interface DropdownProps {
 	rightElement?: React.ReactNode;
 	renderOptionRight?: (option: DropdownOption) => React.ReactNode;
 	direction?: 'up' | 'down';
+	redirect?: string;
+	onActionClick?: (open: boolean) => void;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
 	label,
 	placeholder = "Select option",
 	options,
+	redirect,
 	value,
 	onChange,
 	required = false,
@@ -39,11 +44,13 @@ export const Dropdown: React.FC<DropdownProps> = ({
 	rightElement,
 	renderOptionRight,
 	direction = 'down',
+	onActionClick,
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [mounted, setMounted] = useState(false);
 	const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, bottom: 0 });
 	const dropdownRef = useRef<HTMLDivElement>(null);
+	const router = useRouter();
 
 	useEffect(() => {
 		setMounted(true);
@@ -158,6 +165,15 @@ export const Dropdown: React.FC<DropdownProps> = ({
 		};
 	}, [isOpen]);
 
+	const handleOptionClick = () => {
+		if (redirect) {
+			router.push(`/${redirect}`);
+		}
+		if (onActionClick) {
+			onActionClick(true);
+			setIsOpen(false);
+		}
+	};
 	return (
 		<div className={`dropdown-container ${className}`} ref={dropdownRef}>
 			<label className="dropdown-label">
@@ -232,7 +248,13 @@ export const Dropdown: React.FC<DropdownProps> = ({
 									</div>
 									<div className="dropdown-empty-text">
 										<p className="dropdown-empty-title">No options available</p>
-										<p className="dropdown-empty-description">Add options to see them here</p>
+										<div>
+											{redirect && (
+												<Button variant="primary" size="sm" onClick={handleOptionClick}>
+													click to add a new option
+												</Button>
+											)}
+										</div>
 									</div>
 								</div>
 							) : (

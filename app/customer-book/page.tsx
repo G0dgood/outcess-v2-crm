@@ -35,7 +35,7 @@ const CustomerBookPage: React.FC = () => {
 	// const [currentPage, setCurrentPage] = useState(1);
 	const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
 	const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-	const { canAccess, isAdmin, isSuperAdmin } = usePrivilege();
+	const { canAccess, isAdmin, isSuperAdmin, allBucketAccess } = usePrivilege();
 	const { user } = useAuth();
 	const canAccessModule = canAccess('customerBook');
 	const canView = canAccess('customerBook', 'view');
@@ -50,7 +50,7 @@ const CustomerBookPage: React.FC = () => {
 	}, [campaignData]);
 
 	const userId = String(user?.id || user?._id || '');
-	const hasFullBucketAccess = isAdmin || isSuperAdmin;
+	const hasFullBucketAccess = isAdmin || isSuperAdmin || allBucketAccess;
 
 	const accessibleBuckets = useMemo(
 		() => (hasFullBucketAccess ? buckets : getUserAssignedBuckets(userId, buckets)),
@@ -91,7 +91,8 @@ const CustomerBookPage: React.FC = () => {
 			id: field.id,
 			name: field.name,
 			type: mapFieldType(field.type),
-			required: field.required
+			required: field.required,
+			showTotal: field.showTotal === true,
 		}));
 	}, [configuredFields, accessibleBuckets, hasFullBucketAccess]);
 
@@ -115,14 +116,19 @@ const CustomerBookPage: React.FC = () => {
 				const headers = Object.keys(firstItem).filter(key => !['_id', 'id', '__v', 'companyId', 'campaignId'].includes(key) && key.toLowerCase() !== 'searchid' && key.toLowerCase() !== 'bucketid');
 				setTableHeaders(headers);
 
-				const mappedCustomers: Customer[] = data?.map((item) => {
+				const mappedCustomers: Customer[] = data?.map((item, index) => {
 					const record = item as Record<string, unknown>;
+					// Prefer the unique _id (set `id` AFTER the spread so a shared CSV `id`
+					// column can't override it), and keep a guaranteed-unique row key so
+					// duplicate records (e.g. multiple loans) each render as their own row.
 					return {
-						id: (record?.id as string) || (record?._id as string),
-						...(record as Record<string, string | number | boolean | null | undefined>)
+						...(record as Record<string, string | number | boolean | null | undefined>),
+						id: (record?._id as string) || (record?.id as string) || `row-${index}`,
+						_rowKey: `${(record?._id as string) || (record?.id as string) || 'row'}-${index}`,
 					};
 				});
 				setCustomers(mappedCustomers);
+				setSearchTerm('');
 			} else {
 				setCustomers([]);
 			}
@@ -142,6 +148,32 @@ const CustomerBookPage: React.FC = () => {
 	};
 
 	const filteredCustomers = customers;
+
+	// Headers whose column should be summed and totalled (₦) at the bottom.
+	const totalHeaders = useMemo(() => {
+		const names = new Set(
+			fieldDefinitions
+				.filter((f) => f.showTotal)
+				.map((f) => f.name?.toLowerCase())
+		);
+		return new Set(tableHeaders.filter((h) => names.has(h.toLowerCase())));
+	}, [fieldDefinitions, tableHeaders]);
+
+	// Column sums for the totalled headers across the currently shown rows.
+	const columnTotals = useMemo(() => {
+		const totals: Record<string, number> = {};
+		totalHeaders.forEach((header) => {
+			totals[header] = customers.reduce((sum, c) => {
+				const raw = String(c[header] ?? '').replace(/[^0-9.-]/g, '');
+				const num = parseFloat(raw);
+				return sum + (isNaN(num) ? 0 : num);
+			}, 0);
+		});
+		return totals;
+	}, [totalHeaders, customers]);
+
+	const formatNaira = (value: number) =>
+		`₦${value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 	const handleAddCustomer = () => {
 		setIsAddCustomerModalOpen(true);
@@ -186,17 +218,18 @@ const CustomerBookPage: React.FC = () => {
 								buttonColor={campaignData?.primaryColor}
 							/>
 						)}
-						<div className="flex   items-center justify-end sm:justify-start gap-2 sm:gap-3 whitespace-nowrap">
-							<Button
-								variant="muted-sage-green-outline"
-								size="md"
-								onClick={handleAddCustomer}
-								className="px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
-								disabled={!canCreate}
-							>
-								Add Customer
-							</Button>
-						</div>
+						{canCreate && (
+							<div className="flex   items-center justify-end sm:justify-start gap-2 sm:gap-3 whitespace-nowrap">
+								<Button
+									variant="muted-sage-green-outline"
+									size="md"
+									onClick={handleAddCustomer}
+									className="px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+								>
+									Add Customer
+								</Button>
+							</div>
+						)}
 					</div>
 					<div
 						className="dark:bg-gray-800 border dark:border-gray-700 overflow-hidden rounded-[var(--radius)]"
@@ -212,6 +245,11 @@ const CustomerBookPage: React.FC = () => {
 							>
 								<thead>
 									<tr>
+										<th
+											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider"
+										>
+											Actions
+										</th>
 										{tableHeaders.map((header) => (
 											<th
 												key={header}
@@ -220,11 +258,6 @@ const CustomerBookPage: React.FC = () => {
 												{header}
 											</th>
 										))}
-										<th
-											className="px-6 py-3 text-left text-[8px] md:text-[10px] font-medium uppercase tracking-wider"
-										>
-											Actions
-										</th>
 									</tr>
 								</thead>
 								<tbody
@@ -237,11 +270,23 @@ const CustomerBookPage: React.FC = () => {
 										<SVGLoaderFetch colSpan={tableHeaders.length + 1} text="Searching customer..." />
 									) : filteredCustomers?.length === 0 ? (
 										<NoRecordFound colSpan={tableHeaders.length + 1} />
-									) : filteredCustomers?.map((customer) => (
+									) : filteredCustomers?.map((customer, index) => (
 										<tr
-											key={customer.id}
+											key={(customer._rowKey as string) || `${customer.id}-${index}`}
 											style={{ borderColor: 'var(--light-gray)' }}
 										>
+											<td className="px-6 py-4 whitespace-nowrap">
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() => canView ? handleViewCustomer(customer) : undefined}
+													className="transition-all !rounded-full w-8 h-8 !p-0 flex items-center justify-center border border-transparent hover:border-[#6C8B7D] hover:bg-[#6C8B7D]/10 dark:hover:bg-[#6C8B7D]/20"
+													style={{ color: campaignData?.primaryColor || '#6C8B7D' }}
+													disabled={!canView}
+												>
+													<ArrowRightIcon className="w-4 h-4" />
+												</Button>
+											</td>
 											{tableHeaders?.map((header) => (
 												<td
 													key={`${customer.id}-${header}`}
@@ -251,21 +296,31 @@ const CustomerBookPage: React.FC = () => {
 													{customer[header]}
 												</td>
 											))}
-											<td className="px-6 py-4 whitespace-nowrap">
-												<Button
-													variant="ghost"
-													size="sm"
-													onClick={() => canView ? handleViewCustomer(customer) : undefined}
-													className="dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
-													style={{ color: 'var(--text-secondary)' }}
-													disabled={!canView}
-												>
-													<ArrowRightIcon className="w-5 h-5" />
-												</Button>
-											</td>
+
 										</tr>
 									))}
 								</tbody>
+								{totalHeaders.size > 0 && customers.length > 0 && (
+									<tfoot>
+										<tr
+											className="font-semibold border-t-2"
+											style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--light-gray)' }}
+										>
+											<td className="px-6 py-4 whitespace-nowrap text-[13px] md:text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+												Total
+											</td>
+											{tableHeaders?.map((header) => (
+												<td
+													key={`total-${header}`}
+													className="px-6 py-4 whitespace-nowrap text-[13px] md:text-[15px] font-semibold"
+													style={{ color: 'var(--text-primary)' }}
+												>
+													{totalHeaders.has(header) ? formatNaira(columnTotals[header] || 0) : ''}
+												</td>
+											))}
+										</tr>
+									</tfoot>
+								)}
 							</table>
 						</div>
 					</div>

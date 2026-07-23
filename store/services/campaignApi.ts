@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import type { Bucket, DashboardSettings } from "@/types/dashboard";
+import type { Bucket, DashboardSettings, CustomerField } from "@/types/dashboard";
 
 export interface Campaign {
   _id: string;
@@ -25,13 +25,7 @@ export interface Campaign {
   customerBookSettings?: {
     configuredFields: {
       bucketId: string;
-      fields: {
-        id: string;
-        name: string;
-        type: string;
-        required: boolean;
-        options?: string[];
-      }[];
+      fields: CustomerField[];
     }[];
   };
   shiftHours?: unknown;
@@ -214,6 +208,16 @@ export const campaignApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Campaign"],
     }),
+    deleteBucketFromCampaign: builder.mutation<
+      unknown,
+      { id: string; bucketId: string }
+    >({
+      query: ({ id, bucketId }) => ({
+        url: `api/v1/campaign/${id}/buckets/${bucketId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Campaign"],
+    }),
   }),
 });
 
@@ -230,4 +234,5 @@ export const {
   useAssignMemberToBucketMutation,
   useRemoveMemberFromBucketMutation,
   useUpdateBucketCustomerFieldsMutation,
+  useDeleteBucketFromCampaignMutation,
 } = campaignApi;

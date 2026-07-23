@@ -12,13 +12,15 @@ import SingleCheckbox from './SingleCheckbox';
 import MultipleCheckbox from './MultipleCheckbox';
 import { Cross2Icon, CalendarIcon, ClockIcon, PersonIcon, MobileIcon, EnvelopeClosedIcon, HomeIcon, FileTextIcon } from '@radix-ui/react-icons';
 import EmptyState from './EmptyState';
+import Autosuggestions from '@/components/ Autosuggestions';
 import { useSocket } from '@/contexts/SocketContext';
 import { saveOfflineDisposition, saveSyncedDisposition, DispositionFieldEntry } from '@/utils/offlineDispositions';
 import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useCreateDispositionMutation } from '@/store/services/dispositionApi';
-import { DispositionCategory, Bucket } from '@/types/dashboard';
+import { icons } from 'lucide-react';
+import { DispositionCategory, Bucket, NestedOption } from '@/types/dashboard';
 
 interface FillDispositionModalProps {
 	isOpen: boolean;
@@ -71,8 +73,10 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 		// 1. If direct dispositions exist, use them
 		if (settings.dispositions && settings.dispositions.length > 0) {
-			return settings.dispositions as DispositionCategory[];
+			return (settings.dispositions as DispositionCategory[]).filter(d => !d.isArchived);
 		}
+
+		console.log('campaignData?.dashboardSettings', campaignData?.dashboardSettings)
 
 		// 2. If buckets exist, check if this agent is assigned to a specific bucket
 		const buckets = (settings.buckets || []) as Bucket[];
@@ -88,7 +92,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 			);
 
 			if (assignedBucket && assignedBucket.dispositions && assignedBucket.dispositions.length > 0) {
-				return assignedBucket.dispositions as DispositionCategory[];
+				return (assignedBucket.dispositions as DispositionCategory[]).filter(d => !d.isArchived);
 			}
 
 			// 3. Fallback: gather all unique dispositions across all buckets
@@ -105,12 +109,42 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 				}
 			});
 			if (allDispositions.length > 0) {
-				return allDispositions;
+				return allDispositions.filter(d => !d.isArchived);
 			}
 		}
 
 		return [];
 	}, [campaignData, currentAgentId]);
+
+	// A field's value counts as "answered" for revealing its sub-fields.
+	const valuePresent = (val: string | undefined) =>
+		val !== undefined && String(val).trim() !== '' && val !== 'false';
+
+	// Which of a choice field's options are currently selected (handles single value,
+	// comma / pipe separated multi-selects, and cascading "A > B" paths).
+	const getSelectedOptions = (field: DispositionCategory, val: string | undefined): string[] => {
+		if (!field.optionSubFields || val === undefined) return [];
+		const parts = String(val).split(/\s*(?:,|>|\|)\s*/).map(s => s.trim()).filter(Boolean);
+		return Object.keys(field.optionSubFields).filter(opt => val === opt || parts.includes(opt));
+	};
+
+	// Recursively collect every field that should currently be visible, in order.
+	const flattenVisibleFields = (fields: DispositionCategory[]): DispositionCategory[] => {
+		const out: DispositionCategory[] = [];
+		for (const f of fields) {
+			out.push(f);
+			const val = formData[toCamelCase(f.name)];
+			if (!valuePresent(val)) continue;
+			if (f.subFields?.length) out.push(...flattenVisibleFields(f.subFields));
+			if (f.optionSubFields) {
+				getSelectedOptions(f, val).forEach(opt => {
+					const subs = f.optionSubFields?.[opt];
+					if (subs?.length) out.push(...flattenVisibleFields(subs));
+				});
+			}
+		}
+		return out;
+	};
 
 	// Reset or update form when modal opens/closes
 	useEffect(() => {
@@ -173,9 +207,12 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 	};
 
 	const handleSaveAndPost = async () => {
+		// Only currently-visible fields (parents answered / options selected) are validated & saved.
+		const visibleFields = flattenVisibleFields(dispositions);
+
 		// Basic validation
 		const missingFields: string[] = [];
-		dispositions.forEach((d) => {
+		visibleFields.forEach((d) => {
 			if (d.isRequired) {
 				const key = toCamelCase(d.name);
 				if (d.fieldType === 'date-time') {
@@ -195,8 +232,8 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 			return;
 		}
 
-		// Transform formData to array structure
-		const dispositionData: DispositionFieldEntry[] = dispositions.map(d => {
+		// Transform formData to array structure (visible fields only)
+		const dispositionData: DispositionFieldEntry[] = visibleFields.map(d => {
 			const key = toCamelCase(d.name);
 			let value: string | number | boolean | undefined;
 
@@ -299,12 +336,90 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 		}
 	};
 
+	const renderCascadingDropdowns = (field: DispositionCategory) => {
+		const key = toCamelCase(field.name);
+		const currentVal = formData[key] || '';
+		const selectedPath = currentVal ? currentVal.split(' > ') : [];
+
+		const dropdownsToRender: React.ReactNode[] = [];
+		let currentLevelOptions: NestedOption[] = field.nestedOptions || [];
+		let level = 0;
+		let currentSubLabel = '';
+
+		while (true) {
+			const currentLevelVal = selectedPath[level] || '';
+			const options = currentLevelOptions.map(opt => ({ value: opt.value, label: opt.value }));
+			const currentLevel = level;
+
+			dropdownsToRender.push(
+				<Dropdown
+					key={`${field.id}-level-${level}`}
+					label={level === 0 ? field.name : (currentSubLabel || `Sub-option for "${selectedPath[level - 1]}"`)}
+					placeholder="Select option"
+					options={options}
+					value={currentLevelVal}
+					onChange={(val) => {
+						const stringVal = Array.isArray(val) ? val[0] : val;
+						const newPath = [...selectedPath.slice(0, currentLevel), stringVal].filter(Boolean);
+
+						// Cascade down if the first-level option has autoSelect enabled
+						const activeOpt = currentLevelOptions.find(opt => opt.value === stringVal);
+						if (currentLevel === 0 && activeOpt && activeOpt.autoSelect) {
+							let currentOpt = activeOpt;
+							while (currentOpt.subOptions && currentOpt.subOptions.length > 0) {
+								const firstChild = currentOpt.subOptions[0];
+								newPath.push(firstChild.value);
+								currentOpt = firstChild;
+							}
+						}
+
+						handleInputChange(key)(newPath.join(' > '));
+					}}
+				/>
+			);
+
+			const selectedOpt = currentLevelOptions.find(opt => opt.value === currentLevelVal);
+			if (selectedOpt && selectedOpt.subOptions && selectedOpt.subOptions.length > 0) {
+				currentSubLabel = selectedOpt.subLabel || '';
+				currentLevelOptions = selectedOpt.subOptions;
+				level++;
+			} else {
+				break;
+			}
+		}
+
+		return (
+			<div key={field.id} className="col-span-1 md:col-span-2 border border-dashed border-gray-200 dark:border-gray-700 p-4 rounded-lg bg-gray-50/50 dark:bg-gray-900/10 space-y-4">
+				{dropdownsToRender}
+			</div>
+		);
+	};
+
 	if (!isOpen) return null;
 
 	const renderField = (field: DispositionCategory) => {
 		const key = toCamelCase(field.name);
 
 		switch (field.fieldType) {
+			case 'autosuggest':
+				return (
+					<div key={field.id} className="col-span-1 md:col-span-2">
+						<label
+							className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-1"
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							{field.name}
+							{field.isRequired && <span className="text-red-500 ml-1">*</span>}
+						</label>
+						<Autosuggestions
+							suggestions={field.dropdownOptions || []}
+							value={String(formData[key] || '')}
+							onChange={handleInputChange(key)}
+							required={field.isRequired}
+						/>
+					</div>
+				);
+
 			case 'dropdown':
 				return (
 					<Dropdown
@@ -316,6 +431,9 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 						onChange={(value) => handleInputChange(key)(Array.isArray(value) ? value.join(',') : value)}
 					/>
 				);
+
+			case 'multi-dropdown':
+				return renderCascadingDropdowns(field);
 
 			case 'radio-select':
 			case 'radio-group':
@@ -473,26 +591,27 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 			case 'date-time':
 				return (
-					<div key={field.id}>
+					<div key={field.id} className="col-span-1 md:col-span-2">
 						<label
 							className="block text-[10px] md:text-[12px] font-medium dark:text-gray-300 mb-2"
 							style={{ color: 'var(--text-secondary)' }}
 						>
 							{field.name}
+							{field.isRequired && <span className="text-red-500 ml-1">*</span>}
 						</label>
 						<div className="grid grid-cols-2 gap-3">
-							<div className="input-container relative">
-								<input
-									type="date"
+							<div className="relative">
+								<DateInput
+									label=""
 									placeholder="DD/MM/YY"
 									value={String(formData[`${key}_date`] || '')}
-									onChange={(e) => handleInputChange(`${key}_date`)(e.target.value)}
-									className="input-field pr-10"
+									onChange={(val) => handleInputChange(`${key}_date`)(val)}
+									inputClassName="pr-10"
 								/>
 								<button
 									type="button"
 									onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-										const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+										const input = e.currentTarget.previousElementSibling?.querySelector('input');
 										if (input) {
 											try {
 												(input as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
@@ -502,24 +621,25 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 											}
 										}
 									}}
-									className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
+									className="absolute right-3 top-[10px] cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									<CalendarIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
 								</button>
 							</div>
-							<div className="input-container relative">
-								<input
-									type="time"
+							<div className="relative">
+								<Input
+									label=""
 									placeholder="HH:MM"
+									type="time"
 									value={String(formData[`${key}_time`] || '')}
-									onChange={(e) => handleInputChange(`${key}_time`)(e.target.value)}
-									className="input-field pr-10"
+									onChange={handleInputChange(`${key}_time`)}
+									inputClassName="pr-10"
 								/>
 								<button
 									type="button"
 									onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-										const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+										const input = e.currentTarget.previousElementSibling?.querySelector('input');
 										if (input) {
 											try {
 												(input as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
@@ -529,7 +649,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 											}
 										}
 									}}
-									className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
+									className="absolute right-3 top-[10px] cursor-pointer dark:hover:text-gray-300 transition-colors z-10 p-0 h-auto"
 									style={{ color: 'var(--text-tertiary)' }}
 								>
 									<ClockIcon className="w-4 h-4 dark:text-gray-500" style={{ color: 'var(--text-tertiary)' }} />
@@ -553,6 +673,23 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					/>
 				);
 		}
+	};
+
+	// Render a field, then recursively render its sub-fields once it is answered,
+	// and any option-tied sub-fields for the option(s) currently selected.
+	const renderFieldTree = (field: DispositionCategory): React.ReactNode => {
+		const val = formData[toCamelCase(field.name)];
+		const answered = valuePresent(val);
+		return (
+			<React.Fragment key={field.id}>
+				{renderField(field)}
+				{answered && field.subFields?.map((sf) => renderFieldTree(sf))}
+				{answered && field.optionSubFields &&
+					getSelectedOptions(field, val).flatMap((opt) =>
+						(field.optionSubFields?.[opt] || []).map((sf) => renderFieldTree(sf))
+					)}
+			</React.Fragment>
+		);
 	};
 
 	return (
@@ -638,6 +775,15 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 								{Object.entries(customer)
 									.filter(([key]) => !['id', '_id', 'companyId', 'campaignId', 'createdAt', 'updatedAt', '__v'].includes(key) && key.toLowerCase() !== 'searchid')
 									.map(([key, value]) => {
+										const customFieldConfig = (campaignData?.customerBookSettings?.configuredFields || [])
+											.flatMap(c => c?.fields || [])
+											.find(f => f && f.name === key);
+
+										let CustomIcon = null;
+										if (customFieldConfig?.icon) {
+											CustomIcon = (icons as Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>>)[customFieldConfig.icon];
+										}
+
 										let IconComponent = PersonIcon;
 										const lowerKey = key.toLowerCase();
 										if (lowerKey.includes('phone')) IconComponent = MobileIcon;
@@ -647,7 +793,11 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 
 										return (
 											<div key={key} className="flex items-start gap-4">
-												<IconComponent className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+												{CustomIcon ? (
+													<CustomIcon className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+												) : (
+													<IconComponent className="w-5 h-5 dark:text-gray-500 mt-0.5 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+												)}
 												<div>
 													<label
 														className="block text-[8px] md:text-[10px] font-medium dark:text-gray-400 uppercase tracking-wider mb-1"
@@ -670,7 +820,7 @@ export const FillDispositionModal: React.FC<FillDispositionModalProps> = ({
 					)}
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 						{dispositions?.length > 0 ? (
-							dispositions?.map((field) => renderField(field))
+							dispositions?.map((field) => renderFieldTree(field))
 						) : (
 							<div className="col-span-2">
 								<EmptyState

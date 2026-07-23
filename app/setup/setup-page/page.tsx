@@ -14,7 +14,7 @@ export default function SetupPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [logoFile, setLogoFile] = useState<File | null>(setupData.logoFile || null);
 
-	// console.log('setupData---->', setupData)
+
 
 	useEffect(() => {
 		setCurrentStep(1);

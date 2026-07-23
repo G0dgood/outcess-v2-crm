@@ -16,6 +16,7 @@ interface TeamMember {
 	lastName?: string;
 	name?: string;
 	fullName?: string;
+	isSupervisor?: boolean;
 	role?: string | Role;
 }
 
@@ -149,7 +150,6 @@ export const SupportTicketForm: React.FC<SupportTicketFormProps> = ({
 					placeholder="Select supervisor"
 					multiple={true}
 					options={teamMembers
-						.filter((m) => getRoleName(m.role).toLowerCase().includes('supervisor'))
 						.map((m) => {
 							const roleName = getRoleName(m.role);
 							const fullName = getFullName(m);

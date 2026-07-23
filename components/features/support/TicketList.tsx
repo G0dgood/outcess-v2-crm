@@ -1,6 +1,7 @@
 import { Calendar, Flag, Trash } from 'lucide-react';
 import moment from 'moment';
-import { useDeleteTicketMutation, SupportTicket } from '@/store/services/supportApi';
+import { useDeleteTicketMutation, SupportTicket, PopulatedMember } from '@/store/services/supportApi';
+import { useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
 import { Campaign } from '@/store/services/campaignApi';
 import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +31,14 @@ const TicketList: React.FC<TicketListProps> = ({
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 	const [ticketToDelete, setTicketToDelete] = useState<SupportTicket | null>(null);
 	const [assigningTicket, setAssigningTicket] = useState<SupportTicket | null>(null);
+
+	const campaignId = String(campaignData?._id || campaignData?.id || '');
+	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
+		{ campaignId, limit: 100 },
+		{ skip: !campaignId }
+	);
+	const rawMembers = (teamMembersData as { teamMembers?: PopulatedMember[]; data?: PopulatedMember[] })?.teamMembers || (teamMembersData as { data?: PopulatedMember[] })?.data || (Array.isArray(teamMembersData) ? teamMembersData : []);
+	const teamMembersList = Array.isArray(rawMembers) ? rawMembers : [];
 
 	const handleDeleteClick = (e: React.MouseEvent, ticket: SupportTicket) => {
 		e.stopPropagation();
@@ -119,7 +128,8 @@ const TicketList: React.FC<TicketListProps> = ({
 	}
 
 	return (
-		<div className="flex flex-col border overflow-visible dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm rounded-[var(--radius)] overflow-hidden">
+		<div className="w-full overflow-x-auto scrollbar-thin">
+			<div className="flex flex-col border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm rounded-[var(--radius)] overflow-hidden md:min-w-[950px]">
 			{/* Grid Header */}
 			<div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b dark:border-gray-700">
 				<div className="col-span-4 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
@@ -141,8 +151,20 @@ const TicketList: React.FC<TicketListProps> = ({
 
 			{tickets.map((ticket) => {
 				const colors = getStatusColors(ticket.status);
-				const requester = typeof ticket.creatorId === 'object' ? ticket.creatorId : null;
-				const assignees = (ticket.assignedToIds || []).filter(a => typeof a === 'object');
+				const requester: PopulatedMember | null = typeof ticket.creatorId === 'object' && ticket.creatorId !== null
+					? ticket.creatorId
+					: typeof ticket.creatorId === 'string'
+						? teamMembersList.find((m) => String(m._id || m.id || '') === ticket.creatorId) || ({ _id: ticket.creatorId, name: ticket.creatorName || 'User', firstName: ticket.creatorName || 'User' } as PopulatedMember)
+						: null;
+				const assignees: PopulatedMember[] = (ticket.assignedToIds || [])
+					.map((a) => {
+						if (typeof a === 'string') {
+							const matched = teamMembersList.find((m) => String(m._id || m.id || '') === a);
+							return matched || ({ _id: a, name: 'Agent', firstName: 'Agent', lastName: '' } as PopulatedMember);
+						}
+						return a as PopulatedMember;
+					})
+					.filter(Boolean);
 
 				const handleCardClick = () => {
 					if (!ticket.assignedToIds || ticket.assignedToIds.length === 0) {
@@ -175,6 +197,20 @@ const TicketList: React.FC<TicketListProps> = ({
 								<p className="text-[11px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
 									{ticket?.description || 'No description provided'}
 								</p>
+
+								{/* Participants (compact) — shown on narrow screens where the column is hidden */}
+								<div className="flex md:hidden items-center gap-2 mt-2">
+									<span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+										Participants
+									</span>
+									<ParticipantAvatars
+										requester={requester}
+										assignees={assignees}
+										creatorName={ticket.creatorName}
+										onAssign={() => setAssigningTicket(ticket)}
+										status={ticket.status}
+									/>
+								</div>
 							</div>
 						</div>
 
@@ -242,6 +278,7 @@ const TicketList: React.FC<TicketListProps> = ({
 				ticket={assigningTicket as SupportTicket}
 				campaignData={campaignData}
 			/>
+			</div>
 		</div>
 	);
 };

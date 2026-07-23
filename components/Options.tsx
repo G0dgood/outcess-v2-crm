@@ -1,6 +1,8 @@
+'use client';
 import { FaceIcon } from '@radix-ui/react-icons';
 import { SVGLoader } from './SVGLoader';
-
+import { useRouter } from 'next/navigation';
+import { Button } from './ui/Button';
 
 const timeZoneOptions = [
 	{ value: 'UTC-12', label: 'UTC-12 (Baker Island)' },
@@ -66,7 +68,8 @@ const businessSizeOptions = [
 const plusJakartaStyle = { fontFamily: 'var(--font-plus-jakarta)' };
 
 // NoRecordFound
-const NoRecordFound = ({ colSpan, asTable = true }: { colSpan?: number; asTable?: boolean }) => {
+const NoRecordFound = ({ colSpan, asTable = true, redirect }: { colSpan?: number; asTable?: boolean, redirect?: string }) => {
+	const router = useRouter();
 	const content = (
 		<div className="center-content flex flex-col justify-center items-center h-full">
 			<FaceIcon className="w-16 h-16" color={'var(--text-primary)'} />
@@ -75,6 +78,13 @@ const NoRecordFound = ({ colSpan, asTable = true }: { colSpan?: number; asTable?
 				style={{ color: 'var(--text-primary)' }}>
 				No record found
 			</p>
+			{redirect && (
+				<div className="mt-4">
+					<Button variant="primary" size="sm" onClick={() => router.push(`/${redirect}`)}>
+						Add
+					</Button>
+				</div>
+			)}
 		</div>
 	);
 

@@ -14,6 +14,7 @@ export interface TeamMember {
   companyId?: string;
   supervisorId?: string | null;
   userId?: string;
+  isSupervisor?: boolean;
 }
 
 export interface StatusPayload {
@@ -57,6 +58,20 @@ export interface AssignSupervisorRequest {
   teamMemberIds: string[];
 }
 
+export interface TransferCampaignRequest {
+  teamMemberIds: string[];
+  targetCampaignId: string;
+  roleId: string;
+}
+
+export interface TransferCampaignResponse {
+  message: string;
+  transferredCount: number;
+  skippedCount: number;
+  transferred: string[];
+  skipped: { memberId: string; reason: string }[];
+}
+
 export interface ApiTeamMember {
   isActive: boolean;
   _id?: string;
@@ -83,6 +98,7 @@ export interface ApiTeamMember {
     title?: string;
   };
   shiftHourId?: string;
+  isSupervisor?: boolean;
 }
 
 export interface PaginatedTeamMembersResponse {
@@ -174,13 +190,14 @@ export const teamMembersApi = baseApi.injectEndpoints({
       providesTags: ["TeamMembers"],
     }),
     getSupervisorsByCampaignId: builder.query<
-      GetRolesResponse,
-      { companyId: string; campaignId: string }
+      PaginatedTeamMembersResponse,
+      string
     >({
-      query: ({ companyId, campaignId }) =>
-        `api/v1/roles/supervisors?companyId=${companyId}&campaignId=${campaignId}`,
+      query: (campaignId) =>
+        `api/v1/team-members/campaign/${campaignId}/supervisors`,
       providesTags: ["TeamMembers"],
     }),
+
     getTeamMemberById: builder.query<GetTeamMemberResponse, string>({
       query: (id) => `api/v1/team-members/${id}`,
       providesTags: ["TeamMembers"],
@@ -300,6 +317,17 @@ export const teamMembersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["TeamMembers"],
     }),
+    transferTeamMembersToCampaign: builder.mutation<
+      TransferCampaignResponse,
+      TransferCampaignRequest
+    >({
+      query: (body) => ({
+        url: "api/v1/team-members/transfer-campaign",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["TeamMembers"],
+    }),
     bulkUploadTeamMembers: builder.mutation<BulkUploadResponse, FormData>({
       query: (formData) => ({
         url: "api/v1/team-members/bulk-upload",
@@ -329,6 +357,7 @@ export const {
   useGetTeamMembersByCampaignIdAndRoleIdQuery,
   useGetTeamMembersBySupervisorIdQuery,
   useGetSupervisorsByCampaignIdQuery,
+
   useGetTeamMemberByIdQuery,
   useUpdateTeamMemberMutation,
   useUpdateTeamMemberStatusMutation,
@@ -338,6 +367,7 @@ export const {
   useDeleteManyTeamMembersMutation,
   useAssignShiftHourToTeamMembersMutation,
   useAssignSupervisorToTeamMembersMutation,
+  useTransferTeamMembersToCampaignMutation,
   useBulkUploadTeamMembersMutation,
   useVerifyTeamMemberPasswordMutation,
 } = teamMembersApi;

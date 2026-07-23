@@ -3,6 +3,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useGetCampaignQuery, useGetCampaignByCompanyIdQuery, useGetCampaignByCompanyIdForheaderQuery, Campaign } from '@/store/services/campaignApi';
 import { useAuth } from './AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectIsAdmin, selectUserPrivileges } from '@/store/slices/privilegeSlice';
+import { dispositionApi } from '@/store/services/dispositionApi';
+import { campaignApi } from '@/store/services/campaignApi';
+import { setupBookApi } from '@/store/services/setupBookApi';
+import { teamMembersApi } from '@/store/services/teamMembersApi';
+import { roleApi } from '@/store/services/roleApi';
+import { statusApi } from '@/store/services/statusApi';
+import { supportApi } from '@/store/services/supportApi';
 
 interface CampaignContextType {
     selectedCampaignId: string | null;
@@ -21,6 +30,17 @@ interface CampaignProviderProps {
 export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, initialCampaignId }) => {
     const [selectedCampaignId, setSelectedCampaignIdState] = useState<string | null>(initialCampaignId || null);
     const { user } = useAuth();
+    const isAdmin = useSelector(selectIsAdmin);
+    const userPrivileges = useSelector(selectUserPrivileges);
+
+    // Check if user has dashboard edit permission
+    const hasDashboardEditPermission = () => {
+        if (!userPrivileges?.role?.permissions) return false;
+        const dashboardPermission = userPrivileges.role.permissions.find(
+            (p) => p.moduleName.toLowerCase().replace(/\s+/g, '') === 'dashboard'
+        );
+        return dashboardPermission?.access && dashboardPermission.permissions.edit;
+    };
 
     // Get all campaigns for the company
     const { data: campaignsData } = useGetCampaignByCompanyIdForheaderQuery(
@@ -35,6 +55,15 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, in
     );
 
     useEffect(() => {
+        const userRoleName = typeof user?.role === 'object' ? user.role?.roleName : user?.role;
+        const isUserAdmin = isAdmin || userRoleName === 'Administrator' || userRoleName === 'admin';
+        const hasEditDashboard = hasDashboardEditPermission();
+
+        if (!isUserAdmin && !hasEditDashboard && typeof user?.campaignId === 'string') {
+            setSelectedCampaignIdState(user.campaignId);
+            return;
+        }
+
         const saved = localStorage.getItem('selectedCampaignId');
         if (saved) {
             setSelectedCampaignIdState(saved);
@@ -50,7 +79,9 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, in
                 setSelectedCampaignIdState(campaignId);
             }
         }
-    }, [companyCampaign, campaignsData]);
+    }, [companyCampaign, campaignsData, user, userPrivileges, isAdmin]);
+
+    const dispatch = useDispatch();
 
     const setSelectedCampaignId = (id: string | null) => {
         setSelectedCampaignIdState(id);
@@ -60,7 +91,15 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, in
             } else {
                 localStorage.removeItem('selectedCampaignId');
             }
+            window.dispatchEvent(new CustomEvent('campaignChanged', { detail: { campaignId: id } }));
         }
+        dispatch(dispositionApi.util.resetApiState());
+        dispatch(campaignApi.util.resetApiState());
+        dispatch(setupBookApi.util.resetApiState());
+        dispatch(teamMembersApi.util.resetApiState());
+        dispatch(roleApi.util.resetApiState());
+        dispatch(statusApi.util.resetApiState());
+        dispatch(supportApi.util.resetApiState());
     };
 
     const { data: campaignData, isLoading, isFetching } = useGetCampaignQuery(

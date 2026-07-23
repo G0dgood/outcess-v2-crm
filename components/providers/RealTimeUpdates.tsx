@@ -11,6 +11,7 @@ import { usePathname } from 'next/navigation';
 import { TicketMessage } from '@/store/services/supportApi';
 import { teamMembersApi, TeamMemberStatusUpdatePayload } from '@/store/services/teamMembersApi';
 import { companyApi } from '@/store/services/companyApi';
+import { campaignApi } from '@/store/services/campaignApi';
 import { playNotificationSound } from '@/utils/soundEffects';
 
 export const RealTimeUpdates: React.FC = () => {
@@ -129,12 +130,32 @@ export const RealTimeUpdates: React.FC = () => {
       dispatch(companyApi.util.invalidateTags(['Company']));
     };
 
+    // Handle bucket assignment changes (assign/remove members to/from buckets)
+    const handleBucketAssignmentUpdated = () => {
+      dispatch(campaignApi.util.invalidateTags(['Campaign']));
+    };
+
+    // Personal notification: current user assigned to a bucket
+    const handleBucketAssigned = (data: unknown) => {
+      const payload = data as { bucketName?: string; message?: string };
+      toastInfo(payload.message || `You have been assigned to the "${payload.bucketName}" bucket.`);
+    };
+
+    // Personal notification: current user removed from a bucket
+    const handleBucketRemoved = (data: unknown) => {
+      const payload = data as { bucketName?: string; message?: string };
+      toastInfo(payload.message || `You have been removed from the "${payload.bucketName}" bucket.`);
+    };
+
     on('roleUpdated', handleRoleUpdated);
     on('teamMemberStatusUpdate', handleTeamMemberStatusUpdate);
     on('statusExpired', handleStatusExpired);
     on('newTicketMessage', handleGlobalMessage);
     on('refreshCompanies', handleRefreshCompanies);
     on('refreshPendingReactivations', handleRefreshPendingReactivations);
+    on('bucketAssignmentUpdated', handleBucketAssignmentUpdated);
+    on('bucket_assigned', handleBucketAssigned);
+    on('bucket_removed', handleBucketRemoved);
 
     return () => {
       off('roleUpdated', handleRoleUpdated);
@@ -143,6 +164,9 @@ export const RealTimeUpdates: React.FC = () => {
       off('newTicketMessage', handleGlobalMessage);
       off('refreshCompanies', handleRefreshCompanies);
       off('refreshPendingReactivations', handleRefreshPendingReactivations);
+      off('bucketAssignmentUpdated', handleBucketAssignmentUpdated);
+      off('bucket_assigned', handleBucketAssigned);
+      off('bucket_removed', handleBucketRemoved);
     };
   }, [socket, on, off, updateUser, dispatch, user?.id, user?._id, pathname]);
 

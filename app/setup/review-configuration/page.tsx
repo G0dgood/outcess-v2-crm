@@ -55,7 +55,8 @@ export default function ReviewConfigurationPage(): React.JSX.Element {
 				{ label: 'Dashboard Name', value: setupData.dashboardSettings.dashboardName || 'Not configured' },
 				{ label: 'Visibility', value: setupData.dashboardSettings.dashboardVisibility || 'Not configured' },
 				{ label: 'Widgets', value: `${setupData.dashboardSettings.widgets.length} configured` },
-				{ label: 'Dispositions', value: `${setupData.dashboardSettings.dispositions.length} configured` },
+				// Dispositions count aggregated from buckets (excluding archived ones)
+				{ label: 'Dispositions', value: `${(setupData.dashboardSettings.buckets || []).reduce((acc, b) => acc + (b.dispositions || []).filter(d => !d.isArchived).length, 0)} configured` },
 				{ label: 'Call Outcomes', value: `${setupData.dashboardSettings.callOutcomes.length} configured` },
 				{ label: 'Charts', value: `${setupData.dashboardSettings.dispositionSettings.charts.length} configured` },
 				{ label: 'Time Range View', value: setupData.dashboardSettings.dispositionSettings.timeRangeView || 'Not configured' }

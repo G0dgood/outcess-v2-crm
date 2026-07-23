@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import ProgressBar from '@/components/ui/ProgressBar';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
+import AccessRestricted from '@/components/ui/AccessRestricted';
 
 interface Campaign {
 	_id: string;
@@ -79,7 +80,7 @@ export default function ConfigurationPage() {
 	};
 
 	if (!canAccessModule) {
-		return null;
+		return <AccessRestricted />;
 	}
 
 	return (

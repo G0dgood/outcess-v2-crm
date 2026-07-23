@@ -26,6 +26,7 @@ export interface Role {
   teamMemberCount?: number;
   createdAt?: string;
   updatedAt?: string;
+  allBucketAccess?: boolean;
 }
 
 export interface CreateRoleRequest {
@@ -34,6 +35,8 @@ export interface CreateRoleRequest {
   companyId: string;
   campaignId?: string;
   permissions: RolePermission[];
+  supervisorTitle?: string;
+  allBucketAccess?: boolean;
 }
 
 export interface CreateRoleResponse {
@@ -46,14 +49,7 @@ export interface GetRolesResponse {
   roles: Role[];
 }
 
-export interface CreateSupervisorRoleRequest {
-  roleName: string;
-  supervisorTitle: string;
-  description: string;
-  isSupervisor: boolean;
-  companyId: string;
-  campaignId?: string;
-}
+
 
 export interface PermissionTemplate {
   id: string;
@@ -92,15 +88,19 @@ export const roleApi = baseApi.injectEndpoints({
     }),
     getPermissionWithPrivilege: builder.query<
       GetPermissionTemplatesResponse,
-      string
+      { campaignId?: string; companyId?: string }
     >({
-      query: (campaignId) =>
-        `api/v1/roles/permissions/keys?campaignId=${campaignId}`,
+      query: ({ campaignId, companyId }) => {
+        const params = new URLSearchParams();
+        if (campaignId) params.append("campaignId", campaignId);
+        if (companyId) params.append("companyId", companyId);
+        return `api/v1/roles/permissions/keys?${params.toString()}`;
+      },
       providesTags: ["PermissionTemplates"],
     }),
     updateRole: builder.mutation<
       Role,
-      { id: string; roleData: Partial<CreateRoleRequest> }
+      { id: string; roleData: Partial<Role> }
     >({
       query: ({ id, roleData }) => ({
         url: `api/v1/roles/${id}`,
@@ -123,17 +123,6 @@ export const roleApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Roles"],
     }),
-    createSupervisorRole: builder.mutation<
-      CreateRoleResponse,
-      CreateSupervisorRoleRequest
-    >({
-      query: (data) => ({
-        url: "api/v1/roles/supervisors",
-        method: "POST",
-        body: data,
-      }),
-      invalidatesTags: ["Roles"],
-    }),
   }),
 });
 
@@ -145,5 +134,4 @@ export const {
   useUpdateRoleMutation,
   useDeleteRoleMutation,
   useDeleteRolesByCampaignMutation,
-  useCreateSupervisorRoleMutation,
 } = roleApi;

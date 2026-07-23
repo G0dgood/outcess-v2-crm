@@ -5,7 +5,7 @@ import { useSocket } from '@/contexts/SocketContext';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toastInfo } from '@/utils/toastWithSound';
-import { useGetRolesByCampaignIdQuery } from '@/store/services/roleApi';
+import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
 
 // Permission/Module types
 export type ModuleId =
@@ -51,6 +51,7 @@ export interface UserRole {
 	permissions: RoleModulePermission[];
 	id?: string;
 	description?: string;
+	allBucketAccess?: boolean;
 }
 
 export interface UserPrivileges {
@@ -75,6 +76,7 @@ interface PrivilegeContextType {
 	clearPrivileges: () => void;
 	isAdmin: boolean;
 	isSuperAdmin: boolean;
+	allBucketAccess: boolean;
 }
 
 import { useSelector, useDispatch } from 'react-redux';
@@ -108,14 +110,14 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 	const { socket } = useSocket();
 	const { selectedCampaignId } = useCampaign();
 	const { user, updateUser } = useAuth();
+	const companyId = user?.companyId || (user?.company as { _id?: string })?._id || '';
 
-	// Add reactive query for roles in this Campaign
-	const { data: rolesData } = useGetRolesByCampaignIdQuery(selectedCampaignId || '', {
-		skip: !selectedCampaignId
+	// Add reactive query for roles in this Company
+	const { data: rolesData } = useGetRolesByCompanyIdQuery(companyId, {
+		skip: !companyId
 	});
 
-	console.log('rolesData--->', rolesData)
-	console.log('selectedCampaignId--->', selectedCampaignId)
+
 
 	// Reactively update user privileges when roles data changes
 	useEffect(() => {
@@ -126,26 +128,31 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 			(r._id || r.id) === currentRoleId
 		);
 
-		if (matchingRole && JSON.stringify(matchingRole.permissions) !== JSON.stringify(userPrivileges.role.permissions)) {
+		if (matchingRole && (
+			JSON.stringify(matchingRole.permissions) !== JSON.stringify(userPrivileges.role.permissions) ||
+			matchingRole.allBucketAccess !== userPrivileges.role.allBucketAccess
+		)) {
 			const updatedUserPrivileges = {
 				...userPrivileges,
 				role: {
 					...userPrivileges.role,
-					permissions: matchingRole.permissions
+					permissions: matchingRole.permissions,
+					allBucketAccess: matchingRole.allBucketAccess
 				}
 			};
 
 			dispatch(setReduxPrivileges(updatedUserPrivileges));
 
 			if (user) {
-				const currentRole = typeof user.role === 'object' ? user.role : { roleName: '', permissions: [] };
-				const matchingRoleData = matchingRole as { roleName?: string; name?: string; permissions: RoleModulePermission[] };
+				const currentRole = typeof user.role === 'object' ? user.role : { roleName: '', permissions: [], allBucketAccess: false };
+				const matchingRoleData = matchingRole as { roleName?: string; name?: string; permissions: RoleModulePermission[]; allBucketAccess?: boolean };
 				updateUser({
 					...user,
 					role: {
 						...currentRole,
 						roleName: currentRole.roleName || matchingRoleData.roleName || matchingRoleData.name || '',
-						permissions: matchingRole.permissions
+						permissions: matchingRole.permissions,
+						allBucketAccess: matchingRole.allBucketAccess
 					}
 				});
 			}
@@ -182,7 +189,7 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 
 		socket.emit("joinCampaign", selectedCampaignId);
 
-		const handleUpdateRole = (data: { role: { _id?: string; id?: string; roleName: string; permissions: RoleModulePermission[] } }) => {
+		const handleUpdateRole = (data: { role: { _id?: string; id?: string; roleName: string; permissions: RoleModulePermission[]; allBucketAccess?: boolean } }) => {
 			if (!userPrivileges || !userPrivileges.role) return;
 
 			const currentRoleId = userPrivileges.roleId || userPrivileges.role.id || (userPrivileges.role as { _id?: string })._id;
@@ -194,7 +201,8 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 					...userPrivileges,
 					role: {
 						...userPrivileges.role,
-						permissions: data.role.permissions
+						permissions: data.role.permissions,
+						allBucketAccess: data.role.allBucketAccess
 					}
 				};
 
@@ -205,7 +213,8 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 						...user,
 						role: {
 							...(user.role as { roleName: string; permissions: RoleModulePermission[] }),
-							permissions: data.role.permissions
+							permissions: data.role.permissions,
+							allBucketAccess: data.role.allBucketAccess
 						}
 					});
 				}
@@ -245,13 +254,11 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 
 	const canAccess = (moduleId: ModuleId, action?: PermissionAction): boolean => {
 		if (!userPrivileges) {
-			console.log(`[canAccess] No userPrivileges — denying ${moduleId}`);
 			return false;
 		}
 		if (isAdmin) return true;
 		const modulePermission = findModulePermission(moduleId);
-		console.log(`[canAccess] moduleId="${moduleId}" action="${action}" found=`, modulePermission ? { moduleName: modulePermission.moduleName, access: modulePermission.access, view: modulePermission.permissions?.view } : 'NOT FOUND',
-			'allModuleNames=', userPrivileges.role?.permissions?.map(p => p.moduleName));
+
 		if (modulePermission) {
 			if (!modulePermission.access) return false;
 			if (!action) return true;
@@ -268,6 +275,8 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		dispatch(clearReduxPrivileges());
 	};
 
+	const allBucketAccess = !!userPrivileges?.role?.allBucketAccess;
+
 	const contextValue: PrivilegeContextType = {
 		userPrivileges,
 		isLoading,
@@ -279,6 +288,7 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		clearPrivileges,
 		isAdmin,
 		isSuperAdmin,
+		allBucketAccess,
 	};
 
 	return (

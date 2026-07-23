@@ -277,7 +277,7 @@ export default function CustomerBookPage() {
 		setIsFieldModalOpen(true);
 	};
 
-	const handleAddFieldFromModal = (fieldData: { name: string; type: string; required: boolean; options?: string[] }) => {
+	const handleAddFieldFromModal = (fieldData: { name: string; type: string; required: boolean; options?: string[]; showTotal?: boolean }) => {
 		if (!selectedBucketId) return;
 
 		if (editingField) {

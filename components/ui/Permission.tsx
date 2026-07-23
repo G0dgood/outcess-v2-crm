@@ -8,6 +8,7 @@ import PageHeading from './PageHeading';
 import SubPageHeading from './SubPageHeading';
 import Button from './Button';
 import { useCampaign } from '@/contexts/CampaignContext';
+import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetPermissionWithPrivilegeQuery, useUpdateRoleMutation, RolePermission, Role as ApiRole, Role } from '@/store/services/roleApi';
 import { toastError, toastSuccess } from '@/utils/toastWithSound';
 import PermissionSkeleton from '@/components/skeletons/PermissionSkeleton';
@@ -43,17 +44,26 @@ const mapRolePermissionToItem = (p: RolePermission): PermissionItem => {
 
 interface PermissionProps {
 	className?: string;
-	campaignId?: string;
+	campaignId?: string | null;
 }
 
 const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) => {
 	const { selectedCampaignId } = useCampaign();
-	const targetId = campaignId || selectedCampaignId;
+	const { user } = useUserInfo();
+	const companyId = user?.company?._id || user?.companyId;
+
+	const targetCampaignId = campaignId ?? selectedCampaignId;
 
 	// Note: API returns { roles: Role[] } now
-	const { data: permissionData, isLoading } = useGetPermissionWithPrivilegeQuery(targetId || '', {
-		skip: !targetId
-	});
+	const { data: permissionData, isLoading } = useGetPermissionWithPrivilegeQuery(
+		{
+			campaignId: targetCampaignId ?? undefined,
+			companyId: !targetCampaignId ? (companyId ?? undefined) : undefined
+		},
+		{
+			skip: !targetCampaignId && !companyId
+		}
+	);
 
 	// State now holds the roles with their permissions
 	const [rolesPermissions, setRolesPermissions] = useState<PermissionRole[]>([]);
@@ -74,7 +84,6 @@ const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) =
 
 	const [updateRole] = useUpdateRoleMutation();
 	const [updatingRoleIds, setUpdatingRoleIds] = useState<string[]>([]);
-
 	const handleSaveRole = async (role: PermissionRole) => {
 		const roleId = role._id || role.id!;
 		if (updatingRoleIds.includes(roleId)) return;
@@ -86,7 +95,8 @@ const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) =
 				description: role?.description,
 				companyId: role?.companyId,
 				campaignId: role?.campaignId,
-				permissions: role?.permissions || []
+				permissions: role?.permissions || [],
+				allBucketAccess: role?.allBucketAccess
 			};
 			await updateRole({ id: roleId, roleData }).unwrap();
 			toastSuccess('Permissions updated successfully');
@@ -142,7 +152,9 @@ const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) =
 		const roleId = role._id || role.id;
 		const original = originalRolesPermissions.find(r => (r._id || r.id) === roleId);
 		if (!original) return false;
-		return !arePermissionsEqual(original.permissions || [], role.permissions || []);
+		const permissionsChanged = !arePermissionsEqual(original.permissions || [], role.permissions || []);
+		const allBucketAccessChanged = !!original.allBucketAccess !== !!role.allBucketAccess;
+		return permissionsChanged || allBucketAccessChanged;
 	};
 
 	const handleAccessToggle = (roleId: string, permissionId: string, value: boolean) => {
@@ -162,6 +174,19 @@ const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) =
 							}
 							: p
 					)
+				};
+			}
+			return role;
+		}));
+	};
+
+	const handleAllBucketAccessToggle = (roleId: string, value: boolean) => {
+		setRolesPermissions(prev => prev.map(role => {
+			const currentRoleId = role._id || role.id;
+			if (currentRoleId === roleId) {
+				return {
+					...role,
+					allBucketAccess: value
 				};
 			}
 			return role;
@@ -230,11 +255,11 @@ const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) =
 						title="No Roles Found"
 						description={
 							<>
-								No roles or permission data has been set up yet for this campaign. Create roles in the{' '}
+								No roles or permission data has been set up yet for this company. Create roles in the{' '}
 								<span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
 									Setup Book
 								</span>{' '}
-								to manage team member permissions here.
+								to manage team member permissions across every campaign.
 							</>
 						}
 					/>
@@ -264,7 +289,12 @@ const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) =
 									</span>
 								</div>
 
-								<div className="flex items-center gap-4">
+								<div className="flex items-center gap-6">
+									<Toggle
+										label="Data Analyst (All Bucket Access)"
+										checked={!!role.allBucketAccess}
+										onChange={(checked) => handleAllBucketAccessToggle(roleId, checked)}
+									/>
 									{isRoleDirty(role) && (
 										<Button
 											onClick={() => {

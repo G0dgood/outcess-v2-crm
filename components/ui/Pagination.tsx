@@ -108,6 +108,8 @@ const Pagination: React.FC<PaginationProps> = ({
 
 					const pageNumber = page as number;
 					const isCurrentPage = currentPage === pageNumber;
+					const isDefaultColor = !primaryColor || primaryColor === '#050711' || primaryColor === 'var(--primary)';
+					const showCustomBg = isCurrentPage && !isDefaultColor;
 
 					return (
 						<Button
@@ -119,7 +121,7 @@ const Pagination: React.FC<PaginationProps> = ({
 								? 'text-white shadow-sm'
 								: 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
 								}`}
-							style={isCurrentPage ? { backgroundColor: primaryColor } : {}}
+							style={showCustomBg ? { backgroundColor: primaryColor } : {}}
 						>
 							{pageNumber}
 						</Button>

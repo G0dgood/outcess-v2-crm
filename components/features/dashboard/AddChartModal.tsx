@@ -12,6 +12,7 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useGetDashboardDispositionsByCampaignAndAgentIdReportQuery, useGetAllDashboardDispositionsByCampaignReportQuery } from '@/store/services/dispositionApi';
+import { DispositionCategory, NestedOption } from '@/types/dashboard';
 
 interface AddChartModalProps {
 	isOpen: boolean;
@@ -21,6 +22,7 @@ interface AddChartModalProps {
 		type: 'bar' | 'line' | 'pie' | 'doughnut' | 'polarArea' | 'radar' | 'scatter' | 'bubble';
 		dataSource: string | string[]; // Support both single and multiple data sources
 		timeRange: 'daily' | 'weekly' | 'monthly';
+		size: 'small' | 'medium' | 'large';
 		color?: string;
 		colors?: Record<string, string>; // Map of data source to color
 		position: {
@@ -47,6 +49,12 @@ const timeRangeOptions = [
 	{ value: 'daily', label: 'Daily' },
 	{ value: 'weekly', label: 'Weekly' },
 	{ value: 'monthly', label: 'Monthly' },
+];
+
+const sizeOptions = [
+	{ value: 'small', label: 'Small' },
+	{ value: 'medium', label: 'Medium' },
+	{ value: 'large', label: 'Large' },
 ];
 
 export const AddChartModal: React.FC<AddChartModalProps> = ({
@@ -82,6 +90,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		type: 'pie' as const,
 		dataSource: [] as string[], // Changed to array to support multiple data sources
 		timeRange: 'daily' as const,
+		size: 'small' as const,
 		color: '#050711',
 		colors: {} as Record<string, string>, // Map of data source to color
 		position: {
@@ -107,11 +116,11 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		const dashboardSettings = campaignData?.dashboardSettings;
 
 		// Add disposition categories if available (direct and bucketed)
-		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
+		const allDispositions: DispositionCategory[] = [...(dashboardSettings?.dispositions || [])];
 		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
-			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
+			dashboardSettings.buckets.forEach((bucket: { dispositions?: DispositionCategory[] }) => {
 				if (bucket && Array.isArray(bucket.dispositions)) {
-					bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
+					bucket.dispositions.forEach((disp: DispositionCategory) => {
 						if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
 							allDispositions.push(disp);
 						}
@@ -121,9 +130,34 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		}
 
 		if (allDispositions.length > 0) {
-			allDispositions.forEach((disposition: { name: string }) => {
+			allDispositions.forEach((disposition: DispositionCategory) => {
 				if (disposition?.name) {
 					optionsMap.set(disposition.name, { value: disposition.name, label: disposition.name });
+
+					const collectNested = (opts?: NestedOption[]) => {
+						if (!opts || !Array.isArray(opts)) return;
+						opts.forEach(opt => {
+							if (opt.value) {
+								optionsMap.set(opt.value, { value: opt.value, label: `${disposition.name} -> ${opt.value}` });
+							}
+							if (opt.subLabel && !optionsMap.has(opt.subLabel)) {
+								optionsMap.set(opt.subLabel, { value: opt.subLabel, label: `${disposition.name} Label: ${opt.subLabel}` });
+							}
+							if (opt.subOptions) {
+								collectNested(opt.subOptions);
+							}
+						});
+					};
+
+					collectNested(disposition.nestedOptions);
+
+					if (disposition.dropdownOptions && Array.isArray(disposition.dropdownOptions)) {
+						disposition.dropdownOptions.forEach(opt => {
+							if (opt && opt.trim()) {
+								optionsMap.set(opt.trim(), { value: opt.trim(), label: `${disposition.name} -> ${opt.trim()}` });
+							}
+						});
+					}
 				}
 			});
 		}
@@ -207,6 +241,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 				type: 'pie',
 				dataSource: [],
 				timeRange: 'daily',
+				size: 'small',
 				color: '#050711',
 				colors: {},
 				position: {
@@ -226,6 +261,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 			type: 'pie',
 			dataSource: [],
 			timeRange: 'daily',
+			size: 'small',
 			color: '#050711',
 			colors: {},
 			position: {
@@ -369,6 +405,14 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 						options={timeRangeOptions}
 						value={formData.timeRange}
 						onChange={handleInputChange('timeRange')}
+						required
+					/>
+					<Dropdown
+						label="Size"
+						placeholder="Select size"
+						options={sizeOptions}
+						value={formData.size}
+						onChange={handleInputChange('size')}
 						required
 					/>
 				</div>

@@ -7,7 +7,7 @@ import Dropdown from '@/components/ui/Dropdown';
 import { useGetTicketsBySupervisorIdQuery } from '@/store/services/supportApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCampaign } from '@/contexts/CampaignContext';
-import { useGetSupervisorsByCampaignIdQuery } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
 import PageHeading from '@/components/ui/PageHeading';
 import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
@@ -17,14 +17,12 @@ import { useRouter } from 'next/navigation';
 import SupportSkeleton from '@/components/skeletons/SupportSkeleton';
 import Tabs, { TabItem } from '@/components/ui/Tabs';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useUserInfo } from '@/contexts/UserInfoContext';
 import { Clock, Inbox, CheckCircle2, XCircle } from 'lucide-react';
 import AccessDenied from '@/components/ui/AccessDenied';
 
 const TeamSupportPage = () => {
  const router = useRouter();
  const { user } = useAuth();
- const { user: userInfo } = useUserInfo();
  const { canAccess, isAdmin } = usePrivilege();
  const { campaignData } = useCampaign();
 
@@ -56,51 +54,45 @@ const TeamSupportPage = () => {
 
  // Permission check: only supervisors or admins should see this
  const userRole = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
- const isSupervisor = userRole?.toLowerCase() === 'supervisor' || userRole?.toLowerCase() === 'admin' || isAdmin;
+ const isSupervisor = user?.isSupervisor === true || userRole?.toLowerCase() === 'admin' || isAdmin;
  const hasAccess = canAccess('support', 'view') && isSupervisor;
-
- const companyId =
-  (userInfo?.company as { _id?: string; id?: string } | undefined)?._id ||
-  (userInfo?.company as { _id?: string; id?: string } | undefined)?.id ||
-  userInfo?.companyId ||
-  user?.companyId ||
-  '';
 
  const campaignId = campaignData?._id || campaignData?.id;
 
- const { data: supervisorsData } = useGetSupervisorsByCampaignIdQuery({
-  companyId,
-  campaignId: campaignId || ''
- }, { skip: !companyId || !campaignId || !hasAccess });
+  const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery({
+   campaignId: campaignId || '',
+   limit: 1000
+  }, { skip: !campaignId || !hasAccess });
 
- const supervisors = useMemo(() => {
-  if (!supervisorsData || !Array.isArray(supervisorsData.roles)) return [];
+  const supervisors = useMemo(() => {
+   if (!teamMembersData) return [];
+   const rawMembers = teamMembersData.teamMembers || (Array.isArray(teamMembersData) ? teamMembersData : []);
 
-  const rawRoles = supervisorsData.roles as {
-   _id?: string;
-   id?: string;
-   roleName?: string;
-   supervisorTitle?: string;
-  }[];
+   const options = rawMembers
+    .filter((m: ApiTeamMember) => {
+     return m.isSupervisor === true;
+    })
+    .map((m: ApiTeamMember) => {
+     const fullName = m.firstName && m.lastName
+      ? `${m.firstName} ${m.lastName}`
+      : m.name || m.fullName || 'Unknown Member';
+     return {
+      label: fullName,
+      value: m._id || m.id || ''
+     };
+    });
 
-  const options = rawRoles
-   .map((role) => ({
-    label: (role.supervisorTitle || role.roleName || '').trim(),
-    value: role._id || role.id || ''
-   }))
-   .filter((s) => s.label && s.value);
+   const uniqueMap = new Map<string, { label: string; value: string }>();
+   options.forEach((s) => uniqueMap.set(s.value, s));
 
-  const uniqueMap = new Map<string, { label: string; value: string }>();
-  options.forEach((s) => uniqueMap.set(s.value, s));
+   const result = Array.from(uniqueMap.values());
 
-  const result = Array.from(uniqueMap.values());
+   if (isAdmin) {
+    result.unshift({ label: 'All Supervisors', value: '' });
+   }
 
-  if (isAdmin) {
-   result.unshift({ label: 'All Supervisors', value: '' });
-  }
-
-  return result;
- }, [supervisorsData, isAdmin]);
+   return result;
+  }, [teamMembersData, isAdmin]);
 
  const { data: ticketsData, isLoading } = useGetTicketsBySupervisorIdQuery({
   supervisorId: supervisorFilter,
@@ -198,7 +190,16 @@ const TeamSupportPage = () => {
        className="flex items-center gap-2 h-10 px-4 text-[10px] md:text-[12px] bg-white dark:bg-gray-800"
        onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
       >
-       {dateFilter?.filterType ? (dateFilter.filterType === 'all' ? 'All Time' : dateFilter.filterType) : "This Week"}
+       {dateFilter?.filterType ? (
+        {
+         today: 'Today',
+         yesterday: 'Yesterday',
+         last7days: 'Last 7 Days',
+         last30days: 'Last 30 Days',
+         all: 'All Time',
+         dateRange: 'Date Range'
+        }[dateFilter.filterType] || dateFilter.filterType
+       ) : "This Week"}
       </Button>
       {isDateFilterOpen && (
        <div className="absolute top-full right-0 mt-2 z-50">

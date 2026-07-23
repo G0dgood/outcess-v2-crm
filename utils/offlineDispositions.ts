@@ -3,8 +3,6 @@
  * Manages disposition data when offline, storing in localStorage and syncing when online
  */
 
-import type { SocketMessage } from '@/contexts/SocketContext';
-
 export interface DispositionFieldEntry {
 	fieldId: string;
 	fieldName: string;
@@ -37,6 +35,7 @@ export interface OfflineDisposition {
 	updatedAt: string;
 	syncedAt?: string;
 	dispositionData: DispositionFieldEntry[];
+	fillDisposition?: DispositionFieldEntry[];
 }
 
 const STORAGE_KEY = 'offline_dispositions';
@@ -51,14 +50,18 @@ const notifyUpdate = () => {
 /**
  * Get all offline dispositions
  */
-export const getOfflineDispositions = (): OfflineDisposition[] => {
+export const getOfflineDispositions = (campaignId?: string): OfflineDisposition[] => {
 	if (typeof window === 'undefined') return [];
 
 	try {
 		const stored = localStorage.getItem(STORAGE_KEY);
 		if (stored) {
 			const parsed = JSON.parse(stored);
-			return Array.isArray(parsed) ? parsed : [];
+			const list: OfflineDisposition[] = Array.isArray(parsed) ? parsed : [];
+			if (campaignId) {
+				return list.filter(d => !d.campaignId || d.campaignId === campaignId);
+			}
+			return list;
 		}
 	} catch (error) {
 		console.error('Error loading offline dispositions:', error);
@@ -152,46 +155,63 @@ export const clearSyncedDispositions = (): void => {
 };
 
 /**
- * Sync pending dispositions when online
- * This should be called when connection is restored
+ * Persist a single pending disposition to the server.
+ * Must actually write to the backend (e.g. the REST create-disposition endpoint)
+ * and resolve only on success; reject/throw to keep the item pending for retry.
  */
-export const syncPendingDispositions = async (
-    sendFn?: (message: SocketMessage) => void
-): Promise<{ success: number; failed: number }> => {
-	const pending = getPendingDispositions();
- 
-	
-	let success = 0;
-	let failed = 0;
+export type PersistDispositionFn = (disposition: OfflineDisposition) => Promise<void>;
 
-	for (const disposition of pending) {
-		try {
-			if (sendFn) {
-				// Special check: if it's a socket-based sendFn, we should ensure it's not just queuing
-				// But we'll trust the caller for now.
-				sendFn({
-					type: 'disposition',
-					payload: {
-						fillDisposition: disposition.dispositionData,
-						customerId: disposition.customerId,
-						customerName: disposition.customerName,
-						campaignId: disposition.campaignId,
-						timestamp: disposition.createdAt, // Use original creation time
-					},
-				});
-				
-			 
-				updateDispositionStatus(disposition.id, 'synced');
-				success++;
-			} else { 
-				failed++;
-			}
-		} catch (error) {
-			failed++;
-		}
+/**
+ * Sync pending dispositions when online.
+ * This should be called when connection is restored, or manually via a "Sync" button.
+ *
+ * Each pending disposition is persisted through `persistFn`. Only items that persist
+ * successfully are removed from the offline queue; failures stay pending so they are
+ * retried on the next sync instead of being silently marked as synced.
+ */
+// Module-level lock so concurrent callers (auto-sync on reconnect + a manual
+// button press, or two mounted components) can never double-persist the same item.
+let syncInProgress = false;
+
+export const syncPendingDispositions = async (
+    persistFn: PersistDispositionFn,
+    onlyId?: string
+): Promise<{ success: number; failed: number }> => {
+	if (typeof persistFn !== 'function') {
+		return { success: 0, failed: getPendingDispositions().length };
 	}
 
-	return { success, failed };
+	if (syncInProgress) {
+		return { success: 0, failed: 0 };
+	}
+	syncInProgress = true;
+
+	try {
+		let pending = getPendingDispositions();
+		if (onlyId) {
+			pending = pending.filter((d) => d.id === onlyId);
+		}
+
+		let success = 0;
+		let failed = 0;
+
+		for (const disposition of pending) {
+			try {
+				await persistFn(disposition);
+				// Persisted to the server — remove it from the offline queue so the
+				// server copy (via API) becomes the single source of truth.
+				removeOfflineDisposition(disposition.id);
+				success++;
+			} catch {
+				// Keep it as 'pending' so the next sync (auto or manual) retries it.
+				failed++;
+			}
+		}
+
+		return { success, failed };
+	} finally {
+		syncInProgress = false;
+	}
 };
 
 /**
@@ -209,6 +229,7 @@ export interface SyncedDisposition {
 	agent?: string;
 	agentId?: string;
 	dispositionData: DispositionFieldEntry[];
+	fillDisposition?: DispositionFieldEntry[];
 }
 
 export const saveSyncedDisposition = (
@@ -249,15 +270,21 @@ export const saveSyncedDisposition = (
 /**
  * Get all synced dispositions for a customer
  */
-export const getSyncedDispositions = (customerId?: string): SyncedDisposition[] => {
+export const getSyncedDispositions = (customerId?: string, campaignId?: string): SyncedDisposition[] => {
 	if (typeof window === 'undefined') return [];
 
 	try {
 		const stored = localStorage.getItem(SYNCED_DISPOSITIONS_KEY);
 		if (stored) {
 			const parsed = JSON.parse(stored);
-			const synced: SyncedDisposition[] = Array.isArray(parsed) ? parsed : [];
-			return customerId ? synced.filter(d => d.customerId === customerId) : synced;
+			let synced: SyncedDisposition[] = Array.isArray(parsed) ? parsed : [];
+			if (customerId) {
+				synced = synced.filter(d => d.customerId === customerId);
+			}
+			if (campaignId) {
+				synced = synced.filter(d => !d.campaignId || d.campaignId === campaignId);
+			}
+			return synced;
 		}
 	} catch (error) {
 		console.error('Error loading synced dispositions:', error);

@@ -20,9 +20,10 @@ export interface User {
 		statusUpdatedAt?: string | Date;
 	};
 	avatar?: string;
-	role?: string | { roleName: string; permissions: unknown[] };
+	role?: string | { roleName: string; permissions: unknown[]; allBucketAccess?: boolean };
 	isTeamMember?: boolean;
 	companyId?: string;
+	campaignId?: string;
 	companyName?: string;
 	phone?: string;
 	createdAt?: string;
@@ -159,7 +160,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 			if (tokens.expiresIn) {
 				if (sessionTimeout) clearTimeout(sessionTimeout);
 				const timeout = setTimeout(() => {
-					console.log('Session expired, logging out...');
 					logout();
 				}, tokens.expiresIn * 1000);
 				setSessionTimeout(timeout);

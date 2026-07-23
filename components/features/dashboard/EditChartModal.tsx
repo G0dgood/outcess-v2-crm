@@ -8,7 +8,7 @@ import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useSocket } from '@/contexts/SocketContext';
-import { Chart } from '@/types/dashboard';
+import { Chart, DispositionCategory, NestedOption } from '@/types/dashboard';
 import { useCampaign } from '@/contexts/CampaignContext';
 
 interface EditChartModalProps {
@@ -35,6 +35,12 @@ const timeRangeOptions = [
 	{ value: 'monthly', label: 'Monthly' },
 ];
 
+const sizeOptions = [
+	{ value: 'small', label: 'Small' },
+	{ value: 'medium', label: 'Medium' },
+	{ value: 'large', label: 'Large' },
+];
+
 export const EditChartModal: React.FC<EditChartModalProps> = ({
 	isOpen,
 	onClose,
@@ -48,6 +54,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		type: 'pie',
 		dataSource: [] as string[],
 		timeRange: 'daily',
+		size: 'small',
 		color: '#050711',
 		colors: {} as Record<string, string>,
 		position: {
@@ -83,6 +90,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 				type: chart?.type || 'pie',
 				dataSource,
 				timeRange: chart?.timeRange || 'daily',
+				size: chart?.size || 'small',
 				color: chart?.color || '#050711',
 				colors,
 				position: chart?.position || {
@@ -101,11 +109,11 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		const dashboardSettings = campaignData?.dashboardSettings;
 
 		// Add disposition categories if available (direct and bucketed)
-		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
+		const allDispositions: DispositionCategory[] = [...(dashboardSettings?.dispositions || [])];
 		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
-			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
+			dashboardSettings.buckets.forEach((bucket: { dispositions?: DispositionCategory[] }) => {
 				if (bucket && Array.isArray(bucket.dispositions)) {
-					bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
+					bucket.dispositions.forEach((disp: DispositionCategory) => {
 						if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
 							allDispositions.push(disp);
 						}
@@ -115,9 +123,34 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		}
 
 		if (allDispositions.length > 0) {
-			allDispositions.forEach((disposition: { name: string }) => {
+			allDispositions.forEach((disposition: DispositionCategory) => {
 				if (disposition?.name) {
 					optionsMap.set(disposition.name, { value: disposition.name, label: disposition.name });
+
+					const collectNested = (opts?: NestedOption[]) => {
+						if (!opts || !Array.isArray(opts)) return;
+						opts.forEach(opt => {
+							if (opt.value) {
+								optionsMap.set(opt.value, { value: opt.value, label: `${disposition.name} -> ${opt.value}` });
+							}
+							if (opt.subLabel && !optionsMap.has(opt.subLabel)) {
+								optionsMap.set(opt.subLabel, { value: opt.subLabel, label: `${disposition.name} Label: ${opt.subLabel}` });
+							}
+							if (opt.subOptions) {
+								collectNested(opt.subOptions);
+							}
+						});
+					};
+
+					collectNested(disposition.nestedOptions);
+
+					if (disposition.dropdownOptions && Array.isArray(disposition.dropdownOptions)) {
+						disposition.dropdownOptions.forEach(opt => {
+							if (opt && opt.trim()) {
+								optionsMap.set(opt.trim(), { value: opt.trim(), label: `${disposition.name} -> ${opt.trim()}` });
+							}
+						});
+					}
 				}
 			});
 		}
@@ -238,6 +271,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 				type: chart?.type || 'pie',
 				dataSource,
 				timeRange: chart?.timeRange || 'daily',
+				size: chart?.size || 'small',
 				color: chart?.color || '#050711',
 				colors,
 				position: chart?.position || {
@@ -333,13 +367,21 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 				)}
 
 				<Dropdown
-					label="Time Range"
-					placeholder="Select time range"
-					options={timeRangeOptions}
-					value={formData.timeRange}
-					onChange={handleInputChange('timeRange')}
-					required
-				/>
+				label="Time Range"
+				placeholder="Select time range"
+				options={timeRangeOptions}
+				value={formData.timeRange}
+				onChange={handleInputChange('timeRange')}
+				required
+			/>
+			<Dropdown
+				label="Size"
+				placeholder="Select size"
+				options={sizeOptions}
+				value={formData.size}
+				onChange={handleInputChange('size')}
+				required
+			/>
 			</div>
 
 			{/* Footer */}

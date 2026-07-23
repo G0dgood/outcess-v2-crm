@@ -8,7 +8,7 @@ import { useApiError } from '@/hooks/useApiError';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { toast } from 'sonner';
 import { SupportTicketForm } from './SupportTicketForm';
-import { useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
+import { useGetSupervisorsByCampaignIdQuery } from '@/store/services/teamMembersApi';
 import { Cross2Icon } from '@radix-ui/react-icons';
 
 interface NewTicketModalProps {
@@ -43,7 +43,9 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose, prefil
 
 	useApiError(isError, error, 'Failed to create ticket');
 
-	const { data: teamMembers } = useGetTeamMembersByCampaignIdQuery({ campaignId: selectedCampaignId || '', limit: 1000 });
+	// Dedicated supervisors endpoint: not scoped to the requester's direct
+	// reports, and resolves supervisors by role OR the isSupervisor flag.
+	const { data: teamMembers } = useGetSupervisorsByCampaignIdQuery(selectedCampaignId || '', { skip: !selectedCampaignId });
 
 	const creatorName = user?.firstName && user?.lastName
 		? `${user.firstName} ${user.lastName}`
@@ -125,7 +127,7 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose, prefil
 		try {
 			const rawMembers = (teamMembers as unknown as { teamMembers?: TeamMember[]; data?: TeamMember[] }) || {};
 			const membersList = (Array.isArray(teamMembers) ? teamMembers : rawMembers.teamMembers || rawMembers.data || []) as TeamMember[];
-			
+
 			const firstAssigneeId = assignedToIds[0];
 			const selectedMember = membersList.find((m) => (m._id || m.id) === firstAssigneeId);
 			const roleId = typeof selectedMember?.role === 'object' ? selectedMember?.role?._id || selectedMember?.role?.id : selectedMember?.role;
@@ -158,7 +160,7 @@ const NewTicketModal: React.FC<NewTicketModalProps> = ({ isOpen, onClose, prefil
 			toast.success('Ticket created successfully');
 			resetForm();
 			onClose();
-		} catch (error: unknown) {
+		} catch {
 			// useApiError hook handles the error UI reactively
 		}
 	};
