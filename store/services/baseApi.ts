@@ -14,7 +14,7 @@ const baseQuery = fetchBaseQuery({
 
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
     const result = await baseQuery(args, api, extraOptions);
-    if (result.error && result.error.status === 401) {
+    if (result.error && result.error.status === 419) {
         if (typeof window !== 'undefined') {
             if (!(window as any).__tokenExpiredModalShowing) {
                 (window as any).__tokenExpiredModalShowing = true;

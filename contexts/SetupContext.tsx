@@ -126,7 +126,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			dashboardVisibility: 'all',
 			activeTab: 'kpi',
 			widgets: [
-				{ id: '1', title: 'Total Calls', value: 0, color: '#050711' }
+				{ id: '1', title: 'Total', value: 0, color: '#050711' }
 			],
 			dispositions: [],
 			buckets: [],
@@ -526,23 +526,48 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			customerFields: defaultFields
 		};
 
-		setSetupData(prev => ({
-			...prev,
-			dashboardSettings: {
-				...prev.dashboardSettings,
-				// Stamp the owning campaign so this bucket can never leak into another.
-				buckets: [...(prev.dashboardSettings.buckets || []), { ...newBucket, campaignId: prev.campaignId }]
-			},
-			customerBookSettings: {
-				...prev.customerBookSettings,
-				configuredFields: [
-					...(prev.customerBookSettings.configuredFields || []),
-					{ bucketId, fields: defaultFields }
-				]
+		setSetupData(prev => {
+			const campaignBuckets = prev.dashboardSettings.buckets || [];
+			const campaignWidgets = prev.dashboardSettings.widgets || [];
+
+			// Map any widgets that don't have a bucketId to this first bucket
+			let updatedWidgets = campaignWidgets.map(w => {
+				if (!w.bucketId) {
+					return { ...w, bucketId };
+				}
+				return w;
+			});
+
+			// If it's a subsequent bucket, or if there were no widgets, add a default "Total" widget
+			if (campaignBuckets.length > 0 || updatedWidgets.length === 0) {
+				updatedWidgets.push({
+					id: `default-${bucketId}-${Date.now()}`,
+					title: 'Total',
+					value: 0,
+					color: '#050711',
+					bucketId
+				});
 			}
-		}));
+
+			return {
+				...prev,
+				dashboardSettings: {
+					...prev.dashboardSettings,
+					// Stamp the owning campaign so this bucket can never leak into another.
+					buckets: [...campaignBuckets, { ...newBucket, campaignId: prev.campaignId }],
+					widgets: updatedWidgets
+				},
+				customerBookSettings: {
+					...prev.customerBookSettings,
+					configuredFields: [
+						...(prev.customerBookSettings.configuredFields || []),
+						{ bucketId, fields: defaultFields }
+					]
+				}
+			};
+		});
 		setIsDirty(true);
-	}, []);
+	}, [setupData.dashboardSettings.buckets]);
 
 	const updateBucket = useCallback((bucketId: string, updates: Partial<Bucket>) => {
 		setSetupData(prev => ({

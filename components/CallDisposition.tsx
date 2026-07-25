@@ -172,14 +172,13 @@ export default function CallDisposition() {
 	// sees buckets they are assigned to. Mirrors customer-book / setup-book / report.
 	const { isAdmin, isSuperAdmin, allBucketAccess } = usePrivilege();
 	const { user } = useAuth();
-	const userId = String(user?.id || user?._id || '');
 	const hasFullBucketAccess = isAdmin || isSuperAdmin || allBucketAccess;
 	const accessibleBuckets = useMemo(
 		() =>
 			hasFullBucketAccess
 				? buckets
-				: (getUserAssignedBuckets(userId, (buckets || []) as unknown as BucketWithMembers[]) as unknown as Bucket[]),
-		[buckets, userId, hasFullBucketAccess]
+				: (getUserAssignedBuckets(user || undefined, (buckets || []) as unknown as BucketWithMembers[]) as unknown as Bucket[]),
+		[buckets, user, hasFullBucketAccess]
 	);
 
 	const [activeBucketId, setActiveBucketId] = useState<string | null>(null);

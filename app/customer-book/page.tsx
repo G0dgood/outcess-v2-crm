@@ -28,7 +28,7 @@ interface ConfiguredField {
 }
 
 const CustomerBookPage: React.FC = () => {
-	const { campaignData } = useCampaign();
+	const { campaignData, selectedBucketId } = useCampaign();
 	const campaignId = campaignData?._id || campaignData?.id;
 	const [searchTerm, setSearchTerm] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
@@ -49,21 +49,23 @@ const CustomerBookPage: React.FC = () => {
 		return (campaignData?.dashboardSettings?.buckets || []) as unknown as BucketWithMembers[];
 	}, [campaignData]);
 
-	const userId = String(user?.id || user?._id || '');
 	const hasFullBucketAccess = isAdmin || isSuperAdmin || allBucketAccess;
 
 	const accessibleBuckets = useMemo(
-		() => (hasFullBucketAccess ? buckets : getUserAssignedBuckets(userId, buckets)),
-		[buckets, userId, hasFullBucketAccess]
+		() => (hasFullBucketAccess ? buckets : getUserAssignedBuckets(user || undefined, buckets)),
+		[buckets, user, hasFullBucketAccess]
 	);
 
 	const bucketQueryParams = useMemo(() => {
+		if (selectedBucketId) {
+			return { bucketId: selectedBucketId };
+		}
 		if (hasFullBucketAccess || accessibleBuckets.length === 0) return {};
 		if (accessibleBuckets.length === 1) {
 			return { bucketId: accessibleBuckets[0].id };
 		}
 		return { bucketIds: accessibleBuckets.map((b) => b.id).join(',') };
-	}, [accessibleBuckets, hasFullBucketAccess]);
+	}, [accessibleBuckets, hasFullBucketAccess, selectedBucketId]);
 
 	const mapFieldType = (type: string): 'text' | 'phone' | 'email' | 'number' | 'date' => {
 		if (type === 'phone') return 'phone';
@@ -74,11 +76,13 @@ const CustomerBookPage: React.FC = () => {
 	};
 
 	const fieldDefinitions = useMemo(() => {
-		const relevantConfigs = hasFullBucketAccess
-			? configuredFields
-			: configuredFields.filter((config: ConfiguredField) =>
-				accessibleBuckets.some((bucket: BucketWithMembers) => bucket.id === config?.bucketId)
-			);
+		const relevantConfigs = selectedBucketId
+			? configuredFields.filter((config) => config?.bucketId === selectedBucketId)
+			: (hasFullBucketAccess
+				? configuredFields
+				: configuredFields.filter((config: ConfiguredField) =>
+					accessibleBuckets.some((bucket: BucketWithMembers) => bucket.id === config?.bucketId)
+				));
 
 		const allFields = relevantConfigs.flatMap((config: ConfiguredField) => config?.fields || []);
 		// Deduplicate by ID just in case
@@ -94,7 +98,7 @@ const CustomerBookPage: React.FC = () => {
 			required: field.required,
 			showTotal: field.showTotal === true,
 		}));
-	}, [configuredFields, accessibleBuckets, hasFullBucketAccess]);
+	}, [configuredFields, accessibleBuckets, hasFullBucketAccess, selectedBucketId]);
 
 	// Fetch customer by SearchId within the user's assigned buckets
 	const { data: searchResult, isLoading, isError, error } = useGetSetupBookBySearchIdQuery(

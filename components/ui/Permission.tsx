@@ -48,20 +48,16 @@ interface PermissionProps {
 }
 
 const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) => {
-	const { selectedCampaignId } = useCampaign();
 	const { user } = useUserInfo();
 	const companyId = user?.company?._id || user?.companyId;
-
-	const targetCampaignId = campaignId ?? selectedCampaignId;
 
 	// Note: API returns { roles: Role[] } now
 	const { data: permissionData, isLoading } = useGetPermissionWithPrivilegeQuery(
 		{
-			campaignId: targetCampaignId ?? undefined,
-			companyId: !targetCampaignId ? (companyId ?? undefined) : undefined
+			companyId: companyId ?? undefined
 		},
 		{
-			skip: !targetCampaignId && !companyId
+			skip: !companyId
 		}
 	);
 
