@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
 import { GearIcon, PlusIcon, TrashIcon } from '@radix-ui/react-icons';
 import Pagination from '@/components/ui/Pagination';
 import { useUserInfo } from '@/contexts/UserInfoContext';
@@ -105,7 +105,9 @@ export default function ConfigurationPage() {
 						<Button
 							variant="primary"
 							size="md"
-							onClick={() => {
+							onClick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
 								setSelectedCampaignId('new');
 								localStorage.removeItem('outcess-setup-data');
 								router.push('/setup');
@@ -187,7 +189,9 @@ export default function ConfigurationPage() {
 													<Button
 														variant="ghost"
 														size="sm"
-														onClick={() => {
+														onClick={(e) => {
+															e.preventDefault();
+															e.stopPropagation();
 															setSelectedCampaignId(lob._id);
 															router.push('/setup');
 														}}

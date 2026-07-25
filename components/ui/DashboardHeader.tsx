@@ -10,7 +10,9 @@ import UserDropdown from './UserDropdown';
 import StatusBadge from './StatusBadge';
 import UserRoleBadge from './UserRoleBadge';
 import LogoutConfirmationModal from './LogoutConfirmationModal';
-import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons';
+import { HamburgerMenuIcon, Cross1Icon, LayersIcon, ChevronDownIcon, CheckIcon } from '@radix-ui/react-icons';
+import { SelectBucketModal } from './SelectBucketModal';
+import { getUserAssignedBuckets, BucketWithMembers } from '@/utils/bucketUtils';
 import ThemeToggle from './ThemeToggle';
 import NotificationBell from './NotificationBell';
 import { useSocket } from '@/contexts/SocketContext';
@@ -69,13 +71,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 	const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
+	const [isBucketModalOpen, setIsBucketModalOpen] = useState(false);
+	const { selectedBucketId, setSelectedBucketId } = useCampaign();
+
 	const { isOffline, isOnline, status: socketStatus, disconnect: disconnectSocket, socket } = useSocket();
 	const [logoutApi] = useLogoutMutation();
 	const [teamMemberLogoutApi] = useTeamMemberLogoutMutation();
 	const [updateTeamMemberStatus] = useUpdateTeamMemberStatusMutation();
 	const [updateUser] = useUpdateUserMutation();
-	const { isAdmin, canAccess } = usePrivilege();
-	const { logout: contextLogout } = useAuth();
+	const { isAdmin, isSuperAdmin, allBucketAccess, canAccess } = usePrivilege();
+	const { user: authUser, logout: contextLogout } = useAuth();
 
 	// Get user from Redux store
 	const reduxUser = useSelector((state: { auth: { user: User | null } }) => state.auth.user);
@@ -113,13 +118,29 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const previousUnreadCount = useRef(0);
 	const previousPathname = useRef(pathname);
 	const isNavigating = useRef(false);
-	const { setSelectedCampaignId, isLoading: isLobLoading, campaignData: selectedLOBData, selectedCampaignId } = useCampaign();
+	const { setSelectedCampaignId, isLoading: isLobLoading, campaignData: selectedLOBData, selectedCampaignId, campaigns } = useCampaign();
 	const previousLobId = useRef(selectedCampaignId);
 	const companyId = selectedLOBData?.companyId || displayUser?.companyId || (reduxUser?.company as { _id?: string })?._id || '';
 
-	const { data: campaignData } = useGetCampaignByCompanyIdForheaderQuery({ companyId }, {
-		skip: !companyId
-	});
+	const buckets = React.useMemo(() => {
+		return (selectedLOBData?.dashboardSettings?.buckets || []) as unknown as BucketWithMembers[];
+	}, [selectedLOBData]);
+
+	const hasFullBucketAccess = isAdmin || isSuperAdmin || allBucketAccess || reduxUser?.isSupervisor === true;
+	const hasAllDataCampaignAccess = isAdmin || isSuperAdmin || allBucketAccess || canAccess('dashboard', 'edit');
+
+	const accessibleBuckets = React.useMemo(
+		() => (hasFullBucketAccess ? buckets : getUserAssignedBuckets(authUser || reduxUser || undefined, buckets)),
+		[buckets, authUser, reduxUser, hasFullBucketAccess]
+	);
+
+	const bucketOptions = React.useMemo(() => {
+		const opts = accessibleBuckets.map(b => ({
+			value: b.id,
+			label: b.name
+		}));
+		return [{ value: 'all', label: 'All Buckets' }, ...opts];
+	}, [accessibleBuckets]);
 
 	// Notifications integration
 	const { data: notificationsData, refetch: refetchNotifications } = useGetNotificationsByCampaignIdQuery(selectedCampaignId || '', {
@@ -137,16 +158,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
 
 	useEffect(() => {
-		if (!isAdmin && !canAccess('dashboard', 'edit') && typeof reduxUser?.campaignId === 'string' && selectedCampaignId !== reduxUser.campaignId) {
-			setSelectedCampaignId(reduxUser.campaignId);
-			return;
-		}
-
-		const data = campaignData as { campaigns?: { _id: string; campaignName: string; status?: string }[] } | undefined;
-		if (data && Array.isArray(data.campaigns)) {
-			const options = data?.campaigns?.map((lob) => ({
+		if (Array.isArray(campaigns)) {
+			const options = campaigns.map((lob) => ({
 				value: lob?._id,
-				label: lob?.campaignName,
+				label: lob?.campaignName || lob?.name || '',
 				status: lob?.status,
 			}));
 			setLobOptions(options);
@@ -156,7 +171,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				setSelectedCampaignId(options[0].value);
 			}
 		}
-	}, [campaignData, selectedCampaignId, setSelectedCampaignId, isAdmin, reduxUser, canAccess]);
+	}, [campaigns, selectedCampaignId, setSelectedCampaignId]);
 
 	// Socket integration for Campaign updates
 	useEffect(() => {
@@ -403,8 +418,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 						)}
 					</div>
 				</Button>
-				<div>
-					{(isAdmin || canAccess('dashboard', 'edit')) && (
+				<div className="flex items-center gap-3">
+					{(hasAllDataCampaignAccess || lobOptions.length >= 2) && (
 						<Dropdown
 							label=""
 							redirect='setup'
@@ -435,6 +450,46 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 						/>
 					)}
 
+					{(hasFullBucketAccess ? accessibleBuckets.length > 0 : accessibleBuckets.length >= 2) && (
+						<Dropdown
+							label=""
+							value={selectedBucketId || 'all'}
+							onChange={(value) => {
+								const stringValue = Array.isArray(value) ? value[0] : value;
+								if (stringValue === 'all' || !stringValue) {
+									setSelectedBucketId(null);
+									toastSuccess("Switched to All Buckets");
+								} else {
+									setSelectedBucketId(stringValue);
+									const bName = accessibleBuckets.find(b => b.id === stringValue)?.name || 'Bucket';
+									toastSuccess(`Switched to bucket: ${bName}`);
+								}
+							}}
+							options={bucketOptions}
+							placeholder="Select Bucket"
+							className="!whitespace-nowrap"
+							rightElement={
+								<span
+									role="button"
+									tabIndex={0}
+									onClick={(e) => {
+										e.stopPropagation();
+										setIsBucketModalOpen(true);
+									}}
+									onKeyDown={(e) => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											e.stopPropagation();
+											setIsBucketModalOpen(true);
+										}
+									}}
+									className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors inline-flex items-center justify-center cursor-pointer"
+									title="View in Modal"
+								>
+									<LayersIcon className="w-3 h-3 text-gray-500" />
+								</span>
+							}
+						/>
+					)}
 				</div>
 				{/* Right side - Icons */}
 				<div className="flex items-center justify-center gap-5">
@@ -534,6 +589,20 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				initials={displayUser?.name?.charAt(0).toUpperCase() || 'U'}
 				status={reduxUser?.status?.status || (isOnline ? 'Online' : 'Offline')}
 				statusColor={reduxUser?.status?.color || (isOnline ? '#22C55E' : '#94A3B8')}
+			/>
+
+			<SelectBucketModal
+				isOpen={isBucketModalOpen}
+				onClose={() => setIsBucketModalOpen(false)}
+				buckets={accessibleBuckets}
+				selectedBucketId={selectedBucketId}
+				onSelect={(bucketId) => {
+					setSelectedBucketId(bucketId);
+					setIsBucketModalOpen(false);
+					const bName = accessibleBuckets.find(b => b.id === bucketId)?.name || 'Bucket';
+					toastSuccess(`Switched to bucket: ${bName}`);
+				}}
+				onNavigateToDashboard={() => setIsBucketModalOpen(false)}
 			/>
 
 			{/* Hibernate Overlay Enforcement */}

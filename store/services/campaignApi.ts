@@ -33,6 +33,7 @@ export interface Campaign {
   roleManagementSettings?: {
     modules: { name: string }[];
   };
+  status?: string;
   [key: string]: unknown;
 }
 
@@ -218,6 +219,25 @@ export const campaignApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Campaign"],
     }),
+    getMyCampaigns: builder.query<{ campaigns: Campaign[] }, void>({
+      query: () => "api/v1/team-members/me/campaigns",
+      providesTags: ["Campaign"],
+    }),
+    getCampaignsByUserId: builder.query<{ campaigns: Campaign[] }, string>({
+      query: (userId) => `api/v1/team-members/user/${userId}/campaigns`,
+      providesTags: ["Campaign"],
+    }),
+    switchCampaign: builder.mutation<
+      { message: string; teamMember?: import("../slices/authSlice").User; token?: string },
+      { campaignId: string }
+    >({
+      query: (body) => ({
+        url: "api/v1/team-members/switch-campaign",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["User", "Campaign"],
+    }),
   }),
 });
 
@@ -235,4 +255,7 @@ export const {
   useRemoveMemberFromBucketMutation,
   useUpdateBucketCustomerFieldsMutation,
   useDeleteBucketFromCampaignMutation,
+  useGetMyCampaignsQuery,
+  useGetCampaignsByUserIdQuery,
+  useSwitchCampaignMutation,
 } = campaignApi;

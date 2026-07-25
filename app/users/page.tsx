@@ -15,6 +15,7 @@ import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import AddUserModal from '@/components/features/user/AddUserModal';
 import DeleteUserModal from '@/components/features/user/DeleteUserModal';
 import BulkUploadModal from '@/components/features/user/BulkUploadModal';
+import MultipleCampaignModal from '@/components/features/user/MultipleCampaignModal';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { toast } from 'sonner';
@@ -48,6 +49,7 @@ interface User {
 	};
 	supervisor?: string;
 	isSupervisor?: boolean;
+	campaigns?: { id: string; name: string }[];
 }
 
 interface StatusPayload {
@@ -86,6 +88,7 @@ interface ApiTeamMember {
 	supervisor?: string | { name?: string };
 	supervisorId?: string;
 	isSupervisor?: boolean;
+	campaigns?: { id: string; name: string }[];
 }
 
 const UsersPage: React.FC = () => {
@@ -158,10 +161,11 @@ const UsersPage: React.FC = () => {
 	const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
 	const [shouldRenderDrawer, setShouldRenderDrawer] = useState(false);
 	const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+	const [isMultipleCampaignModalOpen, setIsMultipleCampaignModalOpen] = useState(false);
 	const [showInfoBanner, setShowInfoBanner] = useState(true);
 	const [users, setUsers] = useState<User[]>([]);
 	const companyId = campaignData?.companyId || '';
-	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Is Supervisor', 'Supervisor', 'Shift Hour', 'Bucket', 'Login Status', 'Actions'];
+	const tableHeaders = ['User ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Is Supervisor', 'Supervisor', 'Shift Hour', 'Bucket', 'Campaigns', 'Login Status', 'Actions'];
 	const totalColumns = tableHeaders.length + 1;
 
 	useEffect(() => {
@@ -270,6 +274,7 @@ const UsersPage: React.FC = () => {
 						: undefined,
 					isSupervisor: !!m.isSupervisor,
 					supervisor: supervisorName,
+					campaigns: m.campaigns || [],
 				};
 			});
 			setUsers(mappedUsers);
@@ -421,6 +426,14 @@ const UsersPage: React.FC = () => {
 							<Button
 								variant="outline"
 								size="md"
+								onClick={() => setIsMultipleCampaignModalOpen(true)}
+								className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
+							>
+								Multiple Campaign
+							</Button>
+							<Button
+								variant="outline"
+								size="md"
 								onClick={() => setIsBulkUploadModalOpen(true)}
 								className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
 							>
@@ -555,6 +568,27 @@ const UsersPage: React.FC = () => {
 											)) && (
 													<span className="text-[10px] text-gray-300 italic font-inter font-normal">Unassigned</span>
 												)}
+										</div>
+									</td>
+									<td
+										className="px-6 py-4 text-[10px] md:text-[12px] dark:text-gray-400"
+										style={{ color: 'var(--text-tertiary)' }}
+									>
+										<div className="flex flex-wrap gap-1">
+											{user.campaigns && user.campaigns.length > 0 ? (
+												user.campaigns.map((camp) => (
+													<span
+														key={camp.id}
+														className="text-[9px] px-1.5 py-0.5 rounded-full text-white font-medium shadow-sm"
+														style={{ backgroundColor: '#3B82F6' }}
+														title={camp.name}
+													>
+														{camp.name}
+													</span>
+												))
+											) : (
+												<span className="text-[10px] text-gray-300 italic font-inter font-normal">No campaigns</span>
+											)}
 										</div>
 									</td>
 									<td
@@ -701,6 +735,12 @@ const UsersPage: React.FC = () => {
 				currentCampaignId={campaignId}
 				companyId={companyId}
 				preselectedIds={Array.from(selectedUsers)}
+			/>
+
+			<MultipleCampaignModal
+				isOpen={isMultipleCampaignModalOpen}
+				onClose={() => setIsMultipleCampaignModalOpen(false)}
+				refetchUsers={refetch}
 			/>
 
 			{confirmSupervisorModal?.isOpen && (

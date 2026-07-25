@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import Input from '@/components/ui/Input';
@@ -9,6 +9,8 @@ import ColorPicker from '@/components/ui/ColorPicker';
 import EmptyState from '@/components/ui/EmptyState';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
 import { MixIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
+import { useSetup } from '@/contexts/SetupContext';
+import SelectBucketModal from '@/components/ui/SelectBucketModal';
 
 interface Widget {
     id: string;
@@ -16,6 +18,7 @@ interface Widget {
     value: number;
     color: string;
     callOutcome?: string;
+    bucketId?: string;
 }
 
 interface CallOutcome {
@@ -67,6 +70,28 @@ export default function KPIMetric({
     callOutcomes,
     onCallOutcomesChange
 }: KPIMetricProps) {
+    const { setupData } = useSetup();
+    const buckets = setupData.dashboardSettings.buckets || [];
+    const [selectedBucketId, setSelectedBucketId] = useState<string | null>(null);
+    const [isBucketModalOpen, setIsBucketModalOpen] = useState(false);
+
+    useEffect(() => {
+        if (buckets.length === 1 && !selectedBucketId) {
+            setSelectedBucketId(buckets[0].id);
+        }
+    }, [buckets, selectedBucketId]);
+
+    const activeBucket = useMemo(() => {
+        return buckets.find(b => b.id === selectedBucketId);
+    }, [buckets, selectedBucketId]);
+
+    const displayedWidgets = useMemo(() => {
+        if (buckets.length > 1 && selectedBucketId) {
+            return widgets.filter(w => w.bucketId === selectedBucketId);
+        }
+        return widgets;
+    }, [widgets, buckets.length, selectedBucketId]);
+
     const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
     const [isEditWidgetModalOpen, setIsEditWidgetModalOpen] = useState(false);
     const [isOutcomesModalOpen, setIsOutcomesModalOpen] = useState(false);
@@ -124,7 +149,8 @@ export default function KPIMetric({
                 title: widgetForm.title,
                 value: 0,
                 color: widgetForm.color,
-                callOutcome: widgetForm.callOutcome
+                callOutcome: widgetForm.callOutcome,
+                ...(selectedBucketId ? { bucketId: selectedBucketId } : {})
             };
             onWidgetsChange([...widgets, newWidget]);
             setIsWidgetModalOpen(false);
@@ -158,78 +184,146 @@ export default function KPIMetric({
 
     return (
         <div className="space-y-6">
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-3">
-                <Button
-                    variant="primary"
-                    size="md"
-                    onClick={() => setIsOutcomesModalOpen(true)}
+            {buckets.length > 1 && !selectedBucketId ? (
+                <div
+                    className="flex flex-col items-center justify-center min-h-[350px] rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/10 cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-900/20 group p-10"
+                    onClick={() => setIsBucketModalOpen(true)}
                 >
-                    Manage Outcomes
-                </Button>
-                <Button
-                    variant="primary"
-                    size="md"
-                    onClick={handleAddWidget}
-                >
-                    Add Widget
-                </Button>
-            </div>
-
-            {/* Widgets Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {widgets.map((widget) => (
                     <div
-                        key={widget.id}
-                        className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative rounded-[var(--radius)] overflow-hidden"
-                        style={{
-                            backgroundColor: 'var(--accent-white)',
-                            borderColor: 'var(--light-gray)'
+                        className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500 mb-6 group-hover:scale-110 transition-transform"
+                    >
+                        <MixIcon className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-xl font-bold dark:text-white mb-2" style={{ color: 'var(--text-primary)' }}>
+                        Select a Bucket
+                    </h3>
+                    <p className="text-sm dark:text-gray-400 max-w-sm text-center mb-6" style={{ color: 'var(--text-tertiary)' }}>
+                        Choose the bucket you want to add and configure your KPI metrics for.
+                    </p>
+                    <Button
+                        variant="primary"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsBucketModalOpen(true);
                         }}
                     >
-                        {/* Widget Color Accent */}
-                        <div
-                            className="absolute top-0 left-0 w-full h-1"
-                            style={{ backgroundColor: widget.color }}
-                        />
-                        <div className="flex items-center justify-between mb-4">
-                            <h3
-                                className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
-                                style={{ color: 'var(--text-primary)' }}
-                            >
-                                {widget.title}
-                            </h3>
-                            <div className="flex items-center gap-1">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleEditWidget(widget)}
-                                    className="p-1 h-auto"
-                                    style={{ color: 'var(--text-tertiary)' }}
-                                    title="Edit Metric"
+                        Select Bucket
+                    </Button>
+                </div>
+            ) : (
+                <>
+                    {/* Active Bucket Header */}
+                    {buckets.length > 1 && selectedBucketId && (
+                        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/40 rounded-xl border dark:border-gray-800">
+                            <div className="flex items-center gap-3">
+                                <div
+                                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
+                                    style={{ backgroundColor: activeBucket?.color || 'var(--text-primary)' }}
                                 >
-                                    <Pencil1Icon className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleDeleteWidgetClick(widget)}
-                                    className="p-1 h-auto text-red-500 hover:text-red-700"
-                                    title="Delete KPI Metric"
-                                >
-                                    <TrashIcon className="w-4 h-4" />
-                                </Button>
+                                    <MixIcon className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-semibold dark:text-white" style={{ color: 'var(--text-primary)' }}>
+                                        Active Bucket: {activeBucket?.name}
+                                    </h4>
+                                    <p className="text-[10px] text-gray-500">
+                                        Configuring KPI metrics for this segment
+                                    </p>
+                                </div>
                             </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsBucketModalOpen(true)}
+                            >
+                                Change Bucket
+                            </Button>
                         </div>
-                        <div
-                            className="text-3xl font-bold"
-                            style={{ color: widget.color }}
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex justify-end gap-3">
+                        <Button
+                            variant="primary"
+                            size="md"
+                            onClick={() => setIsOutcomesModalOpen(true)}
                         >
-                            {widget.value}
-                        </div>
+                            Manage Outcomes
+                        </Button>
+                        <Button
+                            variant="primary"
+                            size="md"
+                            onClick={handleAddWidget}
+                        >
+                            Add Widget
+                        </Button>
                     </div>
-                ))}
-            </div>
+
+                    {/* Widgets Grid */}
+                    {displayedWidgets.length === 0 ? (
+                        <EmptyState
+                            icon={MixIcon}
+                            title="No KPI Metrics Yet"
+                            description="Add your first KPI metric widget above to get started"
+                            className="py-16"
+                        />
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {displayedWidgets.map((widget) => (
+                                <div
+                                    key={widget.id}
+                                    className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative rounded-[var(--radius)] overflow-hidden"
+                                    style={{
+                                        backgroundColor: 'var(--accent-white)',
+                                        borderColor: 'var(--light-gray)'
+                                    }}
+                                >
+                                    {/* Widget Color Accent */}
+                                    <div
+                                        className="absolute top-0 left-0 w-full h-1"
+                                        style={{ backgroundColor: widget.color }}
+                                    />
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3
+                                            className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
+                                            style={{ color: 'var(--text-primary)' }}
+                                        >
+                                            {widget.title}
+                                        </h3>
+                                        <div className="flex items-center gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleEditWidget(widget)}
+                                                className="p-1 h-auto"
+                                                style={{ color: 'var(--text-tertiary)' }}
+                                                title="Edit Metric"
+                                            >
+                                                <Pencil1Icon className="w-4 h-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleDeleteWidgetClick(widget)}
+                                                className="p-1 h-auto text-red-500 hover:text-red-700"
+                                                title="Delete KPI Metric"
+                                            >
+                                                <TrashIcon className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div
+                                        className="text-3xl font-bold"
+                                        style={{ color: widget.color }}
+                                    >
+                                        {widget.value}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </>
+            )}
 
             {/* Modals */}
             <WidgetModal
@@ -267,6 +361,18 @@ export default function KPIMetric({
                 onClose={() => { setIsDeleteModalOpen(false); setDeletingWidget(null); }}
                 onConfirm={handleConfirmDeleteWidget}
                 recordName={deletingWidget?.title || ''}
+            />
+            <SelectBucketModal
+                isOpen={isBucketModalOpen}
+                onClose={() => setIsBucketModalOpen(false)}
+                buckets={buckets}
+                selectedBucketId={selectedBucketId}
+                onSelect={(bucketId) => {
+                    setSelectedBucketId(bucketId);
+                    setIsBucketModalOpen(false);
+                }}
+                onNavigateToDashboard={() => setIsBucketModalOpen(false)}
+                getFieldCount={(bucketId) => widgets.filter(w => w.bucketId === bucketId).length}
             />
         </div>
     );

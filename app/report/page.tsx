@@ -124,8 +124,8 @@ const ReportPage: React.FC = () => {
 	}, [campaignData, setupData]);
 
 	const accessibleBuckets = useMemo(() => {
-		return hasFullBucketAccess ? allBuckets : getUserAssignedBuckets(userId, allBuckets);
-	}, [allBuckets, userId, hasFullBucketAccess]);
+		return hasFullBucketAccess ? allBuckets : getUserAssignedBuckets(user || undefined, allBuckets);
+	}, [allBuckets, user, hasFullBucketAccess]);
 
 	const { data: lobApiData, isLoading: isLobLoading } = useGetDispositionsByCampaignReportQuery(
 		{

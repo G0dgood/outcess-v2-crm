@@ -147,6 +147,24 @@ export const RealTimeUpdates: React.FC = () => {
       toastInfo(payload.message || `You have been removed from the "${payload.bucketName}" bucket.`);
     };
 
+    // Handle Supervisor Status Updates
+    const handleUserSupervisorStatusUpdated = (data: unknown) => {
+      const payload = data as { userId: string; isSupervisor: boolean };
+      const currentUserId = user?.id || user?._id;
+      if (payload.userId && currentUserId && payload.userId.toString() === currentUserId.toString()) {
+        toastInfo(`Your supervisor status has been updated to ${payload.isSupervisor ? 'Supervisor' : 'Non-Supervisor'}. Refreshing...`);
+        updateUser({
+          isSupervisor: payload.isSupervisor
+        });
+        dispatch(updateReduxUser({
+          isSupervisor: payload.isSupervisor
+        }));
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    };
+
     on('roleUpdated', handleRoleUpdated);
     on('teamMemberStatusUpdate', handleTeamMemberStatusUpdate);
     on('statusExpired', handleStatusExpired);
@@ -156,6 +174,7 @@ export const RealTimeUpdates: React.FC = () => {
     on('bucketAssignmentUpdated', handleBucketAssignmentUpdated);
     on('bucket_assigned', handleBucketAssigned);
     on('bucket_removed', handleBucketRemoved);
+    on('userSupervisorStatusUpdated', handleUserSupervisorStatusUpdated);
 
     return () => {
       off('roleUpdated', handleRoleUpdated);
@@ -167,6 +186,7 @@ export const RealTimeUpdates: React.FC = () => {
       off('bucketAssignmentUpdated', handleBucketAssignmentUpdated);
       off('bucket_assigned', handleBucketAssigned);
       off('bucket_removed', handleBucketRemoved);
+      off('userSupervisorStatusUpdated', handleUserSupervisorStatusUpdated);
     };
   }, [socket, on, off, updateUser, dispatch, user?.id, user?._id, pathname]);
 

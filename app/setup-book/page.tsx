@@ -73,12 +73,11 @@ const SetupBookPage: React.FC = () => {
 
 	const allConfiguredFieldsChunks = useMemo(() => campaignData?.customerBookSettings?.configuredFields || [], [campaignData]);
 	const buckets = useMemo(() => (campaignData?.dashboardSettings?.buckets || []) as BucketWithMembers[], [campaignData]);
-	const userId = String(user?.id || user?._id || '');
 	const hasFullBucketAccess = isAdmin || isSuperAdmin || allBucketAccess;
 
 	const accessibleBuckets = useMemo(
-		() => (hasFullBucketAccess ? buckets : getUserAssignedBuckets(userId, buckets)),
-		[buckets, userId, hasFullBucketAccess]
+		() => (hasFullBucketAccess ? buckets : getUserAssignedBuckets(user || undefined, buckets)),
+		[buckets, user, hasFullBucketAccess]
 	);
 
 	const bucketOptions = useMemo(() => {

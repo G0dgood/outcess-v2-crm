@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import Button from '@/components/ui/Button';
-import { useGetTeamMembersByCampaignIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByCompanyIdQuery, ApiTeamMember } from '@/store/services/teamMembersApi';
+import { useUserInfo } from '@/contexts/UserInfoContext';
 import { SVGLoaderFetch, NoRecordFound } from '@/components/Options';
 import { useSetup, AssignedMember, Bucket } from '@/contexts/SetupContext';
 import Search from '@/components/ui/Search';
@@ -26,12 +27,15 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 	campaignId,
 	onAssign,
 }) => {
-	const { data: teamMembersResponse, isLoading } = useGetTeamMembersByCampaignIdQuery(
-		{ campaignId, page: 1, limit: 100 },
-		{ skip: !isOpen || !campaignId }
+	const { setupData } = useSetup();
+	const { user } = useUserInfo();
+	const companyId = setupData.companyId || user?.companyId || user?.company?._id || '';
+
+	const { data: teamMembersResponse, isLoading } = useGetTeamMembersByCompanyIdQuery(
+		companyId,
+		{ skip: !isOpen || !companyId }
 	);
 
-	const { setupData } = useSetup();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
 	const [isAssigning, setIsAssigning] = useState(false);
@@ -251,7 +255,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 								<div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-[var(--radius)] flex gap-3">
 									<InfoCircledIcon className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
 									<div className="text-[11px] text-amber-800 dark:text-amber-200 leading-normal">
-										<span className="font-bold">Assignment Alerts:</span> Some selected members are already in other buckets: <span className="font-bold underline">{conflictBuckets.join(', ')}</span>. Do you still want to move them?
+										<span className="font-bold">Assignment Alerts:</span> Some selected members are already in other buckets: <span className="font-bold underline">{conflictBuckets.join(', ')}</span>. They will be added to this bucket as well.
 									</div>
 								</div>
 							)}
