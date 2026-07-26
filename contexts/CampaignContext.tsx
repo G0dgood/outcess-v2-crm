@@ -47,15 +47,33 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, in
     const [switchCampaign] = useSwitchCampaignMutation();
     const [selectedBucketId, setSelectedBucketIdState] = useState<string | null>(null);
 
-    // Save and load selected bucket ID from local storage
+    const { data: campaignData, isLoading: isCampaignLoading, isFetching: isCampaignFetching } = useGetCampaignQuery(
+        selectedCampaignId || '',
+        { skip: !selectedCampaignId || selectedCampaignId === 'new' }
+    );
+
+    // Save, load, and auto-select the first bucket of the campaign if none is validly selected/saved
     useEffect(() => {
-        if (selectedCampaignId) {
-            const saved = localStorage.getItem(`selectedBucketId_${selectedCampaignId}`);
-            setSelectedBucketIdState(saved);
+        if (selectedCampaignId && campaignData?.dashboardSettings?.buckets && Array.isArray(campaignData.dashboardSettings.buckets)) {
+            const buckets = campaignData.dashboardSettings.buckets;
+            if (buckets.length > 0) {
+                const saved = localStorage.getItem(`selectedBucketId_${selectedCampaignId}`);
+                const isSavedValid = saved && buckets.some(b => b.id === saved);
+                if (isSavedValid) {
+                    setSelectedBucketIdState(saved);
+                } else {
+                    setSelectedBucketIdState(buckets[0].id);
+                    localStorage.setItem(`selectedBucketId_${selectedCampaignId}`, buckets[0].id);
+                }
+            } else {
+                setSelectedBucketIdState(null);
+            }
         } else {
             setSelectedBucketIdState(null);
         }
-    }, [selectedCampaignId]);
+    }, [selectedCampaignId, campaignData]);
+
+    // Bucket selection is managed above after campaignData is defined
 
     const setSelectedBucketId = (id: string | null) => {
         setSelectedBucketIdState(id);
@@ -184,6 +202,18 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, in
                         dispatch(setReduxPrivileges(privileges));
                         localStorage.setItem('userPrivileges', JSON.stringify(privileges));
                     }
+
+                    // Save auth data to localStorage synchronously to prevent old session load on reload
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('outcess_auth', JSON.stringify({
+                            user: normalizedUser,
+                            tokens: { accessToken: token },
+                            mfaVerified: false,
+                            savedAt: Date.now()
+                        }));
+                        localStorage.setItem('outcess-user', JSON.stringify(normalizedUser));
+                        localStorage.setItem('outcess-token', token);
+                    }
                     
                     // Reload to fully reset all state and variables for the new campaign
                     window.location.reload();
@@ -214,16 +244,11 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({ children, in
         dispatch(supportApi.util.resetApiState());
     };
 
-    const { data: campaignData, isLoading, isFetching } = useGetCampaignQuery(
-        selectedCampaignId || '',
-        { skip: !selectedCampaignId || selectedCampaignId === 'new' }
-    );
-
     return (
         <CampaignContext.Provider value={{
             selectedCampaignId,
             setSelectedCampaignId,
-            isLoading: isLoading || isFetching,
+            isLoading: isCampaignLoading || isCampaignFetching,
             campaignData,
             campaigns: campaignsList,
             selectedBucketId,
