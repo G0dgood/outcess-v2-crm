@@ -3,7 +3,6 @@
 import React from 'react';
 import Button from './Button';
 import Input from './Input';
-import LogoUpload from './LogoUpload';
 
 interface FormData {
 	companyName: string;
@@ -33,9 +32,7 @@ const CompanyProfile: React.FC<CompanyProfileProps> = ({
 	isEditMode,
 	setIsEditMode,
 	handleSave,
-	isUpdating,
-	logoFile,
-	setLogoFile
+	isUpdating
 }) => {
 	return (
 		<div className="space-y-6">

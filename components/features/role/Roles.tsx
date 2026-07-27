@@ -129,13 +129,6 @@ const Roles: React.FC<RolesProps> = ({ className = '' }) => {
 							style={{
 								backgroundColor: 'var(--accent-white)',
 								borderColor: 'var(--light-gray)',
-								// boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
-							}}
-							onMouseEnter={(e) => {
-								// e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
-							}}
-							onMouseLeave={(e) => {
-								// e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
 							}}
 						>
 							<div className="flex justify-between items-start mb-2">

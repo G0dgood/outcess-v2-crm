@@ -6,7 +6,8 @@
 import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from './offlineDispositions';
 import { filterDispositionsByTimeRange } from './filterUtils';
 import type { ChartDataItem } from '@/components/dashboard/charts/types';
-import { DashboardSettings } from '@/types/dashboard';
+import { DashboardSettings, DispositionCategory } from '@/types/dashboard';
+import { resolveMultiDropdownLevels, getAllCampaignDispositions } from './dispositionMultiDropdown';
 
 interface SetupData {
 	dashboardSettings: DashboardSettings;
@@ -274,58 +275,85 @@ const generateSingleSourceData = (
 	// Use filtered dispositions for counting
 	const dispositionsToCount = filteredDispositions;
 
-	// Handle disposition categories (Fields) - Aggregate values
-	// Gather dispositions from both direct and bucketed sources
-	const configuredDispositions: { name: string; color?: string }[] = [...(setupData.dashboardSettings.dispositions || [])];
-	if (setupData.dashboardSettings.buckets && Array.isArray(setupData.dashboardSettings.buckets)) {
-		setupData.dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
-			if (bucket && Array.isArray(bucket.dispositions)) {
-				bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
-					if (disp && disp.name && !configuredDispositions.some(d => d.name === disp.name)) {
-						configuredDispositions.push(disp);
+	const allCampaignDispositions = getAllCampaignDispositions(setupData.dashboardSettings);
+	const disposition = allCampaignDispositions.find((d: DispositionCategory) => d.name === dataSource);
+
+	if (disposition) {
+		const counts: Record<string, number> = {};
+
+		dispositionsToCount.forEach(disp => {
+			const fields = disp.dispositionData || disp.fillDisposition;
+			if (fields && Array.isArray(fields)) {
+				const field = fields.find((f: DispositionFieldEntry) => f.fieldName === disposition.name);
+				if (field && field.fieldValue) {
+					const valStr = String(field.fieldValue);
+					if (valStr.includes(' > ')) {
+						const levels = resolveMultiDropdownLevels(field.fieldName, valStr, disposition);
+						levels.forEach(lvl => {
+							if (lvl.value && lvl.value !== '-') {
+								counts[lvl.value] = (counts[lvl.value] || 0) + 1;
+							}
+						});
+					} else {
+						const val = valStr.trim();
+						if (val && val !== '-') {
+							counts[val] = (counts[val] || 0) + 1;
+						}
 					}
-				});
+				}
 			}
 		});
+
+		const labels = Object.keys(counts);
+		const rawData = labels.map((label) => ({
+			label,
+			value: counts[label],
+			color: ''
+		}));
+		return cleanChartData(rawData, chartColor || disposition.color);
 	}
 
-	const disposition = configuredDispositions.find((d: { name: string; color?: string }) => d.name === dataSource);
-		if (disposition) {
-			const counts: Record<string, number> = {};
-			
-			dispositionsToCount.forEach(disp => {
-				let value: string | undefined;
+	// Handle sub-label headers or sub-option values of multi-dropdown fields
+	const subLabelCounts: Record<string, number> = {};
+	let matchedMultiLevel = false;
 
-				// Check dispositionData or fillDisposition array
-				const fields = disp.dispositionData || disp.fillDisposition;
-				if (fields && Array.isArray(fields)) {
-					const field = fields.find((f: DispositionFieldEntry) => f.fieldName === disposition.name);
-					if (field) {
-						value = field.fieldValue?.toString().trim();
+	dispositionsToCount.forEach(disp => {
+		const fields = disp.dispositionData || disp.fillDisposition;
+		if (fields && Array.isArray(fields)) {
+			fields.forEach((f: DispositionFieldEntry) => {
+				if (!f.fieldName || f.fieldValue === undefined || f.fieldValue === null) return;
+				const valStr = String(f.fieldValue);
+				if (valStr.includes(' > ')) {
+					const dispDef = allCampaignDispositions.find(d => d.name === f.fieldName);
+					const levels = resolveMultiDropdownLevels(f.fieldName, valStr, dispDef);
+
+					const headerMatch = levels.some(l => l.header.toLowerCase() === dataSource.toLowerCase());
+					const valueMatch = levels.some(l => l.value.toLowerCase() === dataSource.toLowerCase());
+
+					if (headerMatch) {
+						matchedMultiLevel = true;
+						levels.forEach(lvl => {
+							if (lvl.header.toLowerCase() === dataSource.toLowerCase() && lvl.value && lvl.value !== '-') {
+								subLabelCounts[lvl.value] = (subLabelCounts[lvl.value] || 0) + 1;
+							}
+						});
+					} else if (valueMatch) {
+						matchedMultiLevel = true;
+						subLabelCounts[dataSource] = (subLabelCounts[dataSource] || 0) + 1;
 					}
-				}
-
-				// Fallback for direct property access
-				if (!value) {
-					const directValue = disp[disposition.name as keyof typeof disp];
-					if (directValue) {
-						value = directValue.toString().trim();
-					}
-				}
-
-				if (value && value !== '-') {
-					counts[value] = (counts[value] || 0) + 1;
 				}
 			});
-
-			const labels = Object.keys(counts);
-			const rawData = labels.map((label) => ({
-				label,
-				value: counts[label],
-				color: ''
-			}));
-			return cleanChartData(rawData, chartColor || disposition.color);
 		}
+	});
+
+	if (matchedMultiLevel && Object.keys(subLabelCounts).length > 0) {
+		const rawData = Object.keys(subLabelCounts).map(label => ({
+			label,
+			value: subLabelCounts[label],
+			color: ''
+		}));
+		return cleanChartData(rawData, chartColor);
+	}
 
 	// Handle call outcomes (Specific Values) - Count occurrences
 	if (setupData.dashboardSettings.callOutcomes) {

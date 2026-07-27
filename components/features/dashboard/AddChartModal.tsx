@@ -12,6 +12,7 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useGetDashboardDispositionsByCampaignAndAgentIdReportQuery, useGetAllDashboardDispositionsByCampaignReportQuery } from '@/store/services/dispositionApi';
+import { DispositionCategory, NestedOption } from '@/types/dashboard';
 
 interface AddChartModalProps {
 	isOpen: boolean;
@@ -115,11 +116,11 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		const dashboardSettings = campaignData?.dashboardSettings;
 
 		// Add disposition categories if available (direct and bucketed)
-		const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
+		const allDispositions: DispositionCategory[] = [...(dashboardSettings?.dispositions || [])];
 		if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
-			dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
+			dashboardSettings.buckets.forEach((bucket: { dispositions?: DispositionCategory[] }) => {
 				if (bucket && Array.isArray(bucket.dispositions)) {
-					bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
+					bucket.dispositions.forEach((disp: DispositionCategory) => {
 						if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
 							allDispositions.push(disp);
 						}
@@ -129,9 +130,34 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 		}
 
 		if (allDispositions.length > 0) {
-			allDispositions.forEach((disposition: { name: string }) => {
+			allDispositions.forEach((disposition: DispositionCategory) => {
 				if (disposition?.name) {
 					optionsMap.set(disposition.name, { value: disposition.name, label: disposition.name });
+
+					const collectNested = (opts?: NestedOption[]) => {
+						if (!opts || !Array.isArray(opts)) return;
+						opts.forEach(opt => {
+							if (opt.value) {
+								optionsMap.set(opt.value, { value: opt.value, label: `${disposition.name} -> ${opt.value}` });
+							}
+							if (opt.subLabel && !optionsMap.has(opt.subLabel)) {
+								optionsMap.set(opt.subLabel, { value: opt.subLabel, label: `${disposition.name} Label: ${opt.subLabel}` });
+							}
+							if (opt.subOptions) {
+								collectNested(opt.subOptions);
+							}
+						});
+					};
+
+					collectNested(disposition.nestedOptions);
+
+					if (disposition.dropdownOptions && Array.isArray(disposition.dropdownOptions)) {
+						disposition.dropdownOptions.forEach(opt => {
+							if (opt && opt.trim()) {
+								optionsMap.set(opt.trim(), { value: opt.trim(), label: `${disposition.name} -> ${opt.trim()}` });
+							}
+						});
+					}
 				}
 			});
 		}

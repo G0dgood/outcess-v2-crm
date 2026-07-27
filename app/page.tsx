@@ -244,7 +244,7 @@ export default function LoginPage() {
 			}).unwrap();
 			toast.success('Reactivation request sent successfully!');
 			setIsDeactivatedModalOpen(false);
-		} catch (error: unknown) {
+		} catch {
 			// useApiError hook handles the error UI reactively
 		}
 	};

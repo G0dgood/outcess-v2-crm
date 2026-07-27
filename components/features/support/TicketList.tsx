@@ -1,6 +1,7 @@
 import { Calendar, Flag, Trash } from 'lucide-react';
 import moment from 'moment';
-import { useDeleteTicketMutation, SupportTicket } from '@/store/services/supportApi';
+import { useDeleteTicketMutation, SupportTicket, PopulatedMember } from '@/store/services/supportApi';
+import { useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
 import { Campaign } from '@/store/services/campaignApi';
 import { toastSuccess, toastError, toastInfo } from '@/utils/toastWithSound';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +31,14 @@ const TicketList: React.FC<TicketListProps> = ({
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 	const [ticketToDelete, setTicketToDelete] = useState<SupportTicket | null>(null);
 	const [assigningTicket, setAssigningTicket] = useState<SupportTicket | null>(null);
+
+	const campaignId = String(campaignData?._id || campaignData?.id || '');
+	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
+		{ campaignId, limit: 100 },
+		{ skip: !campaignId }
+	);
+	const rawMembers = (teamMembersData as { teamMembers?: PopulatedMember[]; data?: PopulatedMember[] })?.teamMembers || (teamMembersData as { data?: PopulatedMember[] })?.data || (Array.isArray(teamMembersData) ? teamMembersData : []);
+	const teamMembersList = Array.isArray(rawMembers) ? rawMembers : [];
 
 	const handleDeleteClick = (e: React.MouseEvent, ticket: SupportTicket) => {
 		e.stopPropagation();
@@ -142,8 +151,20 @@ const TicketList: React.FC<TicketListProps> = ({
 
 			{tickets.map((ticket) => {
 				const colors = getStatusColors(ticket.status);
-				const requester = typeof ticket.creatorId === 'object' ? ticket.creatorId : null;
-				const assignees = (ticket.assignedToIds || []).filter(a => typeof a === 'object');
+				const requester: PopulatedMember | null = typeof ticket.creatorId === 'object' && ticket.creatorId !== null
+					? ticket.creatorId
+					: typeof ticket.creatorId === 'string'
+						? teamMembersList.find((m) => String(m._id || m.id || '') === ticket.creatorId) || ({ _id: ticket.creatorId, name: ticket.creatorName || 'User', firstName: ticket.creatorName || 'User' } as PopulatedMember)
+						: null;
+				const assignees: PopulatedMember[] = (ticket.assignedToIds || [])
+					.map((a) => {
+						if (typeof a === 'string') {
+							const matched = teamMembersList.find((m) => String(m._id || m.id || '') === a);
+							return matched || ({ _id: a, name: 'Agent', firstName: 'Agent', lastName: '' } as PopulatedMember);
+						}
+						return a as PopulatedMember;
+					})
+					.filter(Boolean);
 
 				const handleCardClick = () => {
 					if (!ticket.assignedToIds || ticket.assignedToIds.length === 0) {

@@ -1,6 +1,5 @@
 import React from 'react';
 import Button from './Button';
-import { useTheme } from '@/contexts/ThemeContext';
 
 interface PaginationProps {
 	currentPage: number;
@@ -21,7 +20,6 @@ const Pagination: React.FC<PaginationProps> = ({
 	className = '',
 	primaryColor = '#050711',
 }) => {
-	const { isDarkMode } = useTheme();
 	const handlePrevious = () => {
 		if (currentPage > 1) {
 			onPageChange(currentPage - 1);

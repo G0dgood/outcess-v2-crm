@@ -123,7 +123,7 @@ const UsersPage: React.FC = () => {
 				data: { isSupervisor }
 			}).unwrap();
 			toast.success(`User supervisor status updated successfully`);
-		} catch (error) {
+		} catch {
 			toast.error('Failed to update supervisor status');
 		}
 	};

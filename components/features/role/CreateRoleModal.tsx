@@ -17,13 +17,6 @@ interface CreateRoleModalProps {
 	onSuccess?: () => void;
 }
 
-interface ApiError {
-	data?: {
-		message?: string;
-	};
-	message?: string;
-}
-
 export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
 	isOpen,
 	onClose,

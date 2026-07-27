@@ -371,12 +371,24 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
         let updateData: FormData | Record<string, unknown> = {};
         switch (currentStep) {
-          case 2:
+          case 2: {
+            // Only persist buckets that belong to this campaign, and stamp them
+            // with the current campaign id. This stops a stale bucket from
+            // another campaign in the shared setup state from being written here.
+            const currentCampaignId = setupData.campaignId;
+            const ownedBuckets = (setupData.dashboardSettings.buckets || [])
+              .filter((b) => !b?.campaignId || String(b.campaignId) === String(currentCampaignId))
+              .map((b) => ({ ...b, campaignId: currentCampaignId }));
+
             updateData = {
-              dashboardSettings: setupData.dashboardSettings,
+              dashboardSettings: {
+                ...setupData.dashboardSettings,
+                buckets: ownedBuckets,
+              },
               progress,
             };
             break;
+          }
           case 3:
             // Sync all bucket-specific customer fields individually
             const buckets = setupData.dashboardSettings.buckets || [];

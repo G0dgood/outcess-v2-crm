@@ -112,7 +112,7 @@ const TeamMembersPage: React.FC = () => {
 		{ skip: !campaignId }
 	);
 	const { socket } = useSocket();
-	const { canAccess } = usePrivilege();
+	const { canAccess, isAdmin } = usePrivilege();
 	const canAccessModule = canAccess('teamMembers', 'view');
 
 	const [createTeamMember] = useCreateTeamMemberMutation();
@@ -279,7 +279,9 @@ const TeamMembersPage: React.FC = () => {
 			});
 	}, [campaignMembersResponse]);
 
-	const isSupervisor = user?.isSupervisor === true;
+	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string; name?: string })?.roleName || (user?.role as { roleName?: string; name?: string })?.name : user?.role;
+	const isSupervisor = user?.isSupervisor === true || userRoleName?.toLowerCase() === 'supervisor';
+	const hasSupervisorAccess = isSupervisor || isAdmin;
 
 	// Members of the current campaign, shaped for the Transfer modal.
 	const transferMemberOptions = useMemo(() => {
@@ -295,21 +297,24 @@ const TeamMembersPage: React.FC = () => {
 	}, [teamMembersData]);
 
 	useEffect(() => {
-		if (isSupervisor) {
-			const currentUserId = user?._id || user?.id;
-			if (currentUserId && supervisorFilter !== currentUserId) {
+		if (!campaignMembersResponse && supervisors.length === 0) return;
+
+		const currentUserId = user?._id || user?.id;
+		const stillValid = supervisors.some((s) => s.value === supervisorFilter);
+
+		if (!stillValid) {
+			const hasUserInSupervisors = currentUserId && supervisors.some((s) => s.value === currentUserId);
+			if (hasUserInSupervisors) {
 				setSupervisorFilter(currentUserId);
-			}
-		} else if (campaignMembersResponse) {
-			// Once the current campaign's members have loaded, make sure the selected
-			// supervisor belongs to this campaign; otherwise reset (e.g. after switching
-			// campaigns) so the list refreshes instead of showing the previous campaign.
-			const stillValid = supervisors.some((s) => s.value === supervisorFilter);
-			if (!stillValid) {
-				setSupervisorFilter(supervisors.length > 0 ? supervisors[0].value : '');
+			} else if (supervisors.length > 0) {
+				setSupervisorFilter(supervisors[0].value);
+			} else if (currentUserId && hasSupervisorAccess) {
+				setSupervisorFilter(currentUserId);
+			} else {
+				setSupervisorFilter('');
 			}
 		}
-	}, [supervisors, supervisorFilter, isSupervisor, user, campaignMembersResponse]);
+	}, [supervisors, supervisorFilter, hasSupervisorAccess, user, campaignMembersResponse]);
 
 	const shiftHourOptions = useMemo(() => {
 		const lobShiftHours = campaignData?.shiftHours as
@@ -471,7 +476,7 @@ const TeamMembersPage: React.FC = () => {
 						label="Supervisor"
 						options={supervisors}
 						value={supervisorFilter}
-						disabled={isSupervisor}
+						disabled={!hasSupervisorAccess}
 						onChange={(val) => {
 							if (Array.isArray(val)) return;
 							setSupervisorFilter(val);

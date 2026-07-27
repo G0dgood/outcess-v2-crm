@@ -28,7 +28,6 @@ import {
 	SMSLog as SMSLogType,
 	SMSCampaign,
 } from '@/store/services/smsApi';
-import { toastSuccess } from '@/utils/toastWithSound';
 import { toast } from 'sonner';
 
 const SMSPage: React.FC = () => {

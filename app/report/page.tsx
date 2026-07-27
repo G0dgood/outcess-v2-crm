@@ -10,7 +10,9 @@ import { MixerHorizontalIcon } from '@radix-ui/react-icons';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import PageHeading from '@/components/ui/PageHeading';
 import Dropdown from '@/components/ui/Dropdown';
+import ReportFilterOptionsModal from '@/components/ReportFilterOptionsModal';
 import { useCampaign } from '@/contexts/CampaignContext';
+import { useSetup } from '@/contexts/SetupContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import AccessRestricted from '@/components/ui/AccessRestricted';
@@ -20,11 +22,13 @@ import {
 	useLazyGetDispositionsByCampaignReportQuery,
 	useLazyGetDispositionsByAgentReportQuery
 } from '@/store/services/dispositionApi';
+import { useGetCampaignByCompanyIdForheaderQuery } from '@/store/services/campaignApi';
+import { useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
-import { toastWarning, toastError } from '@/utils/toastWithSound';
 import CSVDownloadButton from '@/components/ui/CSVDownloadButton';
 import { BucketWithMembers, getUserAssignedBuckets } from '@/utils/bucketUtils';
+import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
 
 interface ReportData {
 	id: string;
@@ -42,8 +46,10 @@ interface ReportItem {
 	id?: string;
 	agent?: {
 		name?: string;
+		firstName?: string;
+		lastName?: string;
 		[key: string]: unknown;
-	} | string;
+	};
 	customer?: {
 		Name?: string;
 		firstName?: string;
@@ -64,11 +70,14 @@ interface ReportApiResponse {
 
 const ReportPage: React.FC = () => {
 	const { campaignData, selectedCampaignId } = useCampaign();
+	const { setupData } = useSetup();
 	const { user } = useUserInfo();
 	const { canAccess, isAdmin, isLoading: isPrivilegeLoading, allBucketAccess, isSuperAdmin } = usePrivilege();
 	const canView = canAccess('report', 'view');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
+
+	const effectiveCampaignId = String(selectedCampaignId || campaignData?._id || campaignData?.id || setupData?.campaignId || user?.campaignId || '');
 
 	const [dateRange, setDateRange] = useState<{ startDate: string; endDate: string }>(() => {
 		// Local start/end of today, converted to UTC instants (matches how createdAt is stored)
@@ -86,37 +95,55 @@ const ReportPage: React.FC = () => {
 	const isAgent = !isAdmin && !isSupervisor;
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
+	const { setSelectedCampaignId } = useCampaign();
 	const [selectedBucketId, setSelectedBucketId] = useState<string>('');
+	const [selectedAgentId, setSelectedAgentId] = useState<string>('');
+
+	// State for Option Modal
+	const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
+
+	const companyId = String(user?.companyId || (typeof user?.company === 'object' ? (user?.company as { _id?: string; id?: string })?._id || (user?.company as { _id?: string; id?: string })?.id : user?.company) || '');
+	const { data: headerCampaignsData } = useGetCampaignByCompanyIdForheaderQuery(
+		companyId ? { companyId } : { companyId: '' },
+		{ skip: !companyId }
+	);
+	const campaignsList = (headerCampaignsData as { campaigns?: Array<{ _id?: string; id?: string; name?: string; campaignName?: string }> })?.campaigns || [];
+
+	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
+		effectiveCampaignId ? { campaignId: effectiveCampaignId } : { campaignId: '' },
+		{ skip: !effectiveCampaignId }
+	);
+	const rawTeamMembers = (teamMembersData as { teamMembers?: Array<{ _id?: string; id?: string; name?: string; firstName?: string; lastName?: string; email?: string }>; data?: Array<{ _id?: string; id?: string; name?: string; firstName?: string; lastName?: string; email?: string }> })?.teamMembers || (teamMembersData as { data?: Array<{ _id?: string; id?: string; name?: string; firstName?: string; lastName?: string; email?: string }> })?.data || (Array.isArray(teamMembersData) ? teamMembersData : []);
+	const teamMembersList = Array.isArray(rawTeamMembers) ? rawTeamMembers : [];
 
 	const userId = String(user?._id || user?.id || '');
 	const hasFullBucketAccess = isAdmin || isSuperAdmin || allBucketAccess;
 
 	const allBuckets = useMemo(() => {
-		return (campaignData?.dashboardSettings?.buckets || []) as unknown as BucketWithMembers[];
-	}, [campaignData]);
+		return (campaignData?.dashboardSettings?.buckets || setupData?.dashboardSettings?.buckets || []) as unknown as BucketWithMembers[];
+	}, [campaignData, setupData]);
 
 	const accessibleBuckets = useMemo(() => {
 		return hasFullBucketAccess ? allBuckets : getUserAssignedBuckets(userId, allBuckets);
 	}, [allBuckets, userId, hasFullBucketAccess]);
 
-
-
 	const { data: lobApiData, isLoading: isLobLoading } = useGetDispositionsByCampaignReportQuery(
 		{
-			campaignId: selectedCampaignId || '',
+			campaignId: effectiveCampaignId,
 			startDate: dateRange.startDate,
 			endDate: dateRange.endDate,
 			page: currentPage,
 			limit: itemsPerPage,
 			search: searchTerm,
-			bucketId: selectedBucketId
+			bucketId: selectedBucketId,
+			agentId: selectedAgentId
 		},
-		{ skip: !selectedCampaignId || isAgent || isPrivilegeLoading }
+		{ skip: !effectiveCampaignId || isAgent || isPrivilegeLoading }
 	);
 
 	const { data: agentApiData, isLoading: isAgentLoading } = useGetDispositionsByAgentReportQuery(
 		{
-			campaignId: selectedCampaignId || '',
+			campaignId: effectiveCampaignId,
 			agentId: user?._id || user?.id || '',
 			page: currentPage,
 			limit: itemsPerPage,
@@ -125,7 +152,7 @@ const ReportPage: React.FC = () => {
 			search: searchTerm,
 			bucketId: selectedBucketId
 		},
-		{ skip: !selectedCampaignId || !isAgent || !(user?._id || user?.id) || isPrivilegeLoading }
+		{ skip: !effectiveCampaignId || !isAgent || !(user?._id || user?.id) || isPrivilegeLoading }
 	);
 
 	const apiData = (isAgent ? agentApiData : lobApiData) as ReportApiResponse | ReportItem[] | undefined;
@@ -143,22 +170,22 @@ const ReportPage: React.FC = () => {
 		setCurrentPage(1);
 	}, [searchTerm, selectedBucketId]);
 
-	// Reset selected bucket if it's not accessible
+	// Reset filters when switching campaigns
+	useEffect(() => {
+		setSelectedBucketId('');
+		setCurrentPage(1);
+		setSearchTerm('');
+	}, [effectiveCampaignId]);
+
+	// Reset selected bucket if it's not valid for current campaign
 	useEffect(() => {
 		if (accessibleBuckets.length > 0 && selectedBucketId) {
 			const isAccessible = hasFullBucketAccess
 				? true
 				: accessibleBuckets.some(b => (b.id || b._id) === selectedBucketId);
-
 			if (!isAccessible) {
-				const firstBucket = accessibleBuckets[0];
-				const bucketId = firstBucket?.id ?? firstBucket?._id ?? '';
-				setSelectedBucketId(bucketId);
+				setSelectedBucketId('');
 			}
-		} else if (accessibleBuckets.length > 0 && !selectedBucketId) {
-			const firstBucket = accessibleBuckets[0];
-			const bucketId = firstBucket?.id ?? firstBucket?._id ?? '';
-			setSelectedBucketId(bucketId);
 		}
 	}, [accessibleBuckets, selectedBucketId, hasFullBucketAccess]);
 
@@ -173,6 +200,10 @@ const ReportPage: React.FC = () => {
 	}, []);
 
 
+
+	const configuredDispositions = useMemo(() => {
+		return getAllCampaignDispositions(campaignData?.dashboardSettings);
+	}, [campaignData?.dashboardSettings]);
 
 	const reportData: ReportData[] = useMemo(() => {
 		if (!apiData) return [];
@@ -209,18 +240,22 @@ const ReportPage: React.FC = () => {
 				});
 			}
 
-			// Flatten fillDisposition
+			// Flatten fillDisposition (expand multi-dropdown levels into distinct header columns)
 			if (Array.isArray(item.fillDisposition)) {
 				item.fillDisposition.forEach((field: DispositionField) => {
-					if (field.fieldName) {
-						row[field.fieldName] = field.fieldValue;
+					if (field.fieldName && field.fieldValue !== undefined && field.fieldValue !== null) {
+						const dispDef = configuredDispositions.find(d => d.name === field.fieldName);
+						const levels = resolveMultiDropdownLevels(field.fieldName, String(field.fieldValue), dispDef);
+						levels.forEach(lvl => {
+							row[lvl.header] = lvl.value;
+						});
 					}
 				});
 			}
 
 			return row;
 		});
-	}, [apiData]);
+	}, [apiData, configuredDispositions]);
 
 	const dynamicHeaders = useMemo(() => {
 		if (reportData.length === 0) return [];
@@ -267,7 +302,7 @@ const ReportPage: React.FC = () => {
 
 	const fetchAllReportsToExport = async (): Promise<ReportItem[]> => {
 		const queryParams = {
-			campaignId: selectedCampaignId || '',
+			campaignId: effectiveCampaignId,
 			startDate: dateRange.startDate,
 			endDate: dateRange.endDate,
 			page: 1,
@@ -321,8 +356,12 @@ const ReportPage: React.FC = () => {
 
 		if (Array.isArray(item.fillDisposition)) {
 			item.fillDisposition.forEach((field: DispositionField) => {
-				if (field.fieldName) {
-					row[field.fieldName] = field.fieldValue;
+				if (field.fieldName && field.fieldValue !== undefined && field.fieldValue !== null) {
+					const dispDef = configuredDispositions.find(d => d.name === field.fieldName);
+					const levels = resolveMultiDropdownLevels(field.fieldName, String(field.fieldValue), dispDef);
+					levels.forEach(lvl => {
+						row[lvl.header] = lvl.value;
+					});
 				}
 			});
 		}
@@ -404,6 +443,20 @@ const ReportPage: React.FC = () => {
 				</div>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
 					<div ref={filterButtonRef} className="relative">
+						<Button
+							type="button"
+							variant="outline"
+							onClick={() => setIsOptionsModalOpen(true)}
+							className="dark:bg-gray-800 border dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100 focus:ring-offset-2 dark:focus:ring-offset-gray-800 dark:focus:ring-gray-400 gap-2 whitespace-nowrap"
+							style={{
+								backgroundColor: 'var(--accent-white)',
+								borderColor: 'var(--light-gray)',
+								color: 'var(--text-secondary)'
+							}}
+						>
+							<MixerHorizontalIcon className="w-4 h-4" />
+							Option Modal
+						</Button>
 						<Button
 							type="button"
 							variant="outline"
@@ -543,6 +596,26 @@ const ReportPage: React.FC = () => {
 					secondaryColor={campaignData?.secondaryColor || 'var(--primary)'}
 				/>
 			)}
+			{/* Report Filter Options Modal */}
+			<ReportFilterOptionsModal
+				isOpen={isOptionsModalOpen}
+				onClose={() => setIsOptionsModalOpen(false)}
+				campaignsList={campaignsList}
+				accessibleBuckets={accessibleBuckets}
+				teamMembersList={teamMembersList}
+				currentCampaignId={effectiveCampaignId}
+				currentBucketId={selectedBucketId}
+				currentAgentId={selectedAgentId}
+				hasFullBucketAccess={hasFullBucketAccess}
+				onApply={({ campaignId, bucketId, agentId }) => {
+					if (campaignId && campaignId !== selectedCampaignId) {
+						setSelectedCampaignId(campaignId);
+					}
+					setSelectedBucketId(bucketId);
+					setSelectedAgentId(agentId);
+					setCurrentPage(1);
+				}}
+			/>
 		</div>
 	);
 };

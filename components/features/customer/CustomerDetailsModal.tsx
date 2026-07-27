@@ -20,6 +20,7 @@ import { useCreateSMSLogMutation } from '@/store/services/smsApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { toast } from 'sonner';
 import { icons } from 'lucide-react';
+import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
 
 interface CustomerDetailsModalProps {
 	isOpen: boolean;
@@ -222,15 +223,25 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 		setCurrentPage(1);
 	}, [customer?.id, isOpen]);
 
+	const configuredDispositions = React.useMemo(() => {
+		return getAllCampaignDispositions(campaignData?.dashboardSettings);
+	}, [campaignData?.dashboardSettings]);
+
 	const dynamicHeaders = React.useMemo(() => {
 		const headers = new Set<string>();
 		combinedDispositions.forEach(item => {
 			item.dispositionData?.forEach((field: DispositionFieldEntry) => {
-				if (field.fieldName) headers.add(field.fieldName);
+				if (field.fieldName && field.fieldValue !== undefined && field.fieldValue !== null) {
+					const dispDef = configuredDispositions.find(d => d.name === field.fieldName);
+					const levels = resolveMultiDropdownLevels(field.fieldName, String(field.fieldValue), dispDef);
+					levels.forEach(lvl => {
+						headers.add(lvl.header);
+					});
+				}
 			});
 		});
 		return Array.from(headers);
-	}, [combinedDispositions]);
+	}, [combinedDispositions, configuredDispositions]);
 
 	const handleViewDetails = (dispositionId: string) => {
 		const disposition = combinedDispositions.find(item => item.id === dispositionId);
@@ -599,17 +610,26 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 													{item.agent}
 												</td>
 												{dynamicHeaders?.map((header) => {
-													const field = item.dispositionData?.find((f: DispositionFieldEntry) => f.fieldName === header);
+													let cellVal = '-';
+													item.dispositionData?.forEach((f: DispositionFieldEntry) => {
+														if (!f.fieldName || f.fieldValue === undefined || f.fieldValue === null) return;
+														const dispDef = configuredDispositions.find(d => d.name === f.fieldName);
+														const levels = resolveMultiDropdownLevels(f.fieldName, String(f.fieldValue), dispDef);
+														const matchingLevel = levels.find(l => l.header === header);
+														if (matchingLevel) {
+															cellVal = matchingLevel.value;
+														}
+													});
+
 													const isComment = header.toLowerCase().includes('comment');
-													const value = field ? String(field.fieldValue || '-') : '-';
-													const displayValue = isComment && value.length > 20 ? `${value.substring(0, 20)}...` : value;
+													const displayValue = isComment && cellVal.length > 20 ? `${cellVal.substring(0, 20)}...` : cellVal;
 
 													return (
 														<td
 															key={header}
-															className={`px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100 ${isComment && value.length > 20 ? 'cursor-pointer hover:underline text-orange-500' : ''}`}
-															style={{ color: isComment && value.length > 20 ? '#F97316' : 'var(--text-primary)' }}
-															onClick={() => isComment && value.length > 20 ? handleCommentClick(value) : undefined}
+															className={`px-6 py-4 whitespace-nowrap text-[10px] md:text-[12px] dark:text-gray-100 ${isComment && cellVal.length > 20 ? 'cursor-pointer hover:underline text-orange-500' : ''}`}
+															style={{ color: isComment && cellVal.length > 20 ? '#F97316' : 'var(--text-primary)' }}
+															onClick={() => isComment && cellVal.length > 20 ? handleCommentClick(cellVal) : undefined}
 														>
 															{displayValue}
 														</td>

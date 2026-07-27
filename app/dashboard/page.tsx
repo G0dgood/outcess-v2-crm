@@ -21,6 +21,8 @@ import {
 	useGetDispositionsByAgentReportQuery
 } from '@/store/services/dispositionApi';
 import { filterDispositionsByTimeRange, getDateRangeFromTimeRange } from '@/utils/filterUtils';
+import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
+import { DispositionCategory, NestedOption } from '@/types/dashboard';
 import {
 	DndContext,
 	closestCenter,
@@ -60,7 +62,7 @@ interface CombinedDispositionItem {
 }
 
 const DashboardContent: React.FC = () => {
-	const { campaignData, isLoading: isLobLoading } = useCampaign();
+	const { campaignData, selectedCampaignId, isLoading: isLobLoading } = useCampaign();
 	const { setupData, addChart: addChartLocal, updateChart: updateChartLocal, updateChartsOrder: updateChartsOrderLocal, updateDashboardSettings: updateDashboardSettingsLocal } = useSetup();
 	const [updateCampaign] = useUpdateCampaignMutation();
 	const isLoading = isLobLoading;
@@ -364,15 +366,15 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const combinedDispositions = useMemo(() => {
-		const offline = getOfflineDispositions();
+		const offline = getOfflineDispositions(selectedCampaignId || undefined);
 		// If we have API data, use it as the source of "synced" data
 		// Otherwise fallback to local synced data
 		// Note: apiDispositions might be empty array, which is valid. 
 		// Check if it's an array to confirm it's loaded.
-		const synced = Array.isArray(apiDispositions) ? apiDispositions : getSyncedDispositions();
+		const synced = Array.isArray(apiDispositions) ? apiDispositions : getSyncedDispositions(undefined, selectedCampaignId || undefined);
 		return [...offline, ...synced] as CombinedDispositionItem[];
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [apiDispositions, pendingDispositionsCount]);
+	}, [apiDispositions, pendingDispositionsCount, selectedCampaignId]);
 
 	// Get widgets from context and update values dynamically based on disposition data
 	const widgets = useMemo(() => {
@@ -380,17 +382,24 @@ const DashboardContent: React.FC = () => {
 		const timeRange = dashboardSettings.dispositionSettings?.timeRangeView || 'daily';
 		const filteredDispositions = filterDispositionsByTimeRange(combinedDispositions, timeRange);
 
+		const configuredDispositions = getAllCampaignDispositions(dashboardSettings);
+
 		// Calculate disposition field counts
 		const calculateDispositionFieldCount = (fieldName: string): number => {
 			return filteredDispositions.filter(disp => {
 				// Check dispositionData or fillDisposition array
 				const fields = disp.dispositionData || disp.fillDisposition;
 				if (fields && Array.isArray(fields)) {
-					const field = fields.find((f: DispositionFieldEntry) => f.fieldName === fieldName);
-					if (field) {
-						const value = field.fieldValue;
-						return value && value.toString().trim() !== '' && value !== '-';
-					}
+					return fields.some((f: DispositionFieldEntry) => {
+						if (!f.fieldName || f.fieldValue === undefined || f.fieldValue === null) return false;
+						const dispDef = configuredDispositions.find(d => d.name === f.fieldName);
+						const levels = resolveMultiDropdownLevels(f.fieldName, String(f.fieldValue), dispDef);
+						return levels.some(lvl =>
+							lvl.header.toLowerCase() === fieldName.toLowerCase() ||
+							lvl.value.toLowerCase() === fieldName.toLowerCase() ||
+							f.fieldName.toLowerCase() === fieldName.toLowerCase()
+						);
+					});
 				}
 
 				// Fallback for direct property access (legacy support)
@@ -477,25 +486,26 @@ const DashboardContent: React.FC = () => {
 			}
 
 			// Check if widget title corresponds to a disposition field
-			// We check if the widget title matches any disposition name in the settings
-			// Find in both direct and bucketed dispositions
-			const allDispositions: Array<{ name: string; color?: string }> = [...(dashboardSettings?.dispositions || [])];
-			if (dashboardSettings?.buckets && Array.isArray(dashboardSettings.buckets)) {
-				dashboardSettings.buckets.forEach((bucket: { dispositions?: Array<{ name: string; color?: string }> }) => {
-					if (bucket && Array.isArray(bucket.dispositions)) {
-						bucket.dispositions.forEach((disp: { name: string; color?: string }) => {
-							if (disp && disp.name && !allDispositions.some(d => d.name === disp.name)) {
-								allDispositions.push(disp);
-							}
-						});
-					}
-				});
-			}
+			const allDispositions = getAllCampaignDispositions(dashboardSettings);
 			const isDispositionField = allDispositions.some(
-				(d: { name: string; color?: string }) => d.name === sourceKey
+				(d: DispositionCategory) => d.name === sourceKey
 			);
+			const isSubOptionOrLabel = allDispositions.some((d: DispositionCategory) => {
+				let found = false;
+				const checkNested = (opts?: NestedOption[]) => {
+					if (!opts) return;
+					opts.forEach(opt => {
+						if (opt.value?.toLowerCase() === sourceKey.toLowerCase() || opt.subLabel?.toLowerCase() === sourceKey.toLowerCase()) {
+							found = true;
+						}
+						if (opt.subOptions) checkNested(opt.subOptions);
+					});
+				};
+				checkNested(d.nestedOptions);
+				return found;
+			});
 
-			if (isDispositionField) {
+			if (isDispositionField || isSubOptionOrLabel) {
 				return { ...widget, value: calculateDispositionFieldCount(sourceKey) };
 			}
 

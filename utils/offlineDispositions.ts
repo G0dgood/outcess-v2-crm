@@ -50,14 +50,18 @@ const notifyUpdate = () => {
 /**
  * Get all offline dispositions
  */
-export const getOfflineDispositions = (): OfflineDisposition[] => {
+export const getOfflineDispositions = (campaignId?: string): OfflineDisposition[] => {
 	if (typeof window === 'undefined') return [];
 
 	try {
 		const stored = localStorage.getItem(STORAGE_KEY);
 		if (stored) {
 			const parsed = JSON.parse(stored);
-			return Array.isArray(parsed) ? parsed : [];
+			const list: OfflineDisposition[] = Array.isArray(parsed) ? parsed : [];
+			if (campaignId) {
+				return list.filter(d => !d.campaignId || d.campaignId === campaignId);
+			}
+			return list;
 		}
 	} catch (error) {
 		console.error('Error loading offline dispositions:', error);
@@ -266,15 +270,21 @@ export const saveSyncedDisposition = (
 /**
  * Get all synced dispositions for a customer
  */
-export const getSyncedDispositions = (customerId?: string): SyncedDisposition[] => {
+export const getSyncedDispositions = (customerId?: string, campaignId?: string): SyncedDisposition[] => {
 	if (typeof window === 'undefined') return [];
 
 	try {
 		const stored = localStorage.getItem(SYNCED_DISPOSITIONS_KEY);
 		if (stored) {
 			const parsed = JSON.parse(stored);
-			const synced: SyncedDisposition[] = Array.isArray(parsed) ? parsed : [];
-			return customerId ? synced.filter(d => d.customerId === customerId) : synced;
+			let synced: SyncedDisposition[] = Array.isArray(parsed) ? parsed : [];
+			if (customerId) {
+				synced = synced.filter(d => d.customerId === customerId);
+			}
+			if (campaignId) {
+				synced = synced.filter(d => !d.campaignId || d.campaignId === campaignId);
+			}
+			return synced;
 		}
 	} catch (error) {
 		console.error('Error loading synced dispositions:', error);

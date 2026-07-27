@@ -171,7 +171,7 @@ export default function SettingsPage() {
 				new: false,
 				confirm: false,
 			});
-		} catch (error: unknown) {
+		} catch {
 			// useApiError hook handles the error UI reactively
 		} finally {
 			setIsPasswordLoading(false);

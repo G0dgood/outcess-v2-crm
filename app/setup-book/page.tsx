@@ -7,7 +7,7 @@ import Pagination from '@/components/ui/Pagination';
 import TablePaginationHeader from '@/components/ui/TablePaginationHeader';
 import Checkbox from '@/components/ui/Checkbox';
 import PageHeading from '@/components/ui/PageHeading';
-import { UploadIcon, Pencil1Icon, TrashIcon, PlusIcon, GridIcon } from '@radix-ui/react-icons';
+import { UploadIcon, Pencil1Icon, TrashIcon, PlusIcon, GridIcon, MixerHorizontalIcon } from '@radix-ui/react-icons';
 import UploadBaseSetupBook from '@/components/ui/UploadBaseSetupBook';
 import CreateRecordModal from '@/components/ui/CreateRecordModal';
 import SelectedRecordsDrawerContent from './SelectedRecordsDrawerContent';
@@ -15,7 +15,10 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import SampleCsvDownloader from '@/components/ui/SampleCsvDownloader';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
 import EditRecordModal from '@/components/ui/EditRecordModal';
+import ReportFilterOptionsModal from '@/components/ReportFilterOptionsModal';
 import { useGetSetupBookByCampaignIdQuery, useDeleteSetupBookRecordsMutation, useDeleteManySetupBookRecordsMutation } from '@/store/services/setupBookApi';
+import { useGetCampaignByCompanyIdForheaderQuery } from '@/store/services/campaignApi';
+import { useGetTeamMembersByCampaignIdQuery } from '@/store/services/teamMembersApi';
 import { toast } from 'sonner';
 import { NoRecordFound, SVGLoaderFetch } from '@/components/Options';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -48,8 +51,25 @@ const SetupBookPage: React.FC = () => {
 	const canEdit = canAccess('setupBook', 'edit');
 	const canDelete = canAccess('setupBook', 'delete');
 
-	const { campaignData } = useCampaign();
+	const { campaignData, setSelectedCampaignId } = useCampaign();
 	const campaignId = campaignData?._id || campaignData?.id;
+
+	const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
+	const [selectedAgentId, setSelectedAgentId] = useState<string>('');
+
+	const companyId = String(user?.companyId || (typeof user?.company === 'object' ? (user?.company as { _id?: string; id?: string })?._id || (user?.company as { _id?: string; id?: string })?.id : user?.company) || '');
+	const { data: headerCampaignsData } = useGetCampaignByCompanyIdForheaderQuery(
+		companyId ? { companyId } : { companyId: '' },
+		{ skip: !companyId }
+	);
+	const campaignsList = (headerCampaignsData as { campaigns?: Array<{ _id?: string; id?: string; name?: string; campaignName?: string }> })?.campaigns || [];
+
+	const { data: teamMembersData } = useGetTeamMembersByCampaignIdQuery(
+		campaignId ? { campaignId: String(campaignId) } : { campaignId: '' },
+		{ skip: !campaignId }
+	);
+	const rawTeamMembers = (teamMembersData as { teamMembers?: Array<{ _id?: string; id?: string; name?: string; firstName?: string; lastName?: string; email?: string }>; data?: Array<{ _id?: string; id?: string; name?: string; firstName?: string; lastName?: string; email?: string }> })?.teamMembers || (teamMembersData as { data?: Array<{ _id?: string; id?: string; name?: string; firstName?: string; lastName?: string; email?: string }> })?.data || (Array.isArray(teamMembersData) ? teamMembersData : []);
+	const teamMembersList = Array.isArray(rawTeamMembers) ? rawTeamMembers : [];
 
 	const allConfiguredFieldsChunks = useMemo(() => campaignData?.customerBookSettings?.configuredFields || [], [campaignData]);
 	const buckets = useMemo(() => (campaignData?.dashboardSettings?.buckets || []) as BucketWithMembers[], [campaignData]);
@@ -381,6 +401,21 @@ const SetupBookPage: React.FC = () => {
 						<GridIcon className="w-4 h-4" />
 						{bucketOptions.find(b => b.id === selectedBucketId)?.name || 'Select Bucket'}
 					</Button>
+					<Button
+						type="button"
+						variant="outline"
+						size="md"
+						onClick={() => setIsOptionsModalOpen(true)}
+						className="dark:bg-gray-800 border dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100 focus:ring-offset-2 dark:focus:ring-offset-gray-800 dark:focus:ring-gray-400 gap-2 whitespace-nowrap"
+						style={{
+							backgroundColor: 'var(--accent-white)',
+							borderColor: 'var(--light-gray)',
+							color: 'var(--text-secondary)'
+						}}
+					>
+						<MixerHorizontalIcon className="w-4 h-4" />
+						Option Modal
+					</Button>
 				</div>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
 					<SampleCsvDownloader
@@ -621,6 +656,30 @@ const SetupBookPage: React.FC = () => {
 					/>
 				</div>
 			)}
+			{/* Filter Options Modal */}
+			<ReportFilterOptionsModal
+				isOpen={isOptionsModalOpen}
+				onClose={() => setIsOptionsModalOpen(false)}
+				campaignsList={campaignsList}
+				accessibleBuckets={accessibleBuckets}
+				teamMembersList={teamMembersList}
+				currentCampaignId={String(campaignId || '')}
+				currentBucketId={selectedBucketId === ALL_MY_BUCKETS ? '' : selectedBucketId}
+				currentAgentId={selectedAgentId}
+				hasFullBucketAccess={hasFullBucketAccess}
+				onApply={({ campaignId: newCampId, bucketId: newBucketId, agentId: newAgentId }) => {
+					if (newCampId && newCampId !== campaignId) {
+						setSelectedCampaignId(newCampId);
+					}
+					if (newBucketId) {
+						setSelectedBucketId(newBucketId);
+					} else if (hasFullBucketAccess) {
+						setSelectedBucketId(ALL_MY_BUCKETS);
+					}
+					setSelectedAgentId(newAgentId);
+					setCurrentPage(1);
+				}}
+			/>
 		</div>
 	);
 };

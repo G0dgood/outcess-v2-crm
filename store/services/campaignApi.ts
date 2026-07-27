@@ -208,6 +208,16 @@ export const campaignApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Campaign"],
     }),
+    deleteBucketFromCampaign: builder.mutation<
+      unknown,
+      { id: string; bucketId: string }
+    >({
+      query: ({ id, bucketId }) => ({
+        url: `api/v1/campaign/${id}/buckets/${bucketId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Campaign"],
+    }),
   }),
 });
 
@@ -224,4 +234,5 @@ export const {
   useAssignMemberToBucketMutation,
   useRemoveMemberFromBucketMutation,
   useUpdateBucketCustomerFieldsMutation,
+  useDeleteBucketFromCampaignMutation,
 } = campaignApi;
