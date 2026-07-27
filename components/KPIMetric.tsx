@@ -71,7 +71,10 @@ export default function KPIMetric({
     onCallOutcomesChange
 }: KPIMetricProps) {
     const { setupData } = useSetup();
-    const buckets = setupData.dashboardSettings.buckets || [];
+    const buckets = useMemo(
+        () => setupData.dashboardSettings.buckets || [],
+        [setupData.dashboardSettings.buckets]
+    );
     const [selectedBucketId, setSelectedBucketId] = useState<string | null>(null);
     const [isBucketModalOpen, setIsBucketModalOpen] = useState(false);
 

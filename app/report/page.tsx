@@ -116,7 +116,6 @@ const ReportPage: React.FC = () => {
 	const rawTeamMembers = (teamMembersData as { teamMembers?: Array<{ _id?: string; id?: string; name?: string; firstName?: string; lastName?: string; email?: string }>; data?: Array<{ _id?: string; id?: string; name?: string; firstName?: string; lastName?: string; email?: string }> })?.teamMembers || (teamMembersData as { data?: Array<{ _id?: string; id?: string; name?: string; firstName?: string; lastName?: string; email?: string }> })?.data || (Array.isArray(teamMembersData) ? teamMembersData : []);
 	const teamMembersList = Array.isArray(rawTeamMembers) ? rawTeamMembers : [];
 
-	const userId = String(user?._id || user?.id || '');
 	const hasFullBucketAccess = isAdmin || isSuperAdmin || allBucketAccess;
 
 	const allBuckets = useMemo(() => {

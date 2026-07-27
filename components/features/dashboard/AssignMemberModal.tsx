@@ -24,7 +24,6 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 	onClose,
 	bucketId,
 	bucketName,
-	campaignId,
 	onAssign,
 }) => {
 	const { setupData } = useSetup();

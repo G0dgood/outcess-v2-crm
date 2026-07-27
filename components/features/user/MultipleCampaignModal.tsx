@@ -4,7 +4,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import Checkbox from '@/components/ui/Checkbox';
-import Icon from '@/components/ui/Icon';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useGetTeamMembersByCompanyIdQuery, useCreateTeamMemberMutation, useDeleteTeamMemberMutation, ApiTeamMember } from '@/store/services/teamMembersApi';
 import { useGetCampaignByCompanyIdForheaderQuery } from '@/store/services/campaignApi';

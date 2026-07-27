@@ -10,7 +10,7 @@ import UserDropdown from './UserDropdown';
 import StatusBadge from './StatusBadge';
 import UserRoleBadge from './UserRoleBadge';
 import LogoutConfirmationModal from './LogoutConfirmationModal';
-import { HamburgerMenuIcon, Cross1Icon, LayersIcon, ChevronDownIcon, CheckIcon } from '@radix-ui/react-icons';
+import { HamburgerMenuIcon, Cross1Icon, LayersIcon } from '@radix-ui/react-icons';
 import { SelectBucketModal } from './SelectBucketModal';
 import { getUserAssignedBuckets, BucketWithMembers } from '@/utils/bucketUtils';
 import ThemeToggle from './ThemeToggle';
@@ -21,7 +21,6 @@ import { toastSuccess } from '@/utils/toastWithSound';
 import { setNavigating } from '@/utils/navigationState';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useGetCampaignByCompanyIdForheaderQuery } from '@/store/services/campaignApi';
 import { useLogoutMutation, useTeamMemberLogoutMutation, useUpdateUserMutation } from '@/store/services/authApi';
 import { useUpdateTeamMemberStatusMutation } from '@/store/services/teamMembersApi';
 import { useSelector, useDispatch } from 'react-redux';
@@ -120,7 +119,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const isNavigating = useRef(false);
 	const { setSelectedCampaignId, isLoading: isLobLoading, campaignData: selectedLOBData, selectedCampaignId, campaigns } = useCampaign();
 	const previousLobId = useRef(selectedCampaignId);
-	const companyId = selectedLOBData?.companyId || displayUser?.companyId || (reduxUser?.company as { _id?: string })?._id || '';
 
 	const buckets = React.useMemo(() => {
 		return (selectedLOBData?.dashboardSettings?.buckets || []) as unknown as BucketWithMembers[];
