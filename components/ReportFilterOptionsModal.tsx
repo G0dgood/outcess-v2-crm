@@ -49,7 +49,6 @@ const ReportFilterOptionsModal: React.FC<ReportFilterOptionsModalProps> = ({
 	currentCampaignId,
 	currentBucketId,
 	currentAgentId,
-	hasFullBucketAccess = false,
 	onApply,
 }) => {
 	const [modalCampaignId, setModalCampaignId] = useState<string>('');
@@ -125,7 +124,6 @@ const ReportFilterOptionsModal: React.FC<ReportFilterOptionsModalProps> = ({
 						label=""
 						placeholder="Select Bucket"
 						options={[
-							...(hasFullBucketAccess ? [{ value: '', label: 'All Buckets' }] : []),
 							...safeAccessibleBuckets.map(b => ({
 								value: String(b.id || b._id || ''),
 								label: b.name

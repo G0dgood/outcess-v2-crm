@@ -80,6 +80,12 @@ export const sampleNotifications: Notification[] = [
 			path: '/settings?tab=status'
 		},
 		{
+			id: 'roles-tab',
+			label: 'Roles',
+			icon: 'book',
+			path: '/settings?tab=roles'
+		},
+		{
 			id: 'permission-tab',
 			label: 'Permission',
 			icon: 'chart',
@@ -90,13 +96,8 @@ export const sampleNotifications: Notification[] = [
 			label: 'Company Details',
 			icon: 'settings',
 			path: '/settings?tab=company-details'
-		},
-		{
-			id: 'roles-tab',
-			label: 'Roles',
-			icon: 'book',
-			path: '/settings?tab=roles'
-		},
+		}
+		
 	];
 
 

@@ -4,9 +4,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Dropdown from '@/components/ui/Dropdown';
 import Checkbox from '@/components/ui/Checkbox';
-import Icon from '@/components/ui/Icon';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { useGetTeamMembersByCompanyIdQuery, useCreateTeamMemberMutation, ApiTeamMember } from '@/store/services/teamMembersApi';
+import { useGetTeamMembersByCompanyIdQuery, useCreateTeamMemberMutation, useDeleteTeamMemberMutation, ApiTeamMember } from '@/store/services/teamMembersApi';
 import { useGetCampaignByCompanyIdForheaderQuery } from '@/store/services/campaignApi';
 import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
@@ -36,6 +35,7 @@ export const MultipleCampaignModal: React.FC<MultipleCampaignModalProps> = ({
 	const { data: campaignsResponse } = useGetCampaignByCompanyIdForheaderQuery({ companyId, limit: 1000 }, { skip: !companyId || !isOpen });
 	const { data: rolesResponse } = useGetRolesByCompanyIdQuery(companyId, { skip: !companyId || !isOpen });
 	const [createTeamMember] = useCreateTeamMemberMutation();
+	const [deleteTeamMember] = useDeleteTeamMemberMutation();
 
 	// Reset form when modal opens/closes
 	useEffect(() => {
@@ -97,6 +97,37 @@ export const MultipleCampaignModal: React.FC<MultipleCampaignModalProps> = ({
 		return campaignIds;
 	}, [selectedUserEmail, companyTeamMembersData]);
 
+	const existingCampaignIdsSerialized = useMemo(() => {
+		return Array.from(existingCampaignIds).sort().join(',');
+	}, [existingCampaignIds]);
+
+	// Map campaign ID to TeamMember ID for the selected user
+	const campaignToMemberIdMap = useMemo(() => {
+		if (!selectedUserEmail || !companyTeamMembersData?.teamMembers) return new Map<string, string>();
+		const list = companyTeamMembersData.teamMembers;
+		const map = new Map<string, string>();
+		for (const m of list) {
+			if (m.email?.toLowerCase() === selectedUserEmail.toLowerCase() && m.campaignId) {
+				const cId = typeof m.campaignId === 'object' ? m.campaignId._id || m.campaignId.id : m.campaignId;
+				const memberId = m._id || m.id;
+				if (cId && memberId) {
+					map.set(cId.toString(), memberId.toString());
+				}
+			}
+		}
+		return map;
+	}, [selectedUserEmail, companyTeamMembersData]);
+
+	// Initialize selected campaigns when selected user changes
+	useEffect(() => {
+		if (selectedUserEmail) {
+			setSelectedCampaignIds(new Set(existingCampaignIds));
+		} else {
+			setSelectedCampaignIds(new Set());
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [selectedUserEmail, existingCampaignIdsSerialized]);
+
 	// Campaign options with assignment status
 	const campaignsList = useMemo(() => {
 		const list = campaignsResponse?.campaigns || [];
@@ -123,49 +154,92 @@ export const MultipleCampaignModal: React.FC<MultipleCampaignModalProps> = ({
 		});
 	};
 
+	const campaignIdsToAssign = useMemo(() => {
+		return Array.from(selectedCampaignIds).filter(id => !existingCampaignIds.has(id));
+	}, [selectedCampaignIds, existingCampaignIds]);
+
 	const handleSave = async () => {
-		if (!selectedUser || !selectedRoleId || selectedCampaignIds.size === 0) {
-			toast.error('Please fill in all fields and select at least one campaign');
+		if (!selectedUser || selectedCampaignIds.size === 0) {
+			toast.error('Please select a user and at least one campaign');
+			return;
+		}
+
+		const campaignIdsToUnassign = Array.from(existingCampaignIds).filter(id => !selectedCampaignIds.has(id));
+
+		if (campaignIdsToAssign.length > 0 && !selectedRoleId) {
+			toast.error('Please select a target role for the new campaign(s)');
 			return;
 		}
 
 		setIsSubmitting(true);
-		let successCount = 0;
-		let failedCount = 0;
+		let assignSuccessCount = 0;
+		let assignFailedCount = 0;
+		let unassignSuccessCount = 0;
+		let unassignFailedCount = 0;
 
 		try {
-			const campaignIdsToAssign = Array.from(selectedCampaignIds);
+			// 1. Process assignments
+			if (campaignIdsToAssign.length > 0) {
+				await Promise.all(
+					campaignIdsToAssign.map(async (cId) => {
+						try {
+							const payload = {
+								name: selectedUser.name || `${selectedUser.firstName} ${selectedUser.lastName}`,
+								email: selectedUser.email || '',
+								phone: selectedUser.phone || '',
+								role: selectedRoleId,
+								companyId: companyId,
+								campaignId: cId,
+								password: '123456', // default password as required by API
+								userId: selectedUser.userId,
+								status: 'inactive'
+							};
+							await createTeamMember(payload).unwrap();
+							assignSuccessCount++;
+						} catch (err) {
+							console.error(`Failed to assign user to campaign ${cId}:`, err);
+							assignFailedCount++;
+						}
+					})
+				);
+			}
 
-			// Submit create mutations in parallel
-			await Promise.all(
-				campaignIdsToAssign.map(async (cId) => {
-					try {
-						const payload = {
-							name: selectedUser.name || `${selectedUser.firstName} ${selectedUser.lastName}`,
-							email: selectedUser.email || '',
-							phone: selectedUser.phone || '',
-							role: selectedRoleId,
-							companyId: companyId,
-							campaignId: cId,
-							password: '123456', // default password as required by API
-							userId: selectedUser.userId,
-							status: 'inactive'
-						};
-						await createTeamMember(payload).unwrap();
-						successCount++;
-					} catch (err) {
-						console.error(`Failed to assign user to campaign ${cId}:`, err);
-						failedCount++;
-					}
-				})
-			);
+			// 2. Process unassignments
+			if (campaignIdsToUnassign.length > 0) {
+				await Promise.all(
+					campaignIdsToUnassign.map(async (cId) => {
+						try {
+							const memberIdToDelete = campaignToMemberIdMap.get(cId);
+							if (memberIdToDelete) {
+								await deleteTeamMember(memberIdToDelete).unwrap();
+								unassignSuccessCount++;
+							}
+						} catch (err) {
+							console.error(`Failed to unassign user from campaign ${cId}:`, err);
+							unassignFailedCount++;
+						}
+					})
+				);
+			}
 
-			if (successCount > 0) {
-				toast.success(`Successfully assigned user to ${successCount} campaigns`);
+			// Show comprehensive feedback
+			const messages = [];
+			if (assignSuccessCount > 0) {
+				messages.push(`assigned to ${assignSuccessCount} campaign(s)`);
+			}
+			if (unassignSuccessCount > 0) {
+				messages.push(`unassigned from ${unassignSuccessCount} campaign(s)`);
+			}
+
+			if (messages.length > 0) {
+				toast.success(`Successfully ${messages.join(' and ')}`);
 				if (refetchUsers) refetchUsers();
 				onClose();
+			} else if (assignFailedCount > 0 || unassignFailedCount > 0) {
+				toast.error('Failed to update campaign assignments');
 			} else {
-				toast.error('Failed to assign user to campaigns');
+				// No changes made
+				onClose();
 			}
 		} catch (error) {
 			console.error('Campaign assignment error:', error);
@@ -192,10 +266,10 @@ export const MultipleCampaignModal: React.FC<MultipleCampaignModalProps> = ({
 							className="text-[14px] md:text-[16px] font-semibold dark:text-gray-100"
 							style={{ color: 'var(--text-primary)' }}
 						>
-							Assign User to Multiple Campaigns
+							Manage Campaign Assignments
 						</h2>
 						<p className="text-[10px] md:text-[11px] text-gray-500 mt-1">
-							Assign an existing user to other campaigns under the company.
+							Assign or unassign the user from campaigns under the company.
 						</p>
 					</div>
 					<Button
@@ -221,7 +295,7 @@ export const MultipleCampaignModal: React.FC<MultipleCampaignModalProps> = ({
 				<div className="p-6 space-y-6 overflow-y-auto flex-1">
 					<Dropdown
 						label="Select User"
-						placeholder="Choose a user to assign"
+						placeholder="Choose a user to manage"
 						options={userOptions}
 						value={selectedUserEmail}
 						onChange={(val) => setSelectedUserEmail(val as string)}
@@ -229,7 +303,7 @@ export const MultipleCampaignModal: React.FC<MultipleCampaignModalProps> = ({
 
 					<Dropdown
 						label="Target Role"
-						placeholder="Select role for target campaigns"
+						placeholder={campaignIdsToAssign.length > 0 ? "Select role for new campaigns" : "Select role (optional)"}
 						options={roleOptions}
 						value={selectedRoleId}
 						onChange={(val) => setSelectedRoleId(val as string)}
@@ -250,33 +324,54 @@ export const MultipleCampaignModal: React.FC<MultipleCampaignModalProps> = ({
 							</div>
 						) : (
 							<div className="border rounded-xl dark:border-gray-700 max-h-48 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
-								{campaignsList.map(camp => (
-									<div
-										key={camp.id}
-										onClick={() => !camp.alreadyAssigned && toggleCampaign(camp.id)}
-										className={`flex items-center justify-between p-3.5 text-xs transition-colors select-none ${
-											camp.alreadyAssigned 
-												? 'opacity-60 bg-gray-50 dark:bg-gray-800/30 cursor-not-allowed' 
-												: 'hover:bg-gray-50/50 dark:hover:bg-gray-700/50 cursor-pointer'
-										}`}
-									>
-										<div className="flex items-center gap-3">
-											<Checkbox
-												checked={camp.alreadyAssigned || selectedCampaignIds.has(camp.id)}
-												onChange={() => {}}
-												disabled={camp.alreadyAssigned}
-												size="small"
-												className="pointer-events-none"
-											/>
-											<span className="font-medium dark:text-gray-100">{camp.name}</span>
+								{campaignsList.map(camp => {
+									const isLastRemaining = selectedCampaignIds.size === 1 && selectedCampaignIds.has(camp.id);
+									return (
+										<div
+											key={camp.id}
+											onClick={() => {
+												if (!isLastRemaining) {
+													toggleCampaign(camp.id);
+												} else {
+													toast.warning("A user must be assigned to at least one campaign.");
+												}
+											}}
+											className={`flex items-center justify-between p-3.5 text-xs transition-colors select-none ${
+												isLastRemaining
+													? 'opacity-60 bg-gray-50 dark:bg-gray-800/30 cursor-not-allowed' 
+													: 'hover:bg-gray-50/50 dark:hover:bg-gray-700/50 cursor-pointer'
+											}`}
+										>
+											<div className="flex items-center gap-3">
+												<Checkbox
+													checked={selectedCampaignIds.has(camp.id)}
+													onChange={() => {}}
+													disabled={isLastRemaining}
+													size="small"
+													className="pointer-events-none"
+												/>
+												<span className="font-medium dark:text-gray-100">{camp.name}</span>
+											</div>
+											{camp.alreadyAssigned ? (
+												selectedCampaignIds.has(camp.id) ? (
+													<span className="text-[9px] px-2 py-0.5 rounded-full bg-green-50 text-green-600 dark:bg-green-950/30 dark:text-green-400 font-semibold border dark:border-green-950">
+														Currently Assigned
+													</span>
+												) : (
+													<span className="text-[9px] px-2 py-0.5 rounded-full bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400 font-semibold border dark:border-red-950">
+														To be Unassigned
+													</span>
+												)
+											) : (
+												selectedCampaignIds.has(camp.id) && (
+													<span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 font-semibold border dark:border-blue-950">
+														To be Assigned
+													</span>
+												)
+											)}
 										</div>
-										{camp.alreadyAssigned && (
-											<span className="text-[9px] px-2 py-0.5 rounded-full bg-green-50 text-green-600 dark:bg-green-950/30 dark:text-green-400 font-semibold border dark:border-green-950">
-												Already Assigned
-											</span>
-										)}
-									</div>
-								))}
+									);
+								})}
 							</div>
 						)}
 					</div>
@@ -300,10 +395,10 @@ export const MultipleCampaignModal: React.FC<MultipleCampaignModalProps> = ({
 							variant="primary"
 							size="md"
 							onClick={handleSave}
-							disabled={!selectedUserEmail || !selectedRoleId || selectedCampaignIds.size === 0 || isSubmitting}
+							disabled={!selectedUserEmail || (campaignIdsToAssign.length > 0 && !selectedRoleId) || selectedCampaignIds.size === 0 || isSubmitting}
 							loading={isSubmitting}
 						>
-							Assign
+							Save Assignments
 						</Button>
 					</div>
 				</div>

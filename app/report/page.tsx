@@ -92,7 +92,10 @@ const ReportPage: React.FC = () => {
 	// Treat the isSupervisor flag as authoritative (a team lead may have any role name),
 	// falling back to the role name for older records.
 	const isSupervisor = user?.isSupervisor === true || userRoleName?.toLowerCase() === 'supervisor';
-	const isAgent = !isAdmin && !isSupervisor;
+	// The "all buckets access" privilege grants full campaign-wide visibility just
+	// like an admin, so such users use the campaign report (all data), never the
+	// agent-only report — regardless of supervisor/team-lead status.
+	const isAgent = !isAdmin && !isSuperAdmin && !isSupervisor && !allBucketAccess;
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
 	const { setSelectedCampaignId } = useCampaign();
@@ -116,7 +119,6 @@ const ReportPage: React.FC = () => {
 	const rawTeamMembers = (teamMembersData as { teamMembers?: Array<{ _id?: string; id?: string; name?: string; firstName?: string; lastName?: string; email?: string }>; data?: Array<{ _id?: string; id?: string; name?: string; firstName?: string; lastName?: string; email?: string }> })?.teamMembers || (teamMembersData as { data?: Array<{ _id?: string; id?: string; name?: string; firstName?: string; lastName?: string; email?: string }> })?.data || (Array.isArray(teamMembersData) ? teamMembersData : []);
 	const teamMembersList = Array.isArray(rawTeamMembers) ? rawTeamMembers : [];
 
-	const userId = String(user?._id || user?.id || '');
 	const hasFullBucketAccess = isAdmin || isSuperAdmin || allBucketAccess;
 
 	const allBuckets = useMemo(() => {
@@ -429,7 +431,6 @@ const ReportPage: React.FC = () => {
 									label=""
 									placeholder="Select a Bucket"
 									options={[
-										...(hasFullBucketAccess ? [{ value: '', label: 'All Buckets' }] : []),
 										...accessibleBuckets.map((b: { id?: string; _id?: string; name: string }) => ({ value: b.id || b._id || '', label: b.name }))
 									]}
 									value={selectedBucketId}

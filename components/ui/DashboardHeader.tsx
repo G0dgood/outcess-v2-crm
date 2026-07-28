@@ -10,7 +10,7 @@ import UserDropdown from './UserDropdown';
 import StatusBadge from './StatusBadge';
 import UserRoleBadge from './UserRoleBadge';
 import LogoutConfirmationModal from './LogoutConfirmationModal';
-import { HamburgerMenuIcon, Cross1Icon, LayersIcon, ChevronDownIcon, CheckIcon } from '@radix-ui/react-icons';
+import { HamburgerMenuIcon, Cross1Icon, LayersIcon } from '@radix-ui/react-icons';
 import { SelectBucketModal } from './SelectBucketModal';
 import { getUserAssignedBuckets, BucketWithMembers } from '@/utils/bucketUtils';
 import ThemeToggle from './ThemeToggle';
@@ -21,7 +21,6 @@ import { toastSuccess } from '@/utils/toastWithSound';
 import { setNavigating } from '@/utils/navigationState';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useGetCampaignByCompanyIdForheaderQuery } from '@/store/services/campaignApi';
 import { useLogoutMutation, useTeamMemberLogoutMutation, useUpdateUserMutation } from '@/store/services/authApi';
 import { useUpdateTeamMemberStatusMutation } from '@/store/services/teamMembersApi';
 import { useSelector, useDispatch } from 'react-redux';
@@ -120,7 +119,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	const isNavigating = useRef(false);
 	const { setSelectedCampaignId, isLoading: isLobLoading, campaignData: selectedLOBData, selectedCampaignId, campaigns } = useCampaign();
 	const previousLobId = useRef(selectedCampaignId);
-	const companyId = selectedLOBData?.companyId || displayUser?.companyId || (reduxUser?.company as { _id?: string })?._id || '';
 
 	const buckets = React.useMemo(() => {
 		return (selectedLOBData?.dashboardSettings?.buckets || []) as unknown as BucketWithMembers[];
@@ -135,11 +133,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	);
 
 	const bucketOptions = React.useMemo(() => {
-		const opts = accessibleBuckets.map(b => ({
+		return accessibleBuckets.map(b => ({
 			value: b.id,
 			label: b.name
 		}));
-		return [{ value: 'all', label: 'All Buckets' }, ...opts];
 	}, [accessibleBuckets]);
 
 	// Notifications integration
@@ -453,7 +450,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					{(hasFullBucketAccess ? accessibleBuckets.length > 0 : accessibleBuckets.length >= 2) && (
 						<Dropdown
 							label=""
-							value={selectedBucketId || 'all'}
+							value={selectedBucketId || ''}
 							onChange={(value) => {
 								const stringValue = Array.isArray(value) ? value[0] : value;
 								if (stringValue === 'all' || !stringValue) {
@@ -509,6 +506,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					)}
 
 					{/* LOB Dropdown - Only for Administrator or users with Dashboard Edit permission */}
+					{/* All Bucket Access Badge */}
+					{mounted && allBucketAccess && (
+						<div
+							className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] md:text-[12px] font-semibold border shadow-xs transition-colors bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/50"
+							title="This role has access to all buckets"
+						>
+							<LayersIcon className="w-3 h-3" />
+							<span>All Bucket Access</span>
+						</div>
+					)}
 					{/* User Role Badge */}
 					{mounted && displayRole && (
 						<UserRoleBadge role={displayRole} className="hidden sm:inline-flex" />
