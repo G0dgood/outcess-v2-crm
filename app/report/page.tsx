@@ -92,7 +92,10 @@ const ReportPage: React.FC = () => {
 	// Treat the isSupervisor flag as authoritative (a team lead may have any role name),
 	// falling back to the role name for older records.
 	const isSupervisor = user?.isSupervisor === true || userRoleName?.toLowerCase() === 'supervisor';
-	const isAgent = !isAdmin && !isSupervisor;
+	// The "all buckets access" privilege grants full campaign-wide visibility just
+	// like an admin, so such users use the campaign report (all data), never the
+	// agent-only report — regardless of supervisor/team-lead status.
+	const isAgent = !isAdmin && !isSuperAdmin && !isSupervisor && !allBucketAccess;
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
 	const { setSelectedCampaignId } = useCampaign();

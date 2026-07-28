@@ -68,7 +68,7 @@ const DashboardContent: React.FC = () => {
 	const isLoading = isLobLoading;
 	const { isOnline, isConnected, isOffline } = useSocket();
 	const { syncNow, isSyncing } = useSyncDispositions();
-	const { canAccess, isAdmin } = usePrivilege();
+	const { canAccess, isAdmin, isSuperAdmin, allBucketAccess } = usePrivilege();
 	const { user } = useUserInfo();
 	const canAccessDashboard = canAccess('dashboard');
 	const canView = canAccess('dashboard', 'view');
@@ -106,7 +106,10 @@ const DashboardContent: React.FC = () => {
 	// Treat the isSupervisor flag as authoritative (a team lead may have any role name),
 	// falling back to the role name for older records.
 	const isSupervisor = user?.isSupervisor === true || userRoleName?.toLowerCase() === 'supervisor';
-	const isCampaignView = isAdmin || isSupervisor;
+	// The "all buckets access" privilege grants full campaign-wide visibility just
+	// like an admin, so such users get the campaign-wide dashboard (all data),
+	// never the agent-only view — regardless of supervisor/team-lead status.
+	const isCampaignView = isAdmin || isSuperAdmin || isSupervisor || allBucketAccess;
 
 	const { data: reportDataAgent, refetch: refetchAgentReport, isFetching: isFetchingAgentReport } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
 		{
