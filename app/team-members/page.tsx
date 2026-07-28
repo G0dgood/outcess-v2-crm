@@ -18,6 +18,7 @@ import {
 	useDeleteTeamMemberMutation
 } from '@/store/services/teamMembersApi';
 import { useGetRolesByCompanyIdQuery } from '@/store/services/roleApi';
+import { isUserAssignedToBucket, BucketWithMembers } from '@/utils/bucketUtils';
 import TeamMembersCards from '@/components/features/team-members/TeamMembersCards';
 import { toastError } from '@/utils/toastWithSound';
 import PageHeader from '@/components/ui/PageHeader';
@@ -58,9 +59,15 @@ interface TeamMemberStatusUpdatePayload {
 }
 
 const TeamMembersPage: React.FC = () => {
-	const { campaignData } = useCampaign();
+	const { campaignData, selectedBucketId } = useCampaign();
 	const { user } = useUserInfo();
 	const campaignId = campaignData?._id || campaignData?.id;
+
+	// Buckets configured for this campaign (with their assigned members).
+	const buckets = useMemo(
+		() => ((campaignData?.dashboardSettings?.buckets as unknown as BucketWithMembers[]) || []),
+		[campaignData]
+	);
 	const [supervisorFilter, setSupervisorFilter] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -88,7 +95,7 @@ const TeamMembersPage: React.FC = () => {
 	// Reset paging when the campaign changes so the list refreshes from page 1.
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [campaignId]);
+	}, [campaignId, selectedBucketId]);
 
 	const { data: teamMembersResponse, isLoading, refetch } = useGetTeamMembersBySupervisorIdQuery(
 		{
@@ -340,11 +347,23 @@ const TeamMembersPage: React.FC = () => {
 	}, [campaignData, teamMembersData]);
 
 	const filteredMembers = useMemo(() => {
+		// In a multi-bucket campaign, only show members assigned to the bucket
+		// currently selected in the header. If none of the (already supervisor-
+		// scoped) members belong to that bucket, the list is empty — nothing shown.
+		const selectedBucket = buckets.length > 1 && selectedBucketId
+			? buckets.find(b => b.id === selectedBucketId)
+			: undefined;
+
 		return teamMembersData.filter(member => {
 			const matchesShift = !shiftFilter || member.displayMember.shiftHourTitle === shiftFilter;
-			return matchesShift;
+			if (!matchesShift) return false;
+
+			if (selectedBucket) {
+				return isUserAssignedToBucket(member.apiMember, selectedBucket);
+			}
+			return true;
 		});
-	}, [teamMembersData, shiftFilter]);
+	}, [teamMembersData, shiftFilter, buckets, selectedBucketId]);
 
 	const totalPages = teamMembersResponse?.pagination?.totalPages || 1;
 	const currentMembers = filteredMembers;

@@ -133,11 +133,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 	);
 
 	const bucketOptions = React.useMemo(() => {
-		const opts = accessibleBuckets.map(b => ({
+		return accessibleBuckets.map(b => ({
 			value: b.id,
 			label: b.name
 		}));
-		return [{ value: 'all', label: 'All Buckets' }, ...opts];
 	}, [accessibleBuckets]);
 
 	// Notifications integration
@@ -451,7 +450,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					{(hasFullBucketAccess ? accessibleBuckets.length > 0 : accessibleBuckets.length >= 2) && (
 						<Dropdown
 							label=""
-							value={selectedBucketId || 'all'}
+							value={selectedBucketId || ''}
 							onChange={(value) => {
 								const stringValue = Array.isArray(value) ? value[0] : value;
 								if (stringValue === 'all' || !stringValue) {
@@ -507,6 +506,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 					)}
 
 					{/* LOB Dropdown - Only for Administrator or users with Dashboard Edit permission */}
+					{/* All Bucket Access Badge */}
+					{mounted && allBucketAccess && (
+						<div
+							className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] md:text-[12px] font-semibold border shadow-xs transition-colors bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/50"
+							title="This role has access to all buckets"
+						>
+							<LayersIcon className="w-3 h-3" />
+							<span>All Bucket Access</span>
+						</div>
+					)}
 					{/* User Role Badge */}
 					{mounted && displayRole && (
 						<UserRoleBadge role={displayRole} className="hidden sm:inline-flex" />

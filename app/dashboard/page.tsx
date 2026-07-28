@@ -416,7 +416,10 @@ const DashboardContent: React.FC = () => {
 		const campaignBuckets = campaignData?.dashboardSettings?.buckets || setupData?.dashboardSettings?.buckets || [];
 		const activeWidgets = (dashboardSettings?.widgets || []).filter((w: Widget) => {
 			if (campaignBuckets.length > 1 && selectedBucketId) {
-				return w.bucketId === selectedBucketId;
+				// Strict per-bucket scoping. A legacy widget with no bucketId belongs
+				// to the first bucket only, so it never leaks into other buckets.
+				const firstBucketId = campaignBuckets[0]?.id;
+				return w.bucketId ? w.bucketId === selectedBucketId : selectedBucketId === firstBucketId;
 			}
 			return true;
 		});
@@ -636,10 +639,13 @@ const DashboardContent: React.FC = () => {
 	const handleSaveNewWidget = useCallback((widgetData: Omit<Widget, 'id'>) => {
 		if (!canCreate) return;
 		const buckets = campaignData?.dashboardSettings?.buckets || setupData?.dashboardSettings?.buckets || [];
+		// Always tag the widget with a bucket in multi-bucket campaigns (falling
+		// back to the first bucket) so it can never leak into other buckets' views.
+		const targetBucketId = buckets.length > 1 ? (selectedBucketId || buckets[0]?.id) : undefined;
 		const newWidget: Widget = {
 			...widgetData,
 			id: `widget-${Date.now()}`,
-			...(buckets.length > 1 && selectedBucketId ? { bucketId: selectedBucketId } : {})
+			...(targetBucketId ? { bucketId: targetBucketId } : {})
 		};
 		const updatedWidgets = [...(dashboardSettings.widgets as Widget[]), newWidget];
 		updateDashboardSettings({

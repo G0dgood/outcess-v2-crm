@@ -431,7 +431,6 @@ const ReportPage: React.FC = () => {
 									label=""
 									placeholder="Select a Bucket"
 									options={[
-										...(hasFullBucketAccess ? [{ value: '', label: 'All Buckets' }] : []),
 										...accessibleBuckets.map((b: { id?: string; _id?: string; name: string }) => ({ value: b.id || b._id || '', label: b.name }))
 									]}
 									value={selectedBucketId}
