@@ -8,9 +8,26 @@ import Icon from '@/components/ui/Icon';
 import ColorPicker from '@/components/ui/ColorPicker';
 import EmptyState from '@/components/ui/EmptyState';
 import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
-import { MixIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
+import { MixIcon, Pencil1Icon, TrashIcon, DragHandleDots2Icon } from '@radix-ui/react-icons';
 import { useSetup } from '@/contexts/SetupContext';
 import SelectBucketModal from '@/components/ui/SelectBucketModal';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    rectSortingStrategy,
+    useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Widget {
     id: string;
@@ -19,7 +36,98 @@ interface Widget {
     color: string;
     callOutcome?: string;
     bucketId?: string;
+    dataSourceName?: string;
 }
+
+// The "Total" aggregate metric is recognised by the dashboard via its title /
+// dataSourceName (see app/dashboard/page.tsx). It is a default KPI that can be
+// deleted, so we let users restore it from the setup screen when it's missing.
+const TOTAL_METRIC_TITLE = 'Total Calls';
+const TOTAL_METRIC_KEYS = ['total calls', 'total dispositions'];
+const isTotalMetric = (w: Widget) =>
+    TOTAL_METRIC_KEYS.includes((w.dataSourceName || w.title || '').trim().toLowerCase());
+
+interface SortableWidgetProps {
+    widget: Widget;
+    onEdit: (widget: Widget) => void;
+    onDelete: (widget: Widget) => void;
+}
+
+// A single KPI metric card that can be dragged to reorder. Only the drag handle
+// initiates a drag, so the edit/delete buttons stay clickable.
+const SortableWidget: React.FC<SortableWidgetProps> = ({ widget, onEdit, onDelete }) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: widget.id });
+
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 10 : undefined,
+        backgroundColor: 'var(--accent-white)',
+        borderColor: 'var(--light-gray)',
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative rounded-[var(--radius)] overflow-hidden select-none"
+        >
+            {/* Widget Color Accent */}
+            <div
+                className="absolute top-0 left-0 w-full h-1"
+                style={{ backgroundColor: widget.color }}
+            />
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 min-w-0">
+                    <span
+                        {...attributes}
+                        {...listeners}
+                        className="cursor-grab active:cursor-grabbing touch-none text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        title="Drag to reorder"
+                    >
+                        <DragHandleDots2Icon className="w-4 h-4" />
+                    </span>
+                    <h3
+                        className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100 truncate"
+                        style={{ color: 'var(--text-primary)' }}
+                    >
+                        {widget.title}
+                    </h3>
+                </div>
+                <div className="flex items-center gap-1">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEdit(widget)}
+                        onPointerDown={(e: React.PointerEvent<HTMLButtonElement>) => e.stopPropagation()}
+                        className="p-1 h-auto"
+                        style={{ color: 'var(--text-tertiary)' }}
+                        title="Edit Metric"
+                    >
+                        <Pencil1Icon className="w-4 h-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDelete(widget)}
+                        onPointerDown={(e: React.PointerEvent<HTMLButtonElement>) => e.stopPropagation()}
+                        className="p-1 h-auto text-red-500 hover:text-red-700"
+                        title="Delete KPI Metric"
+                    >
+                        <TrashIcon className="w-4 h-4" />
+                    </Button>
+                </div>
+            </div>
+            <div
+                className="text-3xl font-bold"
+                style={{ color: widget.color }}
+            >
+                {widget.value}
+            </div>
+        </div>
+    );
+};
 
 interface CallOutcome {
     id: string;
@@ -90,10 +198,59 @@ export default function KPIMetric({
 
     const displayedWidgets = useMemo(() => {
         if (buckets.length > 1 && selectedBucketId) {
-            return widgets.filter(w => w.bucketId === selectedBucketId);
+            // Strict per-bucket scoping. A legacy widget with no bucketId is not
+            // shown in every bucket (that was the leak) — it belongs to the first
+            // bucket only, matching how addBucket historically homed orphans.
+            const firstBucketId = buckets[0]?.id;
+            return widgets.filter(w =>
+                w.bucketId
+                    ? w.bucketId === selectedBucketId
+                    : selectedBucketId === firstBucketId
+            );
         }
         return widgets;
-    }, [widgets, buckets.length, selectedBucketId]);
+    }, [widgets, buckets, selectedBucketId]);
+
+    const hasTotalMetric = useMemo(
+        () => displayedWidgets.some(isTotalMetric),
+        [displayedWidgets]
+    );
+
+    // The bucket a newly created widget must be tagged with. Falls back to the
+    // first bucket so a widget can never be created "bucket-less" (which would
+    // otherwise leak it into other buckets' views).
+    const effectiveBucketId = selectedBucketId || (buckets.length > 0 ? buckets[0].id : undefined);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
+
+    const handleWidgetDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        const oldIndex = displayedWidgets.findIndex(w => w.id === active.id);
+        const newIndex = displayedWidgets.findIndex(w => w.id === over.id);
+        if (oldIndex === -1 || newIndex === -1) return;
+
+        const reordered = arrayMove(displayedWidgets, oldIndex, newIndex);
+
+        // When not filtering by bucket, the displayed list is the full list.
+        const isFiltered = buckets.length > 1 && !!selectedBucketId;
+        if (!isFiltered) {
+            onWidgetsChange(reordered);
+            return;
+        }
+
+        // Otherwise splice the reordered bucket subset back into the full list,
+        // leaving widgets that belong to other buckets untouched.
+        const queue = [...reordered];
+        const merged = widgets.map(w =>
+            w.bucketId === selectedBucketId ? (queue.shift() ?? w) : w
+        );
+        onWidgetsChange(merged);
+    };
 
     const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
     const [isEditWidgetModalOpen, setIsEditWidgetModalOpen] = useState(false);
@@ -111,6 +268,18 @@ export default function KPIMetric({
     const handleAddWidget = () => {
         setIsWidgetModalOpen(true);
         setWidgetForm({ title: '', callOutcome: '', color: '#6C8B7D' });
+    };
+
+    const handleRestoreTotal = () => {
+        if (hasTotalMetric) return;
+        const totalWidget: Widget = {
+            id: Date.now().toString(),
+            title: TOTAL_METRIC_TITLE,
+            value: 0,
+            color: '#050711',
+            ...(effectiveBucketId ? { bucketId: effectiveBucketId } : {})
+        };
+        onWidgetsChange([...widgets, totalWidget]);
     };
 
     const handleEditWidget = (widget: Widget) => {
@@ -153,7 +322,7 @@ export default function KPIMetric({
                 value: 0,
                 color: widgetForm.color,
                 callOutcome: widgetForm.callOutcome,
-                ...(selectedBucketId ? { bucketId: selectedBucketId } : {})
+                ...(effectiveBucketId ? { bucketId: effectiveBucketId } : {})
             };
             onWidgetsChange([...widgets, newWidget]);
             setIsWidgetModalOpen(false);
@@ -246,6 +415,16 @@ export default function KPIMetric({
 
                     {/* Action Buttons */}
                     <div className="flex justify-end gap-3">
+                        {!hasTotalMetric && (
+                            <Button
+                                variant="outline"
+                                size="md"
+                                onClick={handleRestoreTotal}
+                                title="Add the Total metric back to this dashboard"
+                            >
+                                Restore Total
+                            </Button>
+                        )}
                         <Button
                             variant="primary"
                             size="md"
@@ -271,59 +450,27 @@ export default function KPIMetric({
                             className="py-16"
                         />
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {displayedWidgets.map((widget) => (
-                                <div
-                                    key={widget.id}
-                                    className="dark:bg-gray-800 border dark:border-gray-700 p-6 relative rounded-[var(--radius)] overflow-hidden"
-                                    style={{
-                                        backgroundColor: 'var(--accent-white)',
-                                        borderColor: 'var(--light-gray)'
-                                    }}
-                                >
-                                    {/* Widget Color Accent */}
-                                    <div
-                                        className="absolute top-0 left-0 w-full h-1"
-                                        style={{ backgroundColor: widget.color }}
-                                    />
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3
-                                            className="font-inter text-[10px] md:text-[12px] font-medium dark:text-gray-100"
-                                            style={{ color: 'var(--text-primary)' }}
-                                        >
-                                            {widget.title}
-                                        </h3>
-                                        <div className="flex items-center gap-1">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleEditWidget(widget)}
-                                                className="p-1 h-auto"
-                                                style={{ color: 'var(--text-tertiary)' }}
-                                                title="Edit Metric"
-                                            >
-                                                <Pencil1Icon className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleDeleteWidgetClick(widget)}
-                                                className="p-1 h-auto text-red-500 hover:text-red-700"
-                                                title="Delete KPI Metric"
-                                            >
-                                                <TrashIcon className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                    <div
-                                        className="text-3xl font-bold"
-                                        style={{ color: widget.color }}
-                                    >
-                                        {widget.value}
-                                    </div>
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleWidgetDragEnd}
+                        >
+                            <SortableContext
+                                items={displayedWidgets.map(w => w.id)}
+                                strategy={rectSortingStrategy}
+                            >
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {displayedWidgets.map((widget) => (
+                                        <SortableWidget
+                                            key={widget.id}
+                                            widget={widget}
+                                            onEdit={handleEditWidget}
+                                            onDelete={handleDeleteWidgetClick}
+                                        />
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </SortableContext>
+                        </DndContext>
                     )}
                 </>
             )}

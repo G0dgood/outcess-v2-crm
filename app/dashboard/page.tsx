@@ -68,7 +68,7 @@ const DashboardContent: React.FC = () => {
 	const isLoading = isLobLoading;
 	const { isOnline, isConnected, isOffline } = useSocket();
 	const { syncNow, isSyncing } = useSyncDispositions();
-	const { canAccess, isAdmin } = usePrivilege();
+	const { canAccess, isAdmin, isSuperAdmin, allBucketAccess } = usePrivilege();
 	const { user } = useUserInfo();
 	const canAccessDashboard = canAccess('dashboard');
 	const canView = canAccess('dashboard', 'view');
@@ -106,7 +106,10 @@ const DashboardContent: React.FC = () => {
 	// Treat the isSupervisor flag as authoritative (a team lead may have any role name),
 	// falling back to the role name for older records.
 	const isSupervisor = user?.isSupervisor === true || userRoleName?.toLowerCase() === 'supervisor';
-	const isCampaignView = isAdmin || isSupervisor;
+	// The "all buckets access" privilege grants full campaign-wide visibility just
+	// like an admin, so such users get the campaign-wide dashboard (all data),
+	// never the agent-only view — regardless of supervisor/team-lead status.
+	const isCampaignView = isAdmin || isSuperAdmin || isSupervisor || allBucketAccess;
 
 	const { data: reportDataAgent, refetch: refetchAgentReport, isFetching: isFetchingAgentReport } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
 		{
@@ -413,7 +416,10 @@ const DashboardContent: React.FC = () => {
 		const campaignBuckets = campaignData?.dashboardSettings?.buckets || setupData?.dashboardSettings?.buckets || [];
 		const activeWidgets = (dashboardSettings?.widgets || []).filter((w: Widget) => {
 			if (campaignBuckets.length > 1 && selectedBucketId) {
-				return w.bucketId === selectedBucketId;
+				// Strict per-bucket scoping. A legacy widget with no bucketId belongs
+				// to the first bucket only, so it never leaks into other buckets.
+				const firstBucketId = campaignBuckets[0]?.id;
+				return w.bucketId ? w.bucketId === selectedBucketId : selectedBucketId === firstBucketId;
 			}
 			return true;
 		});
@@ -633,10 +639,13 @@ const DashboardContent: React.FC = () => {
 	const handleSaveNewWidget = useCallback((widgetData: Omit<Widget, 'id'>) => {
 		if (!canCreate) return;
 		const buckets = campaignData?.dashboardSettings?.buckets || setupData?.dashboardSettings?.buckets || [];
+		// Always tag the widget with a bucket in multi-bucket campaigns (falling
+		// back to the first bucket) so it can never leak into other buckets' views.
+		const targetBucketId = buckets.length > 1 ? (selectedBucketId || buckets[0]?.id) : undefined;
 		const newWidget: Widget = {
 			...widgetData,
 			id: `widget-${Date.now()}`,
-			...(buckets.length > 1 && selectedBucketId ? { bucketId: selectedBucketId } : {})
+			...(targetBucketId ? { bucketId: targetBucketId } : {})
 		};
 		const updatedWidgets = [...(dashboardSettings.widgets as Widget[]), newWidget];
 		updateDashboardSettings({
