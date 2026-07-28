@@ -7,7 +7,6 @@ import { ChevronDownIcon, ChevronUpIcon, LockClosedIcon } from '@radix-ui/react-
 import PageHeading from './PageHeading';
 import SubPageHeading from './SubPageHeading';
 import Button from './Button';
-import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetPermissionWithPrivilegeQuery, useUpdateRoleMutation, RolePermission, Role as ApiRole, Role } from '@/store/services/roleApi';
 import { toastError, toastSuccess } from '@/utils/toastWithSound';
@@ -47,21 +46,17 @@ interface PermissionProps {
 	campaignId?: string | null;
 }
 
-const Permission: React.FC<PermissionProps> = ({ className = '', campaignId }) => {
-	const { selectedCampaignId } = useCampaign();
+const Permission: React.FC<PermissionProps> = ({ className = '' }) => {
 	const { user } = useUserInfo();
 	const companyId = user?.company?._id || user?.companyId;
-
-	const targetCampaignId = campaignId ?? selectedCampaignId;
 
 	// Note: API returns { roles: Role[] } now
 	const { data: permissionData, isLoading } = useGetPermissionWithPrivilegeQuery(
 		{
-			campaignId: targetCampaignId ?? undefined,
-			companyId: !targetCampaignId ? (companyId ?? undefined) : undefined
+			companyId: companyId ?? undefined
 		},
 		{
-			skip: !targetCampaignId && !companyId
+			skip: !companyId
 		}
 	);
 

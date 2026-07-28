@@ -172,14 +172,13 @@ export default function CallDisposition() {
 	// sees buckets they are assigned to. Mirrors customer-book / setup-book / report.
 	const { isAdmin, isSuperAdmin, allBucketAccess } = usePrivilege();
 	const { user } = useAuth();
-	const userId = String(user?.id || user?._id || '');
 	const hasFullBucketAccess = isAdmin || isSuperAdmin || allBucketAccess;
 	const accessibleBuckets = useMemo(
 		() =>
 			hasFullBucketAccess
 				? buckets
-				: (getUserAssignedBuckets(userId, (buckets || []) as unknown as BucketWithMembers[]) as unknown as Bucket[]),
-		[buckets, userId, hasFullBucketAccess]
+				: (getUserAssignedBuckets(user || undefined, (buckets || []) as unknown as BucketWithMembers[]) as unknown as Bucket[]),
+		[buckets, user, hasFullBucketAccess]
 	);
 
 	const [activeBucketId, setActiveBucketId] = useState<string | null>(null);
@@ -624,7 +623,18 @@ export default function CallDisposition() {
 
 				toast.success("New disposition added and backup copy archived");
 			}
-			setIsAddDispositionModalOpen(false);
+			// Keep the modal open for adding more dispositions, just reset the form fields.
+			setDispositionForm({
+				fieldType: 'dropdown',
+				fieldLabel: '',
+				dropdownOptions: [''],
+				nestedOptions: [] as NestedOption[],
+				sortOrder: 'entered',
+				isRequired: false,
+				color: '#050711',
+				subFields: [] as DispositionCategory[],
+				optionSubFields: {} as Record<string, DispositionCategory[]>
+			});
 		}
 		setEditingDisposition(null);
 	};

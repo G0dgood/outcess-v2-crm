@@ -62,7 +62,7 @@ interface CombinedDispositionItem {
 }
 
 const DashboardContent: React.FC = () => {
-	const { campaignData, selectedCampaignId, isLoading: isLobLoading } = useCampaign();
+	const { campaignData, selectedCampaignId, isLoading: isLobLoading, selectedBucketId } = useCampaign();
 	const { setupData, addChart: addChartLocal, updateChart: updateChartLocal, updateChartsOrder: updateChartsOrderLocal, updateDashboardSettings: updateDashboardSettingsLocal } = useSetup();
 	const [updateCampaign] = useUpdateCampaignMutation();
 	const isLoading = isLobLoading;
@@ -113,7 +113,8 @@ const DashboardContent: React.FC = () => {
 			campaignId: campaignId || '',
 			agentId: user?.id || user?._id || '',
 			startDate: dateRange.startDate || '',
-			endDate: dateRange.endDate || ''
+			endDate: dateRange.endDate || '',
+			bucketId: selectedBucketId || undefined
 		},
 		{ skip: !campaignId || !user || !dateRange.startDate || isCampaignView }
 	);
@@ -122,7 +123,8 @@ const DashboardContent: React.FC = () => {
 		{
 			campaignId: campaignId || '',
 			startDate: dateRange.startDate || '',
-			endDate: dateRange.endDate || ''
+			endDate: dateRange.endDate || '',
+			bucketId: selectedBucketId || undefined
 		},
 		{ skip: !campaignId || !dateRange.startDate || !isCampaignView }
 	);
@@ -408,7 +410,15 @@ const DashboardContent: React.FC = () => {
 			}).length;
 		};
 
-		return dashboardSettings?.widgets?.map((widget: Widget) => {
+		const campaignBuckets = campaignData?.dashboardSettings?.buckets || setupData?.dashboardSettings?.buckets || [];
+		const activeWidgets = (dashboardSettings?.widgets || []).filter((w: Widget) => {
+			if (campaignBuckets.length > 1 && selectedBucketId) {
+				return w.bucketId === selectedBucketId;
+			}
+			return true;
+		});
+
+		return activeWidgets.map((widget: Widget) => {
 			const sourceKey = widget.dataSourceName || widget.title;
 			// Check report data first
 			if (reportData?.data?.breakdown) {
@@ -529,7 +539,7 @@ const DashboardContent: React.FC = () => {
 
 			return widget;
 		});
-	}, [dashboardSettings, combinedDispositions, pendingDispositionsCount, reportData]);
+	}, [dashboardSettings, combinedDispositions, pendingDispositionsCount, reportData, selectedBucketId, campaignData, setupData]);
 
 	const handleEditWidget = useCallback((widgetId: string) => {
 		if (!canEdit) return;
@@ -622,16 +632,18 @@ const DashboardContent: React.FC = () => {
 
 	const handleSaveNewWidget = useCallback((widgetData: Omit<Widget, 'id'>) => {
 		if (!canCreate) return;
+		const buckets = campaignData?.dashboardSettings?.buckets || setupData?.dashboardSettings?.buckets || [];
 		const newWidget: Widget = {
 			...widgetData,
 			id: `widget-${Date.now()}`,
+			...(buckets.length > 1 && selectedBucketId ? { bucketId: selectedBucketId } : {})
 		};
 		const updatedWidgets = [...(dashboardSettings.widgets as Widget[]), newWidget];
 		updateDashboardSettings({
 			widgets: updatedWidgets,
 		});
 		setIsAddWidgetModalOpen(false);
-	}, [canCreate, dashboardSettings.widgets, updateDashboardSettings]);
+	}, [canCreate, dashboardSettings.widgets, updateDashboardSettings, campaignData, setupData, selectedBucketId]);
 
 	const handleAddChart = useCallback((chartData: Omit<Chart, 'id'>) => {
 		if (!canCreate) return;

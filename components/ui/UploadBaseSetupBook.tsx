@@ -271,6 +271,11 @@ const UploadBaseSetupBook: React.FC<UploadBaseProps> = ({
       if (onUploadComplete) {
         onUploadComplete(jsonData, fileToUpload);
       }
+
+      // Reset / close the modal automatically after 1 second
+      setTimeout(() => {
+        handleClose();
+      }, 1000);
     } catch {
       setProgress(0);
     } finally {

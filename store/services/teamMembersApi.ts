@@ -73,6 +73,7 @@ export interface TransferCampaignResponse {
 }
 
 export interface ApiTeamMember {
+		campaignId: any;
   isActive: boolean;
   _id?: string;
   id?: string;
@@ -161,7 +162,7 @@ export const teamMembersApi = baseApi.injectEndpoints({
       query: () => "api/v1/team-members",
       providesTags: ["TeamMembers"],
     }),
-    getTeamMembersByCompanyId: builder.query<unknown, string>({
+    getTeamMembersByCompanyId: builder.query<{ teamMembers: ApiTeamMember[]; message?: string }, string>({
       query: (companyId) => `api/v1/team-members/company/${companyId}`,
       providesTags: ["TeamMembers"],
     }),

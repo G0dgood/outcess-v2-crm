@@ -185,9 +185,14 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 
 	// Socket integration for real-time role updates
 	useEffect(() => {
-		if (!socket || !selectedCampaignId) return;
+		if (!socket) return;
 
-		socket.emit("joinCampaign", selectedCampaignId);
+		if (selectedCampaignId) {
+			socket.emit("joinCampaign", selectedCampaignId);
+		}
+		if (companyId) {
+			socket.emit("joinCompany", companyId);
+		}
 
 		const handleUpdateRole = (data: { role: { _id?: string; id?: string; roleName: string; permissions: RoleModulePermission[]; allBucketAccess?: boolean } }) => {
 			if (!userPrivileges || !userPrivileges.role) return;
@@ -228,7 +233,7 @@ export const PrivilegeProvider: React.FC<PrivilegeProviderProps> = ({
 		return () => {
 			socket.off("updateRole", handleUpdateRole);
 		};
-	}, [socket, selectedCampaignId, userPrivileges, user, updateUser, dispatch]);
+	}, [socket, selectedCampaignId, companyId, userPrivileges, user, updateUser, dispatch]);
 
 	const findModulePermission = (moduleId: string): RoleModulePermission | undefined => {
 		if (!userPrivileges?.role?.permissions) return undefined;

@@ -164,16 +164,22 @@ export const dispositionApi = baseApi.injectEndpoints({
       DashboardReportResponse,
       GetDispositionsByAgentReportRequest
     >({
-      query: ({ campaignId, agentId, startDate, endDate }) =>
-        `api/v1/dispositions/${campaignId}/agent/${agentId}/dashboard-report?startDate=${startDate}&endDate=${endDate}`,
+      query: ({ campaignId, agentId, startDate, endDate, bucketId }) => {
+        let url = `api/v1/dispositions/${campaignId}/agent/${agentId}/dashboard-report?startDate=${startDate}&endDate=${endDate}`;
+        if (bucketId) url += `&bucketId=${bucketId}`;
+        return url;
+      },
       providesTags: ["Disposition"],
     }),
     getAllDashboardDispositionsByCampaignReport: builder.query<
       DashboardReportResponse,
-      { campaignId: string; startDate: string; endDate: string }
+      { campaignId: string; startDate: string; endDate: string; bucketId?: string }
     >({
-      query: ({ campaignId, startDate, endDate }) =>
-        `api/v1/dispositions/${campaignId}/dashboard-report?startDate=${startDate}&endDate=${endDate}`,
+      query: ({ campaignId, startDate, endDate, bucketId }) => {
+        let url = `api/v1/dispositions/${campaignId}/dashboard-report?startDate=${startDate}&endDate=${endDate}`;
+        if (bucketId) url += `&bucketId=${bucketId}`;
+        return url;
+      },
       providesTags: ["Disposition"],
     }),
     getLeaderboard: builder.query<LeaderboardResponse, GetLeaderboardRequest>({

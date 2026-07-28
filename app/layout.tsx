@@ -29,26 +29,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="http://localhost:8000" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  if (window.location.pathname.startsWith('/blog') || window.location.pathname.startsWith('/about') || window.location.pathname.startsWith('/careers')) {
-                    return;
-                  }
-                  const darkMode = localStorage.getItem('darkMode');
-                  if (darkMode === 'true') {
-                    document.documentElement.classList.add('dark');
-                  }
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
-      </head>
       <body
         className={`${workSans.variable} antialiased`}
       >

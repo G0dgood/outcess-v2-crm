@@ -9,6 +9,8 @@ export interface User {
   avatar?: string;
   role?: string | { roleName: string; permissions: unknown[]; allBucketAccess?: boolean };
   isTeamMember?: boolean;
+  isSupervisor?: boolean;
+  userId?: string;
   companyId?: string;
   companyName?: string;
   company?: {

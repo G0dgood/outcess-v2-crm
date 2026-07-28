@@ -65,6 +65,7 @@ export interface Widget {
   callOutcome?: string;
   subKey?: string;
   dataSourceName?: string;
+  bucketId?: string;
 }
 
 export interface CallOutcome {

@@ -5,6 +5,8 @@ import { useUserInfo } from '@/contexts/UserInfoContext';
 import { useGetCampaignByCompanyIdQuery, useGetCampaignQuery, Campaign } from '@/store/services/campaignApi';
 import { useCampaign } from './CampaignContext';
 import Icon from '@/components/ui/Icon';
+import { useSocket } from '@/contexts/SocketContext';
+import { toast } from 'sonner';
 import {
 	DispositionCategory,
 	AssignedMember,
@@ -98,6 +100,7 @@ interface SetupProviderProps {
 export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 	const { user } = useUserInfo();
 	const { selectedCampaignId } = useCampaign();
+	const { socket } = useSocket();
 
 	const [currentStep, setCurrentStep] = useState(1);
 	const [dashboardStep, setDashboardStep] = useState<'KPI Metric' | 'Call Disposition'>('KPI Metric');
@@ -123,7 +126,7 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			dashboardVisibility: 'all',
 			activeTab: 'kpi',
 			widgets: [
-				{ id: '1', title: 'Total Calls', value: 0, color: '#050711' }
+				{ id: '1', title: 'Total', value: 0, color: '#050711' }
 			],
 			dispositions: [],
 			buckets: [],
@@ -311,6 +314,41 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 		}
 	}, [user, setupData.companyId]);
 
+	// Socket Room connection for real-time campaign settings syncing
+	useEffect(() => {
+		if (socket && setupData.campaignId) {
+			socket.emit("joinCampaign", setupData.campaignId);
+		}
+	}, [socket, setupData.campaignId]);
+
+	// Listen to real-time campaign updates
+	useEffect(() => {
+		if (!socket) return;
+
+		const handleCampaignUpdated = (updatedCampaign: any) => {
+			const campaignObj = updatedCampaign?.campaign || updatedCampaign;
+			if (campaignObj?._id !== setupData.campaignId) return;
+
+			// If local state is dirty, inform the user that changes from another instance were synced
+			setIsDirty(prevDirty => {
+				if (prevDirty) {
+					toast.info("Campaign settings updated from another tab/session", {
+						description: "Your workspace has been synchronized.",
+						duration: 4000
+					});
+				}
+				return false;
+			});
+
+			populateData(campaignObj);
+		};
+
+		socket.on("campaignUpdated", handleCampaignUpdated);
+		return () => {
+			socket.off("campaignUpdated", handleCampaignUpdated);
+		};
+	}, [socket, setupData.campaignId, populateData]);
+
 	const updateSetupData = useCallback((data: Partial<SetupData>) => {
 		setSetupData(prev => ({ ...prev, ...data }));
 		setIsDirty(true);
@@ -488,23 +526,48 @@ export const SetupProvider: React.FC<SetupProviderProps> = ({ children }) => {
 			customerFields: defaultFields
 		};
 
-		setSetupData(prev => ({
-			...prev,
-			dashboardSettings: {
-				...prev.dashboardSettings,
-				// Stamp the owning campaign so this bucket can never leak into another.
-				buckets: [...(prev.dashboardSettings.buckets || []), { ...newBucket, campaignId: prev.campaignId }]
-			},
-			customerBookSettings: {
-				...prev.customerBookSettings,
-				configuredFields: [
-					...(prev.customerBookSettings.configuredFields || []),
-					{ bucketId, fields: defaultFields }
-				]
+		setSetupData(prev => {
+			const campaignBuckets = prev.dashboardSettings.buckets || [];
+			const campaignWidgets = prev.dashboardSettings.widgets || [];
+
+			// Map any widgets that don't have a bucketId to this first bucket
+			let updatedWidgets = campaignWidgets.map(w => {
+				if (!w.bucketId) {
+					return { ...w, bucketId };
+				}
+				return w;
+			});
+
+			// If it's a subsequent bucket, or if there were no widgets, add a default "Total" widget
+			if (campaignBuckets.length > 0 || updatedWidgets.length === 0) {
+				updatedWidgets.push({
+					id: `default-${bucketId}-${Date.now()}`,
+					title: 'Total',
+					value: 0,
+					color: '#050711',
+					bucketId
+				});
 			}
-		}));
+
+			return {
+				...prev,
+				dashboardSettings: {
+					...prev.dashboardSettings,
+					// Stamp the owning campaign so this bucket can never leak into another.
+					buckets: [...campaignBuckets, { ...newBucket, campaignId: prev.campaignId }],
+					widgets: updatedWidgets
+				},
+				customerBookSettings: {
+					...prev.customerBookSettings,
+					configuredFields: [
+						...(prev.customerBookSettings.configuredFields || []),
+						{ bucketId, fields: defaultFields }
+					]
+				}
+			};
+		});
 		setIsDirty(true);
-	}, []);
+	}, [setupData.dashboardSettings.buckets]);
 
 	const updateBucket = useCallback((bucketId: string, updates: Partial<Bucket>) => {
 		setSetupData(prev => ({
