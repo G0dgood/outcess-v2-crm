@@ -92,11 +92,11 @@ const ReportPage: React.FC = () => {
 
   const effectiveCampaignId = String(
     selectedCampaignId ||
-      campaignData?._id ||
-      campaignData?.id ||
-      setupData?.campaignId ||
-      user?.campaignId ||
-      "",
+    campaignData?._id ||
+    campaignData?.id ||
+    setupData?.campaignId ||
+    user?.campaignId ||
+    "",
   );
 
   const [dateRange, setDateRange] = useState<{
@@ -135,11 +135,11 @@ const ReportPage: React.FC = () => {
 
   const companyId = String(
     user?.companyId ||
-      (typeof user?.company === "object"
-        ? (user?.company as { _id?: string; id?: string })?._id ||
-          (user?.company as { _id?: string; id?: string })?.id
-        : user?.company) ||
-      "",
+    (typeof user?.company === "object"
+      ? (user?.company as { _id?: string; id?: string })?._id ||
+      (user?.company as { _id?: string; id?: string })?.id
+      : user?.company) ||
+    "",
   );
   const { data: headerCampaignsData } = useGetCampaignByCompanyIdForheaderQuery(
     companyId ? { companyId } : { companyId: "" },
@@ -227,6 +227,8 @@ const ReportPage: React.FC = () => {
       },
       { skip: !effectiveCampaignId || isAgent || isPrivilegeLoading },
     );
+
+  console.log('lobApiData----> ', lobApiData)
 
   const { data: agentApiData, isLoading: isAgentLoading } =
     useGetDispositionsByAgentReportQuery(
@@ -321,23 +323,25 @@ const ReportPage: React.FC = () => {
           : "-";
       const agentName =
         typeof item.agent === "object" ? item.agent?.name : item.agent;
-      const agentId =
+      const rawAgentId =
         (typeof item.agent === "object"
           ? item.agent?.agentId ||
-            item.agent?.userId ||
-            item.agent?._id ||
-            item.agent?.id
+          item.agent?.userId ||
+          item.agent?._id ||
+          item.agent?.id
           : item.agent) ||
         item.agentId ||
         "-";
+      const agentId = rawAgentId && typeof rawAgentId === 'object' ? String(rawAgentId) : (rawAgentId || '-');
       const customerSearchId = item.customer
         ? (Object.entries(item.customer).find(
-            ([key]) => key.toLowerCase() === "searchid",
-          )?.[1] as string)
+          ([key]) => key.toLowerCase() === "searchid",
+        )?.[1] as string)
         : undefined;
 
       const row: ReportData = {
         id: item._id || item.id || "",
+        "Agent ID": agentId || "-",
         "Agent Name": agentName || "Unknown",
         Date: formatted,
         "Search ID": customerSearchId || (item.customerId as string) || "-",
@@ -395,7 +399,7 @@ const ReportPage: React.FC = () => {
     if (reportData.length === 0) return [];
     const headers = new Set<string>();
     // Default headers that should always be present
-    const priorityHeaders = ["Agent Name", "Date"];
+    const priorityHeaders = ["Agent ID", "Agent Name", "Date"];
 
     // Add all keys from all items except Search ID
     reportData.forEach((item) => {
@@ -475,21 +479,22 @@ const ReportPage: React.FC = () => {
         : "-";
     const agentName =
       typeof item.agent === "object" ? item.agent?.name : item.agent;
-    const agentId =
-      typeof item.agent === "object"
-        ? item.agent?.agentId ||
-          item.agent?.userId ||
-          item.agent?._id ||
-          item.agent?.id
-        : item.agentId || item.agent || "-";
+    const rawCsvAgentId =
+      (typeof item.agent === 'object'
+        ? (item.agent?.agentId || item.agent?.userId || item.agent?._id || item.agent?.id)
+        : item.agent)
+      || item.agentId
+      || '-';
+    const agentId = rawCsvAgentId && typeof rawCsvAgentId === 'object' ? String(rawCsvAgentId) : (rawCsvAgentId || '-');
 
     const customerSearchId = item.customer
       ? (Object.entries(item.customer).find(
-          ([key]) => key.toLowerCase() === "searchid",
-        )?.[1] as string)
+        ([key]) => key.toLowerCase() === "searchid",
+      )?.[1] as string)
       : undefined;
 
     const row: Record<string, unknown> = {
+      "Agent ID": agentId || "-",
       "Agent Name": agentName || "Unknown",
       Date: formatted,
       "Search ID": customerSearchId || (item.customerId as string) || "-",
@@ -549,12 +554,12 @@ const ReportPage: React.FC = () => {
     startDate: string;
     endDate: string;
     filterType:
-      | "today"
-      | "yesterday"
-      | "last7days"
-      | "last30days"
-      | "all"
-      | "dateRange";
+    | "today"
+    | "yesterday"
+    | "last7days"
+    | "last30days"
+    | "all"
+    | "dateRange";
     fromDate?: string;
     toDate?: string;
   }) => {
@@ -750,7 +755,7 @@ const ReportPage: React.FC = () => {
                         style={{ color: "var(--text-primary)" }}
                       >
                         {String(report[header] || "-").length >
-                        tooltipLength ? (
+                          tooltipLength ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span className="cursor-pointer">
