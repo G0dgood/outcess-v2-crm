@@ -239,23 +239,51 @@ const generateSingleSourceData = (
 	reportData?: any,
 	chartTimeRange?: string
 ): ChartDataItem[] => {
+	let sourceKey = dataSource;
+	let customLabel = '';
+	let sumKeys: string[] = [];
+	let isSum = false;
+
+	if (dataSource.includes(':::')) {
+		const parts = dataSource.split(':::');
+		sourceKey = parts[0];
+		if (parts[1] === 'sum') {
+			isSum = true;
+			sumKeys = parts[2] ? parts[2].split(',') : [];
+			customLabel = parts[3] || `${sourceKey} (Sum)`;
+		} else {
+			sumKeys = [parts[1]];
+			customLabel = parts[2] || parts[1];
+		}
+	}
+
 	// Check reportData first
 	if (reportData?.data?.breakdown) {
-		const val = reportData.data.breakdown[dataSource];
-		if (val && typeof val === 'object') {
-			const rawData = Object.entries(val).map(([label, value]) => ({
-				label,
-				value: value as number,
-				color: ''
-			}));
-			return cleanChartData(rawData, chartColor);
-		}
-		if (typeof val === 'number') {
-			return [{
-				label: dataSource,
-				value: val,
-				color: chartColor || '#FF6B6B'
-			}];
+		const val = reportData.data.breakdown[sourceKey];
+		if (val !== undefined && val !== null) {
+			if (sumKeys.length > 0) {
+				if (typeof val === 'object') {
+					const calculatedValue = sumKeys.reduce((acc, k) => acc + (Number(val[k]) || 0), 0);
+					return [{
+						label: customLabel || sourceKey,
+						value: calculatedValue,
+						color: chartColor || '#FF6B6B'
+					}];
+				}
+			} else if (typeof val === 'object') {
+				const rawData = Object.entries(val).map(([label, value]) => ({
+					label,
+					value: value as number,
+					color: ''
+				}));
+				return cleanChartData(rawData, chartColor);
+			} else if (typeof val === 'number') {
+				return [{
+					label: customLabel || sourceKey,
+					value: val,
+					color: chartColor || '#FF6B6B'
+				}];
+			}
 		}
 	}
 
@@ -276,7 +304,35 @@ const generateSingleSourceData = (
 	const dispositionsToCount = filteredDispositions;
 
 	const allCampaignDispositions = getAllCampaignDispositions(setupData.dashboardSettings);
-	const disposition = allCampaignDispositions.find((d: DispositionCategory) => d.name === dataSource);
+
+	if (sumKeys.length > 0) {
+		const count = dispositionsToCount.filter(disp => {
+			const fields = disp.dispositionData || disp.fillDisposition;
+			if (fields && Array.isArray(fields)) {
+				return fields.some((f: DispositionFieldEntry) => {
+					if (!f.fieldName || f.fieldValue === undefined || f.fieldValue === null) return false;
+					if (f.fieldName.toLowerCase() !== sourceKey.toLowerCase()) return false;
+					const dispDef = allCampaignDispositions.find(d => d.name === f.fieldName);
+					const levels = resolveMultiDropdownLevels(f.fieldName, String(f.fieldValue), dispDef);
+					return levels.some(lvl =>
+						sumKeys.some(k => 
+							lvl.header.toLowerCase() === k.toLowerCase() ||
+							lvl.value.toLowerCase() === k.toLowerCase()
+						)
+					);
+				});
+			}
+			return false;
+		}).length;
+
+		return [{
+			label: customLabel || sourceKey,
+			value: count,
+			color: chartColor || '#FF6B6B'
+		}];
+	}
+
+	const disposition = allCampaignDispositions.find((d: DispositionCategory) => d.name === sourceKey);
 
 	if (disposition) {
 		const counts: Record<string, number> = {};

@@ -222,6 +222,9 @@ const ReportPage: React.FC = () => {
 				? moment(item.timestamp).format('YYYY-MM-DD HH:mm')
 				: '-';
 			const agentName = typeof item.agent === 'object' ? item.agent?.name : item.agent;
+			const agentId = typeof item.agent === 'object'
+				? (item.agent?.agentId || item.agent?.userId || item.agent?._id || item.agent?.id)
+				: (item.agentId || item.agent || '-');
 			const customerSearchId = item.customer
 				? (Object.entries(item.customer).find(([key]) => key.toLowerCase() === 'searchid')?.[1] as string)
 				: undefined;
@@ -229,6 +232,7 @@ const ReportPage: React.FC = () => {
 			const row: ReportData = {
 				id: item._id || item.id || '',
 				'Agent Name': agentName || 'Unknown',
+				'Agent ID': agentId || '-',
 				'Date': formatted,
 				'Search ID': customerSearchId || (item.customerId as string) || '-',
 			};
@@ -263,7 +267,7 @@ const ReportPage: React.FC = () => {
 		if (reportData.length === 0) return [];
 		const headers = new Set<string>();
 		// Default headers that should always be present
-		const priorityHeaders = ['Agent Name', 'Date'];
+		const priorityHeaders = ['Agent Name', 'Agent ID', 'Date'];
 
 		// Add all keys from all items except Search ID
 		reportData.forEach(item => {
@@ -336,6 +340,9 @@ const ReportPage: React.FC = () => {
 			? moment(item.timestamp).format('YYYY-MM-DD HH:mm')
 			: '-';
 		const agentName = typeof item.agent === 'object' ? item.agent?.name : item.agent;
+		const agentId = typeof item.agent === 'object'
+			? (item.agent?.agentId || item.agent?.userId || item.agent?._id || item.agent?.id)
+			: (item.agentId || item.agent || '-');
 
 		const customerSearchId = item.customer
 			? (Object.entries(item.customer).find(([key]) => key.toLowerCase() === 'searchid')?.[1] as string)
@@ -343,6 +350,7 @@ const ReportPage: React.FC = () => {
 
 		const row: Record<string, unknown> = {
 			'Agent Name': agentName || 'Unknown',
+			'Agent ID': agentId || '-',
 			'Date': formatted,
 			'Search ID': customerSearchId || (item.customerId as string) || '-',
 		};
