@@ -201,7 +201,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 				}
 			} else {
 				const matchingDisp = allConfigured.find(d => d.name === lookupKey);
-				const optionsList = matchingDisp?.dropdownOptions || (matchingDisp as any)?.options || [];
+				const optionsList = matchingDisp?.dropdownOptions || (matchingDisp as { options?: string[] })?.options || [];
 				calculatedValue = getCountForKeys(lookupKey, optionsList);
 			}
 		}
@@ -217,7 +217,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			subKey: compositeSubKey,
 			dataSourceName: lookupKey,
 		}));
-	}, [selectedCategory, selectedKeys, reportData, isTitleManual, campaignData, isOpen, widget]);
+	}, [selectedCategory, selectedKeys, reportData, isTitleManual, campaignData, isOpen, widget, formData.dataSourceName]);
 
 	const subKeyOptions = useMemo(() => {
 		const lookupKey = selectedCategory || formData.dataSourceName;

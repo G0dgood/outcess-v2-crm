@@ -14,7 +14,7 @@ import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useGetDashboardDispositionsByCampaignAndAgentIdReportQuery, useGetAllDashboardDispositionsByCampaignReportQuery } from '@/store/services/dispositionApi';
 import { DispositionCategory, NestedOption } from '@/types/dashboard';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
+import { getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
 
 interface AddChartModalProps {
 	isOpen: boolean;

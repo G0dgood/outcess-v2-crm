@@ -40,7 +40,6 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		subKey: '',
 		dataSourceName: '',
 	});
-	const [selectedSubKey, setSelectedSubKey] = useState<string>('');
 	const [selectedCategory, setSelectedCategory] = useState<string>('');
 	const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
 	const [isTitleManual, setIsTitleManual] = useState(false);
@@ -157,7 +156,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 			} else {
 				// Sum all options of the category
 				const matchingDisp = allConfigured.find(d => d.name === lookupKey);
-				const optionsList = matchingDisp?.dropdownOptions || (matchingDisp as any)?.options || [];
+				const optionsList = matchingDisp?.dropdownOptions || (matchingDisp as { options?: string[] })?.options || [];
 				calculatedValue = getCountForKeys(lookupKey, optionsList);
 			}
 		}
@@ -173,7 +172,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 			subKey: compositeSubKey,
 			dataSourceName: lookupKey,
 		}));
-	}, [selectedCategory, selectedKeys, reportData, isTitleManual, campaignData]);
+	}, [selectedCategory, selectedKeys, reportData, isTitleManual, campaignData, formData.dataSourceName]);
 
 	// Build dropdown options from available data
 	const widgetTitleOptions = useMemo(() => {
@@ -303,7 +302,6 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 
 	const handleDataSourceChange = (value: string) => {
 		setSelectedCategory(value);
-		setSelectedSubKey('');
 		setSelectedKeys([]);
 		setFormData(prev => ({
 			...prev,
@@ -336,7 +334,6 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 				subKey: '',
 				dataSourceName: '',
 			});
-			setSelectedSubKey('');
 			setSelectedCategory('');
 			setSelectedKeys([]);
 			setIsTitleManual(false);
@@ -352,7 +349,6 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 			subKey: '',
 			dataSourceName: '',
 		});
-		setSelectedSubKey('');
 		setSelectedCategory('');
 		setSelectedKeys([]);
 		setIsTitleManual(false);

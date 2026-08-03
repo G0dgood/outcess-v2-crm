@@ -8,7 +8,7 @@ import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useSocket } from '@/contexts/SocketContext';
-import { Chart, DispositionCategory, NestedOption } from '@/types/dashboard';
+import { Chart, DispositionCategory, NestedOption, DashboardReportResponse } from '@/types/dashboard';
 import { useCampaign } from '@/contexts/CampaignContext';
 import Icon from '@/components/ui/Icon';
 import { getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
@@ -18,7 +18,7 @@ interface EditChartModalProps {
 	onClose: () => void;
 	onSave: (chart: Chart) => void;
 	chart: Chart | null;
-	reportData?: any;
+	reportData?: DashboardReportResponse;
 }
 
 const chartTypeOptions = [
@@ -51,10 +51,6 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 	chart,
 	reportData,
 }) => {
-	const [selectedSubKey, setSelectedSubKey] = useState<string>('');
-	const [selectedCategory, setSelectedCategory] = useState<string>('');
-	const [isTitleManual, setIsTitleManual] = useState(false);
-
 	// State for custom aggregation builder
 	const [customCategory, setCustomCategory] = useState<string>('');
 	const [customCheckedKeys, setCustomCheckedKeys] = useState<string[]>([]);
@@ -193,26 +189,6 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 			const stringValue = Array.isArray(value) ? value[0] : value;
 			setFormData(prev => ({ ...prev, [field]: stringValue }));
 		}
-	};
-
-	const handleDataSourceChange = (values: string | string[]) => {
-		const dataSourceArray = Array.isArray(values) ? values : [values];
-		setFormData(prev => {
-			// Initialize colors for new data sources with default color
-			const newColors = { ...prev.colors };
-			dataSourceArray.forEach(source => {
-				if (!newColors[source]) {
-					newColors[source] = prev?.color || '#050711';
-				}
-			});
-			// Remove colors for deselected data sources
-			Object.keys(newColors).forEach(source => {
-				if (!dataSourceArray.includes(source)) {
-					delete newColors[source];
-				}
-			});
-			return { ...prev, dataSource: dataSourceArray, colors: newColors };
-		});
 	};
 
 	const handleColorChange = (dataSource: string, color: string) => {
