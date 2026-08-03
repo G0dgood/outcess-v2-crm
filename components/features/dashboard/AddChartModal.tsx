@@ -560,7 +560,7 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 										<label className="block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
 											Select Options to Sum
 										</label>
-										<div className="max-h-36 overflow-y-auto border dark:border-gray-700 rounded-[var(--radius)] p-3 space-y-2" style={{ backgroundColor: 'var(--card-bg)' }}>
+										<div className="max-h-36 overflow-y-auto border dark:border-gray-700 rounded-[var(--radius)] p-3 flex flex-col gap-3" style={{ backgroundColor: 'var(--card-bg)' }}>
 											{customSubKeyOptions.map(opt => (
 												<Checkbox
 													key={opt.value}
