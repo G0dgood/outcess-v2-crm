@@ -222,12 +222,13 @@ const ReportPage: React.FC = () => {
 				? moment(item.timestamp).format('YYYY-MM-DD HH:mm')
 				: '-';
 			const agentName = typeof item.agent === 'object' ? item.agent?.name : item.agent;
-			const agentId =
+			const rawAgentId =
 				(typeof item.agent === 'object'
 					? (item.agent?.agentId || item.agent?.userId || item.agent?._id || item.agent?.id)
 					: item.agent)
 				|| item.agentId
 				|| '-';
+			const agentId = rawAgentId && typeof rawAgentId === 'object' ? String(rawAgentId) : (rawAgentId || '-');
 			const customerSearchId = item.customer
 				? (Object.entries(item.customer).find(([key]) => key.toLowerCase() === 'searchid')?.[1] as string)
 				: undefined;
