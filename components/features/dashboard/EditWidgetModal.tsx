@@ -41,6 +41,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 	});
 	const [selectedSubKey, setSelectedSubKey] = useState<string>('');
 	const [selectedCategory, setSelectedCategory] = useState<string>('');
+	const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
 	const [isTitleManual, setIsTitleManual] = useState(false);
 
 	// API Data Fetching
@@ -75,13 +76,25 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			});
 
 			if (widget.subKey && widget.subKey.includes(':::')) {
-				const [category, key] = widget.subKey.split(':::');
-				setSelectedCategory(category);
-				setSelectedSubKey(key);
-				setIsTitleManual(widget.title !== key);
+				const parts = widget.subKey.split(':::');
+				const category = parts[0];
+				if (parts[1] === 'sum') {
+					const keys = parts[2] ? parts[2].split(',') : [];
+					setSelectedCategory(category);
+					setSelectedKeys(keys);
+					setSelectedSubKey('');
+					setIsTitleManual(widget.title !== `${category} (Sum)`);
+				} else {
+					const key = parts[1];
+					setSelectedCategory(category);
+					setSelectedSubKey(key);
+					setSelectedKeys([key]);
+					setIsTitleManual(widget.title !== key);
+				}
 			} else {
 				setSelectedCategory(sourceName);
 				setSelectedSubKey('');
+				setSelectedKeys([]);
 				setIsTitleManual(widget.title !== sourceName);
 			}
 		}
@@ -92,13 +105,119 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 		if (isOpen && widget && !selectedCategory && reportData?.data?.breakdown) {
 			const sourceName = widget.dataSourceName || widget.title;
 			if (widget.subKey && widget.subKey.includes(':::')) {
-				const [category] = widget.subKey.split(':::');
-				setSelectedCategory(category);
+				const parts = widget.subKey.split(':::');
+				setSelectedCategory(parts[0]);
 			} else {
 				setSelectedCategory(sourceName);
 			}
 		}
 	}, [isOpen, widget, reportData, selectedCategory]);
+
+	// Calculate value based on selected disposition field / sub-option checkboxes
+	useEffect(() => {
+		// Avoid running calculation during the initial load of the widget to prevent title overrides
+		if (!isOpen || !widget) return;
+		const lookupKey = selectedCategory || formData.dataSourceName;
+		if (!lookupKey) return;
+
+		const dashboardSettings = campaignData?.dashboardSettings;
+		const allConfigured = getAllCampaignDispositions(dashboardSettings);
+
+		// If "Total Dispositions" or "Total Calls" is selected
+		if (lookupKey === 'Total Dispositions' || lookupKey === 'Total Calls') {
+			const apiTotal = reportData?.data?.totalDispositions !== undefined ? Number(reportData.data.totalDispositions) : 0;
+			setFormData(prev => ({
+				...prev,
+				title: isTitleManual ? prev.title : lookupKey,
+				value: apiTotal,
+				subKey: '',
+				dataSourceName: lookupKey,
+			}));
+			return;
+		}
+
+		// Helper to calculate count for offline/synced dispositions
+		const getCountForKeys = (category: string, keys: string[]) => {
+			const offlineDispositions = getOfflineDispositions();
+			const syncedDispositions = getSyncedDispositions();
+			const allDispositions = [...offlineDispositions, ...syncedDispositions];
+
+			return allDispositions.filter(disp => {
+				const fields = disp.dispositionData || disp.fillDisposition;
+				if (fields && Array.isArray(fields)) {
+					return fields.some((f: DispositionFieldEntry) => {
+						if (!f.fieldName || f.fieldValue === undefined || f.fieldValue === null) return false;
+						if (f.fieldName.toLowerCase() !== category.toLowerCase()) return false;
+						const dispDef = allConfigured.find(d => d.name === f.fieldName);
+						const levels = resolveMultiDropdownLevels(f.fieldName, String(f.fieldValue), dispDef);
+						return levels.some(lvl =>
+							keys.some(k => 
+								lvl.header.toLowerCase() === k.toLowerCase() ||
+								lvl.value.toLowerCase() === k.toLowerCase()
+							)
+						);
+					});
+				}
+				return false;
+			}).length;
+		};
+
+		// Calculate value
+		let calculatedValue = 0;
+		let compositeSubKey = '';
+
+		if (selectedKeys.length > 0) {
+			if (selectedKeys.length === 1) {
+				const singleKey = selectedKeys[0];
+				compositeSubKey = `${lookupKey}:::${singleKey}`;
+
+				if (reportData?.data?.breakdown?.[lookupKey]) {
+					const reportValue = reportData.data.breakdown[lookupKey];
+					if (typeof reportValue === 'object' && reportValue !== null) {
+						calculatedValue = Number(reportValue[singleKey]) || 0;
+					}
+				} else {
+					calculatedValue = getCountForKeys(lookupKey, [singleKey]);
+				}
+			} else {
+				compositeSubKey = `${lookupKey}:::sum:::${selectedKeys.join(',')}`;
+
+				if (reportData?.data?.breakdown?.[lookupKey]) {
+					const reportValue = reportData.data.breakdown[lookupKey];
+					if (typeof reportValue === 'object' && reportValue !== null) {
+						calculatedValue = selectedKeys.reduce((acc, k) => acc + (Number(reportValue[k]) || 0), 0);
+					}
+				} else {
+					calculatedValue = getCountForKeys(lookupKey, selectedKeys);
+				}
+			}
+		} else {
+			if (reportData?.data?.breakdown?.[lookupKey]) {
+				const reportValue = reportData.data.breakdown[lookupKey];
+				if (typeof reportValue === 'object' && reportValue !== null) {
+					calculatedValue = Object.values(reportValue).reduce((acc: number, val) => acc + (Number(val) || 0), 0);
+				} else {
+					calculatedValue = Number(reportValue) || 0;
+				}
+			} else {
+				const matchingDisp = allConfigured.find(d => d.name === lookupKey);
+				const optionsList = matchingDisp?.dropdownOptions || (matchingDisp as { options?: string[] })?.options || [];
+				calculatedValue = getCountForKeys(lookupKey, optionsList);
+			}
+		}
+
+		const defaultTitle = selectedKeys.length > 0 
+			? (selectedKeys.length === 1 ? selectedKeys[0] : `${lookupKey} (Sum)`) 
+			: lookupKey;
+
+		setFormData(prev => ({
+			...prev,
+			title: isTitleManual ? prev.title : defaultTitle,
+			value: calculatedValue,
+			subKey: compositeSubKey,
+			dataSourceName: lookupKey,
+		}));
+	}, [selectedCategory, selectedKeys, reportData, isTitleManual, campaignData, isOpen, widget, formData.dataSourceName]);
 
 	const subKeyOptions = useMemo(() => {
 		const lookupKey = selectedCategory || formData.dataSourceName;
@@ -171,6 +290,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 	const handleDataSourceChange = (value: string) => {
 		setSelectedCategory(value);
 		setSelectedSubKey('');
+		setSelectedKeys([]);
 		setFormData(prev => ({
 			...prev,
 			dataSourceName: value,
@@ -191,6 +311,8 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 
 	const widgetTitleOptions = useMemo(() => {
 		const optionsMap = new Map<string, { value: string; label: string }>();
+		optionsMap.set('Total Dispositions', { value: 'Total Dispositions', label: 'Total Dispositions (Overall)' });
+		optionsMap.set('Total Calls', { value: 'Total Calls', label: 'Total Calls (Overall)' });
 
 		if (reportData?.data?.breakdown) {
 			Object.keys(reportData.data.breakdown).forEach(key => {
@@ -244,81 +366,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 		return Array.from(optionsMap.values());
 	}, [campaignData?.dashboardSettings, reportData]);
 
-	useEffect(() => {
-		const lookupKey = selectedCategory || formData.dataSourceName;
-		if (!lookupKey) return;
 
-		const dashboardSettings = campaignData?.dashboardSettings;
-		const allConfigured = getAllCampaignDispositions(dashboardSettings);
-		const outcome = dashboardSettings?.callOutcomes?.find((o: { name: string }) => o.name === lookupKey);
-
-		if (reportData?.data?.breakdown && lookupKey && reportData.data.breakdown[lookupKey] !== undefined) {
-			const reportValue = reportData.data.breakdown[lookupKey];
-			if (typeof reportValue === 'object' && reportValue !== null) {
-				if (selectedSubKey && reportValue[selectedSubKey] !== undefined) {
-					const compositeSubKey = `${lookupKey}:::${selectedSubKey}`;
-					setFormData(prev => ({
-						...prev,
-						title: isTitleManual ? prev.title : selectedSubKey,
-						value: Number(reportValue[selectedSubKey]),
-						subKey: compositeSubKey,
-						dataSourceName: lookupKey,
-					}));
-				} else {
-					const total = Object.values(reportValue).reduce((acc: number, val) => acc + (Number(val) || 0), 0);
-					setFormData(prev => ({
-						...prev,
-						title: isTitleManual ? prev.title : lookupKey,
-						value: total,
-						subKey: '',
-						dataSourceName: lookupKey,
-					}));
-				}
-			} else {
-				setFormData(prev => ({
-					...prev,
-					title: isTitleManual ? prev.title : lookupKey,
-					value: Number(reportValue),
-					subKey: '',
-					dataSourceName: lookupKey,
-				}));
-			}
-			return;
-		}
-
-		const offlineDispositions = getOfflineDispositions();
-		const syncedDispositions = getSyncedDispositions();
-		const allDispositions = [...offlineDispositions, ...syncedDispositions];
-		const targetKey = selectedSubKey || lookupKey;
-
-		const count = allDispositions.filter(disp => {
-			const fields = disp.dispositionData || disp.fillDisposition;
-			if (fields && Array.isArray(fields)) {
-				return fields.some((f: DispositionFieldEntry) => {
-					if (!f.fieldName || f.fieldValue === undefined || f.fieldValue === null) return false;
-					const dispDef = allConfigured.find(d => d.name === f.fieldName);
-					const levels = resolveMultiDropdownLevels(f.fieldName, String(f.fieldValue), dispDef);
-					return levels.some(lvl =>
-						lvl.header.toLowerCase() === targetKey.toLowerCase() ||
-						lvl.value.toLowerCase() === targetKey.toLowerCase() ||
-						f.fieldName.toLowerCase() === targetKey.toLowerCase()
-					);
-				});
-			}
-			if (outcome && fields && Array.isArray(fields)) {
-				return (fields as DispositionFieldEntry[]).some((f: DispositionFieldEntry) => f.fieldValue && f.fieldValue.toString().toLowerCase() === outcome.name.toLowerCase());
-			}
-			return false;
-		}).length;
-
-		setFormData(prev => ({
-			...prev,
-			title: isTitleManual ? prev.title : (selectedSubKey ? `${lookupKey} - ${selectedSubKey}` : lookupKey),
-			value: count,
-			subKey: selectedSubKey ? `${lookupKey}:::${selectedSubKey}` : prev.subKey,
-			dataSourceName: lookupKey,
-		}));
-	}, [formData.dataSourceName, campaignData?.dashboardSettings, reportData, selectedSubKey, selectedCategory, isTitleManual]);
 
 	const isValueAutoCalculated = useMemo(() => {
 		const source = formData.dataSourceName;
@@ -362,8 +410,17 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 				subKey: widget.subKey || '',
 				dataSourceName: sourceName,
 			});
+			setSelectedKeys([]);
 		}
 		onClose();
+	};
+
+	const handleCheckboxChange = (key: string, checked: boolean) => {
+		if (checked) {
+			setSelectedKeys(prev => [...prev, key]);
+		} else {
+			setSelectedKeys(prev => prev.filter(k => k !== key));
+		}
 	};
 
 	return (
@@ -383,19 +440,24 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 				/>
 
 				{subKeyOptions.length > 0 && (
-					<Dropdown
-						label="Aggregation Option"
-						value={selectedSubKey}
-						onChange={(value) => {
-							const val = Array.isArray(value) ? value[0] : value;
-							setSelectedSubKey(val);
-							if (!isTitleManual) {
-								setFormData(prev => ({ ...prev, title: val }));
-							}
-						}}
-						options={subKeyOptions}
-						placeholder="Select specific option"
-					/>
+					<div className="space-y-2">
+						<label className="block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+							Aggregation Options (Select to sum)
+						</label>
+						<div className="max-h-48 overflow-y-auto border dark:border-gray-700 rounded-[var(--radius)] p-3 space-y-2" style={{ backgroundColor: 'var(--card-bg)' }}>
+							{subKeyOptions.map(opt => (
+								<label key={opt.value} className="flex items-center gap-2 text-sm font-medium cursor-pointer text-white">
+									<input
+										type="checkbox"
+										checked={selectedKeys.includes(opt.value)}
+										onChange={(e) => handleCheckboxChange(opt.value, e.target.checked)}
+										className="rounded dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-[var(--accent)] focus:ring-[var(--accent)]"
+									/>
+									<span>{opt.label}</span>
+								</label>
+							))}
+						</div>
+					</div>
 				)}
 
 				<div className="space-y-1">

@@ -8,14 +8,17 @@ import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { useSocket } from '@/contexts/SocketContext';
-import { Chart, DispositionCategory, NestedOption } from '@/types/dashboard';
+import { Chart, DispositionCategory, NestedOption, DashboardReportResponse } from '@/types/dashboard';
 import { useCampaign } from '@/contexts/CampaignContext';
+import Icon from '@/components/ui/Icon';
+import { getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
 
 interface EditChartModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onSave: (chart: Chart) => void;
 	chart: Chart | null;
+	reportData?: DashboardReportResponse;
 }
 
 const chartTypeOptions = [
@@ -46,7 +49,13 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 	onClose,
 	onSave,
 	chart,
+	reportData,
 }) => {
+	// State for custom aggregation builder
+	const [customCategory, setCustomCategory] = useState<string>('');
+	const [customCheckedKeys, setCustomCheckedKeys] = useState<string[]>([]);
+	const [customTitle, setCustomTitle] = useState<string>('');
+	const [showCustomBuilder, setShowCustomBuilder] = useState<boolean>(false);
 	const { isOffline } = useSocket();
 	const { campaignData } = useCampaign();
 	const [formData, setFormData] = useState<Omit<Chart, 'id'>>({
@@ -182,26 +191,6 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 		}
 	};
 
-	const handleDataSourceChange = (values: string | string[]) => {
-		const dataSourceArray = Array.isArray(values) ? values : [values];
-		setFormData(prev => {
-			// Initialize colors for new data sources with default color
-			const newColors = { ...prev.colors };
-			dataSourceArray.forEach(source => {
-				if (!newColors[source]) {
-					newColors[source] = prev?.color || '#050711';
-				}
-			});
-			// Remove colors for deselected data sources
-			Object.keys(newColors).forEach(source => {
-				if (!dataSourceArray.includes(source)) {
-					delete newColors[source];
-				}
-			});
-			return { ...prev, dataSource: dataSourceArray, colors: newColors };
-		});
-	};
-
 	const handleColorChange = (dataSource: string, color: string) => {
 		setFormData(prev => ({
 			...prev,
@@ -220,6 +209,128 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 			delete newColors[sourceToRemove];
 			return { ...prev, dataSource: newDataSource, colors: newColors };
 		});
+	};
+
+	const customCategoryOptions = useMemo(() => {
+		const optionsMap = new Map<string, { value: string; label: string }>();
+
+		if (reportData?.data?.breakdown) {
+			Object.entries(reportData.data.breakdown).forEach(([key, val]) => {
+				if (typeof val === 'object' && val !== null) {
+					optionsMap.set(key, { value: key, label: key });
+				}
+			});
+		}
+
+		const dashboardSettings = campaignData?.dashboardSettings;
+		const allDispositions = getAllCampaignDispositions(dashboardSettings);
+
+		allDispositions.forEach((disposition: DispositionCategory) => {
+			if (disposition?.name) {
+				const hasOptions =
+					(disposition.dropdownOptions && disposition.dropdownOptions.length > 0) ||
+					(disposition.nestedOptions && disposition.nestedOptions.length > 0) ||
+					(disposition.optionSubFields && Object.keys(disposition.optionSubFields).length > 0);
+
+				if (hasOptions) {
+					optionsMap.set(disposition.name, { value: disposition.name, label: disposition.name });
+				}
+			}
+		});
+
+		return Array.from(optionsMap.values());
+	}, [campaignData, reportData]);
+
+	const customSubKeyOptions = useMemo(() => {
+		if (!customCategory) return [];
+
+		const optionsMap = new Map<string, { value: string; label: string }>();
+
+		if (reportData?.data?.breakdown?.[customCategory]) {
+			const reportValue = reportData.data.breakdown[customCategory];
+			if (typeof reportValue === 'object' && reportValue !== null) {
+				Object.keys(reportValue).forEach(key => {
+					optionsMap.set(key, { value: key, label: key });
+				});
+			}
+		}
+
+		const dashboardSettings = campaignData?.dashboardSettings;
+		const allDispositions = getAllCampaignDispositions(dashboardSettings);
+
+		const matchingDisp = allDispositions.find((d: DispositionCategory) => d.name === customCategory);
+		if (matchingDisp) {
+			const collectNested = (opts?: NestedOption[]) => {
+				if (!opts || !Array.isArray(opts)) return;
+				opts.forEach(opt => {
+					if (opt.value) {
+						optionsMap.set(opt.value, { value: opt.value, label: opt.value });
+					}
+					if (opt.subLabel && !optionsMap.has(opt.subLabel)) {
+						optionsMap.set(opt.subLabel, { value: opt.subLabel, label: opt.subLabel });
+					}
+					if (opt.subOptions) {
+						collectNested(opt.subOptions);
+					}
+				});
+			};
+
+			collectNested(matchingDisp.nestedOptions);
+
+			if (matchingDisp.dropdownOptions && Array.isArray(matchingDisp.dropdownOptions)) {
+				matchingDisp.dropdownOptions.forEach((opt: string) => {
+					if (opt && opt.trim()) {
+						optionsMap.set(opt.trim(), { value: opt.trim(), label: opt.trim() });
+					}
+				});
+			}
+
+			if (matchingDisp.optionSubFields && typeof matchingDisp.optionSubFields === 'object') {
+				Object.keys(matchingDisp.optionSubFields).forEach(optKey => {
+					optionsMap.set(optKey, { value: optKey, label: optKey });
+				});
+			}
+		}
+
+		return Array.from(optionsMap.values());
+	}, [customCategory, campaignData, reportData]);
+
+	const handleAddCustomSeries = () => {
+		if (!customCategory || customCheckedKeys.length === 0 || !customTitle.trim()) return;
+
+		const customSourceString = `${customCategory}:::sum:::${customCheckedKeys.join(',')}:::${customTitle.trim()}`;
+
+		setFormData(prev => {
+			const dataSourceArray = Array.isArray(prev.dataSource) ? prev.dataSource : [];
+			if (dataSourceArray.includes(customSourceString)) return prev;
+
+			const newDataSource = [...dataSourceArray, customSourceString];
+			const newColors = { ...prev.colors };
+			newColors[customSourceString] = prev.color || '#050711';
+
+			return {
+				...prev,
+				dataSource: newDataSource,
+				colors: newColors
+			};
+		});
+
+		setCustomCategory('');
+		setCustomCheckedKeys([]);
+		setCustomTitle('');
+		setShowCustomBuilder(false);
+	};
+
+	const getSourceLabel = (source: string) => {
+		if (source.includes(':::')) {
+			const parts = source.split(':::');
+			if (parts[1] === 'sum') {
+				return parts[3] || `${parts[0]} (Sum)`;
+			} else {
+				return parts[2] || parts[1];
+			}
+		}
+		return dataSourceOptions.find(opt => opt.value === source)?.label || source;
 	};
 
 	const handleSave = () => {
@@ -281,6 +392,10 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 					height: 300
 				}
 			});
+			setCustomCategory('');
+			setCustomCheckedKeys([]);
+			setCustomTitle('');
+			setShowCustomBuilder(false);
 		}
 		onClose();
 	};
@@ -319,10 +434,119 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 						: (typeof formData?.dataSource === 'string' && formData?.dataSource)
 							? [formData?.dataSource]
 							: []}
-					onChange={handleDataSourceChange}
+					onChange={(values) => {
+						const dataSourceArray = Array.isArray(values) ? values : [values];
+						setFormData(prev => {
+							const newColors = { ...prev.colors };
+							dataSourceArray.forEach(source => {
+								if (!newColors[source]) {
+									newColors[source] = prev.color || '#050711';
+								}
+							});
+							Object.keys(newColors).forEach(source => {
+								if (!dataSourceArray?.includes(source)) {
+									delete newColors[source];
+								}
+							});
+							return { ...prev, dataSource: dataSourceArray, colors: newColors };
+						});
+					}}
 					required
 					multiple={true}
 				/>
+
+				{/* Custom Aggregation Builder */}
+				<div className="border dark:border-gray-700 rounded-[var(--radius)] p-4 space-y-3" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
+					{!showCustomBuilder ? (
+						<Button
+							variant="outline"
+							size="sm"
+							type="button"
+							className="w-full flex items-center justify-center gap-1 text-xs"
+							onClick={() => setShowCustomBuilder(true)}
+						>
+							<Icon name="Add_round_light" size="sm" />
+							Create Custom Category Sum
+						</Button>
+					) : (
+						<div className="space-y-3">
+							<div className="flex justify-between items-center">
+								<span className="text-xs font-bold text-white">Create Custom Category Sum</span>
+								<Button
+									variant="ghost"
+									size="sm"
+									type="button"
+									onClick={() => {
+										setShowCustomBuilder(false);
+										setCustomCategory('');
+										setCustomCheckedKeys([]);
+										setCustomTitle('');
+									}}
+									className="text-[var(--text-tertiary)] hover:text-white p-0 h-auto"
+								>
+									Cancel
+								</Button>
+							</div>
+
+							<Dropdown
+								label="Select Category"
+								placeholder="Select category"
+								options={customCategoryOptions}
+								value={customCategory}
+								onChange={(value) => {
+									const val = Array.isArray(value) ? value[0] : value;
+									setCustomCategory(val);
+									setCustomCheckedKeys([]);
+								}}
+							/>
+
+							{customSubKeyOptions.length > 0 && (
+								<div className="space-y-2">
+									<label className="block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+										Select Options to Sum
+									</label>
+									<div className="max-h-36 overflow-y-auto border dark:border-gray-700 rounded-[var(--radius)] p-3 space-y-2" style={{ backgroundColor: 'var(--card-bg)' }}>
+										{customSubKeyOptions.map(opt => (
+											<label key={opt.value} className="flex items-center gap-2 text-sm font-medium cursor-pointer text-white">
+												<input
+													type="checkbox"
+													checked={customCheckedKeys.includes(opt.value)}
+													onChange={(e) => {
+														if (e.target.checked) {
+															setCustomCheckedKeys(prev => [...prev, opt.value]);
+														} else {
+															setCustomCheckedKeys(prev => prev.filter(k => k !== opt.value));
+														}
+													}}
+													className="rounded dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-[var(--accent)] focus:ring-[var(--accent)]"
+												/>
+												<span>{opt.label}</span>
+											</label>
+										))}
+									</div>
+								</div>
+							)}
+
+							<Input
+								label="Custom Title"
+								placeholder="e.g. Positive Outcomes"
+								value={customTitle}
+								onChange={(val) => setCustomTitle(val)}
+							/>
+
+							<Button
+								variant="primary"
+								size="sm"
+								type="button"
+								className="w-full text-xs"
+								onClick={handleAddCustomSeries}
+								disabled={!customCategory || customCheckedKeys.length === 0 || !customTitle.trim()}
+							>
+								Add to Chart Data Sources
+							</Button>
+						</div>
+					)}
+				</div>
 
 				{/* Color pickers for each selected data source */}
 				{Array.isArray(formData?.dataSource) && formData?.dataSource?.length > 0 && (
@@ -334,7 +558,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 							Data Source Colors
 						</label>
 						{formData?.dataSource?.map((source: string) => {
-							const sourceLabel = dataSourceOptions?.find(opt => opt.value === source)?.label || source;
+							const sourceLabel = getSourceLabel(source);
 							return (
 								<div key={source} className="flex items-center gap-3">
 									<span
@@ -367,21 +591,21 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 				)}
 
 				<Dropdown
-				label="Time Range"
-				placeholder="Select time range"
-				options={timeRangeOptions}
-				value={formData.timeRange}
-				onChange={handleInputChange('timeRange')}
-				required
-			/>
-			<Dropdown
-				label="Size"
-				placeholder="Select size"
-				options={sizeOptions}
-				value={formData.size}
-				onChange={handleInputChange('size')}
-				required
-			/>
+					label="Time Range"
+					placeholder="Select time range"
+					options={timeRangeOptions}
+					value={formData.timeRange}
+					onChange={handleInputChange('timeRange')}
+					required
+				/>
+				<Dropdown
+					label="Size"
+					placeholder="Select size"
+					options={sizeOptions}
+					value={formData.size}
+					onChange={handleInputChange('size')}
+					required
+				/>
 			</div>
 
 			{/* Footer */}

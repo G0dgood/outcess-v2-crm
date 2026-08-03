@@ -143,6 +143,7 @@ const DashboardContent: React.FC = () => {
 			endDate: '',
 			page: 1,
 			limit: 10000,
+			bucketId: selectedBucketId || undefined,
 		},
 		{ skip: !campaignId || !isCampaignView }
 	);
@@ -155,6 +156,7 @@ const DashboardContent: React.FC = () => {
 			endDate: '',
 			page: 1,
 			limit: 10000,
+			bucketId: selectedBucketId || undefined,
 		},
 		{ skip: !campaignId || isCampaignView || !user?._id }
 	);
@@ -390,22 +392,33 @@ const DashboardContent: React.FC = () => {
 		const configuredDispositions = getAllCampaignDispositions(dashboardSettings);
 
 		// Calculate disposition field counts
-		const calculateDispositionFieldCount = (fieldName: string): number => {
+		const calculateDispositionFieldCount = (fieldName: string, matchKeys?: string[]): number => {
 			return filteredDispositions.filter(disp => {
 				// Check dispositionData or fillDisposition array
 				const fields = disp.dispositionData || disp.fillDisposition;
 				if (fields && Array.isArray(fields)) {
 					return fields.some((f: DispositionFieldEntry) => {
 						if (!f.fieldName || f.fieldValue === undefined || f.fieldValue === null) return false;
+						if (f.fieldName.toLowerCase() !== fieldName.toLowerCase()) return false;
 						const dispDef = configuredDispositions.find(d => d.name === f.fieldName);
 						const levels = resolveMultiDropdownLevels(f.fieldName, String(f.fieldValue), dispDef);
-						return levels.some(lvl =>
-							lvl.header.toLowerCase() === fieldName.toLowerCase() ||
-							lvl.value.toLowerCase() === fieldName.toLowerCase() ||
-							f.fieldName.toLowerCase() === fieldName.toLowerCase()
-						);
+						return levels.some(lvl => {
+							if (matchKeys && matchKeys.length > 0) {
+								return matchKeys.some(k => 
+									lvl.header.toLowerCase() === k.toLowerCase() ||
+									lvl.value.toLowerCase() === k.toLowerCase()
+								);
+							}
+							return (
+								lvl.header.toLowerCase() === fieldName.toLowerCase() ||
+								lvl.value.toLowerCase() === fieldName.toLowerCase() ||
+								f.fieldName.toLowerCase() === fieldName.toLowerCase()
+							);
+						});
 					});
 				}
+
+				if (matchKeys && matchKeys.length > 0) return false;
 
 				// Fallback for direct property access (legacy support)
 				const fieldValue = disp[fieldName as keyof typeof disp];
@@ -433,11 +446,24 @@ const DashboardContent: React.FC = () => {
 				// 0. Check for Composite SubKey (Category:::Key)
 				// This allows Title to be anything (e.g. "mem") while preserving the data source (e.g. "Call Answered")
 				if (widget.subKey && widget.subKey.includes(':::')) {
-					const [category, key] = widget.subKey.split(':::');
-					if (breakdown[category] !== undefined) {
-						const reportValue = breakdown[category];
-						if (typeof reportValue === 'object' && reportValue !== null && reportValue[key] !== undefined) {
-							return { ...widget, value: reportValue[key] };
+					const parts = widget.subKey.split(':::');
+					const category = parts[0];
+					if (parts[1] === 'sum') {
+						const keys = parts[2] ? parts[2].split(',') : [];
+						if (breakdown[category] !== undefined) {
+							const reportValue = breakdown[category];
+							if (typeof reportValue === 'object' && reportValue !== null) {
+								const sumValue = keys.reduce((acc: number, k) => acc + (Number(reportValue[k]) || 0), 0);
+								return { ...widget, value: sumValue };
+							}
+						}
+					} else {
+						const key = parts[1];
+						if (breakdown[category] !== undefined) {
+							const reportValue = breakdown[category];
+							if (typeof reportValue === 'object' && reportValue !== null && reportValue[key] !== undefined) {
+								return { ...widget, value: reportValue[key] };
+							}
 						}
 					}
 					// If composite key lookup fails, preserve saved value
@@ -506,6 +532,18 @@ const DashboardContent: React.FC = () => {
 			const isDispositionField = allDispositions.some(
 				(d: DispositionCategory) => d.name === sourceKey
 			);
+			
+			// Extract matchKeys from subKey if present
+			let matchKeys: string[] | undefined;
+			if (widget.subKey && widget.subKey.includes(':::')) {
+				const parts = widget.subKey.split(':::');
+				if (parts[1] === 'sum') {
+					matchKeys = parts[2] ? parts[2].split(',') : [];
+				} else {
+					matchKeys = [parts[1]];
+				}
+			}
+
 			const isSubOptionOrLabel = allDispositions.some((d: DispositionCategory) => {
 				let found = false;
 				const checkNested = (opts?: NestedOption[]) => {
@@ -522,7 +560,7 @@ const DashboardContent: React.FC = () => {
 			});
 
 			if (isDispositionField || isSubOptionOrLabel) {
-				return { ...widget, value: calculateDispositionFieldCount(sourceKey) };
+				return { ...widget, value: calculateDispositionFieldCount(sourceKey, matchKeys) };
 			}
 
 			// Check if widget title corresponds to a call outcome
@@ -937,6 +975,7 @@ const DashboardContent: React.FC = () => {
 						}}
 						onSave={handleSaveChart}
 						chart={editingChart}
+						reportData={reportData}
 					/>
 
 					{/* Add Widget Modal */}
