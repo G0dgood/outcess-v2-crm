@@ -14,6 +14,7 @@ import { SocketProvider } from '@/contexts/SocketContext';
 import { NavigationProvider } from '@/components/providers/NavigationProvider';
 import { RealTimeUpdates } from '@/components/providers/RealTimeUpdates';
 import { ThemeColorApplier } from '@/components/providers/ThemeColorApplier';
+import AuthGuard from '@/components/providers/AuthGuard';
 
 interface NewProviderProps {
   children: React.ReactNode;
@@ -37,7 +38,7 @@ const NewProvider: React.FC<NewProviderProps> = ({ children }) => {
                       <NavigationProvider>
                         <RealTimeUpdates />
                         <ThemeColorApplier />
-                        {children}
+                        <AuthGuard>{children}</AuthGuard>
                         <Toaster
                           position="top-right"
                           theme="light"
