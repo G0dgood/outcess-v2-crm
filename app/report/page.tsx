@@ -321,6 +321,13 @@ const ReportPage: React.FC = () => {
           : "-";
       const agentName =
         typeof item.agent === "object" ? item.agent?.name : item.agent;
+      const agentId =
+        typeof item.agent === "object"
+          ? item.agent?.agentId ||
+            item.agent?.userId ||
+            item.agent?._id ||
+            item.agent?.id
+          : item.agentId || item.agent || "-";
       const customerSearchId = item.customer
         ? (Object.entries(item.customer).find(
             ([key]) => key.toLowerCase() === "searchid",
@@ -466,6 +473,13 @@ const ReportPage: React.FC = () => {
         : "-";
     const agentName =
       typeof item.agent === "object" ? item.agent?.name : item.agent;
+    const agentId =
+      typeof item.agent === "object"
+        ? item.agent?.agentId ||
+          item.agent?.userId ||
+          item.agent?._id ||
+          item.agent?.id
+        : item.agentId || item.agent || "-";
 
     const customerSearchId = item.customer
       ? (Object.entries(item.customer).find(

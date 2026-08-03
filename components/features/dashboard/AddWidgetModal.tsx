@@ -385,7 +385,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 						<label className="block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
 							Aggregation Options (Select to sum)
 						</label>
-						<div className="max-h-48 overflow-y-auto border dark:border-gray-700 rounded-[var(--radius)] p-3 space-y-2" style={{ backgroundColor: 'var(--card-bg)' }}>
+						<div className="max-h-48 overflow-y-auto border dark:border-gray-700 rounded-[var(--radius)] p-3 flex flex-col gap-3" style={{ backgroundColor: 'var(--card-bg)' }}>
 							{subKeyOptions.map(opt => (
 								<Checkbox
 									key={opt.value}
