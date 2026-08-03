@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Checkbox from '@/components/ui/Checkbox';
 import Dropdown from '@/components/ui/Dropdown';
 import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
@@ -446,15 +447,13 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 						</label>
 						<div className="max-h-48 overflow-y-auto border dark:border-gray-700 rounded-[var(--radius)] p-3 space-y-2" style={{ backgroundColor: 'var(--card-bg)' }}>
 							{subKeyOptions.map(opt => (
-								<label key={opt.value} className="flex items-center gap-2 text-sm font-medium cursor-pointer text-white">
-									<input
-										type="checkbox"
-										checked={selectedKeys.includes(opt.value)}
-										onChange={(e) => handleCheckboxChange(opt.value, e.target.checked)}
-										className="rounded dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-[var(--accent)] focus:ring-[var(--accent)]"
-									/>
-									<span>{opt.label}</span>
-								</label>
+								<Checkbox
+									key={opt.value}
+									size="small"
+									label={opt.label}
+									checked={selectedKeys.includes(opt.value)}
+									onChange={(checked) => handleCheckboxChange(opt.value, checked)}
+								/>
 							))}
 						</div>
 					</div>
