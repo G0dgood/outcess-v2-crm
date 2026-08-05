@@ -447,7 +447,7 @@ const ReportPage: React.FC = () => {
       startDate: dateRange.startDate,
       endDate: dateRange.endDate,
       page: 1,
-      limit: 10000,
+      limit: 1000000,
       search: searchTerm,
       bucketId: selectedBucketId,
     };
