@@ -45,12 +45,12 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
 			<div className="relative">
 				<button
 					onClick={handleNotificationClick}
-					className="p-1 w-8 h-8 flex justify-center items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors cursor-pointer relative rounded-[var(--radius)] hover:bg-gray-100 dark:hover:bg-gray-800"
+					className="p-1 w-12 h-12 flex justify-center items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors cursor-pointer relative rounded-[var(--radius)] hover:bg-gray-100 dark:hover:bg-gray-800"
 					title="Notifications"
 				>
 					<Icon name="Bell_light" size="3xl" />
 					{unreadCount > 0 && (
-						<span className="absolute -top-1 -right-1 flex h-4 px-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-gray-800">
+						<span className="absolute -top-1 -right-1 flex h-4 min-w-[18px] px-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-gray-800">
 							{unreadCount > 99 ? '99+' : unreadCount}
 						</span>
 					)}
