@@ -210,7 +210,6 @@ export default function CallDisposition() {
 	const [previewValue, setPreviewValue] = useState<string>('');
 
 	const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-	const [importJsonText, setImportJsonText] = useState('');
 
 	const handleRestoreDisposition = (id: string) => {
 		if (activeBucketId) {
@@ -292,8 +291,9 @@ export default function CallDisposition() {
 			});
 
 			toast.success(`Successfully pasted and imported ${cleanedDispositions.length} disposition(s)`);
-		} catch (err: any) {
-			toast.error(err.message || "Failed to parse clipboard JSON. Please make sure you copied valid dispositions.");
+		} catch (err) {
+			const error = err as Error;
+			toast.error(error.message || "Failed to parse clipboard JSON. Please make sure you copied valid dispositions.");
 		}
 	};
 
@@ -330,9 +330,9 @@ export default function CallDisposition() {
 
 			toast.success(`Successfully imported ${cleanedDispositions.length} disposition(s)`);
 			setIsImportModalOpen(false);
-			setImportJsonText('');
-		} catch (err: any) {
-			toast.error(err.message || "Failed to parse JSON. Please check the format.");
+		} catch (err) {
+			const error = err as Error;
+			toast.error(error.message || "Failed to parse JSON. Please check the format.");
 		}
 	};
 
