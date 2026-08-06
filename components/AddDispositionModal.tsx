@@ -201,7 +201,11 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 		});
 	};
 
-	// Initialize local options when modal opens & handle socket room
+	// Initialize local options ONLY when the modal opens. localOptions is the
+	// source of truth while editing and already syncs back into dispositionForm,
+	// so we must NOT re-run this on every dropdownOptions change — doing so
+	// regenerated each row's random id (used as the React key), remounting the
+	// inputs on every keystroke and stealing focus.
 	useEffect(() => {
 		if (isOpen) {
 			setLocalOptions(
@@ -211,7 +215,8 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 				}))
 			);
 		}
-	}, [isOpen, dispositionForm.dropdownOptions]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isOpen]);
 
 	const handleSave = (isArchived?: boolean) => {
 		if (socket && isConnected) {

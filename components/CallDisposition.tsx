@@ -9,6 +9,7 @@ import DeleteRecordModal from '@/components/ui/DeleteRecordModal';
 import ConfirmChangeTypeModal from '@/components/ui/ConfirmChangeTypeModal';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
 import Autosuggestions from '@/components/ Autosuggestions';
 import { useSetup, Bucket, DispositionCategory } from '@/contexts/SetupContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
@@ -22,6 +23,10 @@ import {
 	TrashIcon,
 	PieChartIcon,
 	IdCardIcon,
+	DownloadIcon,
+	UploadIcon,
+	CopyIcon,
+	ClipboardIcon,
 } from '@radix-ui/react-icons';
 import EmptyState from '@/components/ui/EmptyState';
 import AssignMemberModal from '@/components/features/dashboard/AssignMemberModal';
@@ -204,6 +209,9 @@ export default function CallDisposition() {
 	const [previewDisposition, setPreviewDisposition] = useState<DispositionCategory | null>(null);
 	const [previewValue, setPreviewValue] = useState<string>('');
 
+	const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+	const [importJsonText, setImportJsonText] = useState('');
+
 	const handleRestoreDisposition = (id: string) => {
 		if (activeBucketId) {
 			updateDispositionInBucket(activeBucketId, id, { isArchived: false });
@@ -215,6 +223,116 @@ export default function CallDisposition() {
 		if (activeBucketId) {
 			deleteDispositionFromBucket(activeBucketId, id);
 			toast.success("Disposition permanently deleted");
+		}
+	};
+
+	const assignNewIds = (d: DispositionCategory): DispositionCategory => {
+		const newId = `dsp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+		const updatedSubFields = Array.isArray(d.subFields)
+			? d.subFields.map(sub => assignNewIds(sub))
+			: d.subFields;
+
+		const updatedOptionSubFields: Record<string, DispositionCategory[]> = {};
+		if (d.optionSubFields && typeof d.optionSubFields === 'object') {
+			Object.entries(d.optionSubFields).forEach(([key, subList]) => {
+				if (Array.isArray(subList)) {
+					updatedOptionSubFields[key] = subList.map(sub => assignNewIds(sub));
+				}
+			});
+		}
+
+		return {
+			...d,
+			id: newId,
+			subFields: updatedSubFields,
+			optionSubFields: updatedOptionSubFields,
+		};
+	};
+
+	const handleCopyToClipboard = () => {
+		if (!activeBucket) return;
+		const dispositionsToExport = (activeBucket.dispositions || []).filter(d => !d.isArchived);
+		const jsonStr = JSON.stringify(dispositionsToExport, null, 2);
+
+		navigator.clipboard.writeText(jsonStr)
+			.then(() => {
+				toast.success("Dispositions copied to clipboard!");
+			})
+			.catch(() => {
+				toast.error("Failed to copy to clipboard");
+			});
+	};
+
+	const handlePasteFromClipboard = async () => {
+		if (!activeBucketId) return;
+		try {
+			const text = await navigator.clipboard.readText();
+			if (!text || !text.trim()) {
+				toast.error("Nothing copied! Please copy dispositions first before pasting.");
+				return;
+			}
+
+			let parsed;
+			try {
+				parsed = JSON.parse(text);
+			} catch {
+				toast.error("Nothing copied! Please copy dispositions first before pasting.");
+				return;
+			}
+
+			if (!Array.isArray(parsed) || parsed.length === 0 || !parsed[0]?.fieldType) {
+				toast.error("Nothing copied! Please copy dispositions first before pasting.");
+				return;
+			}
+
+			const cleanedDispositions = parsed.map(d => assignNewIds(d));
+
+			cleanedDispositions.forEach(d => {
+				addDispositionToBucket(activeBucketId, d);
+			});
+
+			toast.success(`Successfully pasted and imported ${cleanedDispositions.length} disposition(s)`);
+		} catch (err: any) {
+			toast.error(err.message || "Failed to parse clipboard JSON. Please make sure you copied valid dispositions.");
+		}
+	};
+
+	const handleDownloadJson = () => {
+		if (!activeBucket) return;
+		const dispositionsToExport = (activeBucket.dispositions || []).filter(d => !d.isArchived);
+		const jsonStr = JSON.stringify(dispositionsToExport, null, 2);
+		const blob = new Blob([jsonStr], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = `${activeBucket.name.toLowerCase().replace(/\s+/g, '_')}_dispositions.json`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
+		toast.success("Dispositions downloaded successfully!");
+	};
+
+	const handleImportDispositions = (jsonText: string) => {
+		if (!activeBucketId) return;
+		try {
+			const parsed = JSON.parse(jsonText);
+			if (!Array.isArray(parsed)) {
+				throw new Error("Invalid format: Dispositions must be a JSON array of objects.");
+			}
+
+			const cleanedDispositions = parsed.map(d => assignNewIds(d));
+
+			cleanedDispositions.forEach(d => {
+				addDispositionToBucket(activeBucketId, d);
+			});
+
+			toast.success(`Successfully imported ${cleanedDispositions.length} disposition(s)`);
+			setIsImportModalOpen(false);
+			setImportJsonText('');
+		} catch (err: any) {
+			toast.error(err.message || "Failed to parse JSON. Please check the format.");
 		}
 	};
 
@@ -769,14 +887,14 @@ export default function CallDisposition() {
 						className="flex-1 dark:bg-gray-800 border dark:border-gray-700 rounded-[var(--radius)] overflow-hidden flex flex-col"
 						style={{ backgroundColor: 'var(--accent-white)', borderColor: 'var(--light-gray)' }}
 					>
-						<div className="p-6 border-b dark:border-gray-700 flex items-center justify-between bg-gray-50/50 dark:bg-gray-900/10" style={{ borderColor: 'var(--light-gray)' }}>
-							<div>
-								<h2 className="font-inter text-sm font-semibold text-gray-900 dark:text-gray-100">
+						<div className="p-6 border-b dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/50 dark:bg-gray-900/10" style={{ borderColor: 'var(--light-gray)' }}>
+							<div className="min-w-0 flex-1">
+								<h2 className="font-inter text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
 									{activeBucket?.name || 'Select a Bucket'}
 								</h2>
-								<p className="text-[11px] text-gray-500 mt-0.5">{activeBucket?.description || 'Bucket details and dispositions'}</p>
+								<p className="text-[11px] text-gray-500 mt-0.5 break-words max-w-xl">{activeBucket?.description || 'Bucket details and dispositions'}</p>
 							</div>
-							<div className="flex items-center gap-3">
+							<div className="flex flex-wrap items-center gap-2.5 shrink-0">
 								<Button
 									variant="outline"
 									size="sm"
@@ -802,6 +920,53 @@ export default function CallDisposition() {
 								</Button>
 							</div>
 						</div>
+
+						{activeBucketId && (
+							<div className="px-6 py-2 bg-gray-50/15 dark:bg-gray-900/5 border-b dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-3" style={{ borderColor: 'var(--light-gray)' }}>
+								<div className="flex flex-wrap items-center gap-2 shrink-0">
+									<span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mr-1">Templates:</span>
+									<button
+										onClick={handleCopyToClipboard}
+										className="flex items-center gap-1.5 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:text-primary bg-white dark:bg-gray-800 border dark:border-gray-700 px-3 py-1 rounded shadow-2xs hover:border-primary/40 transition-colors"
+										style={{ borderColor: 'var(--light-gray)' }}
+										title="Copy all active dispositions in this bucket to clipboard as JSON"
+									>
+										<CopyIcon className="w-3.5 h-3.5" />
+										Copy
+									</button>
+									<button
+										onClick={handlePasteFromClipboard}
+										className="flex items-center gap-1.5 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:text-primary bg-white dark:bg-gray-800 border dark:border-gray-700 px-3 py-1 rounded shadow-2xs hover:border-primary/40 transition-colors"
+										style={{ borderColor: 'var(--light-gray)' }}
+										title="Paste dispositions from clipboard JSON"
+									>
+										<ClipboardIcon className="w-3.5 h-3.5" />
+										Paste
+									</button>
+									<button
+										onClick={handleDownloadJson}
+										className="flex items-center gap-1.5 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:text-primary bg-white dark:bg-gray-800 border dark:border-gray-700 px-3 py-1 rounded shadow-2xs hover:border-primary/40 transition-colors"
+										style={{ borderColor: 'var(--light-gray)' }}
+										title="Download active dispositions as a JSON file"
+									>
+										<DownloadIcon className="w-3.5 h-3.5" />
+										Download
+									</button>
+									<button
+										onClick={() => setIsImportModalOpen(true)}
+										className="flex items-center gap-1.5 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:text-primary bg-white dark:bg-gray-800 border dark:border-gray-700 px-3 py-1 rounded shadow-2xs hover:border-primary/40 transition-colors"
+										style={{ borderColor: 'var(--light-gray)' }}
+										title="Import dispositions from a JSON file"
+									>
+										<UploadIcon className="w-3.5 h-3.5" />
+										Import
+									</button>
+								</div>
+								<span className="text-[10px] text-gray-400 font-medium md:text-right">
+									Quickly share or copy dispositions across buckets/campaigns.
+								</span>
+							</div>
+						)}
 
 						{/* Assigned Members List (Subheader) */}
 						{activeBucket?.assignedMembers && activeBucket.assignedMembers?.length > 0 && (
@@ -969,6 +1134,12 @@ export default function CallDisposition() {
 				onDeletePermanently={handlePermanentDeleteDisposition}
 			/>
 
+			<ImportModal
+				isOpen={isImportModalOpen}
+				onClose={() => setIsImportModalOpen(false)}
+				onImport={handleImportDispositions}
+			/>
+
 			<DeleteRecordModal
 				isOpen={isDeleteModalOpen}
 				onClose={() => { setIsDeleteModalOpen(false); setItemToDelete(null); }}
@@ -1069,7 +1240,7 @@ export default function CallDisposition() {
 																		placeholder="Select sub-option"
 																		options={selected.subOptions.map(s => ({ value: s.value, label: s.value }))}
 																		value=""
-																		onChange={() => {}}
+																		onChange={() => { }}
 																	/>
 																);
 															}
@@ -1233,8 +1404,8 @@ export default function CallDisposition() {
 													{field.isRequired && <span className="text-red-500 ml-1">*</span>}
 												</label>
 												<div className="grid grid-cols-2 gap-3">
-													<Input label="" placeholder="DD/MM/YYYY" value="" onChange={() => {}} type="date" />
-													<Input label="" placeholder="HH:MM" value="" onChange={() => {}} type="time" />
+													<Input label="" placeholder="DD/MM/YYYY" value="" onChange={() => { }} type="date" />
+													<Input label="" placeholder="HH:MM" value="" onChange={() => { }} type="time" />
 												</div>
 											</div>
 										);
@@ -1354,3 +1525,109 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
 		</div>
 	);
 };
+
+interface ImportModalProps {
+	isOpen: boolean;
+	onClose: () => void;
+	onImport: (jsonText: string) => void;
+}
+
+const ImportModal: React.FC<ImportModalProps> = ({
+	isOpen,
+	onClose,
+	onImport
+}) => {
+	const [jsonText, setJsonText] = useState('');
+	const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		const reader = new FileReader();
+		reader.onload = (event) => {
+			const text = event.target?.result;
+			if (typeof text === 'string') {
+				setJsonText(text);
+			}
+		};
+		reader.readAsText(file);
+	};
+
+	const handleImportClick = () => {
+		onImport(jsonText);
+		setJsonText('');
+	};
+
+	return (
+		<Modal
+			isOpen={isOpen}
+			onClose={onClose}
+			title="Import Dispositions"
+			size="md"
+		>
+			<div className="p-6 space-y-6">
+				<p className="text-[11px] text-gray-500 leading-relaxed">
+					Paste a valid JSON list of dispositions, or upload a previously exported <code>.json</code> file.
+					Importing will create copies of these dispositions with fresh IDs in the active bucket.
+				</p>
+
+				{/* File Selector */}
+				<div className="flex flex-col gap-2">
+					<label className="text-[10px] font-semibold text-gray-400 uppercase">Upload JSON File</label>
+					<div className="flex items-center gap-2">
+						<input
+							type="file"
+							ref={fileInputRef}
+							onChange={handleFileChange}
+							accept=".json"
+							className="hidden"
+						/>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => fileInputRef.current?.click()}
+							className="flex items-center gap-2"
+						>
+							<UploadIcon className="w-3.5 h-3.5" />
+							Choose JSON File
+						</Button>
+						{fileInputRef.current?.files?.[0] && (
+							<span className="text-[11px] text-gray-600 truncate max-w-[200px]">
+								{fileInputRef.current.files[0].name}
+							</span>
+						)}
+					</div>
+				</div>
+
+				{/* Textarea Input */}
+				<Textarea
+					label="Paste JSON Code"
+					rows={8}
+					value={jsonText}
+					onChange={setJsonText}
+					placeholder='[{"name": "Outcome", "fieldType": "dropdown", "dropdownOptions": ["Sale", "No Answer"]}]'
+					className="w-full text-[11px]"
+					inputClassName="font-mono"
+				/>
+
+				{/* Footer */}
+				<div className="flex justify-end gap-2 pt-4 border-t dark:border-gray-700" style={{ borderColor: 'var(--light-gray)' }}>
+					<Button variant="outline" size="sm" onClick={onClose}>
+						Cancel
+					</Button>
+					<Button
+						variant="primary"
+						size="sm"
+						onClick={handleImportClick}
+						disabled={!jsonText.trim()}
+					>
+						Import Template
+					</Button>
+				</div>
+			</div>
+		</Modal>
+	);
+};
+
+

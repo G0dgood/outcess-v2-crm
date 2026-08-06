@@ -142,7 +142,7 @@ const DashboardContent: React.FC = () => {
 			startDate: '',
 			endDate: '',
 			page: 1,
-			limit: 10000,
+			limit: 1000000,
 			bucketId: selectedBucketId || undefined,
 		},
 		{ skip: !campaignId || !isCampaignView }
@@ -155,7 +155,7 @@ const DashboardContent: React.FC = () => {
 			startDate: '',
 			endDate: '',
 			page: 1,
-			limit: 10000,
+			limit: 1000000,
 			bucketId: selectedBucketId || undefined,
 		},
 		{ skip: !campaignId || isCampaignView || !user?._id }

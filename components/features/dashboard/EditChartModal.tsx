@@ -11,6 +11,7 @@ import { useSocket } from '@/contexts/SocketContext';
 import { Chart, DispositionCategory, NestedOption, DashboardReportResponse } from '@/types/dashboard';
 import { useCampaign } from '@/contexts/CampaignContext';
 import Icon from '@/components/ui/Icon';
+import Checkbox from '@/components/ui/Checkbox';
 import { getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
 
 interface EditChartModalProps {
@@ -471,7 +472,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 					) : (
 						<div className="space-y-3">
 							<div className="flex justify-between items-center">
-								<span className="text-xs font-bold text-white">Create Custom Category Sum</span>
+								<span className="text-xs font-bold text-[var(--text-primary)]">Create Custom Category Sum</span>
 								<Button
 									variant="ghost"
 									size="sm"
@@ -482,7 +483,7 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 										setCustomCheckedKeys([]);
 										setCustomTitle('');
 									}}
-									className="text-[var(--text-tertiary)] hover:text-white p-0 h-auto"
+									className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] p-0 h-auto"
 								>
 									Cancel
 								</Button>
@@ -505,23 +506,21 @@ export const EditChartModal: React.FC<EditChartModalProps> = ({
 									<label className="block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
 										Select Options to Sum
 									</label>
-									<div className="max-h-36 overflow-y-auto border dark:border-gray-700 rounded-[var(--radius)] p-3 space-y-2" style={{ backgroundColor: 'var(--card-bg)' }}>
+									<div className="max-h-36 overflow-y-auto border dark:border-gray-700 rounded-[var(--radius)] p-3 flex flex-col gap-3" style={{ backgroundColor: 'var(--card-bg)' }}>
 										{customSubKeyOptions.map(opt => (
-											<label key={opt.value} className="flex items-center gap-2 text-sm font-medium cursor-pointer text-white">
-												<input
-													type="checkbox"
-													checked={customCheckedKeys.includes(opt.value)}
-													onChange={(e) => {
-														if (e.target.checked) {
-															setCustomCheckedKeys(prev => [...prev, opt.value]);
-														} else {
-															setCustomCheckedKeys(prev => prev.filter(k => k !== opt.value));
-														}
-													}}
-													className="rounded dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-[var(--accent)] focus:ring-[var(--accent)]"
-												/>
-												<span>{opt.label}</span>
-											</label>
+											<Checkbox
+												key={opt.value}
+												size="small"
+												label={opt.label}
+												checked={customCheckedKeys.includes(opt.value)}
+												onChange={(checked) => {
+													if (checked) {
+														setCustomCheckedKeys(prev => [...prev, opt.value]);
+													} else {
+														setCustomCheckedKeys(prev => prev.filter(k => k !== opt.value));
+													}
+												}}
+											/>
 										))}
 									</div>
 								</div>
