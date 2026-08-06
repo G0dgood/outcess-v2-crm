@@ -59,7 +59,7 @@ export function CSVDownloadButton<T>({
 
 			// Extract all distinct headers
 			const headers = new Set<string>();
-			const priorityHeaders = ['Agent Name', 'Date', 'Customer Name'];
+			const priorityHeaders = ['Agent ID', 'Agent Name', 'Date', 'Customer Name'];
 			listToExport.forEach((item) => {
 				Object.keys(item).forEach((key) => {
 					headers.add(key);
