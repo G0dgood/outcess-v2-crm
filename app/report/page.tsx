@@ -228,7 +228,7 @@ const ReportPage: React.FC = () => {
       { skip: !effectiveCampaignId || isAgent || isPrivilegeLoading },
     );
 
-  console.log('lobApiData----> ', lobApiData)
+
 
   const { data: agentApiData, isLoading: isAgentLoading } =
     useGetDispositionsByAgentReportQuery(
@@ -450,6 +450,7 @@ const ReportPage: React.FC = () => {
       limit: 1000000,
       search: searchTerm,
       bucketId: selectedBucketId,
+      agentId: selectedAgentId || undefined,
     };
 
     let response: ReportApiResponse | ReportItem[] | undefined;
