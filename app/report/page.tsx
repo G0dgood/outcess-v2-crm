@@ -77,6 +77,10 @@ interface ReportApiResponse {
 
 const ReportPage: React.FC = () => {
   const { campaignData, selectedCampaignId } = useCampaign();
+  const campaignNameClean = (campaignData?.campaignName || campaignData?.name || 'disposition')
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '');
   const { setupData } = useSetup();
   const { user } = useUserInfo();
   const {
@@ -213,7 +217,7 @@ const ReportPage: React.FC = () => {
       : getUserAssignedBuckets(user || undefined, allBuckets);
   }, [allBuckets, user, hasFullBucketAccess]);
 
-  const { data: lobApiData, isLoading: isLobLoading } =
+  const { data: lobApiData, isLoading: isLobLoading, isFetching: isLobFetching } =
     useGetDispositionsByCampaignReportQuery(
       {
         campaignId: effectiveCampaignId,
@@ -230,7 +234,7 @@ const ReportPage: React.FC = () => {
 
 
 
-  const { data: agentApiData, isLoading: isAgentLoading } =
+  const { data: agentApiData, isLoading: isAgentLoading, isFetching: isAgentFetching } =
     useGetDispositionsByAgentReportQuery(
       {
         campaignId: effectiveCampaignId,
@@ -255,8 +259,9 @@ const ReportPage: React.FC = () => {
     | ReportApiResponse
     | ReportItem[]
     | undefined;
+  const isFetching = isAgent ? isAgentFetching : isLobFetching;
   const isLoading =
-    isPrivilegeLoading || (isAgent ? isAgentLoading : isLobLoading);
+    isPrivilegeLoading || (isAgent ? isAgentLoading : isLobLoading) || isFetching;
   const [triggerGetCampaignReport] =
     useLazyGetDispositionsByCampaignReportQuery();
   const [triggerGetAgentReport] = useLazyGetDispositionsByAgentReportQuery();
@@ -674,7 +679,7 @@ const ReportPage: React.FC = () => {
           <CSVDownloadButton
             fetchData={fetchAllReportsToExport}
             formatItem={formatReportItem}
-            fileName={`disposition_report_${moment().format("YYYY-MM-DD")}.csv`}
+            fileName={`${campaignNameClean}_report_${moment().format("YYYY-MM-DD")}.csv`}
             variant="primary"
             size="md"
             className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
