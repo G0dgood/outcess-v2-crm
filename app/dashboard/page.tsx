@@ -15,10 +15,8 @@ import { useUpdateCampaignMutation } from '@/store/services/campaignApi';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import {
-	useGetDashboardDispositionsByCampaignAndAgentIdReportQuery,
-	useGetAllDashboardDispositionsByCampaignReportQuery,
-	useGetDispositionsByCampaignReportQuery,
-	useGetDispositionsByAgentReportQuery
+	useGetDashboardWidgetsQuery,
+	useGetDashboardChartsQuery
 } from '@/store/services/dispositionApi';
 import { filterDispositionsByTimeRange, getDateRangeFromTimeRange } from '@/utils/filterUtils';
 import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
@@ -111,74 +109,85 @@ const DashboardContent: React.FC = () => {
 	// never the agent-only view — regardless of supervisor/team-lead status.
 	const isCampaignView = isAdmin || isSuperAdmin || isSupervisor || allBucketAccess;
 
-	const { data: reportDataAgent, refetch: refetchAgentReport, isFetching: isFetchingAgentReport } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
-		{
-			campaignId: campaignId || '',
-			agentId: user?.id || user?._id || '',
-			startDate: dateRange.startDate || '',
-			endDate: dateRange.endDate || '',
-			bucketId: selectedBucketId || undefined
-		},
-		{ skip: !campaignId || !user || !dateRange.startDate || isCampaignView }
-	);
-
-	const { data: reportDataAdmin, refetch: refetchAdminReport, isFetching: isFetchingAdminReport } = useGetAllDashboardDispositionsByCampaignReportQuery(
+	const { data: widgetReportData, refetch: refetchWidgetReport, isFetching: isFetchingWidgetReport } = useGetDashboardWidgetsQuery(
 		{
 			campaignId: campaignId || '',
 			startDate: dateRange.startDate || '',
 			endDate: dateRange.endDate || '',
-			bucketId: selectedBucketId || undefined
+			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
 		},
-		{ skip: !campaignId || !dateRange.startDate || !isCampaignView }
+		{ skip: !campaignId || !dateRange.startDate }
 	);
 
-	const reportData = isCampaignView ? reportDataAdmin : reportDataAgent;
+	const reportData = widgetReportData;
 
-	// Fetched over all time (no date filter) so each chart can filter by its own
-	// per-chart time range. Widgets still filter this client-side by the dashboard range.
-	const { data: lobReportData, refetch: refetchLobReport, isFetching: isFetchingLobReport } = useGetDispositionsByCampaignReportQuery(
+	const { data: chartDataAll, refetch: refetchChartAll, isFetching: isFetchingChartAll } = useGetDashboardChartsQuery(
 		{
 			campaignId: campaignId || '',
 			startDate: '',
 			endDate: '',
-			page: 1,
-			limit: 1000000,
 			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
 		},
-		{ skip: !campaignId || !isCampaignView }
+		{ skip: !campaignId }
 	);
 
-	const { data: agentReportData, refetch: refetchAgentDispositions, isFetching: isFetchingAgentDispositions } = useGetDispositionsByAgentReportQuery(
+	const { data: chartDataYesterday, refetch: refetchChartYesterday, isFetching: isFetchingChartYesterday } = useGetDashboardChartsQuery(
 		{
 			campaignId: campaignId || '',
-			agentId: user?._id || '',
-			startDate: '',
-			endDate: '',
-			page: 1,
-			limit: 1000000,
+			...getDateRangeFromTimeRange('yesterday'),
 			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
 		},
-		{ skip: !campaignId || isCampaignView || !user?._id }
+		{ skip: !campaignId }
 	);
 
-	const apiDispositions = useMemo(() => {
-		if (isCampaignView) {
-			return (lobReportData as { data?: unknown[] })?.data || (Array.isArray(lobReportData) ? lobReportData : []);
-		} else {
-			return (agentReportData as { data?: unknown[] })?.data || (Array.isArray(agentReportData) ? agentReportData : []);
-		}
-	}, [isCampaignView, lobReportData, agentReportData]);
+	const { data: chartDataWeekly, refetch: refetchChartWeekly, isFetching: isFetchingChartWeekly } = useGetDashboardChartsQuery(
+		{
+			campaignId: campaignId || '',
+			...getDateRangeFromTimeRange('weekly'),
+			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
+		},
+		{ skip: !campaignId }
+	);
 
-	const isRefreshing = isFetchingAgentReport || isFetchingAdminReport || isFetchingLobReport || isFetchingAgentDispositions;
+	const { data: chartDataMonthly, refetch: refetchChartMonthly, isFetching: isFetchingChartMonthly } = useGetDashboardChartsQuery(
+		{
+			campaignId: campaignId || '',
+			...getDateRangeFromTimeRange('monthly'),
+			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
+		},
+		{ skip: !campaignId }
+	);
+
+	const { data: chartDataYearly, refetch: refetchChartYearly, isFetching: isFetchingChartYearly } = useGetDashboardChartsQuery(
+		{
+			campaignId: campaignId || '',
+			...getDateRangeFromTimeRange('yearly'),
+			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
+		},
+		{ skip: !campaignId }
+	);
+
+	const isRefreshing =
+		isFetchingWidgetReport ||
+		isFetchingChartAll ||
+		isFetchingChartYesterday ||
+		isFetchingChartWeekly ||
+		isFetchingChartMonthly ||
+		isFetchingChartYearly;
 
 	const handleRefresh = () => {
-		if (isCampaignView) {
-			refetchAdminReport();
-			refetchLobReport();
-		} else {
-			refetchAgentReport();
-			refetchAgentDispositions();
-		}
+		refetchWidgetReport();
+		refetchChartAll();
+		refetchChartYesterday();
+		refetchChartWeekly();
+		refetchChartMonthly();
+		refetchChartYearly();
 	};
 
 	const updateDashboardSettings = useCallback(async (newSettings: Partial<typeof dashboardSettings>) => {
@@ -374,14 +383,9 @@ const DashboardContent: React.FC = () => {
 
 	const combinedDispositions = useMemo(() => {
 		const offline = getOfflineDispositions(selectedCampaignId || undefined);
-		// If we have API data, use it as the source of "synced" data
-		// Otherwise fallback to local synced data
-		// Note: apiDispositions might be empty array, which is valid. 
-		// Check if it's an array to confirm it's loaded.
-		const synced = Array.isArray(apiDispositions) ? apiDispositions : getSyncedDispositions(undefined, selectedCampaignId || undefined);
-		return [...offline, ...synced] as CombinedDispositionItem[];
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [apiDispositions, pendingDispositionsCount, selectedCampaignId]);
+		const synced = getSyncedDispositions(undefined, selectedCampaignId || undefined);
+		return [...offline, ...synced] as unknown as CombinedDispositionItem[];
+	}, [pendingDispositionsCount, selectedCampaignId]);
 
 	// Get widgets from context and update values dynamically based on disposition data
 	const widgets = useMemo(() => {
@@ -641,11 +645,31 @@ const DashboardContent: React.FC = () => {
 	}, [canEdit, dashboardSettings.dispositionSettings.charts]);
 
 	const generateChartDataWrapper = useCallback((dataSource: string | string[], chartColor?: string, colors?: Record<string, string>, chartTimeRange?: string): ChartDataItem[] => {
-		// When a chart has its own time range, filter the (all-time) dispositions
-		// client-side by that range instead of using the dashboard-scoped breakdown.
-		const reportForChart = chartTimeRange ? undefined : reportData;
-		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, combinedDispositions, reportForChart, chartTimeRange);
-	}, [dashboardSettings, pendingDispositionsCount, combinedDispositions, reportData]);
+		let reportForChart = reportData;
+		if (chartTimeRange) {
+			switch (chartTimeRange) {
+				case 'all':
+					reportForChart = chartDataAll;
+					break;
+				case 'yesterday':
+					reportForChart = chartDataYesterday;
+					break;
+				case 'weekly':
+					reportForChart = chartDataWeekly;
+					break;
+				case 'monthly':
+					reportForChart = chartDataMonthly;
+					break;
+				case 'yearly':
+					reportForChart = chartDataYearly;
+					break;
+				case 'daily':
+					reportForChart = reportData;
+					break;
+			}
+		}
+		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, [], reportForChart, chartTimeRange);
+	}, [dashboardSettings, pendingDispositionsCount, reportData, chartDataAll, chartDataYesterday, chartDataWeekly, chartDataMonthly, chartDataYearly]);
 
 	const handleConfirmDelete = useCallback(() => {
 		if (!canDelete) return;

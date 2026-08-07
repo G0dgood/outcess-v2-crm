@@ -300,7 +300,7 @@ export default function LoginPage() {
 								label="Remember me"
 								size="small"
 							/>
-							<a href="#" className="forgot-password" style={{ color: primaryColor }} onMouseEnter={(e) => {
+							<a href="#" className="forgot-password" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }} onMouseEnter={(e) => {
 								e.currentTarget.style.opacity = '0.8';
 							}} onMouseLeave={(e) => {
 								e.currentTarget.style.opacity = '1';

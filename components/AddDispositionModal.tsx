@@ -441,7 +441,7 @@ const AddDispositionModal: React.FC<AddDispositionModalProps> = ({
 		const hasSubOptions = opt.subOptions && opt.subOptions.length > 0;
 
 		const nodeContent = (
-			<div className="mt-3" style={{ paddingLeft: depth > 0 ? '1.5rem' : '0', borderLeft: depth > 0 ? '2px dashed var(--light-gray)' : 'none', width: '100%' }}>
+			<div key={opt.id} className="mt-3" style={{ paddingLeft: depth > 0 ? '1.5rem' : '0', borderLeft: depth > 0 ? '2px dashed var(--light-gray)' : 'none', width: '100%' }}>
 				<div className="flex items-center gap-2">
 					{hasSubOptions && (
 						<button

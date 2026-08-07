@@ -182,6 +182,34 @@ export const dispositionApi = baseApi.injectEndpoints({
       },
       providesTags: ["Disposition"],
     }),
+    getDashboardWidgets: builder.query<
+      DashboardReportResponse,
+      { campaignId: string; startDate?: string; endDate?: string; bucketId?: string; agentId?: string }
+    >({
+      query: ({ campaignId, startDate, endDate, bucketId, agentId }) => {
+        let url = `api/v1/dispositions/${campaignId}/dashboard/widgets?1=1`;
+        if (startDate) url += `&startDate=${startDate}`;
+        if (endDate) url += `&endDate=${endDate}`;
+        if (bucketId) url += `&bucketId=${bucketId}`;
+        if (agentId) url += `&agentId=${agentId}`;
+        return url;
+      },
+      providesTags: ["Disposition"],
+    }),
+    getDashboardCharts: builder.query<
+      DashboardReportResponse,
+      { campaignId: string; startDate?: string; endDate?: string; bucketId?: string; agentId?: string }
+    >({
+      query: ({ campaignId, startDate, endDate, bucketId, agentId }) => {
+        let url = `api/v1/dispositions/${campaignId}/dashboard/charts?1=1`;
+        if (startDate) url += `&startDate=${startDate}`;
+        if (endDate) url += `&endDate=${endDate}`;
+        if (bucketId) url += `&bucketId=${bucketId}`;
+        if (agentId) url += `&agentId=${agentId}`;
+        return url;
+      },
+      providesTags: ["Disposition"],
+    }),
     getLeaderboard: builder.query<LeaderboardResponse, GetLeaderboardRequest>({
       query: ({ campaignId, timeFilter = "weekly" }) =>
         `api/v1/leaderboard/${campaignId}?timeFilter=${timeFilter}`,
@@ -201,5 +229,7 @@ export const {
   useLazyGetDispositionsByAgentReportQuery,
   useGetDashboardDispositionsByCampaignAndAgentIdReportQuery,
   useGetAllDashboardDispositionsByCampaignReportQuery,
+  useGetDashboardWidgetsQuery,
+  useGetDashboardChartsQuery,
   useGetLeaderboardQuery,
 } = dispositionApi;
