@@ -70,10 +70,20 @@ interface ReportApiResponse {
 
 const ReportPage: React.FC = () => {
 	const { campaignData, selectedCampaignId } = useCampaign();
+	const campaignNameClean = (campaignData?.campaignName || campaignData?.name || 'disposition')
+		.toLowerCase()
+		.replace(/\s+/g, '_')
+		.replace(/[^a-z0-9_]/g, '');
 	const { setupData } = useSetup();
 	const { user } = useUserInfo();
-	const { canAccess, isAdmin, isLoading: isPrivilegeLoading, allBucketAccess, isSuperAdmin } = usePrivilege();
-	const canView = canAccess('report', 'view');
+	const {
+		canAccess,
+		isAdmin,
+		isLoading: isPrivilegeLoading,
+		allBucketAccess,
+		isSuperAdmin,
+	} = usePrivilege();
+	const canView = canAccess("report", "view");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -129,37 +139,53 @@ const ReportPage: React.FC = () => {
 		return hasFullBucketAccess ? allBuckets : getUserAssignedBuckets(user || undefined, allBuckets);
 	}, [allBuckets, user, hasFullBucketAccess]);
 
-	const { data: lobApiData, isLoading: isLobLoading } = useGetDispositionsByCampaignReportQuery(
-		{
-			campaignId: effectiveCampaignId,
-			startDate: dateRange.startDate,
-			endDate: dateRange.endDate,
-			page: currentPage,
-			limit: itemsPerPage,
-			search: searchTerm,
-			bucketId: selectedBucketId,
-			agentId: selectedAgentId
-		},
-		{ skip: !effectiveCampaignId || isAgent || isPrivilegeLoading }
-	);
+	const { data: lobApiData, isLoading: isLobLoading, isFetching: isLobFetching } =
+		useGetDispositionsByCampaignReportQuery(
+			{
+				campaignId: effectiveCampaignId,
+				startDate: dateRange.startDate,
+				endDate: dateRange.endDate,
+				page: currentPage,
+				limit: itemsPerPage,
+				search: searchTerm,
+				bucketId: selectedBucketId,
+				agentId: selectedAgentId,
+			},
+			{ skip: !effectiveCampaignId || isAgent || isPrivilegeLoading },
+		);
 
-	const { data: agentApiData, isLoading: isAgentLoading } = useGetDispositionsByAgentReportQuery(
-		{
-			campaignId: effectiveCampaignId,
-			agentId: user?._id || user?.id || '',
-			page: currentPage,
-			limit: itemsPerPage,
-			startDate: dateRange.startDate,
-			endDate: dateRange.endDate,
-			search: searchTerm,
-			bucketId: selectedBucketId
-		},
-		{ skip: !effectiveCampaignId || !isAgent || !(user?._id || user?.id) || isPrivilegeLoading }
-	);
 
-	const apiData = (isAgent ? agentApiData : lobApiData) as ReportApiResponse | ReportItem[] | undefined;
-	const isLoading = isPrivilegeLoading || (isAgent ? isAgentLoading : isLobLoading);
-	const [triggerGetCampaignReport] = useLazyGetDispositionsByCampaignReportQuery();
+
+	const { data: agentApiData, isLoading: isAgentLoading, isFetching: isAgentFetching } =
+		useGetDispositionsByAgentReportQuery(
+			{
+				campaignId: effectiveCampaignId,
+				agentId: user?._id || user?.id || "",
+				page: currentPage,
+				limit: itemsPerPage,
+				startDate: dateRange.startDate,
+				endDate: dateRange.endDate,
+				search: searchTerm,
+				bucketId: selectedBucketId,
+			},
+			{
+				skip:
+					!effectiveCampaignId ||
+					!isAgent ||
+					!(user?._id || user?.id) ||
+					isPrivilegeLoading,
+			},
+		);
+
+	const apiData = (isAgent ? agentApiData : lobApiData) as
+		| ReportApiResponse
+		| ReportItem[]
+		| undefined;
+	const isFetching = isAgent ? isAgentFetching : isLobFetching;
+	const isLoading =
+		isPrivilegeLoading || (isAgent ? isAgentLoading : isLobLoading) || isFetching;
+	const [triggerGetCampaignReport] =
+		useLazyGetDispositionsByCampaignReportQuery();
 	const [triggerGetAgentReport] = useLazyGetDispositionsByAgentReportQuery();
 
 	const filterButtonRef = useRef<HTMLDivElement>(null);
@@ -431,11 +457,18 @@ const ReportPage: React.FC = () => {
 									label=""
 									placeholder="Select a Bucket"
 									options={[
-										...accessibleBuckets.map((b: { id?: string; _id?: string; name: string }) => ({ value: b.id || b._id || '', label: b.name }))
+										...accessibleBuckets.map(
+											(b: { id?: string; _id?: string; name: string }) => ({
+												value: b.id || b._id || "",
+												label: b.name,
+											}),
+										),
 									]}
 									value={selectedBucketId}
 									onChange={(val) => {
-										setSelectedBucketId(Array.isArray(val) ? val[0] || '' : val);
+										setSelectedBucketId(
+											Array.isArray(val) ? val[0] || "" : val,
+										);
 									}}
 								/>
 							</div>
@@ -443,30 +476,30 @@ const ReportPage: React.FC = () => {
 					})()}
 				</div>
 				<div className="flex flex-wrap items-center justify-end sm:justify-start gap-2 sm:gap-3">
+					<Button
+						type="button"
+						variant="outline"
+						onClick={() => setIsOptionsModalOpen(true)}
+						className="dark:bg-gray-800 border dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100 focus:ring-offset-2 dark:focus:ring-offset-gray-800 dark:focus:ring-gray-400 gap-2 whitespace-nowrap"
+						style={{
+							backgroundColor: "var(--accent-white)",
+							borderColor: "var(--light-gray)",
+							color: "var(--text-secondary)",
+						}}
+					>
+						<MixerHorizontalIcon className="w-4 h-4" />
+						Option Modal
+					</Button>
 					<div ref={filterButtonRef} className="relative">
-						<Button
-							type="button"
-							variant="outline"
-							onClick={() => setIsOptionsModalOpen(true)}
-							className="dark:bg-gray-800 border dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100 focus:ring-offset-2 dark:focus:ring-offset-gray-800 dark:focus:ring-gray-400 gap-2 whitespace-nowrap"
-							style={{
-								backgroundColor: 'var(--accent-white)',
-								borderColor: 'var(--light-gray)',
-								color: 'var(--text-secondary)'
-							}}
-						>
-							<MixerHorizontalIcon className="w-4 h-4" />
-							Option Modal
-						</Button>
 						<Button
 							type="button"
 							variant="outline"
 							onClick={handleFilter}
 							className="dark:bg-gray-800 border dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100 focus:ring-offset-2 dark:focus:ring-offset-gray-800 dark:focus:ring-gray-400 gap-2 whitespace-nowrap"
 							style={{
-								backgroundColor: 'var(--accent-white)',
-								borderColor: 'var(--light-gray)',
-								color: 'var(--text-secondary)'
+								backgroundColor: "var(--accent-white)",
+								borderColor: "var(--light-gray)",
+								color: "var(--text-secondary)",
 							}}
 						>
 							<MixerHorizontalIcon className="w-4 h-4" />
@@ -487,7 +520,7 @@ const ReportPage: React.FC = () => {
 					<CSVDownloadButton
 						fetchData={fetchAllReportsToExport}
 						formatItem={formatReportItem}
-						fileName={`disposition_report_${moment().format('YYYY-MM-DD')}.csv`}
+						fileName={`${campaignNameClean}_report_${moment().format("YYYY-MM-DD")}.csv`}
 						variant="primary"
 						size="md"
 						className="flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-2 text-[10px] md:text-[12px]"
