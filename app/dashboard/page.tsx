@@ -98,7 +98,25 @@ const DashboardContent: React.FC = () => {
 	// Fetch Report Data
 	const campaignId = campaignData?._id || campaignData?.id || setupData?.campaignId;
 	const timeRange = dashboardSettings.dispositionSettings?.timeRangeView || 'daily';
-	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange]);
+
+	// Bumped by the Refresh button so the fixed chart windows recompute "now".
+	const [refreshNonce, setRefreshNonce] = useState(0);
+
+	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange, refreshNonce]);
+
+	// IMPORTANT: memoize the per-chart date ranges. getDateRangeFromTimeRange()
+	// bakes in `new Date()` (endDate = now, ms precision), so calling it inline
+	// in the query args produced a new value every render → RTK Query treated it
+	// as new args → refetched on every render → the Refresh spinner never
+	// stopped (and the backend was hammered continuously). Recompute only when
+	// the user refreshes.
+	const chartRanges = useMemo(() => ({
+		yesterday: getDateRangeFromTimeRange('yesterday'),
+		weekly: getDateRangeFromTimeRange('weekly'),
+		monthly: getDateRangeFromTimeRange('monthly'),
+		yearly: getDateRangeFromTimeRange('yearly'),
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}), [refreshNonce]);
 
 	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
 	// Treat the isSupervisor flag as authoritative (a team lead may have any role name),
@@ -108,6 +126,11 @@ const DashboardContent: React.FC = () => {
 	// like an admin, so such users get the campaign-wide dashboard (all data),
 	// never the agent-only view — regardless of supervisor/team-lead status.
 	const isCampaignView = isAdmin || isSuperAdmin || isSupervisor || allBucketAccess;
+
+	// A campaign must be selected before the dashboard has anything to show. The
+	// bucket is only an optional filter — admins / data analysts see all campaign
+	// data by default (matching the report page), so we do NOT require a bucket.
+	const needsSelection = !campaignId;
 
 	const { data: widgetReportData, refetch: refetchWidgetReport, isFetching: isFetchingWidgetReport } = useGetDashboardWidgetsQuery(
 		{
@@ -136,7 +159,7 @@ const DashboardContent: React.FC = () => {
 	const { data: chartDataYesterday, refetch: refetchChartYesterday, isFetching: isFetchingChartYesterday } = useGetDashboardChartsQuery(
 		{
 			campaignId: campaignId || '',
-			...getDateRangeFromTimeRange('yesterday'),
+			...chartRanges.yesterday,
 			bucketId: selectedBucketId || undefined,
 			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
 		},
@@ -146,7 +169,7 @@ const DashboardContent: React.FC = () => {
 	const { data: chartDataWeekly, refetch: refetchChartWeekly, isFetching: isFetchingChartWeekly } = useGetDashboardChartsQuery(
 		{
 			campaignId: campaignId || '',
-			...getDateRangeFromTimeRange('weekly'),
+			...chartRanges.weekly,
 			bucketId: selectedBucketId || undefined,
 			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
 		},
@@ -156,7 +179,7 @@ const DashboardContent: React.FC = () => {
 	const { data: chartDataMonthly, refetch: refetchChartMonthly, isFetching: isFetchingChartMonthly } = useGetDashboardChartsQuery(
 		{
 			campaignId: campaignId || '',
-			...getDateRangeFromTimeRange('monthly'),
+			...chartRanges.monthly,
 			bucketId: selectedBucketId || undefined,
 			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
 		},
@@ -166,7 +189,7 @@ const DashboardContent: React.FC = () => {
 	const { data: chartDataYearly, refetch: refetchChartYearly, isFetching: isFetchingChartYearly } = useGetDashboardChartsQuery(
 		{
 			campaignId: campaignId || '',
-			...getDateRangeFromTimeRange('yearly'),
+			...chartRanges.yearly,
 			bucketId: selectedBucketId || undefined,
 			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
 		},
@@ -182,6 +205,9 @@ const DashboardContent: React.FC = () => {
 		isFetchingChartYearly;
 
 	const handleRefresh = () => {
+		// Recompute the fixed chart windows against a fresh "now"...
+		setRefreshNonce((n) => n + 1);
+		// ...and force RTK Query to refetch the current data.
 		refetchWidgetReport();
 		refetchChartAll();
 		refetchChartYesterday();
@@ -899,6 +925,14 @@ const DashboardContent: React.FC = () => {
 						</div>
 					</div>
 
+					{needsSelection ? (
+						<EmptyState
+							iconName="NOProduct"
+							title="Select a campaign"
+							description="Choose a campaign from the selector above to view its dashboard data."
+						/>
+					) : (
+					<>
 					{/* Widget Cards */}
 					{canView ? (
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -981,6 +1015,8 @@ const DashboardContent: React.FC = () => {
 							)}
 						</div>
 					</DndContext>
+					</>
+					)}
 
 
 					{/* Add Chart Modal */}
