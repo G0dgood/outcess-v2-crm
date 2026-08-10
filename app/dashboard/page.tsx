@@ -987,11 +987,13 @@ const DashboardContent: React.FC = () => {
 											return (
 												<div key={chart.id} className={colSpanClass}>
 													<SortableChart
-														chart={{ ...chart, size }}
+														// All charts are driven by the single top-level Time Range
+														// control, not a per-chart filter. Overriding timeRange here
+														// makes every chart re-render for the selected range.
+														chart={{ ...chart, size, timeRange: timeRange as Chart['timeRange'] }}
 														generateChartData={generateChartDataWrapper}
 														onRemoveChart={handleRemoveChart}
 														onEditChart={handleEditChart}
-														onTimeRangeChange={(chartId, timeRange) => updateChart(chartId, { timeRange: timeRange as Chart['timeRange'] })}
 														canEdit={canEdit}
 														canDelete={canDelete}
 													/>
