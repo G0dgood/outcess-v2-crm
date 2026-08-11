@@ -15,10 +15,8 @@ import { useUpdateCampaignMutation } from '@/store/services/campaignApi';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import {
-	useGetDashboardDispositionsByCampaignAndAgentIdReportQuery,
-	useGetAllDashboardDispositionsByCampaignReportQuery,
-	useGetDispositionsByCampaignReportQuery,
-	useGetDispositionsByAgentReportQuery
+	useGetDashboardWidgetsQuery,
+	useGetDashboardChartsQuery
 } from '@/store/services/dispositionApi';
 import { filterDispositionsByTimeRange, getDateRangeFromTimeRange } from '@/utils/filterUtils';
 import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
@@ -100,7 +98,25 @@ const DashboardContent: React.FC = () => {
 	// Fetch Report Data
 	const campaignId = campaignData?._id || campaignData?.id || setupData?.campaignId;
 	const timeRange = dashboardSettings.dispositionSettings?.timeRangeView || 'daily';
-	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange]);
+
+	// Bumped by the Refresh button so the fixed chart windows recompute "now".
+	const [refreshNonce, setRefreshNonce] = useState(0);
+
+	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange, refreshNonce]);
+
+	// IMPORTANT: memoize the per-chart date ranges. getDateRangeFromTimeRange()
+	// bakes in `new Date()` (endDate = now, ms precision), so calling it inline
+	// in the query args produced a new value every render → RTK Query treated it
+	// as new args → refetched on every render → the Refresh spinner never
+	// stopped (and the backend was hammered continuously). Recompute only when
+	// the user refreshes.
+	const chartRanges = useMemo(() => ({
+		yesterday: getDateRangeFromTimeRange('yesterday'),
+		weekly: getDateRangeFromTimeRange('weekly'),
+		monthly: getDateRangeFromTimeRange('monthly'),
+		yearly: getDateRangeFromTimeRange('yearly'),
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}), [refreshNonce]);
 
 	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
 	// Treat the isSupervisor flag as authoritative (a team lead may have any role name),
@@ -111,74 +127,93 @@ const DashboardContent: React.FC = () => {
 	// never the agent-only view — regardless of supervisor/team-lead status.
 	const isCampaignView = isAdmin || isSuperAdmin || isSupervisor || allBucketAccess;
 
-	const { data: reportDataAgent, refetch: refetchAgentReport, isFetching: isFetchingAgentReport } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
-		{
-			campaignId: campaignId || '',
-			agentId: user?.id || user?._id || '',
-			startDate: dateRange.startDate || '',
-			endDate: dateRange.endDate || '',
-			bucketId: selectedBucketId || undefined
-		},
-		{ skip: !campaignId || !user || !dateRange.startDate || isCampaignView }
-	);
+	// A campaign must be selected before the dashboard has anything to show. The
+	// bucket is only an optional filter — admins / data analysts see all campaign
+	// data by default (matching the report page), so we do NOT require a bucket.
+	const needsSelection = !campaignId;
 
-	const { data: reportDataAdmin, refetch: refetchAdminReport, isFetching: isFetchingAdminReport } = useGetAllDashboardDispositionsByCampaignReportQuery(
+	const { data: widgetReportData, refetch: refetchWidgetReport, isFetching: isFetchingWidgetReport } = useGetDashboardWidgetsQuery(
 		{
 			campaignId: campaignId || '',
 			startDate: dateRange.startDate || '',
 			endDate: dateRange.endDate || '',
-			bucketId: selectedBucketId || undefined
+			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
 		},
-		{ skip: !campaignId || !dateRange.startDate || !isCampaignView }
+		{ skip: !campaignId || !dateRange.startDate }
 	);
 
-	const reportData = isCampaignView ? reportDataAdmin : reportDataAgent;
+	const reportData = widgetReportData;
 
-	// Fetched over all time (no date filter) so each chart can filter by its own
-	// per-chart time range. Widgets still filter this client-side by the dashboard range.
-	const { data: lobReportData, refetch: refetchLobReport, isFetching: isFetchingLobReport } = useGetDispositionsByCampaignReportQuery(
+	const { data: chartDataAll, refetch: refetchChartAll, isFetching: isFetchingChartAll } = useGetDashboardChartsQuery(
 		{
 			campaignId: campaignId || '',
 			startDate: '',
 			endDate: '',
-			page: 1,
-			limit: 1000000,
 			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
 		},
-		{ skip: !campaignId || !isCampaignView }
+		{ skip: !campaignId }
 	);
 
-	const { data: agentReportData, refetch: refetchAgentDispositions, isFetching: isFetchingAgentDispositions } = useGetDispositionsByAgentReportQuery(
+	const { data: chartDataYesterday, refetch: refetchChartYesterday, isFetching: isFetchingChartYesterday } = useGetDashboardChartsQuery(
 		{
 			campaignId: campaignId || '',
-			agentId: user?._id || '',
-			startDate: '',
-			endDate: '',
-			page: 1,
-			limit: 1000000,
+			...chartRanges.yesterday,
 			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
 		},
-		{ skip: !campaignId || isCampaignView || !user?._id }
+		{ skip: !campaignId }
 	);
 
-	const apiDispositions = useMemo(() => {
-		if (isCampaignView) {
-			return (lobReportData as { data?: unknown[] })?.data || (Array.isArray(lobReportData) ? lobReportData : []);
-		} else {
-			return (agentReportData as { data?: unknown[] })?.data || (Array.isArray(agentReportData) ? agentReportData : []);
-		}
-	}, [isCampaignView, lobReportData, agentReportData]);
+	const { data: chartDataWeekly, refetch: refetchChartWeekly, isFetching: isFetchingChartWeekly } = useGetDashboardChartsQuery(
+		{
+			campaignId: campaignId || '',
+			...chartRanges.weekly,
+			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
+		},
+		{ skip: !campaignId }
+	);
 
-	const isRefreshing = isFetchingAgentReport || isFetchingAdminReport || isFetchingLobReport || isFetchingAgentDispositions;
+	const { data: chartDataMonthly, refetch: refetchChartMonthly, isFetching: isFetchingChartMonthly } = useGetDashboardChartsQuery(
+		{
+			campaignId: campaignId || '',
+			...chartRanges.monthly,
+			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
+		},
+		{ skip: !campaignId }
+	);
+
+	const { data: chartDataYearly, refetch: refetchChartYearly, isFetching: isFetchingChartYearly } = useGetDashboardChartsQuery(
+		{
+			campaignId: campaignId || '',
+			...chartRanges.yearly,
+			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
+		},
+		{ skip: !campaignId }
+	);
+
+	const isRefreshing =
+		isFetchingWidgetReport ||
+		isFetchingChartAll ||
+		isFetchingChartYesterday ||
+		isFetchingChartWeekly ||
+		isFetchingChartMonthly ||
+		isFetchingChartYearly;
 
 	const handleRefresh = () => {
-		if (isCampaignView) {
-			refetchAdminReport();
-			refetchLobReport();
-		} else {
-			refetchAgentReport();
-			refetchAgentDispositions();
-		}
+		// Recompute the fixed chart windows against a fresh "now"...
+		setRefreshNonce((n) => n + 1);
+		// ...and force RTK Query to refetch the current data.
+		refetchWidgetReport();
+		refetchChartAll();
+		refetchChartYesterday();
+		refetchChartWeekly();
+		refetchChartMonthly();
+		refetchChartYearly();
 	};
 
 	const updateDashboardSettings = useCallback(async (newSettings: Partial<typeof dashboardSettings>) => {
@@ -374,14 +409,9 @@ const DashboardContent: React.FC = () => {
 
 	const combinedDispositions = useMemo(() => {
 		const offline = getOfflineDispositions(selectedCampaignId || undefined);
-		// If we have API data, use it as the source of "synced" data
-		// Otherwise fallback to local synced data
-		// Note: apiDispositions might be empty array, which is valid. 
-		// Check if it's an array to confirm it's loaded.
-		const synced = Array.isArray(apiDispositions) ? apiDispositions : getSyncedDispositions(undefined, selectedCampaignId || undefined);
-		return [...offline, ...synced] as CombinedDispositionItem[];
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [apiDispositions, pendingDispositionsCount, selectedCampaignId]);
+		const synced = getSyncedDispositions(undefined, selectedCampaignId || undefined);
+		return [...offline, ...synced] as unknown as CombinedDispositionItem[];
+	}, [pendingDispositionsCount, selectedCampaignId]);
 
 	// Get widgets from context and update values dynamically based on disposition data
 	const widgets = useMemo(() => {
@@ -641,11 +671,31 @@ const DashboardContent: React.FC = () => {
 	}, [canEdit, dashboardSettings.dispositionSettings.charts]);
 
 	const generateChartDataWrapper = useCallback((dataSource: string | string[], chartColor?: string, colors?: Record<string, string>, chartTimeRange?: string): ChartDataItem[] => {
-		// When a chart has its own time range, filter the (all-time) dispositions
-		// client-side by that range instead of using the dashboard-scoped breakdown.
-		const reportForChart = chartTimeRange ? undefined : reportData;
-		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, combinedDispositions, reportForChart, chartTimeRange);
-	}, [dashboardSettings, pendingDispositionsCount, combinedDispositions, reportData]);
+		let reportForChart = reportData;
+		if (chartTimeRange) {
+			switch (chartTimeRange) {
+				case 'all':
+					reportForChart = chartDataAll;
+					break;
+				case 'yesterday':
+					reportForChart = chartDataYesterday;
+					break;
+				case 'weekly':
+					reportForChart = chartDataWeekly;
+					break;
+				case 'monthly':
+					reportForChart = chartDataMonthly;
+					break;
+				case 'yearly':
+					reportForChart = chartDataYearly;
+					break;
+				case 'daily':
+					reportForChart = reportData;
+					break;
+			}
+		}
+		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, [], reportForChart, chartTimeRange);
+	}, [dashboardSettings, pendingDispositionsCount, reportData, chartDataAll, chartDataYesterday, chartDataWeekly, chartDataMonthly, chartDataYearly]);
 
 	const handleConfirmDelete = useCallback(() => {
 		if (!canDelete) return;
@@ -875,6 +925,14 @@ const DashboardContent: React.FC = () => {
 						</div>
 					</div>
 
+					{needsSelection ? (
+						<EmptyState
+							iconName="NOProduct"
+							title="Select a campaign"
+							description="Choose a campaign from the selector above to view its dashboard data."
+						/>
+					) : (
+					<>
 					{/* Widget Cards */}
 					{canView ? (
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -929,11 +987,13 @@ const DashboardContent: React.FC = () => {
 											return (
 												<div key={chart.id} className={colSpanClass}>
 													<SortableChart
-														chart={{ ...chart, size }}
+														// All charts are driven by the single top-level Time Range
+														// control, not a per-chart filter. Overriding timeRange here
+														// makes every chart re-render for the selected range.
+														chart={{ ...chart, size, timeRange: timeRange as Chart['timeRange'] }}
 														generateChartData={generateChartDataWrapper}
 														onRemoveChart={handleRemoveChart}
 														onEditChart={handleEditChart}
-														onTimeRangeChange={(chartId, timeRange) => updateChart(chartId, { timeRange: timeRange as Chart['timeRange'] })}
 														canEdit={canEdit}
 														canDelete={canDelete}
 													/>
@@ -957,6 +1017,8 @@ const DashboardContent: React.FC = () => {
 							)}
 						</div>
 					</DndContext>
+					</>
+					)}
 
 
 					{/* Add Chart Modal */}

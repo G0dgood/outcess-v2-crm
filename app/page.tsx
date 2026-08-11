@@ -224,9 +224,29 @@ export default function LoginPage() {
 					}
 				}
 
-				// Show error toast only after all login attempts have failed
+				// Show error toast only after all login attempts have failed.
+				// Don't blindly claim bad credentials — that generic fallback made
+				// server/connection problems look like the user typed a wrong
+				// username/password. Only say that for an actual auth rejection.
 				const apiError2 = err as ApiError;
-				const errorMessage = apiError2?.data?.message || 'Invalid email or password';
+				const status = apiError2?.status;
+				let errorMessage: string;
+				if (apiError2?.data?.message) {
+					// Trust the server's own message when it sent one.
+					errorMessage = apiError2.data.message;
+				} else if (status === 401 || status === 400) {
+					errorMessage = 'Invalid email or password';
+				} else if (
+					status === 'FETCH_ERROR' ||
+					status === 'TIMEOUT_ERROR' ||
+					status === 'PARSING_ERROR'
+				) {
+					errorMessage = 'Unable to reach the server. Please check your connection and try again.';
+				} else if (typeof status === 'number' && status >= 500) {
+					errorMessage = 'Something went wrong on our end. Please try again shortly.';
+				} else {
+					errorMessage = 'Unable to sign in right now. Please try again.';
+				}
 				toast.error(errorMessage);
 				setIsLoading(false);
 			}
@@ -300,7 +320,7 @@ export default function LoginPage() {
 								label="Remember me"
 								size="small"
 							/>
-							<a href="#" className="forgot-password" style={{ color: primaryColor }} onMouseEnter={(e) => {
+							<a href="#" className="forgot-password" style={{ color: isDarkMode ? '#F3F4F6' : primaryColor }} onMouseEnter={(e) => {
 								e.currentTarget.style.opacity = '0.8';
 							}} onMouseLeave={(e) => {
 								e.currentTarget.style.opacity = '1';

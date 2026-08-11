@@ -148,7 +148,9 @@ const CustomerBookPage: React.FC = () => {
 	}, [searchResult, isError, error]);
 
 	const handleSearch = (value: string) => {
-		setSearchQuery(value);
+		// Ignore any spaces in the entered value (e.g. a phone number typed with
+		// gaps like "080 1234 5678") so the search matches the stored SearchId.
+		setSearchQuery(value.replace(/\s+/g, ''));
 	};
 
 	const filteredCustomers = customers;
