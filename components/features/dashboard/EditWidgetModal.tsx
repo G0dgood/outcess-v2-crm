@@ -14,7 +14,25 @@ import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useGetDashboardDispositionsByCampaignAndAgentIdReportQuery, useGetAllDashboardDispositionsByCampaignReportQuery } from '@/store/services/dispositionApi';
-import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from '@/utils/offlineDispositions';
+import { getOfflineDispositions, getSyncedDispositions } from '@/utils/offlineDispositions';
+
+interface FlexibleFieldEntry {
+	fieldName?: string;
+	label?: string;
+	name?: string;
+	fieldValue?: string | number | boolean | unknown;
+	value?: string | number | boolean | unknown;
+}
+
+interface FlexibleDispositionRecord {
+	createdAt?: string;
+	timestamp?: string | number;
+	dispositionData?: FlexibleFieldEntry[];
+	fillDisposition?: FlexibleFieldEntry[];
+	fields?: FlexibleFieldEntry[];
+	dispositions?: FlexibleFieldEntry[];
+	[key: string]: unknown;
+}
 
 interface EditWidgetModalProps {
 	isOpen: boolean;
@@ -141,9 +159,9 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 		const getCountForKeys = (category: string, keys: string[]) => {
 			const offlineDispositions = getOfflineDispositions();
 			const syncedDispositions = getSyncedDispositions();
-			const allDispositions = [...offlineDispositions, ...syncedDispositions];
+			const allDispositions = [...offlineDispositions, ...syncedDispositions] as unknown as FlexibleDispositionRecord[];
 
-			return allDispositions.filter((disp: any) => {
+			return allDispositions.filter((disp: FlexibleDispositionRecord) => {
 				const createdAt = disp.createdAt || disp.timestamp;
 				if (startDate && createdAt) {
 					const dispTime = new Date(createdAt).getTime();
@@ -154,7 +172,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 
 				const fields = disp.dispositionData || disp.fillDisposition || disp.fields || disp.dispositions;
 				if (fields && Array.isArray(fields)) {
-					return fields.some((f: any) => {
+					return fields.some((f: FlexibleFieldEntry) => {
 						const fieldName = f.fieldName || f.label || f.name;
 						const fieldValue = f.fieldValue ?? f.value;
 						if (!fieldName || fieldValue === undefined || fieldValue === null) return false;
@@ -228,7 +246,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			subKey: compositeSubKey,
 			dataSourceName: lookupKey,
 		}));
-	}, [selectedCategory, selectedKeys, reportData, isTitleManual, campaignData, isOpen, widget, formData.dataSourceName]);
+	}, [selectedCategory, selectedKeys, reportData, isTitleManual, campaignData, isOpen, widget, formData.dataSourceName, startDate, endDate]);
 
 	const subKeyOptions = useMemo(() => {
 		const lookupKey = selectedCategory || formData.dataSourceName;

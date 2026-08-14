@@ -7,7 +7,7 @@ import Checkbox from '@/components/ui/Checkbox';
 import Dropdown from '@/components/ui/Dropdown';
 import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
-import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from '@/utils/offlineDispositions';
+import { getOfflineDispositions, getSyncedDispositions } from '@/utils/offlineDispositions';
 import { Widget, DispositionCategory, NestedOption } from '@/types/dashboard';
 import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
 import { useCampaign } from '@/contexts/CampaignContext';
@@ -15,6 +15,24 @@ import { useSocket } from '@/contexts/SocketContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { useGetDashboardDispositionsByCampaignAndAgentIdReportQuery, useGetAllDashboardDispositionsByCampaignReportQuery } from '@/store/services/dispositionApi';
+
+interface FlexibleFieldEntry {
+	fieldName?: string;
+	label?: string;
+	name?: string;
+	fieldValue?: string | number | boolean | unknown;
+	value?: string | number | boolean | unknown;
+}
+
+interface FlexibleDispositionRecord {
+	createdAt?: string;
+	timestamp?: string | number;
+	dispositionData?: FlexibleFieldEntry[];
+	fillDisposition?: FlexibleFieldEntry[];
+	fields?: FlexibleFieldEntry[];
+	dispositions?: FlexibleFieldEntry[];
+	[key: string]: unknown;
+}
 
 interface AddWidgetModalProps {
 	isOpen: boolean;
@@ -90,9 +108,9 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		const getCountForKeys = (category: string, keys: string[]) => {
 			const offlineDispositions = getOfflineDispositions();
 			const syncedDispositions = getSyncedDispositions();
-			const allDispositions = [...offlineDispositions, ...syncedDispositions];
+			const allDispositions = [...offlineDispositions, ...syncedDispositions] as unknown as FlexibleDispositionRecord[];
 
-			return allDispositions.filter((disp: any) => {
+			return allDispositions.filter((disp: FlexibleDispositionRecord) => {
 				const createdAt = disp.createdAt || disp.timestamp;
 				if (startDate && createdAt) {
 					const dispTime = new Date(createdAt).getTime();
@@ -103,7 +121,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 
 				const fields = disp.dispositionData || disp.fillDisposition || disp.fields || disp.dispositions;
 				if (fields && Array.isArray(fields)) {
-					return fields.some((f: any) => {
+					return fields.some((f: FlexibleFieldEntry) => {
 						const fieldName = f.fieldName || f.label || f.name;
 						const fieldValue = f.fieldValue ?? f.value;
 						if (!fieldName || fieldValue === undefined || fieldValue === null) return false;
@@ -183,7 +201,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 			subKey: compositeSubKey,
 			dataSourceName: lookupKey,
 		}));
-	}, [selectedCategory, selectedKeys, reportData, isTitleManual, campaignData, formData.dataSourceName]);
+	}, [selectedCategory, selectedKeys, reportData, isTitleManual, campaignData, formData.dataSourceName, startDate, endDate]);
 
 	// Build dropdown options from available data
 	const widgetTitleOptions = useMemo(() => {

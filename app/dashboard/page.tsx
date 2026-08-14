@@ -101,7 +101,10 @@ const DashboardContent: React.FC = () => {
 	// Bumped by the Refresh button so the fixed chart windows recompute "now".
 	const [refreshNonce, setRefreshNonce] = useState(0);
 
-	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange, refreshNonce]);
+	const dateRange = useMemo(() => {
+		void refreshNonce;
+		return getDateRangeFromTimeRange(timeRange);
+	}, [timeRange, refreshNonce]);
 
 	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
 	// Treat the isSupervisor flag as authoritative (a team lead may have any role name),
@@ -328,6 +331,7 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const combinedDispositions = useMemo(() => {
+		void pendingDispositionsCount;
 		const offline = getOfflineDispositions(selectedCampaignId || undefined);
 		const synced = getSyncedDispositions(undefined, selectedCampaignId || undefined);
 		return [...offline, ...synced] as unknown as CombinedDispositionItem[];
