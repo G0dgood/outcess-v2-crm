@@ -142,15 +142,17 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 		const dashboardSettings = campaignData?.dashboardSettings;
 		const allConfigured = getAllCampaignDispositions(dashboardSettings);
 
-		// If "Total Dispositions" or "Total Calls" is selected
-		if (lookupKey === 'Total Dispositions' || lookupKey === 'Total Calls') {
-			const apiTotal = reportData?.data?.totalDispositions !== undefined ? Number(reportData.data.totalDispositions) : 0;
+		// If "Total" or legacy total key is selected
+		if (lookupKey === 'Total' || lookupKey === 'Total Dispositions' || lookupKey === 'Total Calls') {
+			const apiTotal = reportData?.data?.totalDispositions !== undefined 
+				? Number(reportData.data.totalDispositions) 
+				: (reportData?.data?.total !== undefined ? Number(reportData.data.total) : 0);
 			setFormData(prev => ({
 				...prev,
-				title: isTitleManual ? prev.title : lookupKey,
+				title: isTitleManual ? prev.title : 'Total',
 				value: apiTotal,
 				subKey: '',
-				dataSourceName: lookupKey,
+				dataSourceName: 'Total',
 			}));
 			return;
 		}
@@ -340,8 +342,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 
 	const widgetTitleOptions = useMemo(() => {
 		const optionsMap = new Map<string, { value: string; label: string }>();
-		optionsMap.set('Total Dispositions', { value: 'Total Dispositions', label: 'Total Dispositions (Overall)' });
-		optionsMap.set('Total Calls', { value: 'Total Calls', label: 'Total Calls (Overall)' });
+		optionsMap.set('Total', { value: 'Total', label: 'Total' });
 
 		if (reportData?.data?.breakdown) {
 			Object.keys(reportData.data.breakdown).forEach(key => {
