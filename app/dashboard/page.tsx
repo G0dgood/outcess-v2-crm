@@ -469,7 +469,35 @@ const DashboardContent: React.FC = () => {
 
 		return activeWidgets.map((widget: Widget) => {
 			const sourceKey = widget.dataSourceName || widget.title;
-			// Check report data first
+			const normalizedSource = (sourceKey || '').toLowerCase().trim();
+
+			// Built-in metric for Total Dispositions / Total Calls
+			const isTotalWidget =
+				normalizedSource === 'total dispositions' ||
+				normalizedSource === 'total calls' ||
+				normalizedSource === 'total call' ||
+				normalizedSource === 'total' ||
+				normalizedSource === 'total call(s)';
+
+			if (isTotalWidget) {
+				const apiTotal =
+					reportData?.data?.totalDispositions !== undefined
+						? Number(reportData.data.totalDispositions)
+						: filteredDispositions.length;
+				return { ...widget, value: apiTotal };
+			}
+
+			// Built-in metric for Pending Dispositions / Pending Calls
+			const isPendingWidget =
+				normalizedSource === 'pending dispositions' ||
+				normalizedSource === 'pending calls' ||
+				normalizedSource === 'pending call';
+
+			if (isPendingWidget) {
+				return { ...widget, value: pendingDispositionsCount };
+			}
+
+			// Check report data breakdown
 			if (reportData?.data?.breakdown) {
 				const breakdown = reportData.data.breakdown;
 
@@ -544,17 +572,6 @@ const DashboardContent: React.FC = () => {
 			// If report data is missing or doesn't have the key, we should not fall back to total counts.
 			if (widget.subKey) {
 				return widget;
-			}
-
-			// Update pending dispositions widget value
-			if (sourceKey === 'Pending Dispositions') {
-				return { ...widget, value: pendingDispositionsCount };
-			}
-
-			// Update total dispositions widget value
-			if (sourceKey === 'Total Dispositions' || sourceKey === 'Total Calls') {
-				const apiTotal = reportData?.data?.totalDispositions !== undefined ? Number(reportData.data.totalDispositions) : filteredDispositions.length;
-				return { ...widget, value: apiTotal };
 			}
 
 			// Check if widget title corresponds to a disposition field

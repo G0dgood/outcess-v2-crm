@@ -387,7 +387,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 		}
 		const isDisposition = allDispositions.some((d: { name: string }) => d.name === source);
 		const isOutcome = dashboardSettings?.callOutcomes?.some((o: { name: string }) => o.name === source);
-		return isDisposition || isOutcome || (reportData?.data?.breakdown && reportData.data.breakdown[source!] !== undefined);
+		return isDisposition || isOutcome || source === 'Total Dispositions' || source === 'Total Calls' || (reportData?.data?.breakdown && reportData.data.breakdown[source!] !== undefined);
 	}, [formData.dataSourceName, campaignData, reportData]);
 
 	const handleSave = () => {
