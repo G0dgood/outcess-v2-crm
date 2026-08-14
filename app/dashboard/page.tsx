@@ -422,7 +422,7 @@ const DashboardContent: React.FC = () => {
 				const breakdown = reportData.data.breakdown;
 
 				// 0. Check for Composite SubKey (Category:::Key)
-				// This allows Title to be anything (e.g. "mem") while preserving the data source (e.g. "Call Answered")
+				// This allows Title to be anything while preserving the data source
 				if (widget.subKey && widget.subKey.includes(':::')) {
 					const parts = widget.subKey.split(':::');
 					const category = parts[0];
@@ -435,49 +435,42 @@ const DashboardContent: React.FC = () => {
 								return { ...widget, value: sumValue };
 							}
 						}
+						return { ...widget, value: 0 };
 					} else {
 						const key = parts[1];
 						if (breakdown[category] !== undefined) {
 							const reportValue = breakdown[category];
 							if (typeof reportValue === 'object' && reportValue !== null && reportValue[key] !== undefined) {
-								return { ...widget, value: reportValue[key] };
+								return { ...widget, value: Number(reportValue[key]) || 0 };
 							}
 						}
+						return { ...widget, value: 0 };
 					}
-					// If composite key lookup fails, preserve saved value
-					return widget;
 				}
 
 				// 1. Direct Lookup (Title = Category)
 				if (breakdown[sourceKey] !== undefined) {
 					const reportValue = breakdown[sourceKey];
 					if (typeof reportValue === 'object' && reportValue !== null) {
-						if (widget.subKey && reportValue[widget.subKey] !== undefined) {
-							return { ...widget, value: reportValue[widget.subKey] };
-						}
-						// If subKey is present but value not found, preserve saved value
 						if (widget.subKey) {
-							return widget;
+							return { ...widget, value: Number(reportValue[widget.subKey]) || 0 };
 						}
 						// If no subKey, sum all values in the object
 						const total = Object.values(reportValue).reduce((acc: number, val) => acc + (Number(val) || 0), 0);
 						return { ...widget, value: total };
 					} else {
-						return { ...widget, value: reportValue };
+						return { ...widget, value: Number(reportValue) || 0 };
 					}
 				}
 
 				// 2. Deep Lookup (Search for Title in all nested objects)
-				// This handles cases where Title = Specific Option (e.g. "Connected") 
-				// and the parent category is not explicitly stored in subKey or is lost.
 				let deepMatchValue: number | undefined;
 				Object.values(breakdown).some((categoryValue) => {
 					if (typeof categoryValue === 'object' && categoryValue !== null) {
-						// Use type assertion or check for property existence safely
 						const val = (categoryValue as Record<string, unknown>)[sourceKey];
 						if (val !== undefined) {
 							deepMatchValue = Number(val);
-							return true; // Stop searching
+							return true;
 						}
 					}
 					return false;
@@ -486,12 +479,11 @@ const DashboardContent: React.FC = () => {
 				if (deepMatchValue !== undefined) {
 					return { ...widget, value: deepMatchValue };
 				}
-			}
 
-			// If widget has a subKey, it depends on report data breakdown.
-			// If report data is missing or doesn't have the key, we should not fall back to total counts.
-			if (widget.subKey) {
-				return widget;
+				// If report data is returned from API but widget key is not in breakdown for this date range, return 0
+				if (widget.subKey || isTotalWidget === false) {
+					return { ...widget, value: 0 };
+				}
 			}
 
 			// Check if widget title corresponds to a disposition field

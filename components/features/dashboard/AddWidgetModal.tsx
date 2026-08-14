@@ -92,14 +92,24 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 			const syncedDispositions = getSyncedDispositions();
 			const allDispositions = [...offlineDispositions, ...syncedDispositions];
 
-			return allDispositions.filter(disp => {
-				const fields = disp.dispositionData || disp.fillDisposition;
+			return allDispositions.filter((disp: any) => {
+				const createdAt = disp.createdAt || disp.timestamp;
+				if (startDate && createdAt) {
+					const dispTime = new Date(createdAt).getTime();
+					const start = new Date(startDate).getTime();
+					const end = endDate ? new Date(endDate).getTime() + 86399999 : start + 86399999;
+					if (dispTime < start || dispTime > end) return false;
+				}
+
+				const fields = disp.dispositionData || disp.fillDisposition || disp.fields || disp.dispositions;
 				if (fields && Array.isArray(fields)) {
-					return fields.some((f: DispositionFieldEntry) => {
-						if (!f.fieldName || f.fieldValue === undefined || f.fieldValue === null) return false;
-						if (f.fieldName.toLowerCase() !== category.toLowerCase()) return false;
-						const dispDef = allConfigured.find(d => d.name === f.fieldName);
-						const levels = resolveMultiDropdownLevels(f.fieldName, String(f.fieldValue), dispDef);
+					return fields.some((f: any) => {
+						const fieldName = f.fieldName || f.label || f.name;
+						const fieldValue = f.fieldValue ?? f.value;
+						if (!fieldName || fieldValue === undefined || fieldValue === null) return false;
+						if (String(fieldName).toLowerCase() !== category.toLowerCase()) return false;
+						const dispDef = allConfigured.find(d => d.name === fieldName);
+						const levels = resolveMultiDropdownLevels(fieldName, String(fieldValue), dispDef);
 						return levels.some(lvl =>
 							keys.some(k => 
 								lvl.header.toLowerCase() === k.toLowerCase() ||
