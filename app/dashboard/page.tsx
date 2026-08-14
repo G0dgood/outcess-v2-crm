@@ -15,8 +15,7 @@ import { useUpdateCampaignMutation } from '@/store/services/campaignApi';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import {
-	useGetDashboardWidgetsQuery,
-	useGetDashboardChartsQuery
+	useGetDashboardWidgetsQuery
 } from '@/store/services/dispositionApi';
 import { filterDispositionsByTimeRange, getDateRangeFromTimeRange } from '@/utils/filterUtils';
 import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
@@ -104,20 +103,6 @@ const DashboardContent: React.FC = () => {
 
 	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange, refreshNonce]);
 
-	// IMPORTANT: memoize the per-chart date ranges. getDateRangeFromTimeRange()
-	// bakes in `new Date()` (endDate = now, ms precision), so calling it inline
-	// in the query args produced a new value every render → RTK Query treated it
-	// as new args → refetched on every render → the Refresh spinner never
-	// stopped (and the backend was hammered continuously). Recompute only when
-	// the user refreshes.
-	const chartRanges = useMemo(() => ({
-		yesterday: getDateRangeFromTimeRange('yesterday'),
-		weekly: getDateRangeFromTimeRange('weekly'),
-		monthly: getDateRangeFromTimeRange('monthly'),
-		yearly: getDateRangeFromTimeRange('yearly'),
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}), [refreshNonce]);
-
 	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
 	// Treat the isSupervisor flag as authoritative (a team lead may have any role name),
 	// falling back to the role name for older records.
@@ -144,76 +129,11 @@ const DashboardContent: React.FC = () => {
 	);
 
 	const reportData = widgetReportData;
-
-	const { data: chartDataAll, refetch: refetchChartAll, isFetching: isFetchingChartAll } = useGetDashboardChartsQuery(
-		{
-			campaignId: campaignId || '',
-			startDate: '',
-			endDate: '',
-			bucketId: selectedBucketId || undefined,
-			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
-		},
-		{ skip: !campaignId }
-	);
-
-	const { data: chartDataYesterday, refetch: refetchChartYesterday, isFetching: isFetchingChartYesterday } = useGetDashboardChartsQuery(
-		{
-			campaignId: campaignId || '',
-			...chartRanges.yesterday,
-			bucketId: selectedBucketId || undefined,
-			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
-		},
-		{ skip: !campaignId }
-	);
-
-	const { data: chartDataWeekly, refetch: refetchChartWeekly, isFetching: isFetchingChartWeekly } = useGetDashboardChartsQuery(
-		{
-			campaignId: campaignId || '',
-			...chartRanges.weekly,
-			bucketId: selectedBucketId || undefined,
-			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
-		},
-		{ skip: !campaignId }
-	);
-
-	const { data: chartDataMonthly, refetch: refetchChartMonthly, isFetching: isFetchingChartMonthly } = useGetDashboardChartsQuery(
-		{
-			campaignId: campaignId || '',
-			...chartRanges.monthly,
-			bucketId: selectedBucketId || undefined,
-			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
-		},
-		{ skip: !campaignId }
-	);
-
-	const { data: chartDataYearly, refetch: refetchChartYearly, isFetching: isFetchingChartYearly } = useGetDashboardChartsQuery(
-		{
-			campaignId: campaignId || '',
-			...chartRanges.yearly,
-			bucketId: selectedBucketId || undefined,
-			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
-		},
-		{ skip: !campaignId }
-	);
-
-	const isRefreshing =
-		isFetchingWidgetReport ||
-		isFetchingChartAll ||
-		isFetchingChartYesterday ||
-		isFetchingChartWeekly ||
-		isFetchingChartMonthly ||
-		isFetchingChartYearly;
+	const isRefreshing = isFetchingWidgetReport;
 
 	const handleRefresh = () => {
-		// Recompute the fixed chart windows against a fresh "now"...
 		setRefreshNonce((n) => n + 1);
-		// ...and force RTK Query to refetch the current data.
 		refetchWidgetReport();
-		refetchChartAll();
-		refetchChartYesterday();
-		refetchChartWeekly();
-		refetchChartMonthly();
-		refetchChartYearly();
 	};
 
 	const updateDashboardSettings = useCallback(async (newSettings: Partial<typeof dashboardSettings>) => {
@@ -688,31 +608,8 @@ const DashboardContent: React.FC = () => {
 	}, [canEdit, dashboardSettings.dispositionSettings.charts]);
 
 	const generateChartDataWrapper = useCallback((dataSource: string | string[], chartColor?: string, colors?: Record<string, string>, chartTimeRange?: string): ChartDataItem[] => {
-		let reportForChart = reportData;
-		if (chartTimeRange) {
-			switch (chartTimeRange) {
-				case 'all':
-					reportForChart = chartDataAll;
-					break;
-				case 'yesterday':
-					reportForChart = chartDataYesterday;
-					break;
-				case 'weekly':
-					reportForChart = chartDataWeekly;
-					break;
-				case 'monthly':
-					reportForChart = chartDataMonthly;
-					break;
-				case 'yearly':
-					reportForChart = chartDataYearly;
-					break;
-				case 'daily':
-					reportForChart = reportData;
-					break;
-			}
-		}
-		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, [], reportForChart, chartTimeRange);
-	}, [dashboardSettings, pendingDispositionsCount, reportData, chartDataAll, chartDataYesterday, chartDataWeekly, chartDataMonthly, chartDataYearly]);
+		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, [], reportData, chartTimeRange);
+	}, [dashboardSettings, pendingDispositionsCount, reportData]);
 
 	const handleConfirmDelete = useCallback(() => {
 		if (!canDelete) return;
