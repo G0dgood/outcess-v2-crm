@@ -15,7 +15,8 @@ import { useUpdateCampaignMutation } from '@/store/services/campaignApi';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import {
-	useGetDashboardWidgetsQuery
+	useGetDashboardWidgetsQuery,
+	useGetDashboardTotalDispositionsQuery
 } from '@/store/services/dispositionApi';
 import { filterDispositionsByTimeRange, getDateRangeFromTimeRange } from '@/utils/filterUtils';
 import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
@@ -131,11 +132,27 @@ const DashboardContent: React.FC = () => {
 		{ skip: !campaignId || !dateRange.startDate }
 	);
 
+	const {
+		data: totalDispositionsData,
+		refetch: refetchTotalDispositions,
+		isFetching: isFetchingTotalDispositions,
+	} = useGetDashboardTotalDispositionsQuery(
+		{
+			campaignId: campaignId || '',
+			startDate: dateRange.startDate || '',
+			endDate: dateRange.endDate || '',
+			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined,
+		},
+		{ skip: !campaignId || !dateRange.startDate }
+	);
+
 	const reportData = widgetReportData;
-	const isRefreshing = isFetchingWidgetReport;
+	const isRefreshing = isFetchingWidgetReport || isFetchingTotalDispositions;
 
 	const handleRefresh = () => {
 		setRefreshNonce((n) => n + 1);
+		refetchTotalDispositions();
 		refetchWidgetReport();
 	};
 
@@ -381,7 +398,7 @@ const DashboardContent: React.FC = () => {
 		};
 
 		const campaignBuckets = campaignData?.dashboardSettings?.buckets || setupData?.dashboardSettings?.buckets || [];
-		const activeWidgets = (dashboardSettings?.widgets || []).filter((w: Widget) => {
+		let activeWidgets = (dashboardSettings?.widgets || []).filter((w: Widget) => {
 			if (campaignBuckets.length > 1 && selectedBucketId) {
 				// Strict per-bucket scoping. A legacy widget with no bucketId belongs
 				// to the first bucket only, so it never leaks into other buckets.
@@ -390,6 +407,13 @@ const DashboardContent: React.FC = () => {
 			}
 			return true;
 		});
+
+		// Ensure default Total Dispositions widget is present if none exists
+		if (activeWidgets.length === 0) {
+			activeWidgets = [
+				{ id: 'default-total-calls', title: 'Total Dispositions', value: 0, color: '#050711' }
+			];
+		}
 
 		return activeWidgets.map((widget: Widget) => {
 			const sourceKey = widget.dataSourceName || widget.title;
@@ -405,9 +429,11 @@ const DashboardContent: React.FC = () => {
 
 			if (isTotalWidget) {
 				const apiTotal =
-					reportData?.data?.totalDispositions !== undefined
-						? Number(reportData.data.totalDispositions)
-						: filteredDispositions.length;
+					totalDispositionsData?.data?.totalDispositions !== undefined
+						? Number(totalDispositionsData.data.totalDispositions)
+						: (reportData?.data?.totalDispositions !== undefined
+							? Number(reportData.data.totalDispositions)
+							: filteredDispositions.length);
 				return { ...widget, value: apiTotal };
 			}
 
@@ -546,7 +572,7 @@ const DashboardContent: React.FC = () => {
 
 			return widget;
 		});
-	}, [dashboardSettings, combinedDispositions, pendingDispositionsCount, reportData, selectedBucketId, campaignData, setupData]);
+	}, [dashboardSettings, combinedDispositions, pendingDispositionsCount, reportData, totalDispositionsData, selectedBucketId, campaignData, setupData]);
 
 	const handleEditWidget = useCallback((widgetId: string) => {
 		if (!canEdit) return;

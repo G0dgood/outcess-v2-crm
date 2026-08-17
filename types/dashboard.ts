@@ -141,3 +141,12 @@ export interface DashboardReportResponse {
     metrics?: DashboardReportMetricItem[];
   };
 }
+
+export interface DashboardTotalResponse {
+  success: boolean;
+  message?: string;
+  data: {
+    total: number;
+    totalDispositions: number;
+  };
+}
