@@ -14,7 +14,11 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useGetDashboardDispositionsByCampaignAndAgentIdReportQuery, useGetAllDashboardDispositionsByCampaignReportQuery } from '@/store/services/dispositionApi';
+import {
+	useGetDashboardDispositionsByCampaignAndAgentIdReportQuery,
+	useGetAllDashboardDispositionsByCampaignReportQuery,
+	useGetDashboardTotalDispositionsQuery,
+} from '@/store/services/dispositionApi';
 
 interface FlexibleFieldEntry {
 	fieldName?: string;
@@ -71,6 +75,16 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 
 	const { isAdmin } = usePrivilege();
 
+	const { data: totalDispositionsData } = useGetDashboardTotalDispositionsQuery(
+		{
+			campaignId,
+			startDate,
+			endDate,
+			agentId: !isAdmin ? agentId : undefined,
+		},
+		{ skip: !campaignId || !isOpen }
+	);
+
 	const { data: reportDataAgent } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
 		{ campaignId, agentId, startDate, endDate },
 		{ skip: !campaignId || !agentId || !isOpen || isAdmin }
@@ -93,12 +107,14 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 
 		// If "Total" or legacy total key is selected
 		if (lookupKey === 'Total' || lookupKey === 'Total Dispositions' || lookupKey === 'Total Calls') {
-			const apiTotal = reportData?.data?.totalDispositions !== undefined 
-				? Number(reportData.data.totalDispositions) 
-				: (reportData?.data?.total !== undefined ? Number(reportData.data.total) : 0);
+			const apiTotal = totalDispositionsData?.data?.totalDispositions !== undefined
+				? Number(totalDispositionsData.data.totalDispositions)
+				: (reportData?.data?.totalDispositions !== undefined 
+					? Number(reportData.data.totalDispositions) 
+					: (reportData?.data?.total !== undefined ? Number(reportData.data.total) : 0));
 			setFormData(prev => ({
 				...prev,
-				title: isTitleManual ? prev.title : 'Total',
+				title: isTitleManual ? prev.title : 'Total Dispositions',
 				value: apiTotal,
 				subKey: '',
 				dataSourceName: 'Total',
@@ -208,7 +224,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 	// Build dropdown options from available data
 	const widgetTitleOptions = useMemo(() => {
 		const optionsMap = new Map<string, { value: string; label: string }>();
-		optionsMap.set('Total', { value: 'Total', label: 'Total' });
+		optionsMap.set('Total', { value: 'Total', label: 'Total Dispositions' });
 
 		if (reportData?.data?.breakdown) {
 			Object.keys(reportData.data.breakdown).forEach(key => {

@@ -30,6 +30,7 @@ import { useGetNotificationsByCampaignIdQuery, useMarkNotificationAsReadMutation
 import { useGetStickyNotesQuery } from '@/store/services/stickyNoteApi';
 import { useAuth } from '@/contexts/AuthContext';
 import HibernateOverlay from './HibernateOverlay';
+import NetworkStatusDot from './NetworkStatusDot';
 
 interface DashboardHeaderProps {
 	name?: string;
@@ -490,20 +491,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 				</div>
 				{/* Right side - Icons */}
 				<div className="flex items-center justify-center gap-5">
-					{/* Offline Indicator */}
-					{(isOffline || socketStatus === 'offline') && (
-						<div
-							className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-							style={{
-								backgroundColor: 'var(--status-error)',
-								color: 'var(--text-inverse)',
-							}}
-							title="Offline - Messages will be queued"
-						>
-							<Icon name="cloud-off" size="sm" color="white" />
-							<span className="text-[8px] md:text-[10px] font-medium hidden sm:inline">Offline</span>
-						</div>
-					)}
+					{/* Network Status Dot */}
+					<NetworkStatusDot />
 
 					{/* LOB Dropdown - Only for Administrator or users with Dashboard Edit permission */}
 					{/* All Bucket Access Badge */}

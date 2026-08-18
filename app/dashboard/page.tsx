@@ -576,7 +576,16 @@ const DashboardContent: React.FC = () => {
 
 	const handleEditWidget = useCallback((widgetId: string) => {
 		if (!canEdit) return;
-		const widget = (dashboardSettings.widgets as Widget[]).find((w: Widget) => w.id === widgetId);
+		let widget = (dashboardSettings.widgets as Widget[]).find((w: Widget) => w.id === widgetId);
+		if (!widget && widgetId === 'default-total-calls') {
+			widget = {
+				id: 'default-total-calls',
+				title: 'Total Dispositions',
+				value: 0,
+				color: '#050711',
+				dataSourceName: 'Total',
+			};
+		}
 		if (widget) {
 			setEditingWidget(widget);
 			setIsEditWidgetModalOpen(true);
@@ -585,7 +594,16 @@ const DashboardContent: React.FC = () => {
 
 	const handleDeleteWidget = useCallback((widgetId: string) => {
 		if (!canDelete) return;
-		const widget = (dashboardSettings.widgets as Widget[]).find((w: Widget) => w?.id === widgetId);
+		let widget = (dashboardSettings.widgets as Widget[]).find((w: Widget) => w?.id === widgetId);
+		if (!widget && widgetId === 'default-total-calls') {
+			widget = {
+				id: 'default-total-calls',
+				title: 'Total Dispositions',
+				value: 0,
+				color: '#050711',
+				dataSourceName: 'Total',
+			};
+		}
 		if (widget) {
 			setDeletingWidget(widget);
 			setIsDeleteWidgetModalOpen(true);
@@ -636,7 +654,8 @@ const DashboardContent: React.FC = () => {
 	const handleConfirmDelete = useCallback(() => {
 		if (!canDelete) return;
 		if (deletingWidget) {
-			const updatedWidgets = (dashboardSettings.widgets as Widget[]).filter((w: Widget) => w.id !== deletingWidget.id);
+			const currentWidgets = (dashboardSettings.widgets as Widget[]) || [];
+			const updatedWidgets = currentWidgets.filter((w: Widget) => w.id !== deletingWidget.id);
 			updateDashboardSettings({
 				widgets: updatedWidgets,
 			});
@@ -647,13 +666,29 @@ const DashboardContent: React.FC = () => {
 
 	const handleSaveWidget = useCallback((widget: Widget) => {
 		if (!canEdit) return;
-		const updatedWidgets = (dashboardSettings.widgets as Widget[]).map((w: Widget) => w.id === widget.id ? widget : w);
+		const currentWidgets = (dashboardSettings.widgets as Widget[]) || [];
+		const exists = currentWidgets.some((w: Widget) => w.id === widget.id);
+		let updatedWidgets: Widget[];
+		if (exists) {
+			updatedWidgets = currentWidgets.map((w: Widget) => w.id === widget.id ? widget : w);
+		} else {
+			const buckets = campaignData?.dashboardSettings?.buckets || setupData?.dashboardSettings?.buckets || [];
+			const targetBucketId = buckets.length > 1 ? (selectedBucketId || buckets[0]?.id) : undefined;
+			updatedWidgets = [
+				...currentWidgets,
+				{
+					...widget,
+					id: widget.id === 'default-total-calls' ? `widget-${Date.now()}` : widget.id,
+					...(targetBucketId ? { bucketId: targetBucketId } : {})
+				}
+			];
+		}
 		updateDashboardSettings({
 			widgets: updatedWidgets,
 		});
 		setIsEditWidgetModalOpen(false);
 		setEditingWidget(null);
-	}, [canEdit, dashboardSettings.widgets, updateDashboardSettings]);
+	}, [canEdit, dashboardSettings.widgets, updateDashboardSettings, campaignData, setupData, selectedBucketId]);
 
 	const handleAddWidget = useCallback(() => {
 		if (!canCreate) return;
@@ -671,7 +706,21 @@ const DashboardContent: React.FC = () => {
 			id: `widget-${Date.now()}`,
 			...(targetBucketId ? { bucketId: targetBucketId } : {})
 		};
-		const updatedWidgets = [...(dashboardSettings.widgets as Widget[]), newWidget];
+		const currentWidgets = (dashboardSettings.widgets as Widget[]) || [];
+		let updatedWidgets: Widget[];
+		if (currentWidgets.length === 0) {
+			const defaultTotalWidget: Widget = {
+				id: `widget-default-total-${Date.now()}`,
+				title: 'Total Dispositions',
+				value: 0,
+				color: '#050711',
+				dataSourceName: 'Total',
+				...(targetBucketId ? { bucketId: targetBucketId } : {})
+			};
+			updatedWidgets = [defaultTotalWidget, newWidget];
+		} else {
+			updatedWidgets = [...currentWidgets, newWidget];
+		}
 		updateDashboardSettings({
 			widgets: updatedWidgets,
 		});

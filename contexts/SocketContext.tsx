@@ -195,7 +195,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 		const SLOW_MS = 1000;       // > 1s round-trip  -> slow
 		const VERY_SLOW_MS = 2500;  // > 2.5s round-trip -> very slow / bad network
 		const TIMEOUT_MS = 6000;    // no response in 6s -> treat as very slow
-		const INTERVAL_MS = 15000;  // re-check every 15s
+		const INTERVAL_MS = 30 * 60 * 1000;  // re-check every 30 minutes
 
 		let cancelled = false;
 		let timer: ReturnType<typeof setTimeout> | null = null;

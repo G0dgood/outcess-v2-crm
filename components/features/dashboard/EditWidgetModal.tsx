@@ -13,7 +13,11 @@ import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/
 // import { useSocket } from '@/contexts/SocketContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useGetDashboardDispositionsByCampaignAndAgentIdReportQuery, useGetAllDashboardDispositionsByCampaignReportQuery } from '@/store/services/dispositionApi';
+import {
+	useGetDashboardDispositionsByCampaignAndAgentIdReportQuery,
+	useGetAllDashboardDispositionsByCampaignReportQuery,
+	useGetDashboardTotalDispositionsQuery,
+} from '@/store/services/dispositionApi';
 import { getOfflineDispositions, getSyncedDispositions } from '@/utils/offlineDispositions';
 
 interface FlexibleFieldEntry {
@@ -68,6 +72,16 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 	const campaignId = campaignData?._id || campaignData?.id || '';
 	const startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
 	const endDate = new Date().toISOString().split('T')[0];
+
+	const { data: totalDispositionsData } = useGetDashboardTotalDispositionsQuery(
+		{
+			campaignId,
+			startDate,
+			endDate,
+			agentId: !isAdmin ? agentId : undefined,
+		},
+		{ skip: !campaignId || !isOpen }
+	);
 
 	const { data: reportDataAgent } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
 		{ campaignId, agentId, startDate, endDate },
@@ -144,12 +158,14 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 
 		// If "Total" or legacy total key is selected
 		if (lookupKey === 'Total' || lookupKey === 'Total Dispositions' || lookupKey === 'Total Calls') {
-			const apiTotal = reportData?.data?.totalDispositions !== undefined 
-				? Number(reportData.data.totalDispositions) 
-				: (reportData?.data?.total !== undefined ? Number(reportData.data.total) : 0);
+			const apiTotal = totalDispositionsData?.data?.totalDispositions !== undefined
+				? Number(totalDispositionsData.data.totalDispositions)
+				: (reportData?.data?.totalDispositions !== undefined 
+					? Number(reportData.data.totalDispositions) 
+					: (reportData?.data?.total !== undefined ? Number(reportData.data.total) : 0));
 			setFormData(prev => ({
 				...prev,
-				title: isTitleManual ? prev.title : 'Total',
+				title: isTitleManual ? prev.title : 'Total Dispositions',
 				value: apiTotal,
 				subKey: '',
 				dataSourceName: 'Total',
@@ -342,7 +358,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 
 	const widgetTitleOptions = useMemo(() => {
 		const optionsMap = new Map<string, { value: string; label: string }>();
-		optionsMap.set('Total', { value: 'Total', label: 'Total' });
+		optionsMap.set('Total', { value: 'Total', label: 'Total Dispositions' });
 
 		if (reportData?.data?.breakdown) {
 			Object.keys(reportData.data.breakdown).forEach(key => {

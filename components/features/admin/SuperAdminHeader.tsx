@@ -14,6 +14,7 @@ import { useLogoutMutation, useTeamMemberLogoutMutation } from '@/store/services
 import { logout as logoutAction } from '@/store/slices/authSlice';
 import { useGetNotificationsByRoleQuery, useMarkNotificationAsReadMutation } from '@/store/services/notificationApi';
 import SuperAdminUserDropdown from './SuperAdminUserDropdown';
+import NetworkStatusDot from '@/components/ui/NetworkStatusDot';
 
 interface SuperAdminHeaderProps {
 	userName?: string;
@@ -134,6 +135,9 @@ const SuperAdminHeader: React.FC<SuperAdminHeaderProps> = ({
 
 				{/* Right side - Icons */}
 				<div className="flex items-center justify-center gap-4">
+					{/* Network Status Dot */}
+					<NetworkStatusDot />
+
 					{/* Dark Mode Toggle */}
 					<ThemeToggle />
 
