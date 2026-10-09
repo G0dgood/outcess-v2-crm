@@ -127,9 +127,26 @@ export interface DashboardSettings {
   };
 }
 
+export interface DashboardReportMetricItem {
+  key: string;
+  value: number;
+  options?: Array<{ key: string; value: number }>;
+}
+
 export interface DashboardReportResponse {
   data: {
+    total?: number;
     totalDispositions: number;
     breakdown: Record<string, Record<string, number> | number>;
+    metrics?: DashboardReportMetricItem[];
+  };
+}
+
+export interface DashboardTotalResponse {
+  success: boolean;
+  message?: string;
+  data: {
+    total: number;
+    totalDispositions: number;
   };
 }

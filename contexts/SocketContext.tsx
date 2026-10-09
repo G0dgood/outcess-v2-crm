@@ -8,6 +8,14 @@ import { useAuth } from './AuthContext';
 // Socket connection status
 export type SocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error' | 'reconnecting' | 'offline';
 
+// Measured network quality.
+// - 'fast'      : healthy round-trip latency
+// - 'slow'      : elevated latency, still usable
+// - 'very-slow' : latency so high / request timing out that the connection is
+//                 effectively unusable ("bad network" / "network too slow")
+// - 'unknown'   : not yet measured, or the browser reports offline
+export type NetworkSpeed = 'fast' | 'slow' | 'very-slow' | 'unknown';
+
 // Message types
 export interface SocketMessage {
 	type: string;
@@ -38,7 +46,7 @@ interface SocketContextType {
 	isOnline: boolean;
 	isOffline: boolean;
 	isReconnected: boolean;
-	networkSpeed: 'fast' | 'slow' | 'unknown';
+	networkSpeed: NetworkSpeed;
 	socket: Socket | null;
 
 	// Connection methods
@@ -88,8 +96,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 	const [offlineModeEnabled, setOfflineModeEnabled] = useState(false);
 	const [isReconnected, setIsReconnected] = useState(false);
 	const { isAuthenticated } = useAuth();
-	const [networkSpeed, setNetworkSpeed] = useState<'fast' | 'slow' | 'unknown'>('unknown');
-	const networkSpeedRef = useRef<'fast' | 'slow' | 'unknown'>('unknown');
+	const [networkSpeed, setNetworkSpeed] = useState<NetworkSpeed>('unknown');
+	const networkSpeedRef = useRef<NetworkSpeed>('unknown');
 
 	const socketRef = useRef<Socket | null>(null);
 	const messageQueueRef = useRef<QueuedMessage[]>([]);
@@ -149,11 +157,13 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 		const updateNetworkSpeed = () => {
 			if (connection) {
 				const type = connection.effectiveType;
-				// 'slow-2g', '2g', '3g', or '4g'
+				// 'slow-2g', '2g', '3g', or '4g'. This API is unsupported in
+				// Safari/Firefox and only a coarse hint, so we use it just to flag
+				// clearly-poor radio connections (2g). The active latency probe
+				// below is authoritative for fast / slow / very-slow.
 				if (type === 'slow-2g' || type === '2g') {
-					setNetworkSpeed('slow');
-				} else {
-					setNetworkSpeed('fast');
+					networkSpeedRef.current = 'slow';
+					setNetworkSpeed((prev) => (prev === 'very-slow' ? prev : 'slow'));
 				}
 			}
 		};
@@ -171,6 +181,81 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, config
 			}
 		};
 	}, []);
+
+	// Actively measure real round-trip latency to the API and classify it. This
+	// catches genuinely slow/laggy connections that the coarse
+	// navigator.connection.effectiveType (unsupported in Safari/Firefox) misses,
+	// and distinguishes "slow" from "very slow / unusable".
+	useEffect(() => {
+		if (typeof window === 'undefined') return;
+
+		const probeBase = (process.env.NEXT_PUBLIC_API_URL || url || '').replace(/\/+$/, '');
+		if (!probeBase) return;
+
+		const SLOW_MS = 1000;       // > 1s round-trip  -> slow
+		const VERY_SLOW_MS = 2500;  // > 2.5s round-trip -> very slow / bad network
+		const TIMEOUT_MS = 6000;    // no response in 6s -> treat as very slow
+		const INTERVAL_MS = 30 * 60 * 1000;  // re-check every 30 minutes
+
+		let cancelled = false;
+		let timer: ReturnType<typeof setTimeout> | null = null;
+
+		const apply = (speed: NetworkSpeed) => {
+			networkSpeedRef.current = speed;
+			setNetworkSpeed(speed);
+		};
+
+		const probe = async () => {
+			if (cancelled) return;
+
+			// Browser says we're offline, or the tab is hidden — don't probe. The
+			// offline banner covers the offline case; hidden tabs don't need checks.
+			if (!navigator.onLine || document.hidden) {
+				if (!navigator.onLine) apply('unknown');
+				timer = setTimeout(probe, INTERVAL_MS);
+				return;
+			}
+
+			const controller = new AbortController();
+			const to = setTimeout(() => controller.abort(), TIMEOUT_MS);
+			const start = performance.now();
+			try {
+				// `no-cors` keeps this working cross-origin without CORS setup — we
+				// only need the round-trip timing, not the (opaque) response body.
+				await fetch(`${probeBase}/?_ping=${Date.now()}`, {
+					method: 'GET',
+					cache: 'no-store',
+					mode: 'no-cors',
+					signal: controller.signal,
+				});
+				const rtt = performance.now() - start;
+				clearTimeout(to);
+				if (cancelled) return;
+				if (rtt >= VERY_SLOW_MS) apply('very-slow');
+				else if (rtt >= SLOW_MS) apply('slow');
+				else apply('fast');
+			} catch {
+				clearTimeout(to);
+				if (cancelled) return;
+				// Timed out or failed while the browser still reports online — the
+				// connection is effectively unusable / far too slow.
+				apply(navigator.onLine ? 'very-slow' : 'unknown');
+			} finally {
+				if (!cancelled) timer = setTimeout(probe, INTERVAL_MS);
+			}
+		};
+
+		// Probe immediately, and again as soon as connectivity returns.
+		probe();
+		const onBackOnline = () => probe();
+		window.addEventListener('online', onBackOnline);
+
+		return () => {
+			cancelled = true;
+			if (timer) clearTimeout(timer);
+			window.removeEventListener('online', onBackOnline);
+		};
+	}, [url]);
 
 	// Load queued messages from localStorage on mount
 	useEffect(() => {

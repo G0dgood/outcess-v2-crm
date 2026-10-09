@@ -7,14 +7,36 @@ import Checkbox from '@/components/ui/Checkbox';
 import Dropdown from '@/components/ui/Dropdown';
 import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Modal } from '@/components/ui/Modal';
-import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from '@/utils/offlineDispositions';
+import { getOfflineDispositions, getSyncedDispositions } from '@/utils/offlineDispositions';
 import { Widget, DispositionCategory, NestedOption } from '@/types/dashboard';
 import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useGetDashboardDispositionsByCampaignAndAgentIdReportQuery, useGetAllDashboardDispositionsByCampaignReportQuery } from '@/store/services/dispositionApi';
+import {
+	useGetDashboardDispositionsByCampaignAndAgentIdReportQuery,
+	useGetAllDashboardDispositionsByCampaignReportQuery,
+	useGetDashboardTotalDispositionsQuery,
+} from '@/store/services/dispositionApi';
+
+interface FlexibleFieldEntry {
+	fieldName?: string;
+	label?: string;
+	name?: string;
+	fieldValue?: string | number | boolean | unknown;
+	value?: string | number | boolean | unknown;
+}
+
+interface FlexibleDispositionRecord {
+	createdAt?: string;
+	timestamp?: string | number;
+	dispositionData?: FlexibleFieldEntry[];
+	fillDisposition?: FlexibleFieldEntry[];
+	fields?: FlexibleFieldEntry[];
+	dispositions?: FlexibleFieldEntry[];
+	[key: string]: unknown;
+}
 
 interface AddWidgetModalProps {
 	isOpen: boolean;
@@ -53,6 +75,16 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 
 	const { isAdmin } = usePrivilege();
 
+	const { data: totalDispositionsData } = useGetDashboardTotalDispositionsQuery(
+		{
+			campaignId,
+			startDate,
+			endDate,
+			agentId: !isAdmin ? agentId : undefined,
+		},
+		{ skip: !campaignId || !isOpen }
+	);
+
 	const { data: reportDataAgent } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
 		{ campaignId, agentId, startDate, endDate },
 		{ skip: !campaignId || !agentId || !isOpen || isAdmin }
@@ -73,15 +105,19 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		const dashboardSettings = campaignData?.dashboardSettings;
 		const allConfigured = getAllCampaignDispositions(dashboardSettings);
 
-		// If "Total Dispositions" or "Total Calls" is selected
-		if (lookupKey === 'Total Dispositions' || lookupKey === 'Total Calls') {
-			const apiTotal = reportData?.data?.totalDispositions !== undefined ? Number(reportData.data.totalDispositions) : 0;
+		// If "Total" or legacy total key is selected
+		if (lookupKey === 'Total' || lookupKey === 'Total Dispositions' || lookupKey === 'Total Calls') {
+			const apiTotal = totalDispositionsData?.data?.totalDispositions !== undefined
+				? Number(totalDispositionsData.data.totalDispositions)
+				: (reportData?.data?.totalDispositions !== undefined 
+					? Number(reportData.data.totalDispositions) 
+					: (reportData?.data?.total !== undefined ? Number(reportData.data.total) : 0));
 			setFormData(prev => ({
 				...prev,
-				title: isTitleManual ? prev.title : lookupKey,
+				title: isTitleManual ? prev.title : 'Total Dispositions',
 				value: apiTotal,
 				subKey: '',
-				dataSourceName: lookupKey,
+				dataSourceName: 'Total',
 			}));
 			return;
 		}
@@ -90,16 +126,26 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 		const getCountForKeys = (category: string, keys: string[]) => {
 			const offlineDispositions = getOfflineDispositions();
 			const syncedDispositions = getSyncedDispositions();
-			const allDispositions = [...offlineDispositions, ...syncedDispositions];
+			const allDispositions = [...offlineDispositions, ...syncedDispositions] as unknown as FlexibleDispositionRecord[];
 
-			return allDispositions.filter(disp => {
-				const fields = disp.dispositionData || disp.fillDisposition;
+			return allDispositions.filter((disp: FlexibleDispositionRecord) => {
+				const createdAt = disp.createdAt || disp.timestamp;
+				if (startDate && createdAt) {
+					const dispTime = new Date(createdAt).getTime();
+					const start = new Date(startDate).getTime();
+					const end = endDate ? new Date(endDate).getTime() + 86399999 : start + 86399999;
+					if (dispTime < start || dispTime > end) return false;
+				}
+
+				const fields = disp.dispositionData || disp.fillDisposition || disp.fields || disp.dispositions;
 				if (fields && Array.isArray(fields)) {
-					return fields.some((f: DispositionFieldEntry) => {
-						if (!f.fieldName || f.fieldValue === undefined || f.fieldValue === null) return false;
-						if (f.fieldName.toLowerCase() !== category.toLowerCase()) return false;
-						const dispDef = allConfigured.find(d => d.name === f.fieldName);
-						const levels = resolveMultiDropdownLevels(f.fieldName, String(f.fieldValue), dispDef);
+					return fields.some((f: FlexibleFieldEntry) => {
+						const fieldName = f.fieldName || f.label || f.name;
+						const fieldValue = f.fieldValue ?? f.value;
+						if (!fieldName || fieldValue === undefined || fieldValue === null) return false;
+						if (String(fieldName).toLowerCase() !== category.toLowerCase()) return false;
+						const dispDef = allConfigured.find(d => d.name === fieldName);
+						const levels = resolveMultiDropdownLevels(fieldName, String(fieldValue), dispDef);
 						return levels.some(lvl =>
 							keys.some(k => 
 								lvl.header.toLowerCase() === k.toLowerCase() ||
@@ -173,13 +219,12 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 			subKey: compositeSubKey,
 			dataSourceName: lookupKey,
 		}));
-	}, [selectedCategory, selectedKeys, reportData, isTitleManual, campaignData, formData.dataSourceName]);
+	}, [selectedCategory, selectedKeys, reportData, isTitleManual, campaignData, formData.dataSourceName, startDate, endDate]);
 
 	// Build dropdown options from available data
 	const widgetTitleOptions = useMemo(() => {
 		const optionsMap = new Map<string, { value: string; label: string }>();
-		optionsMap.set('Total Dispositions', { value: 'Total Dispositions', label: 'Total Dispositions (Overall)' });
-		optionsMap.set('Total Calls', { value: 'Total Calls', label: 'Total Calls (Overall)' });
+		optionsMap.set('Total', { value: 'Total', label: 'Total Dispositions' });
 
 		if (reportData?.data?.breakdown) {
 			Object.keys(reportData.data.breakdown).forEach(key => {

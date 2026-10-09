@@ -13,8 +13,30 @@ import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/
 // import { useSocket } from '@/contexts/SocketContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import { usePrivilege } from '@/contexts/PrivilegeContext';
-import { useGetDashboardDispositionsByCampaignAndAgentIdReportQuery, useGetAllDashboardDispositionsByCampaignReportQuery } from '@/store/services/dispositionApi';
-import { getOfflineDispositions, getSyncedDispositions, DispositionFieldEntry } from '@/utils/offlineDispositions';
+import {
+	useGetDashboardDispositionsByCampaignAndAgentIdReportQuery,
+	useGetAllDashboardDispositionsByCampaignReportQuery,
+	useGetDashboardTotalDispositionsQuery,
+} from '@/store/services/dispositionApi';
+import { getOfflineDispositions, getSyncedDispositions } from '@/utils/offlineDispositions';
+
+interface FlexibleFieldEntry {
+	fieldName?: string;
+	label?: string;
+	name?: string;
+	fieldValue?: string | number | boolean | unknown;
+	value?: string | number | boolean | unknown;
+}
+
+interface FlexibleDispositionRecord {
+	createdAt?: string;
+	timestamp?: string | number;
+	dispositionData?: FlexibleFieldEntry[];
+	fillDisposition?: FlexibleFieldEntry[];
+	fields?: FlexibleFieldEntry[];
+	dispositions?: FlexibleFieldEntry[];
+	[key: string]: unknown;
+}
 
 interface EditWidgetModalProps {
 	isOpen: boolean;
@@ -50,6 +72,16 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 	const campaignId = campaignData?._id || campaignData?.id || '';
 	const startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
 	const endDate = new Date().toISOString().split('T')[0];
+
+	const { data: totalDispositionsData } = useGetDashboardTotalDispositionsQuery(
+		{
+			campaignId,
+			startDate,
+			endDate,
+			agentId: !isAdmin ? agentId : undefined,
+		},
+		{ skip: !campaignId || !isOpen }
+	);
 
 	const { data: reportDataAgent } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
 		{ campaignId, agentId, startDate, endDate },
@@ -124,15 +156,19 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 		const dashboardSettings = campaignData?.dashboardSettings;
 		const allConfigured = getAllCampaignDispositions(dashboardSettings);
 
-		// If "Total Dispositions" or "Total Calls" is selected
-		if (lookupKey === 'Total Dispositions' || lookupKey === 'Total Calls') {
-			const apiTotal = reportData?.data?.totalDispositions !== undefined ? Number(reportData.data.totalDispositions) : 0;
+		// If "Total" or legacy total key is selected
+		if (lookupKey === 'Total' || lookupKey === 'Total Dispositions' || lookupKey === 'Total Calls') {
+			const apiTotal = totalDispositionsData?.data?.totalDispositions !== undefined
+				? Number(totalDispositionsData.data.totalDispositions)
+				: (reportData?.data?.totalDispositions !== undefined 
+					? Number(reportData.data.totalDispositions) 
+					: (reportData?.data?.total !== undefined ? Number(reportData.data.total) : 0));
 			setFormData(prev => ({
 				...prev,
-				title: isTitleManual ? prev.title : lookupKey,
+				title: isTitleManual ? prev.title : 'Total Dispositions',
 				value: apiTotal,
 				subKey: '',
-				dataSourceName: lookupKey,
+				dataSourceName: 'Total',
 			}));
 			return;
 		}
@@ -141,16 +177,26 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 		const getCountForKeys = (category: string, keys: string[]) => {
 			const offlineDispositions = getOfflineDispositions();
 			const syncedDispositions = getSyncedDispositions();
-			const allDispositions = [...offlineDispositions, ...syncedDispositions];
+			const allDispositions = [...offlineDispositions, ...syncedDispositions] as unknown as FlexibleDispositionRecord[];
 
-			return allDispositions.filter(disp => {
-				const fields = disp.dispositionData || disp.fillDisposition;
+			return allDispositions.filter((disp: FlexibleDispositionRecord) => {
+				const createdAt = disp.createdAt || disp.timestamp;
+				if (startDate && createdAt) {
+					const dispTime = new Date(createdAt).getTime();
+					const start = new Date(startDate).getTime();
+					const end = endDate ? new Date(endDate).getTime() + 86399999 : start + 86399999;
+					if (dispTime < start || dispTime > end) return false;
+				}
+
+				const fields = disp.dispositionData || disp.fillDisposition || disp.fields || disp.dispositions;
 				if (fields && Array.isArray(fields)) {
-					return fields.some((f: DispositionFieldEntry) => {
-						if (!f.fieldName || f.fieldValue === undefined || f.fieldValue === null) return false;
-						if (f.fieldName.toLowerCase() !== category.toLowerCase()) return false;
-						const dispDef = allConfigured.find(d => d.name === f.fieldName);
-						const levels = resolveMultiDropdownLevels(f.fieldName, String(f.fieldValue), dispDef);
+					return fields.some((f: FlexibleFieldEntry) => {
+						const fieldName = f.fieldName || f.label || f.name;
+						const fieldValue = f.fieldValue ?? f.value;
+						if (!fieldName || fieldValue === undefined || fieldValue === null) return false;
+						if (String(fieldName).toLowerCase() !== category.toLowerCase()) return false;
+						const dispDef = allConfigured.find(d => d.name === fieldName);
+						const levels = resolveMultiDropdownLevels(fieldName, String(fieldValue), dispDef);
 						return levels.some(lvl =>
 							keys.some(k => 
 								lvl.header.toLowerCase() === k.toLowerCase() ||
@@ -218,7 +264,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 			subKey: compositeSubKey,
 			dataSourceName: lookupKey,
 		}));
-	}, [selectedCategory, selectedKeys, reportData, isTitleManual, campaignData, isOpen, widget, formData.dataSourceName]);
+	}, [selectedCategory, selectedKeys, reportData, isTitleManual, campaignData, isOpen, widget, formData.dataSourceName, startDate, endDate]);
 
 	const subKeyOptions = useMemo(() => {
 		const lookupKey = selectedCategory || formData.dataSourceName;
@@ -312,8 +358,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 
 	const widgetTitleOptions = useMemo(() => {
 		const optionsMap = new Map<string, { value: string; label: string }>();
-		optionsMap.set('Total Dispositions', { value: 'Total Dispositions', label: 'Total Dispositions (Overall)' });
-		optionsMap.set('Total Calls', { value: 'Total Calls', label: 'Total Calls (Overall)' });
+		optionsMap.set('Total', { value: 'Total', label: 'Total Dispositions' });
 
 		if (reportData?.data?.breakdown) {
 			Object.keys(reportData.data.breakdown).forEach(key => {
@@ -387,7 +432,7 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
 		}
 		const isDisposition = allDispositions.some((d: { name: string }) => d.name === source);
 		const isOutcome = dashboardSettings?.callOutcomes?.some((o: { name: string }) => o.name === source);
-		return isDisposition || isOutcome || (reportData?.data?.breakdown && reportData.data.breakdown[source!] !== undefined);
+		return isDisposition || isOutcome || source === 'Total Dispositions' || source === 'Total Calls' || (reportData?.data?.breakdown && reportData.data.breakdown[source!] !== undefined);
 	}, [formData.dataSourceName, campaignData, reportData]);
 
 	const handleSave = () => {

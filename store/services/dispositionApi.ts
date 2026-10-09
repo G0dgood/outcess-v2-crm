@@ -1,4 +1,4 @@
-import { DashboardReportResponse } from "@/types/dashboard";
+import { DashboardReportResponse, DashboardTotalResponse } from "@/types/dashboard";
 import { baseApi } from "./baseApi";
 
 export interface CreateDispositionRequest {
@@ -182,6 +182,72 @@ export const dispositionApi = baseApi.injectEndpoints({
       },
       providesTags: ["Disposition"],
     }),
+    getDashboardWidgets: builder.query<
+      DashboardReportResponse,
+      { campaignId: string; startDate?: string; endDate?: string; bucketId?: string; agentId?: string }
+    >({
+      query: ({ campaignId, startDate, endDate, bucketId, agentId }) => {
+        let url = `api/v1/dispositions/${campaignId}/dashboard/widgets?1=1`;
+        if (startDate) url += `&startDate=${startDate}`;
+        if (endDate) url += `&endDate=${endDate}`;
+        if (bucketId) url += `&bucketId=${bucketId}`;
+        if (agentId) url += `&agentId=${agentId}`;
+        return url;
+      },
+      providesTags: ["Disposition"],
+    }),
+    getDashboardCharts: builder.query<
+      DashboardReportResponse,
+      { campaignId: string; startDate?: string; endDate?: string; bucketId?: string; agentId?: string }
+    >({
+      query: ({ campaignId, startDate, endDate, bucketId, agentId }) => {
+        let url = `api/v1/dispositions/${campaignId}/dashboard/charts?1=1`;
+        if (startDate) url += `&startDate=${startDate}`;
+        if (endDate) url += `&endDate=${endDate}`;
+        if (bucketId) url += `&bucketId=${bucketId}`;
+        if (agentId) url += `&agentId=${agentId}`;
+        return url;
+      },
+      providesTags: ["Disposition"],
+    }),
+    getDashboardTotalDispositions: builder.query<
+      DashboardTotalResponse,
+      {
+        campaignId?: string;
+        startDate?: string;
+        endDate?: string;
+        timeRange?: string;
+        period?: string;
+        date?: string;
+        bucketId?: string;
+        agentId?: string;
+      }
+    >({
+      query: ({
+        campaignId,
+        startDate,
+        endDate,
+        timeRange,
+        period,
+        date,
+        bucketId,
+        agentId,
+      }) => {
+        const basePath = campaignId
+          ? `api/v1/dispositions/${campaignId}/dashboard/total`
+          : `api/v1/dispositions/dashboard/total`;
+        let url = `${basePath}?1=1`;
+        if (startDate) url += `&startDate=${startDate}`;
+        if (endDate) url += `&endDate=${endDate}`;
+        if (timeRange) url += `&timeRange=${timeRange}`;
+        if (period) url += `&period=${period}`;
+        if (date) url += `&date=${date}`;
+        if (bucketId) url += `&bucketId=${bucketId}`;
+        if (agentId) url += `&agentId=${agentId}`;
+        return url;
+      },
+      providesTags: ["Disposition"],
+    }),
     getLeaderboard: builder.query<LeaderboardResponse, GetLeaderboardRequest>({
       query: ({ campaignId, timeFilter = "weekly" }) =>
         `api/v1/leaderboard/${campaignId}?timeFilter=${timeFilter}`,
@@ -201,5 +267,9 @@ export const {
   useLazyGetDispositionsByAgentReportQuery,
   useGetDashboardDispositionsByCampaignAndAgentIdReportQuery,
   useGetAllDashboardDispositionsByCampaignReportQuery,
+  useGetDashboardWidgetsQuery,
+  useGetDashboardChartsQuery,
+  useGetDashboardTotalDispositionsQuery,
+  useLazyGetDashboardTotalDispositionsQuery,
   useGetLeaderboardQuery,
 } = dispositionApi;

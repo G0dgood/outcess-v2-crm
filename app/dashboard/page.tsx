@@ -15,10 +15,8 @@ import { useUpdateCampaignMutation } from '@/store/services/campaignApi';
 import { useCampaign } from '@/contexts/CampaignContext';
 import { useUserInfo } from '@/contexts/UserInfoContext';
 import {
-	useGetDashboardDispositionsByCampaignAndAgentIdReportQuery,
-	useGetAllDashboardDispositionsByCampaignReportQuery,
-	useGetDispositionsByCampaignReportQuery,
-	useGetDispositionsByAgentReportQuery
+	useGetDashboardWidgetsQuery,
+	useGetDashboardTotalDispositionsQuery
 } from '@/store/services/dispositionApi';
 import { filterDispositionsByTimeRange, getDateRangeFromTimeRange } from '@/utils/filterUtils';
 import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
@@ -100,7 +98,14 @@ const DashboardContent: React.FC = () => {
 	// Fetch Report Data
 	const campaignId = campaignData?._id || campaignData?.id || setupData?.campaignId;
 	const timeRange = dashboardSettings.dispositionSettings?.timeRangeView || 'daily';
-	const dateRange = useMemo(() => getDateRangeFromTimeRange(timeRange), [timeRange]);
+
+	// Bumped by the Refresh button so the fixed chart windows recompute "now".
+	const [refreshNonce, setRefreshNonce] = useState(0);
+
+	const dateRange = useMemo(() => {
+		void refreshNonce;
+		return getDateRangeFromTimeRange(timeRange);
+	}, [timeRange, refreshNonce]);
 
 	const userRoleName = typeof user?.role === 'object' ? (user?.role as { roleName?: string })?.roleName : user?.role;
 	// Treat the isSupervisor flag as authoritative (a team lead may have any role name),
@@ -111,74 +116,44 @@ const DashboardContent: React.FC = () => {
 	// never the agent-only view — regardless of supervisor/team-lead status.
 	const isCampaignView = isAdmin || isSuperAdmin || isSupervisor || allBucketAccess;
 
-	const { data: reportDataAgent, refetch: refetchAgentReport, isFetching: isFetchingAgentReport } = useGetDashboardDispositionsByCampaignAndAgentIdReportQuery(
-		{
-			campaignId: campaignId || '',
-			agentId: user?.id || user?._id || '',
-			startDate: dateRange.startDate || '',
-			endDate: dateRange.endDate || '',
-			bucketId: selectedBucketId || undefined
-		},
-		{ skip: !campaignId || !user || !dateRange.startDate || isCampaignView }
-	);
+	// A campaign must be selected before the dashboard has anything to show. The
+	// bucket is only an optional filter — admins / data analysts see all campaign
+	// data by default (matching the report page), so we do NOT require a bucket.
+	const needsSelection = !campaignId;
 
-	const { data: reportDataAdmin, refetch: refetchAdminReport, isFetching: isFetchingAdminReport } = useGetAllDashboardDispositionsByCampaignReportQuery(
+	const { data: widgetReportData, refetch: refetchWidgetReport, isFetching: isFetchingWidgetReport } = useGetDashboardWidgetsQuery(
 		{
 			campaignId: campaignId || '',
 			startDate: dateRange.startDate || '',
 			endDate: dateRange.endDate || '',
-			bucketId: selectedBucketId || undefined
+			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined
 		},
-		{ skip: !campaignId || !dateRange.startDate || !isCampaignView }
+		{ skip: !campaignId || !dateRange.startDate }
 	);
 
-	const reportData = isCampaignView ? reportDataAdmin : reportDataAgent;
-
-	// Fetched over all time (no date filter) so each chart can filter by its own
-	// per-chart time range. Widgets still filter this client-side by the dashboard range.
-	const { data: lobReportData, refetch: refetchLobReport, isFetching: isFetchingLobReport } = useGetDispositionsByCampaignReportQuery(
+	const {
+		data: totalDispositionsData,
+		refetch: refetchTotalDispositions,
+		isFetching: isFetchingTotalDispositions,
+	} = useGetDashboardTotalDispositionsQuery(
 		{
 			campaignId: campaignId || '',
-			startDate: '',
-			endDate: '',
-			page: 1,
-			limit: 1000000,
+			startDate: dateRange.startDate || '',
+			endDate: dateRange.endDate || '',
 			bucketId: selectedBucketId || undefined,
+			agentId: !isCampaignView ? (user?.id || user?._id || '') : undefined,
 		},
-		{ skip: !campaignId || !isCampaignView }
+		{ skip: !campaignId || !dateRange.startDate }
 	);
 
-	const { data: agentReportData, refetch: refetchAgentDispositions, isFetching: isFetchingAgentDispositions } = useGetDispositionsByAgentReportQuery(
-		{
-			campaignId: campaignId || '',
-			agentId: user?._id || '',
-			startDate: '',
-			endDate: '',
-			page: 1,
-			limit: 1000000,
-			bucketId: selectedBucketId || undefined,
-		},
-		{ skip: !campaignId || isCampaignView || !user?._id }
-	);
-
-	const apiDispositions = useMemo(() => {
-		if (isCampaignView) {
-			return (lobReportData as { data?: unknown[] })?.data || (Array.isArray(lobReportData) ? lobReportData : []);
-		} else {
-			return (agentReportData as { data?: unknown[] })?.data || (Array.isArray(agentReportData) ? agentReportData : []);
-		}
-	}, [isCampaignView, lobReportData, agentReportData]);
-
-	const isRefreshing = isFetchingAgentReport || isFetchingAdminReport || isFetchingLobReport || isFetchingAgentDispositions;
+	const reportData = widgetReportData;
+	const isRefreshing = isFetchingWidgetReport || isFetchingTotalDispositions;
 
 	const handleRefresh = () => {
-		if (isCampaignView) {
-			refetchAdminReport();
-			refetchLobReport();
-		} else {
-			refetchAgentReport();
-			refetchAgentDispositions();
-		}
+		setRefreshNonce((n) => n + 1);
+		refetchTotalDispositions();
+		refetchWidgetReport();
 	};
 
 	const updateDashboardSettings = useCallback(async (newSettings: Partial<typeof dashboardSettings>) => {
@@ -373,15 +348,11 @@ const DashboardContent: React.FC = () => {
 	};
 
 	const combinedDispositions = useMemo(() => {
+		void pendingDispositionsCount;
 		const offline = getOfflineDispositions(selectedCampaignId || undefined);
-		// If we have API data, use it as the source of "synced" data
-		// Otherwise fallback to local synced data
-		// Note: apiDispositions might be empty array, which is valid. 
-		// Check if it's an array to confirm it's loaded.
-		const synced = Array.isArray(apiDispositions) ? apiDispositions : getSyncedDispositions(undefined, selectedCampaignId || undefined);
-		return [...offline, ...synced] as CombinedDispositionItem[];
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [apiDispositions, pendingDispositionsCount, selectedCampaignId]);
+		const synced = getSyncedDispositions(undefined, selectedCampaignId || undefined);
+		return [...offline, ...synced] as unknown as CombinedDispositionItem[];
+	}, [pendingDispositionsCount, selectedCampaignId]);
 
 	// Get widgets from context and update values dynamically based on disposition data
 	const widgets = useMemo(() => {
@@ -427,7 +398,7 @@ const DashboardContent: React.FC = () => {
 		};
 
 		const campaignBuckets = campaignData?.dashboardSettings?.buckets || setupData?.dashboardSettings?.buckets || [];
-		const activeWidgets = (dashboardSettings?.widgets || []).filter((w: Widget) => {
+		let activeWidgets = (dashboardSettings?.widgets || []).filter((w: Widget) => {
 			if (campaignBuckets.length > 1 && selectedBucketId) {
 				// Strict per-bucket scoping. A legacy widget with no bucketId belongs
 				// to the first bucket only, so it never leaks into other buckets.
@@ -437,14 +408,51 @@ const DashboardContent: React.FC = () => {
 			return true;
 		});
 
+		// Ensure default Total Dispositions widget is present if none exists
+		if (activeWidgets.length === 0) {
+			activeWidgets = [
+				{ id: 'default-total-calls', title: 'Total Dispositions', value: 0, color: '#050711' }
+			];
+		}
+
 		return activeWidgets.map((widget: Widget) => {
 			const sourceKey = widget.dataSourceName || widget.title;
-			// Check report data first
+			const normalizedSource = (sourceKey || '').toLowerCase().trim();
+
+			// Built-in metric for Total Dispositions / Total Calls
+			const isTotalWidget =
+				normalizedSource === 'total dispositions' ||
+				normalizedSource === 'total calls' ||
+				normalizedSource === 'total call' ||
+				normalizedSource === 'total' ||
+				normalizedSource === 'total call(s)';
+
+			if (isTotalWidget) {
+				const apiTotal =
+					totalDispositionsData?.data?.totalDispositions !== undefined
+						? Number(totalDispositionsData.data.totalDispositions)
+						: (reportData?.data?.totalDispositions !== undefined
+							? Number(reportData.data.totalDispositions)
+							: filteredDispositions.length);
+				return { ...widget, value: apiTotal };
+			}
+
+			// Built-in metric for Pending Dispositions / Pending Calls
+			const isPendingWidget =
+				normalizedSource === 'pending dispositions' ||
+				normalizedSource === 'pending calls' ||
+				normalizedSource === 'pending call';
+
+			if (isPendingWidget) {
+				return { ...widget, value: pendingDispositionsCount };
+			}
+
+			// Check report data breakdown
 			if (reportData?.data?.breakdown) {
 				const breakdown = reportData.data.breakdown;
 
 				// 0. Check for Composite SubKey (Category:::Key)
-				// This allows Title to be anything (e.g. "mem") while preserving the data source (e.g. "Call Answered")
+				// This allows Title to be anything while preserving the data source
 				if (widget.subKey && widget.subKey.includes(':::')) {
 					const parts = widget.subKey.split(':::');
 					const category = parts[0];
@@ -457,49 +465,42 @@ const DashboardContent: React.FC = () => {
 								return { ...widget, value: sumValue };
 							}
 						}
+						return { ...widget, value: 0 };
 					} else {
 						const key = parts[1];
 						if (breakdown[category] !== undefined) {
 							const reportValue = breakdown[category];
 							if (typeof reportValue === 'object' && reportValue !== null && reportValue[key] !== undefined) {
-								return { ...widget, value: reportValue[key] };
+								return { ...widget, value: Number(reportValue[key]) || 0 };
 							}
 						}
+						return { ...widget, value: 0 };
 					}
-					// If composite key lookup fails, preserve saved value
-					return widget;
 				}
 
 				// 1. Direct Lookup (Title = Category)
 				if (breakdown[sourceKey] !== undefined) {
 					const reportValue = breakdown[sourceKey];
 					if (typeof reportValue === 'object' && reportValue !== null) {
-						if (widget.subKey && reportValue[widget.subKey] !== undefined) {
-							return { ...widget, value: reportValue[widget.subKey] };
-						}
-						// If subKey is present but value not found, preserve saved value
 						if (widget.subKey) {
-							return widget;
+							return { ...widget, value: Number(reportValue[widget.subKey]) || 0 };
 						}
 						// If no subKey, sum all values in the object
 						const total = Object.values(reportValue).reduce((acc: number, val) => acc + (Number(val) || 0), 0);
 						return { ...widget, value: total };
 					} else {
-						return { ...widget, value: reportValue };
+						return { ...widget, value: Number(reportValue) || 0 };
 					}
 				}
 
 				// 2. Deep Lookup (Search for Title in all nested objects)
-				// This handles cases where Title = Specific Option (e.g. "Connected") 
-				// and the parent category is not explicitly stored in subKey or is lost.
 				let deepMatchValue: number | undefined;
 				Object.values(breakdown).some((categoryValue) => {
 					if (typeof categoryValue === 'object' && categoryValue !== null) {
-						// Use type assertion or check for property existence safely
 						const val = (categoryValue as Record<string, unknown>)[sourceKey];
 						if (val !== undefined) {
 							deepMatchValue = Number(val);
-							return true; // Stop searching
+							return true;
 						}
 					}
 					return false;
@@ -508,23 +509,11 @@ const DashboardContent: React.FC = () => {
 				if (deepMatchValue !== undefined) {
 					return { ...widget, value: deepMatchValue };
 				}
-			}
 
-			// If widget has a subKey, it depends on report data breakdown.
-			// If report data is missing or doesn't have the key, we should not fall back to total counts.
-			if (widget.subKey) {
-				return widget;
-			}
-
-			// Update pending dispositions widget value
-			if (sourceKey === 'Pending Dispositions') {
-				return { ...widget, value: pendingDispositionsCount };
-			}
-
-			// Update total dispositions widget value
-			if (sourceKey === 'Total Dispositions' || sourceKey === 'Total Calls') {
-				const apiTotal = reportData?.data?.totalDispositions !== undefined ? Number(reportData.data.totalDispositions) : filteredDispositions.length;
-				return { ...widget, value: apiTotal };
+				// If report data is returned from API but widget key is not in breakdown for this date range, return 0
+				if (widget.subKey || isTotalWidget === false) {
+					return { ...widget, value: 0 };
+				}
 			}
 
 			// Check if widget title corresponds to a disposition field
@@ -583,11 +572,20 @@ const DashboardContent: React.FC = () => {
 
 			return widget;
 		});
-	}, [dashboardSettings, combinedDispositions, pendingDispositionsCount, reportData, selectedBucketId, campaignData, setupData]);
+	}, [dashboardSettings, combinedDispositions, pendingDispositionsCount, reportData, totalDispositionsData, selectedBucketId, campaignData, setupData]);
 
 	const handleEditWidget = useCallback((widgetId: string) => {
 		if (!canEdit) return;
-		const widget = (dashboardSettings.widgets as Widget[]).find((w: Widget) => w.id === widgetId);
+		let widget = (dashboardSettings.widgets as Widget[]).find((w: Widget) => w.id === widgetId);
+		if (!widget && widgetId === 'default-total-calls') {
+			widget = {
+				id: 'default-total-calls',
+				title: 'Total Dispositions',
+				value: 0,
+				color: '#050711',
+				dataSourceName: 'Total',
+			};
+		}
 		if (widget) {
 			setEditingWidget(widget);
 			setIsEditWidgetModalOpen(true);
@@ -596,7 +594,16 @@ const DashboardContent: React.FC = () => {
 
 	const handleDeleteWidget = useCallback((widgetId: string) => {
 		if (!canDelete) return;
-		const widget = (dashboardSettings.widgets as Widget[]).find((w: Widget) => w?.id === widgetId);
+		let widget = (dashboardSettings.widgets as Widget[]).find((w: Widget) => w?.id === widgetId);
+		if (!widget && widgetId === 'default-total-calls') {
+			widget = {
+				id: 'default-total-calls',
+				title: 'Total Dispositions',
+				value: 0,
+				color: '#050711',
+				dataSourceName: 'Total',
+			};
+		}
 		if (widget) {
 			setDeletingWidget(widget);
 			setIsDeleteWidgetModalOpen(true);
@@ -641,16 +648,14 @@ const DashboardContent: React.FC = () => {
 	}, [canEdit, dashboardSettings.dispositionSettings.charts]);
 
 	const generateChartDataWrapper = useCallback((dataSource: string | string[], chartColor?: string, colors?: Record<string, string>, chartTimeRange?: string): ChartDataItem[] => {
-		// When a chart has its own time range, filter the (all-time) dispositions
-		// client-side by that range instead of using the dashboard-scoped breakdown.
-		const reportForChart = chartTimeRange ? undefined : reportData;
-		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, combinedDispositions, reportForChart, chartTimeRange);
-	}, [dashboardSettings, pendingDispositionsCount, combinedDispositions, reportData]);
+		return generateChartData(dataSource, chartColor, { dashboardSettings }, pendingDispositionsCount, colors, [], reportData, chartTimeRange);
+	}, [dashboardSettings, pendingDispositionsCount, reportData]);
 
 	const handleConfirmDelete = useCallback(() => {
 		if (!canDelete) return;
 		if (deletingWidget) {
-			const updatedWidgets = (dashboardSettings.widgets as Widget[]).filter((w: Widget) => w.id !== deletingWidget.id);
+			const currentWidgets = (dashboardSettings.widgets as Widget[]) || [];
+			const updatedWidgets = currentWidgets.filter((w: Widget) => w.id !== deletingWidget.id);
 			updateDashboardSettings({
 				widgets: updatedWidgets,
 			});
@@ -661,13 +666,29 @@ const DashboardContent: React.FC = () => {
 
 	const handleSaveWidget = useCallback((widget: Widget) => {
 		if (!canEdit) return;
-		const updatedWidgets = (dashboardSettings.widgets as Widget[]).map((w: Widget) => w.id === widget.id ? widget : w);
+		const currentWidgets = (dashboardSettings.widgets as Widget[]) || [];
+		const exists = currentWidgets.some((w: Widget) => w.id === widget.id);
+		let updatedWidgets: Widget[];
+		if (exists) {
+			updatedWidgets = currentWidgets.map((w: Widget) => w.id === widget.id ? widget : w);
+		} else {
+			const buckets = campaignData?.dashboardSettings?.buckets || setupData?.dashboardSettings?.buckets || [];
+			const targetBucketId = buckets.length > 1 ? (selectedBucketId || buckets[0]?.id) : undefined;
+			updatedWidgets = [
+				...currentWidgets,
+				{
+					...widget,
+					id: widget.id === 'default-total-calls' ? `widget-${Date.now()}` : widget.id,
+					...(targetBucketId ? { bucketId: targetBucketId } : {})
+				}
+			];
+		}
 		updateDashboardSettings({
 			widgets: updatedWidgets,
 		});
 		setIsEditWidgetModalOpen(false);
 		setEditingWidget(null);
-	}, [canEdit, dashboardSettings.widgets, updateDashboardSettings]);
+	}, [canEdit, dashboardSettings.widgets, updateDashboardSettings, campaignData, setupData, selectedBucketId]);
 
 	const handleAddWidget = useCallback(() => {
 		if (!canCreate) return;
@@ -685,7 +706,21 @@ const DashboardContent: React.FC = () => {
 			id: `widget-${Date.now()}`,
 			...(targetBucketId ? { bucketId: targetBucketId } : {})
 		};
-		const updatedWidgets = [...(dashboardSettings.widgets as Widget[]), newWidget];
+		const currentWidgets = (dashboardSettings.widgets as Widget[]) || [];
+		let updatedWidgets: Widget[];
+		if (currentWidgets.length === 0) {
+			const defaultTotalWidget: Widget = {
+				id: `widget-default-total-${Date.now()}`,
+				title: 'Total Dispositions',
+				value: 0,
+				color: '#050711',
+				dataSourceName: 'Total',
+				...(targetBucketId ? { bucketId: targetBucketId } : {})
+			};
+			updatedWidgets = [defaultTotalWidget, newWidget];
+		} else {
+			updatedWidgets = [...currentWidgets, newWidget];
+		}
 		updateDashboardSettings({
 			widgets: updatedWidgets,
 		});
@@ -875,6 +910,14 @@ const DashboardContent: React.FC = () => {
 						</div>
 					</div>
 
+					{needsSelection ? (
+						<EmptyState
+							iconName="NOProduct"
+							title="Select a campaign"
+							description="Choose a campaign from the selector above to view its dashboard data."
+						/>
+					) : (
+					<>
 					{/* Widget Cards */}
 					{canView ? (
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -929,11 +972,13 @@ const DashboardContent: React.FC = () => {
 											return (
 												<div key={chart.id} className={colSpanClass}>
 													<SortableChart
-														chart={{ ...chart, size }}
+														// All charts are driven by the single top-level Time Range
+														// control, not a per-chart filter. Overriding timeRange here
+														// makes every chart re-render for the selected range.
+														chart={{ ...chart, size, timeRange: timeRange as Chart['timeRange'] }}
 														generateChartData={generateChartDataWrapper}
 														onRemoveChart={handleRemoveChart}
 														onEditChart={handleEditChart}
-														onTimeRangeChange={(chartId, timeRange) => updateChart(chartId, { timeRange: timeRange as Chart['timeRange'] })}
 														canEdit={canEdit}
 														canDelete={canDelete}
 													/>
@@ -957,6 +1002,8 @@ const DashboardContent: React.FC = () => {
 							)}
 						</div>
 					</DndContext>
+					</>
+					)}
 
 
 					{/* Add Chart Modal */}

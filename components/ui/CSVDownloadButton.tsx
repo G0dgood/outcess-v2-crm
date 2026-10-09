@@ -111,6 +111,7 @@ export function CSVDownloadButton<T>({
 			size={size}
 			onClick={handleDownload}
 			disabled={disabled || isDownloading}
+			loading={isDownloading}
 			className={`${className} disabled:opacity-50 disabled:cursor-not-allowed`}
 		>
 			{isDownloading ? loadingText : buttonText}

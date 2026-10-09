@@ -3,7 +3,6 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import Dropdown from '@/components/ui/Dropdown';
 import Icon from '@/components/ui/Icon';
 import Button from '@/components/ui/Button';
 import type { Chart } from '@/contexts/SetupContext';
@@ -23,7 +22,6 @@ interface SortableChartProps {
 	chart: Chart;
 	onRemoveChart: (chartId: string) => void;
 	onEditChart: (chartId: string) => void;
-	onTimeRangeChange?: (chartId: string, timeRange: string) => void;
 	generateChartData: (dataSource: string | string[], chartColor?: string, colors?: Record<string, string>, timeRange?: string) => ChartDataItem[];
 	canEdit?: boolean;
 	canDelete?: boolean;
@@ -33,7 +31,6 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 	chart,
 	onRemoveChart,
 	onEditChart,
-	onTimeRangeChange,
 	generateChartData,
 	canEdit = true,
 	canDelete = true,
@@ -120,21 +117,6 @@ export const SortableChart: React.FC<SortableChartProps> = React.memo(({
 					{chart.title}
 				</h3>
 				<div className="flex items-center gap-3 justify-center z-20">
-					<div onPointerDown={(e) => e.stopPropagation()}>
-						<Dropdown
-							label=""
-							value={chart.timeRange}
-							onChange={(value) => onTimeRangeChange?.(chart.id, Array.isArray(value) ? value[0] : value)}
-							options={[
-								{ value: 'daily', label: 'Daily' },
-								{ value: 'yesterday', label: 'Yesterday' },
-								{ value: 'weekly', label: 'Weekly' },
-								{ value: 'monthly', label: 'Monthly' },
-							]}
-							className="min-w-[100px]"
-							inputClassName="h-8"
-						/>
-					</div>
 					{canEdit && (
 						<Button
 							variant="ghost"

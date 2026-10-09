@@ -18,6 +18,7 @@ import { useCampaign } from '@/contexts/CampaignContext';
 import { useGetDispositionsByCustomerQuery } from '@/store/services/dispositionApi';
 import { useCreateSMSLogMutation } from '@/store/services/smsApi';
 import { useUserInfo } from '@/contexts/UserInfoContext';
+import { usePrivilege } from '@/contexts/PrivilegeContext';
 import { toast } from 'sonner';
 import { icons } from 'lucide-react';
 import { resolveMultiDropdownLevels, getAllCampaignDispositions } from '@/utils/dispositionMultiDropdown';
@@ -68,6 +69,9 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 	const { selectedCampaignId, campaignData } = useCampaign();
 	const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
 	const { user } = useUserInfo();
+	const { canAccess } = usePrivilege();
+	// SMS to a customer requires the Customer SMS privilege.
+	const canUseSMS = canAccess('customerSMS', 'view');
 	const companyId = user?.companyId || user?.company?._id || '';
 	const [createSMSLog] = useCreateSMSLogMutation();
 	const [ticketPrefillData, setTicketPrefillData] = useState<{
@@ -335,27 +339,29 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 						}}
 					>
 						<div className="flex items-center justify-end gap-3">
-							<Button
-								variant="primary"
-								size="md"
-								className="flex items-center gap-2"
-								style={{
-									backgroundColor: '#F97316',
-									color: '#FFFFFF',
-									borderColor: '#F97316'
-								}}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.backgroundColor = '#EA580C';
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.backgroundColor = '#F97316';
-								}}
-								onClick={() => setIsSMSModalOpen(true)}
-								icon={<ChatBubbleIcon className="w-4 h-4" />}
-								iconPosition="left"
-							>
-								SMS
-							</Button>
+							{canUseSMS && (
+								<Button
+									variant="primary"
+									size="md"
+									className="flex items-center gap-2"
+									style={{
+										backgroundColor: '#F97316',
+										color: '#FFFFFF',
+										borderColor: '#F97316'
+									}}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.backgroundColor = '#EA580C';
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.backgroundColor = '#F97316';
+									}}
+									onClick={() => setIsSMSModalOpen(true)}
+									icon={<ChatBubbleIcon className="w-4 h-4" />}
+									iconPosition="left"
+								>
+									SMS
+								</Button>
+							)}
 							<Button
 								variant="primary"
 								size="md"
@@ -741,9 +747,9 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
 					customer={customer}
 				/>
 
-				{/* SMS Modal */}
+				{/* SMS Modal — only reachable with the Customer SMS privilege */}
 				<SMSModal
-					isOpen={isSMSModalOpen}
+					isOpen={canUseSMS && isSMSModalOpen}
 					onClose={() => setIsSMSModalOpen(false)}
 					onSend={async (data) => {
 						try {
